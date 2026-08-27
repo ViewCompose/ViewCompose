@@ -1790,8 +1790,8 @@ internal object DocumentationGovernanceV2Reporter {
         val start = source.indexOf(startMarker) + startMarker.length
         val end = source.indexOf(endMarker, start)
         if (end < start) return listOf("'$endMarker' must follow '$startMarker': $sourcePath")
-        val expected = source.substring(start, end).trim()
-        return if (content.trim() == expected) {
+        val expected = source.substring(start, end).trimIndent().trim()
+        return if (content.trimIndent().trim() == expected) {
             emptyList()
         } else {
             listOf("fence content differs from $sourcePath region $region")

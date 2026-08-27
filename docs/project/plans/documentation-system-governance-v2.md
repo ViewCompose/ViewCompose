@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the onboarding-tutorial ownership slice, then hard-cut lazy-collection revision and reuse migration ownership as the next Phase 3 boundary.
+next_action: Merge the lazy-collection revision and reuse migration ownership slice, then hard-cut Effects architecture ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -138,6 +138,11 @@ non-executable catalog decision, removes five resolved exceptions, and reduces t
 issues. It also hard-corrects stale application-package and localized Preview-version examples and
 repairs tutorial dependency placement verification so structured front matter is excluded from the
 top-of-body boundary.
+The accepted lazy-collection revision and reuse migration hard cut now assigns the migration page
+to its three existing runtime owners, registers nine compiled sample decisions across ten exact
+bilingual fences, removes two resolved exceptions, and reduces the report to 43 issues. It also
+hard-corrects exact-region comparison so ordinary function-body indentation does not force compiled
+sample sources into non-idiomatic column-zero formatting.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -146,9 +151,9 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Getting Started and State/Event tutorial ownership slice, then hard-cut
-lazy-collection revision and reuse migration ownership as the next Phase 3 boundary. Pull-request
-gate scaling Phases 3 through 5 are complete, so these scoped content
+Next action: merge the lazy-collection revision and reuse migration ownership slice, then hard-cut
+Effects architecture ownership as the next Phase 3 boundary. Pull-request gate scaling Phases 3
+through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
 
@@ -231,9 +236,9 @@ remains owned by this plan after the Phase 3 content owners move.
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, three explicitly
-ignored test-sample-only artifacts, and zero shared-path classifications against
-`fdcde529eaa9b621f7e4c1265c4981ab4d19f1cf`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
+artifacts, and zero shared-path classifications against
+`921967475ea70fc1c78d2073acc36e3286317cb4`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1585,6 +1590,43 @@ Accepted Getting Started and State/Event tutorial ownership slice on 2026-08-27:
   This slice changes no public API or production runtime behavior and makes no new runtime, visual,
   power, or performance claim. The next action is lazy-collection revision and reuse migration
   ownership.
+
+Accepted lazy-collection revision and reuse migration ownership slice on 2026-08-27:
+
+- retained the stable Migration route and assigned it to the existing `lazy.collections`,
+  `host.android-view`, and `renderer.reconciliation` owners whose contracts the page actually
+  compares. No second collection engine, native-View owner, or reconciliation owner was created;
+- registered nine compiled revision, pager, identity, snapshot, structure, native-View reuse, and
+  item-table decisions across ten exact bilingual fences. The two typed-revision fences reuse one
+  identical compiled region, while every other fence has its own focused region in the Compose
+  migration sample source set;
+- removed two resolved metadata and sample exception records representing 11 findings. The report
+  changed from 54 to 43 issues: missing metadata 37 to 36 and unclassified samples 17 to 7. Orphan
+  symbols remained zero, and taxonomy mismatches, duplicate owners, orphan documents, version
+  conflicts, stale generated output, unbaselined debt, and blocking violations remained zero;
+- exact-region verification initially rejected idiomatically indented function-body samples even
+  when the Markdown fence preserved the same relative source structure. The verifier was
+  hard-corrected to remove only common leading indentation on both sides, and its deterministic
+  regression fixture now proves that a nested compiled region matches an unindented fence;
+- the generated Reference retained 531 entries while its normalized catalog grew from 236,156 to
+  236,738 bytes, an increase of 582 bytes (`0.2464%`), for the migration ownership links;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,063,935 non-API
+  bytes, and left 114,279 bytes under the unchanged 46.9 MiB limit. This is 5,330 bytes (`0.0109%`)
+  above the onboarding slice and is `no material change`. Docusaurus completed in `33.0 s`; timing
+  remains `inconclusive` because cache and process state differed, while the absolute result remains
+  below the `120 s` limit;
+- Compose Migration sample compilation, exact bilingual region identity, Governance V2,
+  documentation structure, language and translation review, generated Reference freshness,
+  release intent, the verifier regression suite, and the complete bilingual site passed. Complete
+  single-worker `qaQuick` passed 2,342 actionable tasks in `19 min 44 s` (2,149 executed and 193
+  up-to-date). This is completeness evidence rather than a speed comparison because the quality
+  plugin correction invalidated publication documentation and broad module build outputs;
+- the overall conclusion is `improved`: the migration page now has exact capability and compiled
+  sample ownership, and normal Kotlin indentation no longer conflicts with exact documentation
+  verification. Release intent found zero release artifacts, zero ignored artifacts, and zero
+  shared-path classifications against `921967475ea70fc1c78d2073acc36e3286317cb4`. This slice changes
+  no public API or production runtime behavior and makes no new runtime, visual, power, or
+  performance claim. The next action is Effects architecture ownership.
 
 | Current area | Required target |
 | --- | --- |

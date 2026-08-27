@@ -22,6 +22,9 @@
   "document_owners": {
     "tutorial": ["tutorial.android-view"],
     "module": ["module.viewcompose-host-android"],
-    "migration": ["migration.compose-host-lifecycle-android-interop"]
+    "migration": [
+      "migration.compose-host-lifecycle-android-interop",
+      "migration.lazy-collection-revision-reuse"
+    ]
   }
 }

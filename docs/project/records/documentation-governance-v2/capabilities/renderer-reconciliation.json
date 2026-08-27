@@ -22,5 +22,8 @@
   ],
   "reference_owner": { "reference_id": "reference.renderer.reconciliation", "generated": true },
   "sample_owner": { "sample_id": "module.renderer-reconciliation" },
-  "document_owners": { "module": ["module.viewcompose-renderer-android"] }
+  "document_owners": {
+    "module": ["module.viewcompose-renderer-android"],
+    "migration": ["migration.lazy-collection-revision-reuse"]
+  }
 }

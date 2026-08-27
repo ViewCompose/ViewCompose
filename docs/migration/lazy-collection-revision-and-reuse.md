@@ -1,5 +1,32 @@
 ---
-title: Migrate lazy collection revisions and reuse
+schema_version: 2
+document_id: migration.lazy-collection-revision-reuse
+doc_type: migration
+owner:
+  kind: capability
+  id: lazy.collections
+version_lane: released
+capability_ids:
+  - lazy.collections
+  - host.android-view
+  - renderer.reconciliation
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-renderer-android
+sample_ids:
+  - migration.lazy-typed-revision
+  - migration.lazy-static-revision
+  - migration.lazy-pager-revision
+  - migration.lazy-named-item
+  - migration.lazy-snapshot
+  - migration.lazy-implicit-siblings
+  - migration.lazy-explicit-root
+  - migration.lazy-android-view-reuse
+  - migration.lazy-item-table
+source_state: The retired alpha contentToken, aggregate snapshotRevision, multi-root delayed holder, and coupled logical/physical reuse contracts.
+target_state: Explicit semantic content revisions, immutable snapshot identity, single-root delayed content, resettable Android Views, and separated logical Session and physical presentation ownership.
 ---
 
 # Migrate lazy collection revisions and reuse
@@ -17,6 +44,7 @@ Rename item and page `contentToken` arguments to `contentRevision`. The value is
 hint: equal key, content revision, and framework environment revision skip the item render
 completely. A changing ordinary Kotlin capture must therefore enter the revision.
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-typed-revision" sample_id="migration.lazy-typed-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 LazyColumn(
     items = messages,
@@ -38,6 +66,7 @@ revision from the key. Their `contentRevision` is required and non-null; `null` 
 sentinel. Use `StaticContentRevision` only when the declaration has no changing ordinary non-State
 input:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-static-revision" sample_id="migration.lazy-static-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 stickyHeader(
     key = "messages-header",
@@ -49,6 +78,7 @@ stickyHeader(
 
 Pager pages now expose all caller-owned snapshot fields:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-pager-revision" sample_id="migration.lazy-pager-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 Page(
     key = account.id,
@@ -75,6 +105,7 @@ old `contentType` as the revision and the old revision as the physical content t
 `item(key, contentRevision, contentType)` or `Page(key, contentRevision, contentType)`. Prefer named
 semantic arguments in maintained source:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-named-item" sample_id="migration.lazy-named-item" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 item(
     key = message.id,
@@ -105,6 +136,7 @@ Typed `LazyColumn`, `LazyRow`, `LazyVerticalGrid`, scoped `items`, and their `Sc
 wrappers do not accept a caller-owned aggregate snapshot revision. Remove `snapshotRevision` from
 calls that used the interim API:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-typed-revision" sample_id="migration.lazy-typed-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 LazyColumn(
     items = messages,
@@ -133,6 +165,7 @@ descriptors must recompile for this alpha hard cut.
 For a homogeneous top-level or `ScrollableScope` container, an application that already owns an
 immutable list submission may opt into the strongly typed whole-snapshot path:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-snapshot" sample_id="migration.lazy-snapshot" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 val lazyMessages = remember(messages) {
     messages.toLazyItemsSnapshot()
@@ -176,6 +209,7 @@ candidate is committed. Use `Spacer` when an entry intentionally has no visible 
 
 Replace implicit siblings:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-implicit-siblings" sample_id="migration.lazy-implicit-siblings" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 item(key = "account", contentRevision = account.version) {
     Text(account.name)
@@ -185,6 +219,7 @@ item(key = "account", contentRevision = account.version) {
 
 with an explicit layout owner:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-explicit-root" sample_id="migration.lazy-explicit-root" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 item(key = "account", contentRevision = account.version) {
     Column {
@@ -203,6 +238,7 @@ A lazy mounted tree containing `AndroidView` does not cross keys unless every in
 `onReset`. Use reset only for replay-safe configuration cleanup. Keep one-shot publication in
 `onCommit` and permanent resource cleanup in `onRelease`.
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-android-view-reuse" sample_id="migration.lazy-android-view-reuse" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 AndroidView(
     factory = { context -> PlayerView(context) },
@@ -241,6 +277,7 @@ shells. Omit `onReset` when a View cannot safely support this lifecycle.
 Direct NodeSpec producers must also migrate the alpha collection boundary from
 `List<LazyListItem>` to `LazyItemTable`:
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-item-table" sample_id="migration.lazy-item-table" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 LazyColumnNodeProps(
     contentPadding = LazyContentPadding.None,
