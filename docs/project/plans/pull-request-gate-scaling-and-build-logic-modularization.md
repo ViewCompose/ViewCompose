@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-28
-next_action: Merge the accepted module-documentation-sample no-shadow mode, record the first eligible hosted run for both accepted affected classes, and retain complete shadow comparison for production and unaccepted module changes.
+next_action: Record the first eligible hosted affected run for both accepted no-shadow classes, while retaining complete shadow comparison for production and unaccepted module changes.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -41,11 +41,11 @@ are in progress.
 
 Last verified: 2026-08-28.
 
-Next action: merge the evidence-backed no-shadow mode for the exact module-documentation/compiled-
-sample class, then record the first eligible hosted run for it and for the existing
-documentation/Tutorial-sample class. Production source, module build scripts, ordinary tests,
-code deletion/rename, Demo, integration, benchmark, shared-input, sensitive-tooling, and unknown-
-path classes retain the complete shadow or full fallback. Build-cache and
+Next action: record the first eligible hosted `affected` run for the exact module-documentation/
+compiled-sample class and for the existing documentation/Tutorial-sample class. Production source,
+module build scripts, ordinary tests, code deletion/rename, Demo, integration, benchmark, shared-
+input, sensitive-tooling, and unknown-path classes retain the complete shadow or full fallback.
+Build-cache and
 configuration-cache probes are complete but neither option is enabled; adoption requires evidence
 beyond the accepted local samples. The Phase 0 task-graph fixtures remain the immutable
 pre-extraction comparator rather than being rewritten for later intentional gates.
@@ -909,6 +909,18 @@ the preceding `28.6 s`, but cache and process state differ, so timing is **incon
 intent again detected zero release artifacts, ignored artifacts, or shared publication paths; the
 repository-only classifier change adds no Maven Changeset. Hosted correctness and actual
 no-shadow latency remain the next acceptance evidence.
+
+Pull request #218 merged the second hard cut as `841b3c7e`. Because the pull request changed the
+classifier itself, planning correctly chose `complete`, skipped the affected candidate, and ran all
+2,342-task verification rather than allowing the new class to self-certify. Full `qaQuick` passed
+in `17 min 52 s`, Preview in `7 min 20 s`, and documentation in `6 min 27 s`; every stable required
+facade passed. Relative to rollout #215, `qaQuick` improved `7.2%`, Preview improved `7.2%`, and
+documentation regressed `23.2%`, but these are single samples with different cache and process
+state, so latency is **inconclusive**. Correctness is **no material change**, with the intended
+fail-closed complete path preserved. This closes implementation and hosted full-fallback validation
+of the second cut; it does not count as a real `affected` observation. The first naturally eligible
+pull request in each accepted no-shadow class remains the next evidence, while all broader module
+classes retain their shadow.
 
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
