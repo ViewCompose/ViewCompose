@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "capability_id": "foundation.environment",
+  "kind": "dsl",
+  "owner": { "kind": "module", "id": "viewcompose-ui-foundation" },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAnimationCoroutineContext", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/AnimationCoroutineContextLocal.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.DesignSystemAttributionProvider", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/DesignSystemDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.UiEnvironment", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/Environment.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideMonotonicFrameClock", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/MonotonicFrameClockLocal.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocal", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/UiLocals.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocals", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/UiLocals.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSaveableStateRegistry", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/SaveableStateRegistryLocal.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.foundation.environment", "generated": true },
+  "sample_owner": { "sample_id": "module.ui-foundation-environment" },
+  "document_owners": {
+    "module": ["module.viewcompose-ui-foundation"]
+  }
+}

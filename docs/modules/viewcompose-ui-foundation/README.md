@@ -1,3 +1,32 @@
+---
+schema_version: 2
+document_id: module.viewcompose-ui-foundation
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-ui-foundation
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.node-timing
+  - diagnostics.session-inspection
+  - foundation.components
+  - foundation.environment
+  - image.foundation
+  - lazy.collections
+  - overlay.foundation
+  - text.input
+  - theme.foundation
+artifact_ids:
+  - viewcompose-ui-foundation
+sample_ids:
+  - module.ui-foundation-dependency
+  - module.ui-foundation-profile-summary
+  - module.ui-foundation-environment
+coordinate: com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01
+minimal_usage_sample_id: module.ui-foundation-dependency
+---
+
 # UI Foundation
 
 `viewcompose-ui-foundation` is the Android-facing declarative UI layer of ViewCompose. It provides
@@ -17,6 +46,7 @@ modules.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-foundation-module-dependency" sample_id="module.ui-foundation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01")
@@ -37,6 +67,7 @@ dependencies {
 
 ## Minimal component usage
 
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt" region="ui-foundation-profile-summary" sample_id="module.ui-foundation-profile-summary" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
 ```kotlin
 fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
     UiTheme {
@@ -51,6 +82,21 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 `UiTreeBuilder` records immutable VNodes. `UiTheme` provides a complete token snapshot and every
 emitted node captures the active theme, density, locale, layout direction, and other locals needed
 by a later renderer or child render session.
+
+## Environment and local scopes
+
+Use `UiEnvironment` for one complete platform-neutral environment snapshot and `ProvideLocal` or
+`ProvideLocals` for application-owned scoped values. Read a Local synchronously while declaring
+content; effect callbacks capture the resolved value rather than reading a provider stack later.
+
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt" region="ui-foundation-environment" sample_id="module.ui-foundation-environment" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
+```kotlin
+UiEnvironment {
+    ProvideLocal(AccountRole, "admin") {
+        Text(UiLocals.current(AccountRole))
+    }
+}
+```
 
 ## Principal APIs
 

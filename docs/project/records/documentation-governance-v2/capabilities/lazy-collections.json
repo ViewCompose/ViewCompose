@@ -11,11 +11,14 @@
     { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyVerticalGrid", "kind": "overload-set", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/CollectionWidgetsDsl.kt" },
     { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.HorizontalPager", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/CollectionWidgetsDsl.kt" },
     { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.VerticalPager", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/CollectionWidgetsDsl.kt" },
-    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.TabRow", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/CollectionWidgetsDsl.kt" }
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.TabRow", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/CollectionWidgetsDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTabRowOverrides", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/defaults/collection/TabRowOverrides.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.lazyItemContentFactory", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/LazyItemContentFactory.kt" }
   ],
   "reference_owner": { "reference_id": "reference.lazy.collections", "generated": true },
   "sample_owner": { "sample_id": "guide.lazy-collections-state" },
   "document_owners": {
+    "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.lazy-lists", "tutorial.lazy-list-performance"],
     "guide": ["guide.lazy-collections"],
     "architecture": ["architecture.lazy-collections-runtime"]

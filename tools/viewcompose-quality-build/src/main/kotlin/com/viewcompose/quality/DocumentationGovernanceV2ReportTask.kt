@@ -732,8 +732,7 @@ internal object DocumentationGovernanceV2Reporter {
                         linkedMapOf<String, Any?>(
                             "documentId" to documentId,
                             "documentType" to documentType,
-                            "path" to document?.get("path")?.toString()?.removePrefix("docs/")
-                                ?.removeSuffix(".md")?.removeSuffix(".mdx")?.let { path -> "/$path" },
+                            "path" to document?.referenceRoute(),
                         )
                     }
                 }
@@ -1140,6 +1139,7 @@ internal object DocumentationGovernanceV2Reporter {
                 "schemaVersion" to schemaVersion,
                 "documentId" to metadata["document_id"],
                 "docType" to metadata["doc_type"],
+                "slug" to metadata["slug"],
                 "versionLane" to metadata["version_lane"],
                 "capabilityIds" to metadata.stringList("capability_ids"),
                 "artifactIds" to metadata.stringList("artifact_ids"),
@@ -1150,6 +1150,19 @@ internal object DocumentationGovernanceV2Reporter {
             )
         }
         .sortedBy { document -> document.getValue("path").toString() }
+
+    private fun Map<String, Any?>.referenceRoute(): String? {
+        val declaredSlug = this["slug"]?.toString()?.takeIf { slug -> slug.startsWith('/') }
+        if (declaredSlug != null) return declaredSlug
+
+        val sourcePath = this["path"]?.toString() ?: return null
+        val route = sourcePath.removePrefix("docs/")
+            .removeSuffix(".md")
+            .removeSuffix(".mdx")
+            .removeSuffix("/README")
+            .removeSuffix("/index")
+        return "/$route"
+    }
 
     private fun discoverExecutableFences(
         repository: File,
