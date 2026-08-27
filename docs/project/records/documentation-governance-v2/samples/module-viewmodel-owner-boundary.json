@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.viewmodel-owner-boundary",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "viewmodel.owner-boundaries",
+  "document_ids": ["module.viewcompose-viewmodel-androidx"],
+  "version_lane": "released",
+  "source": "viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt",
+  "region": "viewmodel-owner-boundary",
+  "build_target": ":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin"
+}

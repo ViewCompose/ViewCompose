@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register ViewModel AndroidX owner, store resolution, and saved-state documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-viewmodel-androidx",
+      "reason": "Only test-only compiled documentation fixtures gain exact source-region comments and one declaration is reordered within test source; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

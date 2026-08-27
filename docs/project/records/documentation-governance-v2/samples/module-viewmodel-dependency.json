@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.viewmodel-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "viewmodel.owner-boundaries",
+  "document_ids": ["module.viewcompose-viewmodel-androidx"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "viewmodel-androidx-module-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

@@ -1,3 +1,26 @@
+---
+schema_version: 2
+document_id: module.viewcompose-viewmodel-androidx
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-viewmodel-androidx
+version_lane: released
+capability_ids:
+  - viewmodel.owner-boundaries
+  - viewmodel.store-resolution
+  - viewmodel.saved-state
+artifact_ids:
+  - viewcompose-viewmodel-androidx
+sample_ids:
+  - module.viewmodel-dependency
+  - module.viewmodel-owner-boundary
+  - module.viewmodel-resolution
+  - module.viewmodel-saved-state
+coordinate: com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha01
+minimal_usage_sample_id: module.viewmodel-dependency
+---
+
 # AndroidX ViewModel Integration
 
 `viewcompose-viewmodel-androidx` connects ViewCompose composition scopes to AndroidX `ViewModelStoreOwner`,
@@ -7,6 +30,7 @@ ownership rather than always expanding to the Activity.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="viewmodel-androidx-module-dependency" sample_id="module.viewmodel-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha01")
@@ -37,14 +61,46 @@ store; the component that created it must clear at the intended terminal lifecyc
 Delayed child sessions capture this local with their declaration context, avoiding accidental
 fallback to a different Activity owner when overlay or retained navigation content renders later.
 
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-owner-boundary" sample_id="module.viewmodel-owner-boundary" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+/** Installs a custom store owner for a nested subtree. */
+fun UiTreeBuilder.provideViewModelStoreOwnerSample(
+    owner: ViewModelStoreOwner,
+): ProfileViewModel {
+    lateinit var model: ProfileViewModel
+    ProvideViewModelStoreOwner(owner) {
+        model = viewModel()
+    }
+    return model
+}
+```
+
 ## Resolving a ViewModel
 
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-resolution" sample_id="module.viewmodel-resolution" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
 class ProfileViewModel : ViewModel()
 
-fun UiTreeBuilder.ProfilePage() {
-    val model = viewModel<ProfileViewModel>()
-    // Render observable model state.
+/** Resolves one instance from the owner installed by the current Android host. */
+fun UiTreeBuilder.viewModelSample(): ProfileViewModel {
+    return viewModel()
+}
+
+/** Keeps two instances of the same class in one store under stable application keys. */
+fun UiTreeBuilder.keyedViewModelSample(
+    owner: ViewModelStoreOwner,
+): Pair<ProfileViewModel, ProfileViewModel> {
+    val primary = viewModel(
+        modelClass = ProfileViewModel::class,
+        key = "primary-profile",
+        owner = owner,
+    )
+    val comparison = viewModel(
+        modelClass = ProfileViewModel::class,
+        key = "comparison-profile",
+        owner = owner,
+    )
+    return primary to comparison
 }
 ```
 
@@ -64,12 +120,8 @@ cleared.
 ## Keys and lookup identity
 
 A null or blank key selects the default identity derived from the ViewModel class. Supply a stable,
-nonblank key to keep multiple instances of the same type in one owner:
-
-```kotlin
-val primary = viewModel<ProfileViewModel>(key = "primary")
-val comparison = viewModel<ProfileViewModel>(key = "comparison")
-```
+nonblank key to keep multiple instances of the same type in one owner, as shown by the compiled
+`keyedViewModelSample` above.
 
 Owner, key, factory, extras, and model class form the composition's provider-lookup identity. When
 one changes, ViewCompose performs a fresh provider lookup. That does not force recreation: if the new
@@ -93,10 +145,11 @@ recoverable creation failures explicitly at the host boundary rather than return
 
 ## SavedStateHandle convenience
 
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-saved-state" sample_id="module.viewmodel-saved-state" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-fun UiTreeBuilder.Filters() {
-    val handle = savedStateHandle(key = "filters")
-    // Read and write values supported by AndroidX SavedStateHandle.
+/** Resolves an independent saved-state namespace under a stable key. */
+fun UiTreeBuilder.savedStateHandleSample(): SavedStateHandle {
+    return savedStateHandle(key = "profile-filters")
 }
 ```
 

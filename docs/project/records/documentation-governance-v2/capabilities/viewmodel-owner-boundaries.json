@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "capability_id": "viewmodel.owner-boundaries",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-viewmodel-androidx" },
+  "artifact": "viewcompose-viewmodel-androidx",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.viewmodel.LocalViewModelStoreOwner", "kind": "type", "visibility": "public", "source": "viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/ViewModelLocals.kt" },
+    { "symbol_id": "com.viewcompose.viewmodel.UiTreeBuilder.ProvideViewModelStoreOwner", "kind": "extension", "visibility": "public", "source": "viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/ViewModelLocals.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.viewmodel.owner-boundaries", "generated": true },
+  "sample_owner": { "sample_id": "module.viewmodel-owner-boundary" },
+  "document_owners": {
+    "architecture": ["architecture.navigation-runtime"],
+    "module": ["module.viewcompose-viewmodel-androidx", "module.viewcompose-android"],
+    "migration": ["migration.compose-host-lifecycle-android-interop"]
+  }
+}

@@ -12,6 +12,9 @@ capability_ids:
   - lifecycle.owner-boundaries
   - lifecycle.flow-collection
   - lifecycle.android-view
+  - viewmodel.owner-boundaries
+  - viewmodel.store-resolution
+  - viewmodel.saved-state
 artifact_ids:
   - viewcompose-android
   - viewcompose-host-android

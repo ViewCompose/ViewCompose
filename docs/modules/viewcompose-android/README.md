@@ -10,6 +10,7 @@ capability_ids:
   - host.android-container
   - host.android-resources
   - lifecycle.owner-boundaries
+  - viewmodel.owner-boundaries
 artifact_ids:
   - viewcompose-android
 sample_ids:

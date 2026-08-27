@@ -8,6 +8,9 @@ import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
+// DOCS_REGION_START(viewmodel-resolution)
+class ProfileViewModel : ViewModel()
+
 /** Resolves one instance from the owner installed by the current Android host. */
 fun UiTreeBuilder.viewModelSample(): ProfileViewModel {
     return viewModel()
@@ -29,7 +32,9 @@ fun UiTreeBuilder.keyedViewModelSample(
     )
     return primary to comparison
 }
+// DOCS_REGION_END(viewmodel-resolution)
 
+// DOCS_REGION_START(viewmodel-owner-boundary)
 /** Installs a custom store owner for a nested subtree. */
 fun UiTreeBuilder.provideViewModelStoreOwnerSample(
     owner: ViewModelStoreOwner,
@@ -40,10 +45,11 @@ fun UiTreeBuilder.provideViewModelStoreOwnerSample(
     }
     return model
 }
+// DOCS_REGION_END(viewmodel-owner-boundary)
 
+// DOCS_REGION_START(viewmodel-saved-state)
 /** Resolves an independent saved-state namespace under a stable key. */
 fun UiTreeBuilder.savedStateHandleSample(): SavedStateHandle {
     return savedStateHandle(key = "profile-filters")
 }
-
-class ProfileViewModel : ViewModel()
+// DOCS_REGION_END(viewmodel-saved-state)

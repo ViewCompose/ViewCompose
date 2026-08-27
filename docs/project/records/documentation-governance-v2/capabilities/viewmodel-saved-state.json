@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "capability_id": "viewmodel.saved-state",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-viewmodel-androidx" },
+  "artifact": "viewcompose-viewmodel-androidx",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.viewmodel.SavedStateHandleHolderViewModel", "kind": "type", "visibility": "public", "source": "viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/SavedStateHandleComposition.kt" },
+    { "symbol_id": "com.viewcompose.viewmodel.savedStateHandle", "kind": "function", "visibility": "public", "source": "viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/SavedStateHandleComposition.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.viewmodel.saved-state", "generated": true },
+  "sample_owner": { "sample_id": "module.viewmodel-saved-state" },
+  "document_owners": {
+    "architecture": ["architecture.navigation-runtime"],
+    "module": ["module.viewcompose-viewmodel-androidx"],
+    "migration": ["migration.compose-host-lifecycle-android-interop"]
+  }
+}

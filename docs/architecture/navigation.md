@@ -8,6 +8,9 @@ owner:
 version_lane: released
 capability_ids:
   - navigation.host
+  - viewmodel.owner-boundaries
+  - viewmodel.store-resolution
+  - viewmodel.saved-state
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
