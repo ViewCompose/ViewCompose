@@ -13,5 +13,11 @@
   ],
   "reference_owner": { "reference_id": "reference.modifier.interaction", "generated": true },
   "sample_owner": { "sample_id": "architecture.modifier-interaction" },
-  "document_owners": { "architecture": ["architecture.modifier-runtime"] }
+  "document_owners": {
+    "architecture": ["architecture.modifier-runtime"],
+    "migration": [
+      "migration.compose-layout-modifier-environment",
+      "migration.dsl-contract-convergence"
+    ]
+  }
 }

@@ -1,3 +1,26 @@
+---
+schema_version: 2
+document_id: migration.compose-state-recomposition-restoration
+doc_type: migration
+owner:
+  kind: capability
+  id: runtime.state
+version_lane: released
+capability_ids:
+  - runtime.state
+  - foundation.effects
+artifact_ids:
+  - viewcompose-runtime
+  - viewcompose-ui-foundation
+  - viewcompose-android
+  - viewcompose-host-android
+  - viewcompose-lifecycle-androidx
+  - viewcompose-viewmodel-androidx
+sample_ids: []
+source_state: Jetpack Compose Runtime, UI, and Foundation 1.12.0 state, composition, effect, and saveable-state semantics.
+target_state: ViewCompose Runtime 0.1.0-alpha03 and current UI Foundation and Android ownership contracts.
+---
+
 # Migrate Compose state, recomposition, and restoration
 
 This page compares the state and composition semantics of Jetpack Compose with ViewCompose and
@@ -5,7 +28,7 @@ defines a migration path from a Compose-owned UI to a ViewCompose-owned Android 
 an engineering comparison, not a source-compatibility promise: similarly named APIs do not imply
 identical compiler, invalidation, identity, or restoration behavior.
 
-Last verified: **2026-08-16**
+Last verified: **2026-08-27**
 
 Re-verification owner: **maintainers of `viewcompose-runtime`, `viewcompose-ui-foundation`,
 `viewcompose-android`, and the AndroidX lifecycle integrations**
@@ -16,7 +39,7 @@ The supported comparison target is the following independently versioned ViewCom
 
 | Artifact | Version | Role in this page |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha02` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
+| `viewcompose-runtime` | `0.1.0-alpha03` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
 | `viewcompose-ui-foundation` | `0.1.0-alpha01` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
 | `viewcompose-android` | `0.1.0-alpha01` | Activity/Fragment entry points and default Android owner installation |
 | `viewcompose-host-android` | `0.1.0-alpha04` | Low-level custom-container hosting and Android SavedState bridge |
@@ -25,7 +48,7 @@ The supported comparison target is the following independently versioned ViewCom
 
 The upstream stable semantic baseline is:
 
-- Compose Runtime, UI, and Foundation `1.11.4`;
+- Compose Runtime, UI, and Foundation `1.12.0`;
 - Activity `1.13.0`;
 - Lifecycle `2.11.0`;
 - SavedState `1.5.0`.
@@ -36,9 +59,12 @@ The upstream versions and release status were checked against the official
 [Activity](https://developer.android.com/jetpack/androidx/releases/activity),
 [Lifecycle](https://developer.android.com/jetpack/androidx/releases/lifecycle), and
 [SavedState](https://developer.android.com/jetpack/androidx/releases/savedstate) release notes.
-Compose `1.11.3` and `1.11.4` do not list a state, snapshot, remember, effect, or saveable-state
-change that alters this matrix. Lifecycle `2.11.0` adds Compose-scoped ViewModel ownership APIs;
-that addition affects ownership choices but does not make the two composition runtimes equivalent.
+Compose `1.12.0` adds keyed `SideEffect` overloads and continues the experimental `LinkTable`
+work. ViewCompose already exposes keyed `SideEffect` overloads, but its explicit positional DSL,
+transactional commit boundary, and runtime remain intentionally independent. Neither upstream
+change alters the capability labels in this page. Lifecycle `2.11.0` adds Compose-scoped ViewModel
+ownership APIs; that addition affects ownership choices but does not make the two composition
+runtimes equivalent.
 
 The repository's executable comparison fixtures intentionally remain on an older set:
 
@@ -52,10 +78,10 @@ The repository's executable comparison fixtures intentionally remain on an older
 These versions are recorded in `gradle/libs.versions.toml`. Consequently, this page uses two
 different evidence classes:
 
-1. **Official semantic evidence** describes the Compose `1.11.4` and AndroidX baseline and links
+1. **Official semantic evidence** describes the Compose `1.12.0` and AndroidX baseline and links
    only to Android's official documentation or API reference.
 2. **Repository execution evidence** describes current ViewCompose source, tests, and compiled
-   samples. It does not prove Compose `1.11.4` behavior because the local comparison dependency is
+   samples. It does not prove Compose `1.12.0` behavior because the local comparison dependency is
    `1.7.8`.
 
 Capability labels have fixed meanings:
@@ -403,7 +429,7 @@ ViewCompose is **Partially supported**:
 - automatic keys combine the structural group path, positional saveable slot, and active explicit
   key hash;
 - `Saver`, `autoSaver`, `listSaver`, `mapSaver`, and `mutableStateSaver` are available;
-- ViewCompose still accepts a user-provided string key, while Compose `1.11.4` marks custom
+- ViewCompose still accepts a user-provided string key, while Compose `1.12.0` marks custom
   `rememberSaveable` keys unsupported in favor of positional scoping;
 - explicit keys must be nonblank and unique among active providers in one registry.
 
@@ -550,7 +576,7 @@ Known risks requiring new executable evidence before stronger documentation clai
 
 - equal-result and nested `derivedStateOf` invalidation behavior;
 - mutable snapshot creation under a read-only snapshot;
-- direct semantic comparison tests against the official Compose `1.11.4` baseline rather than the
+- direct semantic comparison tests against the official Compose `1.12.0` baseline rather than the
   repository's older `1.7.8` fixture.
 
 ## Verification baseline and re-verification owner

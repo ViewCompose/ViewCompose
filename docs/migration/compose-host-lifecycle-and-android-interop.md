@@ -24,7 +24,7 @@ artifact_ids:
 sample_ids:
   - migration.compose-host
   - migration.viewcompose-host
-source_state: Jetpack Compose UI and Runtime 1.11.4 host, lifecycle, state-owner, and Android View interop semantics.
+source_state: Jetpack Compose UI and Runtime 1.12.0 host, lifecycle, state-owner, and Android View interop semantics.
 target_state: ViewCompose Android 0.1.0-alpha01 and Host Android 0.1.0-alpha04 ownership and interop contracts.
 ---
 
@@ -34,12 +34,12 @@ This page maps Android host, lifecycle, state-owner, and Android View interop be
 Compose to ViewCompose. It is an engineering comparison, not a claim that similarly named APIs
 have identical semantics.
 
-- **Source state:** Jetpack Compose UI and Runtime 1.11.4, Activity 1.13.0, Lifecycle 2.11.0,
+- **Source state:** Jetpack Compose UI and Runtime 1.12.0, Activity 1.13.0, Lifecycle 2.11.0,
   and SavedState 1.5.0.
 - **Target state:** `viewcompose-android`, `viewcompose-lifecycle-androidx`,
   `viewcompose-viewmodel-androidx`, and `viewcompose-renderer-android` 0.1.0-alpha01, plus the
   low-level `viewcompose-host-android` 0.1.0-alpha04 engine.
-- **Last verified:** 2026-08-24.
+- **Last verified:** 2026-08-27.
 - **Re-verification owner:** maintainers of `viewcompose-android`, `viewcompose-host-android`,
   `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx`, and
   `viewcompose-renderer-android`.
@@ -59,7 +59,7 @@ release notes:
 
 The local executable baseline is Compose 1.7.8, Activity 1.12.4, Lifecycle 2.8.7, and Kotlin
 2.0.21. Repository tests and compiled samples cited below verify ViewCompose behavior against that
-dependency set. They do not constitute execution of upstream Compose 1.11.4, Activity 1.13.0, or
+dependency set. They do not constitute execution of upstream Compose 1.12.0, Activity 1.13.0, or
 Lifecycle 2.11.0. Re-verification must therefore repeat both the official semantic review and the
 local test run when either baseline changes.
 

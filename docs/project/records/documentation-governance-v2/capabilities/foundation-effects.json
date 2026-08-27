@@ -86,6 +86,9 @@
     ],
     "module": [
       "module.viewcompose-ui-foundation"
+    ],
+    "migration": [
+      "migration.compose-state-recomposition-restoration"
     ]
   }
 }

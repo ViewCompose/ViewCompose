@@ -1,5 +1,25 @@
 ---
 title: Migrate converged DSL contracts
+schema_version: 2
+document_id: migration.dsl-contract-convergence
+doc_type: migration
+owner:
+  kind: capability
+  id: foundation.components
+version_lane: released
+capability_ids:
+  - foundation.components
+  - modifier.interaction
+  - text.input
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-animation
+  - viewcompose-renderer-android
+sample_ids: []
+source_state: Removed alpha component aliases, Android-shaped interaction fields, replaceable input wrappers, and alpha-only AnimatedContent naming.
+target_state: Released variant, indication, typed TextField profile, and explicit Crossfade contracts.
 ---
 
 # Migrate converged DSL contracts

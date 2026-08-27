@@ -19,5 +19,8 @@
   ],
   "reference_owner": { "reference_id": "reference.modifier.appearance", "generated": true },
   "sample_owner": { "sample_id": "architecture.modifier-appearance" },
-  "document_owners": { "architecture": ["architecture.modifier-runtime"] }
+  "document_owners": {
+    "architecture": ["architecture.modifier-runtime"],
+    "migration": ["migration.compose-layout-modifier-environment"]
+  }
 }

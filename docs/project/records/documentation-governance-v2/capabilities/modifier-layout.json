@@ -33,6 +33,7 @@
   "sample_owner": { "sample_id": "tutorial.layouts-and-modifiers" },
   "document_owners": {
     "tutorial": ["tutorial.layouts-and-modifiers"],
-    "architecture": ["architecture.modifier-runtime"]
+    "architecture": ["architecture.modifier-runtime"],
+    "migration": ["migration.compose-layout-modifier-environment"]
   }
 }

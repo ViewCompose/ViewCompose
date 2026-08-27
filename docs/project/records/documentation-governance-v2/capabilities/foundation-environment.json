@@ -17,6 +17,7 @@
   "reference_owner": { "reference_id": "reference.foundation.environment", "generated": true },
   "sample_owner": { "sample_id": "module.ui-foundation-environment" },
   "document_owners": {
-    "module": ["module.viewcompose-ui-foundation"]
+    "module": ["module.viewcompose-ui-foundation"],
+    "migration": ["migration.compose-layout-modifier-environment"]
   }
 }

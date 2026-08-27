@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the documentation entry-point metadata slice, then reconcile and hard-cut the migration overview and remaining migration-page metadata.
+next_action: Merge the migration semantic-reconciliation slice, then govern and reconcile the five remaining active Architecture pages before the ADR metadata batch.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -1780,6 +1780,54 @@ Accepted documentation entry-point metadata slice on 2026-08-27:
   `83d8f66ceb1e4c813f81a7ca82d5ead93c3434e4`. This slice changes no publication input, public API,
   or production runtime behavior and makes no new runtime, visual, power, or performance claim.
   The next action is migration-overview semantic reconciliation and remaining migration metadata.
+
+Accepted Migration semantic-reconciliation and metadata slice on 2026-08-27:
+
+- assigned stable released-lane contracts to the Compose migration overview and the remaining
+  layout/environment, navigation, state/restoration, and converged-DSL migration pages. Existing
+  capability records now point back to every new migration owner; the overview remains a
+  project-owned router rather than claiming ownership of all linked application capabilities;
+- hard-cut stale release baselines to the immutable current ViewCompose versions: Runtime
+  `0.1.0-alpha03`, UI Contract `0.1.0-alpha04`, Host Android `0.1.0-alpha04`, and Navigation Core
+  `0.1.0-alpha03`. Official stable upstream review moved Compose Runtime/UI/Foundation to `1.12.0`
+  and Navigation3 to `1.1.5`; Activity `1.13.0`, Lifecycle `2.11.0`, SavedState `1.5.0`, and
+  Navigation 2 `2.9.8` remain current;
+- corrected the migration overview's stale animation classification. Physical spring,
+  `Animatable`, decay, generic and seekable transitions, bounds, and one-window navigation shared
+  motion are released and supported with the differences documented by the Animation migration
+  owner. Timeline inspection remains partially supported because selected capture and
+  Preview-owned seeking exist while continuous profiling and remote live-application seeking do
+  not. No planned capability was promoted without released source and executable evidence;
+- re-reviewed Compose `1.12.0` state semantics. Its keyed `SideEffect` overloads and experimental
+  `LinkTable` work do not change this page's capability labels: ViewCompose already has keyed
+  `SideEffect`, but preserves its independent explicit positional DSL and transactional commit
+  boundary. Navigation3 `1.1.5` instance-key registration precedence is recorded as an upstream
+  distinction rather than implied ViewCompose parity;
+- removed five resolved metadata exceptions. The Governance V2 report changed from 30 to 25
+  issues, all remaining findings are exact missing-metadata debt. All 531 discovered entries remain
+  owned; unclassified samples, orphan symbols, taxonomy mismatches, duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remain zero;
+- regenerated the Capability Reference from the reciprocal ownership records. It retains 531
+  entries and grows from 237,828 to 240,354 bytes, a 2,526-byte (`1.0621%`) metadata-only increase;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,120,097 non-API
+  bytes, and left 58,117 bytes under the unchanged 46.9 MiB limit. This is 25,224 bytes (`0.0514%`)
+  above the entry-point slice and is `no material change`. Docusaurus completed in `33.6 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit. The first build exposed one translated automatic-anchor mismatch;
+  an explicit stable Chinese anchor was added and the repeated complete build passed;
+- Governance V2, documentation structure, language and translation review, generated Reference
+  freshness, migration paired-sample compilation, release intent, and the complete bilingual site
+  passed. Complete single-worker `qaQuick` passed 2,342 actionable tasks in `37 s` (180 executed and
+  2,162 up-to-date); this is completeness evidence rather than a speed comparison because it reused
+  previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: version and capability claims now agree across the
+  overview, detailed migration owners, published artifacts, and official stable upstream release
+  notes. Release intent found zero release artifacts, zero ignored artifacts, and zero shared-path
+  classifications against `d74141db732e1651766745dd611c963340c2fea6`. This documentation-only
+  slice changes no publication input, public API, or production runtime behavior and makes no new
+  visual, power, or performance claim. The next action is the five remaining active Architecture
+  pages before the ADR metadata batch.
 
 | Current area | Required target |
 | --- | --- |

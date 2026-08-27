@@ -34,6 +34,7 @@
     "tutorial": ["tutorial.navigation"],
     "guide": ["guide.navigation-production-host"],
     "architecture": ["architecture.navigation-runtime"],
-    "module": ["module.viewcompose-navigation-core", "module.viewcompose-navigation-android"]
+    "module": ["module.viewcompose-navigation-core", "module.viewcompose-navigation-android"],
+    "migration": ["migration.compose-navigation"]
   }
 }

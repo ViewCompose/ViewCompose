@@ -155,7 +155,7 @@ Navigation 所有。ViewCompose 暴露归一化 Fraction，而不是公开纳秒
 Predictive Progress 结束后还必须显式选择 `animateTo` 或 `snapTo`，不会反向修改 Navigation
 Transaction。
 
-## Layout 与共享运动映射
+## Layout 与共享运动映射 {/* #layout-and-shared-motion-mapping */}
 
 Phase 5 Bounds 动画使用完成 RTL 解析后的直接 ViewCompose Layout Parent 物理像素坐标系。
 Renderer 会真正 Layout 当前动画矩形，使 Drawing、Hit Test 与 Accessibility Bounds 一致；

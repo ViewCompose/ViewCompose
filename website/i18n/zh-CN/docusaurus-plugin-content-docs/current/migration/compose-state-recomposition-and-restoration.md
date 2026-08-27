@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: ebb0a0f215f9403826eec443be0765fc2aaf5bbb2dc5f8122973082e8890a119
+translation_source_hash: 4772dffd8642ec6a1bd28b259cd53047ea9a07d9d458d2ed3deffe485a3207b2
 translation_status: current
 ---
 
@@ -10,7 +10,7 @@ translation_status: current
 迁移到 ViewCompose 所有的 Android `View` 树的路径。这是一份工程对比，而不是源码兼容承诺：
 API 名称相似，并不表示编译器、失效、Identity 或恢复行为完全相同。
 
-最后验证日期：**2026-08-16**
+最后验证日期：**2026-08-27**
 
 重新验证负责人：**`viewcompose-runtime`、`viewcompose-ui-foundation`、
 `viewcompose-android` 与 AndroidX lifecycle 集成的维护者**
@@ -21,7 +21,7 @@ API 名称相似，并不表示编译器、失效、Identity 或恢复行为完�
 
 | 产物 | 版本 | 在本页中的职责 |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha02` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
+| `viewcompose-runtime` | `0.1.0-alpha03` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
 | `viewcompose-ui-foundation` | `0.1.0-alpha01` | `remember`、`key`、Effect、`Saver` 及 `rememberSaveable` |
 | `viewcompose-android` | `0.1.0-alpha01` | Activity/Fragment 入口与默认 Android Owner 安装 |
 | `viewcompose-host-android` | `0.1.0-alpha04` | 底层自定义容器宿主与 Android SavedState 桥接 |
@@ -30,7 +30,7 @@ API 名称相似，并不表示编译器、失效、Identity 或恢复行为完�
 
 上游稳定语义基线为：
 
-- Compose Runtime、UI 和 Foundation `1.11.4`；
+- Compose Runtime、UI 和 Foundation `1.12.0`；
 - Activity `1.13.0`；
 - Lifecycle `2.11.0`；
 - SavedState `1.5.0`。
@@ -41,9 +41,11 @@ API 名称相似，并不表示编译器、失效、Identity 或恢复行为完�
 [Activity](https://developer.android.com/jetpack/androidx/releases/activity)、
 [Lifecycle](https://developer.android.com/jetpack/androidx/releases/lifecycle) 和
 [SavedState](https://developer.android.com/jetpack/androidx/releases/savedstate) 发布说明核对。
-Compose `1.11.3` 与 `1.11.4` 的发布说明没有列出会改变本矩阵的状态、快照、remember、Effect
-或可保存状态变更。Lifecycle `2.11.0` 新增 Compose Scope 的 ViewModel Ownership API；该新增
-能力会影响 Ownership 选择，但不会使两个组合 Runtime 等价。
+Compose `1.12.0` 新增带 Key 的 `SideEffect` 重载，并继续推进实验性 `LinkTable`。
+ViewCompose 已提供带 Key 的 `SideEffect` 重载，但其显式位置 DSL、事务提交边界和 Runtime
+仍然独立设计。这两项上游变化都不会改变本文的能力标签。Lifecycle `2.11.0` 新增 Compose
+Scope 的 ViewModel Ownership API；该新增能力会影响 Ownership 选择，但不会使两个组合
+Runtime 等价。
 
 仓库中的可执行对比 Fixture 有意保留在一组较旧版本上：
 
@@ -58,10 +60,10 @@ Compose `1.11.3` 与 `1.11.4` 的发布说明没有列出会改变本矩阵的�
 [`gradle/libs.versions.toml`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/libs.versions.toml)
 中。因此，本页使用两类不同证据：
 
-1. **官方语义证据**描述 Compose `1.11.4` 与 AndroidX 基线，并且只链接到 Android 官方文档
+1. **官方语义证据**描述 Compose `1.12.0` 与 AndroidX 基线，并且只链接到 Android 官方文档
    或 API 参考。
 2. **仓库执行证据**描述当前 ViewCompose 源码、测试与已编译示例。因为本地对比依赖版本为
-   `1.7.8`，这些证据不能证明 Compose `1.11.4` 的行为。
+   `1.7.8`，这些证据不能证明 Compose `1.12.0` 的行为。
 
 能力状态具有固定含义：
 
@@ -366,7 +368,7 @@ ViewCompose 为**部分支持（Partially supported）**：
 - Input 会重置 Holder，但不会存入其 Saved Representation；
 - 自动 Key 由结构 Group Path、位置 Saveable Slot 及活跃显式 Key Hash 组合；
 - 提供 `Saver`、`autoSaver`、`listSaver`、`mapSaver` 和 `mutableStateSaver`；
-- ViewCompose 仍接受用户提供的字符串 Key，而 Compose `1.11.4` 已把自定义
+- ViewCompose 仍接受用户提供的字符串 Key，而 Compose `1.12.0` 已把自定义
   `rememberSaveable` Key 标为不支持，改用位置 Scope；
 - 显式 Key 不得为空白，并且在同一 Registry 的活跃 Provider 中必须唯一。
 
@@ -493,7 +495,7 @@ SavedState 服务。与 Compose 相同，ViewCompose 不承诺在用户 Force St
 
 - 相等结果及嵌套 `derivedStateOf` 的失效行为；
 - 在只读快照中创建可变快照；
-- 直接针对官方 Compose `1.11.4` 基线的语义对比测试，而不是仓库中较旧的 `1.7.8` Fixture。
+- 直接针对官方 Compose `1.12.0` 基线的语义对比测试，而不是仓库中较旧的 `1.7.8` Fixture。
 
 ## 验证基线与重新验证负责人
 

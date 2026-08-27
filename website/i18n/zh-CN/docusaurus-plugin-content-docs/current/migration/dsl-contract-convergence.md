@@ -1,7 +1,7 @@
 ---
 title: 迁移已收敛的 DSL 契约
 translation_source: migration/dsl-contract-convergence.md
-translation_source_hash: 19478e72f3d9b21bfedc013ddefe9a9f6b31cd7916399e5695df645a7c9be6d7
+translation_source_hash: 7aeb2467c6fedff8efda94eb0ac513487cda585a1105cee0597b4ea4607b07f0
 translation_status: current
 ---
 
