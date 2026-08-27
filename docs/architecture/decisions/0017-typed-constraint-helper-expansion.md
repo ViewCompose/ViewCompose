@@ -1,3 +1,31 @@
+---
+schema_version: 2
+document_id: architecture.typed-constraint-helper-expansion
+doc_type: architecture
+slug: /architecture/decisions/typed-constraint-helper-expansion
+owner:
+  kind: capability
+  id: constraintlayout.helpers
+version_lane: released
+capability_ids:
+  - constraintlayout.core
+  - constraintlayout.helpers
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-constraintlayout-androidx
+  - viewcompose-renderer-android
+sample_ids:
+  - module.constraintlayout-inline
+  - module.constraintlayout-helpers
+  - module.renderer-tree-transaction
+invariants:
+  - Grid and CircularFlow remain typed Android-free graph declarations whose native expansion participates in the existing atomic renderer transaction.
+  - Generated Grid proxies and restored physical margins stay bounded, stable, removable, and invisible to application anchoring.
+evidence:
+  - Frozen chain, margin, wrap, physical-edge, Grid, and circle geometry cases; invalid-candidate retention; LTR and RTL; replacement stress; compiled samples; Demo and Preview acceptance.
+---
+
 # ADR-0017: Typed ConstraintLayout helper expansion
 
 - Status: Accepted

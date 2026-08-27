@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the governed ADR-0009 through ADR-0013 slice, then govern and reconcile ADR-0014 through ADR-0018 without widening the site budget.
+next_action: Merge the governed ADR-0014 through ADR-0018 and site-representation slice, then govern ADR-0022 and the four remaining project pages.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -157,6 +157,11 @@ reduces the report to 34 metadata-only issues with unclassified sample debt at z
 The accepted documentation entry-point hard cut now governs the canonical documentation, ADR,
 module, and active-plan indexes, repairs the schema-level `title`/`slug` omission without changing
 routes, and reduces the remaining metadata-only report to 30 issues.
+The accepted Migration and Architecture reconciliation slices, ADR-0001 through ADR-0013
+governance, and normalized generated-document registry reduce that report to 10 exact
+missing-metadata findings with every other category at zero. The current ADR-0014 through ADR-0018
+slice removes five more exceptions and establishes a build-time representation boundary that keeps
+machine-only governance metadata out of browser page chunks without weakening source verification.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -165,8 +170,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the documentation entry-point metadata slice, then reconcile and hard-cut the
-migration overview and remaining migration-page metadata.
+Next action: merge the governed ADR-0014 through ADR-0018 and site-representation slice, then govern
+ADR-0022 and the four remaining project pages.
 Pull-request gate scaling Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -1979,6 +1984,48 @@ Accepted ADR-0009 through ADR-0013 governance slice on 2026-08-27:
   claim. The limitation is that only 11,097 non-API bytes remain; ADR-0014 through ADR-0018 must
   retain the hard budget and normalize another owning representation if ordinary metadata growth
   cannot fit.
+
+Accepted ADR-0014 through ADR-0018 governance and site-representation slice on 2026-08-27:
+
+- assigned stable capability ownership, lifecycle contracts, invariants, evidence, explicit stable
+  routes, and reciprocal capability links to renderer-neutral interaction indication, observed
+  property transactions, ConstraintLayout graph ownership, typed helper expansion, and focus,
+  keyboard, plus pager-selection ownership. All five decisions remain semantically current against
+  the implementation and their Chinese mirrors carry reviewed canonical fingerprints;
+- removed five resolved metadata exceptions. The Governance V2 report changed from 10 to 5 issues,
+  all remaining findings are exact missing-metadata debt. All 531 discovered entries remain owned;
+  unclassified samples, orphan symbols, taxonomy mismatches, duplicate owners, orphan documents,
+  version conflicts, stale generated output, unbaselined debt, and blocking violations remain zero;
+- regenerated the schema-3 Capability Reference with 531 entries. It grows from 232,584 to 234,313
+  bytes, a 1,729-byte (`0.7434%`) metadata-only increase while retaining the normalized global
+  document registry;
+- the first complete site build produced 49,182,319 non-API bytes, 15,202 bytes (`0.0309%`) above
+  the preceding accepted build and 4,104.6 bytes over the unchanged 46.9 MiB limit. This exposed
+  repeated Governance V2 ownership and translation-review fields in browser page chunks rather
+  than a need to widen the budget;
+- hard-cut that duplicate representation at the Docusaurus compilation boundary: source front
+  matter remains the verifier authority, generated Reference remains the public relationship
+  model, and a focused Remark transform removes only machine-governance and translation-review
+  fields after `slug` resolution. A regression test proves that presentation fields such as
+  `title`, `slug`, sidebar, and draft state remain intact; no compatibility facade was added;
+- the accepted complete bilingual site audited 454 pages and 30 redirects, produced 49,088,156
+  non-API bytes, and left 90,058.4 bytes under the unchanged limit. This is 94,163 bytes (`0.1915%`)
+  below the failed build and 78,961 bytes (`0.1606%`) below the preceding accepted build, so the
+  site representation conclusion is `improved`. Docusaurus completed in `29.8 s`; timing remains
+  `inconclusive` because cache and process state differed, while the absolute result remains below
+  the `120 s` limit;
+- focused transform tests, TypeScript compilation, Governance V2, documentation structure, all
+  documentation-script tests, reviewed Chinese translations, generated Reference freshness,
+  stable routes, release intent, and the complete bilingual site passed. Complete single-worker
+  `qaQuick` passed 2,342 actionable tasks in `29.7 s` (180 executed and 2,162 up-to-date); this is
+  completeness evidence rather than a speed comparison because it reused previously produced
+  publication, module, and site outputs;
+- this documentation-and-site-tooling slice changes no publication input, public API, or production
+  runtime behavior and makes no new visual, power, or application-performance claim. The site
+  measurement is one local production build, so hosted duration and deployment behavior remain
+  outside its conclusion. Release intent found zero release artifacts, zero ignored artifacts, and
+  zero shared-path classifications against `f97303141f9340f1207fef23a7bb32822ac37e5c`. The next
+  action is ADR-0022 and the four remaining project pages.
 
 | Current area | Required target |
 | --- | --- |

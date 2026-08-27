@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0017-typed-constraint-helper-expansion.md
-translation_source_hash: 04c2e40b41be8adf4a92d0d4b0366cd6b5b4cdafac58adc111e70d459c0f891e
+translation_source_hash: 372602c65a43c0330a78baeec1fd156feb303d33e64a6023650327ad1bc0d298
 translation_status: current
 ---
 

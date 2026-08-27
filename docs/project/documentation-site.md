@@ -51,7 +51,10 @@ The production artifact is assembled in seven explicit stages:
    of whether immutable API output was restored or rebuilt.
 6. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
    output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
-   `website/build/`, with broken links and anchors treated as errors.
+   `website/build/`, with broken links and anchors treated as errors. After Docusaurus resolves
+   presentation fields such as `slug`, a remark transform removes Governance V2 ownership fields
+   and translation-review fingerprints from browser page chunks. Source files remain the verifier
+   input; the generated Capability Reference remains the public relationship model.
 7. the build wrapper verifies shared site-shell behavior across locales, audits Docusaurus-owned
    HTML accessibility, and enforces build-time, total output, JavaScript, CSS, and per-locale
    search-index budgets. Dokka-generated HTML remains under the API generator's independent
@@ -152,6 +155,16 @@ leaving 762,215.4 B (1.5499%) headroom: the result is `improved`. The measuremen
 production build; the stop condition remains unchanged: do not raise the threshold, and make the
 next failure consolidate representation again. Current public contracts and valid immutable API
 history must not be deleted merely to recover budget.
+
+The front-matter transform is a representation boundary, not a weaker metadata contract. It keeps
+`title`, `slug`, sidebar, draft, and other Docusaurus presentation fields while excluding only
+machine-governance and translation-review fields that no rendered page reads. A focused regression
+test protects that boundary. When the ADR-0014 through ADR-0018 slice first exceeded the unchanged
+limit by 4,104.6 B, applying this boundary reduced the same generated output from 49,182,319 B to
+49,073,870 B, a 108,449-byte (`0.2205%`) reduction, and left 104,344.4 B of headroom. The conclusion
+is `improved`; route, page, search, language, translation, and public Reference behavior remained
+unchanged. The measurement is one local production build and makes no claim about hosted duration,
+deployment, or runtime application performance.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table

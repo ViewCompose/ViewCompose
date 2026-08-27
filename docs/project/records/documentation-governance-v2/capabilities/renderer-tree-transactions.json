@@ -22,7 +22,10 @@
       "architecture.node-spec",
       "architecture.delayed-session-containers",
       "architecture.prefetched-session-activation",
-      "architecture.lazy-collection-ownership"
+      "architecture.lazy-collection-ownership",
+      "architecture.observed-property-transactions",
+      "architecture.constraintlayout-graph-ownership",
+      "architecture.typed-constraint-helper-expansion"
     ],
     "module": ["module.viewcompose-renderer-android", "module.viewcompose-ui-contract"]
   }

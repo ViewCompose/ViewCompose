@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 1d7d4f1d7cba22db389a4112a6f514000384972ae31406030f85e046220cb18b
+translation_source_hash: c46eac7e8cc58885612337dd0779b7b73307ff998c49997bc3c1b169a2424714
 translation_status: current
 ---
 
@@ -30,7 +30,9 @@ translation_status: current
    revision 生成目录和每个已发布制品/版本的模块手册快照，不维护第二份注册表。无论不可变 API
    产物来自恢复还是重建，生成器都会先按精确完整 SHA 解析每个唯一冻结 revision，再读取快照。
 6. Docusaurus type-check 并构建手写文档、站点界面、生成 API、本地化搜索索引和兼容重定向，
-   同时输出 `en` 与 `zh-CN` 到 `website/build/`；坏链和坏锚点均为错误。
+   同时输出 `en` 与 `zh-CN` 到 `website/build/`；坏链和坏锚点均为错误。Docusaurus 解析 `slug`
+   等展示字段后，Remark Transform 会从浏览器页面 Chunk 中移除 Governance V2 所有权字段与翻译
+   审核指纹。源文件仍是验证器输入，生成的 Capability Reference 仍是公开关系模型。
 7. 构建 wrapper 验证跨语言站点外壳行为，审核 Docusaurus 自有 HTML 无障碍，并限制构建时间、
    总产物、JavaScript、CSS 和各语言搜索索引。Dokka HTML 由 API 生成器独立保证完整性，不混入
    站点模板无障碍门禁。
@@ -116,6 +118,13 @@ API 树平均 4.5 MiB/单树 24 MiB、API 路由开销 1 MiB、JavaScript 总计
 至 48,415,999 B，留下 762,215.4 B（1.5499%）余量，结论为 `improved`。该测量只覆盖一次本地
 生产构建；停止条件不变：不得提高阈值，下次失败仍须改善表示。不得仅为回收预算而删除当前公共
 契约或合法不可变 API 历史。
+
+Front Matter Transform 是表示边界，不会弱化元数据契约。它保留 `title`、`slug`、Sidebar、Draft
+及其他 Docusaurus 展示字段，只排除渲染页面不会读取的机器治理与翻译审核字段；专项回归测试保护
+该边界。ADR-0014～ADR-0018 批次首次超过不变上限 4,104.6 B，应用该边界后，同一生成产物从
+49,182,319 B 降到 49,073,870 B，减少 108,449 字节（`0.2205%`），并留下 104,344.4 B 余量。
+结论为 `improved`；路由、页面、搜索、语言、翻译与公开 Reference 行为均未改变。该测量仅覆盖一次
+本地生产构建，不对托管耗时、部署或应用运行时性能作结论。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、
 accessible name、图片替代文本、表头、iframe title 和重复 ID；重定向 stub 与 Dokka 生成页

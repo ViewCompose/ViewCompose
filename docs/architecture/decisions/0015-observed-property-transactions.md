@@ -1,3 +1,28 @@
+---
+schema_version: 2
+document_id: architecture.observed-property-transactions
+doc_type: architecture
+slug: /architecture/decisions/observed-property-transactions
+owner:
+  kind: capability
+  id: renderer.tree-transactions
+version_lane: released
+capability_ids:
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-renderer-android
+sample_ids:
+  - module.renderer-observed-properties
+invariants:
+  - One RenderSession registry owns observed dependencies, captured environment, coalescing, and transactional membership for the logical emitting scope.
+  - A property batch targets only committed NodeSpec properties and either commits completely or restores every native mutation and candidate observation.
+evidence:
+  - Observed-value and NodeSpec samples, registry and scheduling tests, fake-engine and Android failure injection, exact-target rollback, lifecycle, environment, diagnostics, and three-engine benchmark evidence.
+---
+
 # ADR-0015: Observed property transactions
 
 - Status: Accepted
