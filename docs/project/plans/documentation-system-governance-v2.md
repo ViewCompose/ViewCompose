@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the publishing workflow ownership slice, then hard-cut Source Documentation and API Comment Standard sample ownership as the next Phase 3 boundary.
+next_action: Merge the Source Documentation and API Comment Standard sample slice, then hard-cut the remaining Governance V2 metadata beginning with repository and section entry points.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -151,6 +151,9 @@ The accepted publishing workflow hard cut now gives the repository release workf
 ownership, registers three compiled bilingual dependency-exposure decisions, removes two resolved
 exceptions representing four findings, and reduces the report to 37 issues without adding a
 maintainer-only concept to the application capability Reference.
+The accepted Source Documentation and API Comment Standard hard cut now registers the final three
+executable fences as compiled bilingual form contracts, removes the final sample exception, and
+reduces the report to 34 metadata-only issues with unclassified sample debt at zero.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -159,9 +162,9 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the publishing workflow ownership slice, then hard-cut Source Documentation and
-API Comment Standard sample ownership as the next Phase 3 boundary. Pull-request gate scaling
-Phases 3 through 5 are complete, so these scoped content
+Next action: merge the Source Documentation and API Comment Standard sample slice, then hard-cut
+the remaining Governance V2 metadata beginning with repository and section entry points.
+Pull-request gate scaling Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
 
@@ -246,7 +249,7 @@ workflows, and compiled repository-quality tooling only; they do not change a pu
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
 artifacts, and zero shared-path classifications against
-`6a89c53e1297cc8a605c571920c0ffd2a1c66b73`.
+`e980aae5709a27d57044cd6c450339bb55911b8b`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1705,6 +1708,40 @@ Accepted publishing workflow ownership slice on 2026-08-27:
   `6a89c53e1297cc8a605c571920c0ffd2a1c66b73`. This slice changes no publication input, public API,
   or production runtime behavior and makes no new runtime, visual, power, or performance claim.
   The next action is Source Documentation and API Comment Standard sample ownership.
+
+Accepted Source Documentation and API Comment Standard sample ownership slice on 2026-08-27:
+
+- retained the stable Project route and its `documentation-governance` owner while adding exact
+  sample ownership for the contract-focused comment, stateful DSL component, and stateful resource
+  owner templates. The Chinese mirror now carries the same structured lifecycle and validation
+  contract as the canonical page;
+- registered all three existing bilingual Kotlin fences as exact compiled regions. Their private
+  Tutorials fixture supplies only local placeholder types and abstract declarations, preserving the
+  documented authoring form without inventing a public framework API or claiming runtime behavior;
+- removed the final sample exception. The report changed from 37 to 34 issues: unclassified samples
+  fell from 3 to 0 and missing metadata remained 34. All 531 discovered entries remain owned;
+  orphan symbols, taxonomy mismatches, duplicate owners, orphan documents, version conflicts,
+  stale generated output, unbaselined debt, and blocking violations remain zero;
+- the generated Reference retained 531 entries and its normalized catalog remained byte-for-byte
+  unchanged at 237,828 bytes, as expected for a project policy page with no application capability;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,077,257 non-API
+  bytes, and left 100,957 bytes under the unchanged 46.9 MiB limit. This is 1,790 bytes (`0.0036%`)
+  above the publishing workflow slice and is `no material change`. Docusaurus completed in
+  `29.4 s`; timing remains `inconclusive` because cache and process state differed, while the
+  absolute result remains below the `120 s` limit;
+- Tutorials sample compilation, exact bilingual region identity, Governance V2, documentation
+  structure, language and translation review, generated Reference freshness, release intent, and
+  the complete bilingual site passed. Complete single-worker `qaQuick` passed 2,342 actionable
+  tasks in `33 s` (185 executed and 2,157 up-to-date); this is completeness evidence rather than a
+  speed comparison because it reused previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: every executable fence in active public documentation now
+  has an explicit governed disposition, while the policy templates remain compile-checked without
+  becoming product surface. Release intent found zero release artifacts, zero ignored artifacts,
+  and zero shared-path classifications against
+  `e980aae5709a27d57044cd6c450339bb55911b8b`. This slice changes no publication input, public API,
+  or production runtime behavior and makes no new runtime, visual, power, or performance claim.
+  The next action is the remaining Governance V2 page metadata, beginning with repository and
+  section entry points.
 
 | Current area | Required target |
 | --- | --- |

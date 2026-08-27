@@ -1,6 +1,23 @@
 ---
+schema_version: 2
+document_id: project.api-documentation-quality
+doc_type: project
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids:
+  - project.api-documentation-contract-comment
+  - project.api-documentation-stateful-dsl-template
+  - project.api-documentation-resource-owner-template
+workflow: 定义公共源码注释质量等级、契约字段与写作形式。
+validation:
+  - ./gradlew verifyDocumentationStructure
+lifecycle: 公共源码注释策略或上游指南变化时更新。
 translation_source: project/api-documentation-quality.md
-translation_source_hash: 2fb2bc8f71e3c79576d7f5c9e5ec1dc7331f88176eaba45f67be514150a49bc5
+translation_source_hash: 53342d22faea3790543267658fef65004a977589595543719a080e43e15051cc
 translation_status: current
 ---
 
@@ -192,6 +209,8 @@ Java API 使用相同契约内容但采用 Javadoc 语法：`{@link Type}`、`{@
 
 以下形式聚焦契约：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ApiDocumentationContractSamples.kt" region="project-api-documentation-contract-comment" sample_id="project.api-documentation-contract-comment" build_target=":samples:tutorials:compileDebugKotlin" */}
+
 ```kotlin
 /**
  * Applies [block] to the current composition and commits its state when rendering succeeds.
@@ -242,6 +261,8 @@ class 映射。
 
 ### 有状态 DSL 组件
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ApiDocumentationContractSamples.kt" region="project-api-documentation-stateful-dsl-template" sample_id="project.api-documentation-stateful-dsl-template" build_target=":samples:tutorials:compileDebugKotlin" */}
+
 ```kotlin
 /**
  * Displays one selectable destination and reports user requests through [onSelected].
@@ -268,6 +289,8 @@ fun UiTreeBuilder.NavigationDestination(
 ```
 
 ### 有状态资源 owner
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ApiDocumentationContractSamples.kt" region="project-api-documentation-resource-owner-template" sample_id="project.api-documentation-resource-owner-template" build_target=":samples:tutorials:compileDebugKotlin" */}
 
 ```kotlin
 /**
