@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Diagnostics ownership slice, then audit Graphics Core and Graphics Android ownership as the next Phase 3 boundary.
+next_action: Merge the Graphics ownership slice, then audit Gesture Core and Gesture Android ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -32,6 +32,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-viewmodel-phase3.json
   - release/changes/20260827-governance-renderer-phase3.json
   - release/changes/20260827-governance-diagnostics-phase3.json
+  - release/changes/20260827-governance-graphics-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -100,6 +101,9 @@ The accepted Diagnostics hard cut now assigns 52 previously undiscovered Foundat
 contracts and five Diagnostics integration entries to four capability owners, registers 11 exact
 sample decisions, normalizes shared generated-Reference ownership metadata, removes 12 resolved
 exceptions, and reduces the report to 206 issues.
+The accepted Graphics hard cut now assigns the six Canvas and drawing-Modifier entries to one
+custom-drawing capability owner, registers six exact module sample decisions, removes five
+resolved exceptions, and reduces the report to 192 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -108,7 +112,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Diagnostics ownership slice, then audit Graphics Core and Graphics Android
+Next action: merge the Graphics ownership slice, then audit Gesture Core and Gesture Android
 ownership as the next Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
@@ -155,6 +159,11 @@ remains owned by this plan after the Phase 3 content owners move.
   were separated into focused examples. Test sources are excluded from published artifacts;
   production source, API, runtime behavior, publication metadata, and generated artifact content
   remain unchanged.
+- `release/changes/20260827-governance-graphics-phase3.json` explicitly ignores Graphics Core and
+  Graphics because only test-only compiled documentation fixtures gained exact regions and
+  equivalent sample bindings. Test sources are excluded from published artifacts; production
+  source, API, runtime behavior, publication metadata, and generated artifact content remain
+  unchanged.
 
 ## Release intent rationale
 
@@ -163,7 +172,7 @@ workflows, and compiled repository-quality tooling only; they do not change a pu
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, two explicitly
 ignored test-sample-only artifacts, and zero shared-path classifications against
-`9e97994cc12d1e6bd6c7e59fcd7c360d82209d86`.
+`5f6bc7ee7b7b3775f14598fde6165ce9af4aa18f`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1210,6 +1219,38 @@ Accepted Diagnostics ownership slice on 2026-08-27:
   artifacts. This slice reuses existing unit, device, diagnostic, and performance evidence and
   makes no new runtime, visual, power, or performance claim. The next action is Graphics Core and
   Graphics Android ownership.
+
+Accepted Graphics ownership slice on 2026-08-27:
+
+- retained the Graphics Core and Graphics module routes and treated their platform-neutral command
+  model plus composition-facing Canvas and drawing Modifiers as one custom-drawing capability
+  family, matching the established Animation/Animation Core ownership pattern;
+- registered one capability owner for all six previously orphaned `Canvas`, `drawBehind`,
+  `drawWithContent`, `drawWithCache`, `draw`, and `drawCache` entries. Six exact dependency, path,
+  scene, Canvas, and cache sample decisions now back both module manuals, and the Graphics
+  compatibility note now names the current `0.1.0-alpha04` line;
+- removed five resolved metadata, symbol, and sample exception records. The report changed from 206
+  to 192 issues: missing metadata 54 to 52, orphan symbols 87 to 81, and unclassified samples 64 to
+  58. Taxonomy mismatches remained 1; duplicate owners, orphan documents, version conflicts, stale
+  generated output, unbaselined debt, and blocking violations remained zero;
+- the generated Reference retained 531 entries while its normalized catalog grew by only 970 bytes,
+  from 224,059 to 225,029 bytes (`0.4329%`), for the new shared capability metadata. The complete
+  bilingual site audited 454 pages and 30 redirects, produced 48,948,648 non-API bytes, and left
+  229,566 bytes under the unchanged 46.9 MiB limit. This is 3,491 bytes (`0.0071%`) above the
+  Diagnostics slice and is `no material change`. Docusaurus completed in `67.0 s`; the duration
+  comparison is `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- Graphics Core and Graphics unit tests, Tutorial compilation, exact bilingual region identity,
+  Governance V2, documentation structure, release intent, and the complete bilingual site passed.
+  Complete `qaQuick` then passed 2,342 actionable tasks in `1 min 35 s` (185 executed and 2,157
+  up-to-date); this is completeness evidence rather than a speed comparison because the warm local
+  task graph reused previously produced module and site outputs;
+- the overall conclusion is `improved`: every application-facing Graphics entry and every public
+  module fence now has exact generated ownership without changing public API, production runtime
+  behavior, routes, or published artifacts. Release intent found zero release artifacts and
+  explicitly ignored the two test-sample-only Graphics artifacts. This slice reuses existing unit,
+  renderer, device, visual, and performance evidence and makes no new runtime, visual, power, or
+  performance claim. The next action is Gesture Core and Gesture Android ownership.
 
 | Current area | Required target |
 | --- | --- |

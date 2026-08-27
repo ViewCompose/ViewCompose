@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics-core/README.md
-translation_source_hash: 09c0f6724bc5024e58fc49a7193feab2e1a922737974408125b68b0ab1edd623
+translation_source_hash: cee73b8d66f6c8171d8e5ac447763bf2e9d38d905e20d5c712b05bfccc349c6b
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ Paint 与 Filter、有序绘制命令、经过验证且可复用的 Scene、可�
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="graphics-core-module-dependency" sample_id="module.graphics-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
@@ -47,6 +48,7 @@ Transform 可以改变该空间。Geometry 值保持轻量，不拒绝负数、�
 `PathModel` 是有序命令列表加 `NonZero` 或 `EvenOdd` Fill Rule。`PathBuilder` 在 `build` 时复制
 命令，之后复用 Builder 不影响旧模型。直接构造 `PathModel` 会保留传入列表，应传不可变 List。
 
+{/* compiled-region source="viewcompose-graphics-core/src/test/samples/com/viewcompose/graphics/core/samples/GraphicsCoreSamples.kt" region="graphics-core-path" sample_id="module.graphics-core-path" build_target=":viewcompose-graphics-core:compileTestKotlin" */}
 ```kotlin
 val triangle = path {
     moveTo(8f, 8f)
@@ -80,6 +82,7 @@ Stroke 尺寸、Radius 和 Gradient Stop 不验证，以便自定义 Renderer �
 `DrawScene` 复制 Command List，并拒绝无匹配 Restore 或遗留 Save Depth。嵌套 Scene 独立验证，
 可以在不同 Transform 与 Clip 下复用：
 
+{/* compiled-region source="viewcompose-graphics-core/src/test/samples/com/viewcompose/graphics/core/samples/GraphicsCoreSamples.kt" region="graphics-core-scene" sample_id="module.graphics-core-scene" build_target=":viewcompose-graphics-core:compileTestKotlin" */}
 ```kotlin
 val badge = drawScene {
     save()

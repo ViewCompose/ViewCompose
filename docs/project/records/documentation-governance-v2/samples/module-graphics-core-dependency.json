@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.graphics-core-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "graphics.custom-drawing",
+  "document_ids": ["module.viewcompose-graphics-core"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "graphics-core-module-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}
