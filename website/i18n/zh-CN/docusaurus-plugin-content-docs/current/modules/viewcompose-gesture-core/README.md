@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture-core/README.md
-translation_source_hash: ccdcce183b68ac5c17f566577077a8f1c0c0326060b2f77b4e625affef01190a
+translation_source_hash: 6f23038c71596d3eb47f6c304b19f6f008e310775b52be2c9fb594d047b59bac
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gesture-core-module-dependency" sample_id="module.gesture-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
@@ -39,6 +40,7 @@ Transform Motion、获取平台 Touch Slop 与 Fling 速度、解析布局方向
 `resolveLockAxis` 会等待累计移动达到 Touch Slop。固定方向还要求本轴移动不小于垂直轴。
 Free 方向选择移动更大的轴；完全相等时选择 Horizontal。
 
+{/* compiled-region source="viewcompose-gesture-core/src/test/samples/com/viewcompose/gesture/core/samples/GestureCoreSamples.kt" region="gesture-core-axis-lock" sample_id="module.gesture-core-axis-lock" build_target=":viewcompose-gesture-core:compileTestKotlin" */}
 ```kotlin
 val axis = resolveLockAxis(
     dx = 18f,
@@ -76,6 +78,7 @@ Anchored 解析函数都会在内部验证。
 `AnchoredThresholdPolicy` 可以替换平台 Fling 阈值，便于 Renderer 特化和确定性测试。移动会在
 端点处截断；一次 Settle 不会跨越多个锚点。
 
+{/* compiled-region source="viewcompose-gesture-core/src/test/samples/com/viewcompose/gesture/core/samples/GestureCoreSamples.kt" region="gesture-core-anchored-settle" sample_id="module.gesture-core-anchored-settle" build_target=":viewcompose-gesture-core:compileTestKotlin" */}
 ```kotlin
 val result = resolveAnchoredSettleTarget(
     anchorsPx = listOf(0f, 160f, 320f),
@@ -114,6 +117,6 @@ val result = resolveAnchoredSettleTarget(
 
 ## 兼容性说明
 
-`0.1.0-alpha03` 建立速度优先于距离、逻辑 Horizontal Swipe 方向、相邻锚点移动、严格锚点顺序和
+`0.1.0-alpha04` 建立速度优先于距离、逻辑 Horizontal Swipe 方向、相邻锚点移动、严格锚点顺序和
 语义 Offset 保留契约。指针派发、可变状态、组合所有权与 Android 事件集成属于
 `viewcompose-gesture` 和 Renderer。

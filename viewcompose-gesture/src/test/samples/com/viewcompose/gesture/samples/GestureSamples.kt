@@ -21,7 +21,10 @@ import com.viewcompose.ui.gesture.NestedScrollSource
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.ScrollDelta
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.clickable
+import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.unit.dp
 
 fun rawPointerInput(): Modifier {
     return Modifier.pointerInput(key = "canvas-input") { event ->
@@ -40,6 +43,17 @@ fun combinedClick(onOpen: () -> Unit): Modifier {
     )
 }
 
+private fun openItem() = Unit
+
+private fun openContextMenu() = Unit
+
+// DOCS_REGION_START(gesture-combined-click)
+val actions = Modifier.combinedClickable(
+    onClick = { openItem() },
+    onLongClick = { openContextMenu() },
+)
+// DOCS_REGION_END(gesture-combined-click)
+
 fun UiTreeBuilder.dragState(): Modifier {
     val offsetPx = mutableStateOf(0f)
     val dragState = rememberDraggableState { deltaPx ->
@@ -52,16 +66,19 @@ fun UiTreeBuilder.dragState(): Modifier {
 }
 
 fun UiTreeBuilder.anchoredDragState(): Modifier {
-    val anchors = draggableAnchors<SheetValue> {
-        anchor(offsetPx = 0f, value = SheetValue.Collapsed)
-        anchor(offsetPx = 480f, value = SheetValue.Expanded)
-    }
-    val state = rememberAnchoredDraggableState(SheetValue.Collapsed)
-    return Modifier.anchoredDraggable(
-        state = state,
-        anchors = anchors,
-        orientation = GestureOrientation.Vertical,
-    )
+// DOCS_REGION_START(gesture-anchored-drag)
+val anchors = draggableAnchors<SheetValue> {
+    anchor(0f, SheetValue.Collapsed)
+    anchor(480f, SheetValue.Expanded)
+}
+val sheet = rememberAnchoredDraggableState(SheetValue.Collapsed)
+val modifier = Modifier.anchoredDraggable(
+    state = sheet,
+    anchors = anchors,
+    orientation = GestureOrientation.Vertical,
+)
+// DOCS_REGION_END(gesture-anchored-drag)
+    return modifier
 }
 
 fun UiTreeBuilder.toggleDragState(
@@ -78,6 +95,25 @@ fun UiTreeBuilder.toggleDragState(
         state.progress.value,
         state.lastCompletion.value,
     )
+}
+
+fun UiTreeBuilder.toggleDragModuleSample(
+    checked: Boolean,
+    rtl: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+): Modifier {
+    val density = Environment.density
+// DOCS_REGION_START(gesture-toggle-drag)
+val drag = rememberToggleDragState(
+    checked = checked,
+    checkedAnchorOffsetPx = density.toPx(if (rtl) (-20).dp else 20.dp),
+    onCheckedChange = onCheckedChange,
+)
+val target = Modifier
+    .clickable { onCheckedChange(!checked) }
+    .toggleDraggable(drag)
+// DOCS_REGION_END(gesture-toggle-drag)
+    return target
 }
 
 fun UiTreeBuilder.transformState(): Modifier {

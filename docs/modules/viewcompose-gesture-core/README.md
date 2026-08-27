@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-gesture-core
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-gesture-core
+version_lane: released
+capability_ids:
+  - gesture.modifiers
+artifact_ids:
+  - viewcompose-gesture-core
+sample_ids:
+  - module.gesture-core-dependency
+  - module.gesture-core-axis-lock
+  - module.gesture-core-anchored-settle
+coordinate: com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04
+minimal_usage_sample_id: module.gesture-core-dependency
+---
+
 # Gesture Core
 
 `viewcompose-gesture-core` is the platform-neutral policy layer for ViewCompose gesture
@@ -7,6 +27,7 @@ stream, Android `MotionEvent`, coroutine, mutable gesture state, or View.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gesture-core-module-dependency" sample_id="module.gesture-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
@@ -39,6 +60,7 @@ to pan. Normalize inputs at the renderer boundary.
 requires its axis to dominate the perpendicular axis. Free orientation selects the larger movement,
 with horizontal winning an exact tie.
 
+{/* compiled-region source="viewcompose-gesture-core/src/test/samples/com/viewcompose/gesture/core/samples/GestureCoreSamples.kt" region="gesture-core-axis-lock" sample_id="module.gesture-core-axis-lock" build_target=":viewcompose-gesture-core:compileTestKotlin" */}
 ```kotlin
 val axis = resolveLockAxis(
     dx = 18f,
@@ -81,6 +103,7 @@ segment multiplied by `segmentFraction`. `AnchoredThresholdPolicy` may replace t
 threshold, which is useful for renderer-specific behavior and deterministic tests. Movement is
 clamped at the end anchors; one settle never skips multiple anchors.
 
+{/* compiled-region source="viewcompose-gesture-core/src/test/samples/com/viewcompose/gesture/core/samples/GestureCoreSamples.kt" region="gesture-core-anchored-settle" sample_id="module.gesture-core-anchored-settle" build_target=":viewcompose-gesture-core:compileTestKotlin" */}
 ```kotlin
 val result = resolveAnchoredSettleTarget(
     anchorsPx = listOf(0f, 160f, 320f),
@@ -123,7 +146,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha03` line establishes velocity-before-distance arbitration, logical horizontal swipe
+The `0.1.0-alpha04` line establishes velocity-before-distance arbitration, logical horizontal swipe
 directions, adjacent-anchor movement, strict anchor ordering, and semantic offset preservation.
 Pointer dispatch, mutable state, composition ownership, and Android event integration belong to
 `viewcompose-gesture` and the renderer.

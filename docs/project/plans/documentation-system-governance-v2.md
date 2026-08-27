@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Graphics ownership slice, then audit Gesture Core and Gesture Android ownership as the next Phase 3 boundary.
+next_action: Merge the Gesture ownership slice, then audit Navigation Core and Navigation Android ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -33,6 +33,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-renderer-phase3.json
   - release/changes/20260827-governance-diagnostics-phase3.json
   - release/changes/20260827-governance-graphics-phase3.json
+  - release/changes/20260827-governance-gesture-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -104,6 +105,10 @@ exceptions, and reduces the report to 206 issues.
 The accepted Graphics hard cut now assigns the six Canvas and drawing-Modifier entries to one
 custom-drawing capability owner, registers six exact module sample decisions, removes five
 resolved exceptions, and reduces the report to 192 issues.
+The accepted Gesture hard cut now assigns the remaining controlled-toggle Modifier entry to the
+existing gesture capability, registers seven exact module sample decisions, removes five resolved
+exceptions, repairs one previously non-compiling RTL dp expression, and reduces the report to 182
+issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -112,7 +117,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Graphics ownership slice, then audit Gesture Core and Gesture Android
+Next action: merge the Gesture ownership slice, then audit Navigation Core and Navigation Android
 ownership as the next Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
@@ -164,6 +169,10 @@ remains owned by this plan after the Phase 3 content owners move.
   equivalent sample bindings. Test sources are excluded from published artifacts; production
   source, API, runtime behavior, publication metadata, and generated artifact content remain
   unchanged.
+- `release/changes/20260827-governance-gesture-phase3.json` explicitly ignores Gesture Core and
+  Gesture because only test-only compiled documentation fixtures gained exact regions and sample
+  bindings. Test sources are excluded from published artifacts; production source, API, runtime
+  behavior, publication metadata, and generated artifact content remain unchanged.
 
 ## Release intent rationale
 
@@ -172,7 +181,7 @@ workflows, and compiled repository-quality tooling only; they do not change a pu
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, two explicitly
 ignored test-sample-only artifacts, and zero shared-path classifications against
-`5f6bc7ee7b7b3775f14598fde6165ce9af4aa18f`.
+`d71b48b781786a0888a1299e2b802ee9d22221c7`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1251,6 +1260,40 @@ Accepted Graphics ownership slice on 2026-08-27:
   explicitly ignored the two test-sample-only Graphics artifacts. This slice reuses existing unit,
   renderer, device, visual, and performance evidence and makes no new runtime, visual, power, or
   performance claim. The next action is Gesture Core and Gesture Android ownership.
+
+Accepted Gesture ownership slice on 2026-08-27:
+
+- retained the Gesture Core and Gesture module routes and treated the platform-neutral policy
+  kernel as the lower-level implementation of the existing `gesture.modifiers` capability. The
+  independent `nested.scroll` capability remains owned by the Gesture module;
+- added the previously orphaned `toggleDraggable` entry to `gesture.modifiers` and registered seven
+  exact dependency, axis-lock, anchored-settle, combined-click, anchored-drag, and controlled-toggle
+  sample decisions. Compiling the controlled-toggle fence exposed the old invalid `-20.dp`
+  expression; `(-20).dp` now preserves the intended RTL offset with valid Kotlin syntax. Both
+  compatibility notes now name the current `0.1.0-alpha04` line;
+- removed five resolved metadata, symbol, and sample exception records. The report changed from 192
+  to 182 issues: missing metadata 52 to 50, orphan symbols 81 to 80, and unclassified samples 58 to
+  51. The one pre-existing Navigation Core taxonomy mismatch remained; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- the generated Reference retained 531 entries while its normalized catalog grew by only 558 bytes,
+  from 225,029 to 225,587 bytes (`0.2480%`), for the additional symbol and module ownership links.
+  The complete bilingual site audited 454 pages and 30 redirects, produced 48,951,832 non-API
+  bytes, and left 226,382 bytes under the unchanged 46.9 MiB limit. This is 3,184 bytes (`0.0065%`)
+  above the Graphics slice and is `no material change`. Docusaurus completed in `27.9 s`; the
+  duration comparison is `inconclusive` because cache and process state differed, while the
+  absolute result remains below the `120 s` limit;
+- Gesture Core and Gesture unit tests, Tutorial compilation, exact bilingual region identity,
+  Governance V2, documentation structure, release intent, and the complete bilingual site passed.
+  Complete `qaQuick` then passed 2,342 actionable tasks in `37 s` (186 executed and 2,156
+  up-to-date); this is completeness evidence rather than a speed comparison because the warm local
+  task graph reused previously produced module and site outputs;
+- the overall conclusion is `improved`: every discovered Gesture entry and both public module pages
+  now have exact generated ownership without changing public API, production runtime behavior,
+  routes, or published artifacts. Release intent found zero release artifacts and explicitly
+  ignored the two test-sample-only Gesture artifacts. This slice reuses existing unit, renderer,
+  device, visual, and performance evidence and makes no new runtime, visual, power, or performance
+  claim. The next action is Navigation Core and Navigation Android ownership.
 
 | Current area | Required target |
 | --- | --- |

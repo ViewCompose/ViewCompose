@@ -1,3 +1,25 @@
+---
+schema_version: 2
+document_id: module.viewcompose-gesture
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-gesture
+version_lane: released
+capability_ids:
+  - gesture.modifiers
+  - nested.scroll
+artifact_ids:
+  - viewcompose-gesture
+sample_ids:
+  - module.gesture-dependency
+  - module.gesture-combined-click
+  - module.gesture-anchored-drag
+  - module.gesture-toggle-drag
+coordinate: com.viewcompose:viewcompose-gesture:0.1.0-alpha04
+minimal_usage_sample_id: module.gesture-dependency
+---
+
 # Gesture
 
 `viewcompose-gesture` is the composition-facing gesture DSL for ViewCompose. It adds raw pointer,
@@ -7,6 +29,7 @@ the Android renderer owns the native pointer stream and recognition engine.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gesture-module-dependency" sample_id="module.gesture-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
@@ -41,6 +64,7 @@ should treat the event as consumed.
 and slop come from Android. Disabled calls and calls with no callbacks return the original modifier
 unchanged, avoiding an inert native recognizer.
 
+{/* compiled-region source="viewcompose-gesture/src/test/samples/com/viewcompose/gesture/samples/GestureSamples.kt" region="gesture-combined-click" sample_id="module.gesture-combined-click" build_target=":viewcompose-gesture:compileDebugUnitTestKotlin" */}
 ```kotlin
 val actions = Modifier.combinedClickable(
     onClick = { openItem() },
@@ -66,6 +90,7 @@ cancellation as a zero-velocity normal stop.
 order is sorted automatically. Semantic values may repeat, but unique values are recommended
 because `offsetOf` selects the first match. Exact floating-point equality is used by `valueAt`.
 
+{/* compiled-region source="viewcompose-gesture/src/test/samples/com/viewcompose/gesture/samples/GestureSamples.kt" region="gesture-anchored-drag" sample_id="module.gesture-anchored-drag" build_target=":viewcompose-gesture:compileDebugUnitTestKotlin" */}
 ```kotlin
 val anchors = draggableAnchors<SheetValue> {
     anchor(0f, SheetValue.Collapsed)
@@ -101,10 +126,11 @@ two-state components such as a design-system-owned Switch. The checked anchor is
 pixel offset from unchecked zero. Its exposed `progress` stays logical from `0f` unchecked to `1f`
 checked, so callers can use a negative checked offset in RTL without reversing drawing logic.
 
+{/* compiled-region source="viewcompose-gesture/src/test/samples/com/viewcompose/gesture/samples/GestureSamples.kt" region="gesture-toggle-drag" sample_id="module.gesture-toggle-drag" build_target=":viewcompose-gesture:compileDebugUnitTestKotlin" */}
 ```kotlin
 val drag = rememberToggleDragState(
     checked = checked,
-    checkedAnchorOffsetPx = density.toPx(if (rtl) -20.dp else 20.dp),
+    checkedAnchorOffsetPx = density.toPx(if (rtl) (-20).dp else 20.dp),
     onCheckedChange = onCheckedChange,
 )
 val target = Modifier
@@ -171,7 +197,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha03` line establishes synchronous callback delivery, latest-lambda remembered state,
+The `0.1.0-alpha04` line establishes synchronous callback delivery, latest-lambda remembered state,
 renderer-owned recognition, immediate anchored settling, explicit cancellation, and detachable
 nested-scroll dispatch. API resemblance to Jetpack Compose gesture modifiers does not imply the same
 suspend mutation, `MutatorMutex`, or animation behavior.

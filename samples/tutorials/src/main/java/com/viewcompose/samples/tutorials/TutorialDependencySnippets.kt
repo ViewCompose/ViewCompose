@@ -59,6 +59,22 @@ dependencies {
     // DOCS_REGION_END(animation-core-module-dependency)
 }
 
+private val gestureCoreModuleDependency = run {
+    // DOCS_REGION_START(gesture-core-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(gesture-core-module-dependency)
+}
+
+private val gestureModuleDependency = run {
+    // DOCS_REGION_START(gesture-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(gesture-module-dependency)
+}
+
 private val graphicsCoreModuleDependency = run {
     // DOCS_REGION_START(graphics-core-module-dependency)
 dependencies {
