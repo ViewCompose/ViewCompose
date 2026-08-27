@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "migration.lazy-item-table",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "lazy.collections",
+  "document_ids": ["migration.lazy-collection-revision-reuse"],
+  "version_lane": "released",
+  "source": "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt",
+  "region": "migration-lazy-item-table",
+  "build_target": ":samples:compose-migration:compileDebugKotlin"
+}

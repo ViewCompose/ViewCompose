@@ -668,6 +668,11 @@
           "documentId": "migration.compose-host-lifecycle-android-interop",
           "documentType": "migration",
           "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "migration.lazy-collection-revision-reuse",
+          "documentType": "migration",
+          "path": "/migration/lazy-collection-revision-and-reuse"
         }
       ],
       "sample": {
@@ -777,6 +782,11 @@
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "migration.lazy-collection-revision-reuse",
+          "documentType": "migration",
+          "path": "/migration/lazy-collection-revision-and-reuse"
         }
       ],
       "sample": {
@@ -1460,6 +1470,11 @@
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
           "path": "/modules/viewcompose-renderer-android"
+        },
+        {
+          "documentId": "migration.lazy-collection-revision-reuse",
+          "documentType": "migration",
+          "path": "/migration/lazy-collection-revision-and-reuse"
         }
       ],
       "sample": {

@@ -1,7 +1,34 @@
 ---
-title: 迁移 Lazy 集合 Revision 与复用
+schema_version: 2
+document_id: migration.lazy-collection-revision-reuse
+doc_type: migration
+owner:
+  kind: capability
+  id: lazy.collections
+version_lane: released
+capability_ids:
+  - lazy.collections
+  - host.android-view
+  - renderer.reconciliation
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-renderer-android
+sample_ids:
+  - migration.lazy-typed-revision
+  - migration.lazy-static-revision
+  - migration.lazy-pager-revision
+  - migration.lazy-named-item
+  - migration.lazy-snapshot
+  - migration.lazy-implicit-siblings
+  - migration.lazy-explicit-root
+  - migration.lazy-android-view-reuse
+  - migration.lazy-item-table
+source_state: 已移除的 Alpha contentToken、聚合 snapshotRevision、多根延迟 Holder，以及耦合的逻辑与物理复用契约。
+target_state: 显式语义 Content Revision、不可变 Snapshot 标识、单根延迟内容、可 Reset Android View，以及分离的逻辑 Session 与物理呈现所有权。
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: ca384abe66620d0472d41cf3307a3f3742d4f48947af95c8568765b70204320b
+translation_source_hash: 3241fbc65573cd98bc45b0c3cf716b30e227c65b4ccc8e444a75aa04a3d3ee23
 translation_status: current
 ---
 
@@ -19,6 +46,7 @@ translation_status: current
 Revision 和框架 Environment Revision 相等时，条目会完全跳过 Render。变化的普通 Kotlin 捕获值
 必须进入 Revision。
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-typed-revision" sample_id="migration.lazy-typed-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 LazyColumn(
     items = messages,
@@ -38,6 +66,7 @@ Session 中读取的 ViewCompose `State` 已经可观察，无需重复放入 Re
 Revision；其 `contentRevision` 必传且不可空，`null` 不是静态哨兵。只有 Declaration 没有会变化的
 普通非 State 输入时，才能使用 `StaticContentRevision`：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-static-revision" sample_id="migration.lazy-static-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 stickyHeader(
     key = "messages-header",
@@ -49,6 +78,7 @@ stickyHeader(
 
 Pager Page 现在暴露全部调用方快照字段：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-pager-revision" sample_id="migration.lazy-pager-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 Page(
     key = account.id,
@@ -71,6 +101,7 @@ Page(
 Revision 当作物理 Content Type。必须改写为 `item(key, contentRevision, contentType)` 或
 `Page(key, contentRevision, contentType)`。维护中的源码应优先使用语义命名参数：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-named-item" sample_id="migration.lazy-named-item" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 item(
     key = message.id,
@@ -98,6 +129,7 @@ Typed `LazyColumn`、`LazyRow`、`LazyVerticalGrid`、Scoped `items` 及其 `Scr
 Wrapper 不再接受调用方持有的聚合 Snapshot Revision。使用过中间版本 API 的调用应删除
 `snapshotRevision`：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-typed-revision" sample_id="migration.lazy-typed-revision" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 LazyColumn(
     items = messages,
@@ -124,6 +156,7 @@ Item 的 `contentRevision`。针对中间版本聚合参数 Method Descriptor �
 对于顶层或 `ScrollableScope` 的均质容器，已经持有不可变 List Submission 的应用可以选择强类型
 整表 Snapshot 快路：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-snapshot" sample_id="migration.lazy-snapshot" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 val lazyMessages = remember(messages) {
     messages.toLazyItemsSnapshot()
@@ -163,6 +196,7 @@ Identity 快路。Scoped `LazyColumn { items(...) }` 与 `LazyVerticalGrid { ite
 
 把隐式 Sibling：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-implicit-siblings" sample_id="migration.lazy-implicit-siblings" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 item(key = "account", contentRevision = account.version) {
     Text(account.name)
@@ -172,6 +206,7 @@ item(key = "account", contentRevision = account.version) {
 
 改为显式布局所有者：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-explicit-root" sample_id="migration.lazy-explicit-root" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 item(key = "account", contentRevision = account.version) {
     Column {
@@ -189,6 +224,7 @@ Content，不受此延迟 Holder 限制。
 包含 `AndroidView` 的 Lazy Mounted Tree，只有所有互操作节点都声明 `onReset` 才能跨 Key。
 Reset 只做可重放配置清理，一次性发布放在 `onCommit`，永久资源清理放在 `onRelease`。
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-android-view-reuse" sample_id="migration.lazy-android-view-reuse" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 AndroidView(
     factory = { context -> PlayerView(context) },
@@ -221,6 +257,7 @@ AndroidView(
 直接 NodeSpec Producer 还必须把 Alpha 集合边界从 `List<LazyListItem>` 迁移到
 `LazyItemTable`：
 
+{/* compiled-region source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt" region="migration-lazy-item-table" sample_id="migration.lazy-item-table" build_target=":samples:compose-migration:compileDebugKotlin" */}
 ```kotlin
 LazyColumnNodeProps(
     contentPadding = LazyContentPadding.None,

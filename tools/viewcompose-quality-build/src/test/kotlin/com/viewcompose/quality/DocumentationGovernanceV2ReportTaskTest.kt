@@ -442,9 +442,11 @@ class DocumentationGovernanceV2ReportTaskTest {
             "viewcompose-example/src/main/java/example/CurrentDocumentationSample.kt"
         repository.resolve(compiledSamplePath).apply {
             writeText(
-                "// DOCS_REGION_START(current)\n" +
-                    "VisibleDsl()\n" +
-                    "// DOCS_REGION_END(current)\n",
+                "fun nestedDocumentationSample() {\n" +
+                    "    // DOCS_REGION_START(current)\n" +
+                    "    VisibleDsl()\n" +
+                    "    // DOCS_REGION_END(current)\n" +
+                    "}\n",
             )
         }
         val currentDocument = repository.resolve("docs/guides/current.md").apply {

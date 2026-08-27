@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "migration.lazy-android-view-reuse",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "host.android-view",
+  "document_ids": ["migration.lazy-collection-revision-reuse"],
+  "version_lane": "released",
+  "source": "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/collection/ViewComposeLazyCollectionMigrationSamples.kt",
+  "region": "migration-lazy-android-view-reuse",
+  "build_target": ":samples:compose-migration:compileDebugKotlin"
+}
