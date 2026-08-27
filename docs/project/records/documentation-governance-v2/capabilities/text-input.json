@@ -13,6 +13,7 @@
   "reference_owner": { "reference_id": "reference.text.input", "generated": true },
   "sample_owner": { "sample_id": "guide.text-input-editing" },
   "document_owners": {
+    "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.text-input"],
     "guide": ["guide.text-input-editing", "guide.text-input-rich-text"],
     "architecture": ["architecture.text-input-runtime"]

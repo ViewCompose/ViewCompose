@@ -22,6 +22,7 @@
   "reference_owner": { "reference_id": "reference.overlay.foundation", "generated": true },
   "sample_owner": { "sample_id": "tutorial.overlays" },
   "document_owners": {
+    "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.overlays"],
     "guide": ["guide.overlay-presentation"],
     "architecture": ["architecture.overlay-root-selection"]

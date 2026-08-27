@@ -12,6 +12,7 @@
   "reference_owner": { "reference_id": "reference.image.foundation", "generated": true },
   "sample_owner": { "sample_id": "guide.image-loader-install" },
   "document_owners": {
+    "module": ["module.viewcompose-ui-foundation"],
     "guide": ["guide.image-loading"],
     "migration": ["migration.image-loading"]
   }

@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Navigation ownership slice, then audit UI Foundation, Material 3, and One UI 7 ownership as the next Phase 3 boundary.
+next_action: Merge the UI Foundation ownership slice, then hard-cut Material 3, Material 3 Android, and One UI 7 ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -35,6 +35,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-graphics-phase3.json
   - release/changes/20260827-governance-gesture-phase3.json
   - release/changes/20260827-governance-navigation-modules-phase3.json
+  - release/changes/20260827-governance-ui-foundation-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -113,6 +114,10 @@ issues.
 The accepted Navigation module hard cut now registers seven exact Core and Android module sample
 decisions, compiles the previously unregistered Core sample source set, removes five resolved
 exceptions including the final taxonomy mismatch, and reduces the report to 172 issues.
+The accepted UI Foundation hard cut now assigns 61 previously orphaned component, environment,
+and lazy-collection entries to their existing or new capability owners, registers three exact
+module sample decisions, repairs generated module-manual route derivation, removes 28 resolved
+exceptions, and reduces the report to 108 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -121,8 +126,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Navigation ownership slice, then audit UI Foundation, Material 3, and One UI
-7 ownership as the next Phase 3 boundary. Pull-request gate scaling
+Next action: merge the UI Foundation ownership slice, then hard-cut Material 3, Material 3 Android,
+and One UI 7 ownership as the next Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -182,15 +187,19 @@ remains owned by this plan after the Phase 3 content owners move.
   only with the test source set and both modules gain exact test-only documentation regions. Test
   sources remain excluded from published artifacts; production source, API, runtime behavior,
   publication metadata, and generated artifact content remain unchanged.
+- `release/changes/20260827-governance-ui-foundation-phase3.json` explicitly ignores UI Foundation
+  because only test-only compiled documentation samples and governance records were added. Test
+  sources are excluded from published artifacts; production source, public signatures, runtime
+  behavior, publication metadata, and generated artifact content remain unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, two explicitly
-ignored test-sample-only artifacts, and zero shared-path classifications against
-`290b1fc07579eb1a2e168ca7c6e71f3836f5eee1`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
+ignored test-sample-only artifact, and zero shared-path classifications against
+`0c6b6880ef460d1a703bb0fdcc92877558898bfa`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1338,6 +1347,51 @@ Accepted Navigation module ownership slice on 2026-08-27:
   test-sample-only Navigation artifacts. This slice reuses existing navigation unit, Android host,
   predictive-Back, adaptive-pane, and device evidence and makes no new runtime, visual, power, or
   performance claim. The next action is UI Foundation, Material 3, and One UI 7 ownership.
+
+Accepted UI Foundation module ownership slice on 2026-08-27:
+
+- retained the UI Foundation module route and registered ten existing or new capability owners for
+  its component, text-input, collection, image, overlay, theme, diagnostics, and environment
+  contracts. The hard cut assigns 61 previously orphaned entries: 52 Foundation component
+  overload sets and extensions, seven environment/local-scope entries, and two collection override
+  or item-factory entries;
+- registered three exact compiled dependency, profile-summary, and environment/local-scope sample
+  decisions. The module manual now distinguishes environment-wide values from subtree-local
+  overrides and links every owned capability through the generated Reference instead of retaining
+  an implicit handwritten inventory;
+- removed 28 resolved metadata, ownership, and sample exception records. The report changed from
+  172 to 108 issues: missing metadata 48 to 47, orphan symbols 80 to 19, and unclassified samples
+  44 to 42. Taxonomy mismatches, duplicate owners, orphan documents, version conflicts, stale
+  generated output, unbaselined debt, and blocking violations remained zero;
+- the generated Reference retained 531 entries while its normalized catalog grew from 225,959 to
+  231,063 bytes, an increase of 5,104 bytes (`2.2588%`). The larger catalog is expected ownership
+  data for 61 symbol-to-capability links and ten module-to-capability links, rather than duplicated
+  prose or an entry-count increase;
+- the first complete site build exposed a latent generated-link defect: module manuals with a
+  terminal `README.md` were emitted as `/README/` routes even when frontmatter declared a stable
+  slug. The generator now prefers the declared absolute slug and otherwise normalizes terminal
+  `README` or `index` segments. A focused quality-tooling unit test locks that behavior, and the
+  final link audit contains no generated `/README/` or `/index/` module route;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 48,979,391 non-API
+  bytes, and left 198,823 bytes under the unchanged 46.9 MiB limit. This is 22,380 bytes
+  (`0.0457%`) above the Navigation slice and is `no material change`. Docusaurus completed in
+  `43.9 s`; build timing is `inconclusive` because cache, network, and process state differed,
+  while the absolute result remains below the `120 s` limit;
+- UI Foundation sample compilation and unit tests, the quality-tooling unit suite, Tutorial
+  compilation, exact bilingual region identity, Governance V2, documentation structure, language
+  and translation review, generated Reference freshness, release intent, and the complete
+  bilingual site passed. Complete `qaQuick` passed 2,342 actionable tasks with one worker in
+  `6 min 30 s` (388 executed and 1,954 up-to-date). Two earlier default-worker attempts stopped
+  solely on remote Dokka package-list socket timeouts in Host Android and Lifecycle AndroidX; each
+  affected task passed independently before the complete single-worker run. This records an
+  external network limitation, not a product or verification failure;
+- the overall conclusion is `improved`: UI Foundation's public module and 61 entries now have exact
+  generated ownership, the latent module-route defect is hard-fixed in the generator, and no
+  public API, production runtime behavior, route, or published artifact changed. Release intent
+  found zero release artifacts and explicitly ignored the one test-sample-only UI Foundation
+  artifact. This slice reuses existing unit, renderer, device, visual, and performance evidence and
+  makes no new runtime, visual, power, or performance claim. The next action is Material 3,
+  Material 3 Android, and One UI 7 ownership.
 
 | Current area | Required target |
 | --- | --- |

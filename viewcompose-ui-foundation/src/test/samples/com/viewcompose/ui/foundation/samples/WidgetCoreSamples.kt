@@ -68,6 +68,7 @@ import com.viewcompose.ui.foundation.PopupSize
 import com.viewcompose.ui.foundation.Popup
 import com.viewcompose.ui.foundation.PlainTooltip
 import com.viewcompose.ui.foundation.ProvideImageLoader
+import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.ProvideButtonOverrides
 import com.viewcompose.ui.foundation.ProvideAlertDialogOverrides
 import com.viewcompose.ui.foundation.ProvideBadgeOverrides
@@ -106,6 +107,7 @@ import com.viewcompose.ui.foundation.Snackbar
 import com.viewcompose.ui.foundation.Spacer
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.RichText
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.FlowRow
@@ -122,6 +124,7 @@ import com.viewcompose.ui.foundation.TopAppBarOverrides
 import com.viewcompose.ui.foundation.Toast
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiSwitchSizing
+import com.viewcompose.ui.foundation.UiEnvironment
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -137,6 +140,8 @@ import com.viewcompose.ui.foundation.observedNodeSpec
 import com.viewcompose.ui.foundation.observedValue
 import com.viewcompose.ui.foundation.toLazyItemsSnapshot
 import com.viewcompose.ui.foundation.lazyItemContentFactory
+import com.viewcompose.ui.foundation.uiLocalOf
+import com.viewcompose.ui.foundation.UiLocals
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.MinHeightModifierElement
@@ -177,6 +182,29 @@ import com.viewcompose.ui.state.ScrollState
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
+
+// DOCS_REGION_START(ui-foundation-profile-summary)
+fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
+    UiTheme {
+        Column(spacing = 8.dp) {
+            Text(name, style = TextDefaults.titleMediumStyle())
+            Text(role, color = TextDefaults.secondaryColor())
+        }
+    }
+}
+// DOCS_REGION_END(ui-foundation-profile-summary)
+
+private val AccountRole = uiLocalOf(debugName = "AccountRole") { "guest" }
+
+fun UiTreeBuilder.profileEnvironmentSample() {
+    // DOCS_REGION_START(ui-foundation-environment)
+UiEnvironment {
+    ProvideLocal(AccountRole, "admin") {
+        Text(UiLocals.current(AccountRole))
+    }
+}
+    // DOCS_REGION_END(ui-foundation-environment)
+}
 
 fun UiTreeBuilder.layoutDslSample() {
     Scaffold(

@@ -36,6 +36,7 @@
   "reference_owner": { "reference_id": "reference.diagnostics.correlated-events", "generated": true },
   "sample_owner": { "sample_id": "tutorial.render-diagnostics" },
   "document_owners": {
+    "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.render-diagnostics"],
     "architecture": ["architecture.render-failures", "adr.correlated-render-diagnostics"],
     "tooling": ["tooling.diagnostics"]

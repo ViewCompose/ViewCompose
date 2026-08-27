@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register UI Foundation module documentation and capability ownership without changing the published artifact.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-ui-foundation",
+      "reason": "Only test-only compiled documentation samples and governance records are added; production sources, public signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

@@ -12,6 +12,7 @@
   "reference_owner": { "reference_id": "reference.theme.foundation", "generated": true },
   "sample_owner": { "sample_id": "guide.theming-local-override" },
   "document_owners": {
+    "module": ["module.viewcompose-ui-foundation"],
     "guide": ["guide.theming-local-overrides"],
     "architecture": ["architecture.theme-runtime"]
   }

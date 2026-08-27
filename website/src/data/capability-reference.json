@@ -234,12 +234,12 @@
         {
           "documentId": "module.viewcompose-animation",
           "documentType": "module",
-          "path": "/modules/viewcompose-animation/README"
+          "path": "/modules/viewcompose-animation"
         },
         {
           "documentId": "module.viewcompose-animation-core",
           "documentType": "module",
-          "path": "/modules/viewcompose-animation-core/README"
+          "path": "/modules/viewcompose-animation-core"
         },
         {
           "documentId": "migration.compose-animation",
@@ -260,7 +260,7 @@
         {
           "documentId": "module.viewcompose-camerax-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-camerax-androidx/README"
+          "path": "/modules/viewcompose-camerax-androidx"
         }
       ],
       "sample": {
@@ -276,7 +276,7 @@
         {
           "documentId": "module.viewcompose-constraintlayout-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-constraintlayout-androidx/README"
+          "path": "/modules/viewcompose-constraintlayout-androidx"
         }
       ],
       "sample": {
@@ -292,7 +292,7 @@
         {
           "documentId": "module.viewcompose-constraintlayout-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-constraintlayout-androidx/README"
+          "path": "/modules/viewcompose-constraintlayout-androidx"
         }
       ],
       "sample": {
@@ -319,6 +319,11 @@
           "documentId": "adr.correlated-render-diagnostics",
           "documentType": "architecture",
           "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
         },
         {
           "documentId": "tooling.diagnostics",
@@ -354,7 +359,7 @@
         {
           "documentId": "module.viewcompose-diagnostics",
           "documentType": "module",
-          "path": "/modules/viewcompose-diagnostics/README"
+          "path": "/modules/viewcompose-diagnostics"
         },
         {
           "documentId": "tooling.diagnostics",
@@ -383,6 +388,11 @@
           "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
         },
         {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
           "documentId": "tooling.diagnostics",
           "documentType": "tooling",
           "path": "/tooling/diagnostics"
@@ -409,6 +419,11 @@
           "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
         },
         {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
           "documentId": "tooling.diagnostics",
           "documentType": "tooling",
           "path": "/tooling/diagnostics"
@@ -427,7 +442,7 @@
         {
           "documentId": "module.viewcompose-exoplayer2-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-exoplayer2-android/README"
+          "path": "/modules/viewcompose-exoplayer2-android"
         }
       ],
       "sample": {
@@ -458,6 +473,38 @@
       }
     },
     {
+      "capabilityId": "foundation.components",
+      "referenceId": "reference.foundation.components",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-foundation-profile-summary",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "foundation.environment",
+      "referenceId": "reference.foundation.environment",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-foundation-environment",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "gesture.modifiers",
       "referenceId": "reference.gesture.modifiers",
       "relatedDocuments": [
@@ -474,12 +521,12 @@
         {
           "documentId": "module.viewcompose-gesture",
           "documentType": "module",
-          "path": "/modules/viewcompose-gesture/README"
+          "path": "/modules/viewcompose-gesture"
         },
         {
           "documentId": "module.viewcompose-gesture-core",
           "documentType": "module",
-          "path": "/modules/viewcompose-gesture-core/README"
+          "path": "/modules/viewcompose-gesture-core"
         }
       ],
       "sample": {
@@ -495,12 +542,12 @@
         {
           "documentId": "module.viewcompose-graphics",
           "documentType": "module",
-          "path": "/modules/viewcompose-graphics/README"
+          "path": "/modules/viewcompose-graphics"
         },
         {
           "documentId": "module.viewcompose-graphics-core",
           "documentType": "module",
-          "path": "/modules/viewcompose-graphics-core/README"
+          "path": "/modules/viewcompose-graphics-core"
         }
       ],
       "sample": {
@@ -516,7 +563,7 @@
         {
           "documentId": "module.viewcompose-host-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-host-android/README"
+          "path": "/modules/viewcompose-host-android"
         }
       ],
       "sample": {
@@ -532,12 +579,12 @@
         {
           "documentId": "module.viewcompose-host-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-host-android/README"
+          "path": "/modules/viewcompose-host-android"
         },
         {
           "documentId": "module.viewcompose-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-android/README"
+          "path": "/modules/viewcompose-android"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -558,7 +605,7 @@
         {
           "documentId": "module.viewcompose-host-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-host-android/README"
+          "path": "/modules/viewcompose-host-android"
         }
       ],
       "sample": {
@@ -579,12 +626,12 @@
         {
           "documentId": "module.viewcompose-host-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-host-android/README"
+          "path": "/modules/viewcompose-host-android"
         },
         {
           "documentId": "module.viewcompose-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-android/README"
+          "path": "/modules/viewcompose-android"
         }
       ],
       "sample": {
@@ -605,7 +652,7 @@
         {
           "documentId": "module.viewcompose-host-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-host-android/README"
+          "path": "/modules/viewcompose-host-android"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -631,7 +678,7 @@
         {
           "documentId": "module.viewcompose-image-coil",
           "documentType": "module",
-          "path": "/modules/viewcompose-image-coil/README"
+          "path": "/modules/viewcompose-image-coil"
         },
         {
           "documentId": "migration.image-loading",
@@ -653,6 +700,11 @@
           "documentId": "guide.image-loading",
           "documentType": "guide",
           "path": "/guides/image-loading"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
         },
         {
           "documentId": "migration.image-loading",
@@ -678,7 +730,7 @@
         {
           "documentId": "module.viewcompose-image-glide",
           "documentType": "module",
-          "path": "/modules/viewcompose-image-glide/README"
+          "path": "/modules/viewcompose-image-glide"
         }
       ],
       "sample": {
@@ -710,6 +762,11 @@
           "documentId": "architecture.lazy-collections-runtime",
           "documentType": "architecture",
           "path": "/architecture/lazy-collections"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
         }
       ],
       "sample": {
@@ -730,7 +787,7 @@
         {
           "documentId": "module.viewcompose-lifecycle-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx/README"
+          "path": "/modules/viewcompose-lifecycle-androidx"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -761,7 +818,7 @@
         {
           "documentId": "module.viewcompose-lifecycle-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx/README"
+          "path": "/modules/viewcompose-lifecycle-androidx"
         }
       ],
       "sample": {
@@ -782,7 +839,7 @@
         {
           "documentId": "module.viewcompose-lifecycle-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx/README"
+          "path": "/modules/viewcompose-lifecycle-androidx"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -808,12 +865,12 @@
         {
           "documentId": "module.viewcompose-lifecycle-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx/README"
+          "path": "/modules/viewcompose-lifecycle-androidx"
         },
         {
           "documentId": "module.viewcompose-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-android/README"
+          "path": "/modules/viewcompose-android"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -834,7 +891,7 @@
         {
           "documentId": "module.viewcompose-google-maps-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-google-maps-android/README"
+          "path": "/modules/viewcompose-google-maps-android"
         }
       ],
       "sample": {
@@ -850,7 +907,7 @@
         {
           "documentId": "module.viewcompose-google-maps-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-google-maps-android/README"
+          "path": "/modules/viewcompose-google-maps-android"
         }
       ],
       "sample": {
@@ -866,7 +923,7 @@
         {
           "documentId": "module.viewcompose-media3-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-media3-androidx/README"
+          "path": "/modules/viewcompose-media3-androidx"
         }
       ],
       "sample": {
@@ -998,12 +1055,12 @@
         {
           "documentId": "module.viewcompose-navigation-core",
           "documentType": "module",
-          "path": "/modules/viewcompose-navigation-core/README"
+          "path": "/modules/viewcompose-navigation-core"
         },
         {
           "documentId": "module.viewcompose-navigation-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-navigation-android/README"
+          "path": "/modules/viewcompose-navigation-android"
         }
       ],
       "sample": {
@@ -1029,7 +1086,7 @@
         {
           "documentId": "module.viewcompose-gesture",
           "documentType": "module",
-          "path": "/modules/viewcompose-gesture/README"
+          "path": "/modules/viewcompose-gesture"
         }
       ],
       "sample": {
@@ -1081,7 +1138,7 @@
         {
           "documentId": "module.viewcompose-overlay-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-overlay-android/README"
+          "path": "/modules/viewcompose-overlay-android"
         }
       ],
       "sample": {
@@ -1108,6 +1165,11 @@
           "documentId": "architecture.overlay-root-selection",
           "documentType": "architecture",
           "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
         }
       ],
       "sample": {
@@ -1154,7 +1216,7 @@
         {
           "documentId": "module.viewcompose-overlay-material3-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-overlay-material3-android/README"
+          "path": "/modules/viewcompose-overlay-material3-android"
         }
       ],
       "sample": {
@@ -1180,7 +1242,7 @@
         {
           "documentId": "module.viewcompose-overlay-oneui7-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-overlay-oneui7-android/README"
+          "path": "/modules/viewcompose-overlay-oneui7-android"
         }
       ],
       "sample": {
@@ -1196,7 +1258,7 @@
         {
           "documentId": "module.viewcompose-preview-core",
           "documentType": "module",
-          "path": "/modules/viewcompose-preview-core/README"
+          "path": "/modules/viewcompose-preview-core"
         }
       ],
       "sample": {
@@ -1212,7 +1274,7 @@
         {
           "documentId": "module.viewcompose-preview-core",
           "documentType": "module",
-          "path": "/modules/viewcompose-preview-core/README"
+          "path": "/modules/viewcompose-preview-core"
         }
       ],
       "sample": {
@@ -1228,7 +1290,7 @@
         {
           "documentId": "module.viewcompose-preview-gradle-plugin",
           "documentType": "module",
-          "path": "/modules/viewcompose-preview-gradle-plugin/README"
+          "path": "/modules/viewcompose-preview-gradle-plugin"
         }
       ],
       "sample": {
@@ -1244,7 +1306,7 @@
         {
           "documentId": "module.viewcompose-preview",
           "documentType": "module",
-          "path": "/modules/viewcompose-preview/README"
+          "path": "/modules/viewcompose-preview"
         }
       ],
       "sample": {
@@ -1260,7 +1322,7 @@
         {
           "documentId": "module.viewcompose-preview-runner",
           "documentType": "module",
-          "path": "/modules/viewcompose-preview-runner/README"
+          "path": "/modules/viewcompose-preview-runner"
         }
       ],
       "sample": {
@@ -1276,7 +1338,7 @@
         {
           "documentId": "module.viewcompose-preview-worker-host",
           "documentType": "module",
-          "path": "/modules/viewcompose-preview-worker-host/README"
+          "path": "/modules/viewcompose-preview-worker-host"
         }
       ],
       "sample": {
@@ -1292,7 +1354,7 @@
         {
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android/README"
+          "path": "/modules/viewcompose-renderer-android"
         }
       ],
       "sample": {
@@ -1308,7 +1370,7 @@
         {
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android/README"
+          "path": "/modules/viewcompose-renderer-android"
         }
       ],
       "sample": {
@@ -1324,7 +1386,7 @@
         {
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android/README"
+          "path": "/modules/viewcompose-renderer-android"
         }
       ],
       "sample": {
@@ -1340,7 +1402,7 @@
         {
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android/README"
+          "path": "/modules/viewcompose-renderer-android"
         }
       ],
       "sample": {
@@ -1366,7 +1428,7 @@
         {
           "documentId": "module.viewcompose-shadow-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-shadow-android/README"
+          "path": "/modules/viewcompose-shadow-android"
         }
       ],
       "sample": {
@@ -1392,7 +1454,7 @@
         {
           "documentId": "module.viewcompose-shadow-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-shadow-android/README"
+          "path": "/modules/viewcompose-shadow-android"
         }
       ],
       "sample": {
@@ -1424,6 +1486,11 @@
           "documentId": "architecture.text-input-runtime",
           "documentType": "architecture",
           "path": "/architecture/text-input"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
         }
       ],
       "sample": {
@@ -1445,6 +1512,11 @@
           "documentId": "architecture.theme-runtime",
           "documentType": "architecture",
           "path": "/architecture/theming"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
         }
       ],
       "sample": {
@@ -1496,12 +1568,12 @@
         {
           "documentId": "module.viewcompose-viewmodel-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-viewmodel-androidx/README"
+          "path": "/modules/viewcompose-viewmodel-androidx"
         },
         {
           "documentId": "module.viewcompose-android",
           "documentType": "module",
-          "path": "/modules/viewcompose-android/README"
+          "path": "/modules/viewcompose-android"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -1527,7 +1599,7 @@
         {
           "documentId": "module.viewcompose-viewmodel-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-viewmodel-androidx/README"
+          "path": "/modules/viewcompose-viewmodel-androidx"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -1553,7 +1625,7 @@
         {
           "documentId": "module.viewcompose-viewmodel-androidx",
           "documentType": "module",
-          "path": "/modules/viewcompose-viewmodel-androidx/README"
+          "path": "/modules/viewcompose-viewmodel-androidx"
         },
         {
           "documentId": "migration.compose-host-lifecycle-android-interop",
@@ -1772,6 +1844,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1780,6 +1853,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1788,6 +1862,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1796,6 +1871,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1804,6 +1880,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1812,6 +1889,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1820,6 +1898,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1828,6 +1907,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -1836,6 +1916,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2178,6 +2259,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2186,6 +2268,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2194,6 +2277,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2202,6 +2286,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2210,6 +2295,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2227,6 +2313,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2235,6 +2322,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2399,6 +2487,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.environment",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2430,6 +2519,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2438,6 +2528,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2446,6 +2537,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2472,6 +2564,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2480,6 +2573,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2488,6 +2582,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 2,
@@ -2528,6 +2623,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2536,6 +2632,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2544,6 +2641,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2552,6 +2650,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2560,6 +2659,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2568,6 +2668,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2576,6 +2677,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2584,6 +2686,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2592,6 +2695,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2600,6 +2704,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2608,6 +2713,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2616,6 +2722,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2675,6 +2782,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2698,6 +2806,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2706,6 +2815,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2714,6 +2824,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2731,6 +2842,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2775,6 +2887,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2783,6 +2896,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2791,6 +2905,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2840,6 +2955,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2848,6 +2964,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2856,6 +2973,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2864,6 +2982,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -2944,6 +3063,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.environment",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5908,6 +6028,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5934,6 +6055,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5942,6 +6064,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5950,6 +6073,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.environment",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5958,6 +6082,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.environment",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5966,6 +6091,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.environment",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5983,6 +6109,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.environment",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5991,6 +6118,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -5999,6 +6127,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -6007,6 +6136,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -6015,6 +6145,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -6023,6 +6154,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.components",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -6031,6 +6163,7 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "foundation.environment",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
@@ -6073,7 +6206,7 @@
     },
     "entryCount": 531,
     "groupCount": 15,
-    "ownedEntryCount": 451,
+    "ownedEntryCount": 512,
     "sourceFingerprint": "80f5edb72153bf8b4f5d111fc8e85926e3be3abcc15679a3a7afb2fc126132f9"
   }
 }

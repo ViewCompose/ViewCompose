@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: aa03b2aceab77665704837d7c2f42a89562942d12f5d3e93b553b09612d6b755
+translation_source_hash: b148e9b6d14b0796558d5b946dc782a4529d01b09d373c10d55f5bfc86b1ee55
 translation_status: current
 ---
 
@@ -21,6 +21,7 @@ Popup，不执行图片解码，也不提供可选的动画、手势、图形、
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-foundation-module-dependency" sample_id="module.ui-foundation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01")
@@ -40,6 +41,7 @@ dependencies {
 
 ## 最小组件示例
 
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt" region="ui-foundation-profile-summary" sample_id="module.ui-foundation-profile-summary" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
 ```kotlin
 fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
     UiTheme {
@@ -53,6 +55,21 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 
 `UiTreeBuilder` 记录不可变 VNode。`UiTheme` 提供完整 Token 快照，每个发射的节点都会捕获
 当前主题、密度、语言、布局方向，以及后续渲染器或子 Render Session 所需的其他 Local。
+
+## 环境与 Local 作用域
+
+使用 `UiEnvironment` 提供一份完整的平台中立环境快照，使用 `ProvideLocal` 或 `ProvideLocals`
+提供应用拥有的作用域值。声明内容时同步读取 Local；Effect 回调应捕获已解析值，而不是稍后再读取
+Provider Stack。
+
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt" region="ui-foundation-environment" sample_id="module.ui-foundation-environment" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
+```kotlin
+UiEnvironment {
+    ProvideLocal(AccountRole, "admin") {
+        Text(UiLocals.current(AccountRole))
+    }
+}
+```
 
 ## 主要 API
 

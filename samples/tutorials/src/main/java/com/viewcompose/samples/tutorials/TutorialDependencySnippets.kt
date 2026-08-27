@@ -123,6 +123,14 @@ dependencies {
     // DOCS_REGION_END(viewmodel-androidx-module-dependency)
 }
 
+private val uiFoundationModuleDependency = run {
+    // DOCS_REGION_START(ui-foundation-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(ui-foundation-module-dependency)
+}
+
 private val rendererAndroidModuleDependency = run {
     // DOCS_REGION_START(renderer-android-module-dependency)
 dependencies {

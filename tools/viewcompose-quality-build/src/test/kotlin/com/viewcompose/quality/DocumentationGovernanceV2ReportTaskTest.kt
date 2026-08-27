@@ -329,7 +329,9 @@ class DocumentationGovernanceV2ReportTaskTest {
         }
         val translationPolicy = repository.resolve("website/i18n/translation-policy.json").apply {
             parentFile.mkdirs()
-            writeText("""{"schemaVersion":1,"locale":"zh-CN","required":[]}""")
+            writeText(
+                """{"schemaVersion":1,"locale":"zh-CN","required":["modules/viewcompose-example/README.md"]}""",
+            )
         }
         val moduleCatalog = repository.resolve("docs/modules/README.md").apply {
             parentFile.mkdirs()
@@ -360,8 +362,25 @@ class DocumentationGovernanceV2ReportTaskTest {
                   ],
                   "reference_owner": {"reference_id": "reference.example.entries", "generated": true},
                   "sample_owner": {"exception_id": "DOC-9999"},
-                  "document_owners": {}
+                  "document_owners": {"module": ["module.viewcompose-example"]}
                 }
+                """.trimIndent(),
+            )
+        }
+        val moduleDocument = repository.resolve(
+            "docs/modules/viewcompose-example/README.md",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                ---
+                schema_version: 2
+                document_id: module.viewcompose-example
+                doc_type: module
+                version_lane: next
+                ---
+
+                # Example
                 """.trimIndent(),
             )
         }
@@ -371,7 +390,7 @@ class DocumentationGovernanceV2ReportTaskTest {
             contractFiles = contractRoot.walkTopDown().filter(File::isFile).toSet(),
             recordFiles = setOf(capability),
             sourceSetDirectories = setOf(sourceRoot),
-            activeDocumentationFiles = emptySet(),
+            activeDocumentationFiles = setOf(moduleDocument),
             localeMirrorFiles = emptySet(),
             publishingFiles = setOf(publishing, releases),
             documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
@@ -384,6 +403,10 @@ class DocumentationGovernanceV2ReportTaskTest {
         assertEquals(1, capabilities.size)
         assertEquals("example.entries", capabilities.single()["capabilityId"])
         assertEquals("reference.example.entries", capabilities.single()["referenceId"])
+        @Suppress("UNCHECKED_CAST")
+        val relatedDocuments = capabilities.single().getValue("relatedDocuments")
+            as List<Map<String, Any?>>
+        assertEquals("/modules/viewcompose-example", relatedDocuments.single()["path"])
         @Suppress("UNCHECKED_CAST")
         val groups = reference.getValue("groups") as List<Map<String, Any?>>
         val entries = groups.flatMap { group ->
