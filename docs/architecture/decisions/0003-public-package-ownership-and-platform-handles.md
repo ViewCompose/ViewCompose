@@ -1,3 +1,44 @@
+---
+schema_version: 2
+document_id: architecture.public-package-ownership
+doc_type: architecture
+slug: /architecture/decisions/public-package-ownership-and-platform-handles
+owner:
+  kind: capability
+  id: host.android-container
+version_lane: released
+capability_ids:
+  - constraintlayout.core
+  - foundation.environment
+  - host.android-container
+  - host.android-resources
+  - overlay.android-transport
+  - overlay.material3
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-android
+  - viewcompose-constraintlayout-androidx
+  - viewcompose-overlay-android
+  - viewcompose-overlay-material3-android
+sample_ids:
+  - module.host-android-dependency
+  - module.constraintlayout-dependency
+  - module.overlay-android-dependency
+  - module.overlay-material3-dependency
+invariants:
+  - Every published artifact has one canonical package-root owner and each Android namespace equals that root.
+  - Neutral application entry points and low-level mounting remain in distinct com.viewcompose.android and com.viewcompose.host.android roots.
+  - UI Foundation coordinates Android execution only through opaque installed platform contracts and never unwraps native containers.
+  - Neutral overlay transport and Material presentation retain distinct artifacts and package roots with no split ownership.
+  - Retired widget and generic overlay taxonomies never return through source or service descriptors.
+evidence:
+  - tools/viewcompose-quality-build/src/main/kotlin/com/viewcompose/quality/ArchitectureGateTasks.kt
+  - tools/viewcompose-quality-build/src/test/kotlin/com/viewcompose/quality/ArchitectureGateParityTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionPlatformRegistryTest.kt
+  - viewcompose-host-android/src/test/java/com/viewcompose/host/android/overlay/AndroidOverlayHostDefaultsTest.kt
+---
+
 # ADR-0003: Public Package Ownership and Platform Handles
 
 ## Status and date

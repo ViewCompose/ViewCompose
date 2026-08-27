@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0001-hosted-documentation-platform.md
-translation_source_hash: 9aca686a026dff3a6e23973d4c871c410a16315372125ca607bfa74aaece3482
+translation_source_hash: 1a4ceab3a7410f235dc64e43dd13db28675d8a6cfe954b32767e3a3f676e9f36
 translation_status: current
 ---
 

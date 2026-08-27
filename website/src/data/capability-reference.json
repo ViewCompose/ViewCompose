@@ -232,6 +232,11 @@
           "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
         },
         {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
           "documentId": "module.viewcompose-animation",
           "documentType": "module",
           "path": "/modules/viewcompose-animation"
@@ -278,6 +283,11 @@
       "capabilityId": "constraintlayout.core",
       "referenceId": "reference.constraintlayout.core",
       "relatedDocuments": [
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
         {
           "documentId": "module.viewcompose-constraintlayout-androidx",
           "documentType": "module",
@@ -497,6 +507,16 @@
           "path": "/architecture/design-systems"
         },
         {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
@@ -548,6 +568,11 @@
       "capabilityId": "foundation.environment",
       "referenceId": "reference.foundation.environment",
       "relatedDocuments": [
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
         {
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
@@ -638,6 +663,16 @@
       "referenceId": "reference.host.android-container",
       "relatedDocuments": [
         {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
           "documentId": "module.viewcompose-host-android",
           "documentType": "module",
           "path": "/modules/viewcompose-host-android"
@@ -688,6 +723,16 @@
           "documentId": "architecture.design-system-integration",
           "documentType": "architecture",
           "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
         },
         {
           "documentId": "module.viewcompose-host-android",
@@ -1022,6 +1067,16 @@
           "path": "/architecture/design-systems"
         },
         {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
           "documentId": "module.viewcompose-material3",
           "documentType": "module",
           "path": "/modules/viewcompose-material3"
@@ -1257,6 +1312,16 @@
           "path": "/architecture/design-systems"
         },
         {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
           "documentId": "module.viewcompose-oneui7",
           "documentType": "module",
           "path": "/modules/viewcompose-oneui7"
@@ -1312,6 +1377,11 @@
           "documentId": "architecture.design-system-integration",
           "documentType": "architecture",
           "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
         },
         {
           "documentId": "module.viewcompose-overlay-android",
@@ -1395,6 +1465,11 @@
           "documentId": "architecture.design-system-integration",
           "documentType": "architecture",
           "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
         },
         {
           "documentId": "module.viewcompose-overlay-material3-android",
@@ -1824,6 +1899,16 @@
           "path": "/architecture/design-systems"
         },
         {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
@@ -1865,6 +1950,16 @@
           "path": "/architecture/design-systems"
         },
         {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
           "documentId": "module.viewcompose-material3",
           "documentType": "module",
           "path": "/modules/viewcompose-material3"
@@ -1889,6 +1984,16 @@
           "documentId": "architecture.design-system-integration",
           "documentType": "architecture",
           "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
         },
         {
           "documentId": "module.viewcompose-oneui7",

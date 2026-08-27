@@ -1,3 +1,47 @@
+---
+schema_version: 2
+document_id: architecture.design-system-resolution
+doc_type: architecture
+slug: /architecture/decisions/design-system-resolution-boundary
+owner:
+  kind: capability
+  id: theme.foundation
+version_lane: released
+capability_ids:
+  - animation.composition-motion
+  - foundation.components
+  - material3.components
+  - oneui7.components
+  - theme.foundation
+  - theme.material3
+  - theme.oneui7
+artifact_ids:
+  - viewcompose-animation-core
+  - viewcompose-animation
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-material3
+  - viewcompose-oneui7
+sample_ids:
+  - module.material3-theme
+  - module.material3-components
+  - module.oneui7-theme
+  - module.oneui7-components
+invariants:
+  - Foundation tokens, typed design-system recipes, and resolved renderer execution contracts remain separate immutable boundaries.
+  - Android Renderer never branches on the originating design-system identity.
+  - Shared Basic primitives carry only semantics proven reusable across materially different systems; named structure remains in its owning module.
+  - Runtime switching replaces one coherent root and Session bundle instead of mutating design-system identity in place.
+  - Motion policy resolves immutable semantic roles while lifecycle-owned animation APIs retain execution ownership.
+evidence:
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/theme/ThemeRecipeBoundaryGuardTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/theme/DesignSystemDiagnosticsTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/guard/DesignSystemIsolationGuardTest.kt
+  - viewcompose-material3/src/test/java/com/viewcompose/material3/Material3ThemeBridgeTest.kt
+  - viewcompose-oneui7/src/test/java/com/viewcompose/oneui7/OneUi7ComponentsTest.kt
+---
+
 # ADR-0004: Design-System Resolution Boundary
 
 ## Status and date

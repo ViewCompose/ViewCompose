@@ -64,7 +64,11 @@
   "document_owners": {
     "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.getting-started", "tutorial.state-and-events"],
-    "architecture": ["architecture.design-system-integration"],
+    "architecture": [
+      "architecture.design-system-integration",
+      "architecture.design-system-resolution",
+      "architecture.design-system-host-backends"
+    ],
     "migration": [
       "migration.compose-layout-modifier-environment",
       "migration.dsl-contract-convergence"

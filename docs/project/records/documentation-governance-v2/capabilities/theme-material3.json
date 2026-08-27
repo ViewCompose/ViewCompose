@@ -14,6 +14,11 @@
     "module": ["module.viewcompose-material3", "module.viewcompose-material3-android"],
     "tutorial": ["tutorial.theming"],
     "guide": ["guide.theming-mode-switch", "guide.theming-dynamic-color"],
-    "architecture": ["architecture.theme-runtime", "architecture.design-system-integration"]
+    "architecture": [
+      "architecture.theme-runtime",
+      "architecture.design-system-integration",
+      "architecture.design-system-resolution",
+      "architecture.design-system-host-backends"
+    ]
   }
 }

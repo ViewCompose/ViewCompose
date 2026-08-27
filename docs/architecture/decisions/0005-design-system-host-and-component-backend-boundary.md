@@ -1,3 +1,50 @@
+---
+schema_version: 2
+document_id: architecture.design-system-host-backends
+doc_type: architecture
+slug: /architecture/decisions/design-system-host-and-component-backend-boundary
+owner:
+  kind: capability
+  id: theme.foundation
+version_lane: released
+capability_ids:
+  - foundation.components
+  - host.android-container
+  - host.android-resources
+  - material3.components
+  - oneui7.components
+  - theme.foundation
+  - theme.material3
+  - theme.oneui7
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-host-android
+  - viewcompose-android
+  - viewcompose-material3
+  - viewcompose-material3-android
+  - viewcompose-oneui7
+sample_ids:
+  - module.material3-android-host
+  - module.material3-theme
+  - module.material3-components
+  - module.oneui7-theme
+  - module.oneui7-components
+invariants:
+  - A named Android adapter resolves design-system Context and platform capability before View construction, then composition installs the matching immutable policy bundle.
+  - Neutral Host and viewcompose-android never select Material or expose named design-system policy.
+  - Component backends retain a native behavioral core, use a named DSL composite, or add a neutral custom View according to explicit behavior and performance evidence.
+  - A design-specific Android View remains in a named integration until two independent consumers prove a name-free renderer contract.
+  - Replacing native behavior requires interaction, focus, accessibility, restoration, lifecycle, visual, and performance parity rather than resting screenshots alone.
+evidence:
+  - tools/viewcompose-quality-build/src/test/kotlin/com/viewcompose/quality/ArchitectureGateParityTest.kt
+  - viewcompose-android/src/test/java/com/viewcompose/android/AndroidHostThemeIntegrationTest.kt
+  - viewcompose-material3-android/src/test/java/com/viewcompose/material3/android/Material3AndroidHostIntegrationTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/theme/ThemeRecipeBoundaryGuardTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/guard/DesignSystemIsolationGuardTest.kt
+---
+
 # ADR-0005: Design-System Host and Component Backend Boundary
 
 ## Status and date

@@ -1,3 +1,27 @@
+---
+schema_version: 2
+document_id: architecture.five-layer-runtime-modules
+doc_type: architecture
+slug: /architecture/decisions/five-layer-runtime-module-architecture
+owner:
+  kind: project
+  id: architecture
+version_lane: released
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+invariants:
+  - Every published runtime artifact belongs to exactly one of Kernel, UI Foundation, Android Engine, Design System, or Integrations.
+  - Lower layers never depend on higher layers, runtime never depends on tooling, and application aggregates own no lower-layer semantics.
+  - Material and other named design systems remain above neutral UI Foundation, Android Renderer, and Host contracts.
+  - Renderer executes resolved name-free semantics; a public renderer extension surface requires independent lifecycle, conflict, rollback, and performance evidence.
+  - Responsibility-misaligned alpha artifacts and coordinates are replaced by hard cut rather than permanent forwarding facades.
+evidence:
+  - gradle/viewcompose-dependency-contracts.properties
+  - tools/viewcompose-quality-build/src/main/kotlin/com/viewcompose/quality/ArchitectureGateTasks.kt
+  - tools/viewcompose-quality-build/src/test/kotlin/com/viewcompose/quality/ArchitectureGateParityTest.kt
+---
+
 # ADR-0002: Five-Layer Runtime Module Architecture
 
 ## Status and date

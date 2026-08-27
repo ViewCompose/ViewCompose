@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0005-design-system-host-and-component-backend-boundary.md
-translation_source_hash: 9f053d1604c189941b2e51ecb46bc0e5edbdfcc30a42974574a5c54fea8641fa
+translation_source_hash: b0335fa5d95bc7b9c2c183875a1cdb4f55c29490009c9265332f9b2bf1f17956
 translation_status: current
 ---
 

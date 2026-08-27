@@ -1,3 +1,29 @@
+---
+schema_version: 2
+document_id: architecture.hosted-documentation-platform
+doc_type: architecture
+slug: /architecture/decisions/hosted-documentation-platform
+owner:
+  kind: project
+  id: documentation-site
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+invariants:
+  - Handwritten documentation remains reviewable beside source while generated site and API output stay outside version control.
+  - Every published artifact version resolves API documentation from an immutable source revision rather than a moving branch.
+  - Pull requests verify the complete static product, and only main may deploy the stable public routes.
+  - Module navigation, version aliases, and API assembly derive from publishing and documentation registries instead of parallel site configuration.
+evidence:
+  - website/package.json
+  - website/scripts/assemble-versioned-api-docs.mjs
+  - website/scripts/build-site.mjs
+  - website/scripts/__tests__/versioned-api-cache.test.mjs
+  - website/scripts/__tests__/verify-site-budgets.test.mjs
+  - .github/workflows/documentation.yml
+---
+
 # ADR-0001: Hosted Documentation Platform
 
 ## Status and date

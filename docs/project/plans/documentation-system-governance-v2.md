@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Architecture core metadata slice, then govern and reconcile ADR-0001 through ADR-0005 before the remaining ADR metadata batches.
+next_action: Merge the ADR-0001 through ADR-0005 metadata slice, then deduplicate Capability Reference related-document output before governing the remaining ADR metadata batches.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -1865,6 +1865,47 @@ Accepted Architecture core semantic-reconciliation and metadata slice on 2026-08
   slice changes no publication input, public API, or production runtime behavior and makes no new
   visual, power, or performance claim. The next action is ADR-0001 through ADR-0005, followed by the
   remaining ADR metadata batches.
+
+Accepted ADR-0001 through ADR-0005 semantic-reconciliation and metadata slice on 2026-08-27:
+
+- assigned stable project or capability ownership, released/version-agnostic lifecycle contracts,
+  evidence, invariants, reciprocal capability links, artifacts, and compiled-sample relationships
+  to the hosted-documentation, runtime-layer, public-package, design-system-resolution, and
+  design-system-backend decisions. Their Chinese mirrors carry reviewed canonical fingerprints;
+- rechecked the hosted Docusaurus/Search/GitHub Pages stack, five-layer module and package-isolation
+  gates, neutral versus design-system host entry points, design-system resolution diagnostics, and
+  platform-handle ownership against current build configuration, source, and tests. The decisions
+  remain semantically current, so no architectural behavior was rewritten or promoted;
+- hard-corrected the generated source links for numbered ADR files by declaring explicit stable
+  Docusaurus slugs matching their existing number-prefix-stripped routes. The first complete site
+  build rejected the numeric file-path links; regeneration plus the explicit route contracts made
+  every generated Reference link and both locales pass without weakening broken-link validation;
+- removed five resolved metadata exceptions. The Governance V2 report changed from 20 to 15
+  issues, all remaining findings are exact missing-metadata debt. All 531 discovered entries remain
+  owned; unclassified samples, orphan symbols, taxonomy mismatches, duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remain zero;
+- regenerated the Capability Reference from reciprocal ownership. It retains 531 entries and grows
+  from 243,518 to 248,068 bytes, a 4,550-byte (`1.8684%`) metadata-only increase;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,168,586 non-API
+  bytes, and left 9,628 bytes under the unchanged 46.9 MiB limit. This is 26,368 bytes (`0.0537%`)
+  above the Architecture core slice and is `no material change`. Docusaurus completed in `38.0 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- Governance V2, documentation structure, language and translation review, generated Reference
+  freshness, release intent, stable-route existence, and the complete bilingual site passed.
+  Complete single-worker `qaQuick` passed 2,342 actionable tasks in `38 s` (180 executed and 2,162
+  up-to-date); this is completeness evidence rather than a speed comparison because it reused
+  previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: the first five ADRs now have machine-checked ownership and
+  their durable route contracts agree with the generated Reference. Release intent found zero
+  release artifacts, zero ignored artifacts, and zero shared-path classifications against
+  `a89992ac60ab15d5535361504273fa9157f42a89`. This documentation-only slice changes no publication
+  input, public API, or production runtime behavior and makes no new visual, power, or performance
+  claim. The limitation is that reciprocal related-document records still duplicate presentation
+  data in the Reference bundle; only 9,628 non-API bytes remain. The next action is to deduplicate
+  that generated representation before adding the remaining ADR metadata, without widening the
+  accepted site budget.
 
 | Current area | Required target |
 | --- | --- |

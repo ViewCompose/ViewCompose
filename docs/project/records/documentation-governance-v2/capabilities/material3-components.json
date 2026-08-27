@@ -17,6 +17,10 @@
   "sample_owner": { "sample_id": "module.material3-components" },
   "document_owners": {
     "module": ["module.viewcompose-material3", "module.viewcompose-material3-android"],
-    "architecture": ["architecture.design-system-integration"]
+    "architecture": [
+      "architecture.design-system-integration",
+      "architecture.design-system-resolution",
+      "architecture.design-system-host-backends"
+    ]
   }
 }
