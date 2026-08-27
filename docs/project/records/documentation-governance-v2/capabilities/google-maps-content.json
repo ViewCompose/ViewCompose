@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "capability_id": "maps.google.content",
+  "kind": "integration",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-google-maps-android"
+  },
+  "artifact": "viewcompose-google-maps-android",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha01"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.maps.google.GoogleMapMarkerStyle",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-google-maps-android/src/main/java/com/viewcompose/maps/google/GoogleMapScope.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.maps.google.GoogleMapPolylineStyle",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-google-maps-android/src/main/java/com/viewcompose/maps/google/GoogleMapScope.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.maps.google.GoogleMapScope",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-google-maps-android/src/main/java/com/viewcompose/maps/google/GoogleMapScope.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.maps.google.content",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.google-map-content"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-google-maps-android"
+    ]
+  }
+}

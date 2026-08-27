@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.media3-player",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "media3.player",
+  "document_ids": [
+    "module.viewcompose-media3-androidx"
+  ],
+  "version_lane": "released",
+  "source": "viewcompose-media3-androidx/src/test/samples/com/viewcompose/media3/samples/Media3Samples.kt",
+  "region": "media3-player",
+  "build_target": ":viewcompose-media3-androidx:compileDebugUnitTestKotlin"
+}

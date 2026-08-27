@@ -1,0 +1,88 @@
+{
+  "schema_version": 2,
+  "capability_id": "camerax.preview",
+  "kind": "integration",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-camerax-androidx"
+  },
+  "artifact": "viewcompose-camerax-androidx",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha01"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXLensFacing",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewBindingState",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewConfiguration",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewFailure",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewFailureReason",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewImplementationMode",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewRotation",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewScaleType",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.CameraXPreviewStreamState",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.camerax.UiTreeBuilder.CameraXPreviewView",
+      "kind": "extension",
+      "visibility": "public",
+      "source": "viewcompose-camerax-androidx/src/main/java/com/viewcompose/camerax/CameraXPreviewView.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.camerax.preview",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.camerax-preview"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-camerax-androidx"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-camerax-androidx/README.md
-translation_source_hash: fa5d4eeaee9f154fe951c7b95fac0c9c205a97c5ddf318a0476c9beb6735ba9b
+translation_source_hash: 752acf7c84dc75053671b411769551a3ee0bd0b06c6894f7bd870c5ee024c5dc
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="camerax-dependency" sample_id="module.camerax-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-camerax-androidx:0.1.0-alpha01")
@@ -33,18 +34,23 @@ dependencies {
 
 在应用代码中解析权限和进程 provider，再把 provider 作为受控状态传入：
 
+{/* compiled-region source="viewcompose-camerax-androidx/src/test/samples/com/viewcompose/camerax/samples/CameraXSamples.kt" region="camerax-preview" sample_id="module.camerax-preview" build_target=":viewcompose-camerax-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-CameraXPreviewView(
-    cameraProvider = resolvedProvider,
-    lensFacing = CameraXLensFacing.Back,
-    configuration = CameraXPreviewConfiguration(
-        contentDescription = "Document camera preview",
-    ),
-    onFailure = { failure -> showCameraFailure(failure.reason) },
-)
+fun UiTreeBuilder.cameraXPreviewViewSample(provider: ProcessCameraProvider?) {
+    CameraXPreviewView(
+        cameraProvider = provider,
+        lensFacing = CameraXLensFacing.Back,
+        configuration = CameraXPreviewConfiguration(
+            contentDescription = "Document camera preview",
+        ),
+        onFailure = { failure ->
+            // Present failure.reason and let the application decide whether or when to retry.
+        },
+    )
+}
 ```
 
-`ProcessCameraProvider.getInstance(context)` 尚未完成时，`resolvedProvider` 可以为 `null`。
+`ProcessCameraProvider.getInstance(context)` 尚未完成时，`provider` 可以为 `null`。
 此时组件不执行相机工作，并报告 `WaitingForProvider`。如果应用不采用 CameraX 默认值，应在
 解析 provider 之前完成进程配置。模块不依赖 `camera-camera2`；应用可以明确选择该后端或
 其他兼容 CameraX 配置。

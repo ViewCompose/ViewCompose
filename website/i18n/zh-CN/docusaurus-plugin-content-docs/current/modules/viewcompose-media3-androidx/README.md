@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-media3-androidx/README.md
-translation_source_hash: 29ef989dfae1ee3b263a3084c575ec8274e240c2a92a9fcaa16961fe14e6bd84
+translation_source_hash: ad71ee66b88f4f36616aecc987aa081e16b48e8a9521c82506680876992365d8
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="media3-dependency" sample_id="module.media3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-media3-androidx:0.1.0-alpha01")
@@ -29,16 +30,22 @@ dependencies {
 
 ## 基本用法
 
+{/* compiled-region source="viewcompose-media3-androidx/src/test/samples/com/viewcompose/media3/samples/Media3Samples.kt" region="media3-player" sample_id="module.media3-player" build_target=":viewcompose-media3-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-Media3PlayerView(
-    player = activityOwnedPlayer,
-    surfaceType = Media3SurfaceType.SurfaceView,
-    configuration = Media3PlayerViewConfiguration(
-        showBuffering = Media3ShowBuffering.WhenPlaying,
-        contentDescription = "Episode video",
-    ),
-    onRenderedFirstFrame = { firstFrameVisible = true },
-)
+fun UiTreeBuilder.media3PlayerViewSample(player: Player) {
+    Media3PlayerView(
+        player = player,
+        surfaceType = Media3SurfaceType.SurfaceView,
+        configuration = Media3PlayerViewConfiguration(
+            useController = true,
+            showBuffering = Media3ShowBuffering.WhenPlaying,
+            contentDescription = "Episode video",
+        ),
+        onRenderedFirstFrame = {
+            // Update caller-owned UI state or diagnostics here.
+        },
+    )
+}
 ```
 
 调用方负责创建、配置、控制并最终释放 `Player`。集成层不会调用 `play`、`pause`、`stop` 或

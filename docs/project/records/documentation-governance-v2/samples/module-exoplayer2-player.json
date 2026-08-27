@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.exoplayer2-player",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "exoplayer2.player",
+  "document_ids": [
+    "module.viewcompose-exoplayer2-android"
+  ],
+  "version_lane": "released",
+  "source": "viewcompose-exoplayer2-android/src/test/samples/com/viewcompose/exoplayer2/samples/ExoPlayerSamples.kt",
+  "region": "exoplayer2-player",
+  "build_target": ":viewcompose-exoplayer2-android:compileDebugUnitTestKotlin"
+}

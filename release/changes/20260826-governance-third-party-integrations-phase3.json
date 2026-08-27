@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register compiled CameraX, Google Maps, Media3, and legacy ExoPlayer documentation samples and ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-camerax-androidx",
+      "reason": "Only the test-only compiled documentation sample gains region boundaries; test sources are excluded from the published artifact, and production sources, signatures, behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-google-maps-android",
+      "reason": "Only test-only compiled documentation samples are reorganized to expose separate host and keyed-content regions; test sources are excluded from the published artifact, and production sources, signatures, behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-media3-androidx",
+      "reason": "Only the test-only compiled documentation sample is aligned with the existing Surface and configuration contract; test sources are excluded from the published artifact, and production sources, signatures, behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-exoplayer2-android",
+      "reason": "Only the test-only compiled documentation sample gains region boundaries; test sources are excluded from the published artifact, and production sources, signatures, behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: module.viewcompose-camerax-androidx
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-camerax-androidx
+version_lane: released
+capability_ids:
+  - camerax.preview
+artifact_ids:
+  - viewcompose-camerax-androidx
+sample_ids:
+  - module.camerax-dependency
+  - module.camerax-preview
+coordinate: com.viewcompose:viewcompose-camerax-androidx:0.1.0-alpha01
+minimal_usage_sample_id: module.camerax-dependency
+---
+
 # CameraX AndroidX Integration
 
 `viewcompose-camerax-androidx` hosts one CameraX 1.6.1 `Preview` in a native `PreviewView`. It
@@ -6,6 +25,7 @@ choosing a process provider configuration, or disturbing unrelated CameraX use c
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="camerax-dependency" sample_id="module.camerax-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-camerax-androidx:0.1.0-alpha01")
@@ -29,18 +49,23 @@ dependencies {
 Resolve permission and the process provider in application code, then pass the provider as
 controlled state:
 
+{/* compiled-region source="viewcompose-camerax-androidx/src/test/samples/com/viewcompose/camerax/samples/CameraXSamples.kt" region="camerax-preview" sample_id="module.camerax-preview" build_target=":viewcompose-camerax-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-CameraXPreviewView(
-    cameraProvider = resolvedProvider,
-    lensFacing = CameraXLensFacing.Back,
-    configuration = CameraXPreviewConfiguration(
-        contentDescription = "Document camera preview",
-    ),
-    onFailure = { failure -> showCameraFailure(failure.reason) },
-)
+fun UiTreeBuilder.cameraXPreviewViewSample(provider: ProcessCameraProvider?) {
+    CameraXPreviewView(
+        cameraProvider = provider,
+        lensFacing = CameraXLensFacing.Back,
+        configuration = CameraXPreviewConfiguration(
+            contentDescription = "Document camera preview",
+        ),
+        onFailure = { failure ->
+            // Present failure.reason and let the application decide whether or when to retry.
+        },
+    )
+}
 ```
 
-`resolvedProvider` may be `null` while `ProcessCameraProvider.getInstance(context)` is pending. In
+`provider` may be `null` while `ProcessCameraProvider.getInstance(context)` is pending. In
 that state the component performs no camera work and reports `WaitingForProvider`. Configure the
 process provider before resolving it if the application does not use CameraX defaults. The module
 does not depend on `camera-camera2`; applications may select that backend or another compatible

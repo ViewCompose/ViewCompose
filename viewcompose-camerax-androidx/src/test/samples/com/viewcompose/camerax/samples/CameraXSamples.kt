@@ -7,6 +7,7 @@ import com.viewcompose.camerax.CameraXPreviewView
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /** Hosts one integration-owned preview after the caller has resolved permission and a provider. */
+// DOCS_REGION_START(camerax-preview)
 fun UiTreeBuilder.cameraXPreviewViewSample(provider: ProcessCameraProvider?) {
     CameraXPreviewView(
         cameraProvider = provider,
@@ -19,3 +20,4 @@ fun UiTreeBuilder.cameraXPreviewViewSample(provider: ProcessCameraProvider?) {
         },
     )
 }
+// DOCS_REGION_END(camerax-preview)

@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "capability_id": "exoplayer2.player",
+  "kind": "integration",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-exoplayer2-android"
+  },
+  "artifact": "viewcompose-exoplayer2-android",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha01"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.exoplayer2.ExoPlayerArtworkDisplayMode",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-exoplayer2-android/src/main/java/com/viewcompose/exoplayer2/ExoPlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.exoplayer2.ExoPlayerResizeMode",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-exoplayer2-android/src/main/java/com/viewcompose/exoplayer2/ExoPlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.exoplayer2.ExoPlayerShowBuffering",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-exoplayer2-android/src/main/java/com/viewcompose/exoplayer2/ExoPlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.exoplayer2.ExoPlayerSurfaceType",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-exoplayer2-android/src/main/java/com/viewcompose/exoplayer2/ExoPlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.exoplayer2.ExoPlayerViewConfiguration",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-exoplayer2-android/src/main/java/com/viewcompose/exoplayer2/ExoPlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.exoplayer2.UiTreeBuilder.ExoPlayerView",
+      "kind": "extension",
+      "visibility": "public",
+      "source": "viewcompose-exoplayer2-android/src/main/java/com/viewcompose/exoplayer2/ExoPlayerView.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.exoplayer2.player",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.exoplayer2-player"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-exoplayer2-android"
+    ]
+  }
+}

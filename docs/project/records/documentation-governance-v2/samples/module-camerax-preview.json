@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.camerax-preview",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "camerax.preview",
+  "document_ids": [
+    "module.viewcompose-camerax-androidx"
+  ],
+  "version_lane": "released",
+  "source": "viewcompose-camerax-androidx/src/test/samples/com/viewcompose/camerax/samples/CameraXSamples.kt",
+  "region": "camerax-preview",
+  "build_target": ":viewcompose-camerax-androidx:compileDebugUnitTestKotlin"
+}

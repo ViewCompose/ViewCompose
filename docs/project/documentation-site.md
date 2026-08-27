@@ -430,6 +430,18 @@ identity token.
   framework behavior, or budget. This observation reuses existing protocol, runner,
   device-diagnostic, and Paparazzi evidence and makes no new runtime, visual, or performance claim.
 
+- **2026-08-26, Governance V2 third-party integration local acceptance:** the hard cut retained
+  the CameraX, Google Maps, Media3, and legacy ExoPlayer module routes, registered all 32 public
+  entries and nine compiled sample decisions, and reduced Governance V2 debt from 390 to 345. The
+  complete evidence-bearing build audited 454 pages, produced 48,715,878 non-API bytes, left
+  462,336 bytes under the unchanged limit, and completed Docusaurus in `27.4 s`. This is 68,266
+  bytes (`0.1403%`) above the Preview slice because four structured module contracts and full
+  compiled samples are now emitted. The result is **improved**: exact ownership and bilingual
+  executable coverage increased while the build remains well inside the unchanged budget, without
+  changing the website stack, routes, framework behavior, or published artifacts. This observation
+  reuses existing module/device evidence and makes no new runtime, network, power, or performance
+  claim.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

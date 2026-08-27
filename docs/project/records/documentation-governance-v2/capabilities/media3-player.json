@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "capability_id": "media3.player",
+  "kind": "integration",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-media3-androidx"
+  },
+  "artifact": "viewcompose-media3-androidx",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha01"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.media3.Media3ArtworkDisplayMode",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-media3-androidx/src/main/java/com/viewcompose/media3/Media3PlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.media3.Media3PlayerViewConfiguration",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-media3-androidx/src/main/java/com/viewcompose/media3/Media3PlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.media3.Media3ResizeMode",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-media3-androidx/src/main/java/com/viewcompose/media3/Media3PlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.media3.Media3ShowBuffering",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-media3-androidx/src/main/java/com/viewcompose/media3/Media3PlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.media3.Media3SurfaceType",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-media3-androidx/src/main/java/com/viewcompose/media3/Media3PlayerView.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.media3.UiTreeBuilder.Media3PlayerView",
+      "kind": "extension",
+      "visibility": "public",
+      "source": "viewcompose-media3-androidx/src/main/java/com/viewcompose/media3/Media3PlayerView.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.media3.player",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.media3-player"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-media3-androidx"
+    ]
+  }
+}

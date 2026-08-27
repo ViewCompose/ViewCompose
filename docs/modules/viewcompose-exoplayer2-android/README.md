@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: module.viewcompose-exoplayer2-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-exoplayer2-android
+version_lane: released
+capability_ids:
+  - exoplayer2.player
+artifact_ids:
+  - viewcompose-exoplayer2-android
+sample_ids:
+  - module.exoplayer2-dependency
+  - module.exoplayer2-player
+coordinate: com.viewcompose:viewcompose-exoplayer2-android:0.1.0-alpha01
+minimal_usage_sample_id: module.exoplayer2-dependency
+---
+
 # Legacy ExoPlayer 2 Integration
 
 `viewcompose-exoplayer2-android` hosts a caller-owned legacy
@@ -6,8 +25,11 @@ Media3 alias.
 
 ## Artifact
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="exoplayer2-dependency" sample_id="module.exoplayer2-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-implementation("com.viewcompose:viewcompose-exoplayer2-android:0.1.0-alpha01")
+dependencies {
+    implementation("com.viewcompose:viewcompose-exoplayer2-android:0.1.0-alpha01")
+}
 ```
 
 Alpha: Q3 `ExoPlayerView`, Q2 configuration, Q1 enums; API 24+; discontinued SDK 2.19.1. Core is
@@ -16,8 +38,18 @@ Media3 dependency/alias; Apache-2.0 is in `THIRD_PARTY_NOTICES.md`. Prefer Media
 
 ## Contract
 
+{/* compiled-region source="viewcompose-exoplayer2-android/src/test/samples/com/viewcompose/exoplayer2/samples/ExoPlayerSamples.kt" region="exoplayer2-player" sample_id="module.exoplayer2-player" build_target=":viewcompose-exoplayer2-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-ExoPlayerView(player = ownedPlayer, surfaceType = ExoPlayerSurfaceType.SurfaceView)
+fun UiTreeBuilder.exoPlayerViewSample(player: Player) {
+    ExoPlayerView(
+        player = player,
+        surfaceType = ExoPlayerSurfaceType.SurfaceView,
+        configuration = ExoPlayerViewConfiguration(
+            showBuffering = ExoPlayerShowBuffering.WhenPlaying,
+            contentDescription = "Legacy episode video",
+        ),
+    )
+}
 ```
 
 The caller owns Player commands/state/release. A nearest `LocalLifecycleOwner` is required;

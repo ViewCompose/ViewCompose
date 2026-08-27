@@ -174,6 +174,41 @@ dependencies {
     // DOCS_REGION_END(constraintlayout-dependency)
 }
 
+private val cameraXModuleDependency = run {
+    // DOCS_REGION_START(camerax-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-camerax-androidx:0.1.0-alpha01")
+
+    // The application, not the integration, selects the CameraX hardware backend.
+    implementation("androidx.camera:camera-camera2:1.6.1")
+}
+    // DOCS_REGION_END(camerax-dependency)
+}
+
+private val googleMapsModuleDependency = run {
+    // DOCS_REGION_START(google-maps-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(google-maps-dependency)
+}
+
+private val media3ModuleDependency = run {
+    // DOCS_REGION_START(media3-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-media3-androidx:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(media3-dependency)
+}
+
+private val exoPlayer2ModuleDependency = run {
+    // DOCS_REGION_START(exoplayer2-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-exoplayer2-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(exoplayer2-dependency)
+}
+
 private val previewNativeInstall = run {
     // DOCS_REGION_START(preview-native-install)
 plugins {

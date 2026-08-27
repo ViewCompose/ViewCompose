@@ -3090,73 +3090,213 @@
       "entries": [
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXLensFacing"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewBindingState"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewConfiguration"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewFailure"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewFailureReason"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewImplementationMode"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewRotation"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewScaleType"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.CameraXPreviewStreamState"
         },
         {
           "artifact": "viewcompose-camerax-androidx",
+          "capabilityId": "camerax.preview",
           "kind": "integration",
           "namespace": "com.viewcompose.camerax",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.camerax.preview",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-camerax-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-camerax-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.camerax-preview",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.camerax.UiTreeBuilder.CameraXPreviewView"
         },
         {
@@ -4080,116 +4220,340 @@
         },
         {
           "artifact": "viewcompose-exoplayer2-android",
+          "capabilityId": "exoplayer2.player",
           "kind": "integration",
           "namespace": "com.viewcompose.exoplayer2",
           "overloadCount": 1,
+          "referenceId": "reference.exoplayer2.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-exoplayer2-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-exoplayer2-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.exoplayer2-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.exoplayer2.ExoPlayerArtworkDisplayMode"
         },
         {
           "artifact": "viewcompose-exoplayer2-android",
+          "capabilityId": "exoplayer2.player",
           "kind": "integration",
           "namespace": "com.viewcompose.exoplayer2",
           "overloadCount": 1,
+          "referenceId": "reference.exoplayer2.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-exoplayer2-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-exoplayer2-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.exoplayer2-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.exoplayer2.ExoPlayerResizeMode"
         },
         {
           "artifact": "viewcompose-exoplayer2-android",
+          "capabilityId": "exoplayer2.player",
           "kind": "integration",
           "namespace": "com.viewcompose.exoplayer2",
           "overloadCount": 1,
+          "referenceId": "reference.exoplayer2.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-exoplayer2-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-exoplayer2-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.exoplayer2-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.exoplayer2.ExoPlayerShowBuffering"
         },
         {
           "artifact": "viewcompose-exoplayer2-android",
+          "capabilityId": "exoplayer2.player",
           "kind": "integration",
           "namespace": "com.viewcompose.exoplayer2",
           "overloadCount": 1,
+          "referenceId": "reference.exoplayer2.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-exoplayer2-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-exoplayer2-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.exoplayer2-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.exoplayer2.ExoPlayerSurfaceType"
         },
         {
           "artifact": "viewcompose-exoplayer2-android",
+          "capabilityId": "exoplayer2.player",
           "kind": "integration",
           "namespace": "com.viewcompose.exoplayer2",
           "overloadCount": 1,
+          "referenceId": "reference.exoplayer2.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-exoplayer2-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-exoplayer2-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.exoplayer2-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.exoplayer2.ExoPlayerViewConfiguration"
         },
         {
           "artifact": "viewcompose-exoplayer2-android",
+          "capabilityId": "exoplayer2.player",
           "kind": "integration",
           "namespace": "com.viewcompose.exoplayer2",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.exoplayer2.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-exoplayer2-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-exoplayer2-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.exoplayer2-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.exoplayer2.UiTreeBuilder.ExoPlayerView"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.view",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.view",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-view",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapColorScheme"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.content",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.content",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-content",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapMarkerStyle"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.view",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.view",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-view",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapPadding"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.content",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.content",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-content",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapPolylineStyle"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.view",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.view",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-view",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapProperties"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.content",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.content",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-content",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapScope"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.view",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.view",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-view",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapType"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.view",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.view",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-view",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapUiSettings"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.view",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
+          "referenceId": "reference.maps.google.view",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-view",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.GoogleMapViewOptions"
         },
         {
           "artifact": "viewcompose-google-maps-android",
+          "capabilityId": "maps.google.view",
           "kind": "integration",
           "namespace": "com.viewcompose.maps.google",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.maps.google.view",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-google-maps-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-google-maps-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.google-map-view",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.maps.google.UiTreeBuilder.GoogleMapView"
         },
         {
@@ -4388,45 +4752,129 @@
         },
         {
           "artifact": "viewcompose-media3-androidx",
+          "capabilityId": "media3.player",
           "kind": "integration",
           "namespace": "com.viewcompose.media3",
           "overloadCount": 1,
+          "referenceId": "reference.media3.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-media3-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-media3-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.media3-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.media3.Media3ArtworkDisplayMode"
         },
         {
           "artifact": "viewcompose-media3-androidx",
+          "capabilityId": "media3.player",
           "kind": "integration",
           "namespace": "com.viewcompose.media3",
           "overloadCount": 1,
+          "referenceId": "reference.media3.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-media3-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-media3-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.media3-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.media3.Media3PlayerViewConfiguration"
         },
         {
           "artifact": "viewcompose-media3-androidx",
+          "capabilityId": "media3.player",
           "kind": "integration",
           "namespace": "com.viewcompose.media3",
           "overloadCount": 1,
+          "referenceId": "reference.media3.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-media3-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-media3-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.media3-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.media3.Media3ResizeMode"
         },
         {
           "artifact": "viewcompose-media3-androidx",
+          "capabilityId": "media3.player",
           "kind": "integration",
           "namespace": "com.viewcompose.media3",
           "overloadCount": 1,
+          "referenceId": "reference.media3.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-media3-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-media3-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.media3-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.media3.Media3ShowBuffering"
         },
         {
           "artifact": "viewcompose-media3-androidx",
+          "capabilityId": "media3.player",
           "kind": "integration",
           "namespace": "com.viewcompose.media3",
           "overloadCount": 1,
+          "referenceId": "reference.media3.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-media3-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-media3-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.media3-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.media3.Media3SurfaceType"
         },
         {
           "artifact": "viewcompose-media3-androidx",
+          "capabilityId": "media3.player",
           "kind": "integration",
           "namespace": "com.viewcompose.media3",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.media3.player",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-media3-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-media3-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.media3-player",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.media3.UiTreeBuilder.Media3PlayerView"
         },
         {
@@ -8032,7 +8480,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 245,
+    "ownedEntryCount": 277,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }
