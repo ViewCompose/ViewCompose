@@ -385,10 +385,31 @@ class DocumentationGovernanceV2ReportTaskTest {
                   "artifact": "viewcompose-example",
                   "version_state": {"lane": "next"},
                   "symbols": [
-                    {"symbol_id": "example.FirstEntry", "kind": "type", "visibility": "public", "source": "viewcompose-example/src/main/java/example/Entries.kt"},
-                    {"symbol_id": "example.SecondEntry", "kind": "type", "visibility": "public", "source": "viewcompose-example/src/main/java/example/Entries.kt"}
+                    {"symbol_id": "example.FirstEntry", "kind": "type", "visibility": "public", "source": "viewcompose-example/src/main/java/example/Entries.kt"}
                   ],
                   "reference_owner": {"reference_id": "reference.example.entries", "generated": true},
+                  "sample_owner": {"exception_id": "DOC-9999"},
+                  "document_owners": {"module": ["module.viewcompose-example"]}
+                }
+                """.trimIndent(),
+            )
+        }
+        val secondCapability = repository.resolve(
+            "docs/project/records/documentation-governance-v2/capabilities/example-second.json",
+        ).apply {
+            writeText(
+                """
+                {
+                  "schema_version": 2,
+                  "capability_id": "example.second-entry",
+                  "kind": "integration",
+                  "owner": {"kind": "module", "id": "viewcompose-example"},
+                  "artifact": "viewcompose-example",
+                  "version_state": {"lane": "next"},
+                  "symbols": [
+                    {"symbol_id": "example.SecondEntry", "kind": "type", "visibility": "public", "source": "viewcompose-example/src/main/java/example/Entries.kt"}
+                  ],
+                  "reference_owner": {"reference_id": "reference.example.second-entry", "generated": true},
                   "sample_owner": {"exception_id": "DOC-9999"},
                   "document_owners": {"module": ["module.viewcompose-example"]}
                 }
@@ -416,7 +437,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         val result = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = contractRoot.walkTopDown().filter(File::isFile).toSet(),
-            recordFiles = setOf(capability),
+            recordFiles = setOf(capability, secondCapability),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(moduleDocument),
             localeMirrorFiles = emptySet(),
@@ -425,16 +446,38 @@ class DocumentationGovernanceV2ReportTaskTest {
         )
         @Suppress("UNCHECKED_CAST")
         val reference = JsonSlurper().parseText(result.referenceCatalog) as Map<String, Any?>
-        assertEquals(2, (reference.getValue("schemaVersion") as Number).toInt())
+        assertEquals(3, (reference.getValue("schemaVersion") as Number).toInt())
         @Suppress("UNCHECKED_CAST")
         val capabilities = reference.getValue("capabilities") as List<Map<String, Any?>>
-        assertEquals(1, capabilities.size)
-        assertEquals("example.entries", capabilities.single()["capabilityId"])
-        assertEquals("reference.example.entries", capabilities.single()["referenceId"])
+        assertEquals(2, capabilities.size)
+        val capabilitiesById = capabilities.associateBy { record ->
+            record.getValue("capabilityId").toString()
+        }
+        assertEquals(
+            "reference.example.entries",
+            capabilitiesById.getValue("example.entries")["referenceId"],
+        )
+        assertEquals(
+            "reference.example.second-entry",
+            capabilitiesById.getValue("example.second-entry")["referenceId"],
+        )
         @Suppress("UNCHECKED_CAST")
-        val relatedDocuments = capabilities.single().getValue("relatedDocuments")
-            as List<Map<String, Any?>>
-        assertEquals("/modules/viewcompose-example", relatedDocuments.single()["path"])
+        val documents = reference.getValue("documents") as Map<String, Map<String, Any?>>
+        assertEquals(setOf("module.viewcompose-example"), documents.keys)
+        assertEquals(
+            "module",
+            documents.getValue("module.viewcompose-example")["documentType"],
+        )
+        assertEquals(
+            "/modules/viewcompose-example",
+            documents.getValue("module.viewcompose-example")["path"],
+        )
+        assertTrue(
+            capabilities.all { record ->
+                record["relatedDocumentIds"] == listOf("module.viewcompose-example")
+            },
+        )
+        assertTrue(capabilities.none { record -> "relatedDocuments" in record })
         @Suppress("UNCHECKED_CAST")
         val groups = reference.getValue("groups") as List<Map<String, Any?>>
         val entries = groups.flatMap { group ->
@@ -442,7 +485,10 @@ class DocumentationGovernanceV2ReportTaskTest {
             group.getValue("entries") as List<Map<String, Any?>>
         }
         assertEquals(2, entries.size)
-        assertTrue(entries.all { entry -> entry["capabilityId"] == "example.entries" })
+        assertEquals(
+            setOf("example.entries", "example.second-entry"),
+            entries.map { entry -> entry["capabilityId"] }.toSet(),
+        )
         assertTrue(entries.none { entry -> "referenceId" in entry || "sample" in entry })
     }
 

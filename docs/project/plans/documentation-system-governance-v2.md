@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the ADR-0001 through ADR-0005 metadata slice, then deduplicate Capability Reference related-document output before governing the remaining ADR metadata batches.
+next_action: Merge the normalized Capability Reference document registry, then govern and reconcile ADR-0009 through ADR-0013.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -1906,6 +1906,39 @@ Accepted ADR-0001 through ADR-0005 semantic-reconciliation and metadata slice on
   data in the Reference bundle; only 9,628 non-API bytes remain. The next action is to deduplicate
   that generated representation before adding the remaining ADR metadata, without widening the
   accepted site budget.
+
+Accepted normalized Capability Reference document-registry slice on 2026-08-27:
+
+- hard-cut the generated catalog from schema 2 to schema 3. Capability records now retain only
+  ordered related-document IDs, while one catalog-level document registry owns each document type
+  and route. The website resolves links through that registry with no compatibility facade for the
+  duplicated schema 2 representation;
+- preserved all 226 capability-to-document relationships while reducing them to 94 unique document
+  descriptors. Every ID resolves, every descriptor has a deployable route, and the existing link
+  labels and destinations remain unchanged. A focused generator regression uses two capabilities
+  sharing one document to prevent the duplicated object shape from returning;
+- the generated Reference retains 531 entries and 68 capability records. Its committed size falls
+  from 248,068 to 230,534 bytes, a 17,534-byte (`7.0682%`) reduction;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,148,788 non-API
+  bytes, and left 29,426 bytes under the unchanged 46.9 MiB limit. This is 19,798 bytes (`0.0403%`)
+  below the ADR-0001 through ADR-0005 slice and is `improved`. Docusaurus completed in `41.4 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- the focused and complete quality-tool unit suites, Governance V2, generated Reference freshness,
+  release intent, TypeScript production compilation, stable-route existence, and the complete
+  bilingual site passed. The first cold single-worker `qaQuick` attempt stopped in the
+  ConstraintLayout Dokka render worker without a source diagnostic; the isolated task immediately
+  passed, and the complete retry passed 2,342 actionable tasks in `13 min 17 s` (2,086 executed and
+  256 up-to-date). The result is completeness evidence rather than a speed comparison because it
+  rebuilt most publication, Dokka, release-application, and test outputs; the transient first
+  attempt remains a tooling limitation rather than accepted performance evidence;
+- the overall conclusion is `improved`: the source-derived relationship model and rendered links
+  are unchanged while duplicated presentation data is removed at its owning generator boundary.
+  Governance debt remains 15 exact missing-metadata findings, with every other issue category at
+  zero. Release intent found zero release artifacts, zero ignored artifacts, and zero shared-path
+  classifications against `29033e6154bd761997d603796cc9a15d31c85739`. This tooling-and-site-only
+  slice changes no publication input, public API, or production runtime behavior and makes no new
+  visual, power, or performance claim. The next action is ADR-0009 through ADR-0013.
 
 | Current area | Required target |
 | --- | --- |
