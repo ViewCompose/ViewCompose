@@ -1,3 +1,20 @@
+---
+schema_version: 2
+document_id: project.plan-index
+doc_type: project
+owner:
+  kind: project
+  id: planning
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Index active multi-session execution plans and preserve their release-blocking Changeset ownership until archival.
+validation:
+  - ./gradlew verifyDocumentationStructure verifyViewComposeReleaseIntent
+lifecycle: Update whenever an execution plan starts, changes status, becomes blocked, completes, or moves to the archive.
+---
+
 # Active Execution Plans
 
 This directory contains multi-step work that is currently active and must survive across sessions.

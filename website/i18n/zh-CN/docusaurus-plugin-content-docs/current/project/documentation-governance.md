@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 52d3d50c862203538459becff75c759eb77a09cacd3bdc5ba2777e62d8835443
+translation_source_hash: 4cc2861b63f2eee484e2c01932456bbaa2093c6c9520986e60402738f5a943b9
 translation_status: current
 ---
 
@@ -91,6 +91,8 @@ declaration 不进入应用侧目录。
 每个 canonical 有效手写公共页声明稳定 document/type/owner identity、一个版本 lane，以及显式
 capability、artifact 和 sample 集合；locale 镜像继承该记录，只增加翻译 metadata。目录与
 `doc_type` 必须一致。
+可选的 Docusaurus `title` 与绝对 `slug` 属于展示和稳定路由元数据，不能替代 `document_id`、
+所有权或 locale-aware redirect 契约。
 
 | `doc_type` | 机器必需元数据 | 由 reviewer 判断的目的与证据 |
 | --- | --- | --- |

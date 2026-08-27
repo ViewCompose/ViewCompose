@@ -1,6 +1,22 @@
 ---
+schema_version: 2
+document_id: architecture.decisions-index
+doc_type: architecture
+owner:
+  kind: project
+  id: architecture
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+invariants:
+  - 已接受决策保留原始理由；需要改变时以新的编号 ADR 明确取代，不通过重写隐藏历史取舍。
+  - 改变当前行为的决策必须在同一变更中更新有效 Architecture 与 Module owner。
+evidence:
+  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0022-in-memory-development-tooling-installation.md
+  - ./gradlew verifyDocumentationStructure
 translation_source: architecture/decisions/README.md
-translation_source_hash: 21f5be4445fb339fa0895a84b2229b61788fd951a800252332f64ad7042e3c93
+translation_source_hash: 84f5ad413162203738e11f032f72a56085e2fe2ef0bc5462665f01a6a09f3b90
 translation_status: current
 ---
 

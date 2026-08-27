@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Source Documentation and API Comment Standard sample slice, then hard-cut the remaining Governance V2 metadata beginning with repository and section entry points.
+next_action: Merge the documentation entry-point metadata slice, then reconcile and hard-cut the migration overview and remaining migration-page metadata.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -154,6 +154,9 @@ maintainer-only concept to the application capability Reference.
 The accepted Source Documentation and API Comment Standard hard cut now registers the final three
 executable fences as compiled bilingual form contracts, removes the final sample exception, and
 reduces the report to 34 metadata-only issues with unclassified sample debt at zero.
+The accepted documentation entry-point hard cut now governs the canonical documentation, ADR,
+module, and active-plan indexes, repairs the schema-level `title`/`slug` omission without changing
+routes, and reduces the remaining metadata-only report to 30 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -162,8 +165,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Source Documentation and API Comment Standard sample slice, then hard-cut
-the remaining Governance V2 metadata beginning with repository and section entry points.
+Next action: merge the documentation entry-point metadata slice, then reconcile and hard-cut the
+migration overview and remaining migration-page metadata.
 Pull-request gate scaling Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -249,7 +252,7 @@ workflows, and compiled repository-quality tooling only; they do not change a pu
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
 artifacts, and zero shared-path classifications against
-`e980aae5709a27d57044cd6c450339bb55911b8b`.
+`83d8f66ceb1e4c813f81a7ca82d5ead93c3434e4`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1742,6 +1745,41 @@ Accepted Source Documentation and API Comment Standard sample ownership slice on
   or production runtime behavior and makes no new runtime, visual, power, or performance claim.
   The next action is the remaining Governance V2 page metadata, beginning with repository and
   section entry points.
+
+Accepted documentation entry-point metadata slice on 2026-08-27:
+
+- assigned stable project ownership and lifecycle contracts to the canonical documentation index,
+  the 38-artifact module catalog, and the active-plan index, and assigned the ADR catalog its
+  architecture invariants and evidence boundary. Their required Chinese mirrors carry the same
+  structured records and reviewed canonical fingerprints;
+- hard-corrected the frozen document contract to admit only non-empty Docusaurus `title` values and
+  absolute `slug` values. A focused schema regression proves the root `/documentation` route can
+  retain its presentation metadata without weakening `additionalProperties: false`; generated
+  English and Chinese `/documentation` outputs were both verified present;
+- removed four resolved metadata exceptions. The report changed from 34 to 30 issues, all remaining
+  findings are exact missing-metadata debt, and unclassified samples remain zero. All 531 discovered
+  entries remain owned; orphan symbols, taxonomy mismatches, duplicate owners, orphan documents,
+  version conflicts, stale generated output, unbaselined debt, and blocking violations remain zero;
+- the generated Reference retained 531 entries and its normalized catalog remained byte-for-byte
+  unchanged at 237,828 bytes. Entry-point and artifact-registry ownership must not add duplicate
+  application capability entries;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,094,873 non-API
+  bytes, and left 83,341 bytes under the unchanged 46.9 MiB limit. This is 17,616 bytes (`0.0359%`)
+  above the API-comment sample slice and is `no material change`. Docusaurus completed in `34.3 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- the focused document-schema regression, Governance V2 contract fixtures, documentation structure,
+  language and translation review, generated Reference freshness, release intent, route existence,
+  and the complete bilingual site passed. Complete single-worker `qaQuick` passed 2,342 actionable
+  tasks in `28 s` (180 executed and 2,162 up-to-date); this is completeness evidence rather than a
+  speed comparison because it reused previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: the primary navigation and registry boundaries now declare
+  exact maintenance ownership, and stable Docusaurus routes are first-class validated metadata
+  instead of an unrepresentable exception. Release intent found zero release artifacts, zero
+  ignored artifacts, and zero shared-path classifications against
+  `83d8f66ceb1e4c813f81a7ca82d5ead93c3434e4`. This slice changes no publication input, public API,
+  or production runtime behavior and makes no new runtime, visual, power, or performance claim.
+  The next action is migration-overview semantic reconciliation and remaining migration metadata.
 
 | Current area | Required target |
 | --- | --- |

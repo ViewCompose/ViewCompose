@@ -15,6 +15,8 @@
     "sample_ids"
   ],
   "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "slug": { "type": "string", "pattern": "^/.*$" },
     "schema_version": { "const": 2 },
     "document_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$" },
     "doc_type": {

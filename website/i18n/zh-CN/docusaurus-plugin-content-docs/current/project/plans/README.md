@@ -1,6 +1,20 @@
 ---
+schema_version: 2
+document_id: project.plan-index
+doc_type: project
+owner:
+  kind: project
+  id: planning
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: 登记跨会话活动执行计划，并在归档前保留其阻断发布的 Changeset 所有权。
+validation:
+  - ./gradlew verifyDocumentationStructure verifyViewComposeReleaseIntent
+lifecycle: 执行计划启动、状态变化、阻塞、完成或移入归档时更新。
 translation_source: project/plans/README.md
-translation_source_hash: ffb3ab5ab56ada85622b29cc37effb9f1d9ab694f09ac3cac1340406c117ed86
+translation_source_hash: 7f8a3756abf7b4c456e297b2fece06565b6f58cafc5736a4ffc5006d818376f4
 translation_status: current
 ---
 
