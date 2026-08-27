@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the migration semantic-reconciliation slice, then govern and reconcile the five remaining active Architecture pages before the ADR metadata batch.
+next_action: Merge the Architecture core metadata slice, then govern and reconcile ADR-0001 through ADR-0005 before the remaining ADR metadata batches.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -1828,6 +1828,43 @@ Accepted Migration semantic-reconciliation and metadata slice on 2026-08-27:
   slice changes no publication input, public API, or production runtime behavior and makes no new
   visual, power, or performance claim. The next action is the five remaining active Architecture
   pages before the ADR metadata batch.
+
+Accepted Architecture core semantic-reconciliation and metadata slice on 2026-08-27:
+
+- assigned stable released-lane contracts to the system overview, NodeSpec-only specification,
+  delayed Session container checklist, state-snapshot architecture, and multi-design-system
+  integration standard. Capability records now point back to the exact NodeSpec, lazy/session,
+  navigation, runtime-state, theme, component, host-resource, and overlay architecture owners; the
+  system overview remains project-owned instead of claiming every framework capability;
+- rechecked NodeSpec emission and typed binder access, Snapshot MVCC/conflict and prepared
+  observation replacement, lazy-item preparation/activation and parent-commit publication, and
+  design-system isolation against current source plus the named regression tests. The durable
+  invariants match implementation, so no runtime contract was rewritten and no unsupported parity
+  claim was promoted;
+- removed five resolved metadata exceptions. The Governance V2 report changed from 25 to 20
+  issues, all remaining findings are exact missing-metadata debt. All 531 discovered entries remain
+  owned; unclassified samples, orphan symbols, taxonomy mismatches, duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remain zero;
+- regenerated the Capability Reference from reciprocal ownership. It retains 531 entries and grows
+  from 240,354 to 243,518 bytes, a 3,164-byte (`1.3164%`) metadata-only increase;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,142,218 non-API
+  bytes, and left 35,996 bytes under the unchanged 46.9 MiB limit. This is 22,121 bytes (`0.0450%`)
+  above the Migration slice and is `no material change`. Docusaurus completed in `39.8 s`; timing
+  remains `inconclusive` because cache and process state differed, while the absolute result remains
+  below the `120 s` limit;
+- Governance V2, documentation structure, language and translation review, generated Reference
+  freshness, release intent, and the complete bilingual site passed. Complete single-worker
+  `qaQuick` passed 2,342 actionable tasks in `38 s` (180 executed and 2,162 up-to-date); this is
+  completeness evidence rather than a speed comparison because it reused previously produced
+  publication, module, and site outputs;
+- the overall conclusion is `improved`: the remaining core Architecture pages now expose explicit
+  machine-checked ownership, invariant, evidence, capability, artifact, and sample boundaries.
+  Release intent found zero release artifacts, zero ignored artifacts, and zero shared-path
+  classifications against `c1794a82811f397448108218525405a538e999bb`. This documentation-only
+  slice changes no publication input, public API, or production runtime behavior and makes no new
+  visual, power, or performance claim. The next action is ADR-0001 through ADR-0005, followed by the
+  remaining ADR metadata batches.
 
 | Current area | Required target |
 | --- | --- |

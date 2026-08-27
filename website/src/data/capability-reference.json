@@ -492,6 +492,11 @@
           "path": "/tutorials/state-and-events"
         },
         {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
@@ -680,6 +685,11 @@
           "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
         },
         {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
           "documentId": "module.viewcompose-host-android",
           "documentType": "module",
           "path": "/modules/viewcompose-host-android"
@@ -828,6 +838,16 @@
           "documentId": "architecture.lazy-collections-runtime",
           "documentType": "architecture",
           "path": "/architecture/lazy-collections"
+        },
+        {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
+        },
+        {
+          "documentId": "architecture.state-snapshots",
+          "documentType": "architecture",
+          "path": "/architecture/state-snapshots"
         },
         {
           "documentId": "module.viewcompose-ui-foundation",
@@ -996,6 +1016,11 @@
       "capabilityId": "material3.components",
       "referenceId": "reference.material3.components",
       "relatedDocuments": [
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
         {
           "documentId": "module.viewcompose-material3",
           "documentType": "module",
@@ -1170,6 +1195,11 @@
           "path": "/architecture/navigation"
         },
         {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
+        },
+        {
           "documentId": "module.viewcompose-navigation-core",
           "documentType": "module",
           "path": "/modules/viewcompose-navigation-core"
@@ -1222,6 +1252,11 @@
       "referenceId": "reference.oneui7.components",
       "relatedDocuments": [
         {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
           "documentId": "module.viewcompose-oneui7",
           "documentType": "module",
           "path": "/modules/viewcompose-oneui7"
@@ -1272,6 +1307,11 @@
           "documentId": "architecture.overlay-root-selection",
           "documentType": "architecture",
           "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
         },
         {
           "documentId": "module.viewcompose-overlay-android",
@@ -1352,6 +1392,11 @@
           "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
         },
         {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
           "documentId": "module.viewcompose-overlay-material3-android",
           "documentType": "module",
           "path": "/modules/viewcompose-overlay-material3-android"
@@ -1376,6 +1421,11 @@
           "documentId": "architecture.overlay-root-selection",
           "documentType": "architecture",
           "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
         },
         {
           "documentId": "module.viewcompose-overlay-oneui7-android",
@@ -1548,6 +1598,16 @@
       "referenceId": "reference.renderer.reconciliation",
       "relatedDocuments": [
         {
+          "documentId": "architecture.node-spec",
+          "documentType": "architecture",
+          "path": "/architecture/node-spec"
+        },
+        {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
+        },
+        {
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
           "path": "/modules/viewcompose-renderer-android"
@@ -1572,6 +1632,16 @@
           "documentId": "architecture.effects",
           "documentType": "architecture",
           "path": "/architecture/effects"
+        },
+        {
+          "documentId": "architecture.node-spec",
+          "documentType": "architecture",
+          "path": "/architecture/node-spec"
+        },
+        {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
         },
         {
           "documentId": "module.viewcompose-renderer-android",
@@ -1613,6 +1683,11 @@
           "documentId": "architecture.effects",
           "documentType": "architecture",
           "path": "/architecture/effects"
+        },
+        {
+          "documentId": "architecture.state-snapshots",
+          "documentType": "architecture",
+          "path": "/architecture/state-snapshots"
         },
         {
           "documentId": "module.viewcompose-runtime",
@@ -1744,6 +1819,11 @@
           "path": "/architecture/theming"
         },
         {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
@@ -1780,6 +1860,11 @@
           "path": "/architecture/theming"
         },
         {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
           "documentId": "module.viewcompose-material3",
           "documentType": "module",
           "path": "/modules/viewcompose-material3"
@@ -1800,6 +1885,11 @@
       "capabilityId": "theme.oneui7",
       "referenceId": "reference.theme.oneui7",
       "relatedDocuments": [
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
         {
           "documentId": "module.viewcompose-oneui7",
           "documentType": "module",

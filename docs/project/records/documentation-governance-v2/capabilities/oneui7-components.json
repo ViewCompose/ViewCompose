@@ -15,6 +15,7 @@
   "reference_owner": { "reference_id": "reference.oneui7.components", "generated": true },
   "sample_owner": { "sample_id": "module.oneui7-components" },
   "document_owners": {
-    "module": ["module.viewcompose-oneui7"]
+    "module": ["module.viewcompose-oneui7"],
+    "architecture": ["architecture.design-system-integration"]
   }
 }

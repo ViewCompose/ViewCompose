@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 7ee26d3c75c3e742154a38c98927aa7476adf6e40a6340b94d97a96e50ca8e20
+translation_source_hash: 402b9852c4ce91b8dc7240d5b4b46f228bee68f329c70462706e9513fb3a77ec
 translation_status: current
 ---
 

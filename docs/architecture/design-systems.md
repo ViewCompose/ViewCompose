@@ -1,3 +1,55 @@
+---
+schema_version: 2
+document_id: architecture.design-system-integration
+doc_type: architecture
+owner:
+  kind: capability
+  id: theme.foundation
+version_lane: released
+capability_ids:
+  - foundation.components
+  - host.android-resources
+  - material3.components
+  - oneui7.components
+  - overlay.android-transport
+  - overlay.material3
+  - overlay.oneui7
+  - theme.foundation
+  - theme.material3
+  - theme.oneui7
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-host-android
+  - viewcompose-android
+  - viewcompose-material3
+  - viewcompose-material3-android
+  - viewcompose-oneui7
+  - viewcompose-overlay-android
+  - viewcompose-overlay-material3-android
+  - viewcompose-overlay-oneui7-android
+sample_ids:
+  - module.material3-theme
+  - module.material3-components
+  - module.oneui7-theme
+  - module.oneui7-components
+invariants:
+  - Design-system identity, recipes, and Android theme interpretation remain above UI Foundation, neutral Host, and Android Renderer.
+  - Each root captures one coherent immutable bundle for tokens, recipes, motion, capability, overlays, delayed content, and diagnostics.
+  - Renderer receives only resolved name-free execution contracts and never selects behavior by design-system identity.
+  - A shared Foundation or NodeSpec abstraction requires evidence from at least two materially different design systems.
+  - Native behavioral cores are replaced only after interaction, focus, accessibility, restoration, lifecycle, visual, and performance parity is demonstrated.
+evidence:
+  - tools/viewcompose-quality-build/src/test/kotlin/com/viewcompose/quality/ArchitectureGateParityTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/guard/DesignSystemIsolationGuardTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/theme/ThemeRecipeBoundaryGuardTest.kt
+  - viewcompose-material3/src/test/java/com/viewcompose/material3/Material3ThemeBridgeTest.kt
+  - viewcompose-oneui7/src/test/java/com/viewcompose/oneui7/OneUi7ComponentsTest.kt
+  - viewcompose-material3-android/src/test/java/com/viewcompose/material3/android/Material3AndroidHostIntegrationTest.kt
+  - viewcompose-overlay-oneui7-android/src/test/java/com/viewcompose/overlay/oneui7/android/host/AndroidOverlayHostAttributionTest.kt
+---
+
 # Multi-Design-System Architecture and Integration Standard
 
 ## 1. Status and scope

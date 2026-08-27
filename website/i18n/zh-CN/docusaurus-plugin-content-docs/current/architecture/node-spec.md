@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/node-spec.md
-translation_source_hash: 82822a63d233fc6acf83d9335b99bc132a19612e3b37914a97b076e23c7b8a27
+translation_source_hash: 6a2e6a7eaf838cb79f2efe16ad03686af0564a82c57238ee9c40a88371e26d9a
 translation_status: current
 ---
 
