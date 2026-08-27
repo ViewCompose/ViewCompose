@@ -1160,6 +1160,58 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `armed inspection registers and captures before the initial frame without nested render`() {
+        lateinit var capture: RenderNodeTimingCapture
+        var registrationCalls = 0
+        NoOpRenderSessionDiagnostics.inspectionTooling = object : RenderSessionInspectionTooling {
+            override fun inspectionPolicy(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+            ): RenderSessionInspectionPolicy =
+                RenderSessionInspectionPolicy.TrackSessionBeforeFirstFrame
+
+            override fun register(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+                sourceCandidates: List<List<UiSourceCallSite>>,
+                nodeInspection: RenderSessionNodeInspection,
+                diagnosticInspection: RenderSessionDiagnosticInspection,
+                timingInspection: RenderSessionTimingInspection,
+            ): RenderSessionInspectionRegistration? {
+                registrationCalls += 1
+                assertTrue(sourceCandidates.isEmpty())
+                assertTrue(engine.renderDiagnosticLevels.isEmpty())
+                val start = timingInspection.startCapture(
+                    RenderNodeTimingCaptureRequest(maxFrames = 1),
+                )
+                assertEquals(RenderNodeTimingStartStatus.Started, start.status)
+                capture = checkNotNull(start.capture)
+                return null
+            }
+        }
+        session = createSession(failures = mutableListOf()) {
+            Text("Cold timed node")
+        }
+
+        session.render()
+
+        val result = capture.snapshot()
+        assertEquals(1, registrationCalls)
+        assertEquals(1, engine.renderDiagnosticLevels.size)
+        assertEquals(1, result.completedFrames)
+        assertEquals(RenderNodeTimingEndReason.FrameLimit, result.endReason)
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Composition
+        })
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Reconciliation
+        })
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Binding
+        })
+    }
+
+    @Test
     fun `timing inspection captures one correlated composition and renderer frame on request`() {
         var capturedTimingInspection: RenderSessionTimingInspection? = null
         val value = mutableStateOf(0)

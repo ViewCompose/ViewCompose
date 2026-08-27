@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 08fd4b675202548b1d44498f5ad841c93c1c7a77bdc895949da381df2ac58d7e
+translation_source_hash: c4b182d07f3cf7a86cc80a1107dca427f58d01183be0f020ba3e6b5008d7068a
 translation_status: current
 ---
 
@@ -533,20 +533,51 @@ ProfileInstaller `WRITE_SKIP_FILE` Broadcast，再强制停止 Target；Instrume
 | 滚动 | `5.615/9.230/10.682`、Heap `7724` | `5.592/8.066/9.256`、`7848` | `5.204/6.862/8.256`、`4291` | `0.055/0.089/0.012` | 相对 Compose `+0.4%/+14.4%`，为 `no material change`；相对 Android Views `+7.9%/+34.5%`，P95 仍为 `regressed`，Heap 高 `3433 KiB`（`+80.0%`）。 |
 | 更新 | `4.924/12.092/21.111`、Heap `7859` | `6.005/15.771/35.524`、`8776` | `4.922/8.024/9.247`、`5840` | `0.027/0.072/0.088` | 相对 Compose `-18.0%/-23.3%`，为 `improved`；相对 Android Views `+0.0%/+50.7%`，P95 仍为 `regressed`。 |
 
-六个方法都通过 `0.15` 稳定性门禁。有限诊断准确解析到作者编写的 LazyItem 源码，把 Text
+六个方法都通过 `0.15` 稳定性门禁。原有限诊断准确解析到作者编写的 LazyItem 源码，把 Text
 直接 Binding 排在受支持 Item 区间的首位，并排除了真实纯滚动交互中的 Host Composition、
 Reconciliation 与 Binding。独立 Trace 显示所有观测到的冷 `VC.DirectRender` Slice 都位于
 `RV Scroll`，而不是 `RV Prefetch`；Release Trace 还保留了有限计时器不支持的 Input、
-Traversal 与 RenderThread 工作。因此诊断能力可以指导分流，但不能单独排序完整的整帧尾部。
+Traversal 与 RenderThread 工作。因此原“已选 Session”流程可以指导分流，但它强制产生的结构
+帧和无法跟随未来冷 LazyItem Session 的限制，使它不能直接排序激活尾部。
 
-六个可逆探针分别检验了分离式 Preparation、跨 Owner Diff、Row 扁平化、RecyclerView
-Prefetch、Mounted Cache 容量，以及跨 Owner 与 Text Binding 的组合，最终全部回退。最接近的
-成对候选在更新 P50/P95 上变化 `+1.5%/+2.7%`，滚动变化 `+0.8%/-4.0%`，Heap 分别增加
-`1.9%/2.2%`；其分类是 `no material change`，不足以证明增加 Renderer 复杂度有价值。启动有限
-Capture 还会强制执行一个结构帧；所选 LazyItem Session 的 Key 离开 Viewport 后会结束，不能
-自动跟随新出现的 Key。下一步应建立 Interaction-armed 或等价的冷 Session 关联能力，再验证不
-改变冻结工作负载的物理 Holder/Root 复用候选。在取得该证据前，原生滚动与更新 P95 差距继续
-保持开放，本轮不接受任何生产修正。
+由证据触发的修正新增一次显式“未来 LazyItem”Arm。它只匹配精确的活动父 Host、`LazyItem`
+角色和高于 Arm 时下限的 Session ID；最多等待 10 秒单调时钟时间，并在不制造额外 Render 的
+前提下采集一个完整帧。五次正确命中的采集全部保留 68 次时钟读取和 34 条记录，没有丢弃或
+截断；Active Debug 下的帧耗时为 `28.705/14.881/6.123/5.532/4.456 ms`，Reconciliation Root
+耗时为 `21.873/9.301/4.020/3.510/3.070 ms`，Direct Binding 总和为
+`11.608/2.575/1.457/1.258/1.270 ms`。这些数值只排序受支持工作，不是 Release 帧耗时证据。
+随后 12 次连续 Arm 将不同逻辑 Session ID 映射到不透明物理容器 Token；Token `9`、`8`、`13`
+的重复证明真实 Fling 会在物理 Holder 上安装新的逻辑 Owner。这把下一决策从“创建更多 Holder”
+或“扩大 Mounted Cache”改为 Ownership-safe Adoption 路径，以及仍不受支持的平台尾部。升级后的
+诊断因此属于 `actionable but partial`：它补齐未来 Session 与 Holder 关联盲点，但
+Measure/Layout/Draw、Input、RenderThread、GPU 和 SurfaceFlinger 仍必须由 Perfetto 归因。
+
+七个可逆探针分别检验了分离式 Preparation、跨 Owner Diff、Row 扁平化、RecyclerView
+Prefetch、Mounted Cache 容量、跨 Owner 与 Text Binding 组合，以及非活动 Layout Pass 诊断。
+最终全部回退。最接近的 Renderer 成对候选在更新 P50/P95 上变化 `+1.5%/+2.7%`，滚动变化
+`+0.8%/-4.0%`，Heap 分别增加 `1.9%/2.2%`；移除非活动 Layout Pass 调用也只让滚动 P95
+变化 `-4.6%`（`-0.424 ms`）。两者都是 `no material change`，仍落后于 Android Views，
+不足以支持增加 Renderer 复杂度或削弱诊断能力。
+
+保留的诊断 Seam 最后与精确的 `9f245448` 对照比较。对照与候选 Target APK 的 SHA-256 分别为
+`b650d46b8bd80a2712a965dcc613b4a11e81dc0046aa6941b439fc1edede1cab` 和
+`13ef6933a17a3261e51a583c01e5450cf86de30ee0f0321530a81bdf5ba72182`，大小同为
+`6,988,419` 字节；Benchmark APK 字节完全一致，SHA-256 为
+`1430a42a222b172fa4eac30f10ae7e0c4c9bfb64dcfd28c7b211f97c5eee4bb7`。每个已接受测试臂都在
+相同小米控制下执行五轮。
+
+| 诊断 Seam 动作 | 精确对照 P50/P95/P99；Heap | 候选 P50/P95/P99；Heap | 候选归一化变化 | Run-P50 CV 对照/候选 | 结论 |
+| --- | --- | --- | --- | --- | --- |
+| 滚动 | `4.995/8.331/9.731`；`7562` | `4.871/8.294/9.076`；`7955` | `-2.5%/-0.4%/-6.7%`；Heap `+393 KiB`（`+5.2%`） | `0.092/0.051` | 时序为 `no material change`；更早的相邻测试对中 Heap 方向相反，未形成可复现回退。 |
+| 更新 | `4.492/11.452/16.249`；`7879` | `4.309/11.515/14.237`；`7944` | `-4.1%/+0.6%/-12.4%`；Heap `+65 KiB`（`+0.8%`） | `0.047/0.120` | `no material change`；没有跨过回退门槛。 |
+
+更早的一对更新数据曾显示 P95 回退：对照 `9.708 ms`，候选 `11.742 ms`（`+20.9%`、
+`+2.034 ms`）。该批次没有被平均掉，而是直接拒绝，因为精确对照立即复测时自身移动到
+`11.202 ms`（`+15.4%`、`+1.494 ms`）；相邻候选复测为 `11.515 ms`（`+2.8%`、
+`+0.313 ms`）。上表最终稳定测试对再次独立确认无回退。精确比较证明非活动的保留 Seam 没有
+实质帧耗时回退，但它不是新的三引擎性能候选。已接受的既有矩阵继续拥有跨引擎结论：Android
+Views 滚动与更新 P95 差距仍保持开放，不保留任何 Renderer 修正；下一项性能工作必须先归因
+不受支持的平台尾部，再测试新的生产改动。
 
 Observed Property 事务显著减少完整树工作，并优于同批 Compose 属性对照，但原生属性失效
 与 Traversal 仍拥有更低的尾延迟。已接受的 API 33 Trace 证明属性帧进入

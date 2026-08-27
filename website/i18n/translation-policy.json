@@ -60,6 +60,7 @@
     "migration/dsl-contract-convergence.md",
     "migration/image-loading.md",
     "migration/lazy-collection-revision-and-reuse.md",
+    "migration/render-session-pre-frame-inspection.md",
     "modules/README.md",
     "modules/viewcompose-android/README.md",
     "modules/viewcompose-animation-core/README.md",

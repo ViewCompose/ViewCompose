@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add bounded pre-frame LazyItem timing diagnostics and physical-holder correlation while keeping concrete tooling debug-only.",
+  "changes": [
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ]
+}

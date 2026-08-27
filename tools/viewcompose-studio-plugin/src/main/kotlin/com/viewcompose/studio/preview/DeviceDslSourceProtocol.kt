@@ -15,6 +15,7 @@ internal const val DEVICE_DSL_SOURCE_REQUEST_OPERATION_EXTRA = "operation"
 internal const val DEVICE_DSL_SOURCE_REQUEST_SESSION_ID_EXTRA = "session_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA = "node_token"
 internal const val DEVICE_DSL_TIMING_PHASES_EXTRA = "timing_phases"
+internal const val DEVICE_DSL_TIMING_FUTURE_LAZY_ITEM_EXTRA = "timing_future_lazy_item"
 internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 7
 
 internal enum class StudioDeviceDslOperation(val wireValue: String) {
@@ -42,6 +43,23 @@ internal enum class StudioDeviceDslTimingStartStatus(val wireValue: String) {
     AlreadyActive("already_active"),
     EndedSession("ended_session"),
 }
+
+internal enum class StudioDeviceDslTimingArmEndReason(val wireValue: String) {
+    Matched("matched"),
+    DurationLimit("duration_limit"),
+    ParentEnded("parent_ended"),
+    Superseded("superseded"),
+    CaptureRejected("capture_rejected"),
+}
+
+internal data class StudioDeviceDslTimingArmSnapshot(
+    val parentSessionId: Long,
+    val matchedSessionId: Long?,
+    val matchedPhysicalContainerToken: Long?,
+    val startedAtNanos: Long,
+    val endedAtNanos: Long?,
+    val endReason: StudioDeviceDslTimingArmEndReason?,
+)
 
 internal enum class StudioDeviceDslTimingPhase(val wireValue: String) {
     Composition("composition"),
@@ -93,6 +111,7 @@ internal data class StudioDeviceDslTimingResult(
 
 internal data class StudioDeviceDslTimingSnapshot(
     val startStatus: StudioDeviceDslTimingStartStatus,
+    val arm: StudioDeviceDslTimingArmSnapshot?,
     val result: StudioDeviceDslTimingResult?,
 )
 
@@ -162,6 +181,7 @@ internal data class StudioDeviceDslSourceSession(
     val sessionId: Long,
     val parentSessionId: Long?,
     val role: StudioRenderSessionRole,
+    val physicalContainerToken: Long?,
     val renderingActive: Boolean,
     val attachedToWindow: Boolean,
     val shown: Boolean,
@@ -253,6 +273,9 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
                 sessionId = sessionId,
                 parentSessionId = parentSessionId,
                 role = role,
+                physicalContainerToken = session.optionalLong("physicalContainerToken")?.also {
+                    require(it > 0L) { "Physical container tokens must be positive." }
+                },
                 renderingActive = session.requiredBoolean("renderingActive"),
                 attachedToWindow = session.requiredBoolean("attachedToWindow"),
                 shown = session.requiredBoolean("shown"),
@@ -494,6 +517,41 @@ private fun JsonObject.toDeviceDslTimingSnapshot(): StudioDeviceDslTimingSnapsho
     val startStatus = StudioDeviceDslTimingStartStatus.entries.firstOrNull { status ->
         status.wireValue == startStatusValue
     } ?: throw IllegalArgumentException("Unknown device DSL timing start status '$startStatusValue'.")
+    val arm = optionalObject("arm")?.let { armed ->
+        val endReason = armed.optionalBoundedString("endReason")?.let { value ->
+            StudioDeviceDslTimingArmEndReason.entries.firstOrNull { reason ->
+                reason.wireValue == value
+            } ?: throw IllegalArgumentException("Unknown device DSL timing arm reason '$value'.")
+        }
+        StudioDeviceDslTimingArmSnapshot(
+            parentSessionId = armed.requiredLong("parentSessionId").also { value ->
+                require(value > 0L) { "Armed timing parent session ID must be positive." }
+            },
+            matchedSessionId = armed.optionalLong("matchedSessionId")?.also { value ->
+                require(value > 0L) { "Matched timing session ID must be positive." }
+            },
+            matchedPhysicalContainerToken =
+                armed.optionalLong("matchedPhysicalContainerToken")?.also { value ->
+                    require(value > 0L) { "Matched physical container token must be positive." }
+                },
+            startedAtNanos = armed.requiredLong("startedAtNanos").coerceAtLeast(0L),
+            endedAtNanos = armed.optionalLong("endedAtNanos")?.coerceAtLeast(0L),
+            endReason = endReason,
+        ).also { parsed ->
+            require(parsed.endedAtNanos == null || parsed.endedAtNanos >= parsed.startedAtNanos) {
+                "Armed timing cannot end before it starts."
+            }
+            require(
+                parsed.endReason != StudioDeviceDslTimingArmEndReason.Matched ||
+                    (
+                        parsed.matchedSessionId != null &&
+                            parsed.matchedPhysicalContainerToken != null
+                        )
+            ) {
+                "Matched timing must identify its logical session and physical container."
+            }
+        }
+    }
     val result = optionalObject("result")?.let { capture ->
         val clock = capture.requiredBoundedString("clock")
         require(clock == "monotonic_nanoseconds") {
@@ -535,7 +593,11 @@ private fun JsonObject.toDeviceDslTimingSnapshot(): StudioDeviceDslTimingSnapsho
             }
         }
     }
-    return StudioDeviceDslTimingSnapshot(startStatus, result)
+    return StudioDeviceDslTimingSnapshot(
+        startStatus = startStatus,
+        arm = arm,
+        result = result,
+    )
 }
 
 private fun JsonElement.requiredDeviceDslTimingRecord(): StudioDeviceDslTimingRecord {

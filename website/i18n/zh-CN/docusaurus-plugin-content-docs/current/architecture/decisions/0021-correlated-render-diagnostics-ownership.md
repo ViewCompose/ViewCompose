@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0021-correlated-render-diagnostics-ownership.md
-translation_source_hash: f51a224671ada53bd1394c0e2eea366d8b8eec178b5f7cba39b1a2ef684b186c
+translation_source_hash: 8c7a48f61fa08784912ac7c69ac84ee50bf0b4d8f2b875707376a08bc319d2f4
 translation_status: current
 schema_version: 2
 document_id: adr.correlated-render-diagnostics
@@ -191,6 +191,16 @@ View/窗口弱引用，不安装周期布局、滚动、绘制、触摸、帧或
 尝试/保留的时钟读取、空时钟对开销、截断、不支持领域与丢弃数。未激活时逐节点时钟读取和
 记录/历史分配必须为零；运行时与渲染器只允许一次经批准的可空端口/请求状态检查。
 
+#### 有界 Future-session 扩展（2026-08-27）
+
+一次显式开发工具请求可以对一个精确 Parent Session 进入 Armed 状态，等待未来的 `LazyItem`
+Child。匹配只使用 Parent Session ID、`LazyItem` Role 和 Arm 时记录的 Session-ID 下限。Arm 在十秒
+单调时间后到期，匹配后最多记录一个完整帧。`viewcompose-ui-foundation` 允许该 Session 在首帧前
+立即注册；Registration 期间启动 Timing 会附着到正在进入的帧，不能请求嵌套结构 Render。Preview
+负责具体 Arm、Deadline、结束结果和一个不透明的进程内 Physical-container Token；该 Token 只用于
+关联 Logical Session 替换与 Holder 复用。应用 Key 和 Native Object 都不会成为 Selector 或序列化
+身份。
+
 ### 绝对上限
 
 | 资源 | 硬上限与溢出行为 |
@@ -201,7 +211,7 @@ View/窗口弱引用，不安装周期布局、滚动、绘制、触摸、帧或
 | 已挂载节点请求 | 访问 2,048、返回 512、深度 64；达到限制即停止并报告截断 |
 | 高亮 | 每进程一个、五秒 |
 | 失败指纹 | 绝对 128，公共默认 64 |
-| 计时 | 每进程一个；8 帧或 2 秒；每帧 64 节点；512 记录；深度 32 |
+| 计时 | 每进程一个；已选 Session 为 8 帧或 2 秒；Future `LazyItem` 先 Arm 10 秒再采集 1 帧；每帧 64 节点；512 记录；深度 32 |
 | Nonce | 1--128 个 ASCII `[A-Za-z0-9._-]` |
 | 其他字符串 | 256 个 UTF-16 单元 |
 | 序列化响应 | 256 KiB UTF-8，含信封与截断元数据 |

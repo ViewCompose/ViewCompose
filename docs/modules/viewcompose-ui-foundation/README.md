@@ -219,8 +219,10 @@ by a later renderer or child render session.
 - `RenderSessionInspectionTooling`, `RenderSessionInspectionPolicy`, and
   `RenderSessionInspectionRegistration` form a Q3 optional platform contract. The policy separates
   lifecycle/node tracking from bounded first-frame source capture, allowing high-churn lazy-item
-  sessions to remain request-inspectable without source-stack work. The compiled
-  `renderSessionInspectionToolingSample` demonstrates the adapter lifecycle.
+  sessions to remain request-inspectable without source-stack work. One explicitly armed request
+  may select `TrackSessionBeforeFirstFrame`; registration then receives an empty source list before
+  the initial frame and can attach a one-frame timing capture without requesting a nested render.
+  The compiled `renderSessionInspectionToolingSample` demonstrates both paths.
 - `RenderSessionDiagnosticInspection` is the Q3 request-only safe-summary handle registered for the
   same logical Session. Its Q2 snapshot exposes activity, end state, latest committed frame, latest
   completed attempt, and bounded typed failure summaries without retaining or returning a raw
@@ -456,17 +458,22 @@ incorrectly give unloaded positions logical state ownership.
 `RenderSessionPlatformDiagnostics.inspectionTooling`, `RenderSessionInspectionTooling`,
 `RenderSessionInspectionPolicy`, and `RenderSessionInspectionRegistration` are Q3 tooling APIs.
 The alpha-line hard cut replaces the former source-only port: each logical session is ignored,
-tracked without source capture, or tracked with bounded first-successful-frame source capture.
-Registration is attempted at most once after a successful native frame, including for an empty
-candidate list, and receives the same `RenderDiagnosticContext` used by runtime events. Existing
-platform diagnostics use the default `null` adapter and retain their previous behavior. Opted-in
-custom platforms keep registration state bounded by its render session, consume any candidate-chain
-list synchronously, and perform callbacks on the platform render thread. Registration also receives
-Q3 `RenderSessionNodeInspection`. Its Q2 `RenderNodeToken`, node kind, entry, and snapshot values are
-process-local request data, never application identity. `snapshot()` visits at most 2,048 current
-mounted nodes, retains at most 512 to depth 64, emits privacy-safe type/source metadata and weak
-platform targets, and reports unsupported, ended, dropped, and truncated states. A newer snapshot,
-node replacement, cross-owner reuse, session end, or process recreation invalidates prior tokens.
+tracked without source capture, tracked before its first frame, or tracked with bounded
+first-successful-frame source capture. Ordinary registration is attempted at most once after a
+successful native frame, including for an empty candidate list. The pre-frame policy is reserved
+for one explicit armed request: registration happens immediately before the initial frame, receives
+an empty candidate list, and may attach finite timing to that already-entering frame without a
+nested structural render. Registration receives the same `RenderDiagnosticContext` used by runtime
+events. Existing platform diagnostics use the default `null` adapter and retain their previous
+behavior. Opted-in custom platforms keep registration state bounded by its render session, consume
+any candidate-chain list synchronously, and perform callbacks on the platform render thread.
+Registration also receives Q3 `RenderSessionNodeInspection`. Its Q2 `RenderNodeToken`, node kind,
+entry, and snapshot values are process-local request data, never application identity. `snapshot()`
+visits at most 2,048 current mounted nodes, retains at most 512 to depth 64, emits privacy-safe
+type/source metadata and weak platform targets, and reports unsupported, ended, dropped, and
+truncated states. A newer snapshot, node replacement, cross-owner reuse, session end, or process
+recreation invalidates prior tokens. Exhaustive consumers must handle the new policy as described
+in [Migrate pre-frame render-session inspection](../../migration/render-session-pre-frame-inspection.md).
 
 Registration now also receives Q3 `RenderSessionDiagnosticInspection` and
 `RenderSessionTimingInspection`. This is an intentional alpha hard cut to the registration

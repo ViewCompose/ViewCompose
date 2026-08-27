@@ -26,6 +26,7 @@
   "document_owners": {
     "tutorial": ["tutorial.render-diagnostics"],
     "architecture": ["adr.correlated-render-diagnostics"],
-    "tooling": ["tooling.diagnostics"]
+    "tooling": ["tooling.diagnostics"],
+    "migration": ["migration.render-session-pre-frame-inspection"]
   }
 }

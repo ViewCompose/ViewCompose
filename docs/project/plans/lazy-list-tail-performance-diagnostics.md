@@ -9,9 +9,13 @@ owner:
 version_lane: version-agnostic
 capability_ids:
   - lazy.collections
+  - diagnostics.session-inspection
+  - diagnostics.node-timing
+  - preview.integration
 artifact_ids:
   - viewcompose-ui-foundation
   - viewcompose-renderer-android
+  - viewcompose-preview
 sample_ids: []
 status: active
 scope: Use and, when evidence proves necessary, minimally extend the finite diagnostics to attribute and reduce the accepted LazyColumn tail-latency gaps.
@@ -27,25 +31,31 @@ ordered_work:
 completion:
   - Close the accepted list-tail regression or assign every remaining material gap to a separately evidenced owner while proving whether the shipped diagnostics changed the investigation decision.
 last_verified: 2026-08-27
-next_action: Add an interaction-armed capture that can follow a future LazyItem logical key or obtain equivalent cold-session correlation, then test physical holder/root reuse without changing performance.list@5.
-maven_release_changesets: []
+next_action: Continue platform-tail attribution in measure/layout/draw, input, and RenderThread before testing another production candidate; the unresolved Android Views P95 gaps remain open.
+maven_release_changesets:
+  - release/changes/20260827-armed-lazy-item-diagnostics.json
 ---
 
 # Lazy List Tail Performance and Diagnostics Utility Plan
 
 ## Status
 
-Active. This work runs in a dedicated worktree and branch based on `main` revision `6ab095a7`, so
-the concurrent Documentation Governance V2 work remains isolated. The plan-first baseline is
-commit `ffe8797a`. Six one-factor implementation/configuration probes have been measured and
-reverted; no production implementation is retained because none met the acceptance threshold.
+Active. This work runs in a dedicated worktree and branch based on `main` revision `290b1fc0`, so
+the concurrent documentation-governance work remains isolated. The plan-first baseline is commit
+`754e018d`; the evidence-triggered Phase 1A amendment is commit `9f245448`. Seven one-factor
+implementation/configuration probes have been measured and reverted; no performance implementation
+is retained because none met the acceptance threshold. The request-driven diagnostics correction
+passed focused behavior, optimized-Release isolation, exact-control performance acceptance, and the
+repository quality suites. The Xiaomi connected suites also passed independently; one aggregate
+`qaFull` invocation cannot stay green because MIUI intermittently rejects UTP install sessions, as
+recorded below.
 
 Last verified: 2026-08-27.
 
-Next action: execute Phase 1A by adding an interaction-armed capture that can follow a future
-LazyItem Session without accepting an application key or forcing a synthetic structural frame,
-then use that capture to decide whether physical holder/root reuse owns the next candidate. The
-plan remains active because the Android Views scroll and mutation P95 gaps are still material.
+Next action: continue attribution in the unsupported measure/layout/draw, input, and RenderThread
+domains before testing another production candidate. The plan remains active because the Android
+Views scroll and mutation P95 gaps are still material and no production performance correction has
+passed acceptance.
 
 ## Execution record: 2026-08-27
 
@@ -80,8 +90,52 @@ For this investigation, the diagnostics are **actionable for triage but insuffic
 optimization acceptance**. They changed the decision by rejecting Host recomposition, duplicate
 attach, and detached-preparation ownership as the primary pure-scroll explanation, identified the
 authored Text/direct-binding path to test for mutation, and handed the unsupported remainder to
-Perfetto. They did not identify a correction that passed the Release frame gate, and their forced
-first frame plus inability to follow future cold LazyItem Sessions remain concrete follow-up work.
+Perfetto. The original selected-session path did not identify a correction that passed the Release
+frame gate; its forced first frame and inability to follow future cold LazyItem Sessions triggered
+Phase 1A instead of another speculative runtime probe.
+
+### Phase 1A armed-capture result
+
+The retained correction adds an explicit future-LazyItem request. It matches only a live exact
+parent Host, the `LazyItem` role, and a Session ID above the arm-time floor. The process owns one arm,
+waits at most ten monotonic seconds, captures one completed frame, and reports matched, duration
+limit, parent ended, superseded, or capture rejected. Registering the matched Session immediately
+before its initial frame lets the timing request observe the frame already entering preparation;
+it does not manufacture a second structural render. The original selected-session request remains
+unchanged.
+
+Two initial two-second arms expired while the operator moved between Studio, ADB, and the device.
+That result was operationally deterministic but too short for the supported human workflow, so the
+fixed arm window changed to ten seconds and the Studio response timeout to fifteen seconds. Five
+correctly targeted captures then matched the `performance.list` Host rather than the still-live
+catalog Host. Every capture reported one `LazyItem` frame, `frame_limit`, 68 attempted and retained
+clock reads, 34 records, no drops, and no truncation. Frame elapsed values were
+`28.705/14.881/6.123/5.532/4.456 ms`; these active-Debug values rank supported work only and are not
+Release frame-time evidence. Reconciliation root time was `21.873/9.301/4.020/3.510/3.070 ms`,
+while direct-binding sums were `11.608/2.575/1.457/1.258/1.270 ms`. The first cold row ranked a
+`Row` reconciliation-self record at `2.825 ms` across three recorded intervals and Text/Surface
+direct binding at `2.264/2.206/1.405/1.365 ms`.
+
+The first five otherwise valid arms accidentally targeted the catalog Host; their nodes included
+`FlowRow` and `Button`, so their attribution was discarded. This exposed a necessary operating
+guard: verify both the Host source candidate and node types before attributing a timing report.
+
+The Phase 1A output was still unable to distinguish a newly created physical holder from a new
+logical Session installed over a recycled holder. A bounded process-local opaque physical-container
+token was therefore added to the same concrete Debug tooling. Twelve consecutive target arms
+matched logical Session IDs `17/21/27/32/37/42/47/52/57/62/68/73` to physical tokens
+`5/9/3/8/13/6/11/4/9/2/8/13`. Repeated tokens `9`, `8`, and `13` across different logical IDs prove
+physical holder reuse on the real fling. All twelve captures still retained 68 clock reads and the
+complete row-tree phase shape. The decision is therefore no longer “create more holders” or “raise
+the mounted-tree cache”; it is that a reused holder adopts a tree for a new logical owner and the
+ownership-safe path recomposes, reconciles, and rebinds the row while unsupported traversal and
+RenderThread work remains outside the finite timer.
+
+For this defect the upgraded diagnostics are **actionable but partial**. They correctly changed the
+next decision, correlated source, parent, logical Session, and physical holder without application
+keys, and removed the future-Session blind spot. They do not make active Debug durations comparable
+to Release, and they still require Perfetto for measure/layout/draw, input, RenderThread, GPU, and
+SurfaceFlinger ownership.
 
 ### Fixed-clock comparison baseline
 
@@ -128,26 +182,89 @@ The following one-factor probes were reverted:
    mutation `5.300/13.165`, heap `8102`, and scroll `5.862/8.909`, heap `7126`, against an adjacent
    exact-original control of `5.224/12.814`, `7949`, and `5.813/9.284`, `6971`. The normalized
    changes were mutation `+1.5%/+2.7%/+1.9%` and scroll `+0.8%/-4.0%/+2.2%`, all below the combined
-   acceptance thresholds.
+   acceptance thresholds; and
+7. removing the inactive `LayoutPassTracker` calls from only the `Surface`/`Box` and `Row`/`Column`
+   containers used by the row tested whether old diagnostic branches owned the unsupported
+   traversal tail. The Release-like candidate produced scroll `5.087/8.860/9.688 ms`, heap
+   `7849 KiB`, against the adjacent exact-original `5.813/9.284 ms` control. P95 changed only
+   `-4.6%` (`-0.424 ms`), remained materially behind Android Views, and did not justify weakening
+   the published layout-pass diagnostic. The probe and both source edits were reverted.
 
-The closest candidate is therefore `no material change`, not an optimization. Retaining it would
-add renderer complexity without closing either Android Views P95 gap. No Maven Changeset is
-required because every production probe was reverted and this checkpoint changes documentation
-only.
+The closest performance candidate remains `no material change`, not an optimization. Retaining one
+would add renderer complexity or weaken diagnostics without closing either Android Views P95 gap.
+Every renderer performance probe is reverted. A Maven Changeset is nevertheless required for the
+retained Foundation inspection seam and Preview diagnostic behavior.
+
+### Retained diagnostics no-regression acceptance
+
+The exact control is a detached worktree at retained-plan commit `9f245448`. Its target APK
+SHA-256 is `b650d46b8bd80a2712a965dcc613b4a11e81dc0046aa6941b439fc1edede1cab`; the candidate target is
+`13ef6933a17a3261e51a583c01e5450cf86de30ee0f0321530a81bdf5ba72182`. Both target APKs are
+`6,988,419` bytes. The benchmark APK is byte-identical in both worktrees at SHA-256
+`1430a42a222b172fa4eac30f10ae7e0c4c9bfb64dcfd28c7b211f97c5eee4bb7` and `40,023,416` bytes.
+Every accepted arm used five iterations, the same rooted-reset procedure, fixed Xiaomi clocks and
+interconnect votes, stopped vendor performance services, suspended charging, and a temperature no
+higher than `36 °C`.
+
+Frame values are P50/P95/P99 milliseconds; heap is median peak KiB.
+
+| Action | Exact control | Retained candidate | Normalized candidate change | Run-P50 CV control/candidate | Interpretation |
+| --- | --- | --- | --- | --- | --- |
+| Scroll | `4.995/8.331/9.731`, heap `7562` | `4.871/8.294/9.076`, `7955` | `-2.5%/-0.4%/-6.7%`; heap `+393 KiB` (`+5.2%`) | `0.092/0.051` | Timing `no material change`; the earlier adjacent pair had the opposite heap direction, so no repeatable heap regression is assigned. |
+| Mutation | `4.492/11.452/16.249`, heap `7879` | `4.309/11.515/14.237`, `7944` | `-4.1%/+0.6%/-12.4%`; heap `+65 KiB` (`+0.8%`) | `0.047/0.120` | `no material change`; neither frame gate is crossed. |
+
+An earlier mutation pair produced control `4.274/9.708/13.450`, heap `7459`, and candidate
+`4.339/11.742/20.297`, heap `7570`. Its P95 appeared to regress by `20.9%` and `2.034 ms`, so it was
+not accepted. The exact control immediately repeated at `4.432/11.202/21.666`, heap `8109`; that
+control movement alone was `+15.4%` and `+1.494 ms` at P95. The adjacent candidate repeat was
+`4.309/11.515/14.237`, heap `7944`, or `+2.8%` and `+0.313 ms` at P95. The later stable comparison
+above independently retained the same candidate result and produced a control within `0.063 ms` at
+P95. This preserves the rejected batch instead of averaging away a false alert.
+
+Conclusion: the inactive Foundation seam and downstream armed tooling cause `no material change`
+in the two ViewCompose paths and pass the no-regression gate. The comparison is release-safety
+evidence for a diagnostic change, not a performance-correction matrix; Compose and Android Views
+were not rerun because neither their code nor the frozen workload changed. Their accepted same-run
+matrix continues to own the residual cross-engine gap. This limitation keeps the plan active and
+does not satisfy Phase 4 performance success.
+
+### Repository and device acceptance
+
+Focused Foundation, Preview, and standalone Studio protocol/model tests pass. Documentation
+structure, language, translation, Governance V2, documentation scripts, release intent, dependency
+and boundary checks pass. `verifyDevelopmentToolingIsolation` and the optimized Release APK scan
+pass; the Release artifact excludes the concrete future-arm request and physical-container token
+markers. `qaQuick`, `qaPreview`, and `qaRelease` pass in one invocation with 2,414 tasks considered.
+
+`qaFull` was bound explicitly to Xiaomi serial `e5e70042`. Its first connected attempt exposed a
+MIUI confirmation dialog saying that ViewCompose was trying to start the test package; the dialog
+caused an empty `AnimationBoundsDeviceTest` failure and then blocked later installs. After explicitly
+allowing that device action, the failed method passed alone in `2.62 s`, and the complete main App
+suite passed with 153 executed tests, zero failures, and three credential/device-condition skips.
+MIUI then intermittently rejected the UTP install sessions for the Counter and Tutorials packages
+with `INSTALL_FAILED_USER_RESTRICTED` or `Connection refused`. Root preinstallation of the identical
+APKs allowed the unchanged Gradle connected tasks to pass independently: Counter `1/1` and
+Tutorials `2/2`. A final aggregate retry again failed before running tests because MIUI rejected all
+three UTP install sessions; it did not produce a test assertion failure.
+
+The connected evidence is accepted as passing constituent suites with a scoped device-environment
+exception, not as a green aggregate `qaFull` invocation. Owner: this active performance plan. Before
+archival, rerun the aggregate on a device with persistent `Install via USB` permission or a managed
+CI device. The Xiaomi CPU/GPU/interconnect governors, charging input, vendor performance services,
+original Magisk entry point, and trace-tool modes were restored after benchmarking; no temporary
+APK, shell wrapper, or fixed-clock state remains.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260827-armed-lazy-item-diagnostics.json`
 
 ## Release intent rationale
 
-This planning step changes only a repository-only active plan and its index. It does not change a
-published artifact, publication input, or compiled API sample. The first production change in
-`viewcompose-ui-foundation`, `viewcompose-renderer-android`, or another published artifact must add
-one immutable `release/changes/*.json` file in the same pull request, classify the direct artifact
-as `fix`, `feature`, `breaking`, or concretely `ignored`, and replace `- None.` above with every
-Changeset owned by this plan. Reverse-dependency impact remains release-planner output and must not
-be written by hand.
+The retained implementation changes the published Q3 Foundation inspection policy and the optional
+Preview artifact, so the immutable Changeset classifies UI Foundation as breaking and Preview as a
+feature. Concrete request parsing, arm ownership, physical-container correlation, report writing,
+and Studio controls remain downstream in Preview/Studio. Foundation retains only an optional
+policy branch and performs no recurring observation or per-node timing without an explicit request.
 
 ## Objective
 
@@ -337,8 +454,8 @@ unnecessary.
    `LazyItem` child role and a Session created after the request. Do not accept, retain, serialize,
    hash, or expose an application item key, node content, callback, native object, or source string
    as a selector.
-3. Own at most one armed request per process. Give it a request nonce, a two-monotonic-second
-   deadline, the existing eight-completed-frame ceiling after attachment, and terminal outcomes for
+3. Own at most one armed request per process. Give it a request nonce, a ten-monotonic-second
+   deadline, a one-completed-frame ceiling after attachment, and terminal outcomes for
    matched, timed out, parent ended, superseded, or process disposed. Registration and timing work
    exist only while an explicit debuggable-process request is armed.
 4. Ensure the request can attach before the matched Session's first supported render phase. A
@@ -452,7 +569,7 @@ material tail remains unowned, and this plan has no pending next action.
 | --- | --- |
 | Workload integrity | exact `performance.list@5` route, 1,000 rows, stable keys/type, eight bidirectional gestures, eight mutation/reset cycles, equal three-engine presentation |
 | Diagnostics identity | Host/LazyItem parent graph, logical identity across recycle, current source location, nonce/session validity, terminal capture state |
-| Diagnostics bounds | at most eight frames/two seconds, raw clock overhead, attempted/retained reads, drops, truncation, strings/depth/response limits, unsupported domains |
+| Diagnostics bounds | selected-session capture remains at most eight frames/two seconds; future-LazyItem arm is at most one frame/ten seconds; raw clock overhead, attempted/retained reads, drops, truncation, strings/depth/response limits, unsupported domains |
 | Supported phases | composition inclusive/self, reconciliation inclusive/self, binding direct; no double-counted parent ranking |
 | Unsupported phases | measure/layout/draw/RenderThread/GPU/SurfaceFlinger claims come from platform evidence, not node-timing inference |
 | Lazy behavior | key/revision State and effects, preparation activation boundary, attached refresh, reuse/reset/release, rollback, focus/accessibility, disposal |

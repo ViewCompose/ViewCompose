@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: b06dd78e6626b4500ed71d159dba632478bfa0d91d14f82fadc114faef93d3b4
+translation_source_hash: ea4b4e1717d4c56adf8e71a65fff79e05a76f8ce571de1b3241dfb7e1ff00df4
 translation_status: current
 ---
 
@@ -72,9 +72,13 @@ Action 的 Application-process 实现。它遵守 ADR-0009：激活必须同时�
 Observer、Per-node Timer 或 Report Write。
 
 Diagnostics Protocol v7 返回受隐私限制的 Session/Frame/Failure Summary、Mounted-node
-Snapshot/Highlight 与有限 Timing Capture。请求要求 Android `DUMP`、One-use Nonce、Foreground
-Package 与 Live-process 验证。Node Traversal、Depth、String、Timing Record、Response Byte 与
-Highlight Lifetime 都有上限；Stale、Hidden、Recycled、Clipped、Ended、Unsupported Node
+Snapshot/Highlight 与有限 Timing Capture。除了对已选 Session 最多采集八帧/两秒，
+**Capture next LazyItem** 还会对一个精确 Parent Session 进入最多十秒单调时间的 Armed 状态，并
+采集下一个 `LazyItem` 子 Session 的首个受支持帧。匹配只使用 Parent ID、Child Role 和 Arm 后的
+Session-ID 下限。报告包含不透明的进程内 Physical-container Token，可以在不公开应用 Key 或 Native
+Object 的前提下关联不同 Logical Session 与 Holder 复用。请求要求 Android `DUMP`、One-use Nonce、
+Foreground Package 与 Live-process 验证。Node Traversal、Depth、String、Timing Record、Response
+Byte 与 Highlight Lifetime 都有上限；Stale、Hidden、Recycled、Clipped、Ended、Unsupported Node
 Fail Closed。Timing 只覆盖 ViewCompose Composition、Reconciliation 与 Direct Binding，不覆盖
 Android Measure/Layout/Draw、GPU、RenderThread、Decode、Network、Database 或 SDK Work。
 

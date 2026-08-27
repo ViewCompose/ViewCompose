@@ -621,24 +621,61 @@ Frame values are P50/P95/P99 milliseconds; heap is median peak KiB.
 | Scroll | `5.615/9.230/10.682`, heap `7724` | `5.592/8.066/9.256`, `7848` | `5.204/6.862/8.256`, `4291` | `0.055/0.089/0.012` | Versus Compose `+0.4%/+14.4%`: `no material change`. Versus Views `+7.9%/+34.5%`: P95 remains `regressed`; heap is `+3433 KiB` (`+80.0%`). |
 | Mutation | `4.924/12.092/21.111`, heap `7859` | `6.005/15.771/35.524`, `8776` | `4.922/8.024/9.247`, `5840` | `0.027/0.072/0.088` | Versus Compose `-18.0%/-23.3%`: `improved`. Versus Views `+0.0%/+50.7%`: P95 remains `regressed`. |
 
-All six methods pass the `0.15` stability gate. Finite diagnostics correctly resolved the authored
-LazyItem source, ranked Text/direct binding as the largest supported item interval, and excluded
-Host composition/reconciliation/binding from the actual pure-scroll interaction. An independent
-trace put all observed cold `VC.DirectRender` slices under `RV Scroll`, not `RV Prefetch`, while
-Release traces retained additional input/traversal and RenderThread work that the finite timer does
-not support. The diagnostics were therefore actionable for triage, but they did not by themselves
-rank the complete frame tail.
+All six methods pass the `0.15` stability gate. The original finite diagnostics correctly resolved
+the authored LazyItem source, ranked Text/direct binding as the largest supported item interval, and
+excluded Host composition/reconciliation/binding from the actual pure-scroll interaction. An
+independent trace put all observed cold `VC.DirectRender` slices under `RV Scroll`, not
+`RV Prefetch`, while Release traces retained additional input/traversal and RenderThread work that
+the finite timer does not support. The original selected-session workflow was therefore actionable
+for triage, but its forced structural frame and inability to follow a future cold LazyItem Session
+prevented it from ranking the activation tail directly.
 
-Six reversible probes tested detached preparation, cross-owner diffing, row flattening,
-RecyclerView prefetch, mounted-cache size, and combined cross-owner/Text binding. All were reverted.
-The closest paired candidate changed mutation by `+1.5%/+2.7%` and scroll by `+0.8%/-4.0%` at
-P50/P95, while increasing heap by `1.9%/2.2%`; its classification is `no material change` and it
-does not justify renderer complexity. Starting a finite capture also forces one structural frame,
-and a selected LazyItem Session ends when its key leaves the viewport instead of following a newly
-visible key. The next action is an interaction-armed or equivalent cold-session correlation path,
-then a physical holder/root-reuse candidate that preserves the frozen workload. Until that evidence
-exists, the native scroll and mutation P95 gaps remain open and no production correction is
-accepted.
+The evidence-triggered correction adds one explicit future-LazyItem arm. It matches an exact live
+parent Host, the `LazyItem` role, and a Session ID above the arm-time floor; waits at most ten
+monotonic seconds; and captures one completed frame without manufacturing another render. Five
+correctly targeted captures retained all 68 attempted clock reads and 34 records with no drops or
+truncation. Their active-Debug frame elapsed values were
+`28.705/14.881/6.123/5.532/4.456 ms`. Reconciliation root time was
+`21.873/9.301/4.020/3.510/3.070 ms`, and direct-binding sums were
+`11.608/2.575/1.457/1.258/1.270 ms`. These values rank supported work only and are not Release
+frame-time evidence. Twelve consecutive arms then mapped distinct logical Session IDs to opaque
+physical-container tokens; repeated tokens `9`, `8`, and `13` proved that real flings reuse physical
+holders while installing a new logical owner. That changed the next decision from holder creation
+or mounted-cache sizing to the ownership-safe adoption path plus the still-unsupported platform
+tail. The upgraded diagnostics are therefore `actionable but partial`: they close the future-Session
+and holder-correlation blind spots, but Perfetto still owns measure/layout/draw, input,
+RenderThread, GPU, and SurfaceFlinger attribution.
+
+Seven reversible probes tested detached preparation, cross-owner diffing, row flattening,
+RecyclerView prefetch, mounted-cache size, combined cross-owner/Text binding, and inactive
+layout-pass tracking. All were reverted. The closest paired renderer candidate changed mutation by
+`+1.5%/+2.7%` and scroll by `+0.8%/-4.0%` at P50/P95 while increasing heap by `1.9%/2.2%`.
+Removing the inactive layout-pass calls changed scroll P95 by only `-4.6%` (`-0.424 ms`). Both are
+`no material change`, remain behind Android Views, and do not justify renderer complexity or weaker
+diagnostics.
+
+The retained diagnostic seam was finally compared with an exact `9f245448` control. Control and
+candidate target APK SHA-256 values were
+`b650d46b8bd80a2712a965dcc613b4a11e81dc0046aa6941b439fc1edede1cab` and
+`13ef6933a17a3261e51a583c01e5450cf86de30ee0f0321530a81bdf5ba72182`; both were `6,988,419`
+bytes. The benchmark APK was byte-identical at
+`1430a42a222b172fa4eac30f10ae7e0c4c9bfb64dcfd28c7b211f97c5eee4bb7`. Each accepted arm contains
+five iterations under the same Xiaomi controls.
+
+| Diagnostic-seam action | Exact control P50/P95/P99; heap | Candidate P50/P95/P99; heap | Normalized candidate change | Run-P50 CV control/candidate | Conclusion |
+| --- | --- | --- | --- | --- | --- |
+| Scroll | `4.995/8.331/9.731`; `7562` | `4.871/8.294/9.076`; `7955` | `-2.5%/-0.4%/-6.7%`; heap `+393 KiB` (`+5.2%`) | `0.092/0.051` | Timing `no material change`; heap direction was not repeatable across the earlier adjacent pair. |
+| Mutation | `4.492/11.452/16.249`; `7879` | `4.309/11.515/14.237`; `7944` | `-4.1%/+0.6%/-12.4%`; heap `+65 KiB` (`+0.8%`) | `0.047/0.120` | `no material change`; no regression threshold is crossed. |
+
+An earlier mutation pair appeared to regress at P95: control `9.708 ms` versus candidate
+`11.742 ms` (`+20.9%`, `+2.034 ms`). It was rejected rather than averaged away because the exact
+control itself moved to `11.202 ms` on immediate repetition (`+15.4%`, `+1.494 ms`); the adjacent
+candidate repeat was `11.515 ms` (`+2.8%`, `+0.313 ms`). The final stable pair above independently
+confirmed the no-regression result. The exact comparison proves that the inactive retained seam has
+no material frame-time regression, but it is not a new three-engine performance candidate. The
+accepted prior matrix continues to own the cross-engine conclusion: Android Views scroll and
+mutation P95 gaps remain open, no renderer correction is retained, and the next performance step
+must attribute the unsupported platform tail before testing another production change.
 
 Observed-property transactions materially reduce complete-tree work and beat the same-run Compose
 property control, but native property invalidation and traversal still own the lower tail. The

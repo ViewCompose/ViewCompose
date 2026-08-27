@@ -196,23 +196,33 @@ produce bounded records. Treat that first frame as capture setup unless the inte
 caused it; do not label its phase durations as the later gesture or mutation. The capture follows
 the selected logical Session only. When a lazy key leaves the viewport and its Session ends, a
 newly visible key receives a new Session ID even if RecyclerView reuses the same physical holder or
-mounted presentation. The inspector does not currently arm a request for a future Session or
-follow replacement by logical role/key.
+mounted presentation.
 
-For cold lazy-list work, use a selected item only when its logical key is known to survive the
-interaction. Otherwise use the Host capture to exclude supported Host phases, then correlate
-RecyclerView holder/bind sections and the newly created item Session with a platform trace. A
-Session-ended result is identity evidence, not an empty performance result. Measure/layout/draw,
-RenderThread, GPU, and buffer-queue ownership still requires Perfetto or another platform profiler.
+For cold lazy-list work, select the exact live parent Session and use **Capture next LazyItem**. The
+process owns at most one arm. It waits at most ten monotonic seconds for a child with that exact
+parent, the `LazyItem` role, and a Session ID above the arm-time floor, then captures one completed
+frame. Registration happens before the matched child's initial frame, so timing attaches to the
+frame already entering preparation rather than forcing another structural render. Terminal reasons
+distinguish matched, duration limit, parent ended, superseded, and capture rejected. The arm never
+accepts or serializes an application key, node content, callback, source string, or native object.
+
+Each Session row also carries an opaque process-local physical-container token, and the arm reports
+the token of its match. Equal tokens across different logical Session IDs prove physical holder
+reuse without making the token a selector or stable identity. Verify the selected Host's authored
+source and the matched node types before attribution; a foreground process may contain another
+valid Host. A Session-ended result remains identity evidence, not an empty performance result.
+Measure/layout/draw, RenderThread, GPU, and buffer-queue ownership still requires Perfetto or
+another platform profiler.
 
 The `performance.list@5` field recheck applied this rule. Repeated captures resolved the authored
-LazyItem source and ranked Text/direct binding inside the forced item frame, while a Host capture
-showed no supported phase during the actual pure-scroll interval. A matching platform trace placed
-cold direct render under `RV Scroll`, not `RV Prefetch`, and retained input/traversal and
-RenderThread work outside the finite timer. The result was actionable for triage but insufficient
-for optimization acceptance: it changed which hypotheses were rejected, yet no measured candidate
-closed the Release tail. Future interaction-armed or future-Session capture is therefore a new
-diagnostic expansion, not behavior that callers should assume today.
+LazyItem source and ranked Text/direct binding inside the selected item frame, while a Host capture
+showed no supported phase during the actual pure-scroll interval. Future-item capture then observed
+the cold logical Session's first supported frame. Twelve consecutive matches reused physical tokens
+`9`, `8`, and `13` across different logical Session IDs, proving that the workload already reuses
+holders. A matching platform trace placed cold direct render under `RV Scroll`, not `RV Prefetch`,
+and retained input/traversal and RenderThread work outside the finite timer. The upgrade was
+actionable but partial: it removed the future-Session and holder-creation ambiguities and changed the
+next source-level decision, but no measured production candidate closed the Release tail.
 
 ## 8. Demo inspector
 
@@ -227,12 +237,14 @@ plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnost
 
 ## 9. Remaining expansion contract
 
-[ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
+[ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1
+and its bounded future-session extension.
 A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
 production aggregation; `viewcompose-preview` owns the shipped request-driven correlated inspector,
-highlighting, and finite timing. No diagnostics expansion is currently active. A future continuous
-observer, new timing domain, or broader device contract requires a new attributed plan and must
-preserve ADR-0009's inactive and Release isolation rules.
+highlighting, selected-session timing, and one-shot future-LazyItem timing. The active list-tail plan
+owns the extension's no-regression and release-isolation acceptance. A future continuous observer,
+new timing domain, or broader device contract requires a new attributed plan and must preserve
+ADR-0009's inactive and Release isolation rules.
 
 `./gradlew verifyDemoReleaseToolingApk` assembles the optimized Demo Release APK and rejects the
 device request action, v7 report path, receiver, service registration, or concrete inspection class

@@ -291,6 +291,205 @@ class AndroidDeviceDslInspectionToolingTest {
     }
 
     @Test
+    fun `armed timing matches only a future lazy item under the exact parent`() {
+        var nowNanos = 100L
+        val registry = AndroidDeviceDslSourceRegistry(
+            monotonicTimeNanos = { nowNanos },
+        )
+        registry.register(
+            container = FrameLayout(applicationContext()),
+            sessionId = 1L,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
+            sourceCandidates = sourceCandidates(),
+            nodeInspection = emptyNodeInspection(),
+        )
+        val reusedPhysicalContainer = FrameLayout(applicationContext())
+        registry.register(
+            container = reusedPhysicalContainer,
+            sessionId = 2L,
+            parentSessionId = 1L,
+            role = RenderSessionRole.LazyItem,
+            sourceCandidates = emptyList(),
+            nodeInspection = emptyNodeInspection(),
+        )
+
+        val start = registry.startTiming(futureLazyItemTimingRequest(parentSessionId = 1L))
+        assertEquals(RenderNodeTimingStartStatus.Started, start.status)
+        assertNotNull(start.arm)
+        assertFalse(
+            registry.shouldRegisterBeforeFirstFrame(
+                diagnosticContext(2L, 1L, RenderSessionRole.LazyItem),
+            ),
+        )
+        assertFalse(
+            registry.shouldRegisterBeforeFirstFrame(
+                diagnosticContext(3L, 2L, RenderSessionRole.LazyItem),
+            ),
+        )
+        assertFalse(
+            registry.shouldRegisterBeforeFirstFrame(
+                diagnosticContext(3L, 1L, RenderSessionRole.PagerPage),
+            ),
+        )
+        assertTrue(
+            registry.shouldRegisterBeforeFirstFrame(
+                diagnosticContext(3L, 1L, RenderSessionRole.LazyItem),
+            ),
+        )
+        registry.unregister(2L)
+
+        var capturedRequest: RenderNodeTimingCaptureRequest? = null
+        val result = timingResult(
+            sessionId = 3L,
+            parentSessionId = 1L,
+            role = RenderSessionRole.LazyItem,
+        )
+        registry.register(
+            container = reusedPhysicalContainer,
+            sessionId = 3L,
+            parentSessionId = 1L,
+            role = RenderSessionRole.LazyItem,
+            sourceCandidates = emptyList(),
+            nodeInspection = emptyNodeInspection(),
+            timingInspection = object : RenderSessionTimingInspection {
+                override fun startCapture(
+                    request: RenderNodeTimingCaptureRequest,
+                ): RenderNodeTimingCaptureStart {
+                    capturedRequest = request
+                    return RenderNodeTimingCaptureStart(
+                        RenderNodeTimingStartStatus.Started,
+                        fixedTimingCapture(result),
+                    )
+                }
+            },
+        )
+
+        val armed = registry.pollArmedTiming(checkNotNull(start.arm))
+        assertEquals(DeviceDslTimingArmEndReason.Matched, armed.snapshot.endReason)
+        assertEquals(3L, armed.snapshot.matchedSessionId)
+        assertEquals(2L, armed.snapshot.matchedPhysicalContainerToken)
+        assertNotNull(armed.capture)
+        assertEquals(1, checkNotNull(capturedRequest).maxFrames)
+        assertEquals(RenderNodeTimingPhase.entries.toSet(), capturedRequest?.phases)
+        nowNanos += 1L
+    }
+
+    @Test
+    fun `armed timing request writes the matched cold session response once`() {
+        val context = applicationContext()
+        val registry = AndroidDeviceDslSourceRegistry(
+            processId = { 42 },
+            currentTimeMillis = { 1234L },
+            monotonicTimeNanos = { 100L },
+        )
+        registry.register(
+            container = FrameLayout(context),
+            sessionId = 1L,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
+            sourceCandidates = sourceCandidates(),
+            nodeInspection = emptyNodeInspection(),
+        )
+        val delayed = mutableListOf<Runnable>()
+        var writtenJson: String? = null
+        var finishedCount = 0
+        val handler = DeviceDslSourceRequestHandler(
+            registry = registry,
+            execute = { runnable -> runnable.run() },
+            writeResponse = { _, json -> writtenJson = json },
+            postDelayed = { _, action -> delayed += action },
+        )
+
+        handler.handle(
+            context = context,
+            request = futureLazyItemTimingRequest(1L),
+            onFinished = { finishedCount += 1 },
+        )
+        assertEquals(1, delayed.size)
+        assertEquals(null, writtenJson)
+
+        val result = timingResult(
+            sessionId = 2L,
+            parentSessionId = 1L,
+            role = RenderSessionRole.LazyItem,
+        )
+        registry.register(
+            container = FrameLayout(context),
+            sessionId = 2L,
+            parentSessionId = 1L,
+            role = RenderSessionRole.LazyItem,
+            sourceCandidates = emptyList(),
+            nodeInspection = emptyNodeInspection(),
+            timingInspection = fixedTimingInspection(result),
+        )
+        delayed.removeAt(0).run()
+
+        val timing = JSONObject(checkNotNull(writtenJson)).getJSONObject("timing")
+        val arm = timing.getJSONObject("arm")
+        val capture = timing.getJSONObject("result")
+        assertEquals("matched", arm.getString("endReason"))
+        assertEquals(1L, arm.getLong("parentSessionId"))
+        assertEquals(2L, arm.getLong("matchedSessionId"))
+        assertTrue(arm.getLong("matchedPhysicalContainerToken") > 0L)
+        assertEquals(2L, capture.getLong("sessionId"))
+        assertEquals(1L, capture.getLong("parentSessionId"))
+        assertEquals(RenderSessionRole.LazyItem.name, capture.getString("role"))
+        assertEquals(1, finishedCount)
+        assertTrue(delayed.isEmpty())
+    }
+
+    @Test
+    fun `armed timing timeout parent end and supersession are explicit`() {
+        var nowNanos = 100L
+        val registry = AndroidDeviceDslSourceRegistry(
+            monotonicTimeNanos = { nowNanos },
+        )
+        fun registerParent() {
+            registry.register(
+                container = FrameLayout(applicationContext()),
+                sessionId = 1L,
+                parentSessionId = null,
+                role = RenderSessionRole.Host,
+                sourceCandidates = sourceCandidates(),
+                nodeInspection = emptyNodeInspection(),
+            )
+        }
+        registerParent()
+
+        val timedOut = checkNotNull(
+            registry.startTiming(futureLazyItemTimingRequest(1L)).arm,
+        )
+        nowNanos += 10_000_000_000L
+        assertEquals(
+            DeviceDslTimingArmEndReason.DurationLimit,
+            registry.pollArmedTiming(timedOut).snapshot.endReason,
+        )
+
+        val parentEnded = checkNotNull(
+            registry.startTiming(futureLazyItemTimingRequest(1L)).arm,
+        )
+        registry.unregister(1L)
+        assertEquals(
+            DeviceDslTimingArmEndReason.ParentEnded,
+            registry.pollArmedTiming(parentEnded).snapshot.endReason,
+        )
+
+        registerParent()
+        val superseded = checkNotNull(
+            registry.startTiming(futureLazyItemTimingRequest(1L)).arm,
+        )
+        val replacement = registry.startTiming(
+            futureLazyItemTimingRequest(1L, requestId = "replacement-request"),
+        )
+        assertEquals(
+            DeviceDslTimingArmEndReason.Superseded,
+            registry.pollArmedTiming(superseded).snapshot.endReason,
+        )
+        assertNotNull(replacement.arm)
+    }
+
+    @Test
     fun `only one process timing capture may remain active`() {
         val context = applicationContext()
         val registry = AndroidDeviceDslSourceRegistry()
@@ -555,6 +754,7 @@ class AndroidDeviceDslInspectionToolingTest {
                 sessionId = sessionIndex + 1L,
                 parentSessionId = null,
                 role = RenderSessionRole.Host,
+                physicalContainerToken = sessionIndex + 1L,
                 renderingActive = true,
                 attachedToWindow = true,
                 shown = true,
@@ -673,6 +873,32 @@ class AndroidDeviceDslInspectionToolingTest {
         )
     }
 
+    private fun futureLazyItemTimingRequest(
+        parentSessionId: Long,
+        requestId: String = REQUEST_ID,
+    ): DeviceDslToolingRequest {
+        return DeviceDslToolingRequest(
+            requestId = requestId,
+            operation = DeviceDslToolingOperation.Timing,
+            sessionId = parentSessionId,
+            timingPhases = RenderNodeTimingPhase.entries.toSet(),
+            futureLazyItemTiming = true,
+        )
+    }
+
+    private fun diagnosticContext(
+        sessionId: Long,
+        parentSessionId: Long?,
+        role: RenderSessionRole,
+    ): RenderDiagnosticContext = RenderDiagnosticContext(
+        sessionId = renderSessionTraceId(sessionId),
+        parentSessionId = parentSessionId?.let(::renderSessionTraceId),
+        role = role,
+        frameId = null,
+        eventSequence = 0L,
+        monotonicTimestampNanos = 100L,
+    )
+
     private fun emptyNodeInspection(): RenderSessionNodeInspection {
         return object : RenderSessionNodeInspection {
             override fun snapshot(): RenderNodeInspectionSnapshot {
@@ -767,12 +993,15 @@ class AndroidDeviceDslInspectionToolingTest {
         records: List<RenderNodeTimingRecord> = emptyList(),
         complete: Boolean = true,
         endReason: RenderNodeTimingEndReason? = RenderNodeTimingEndReason.FrameLimit,
+        sessionId: Long = 21L,
+        parentSessionId: Long? = null,
+        role: RenderSessionRole = RenderSessionRole.Host,
     ): RenderNodeTimingCaptureResult {
         return RenderNodeTimingCaptureResult(
             context = RenderDiagnosticContext(
-                sessionId = renderSessionTraceId(21L),
-                parentSessionId = null,
-                role = RenderSessionRole.Host,
+                sessionId = renderSessionTraceId(sessionId),
+                parentSessionId = parentSessionId?.let(::renderSessionTraceId),
+                role = role,
                 frameId = null,
                 eventSequence = 0L,
                 monotonicTimestampNanos = 100L,

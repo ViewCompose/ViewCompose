@@ -2,6 +2,29 @@ package com.viewcompose.studio.preview
 
 import java.util.Locale
 
+internal fun StudioDeviceDslTimingSnapshot.toTopCostText(
+    messages: PreviewUiMessages,
+    limit: Int = 20,
+): String {
+    val resultText = result?.toTopCostText(messages, limit).orEmpty()
+    val armed = arm ?: return resultText
+    return buildString {
+        append(
+            messages.text(
+                "deviceDsl.timing.arm",
+                armed.parentSessionId,
+                armed.matchedSessionId?.toString() ?: "-",
+                armed.matchedPhysicalContainerToken?.toString() ?: "-",
+                armed.endReason?.wireValue ?: "armed",
+            ),
+        )
+        if (resultText.isNotEmpty()) {
+            append('\n')
+            append(resultText)
+        }
+    }
+}
+
 internal fun StudioDeviceDslTimingResult.toTopCostText(
     messages: PreviewUiMessages,
     limit: Int = 20,
