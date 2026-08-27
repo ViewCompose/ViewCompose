@@ -17,7 +17,7 @@
   "reference_owner": { "reference_id": "reference.lifecycle.effects", "generated": true },
   "sample_owner": { "sample_id": "module.lifecycle-effects" },
   "document_owners": {
-    "architecture": ["architecture.lifecycle-saved-state", "architecture.transactional-effect-lifecycle"],
+    "architecture": ["architecture.effects", "architecture.lifecycle-saved-state", "architecture.transactional-effect-lifecycle"],
     "module": ["module.viewcompose-lifecycle-androidx"]
   }
 }

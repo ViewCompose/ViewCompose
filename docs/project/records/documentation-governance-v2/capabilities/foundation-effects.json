@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "capability_id": "foundation.effects",
+  "kind": "dsl",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-ui-foundation"
+  },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha01"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.SideEffect",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/SideEffect.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.DisposableEffect",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/DisposableEffect.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.DisposableEffectScope",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/DisposableEffect.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.DisposableEffectResult",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/DisposableEffect.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.LaunchedEffect",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/CoroutineEffects.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.rememberCoroutineScope",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/CoroutineEffects.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.rememberUpdatedState",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/RememberUpdatedState.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.ProduceStateScope",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/ProduceState.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.produceState",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/ProduceState.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.CompositionEffectContext",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/EffectCallbackContext.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.foundation.effects",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "architecture.effects-local-capture"
+  },
+  "document_owners": {
+    "architecture": [
+      "architecture.effects"
+    ],
+    "module": [
+      "module.viewcompose-ui-foundation"
+    ]
+  }
+}

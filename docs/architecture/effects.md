@@ -1,3 +1,36 @@
+---
+schema_version: 2
+document_id: architecture.effects
+doc_type: architecture
+owner:
+  kind: capability
+  id: foundation.effects
+version_lane: released
+capability_ids:
+  - foundation.effects
+  - runtime.state
+  - lifecycle.effects
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-runtime
+  - viewcompose-ui-foundation
+  - viewcompose-lifecycle-androidx
+  - viewcompose-renderer-android
+sample_ids:
+  - architecture.effects-local-capture
+invariants:
+  - Candidate effects start only after the native tree commits; abort preserves the previously committed effect set.
+  - Structural position and explicit keys own effect identity, while outgoing lifecycles complete before incoming replacements start.
+  - Composition-owned coroutine work belongs to its effect, remembered scope, and render session; render inactivity alone never pauses it.
+evidence:
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SideEffectTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/DisposableEffectTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/CoroutineEffectsTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberUpdatedStateTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/ProduceStateTest.kt
+  - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotFlowTest.kt
+---
+
 # Transactional effects and structured work
 
 ViewCompose effects connect a successful declarative frame to imperative work. They are part of the
@@ -92,6 +125,7 @@ uses `viewcompose-lifecycle-androidx`.
 
 Resolve composition-scoped values while declaring the effect and capture the result:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/EffectsArchitectureSamples.kt" region="architecture-effects-local-capture" sample_id="architecture.effects-local-capture" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val theme = Theme.current
 val window = activity.window

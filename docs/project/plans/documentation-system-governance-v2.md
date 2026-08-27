@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the lazy-collection revision and reuse migration ownership slice, then hard-cut Effects architecture ownership as the next Phase 3 boundary.
+next_action: Merge the Effects architecture ownership slice, then hard-cut publishing workflow ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -143,6 +143,10 @@ to its three existing runtime owners, registers nine compiled sample decisions a
 bilingual fences, removes two resolved exceptions, and reduces the report to 43 issues. It also
 hard-corrects exact-region comparison so ordinary function-body indentation does not force compiled
 sample sources into non-idiomatic column-zero formatting.
+The accepted Effects architecture hard cut now gives the Foundation effect runtime a dedicated
+capability owner, extends the existing State, Lifecycle, and Renderer owners only at their real
+boundaries, registers one compiled bilingual Local-capture decision, removes two resolved
+exceptions, and reduces the report to 41 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -151,9 +155,9 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the lazy-collection revision and reuse migration ownership slice, then hard-cut
-Effects architecture ownership as the next Phase 3 boundary. Pull-request gate scaling Phases 3
-through 5 are complete, so these scoped content
+Next action: merge the Effects architecture ownership slice, then hard-cut publishing workflow
+ownership as the next Phase 3 boundary. Pull-request gate scaling Phases 3 through 5 are complete,
+so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
 
@@ -238,7 +242,7 @@ workflows, and compiled repository-quality tooling only; they do not change a pu
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
 artifacts, and zero shared-path classifications against
-`921967475ea70fc1c78d2073acc36e3286317cb4`.
+`6072312fe117dd32f09922ef28c5c3ac195101c2`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1627,6 +1631,40 @@ Accepted lazy-collection revision and reuse migration ownership slice on 2026-08
   shared-path classifications against `921967475ea70fc1c78d2073acc36e3286317cb4`. This slice changes
   no public API or production runtime behavior and makes no new runtime, visual, power, or
   performance claim. The next action is Effects architecture ownership.
+
+Accepted Effects architecture ownership slice on 2026-08-27:
+
+- retained the stable Architecture route and introduced `foundation.effects` as the explicit owner
+  for the ten public synchronous, disposable, coroutine, produced-state, updated-state, and
+  integration-callback contracts taught by the page. `snapshotFlow` extends `runtime.state`, while
+  Lifecycle effects and renderer commit ordering extend their existing owners instead of being
+  folded into the Foundation capability;
+- registered one exact bilingual compiled region proving that composition-scoped values are
+  resolved during declaration and captured by a keyed `SideEffect`. The sample lives in the
+  application-level Tutorials sample project, so no published artifact source is modified;
+- removed two resolved metadata and sample exception records. The report changed from 43 to 41
+  issues: missing metadata 36 to 35 and unclassified samples 7 to 6. All 531 discovered entries
+  remain owned; orphan symbols, taxonomy mismatches, duplicate owners, orphan documents, version
+  conflicts, stale generated output, unbaselined debt, and blocking violations remain zero;
+- the generated Reference retained 531 entries while its normalized catalog grew from 236,738 to
+  237,828 bytes, an increase of 1,090 bytes (`0.4604%`), for the new Effect owner and the exact
+  Architecture relationships;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,071,707 non-API
+  bytes, and left 106,507 bytes under the unchanged 46.9 MiB limit. This is 7,772 bytes (`0.0158%`)
+  above the lazy-collection migration slice and is `no material change`. Docusaurus completed in
+  `38.4 s`; timing remains `inconclusive` because cache and process state differed, while the
+  absolute result remains below the `120 s` limit;
+- Tutorials sample compilation, exact bilingual region identity, Governance V2, documentation
+  structure, language and translation review, generated Reference freshness, release intent, and
+  the complete bilingual site passed. Complete single-worker `qaQuick` passed 2,342 actionable
+  tasks in `44 s` (187 executed and 2,155 up-to-date); this is completeness evidence rather than a
+  speed comparison because it reused previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: the effect runtime now has a first-class capability owner,
+  while State, Lifecycle, and Renderer retain their separate responsibilities. Release intent
+  found zero release artifacts, zero ignored artifacts, and zero shared-path classifications
+  against `6072312fe117dd32f09922ef28c5c3ac195101c2`. This slice changes no public API or production
+  runtime behavior and makes no new runtime, visual, power, or performance claim. The next action
+  is publishing workflow ownership.
 
 | Current area | Required target |
 | --- | --- |

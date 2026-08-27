@@ -1,6 +1,36 @@
 ---
+schema_version: 2
+document_id: architecture.effects
+doc_type: architecture
+owner:
+  kind: capability
+  id: foundation.effects
+version_lane: released
+capability_ids:
+  - foundation.effects
+  - runtime.state
+  - lifecycle.effects
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-runtime
+  - viewcompose-ui-foundation
+  - viewcompose-lifecycle-androidx
+  - viewcompose-renderer-android
+sample_ids:
+  - architecture.effects-local-capture
+invariants:
+  - 候选 Effect 只在原生树提交后启动；中止会保留先前已提交的 Effect 集合。
+  - 结构位置与显式 Key 共同持有 Effect 身份，退出生命周期会在进入替换项启动前完成。
+  - Composition 所有的 Coroutine 工作归属于对应 Effect、Remember Scope 与 Render Session；仅 Render 不活跃绝不会暂停它。
+evidence:
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SideEffectTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/DisposableEffectTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/CoroutineEffectsTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberUpdatedStateTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/ProduceStateTest.kt
+  - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotFlowTest.kt
 translation_source: architecture/effects.md
-translation_source_hash: 841da7ab45495623c67ed264bd6132e52e261f2dad52c0d544f08ef737838af1
+translation_source_hash: 2fd9edfbc11d561d7efae40a6468c08128d87e9503e5e8d26a44eb4a8f1d5254
 translation_status: current
 ---
 
@@ -89,6 +119,7 @@ Render 不活跃不是 Coroutine Pause 信号。必须在低于 `STARTED` 或 `R
 
 声明 Effect 时先解析 Composition Scope 值，然后捕获结果：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/EffectsArchitectureSamples.kt" region="architecture-effects-local-capture" sample_id="architecture.effects-local-capture" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val theme = Theme.current
 val window = activity.window
