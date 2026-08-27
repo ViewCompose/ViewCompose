@@ -19,6 +19,10 @@ site, search index, or sitemap.
   process-first remediation for capability ownership, document-type and version-lane contracts,
   complete executable-sample discovery, a no-new-debt ratchet, generated DSL/Modifier reference,
   information-architecture repair, and prioritized standalone Tutorial/Guide coverage.
+- [Lazy list tail performance and diagnostics utility](./lazy-list-tail-performance-diagnostics.md) —
+  use the completed correlated inspector and finite timing capture against the accepted
+  `performance.list@5` scroll and mutation tails, retain one measured correction, and determine
+  whether the shipped diagnostic domains materially improve a real performance investigation.
 - [Demo post-release verification closeout](./demo-post-release-verification-closeout.md) —
   hardware-deferred because no currently available physical device can prove the required stable
   CPU, GPU, and display-pipeline control. All other phases are complete; resume only to recapture
