@@ -10,7 +10,7 @@ version_lane: version-agnostic
 capability_ids: []
 artifact_ids: []
 sample_ids: []
-status: active
+status: complete
 scope: Establish structured documentation ownership, discovery, debt ratchets, and generated Reference.
 non_goals:
   - Weaken existing documentation, source-comment, release, or site gates.
@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-28
-next_action: Merge the zero-debt ADR-0022 and final project/tooling metadata slice, then execute Phase 7 strict closeout and archive this plan.
+next_action: None. Phase 7 is accepted and this plan is archived.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -45,7 +45,7 @@ maven_release_changesets:
 
 ## Status
 
-Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A, 0B,
+Complete. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A, 0B,
 and 1 are complete. The first Phase 2 slice enforces the frozen baseline as a blocking no-new-debt
 ratchet; the second automatically discovers Tutorial pages and validates type-aware sample markers
 plus exact source-region identity in both languages; the third requires structural public
@@ -173,8 +173,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-28.
 
-Next action: merge the zero-debt ADR-0022 and final project/tooling metadata slice, then execute
-Phase 7 strict closeout and archive this plan.
+Next action: none. Phase 7 is accepted and this plan is archived.
 Pull-request gate scaling Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -2064,6 +2063,43 @@ Accepted zero-debt ADR-0022 and final project/tooling metadata slice on 2026-08-
   input, public API, production runtime behavior, visual output, power behavior, or application
   performance. Phase 7 strict closeout and plan archival intentionally remain a separate final
   review slice after this zero-debt baseline is merged.
+
+Accepted Phase 7 strict closeout and archival on 2026-08-28:
+
+- hard-cut the permanent verifier from the Phase 2 ratchet to blocking `strict` mode. The contract
+  manifest no longer contains a debt baseline; exact-baseline correlation and report fields,
+  count-reduction mutation support, the capability-to-exception sample fallback, and the accepted
+  exception fixture were deleted. The exception schema remains only to recognize and directly
+  reject forbidden records, and the Git policy permits deletion but rejects every other exception
+  mutation;
+- changed the machine and human reports to `strictViolations`, made every discovered issue block,
+  and made the generated-Reference update task refuse both contract and strict violations. Focused
+  compiled quality tests cover deterministic issue blocking, a schema-valid forbidden exception,
+  removed capability fallback, modified/added exception rejection, deletion, immutable impact
+  records, and public-API impact ownership; all 13 tests passed;
+- the source-derived strict report passed against `4cd660f26fd060bb5be4e25d4d72731e1e1379b7`
+  with 531 application entries, 123 public pages and locale mirrors, 201 executable fences, zero
+  exception records, zero issues in every category, zero contract violation, and zero strict
+  violation;
+- complete documentation structure, 72 documentation-script tests, 123 reviewed Chinese
+  translations, all generated API and module manuals, migration and Tutorial samples, release APK
+  isolation, module/unit/behavior suites, and `qaQuick` passed. The intentionally cold full run
+  executed 2,354 actionable tasks in `12 m 32 s` (2,274 executed and 80 up-to-date); this is
+  completeness evidence, not a build-speed comparison;
+- the complete bilingual site audited 454 pages and 30 redirects, verified 100 immutable API
+  versions, 100 module manuals, and 100 Chinese fallback routes, and produced 49,085,303 non-API
+  bytes. This is 8,676 bytes (`0.0177%`) below the preceding zero-debt build and leaves 92,911.4
+  bytes below the unchanged 46.9 MiB limit, so the size conclusion is `no material change`.
+  Docusaurus completed in `42.6 s`; timing is `inconclusive` because cache and process state differ,
+  while the absolute result remains below the `120 s` limit;
+- release intent found zero release artifacts, zero ignored artifacts, and zero shared-path
+  classifications. This strict-governance and internal build-tooling change has no published API,
+  Maven artifact, runtime behavior, visual output, device-power, or application-performance impact,
+  so it owns no additional immutable Changeset;
+- the overall conclusion is `improved`: temporary debt machinery is gone, all permanent local, PR,
+  and deployment gates are blocking and zero-exception, and the durable governance and site owners
+  contain the surviving contract. All completion criteria are satisfied, so this plan moves to the
+  archive and no longer blocks release planning.
 
 | Current area | Required target |
 | --- | --- |

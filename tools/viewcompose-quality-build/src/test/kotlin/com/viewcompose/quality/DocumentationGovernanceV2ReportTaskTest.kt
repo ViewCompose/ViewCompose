@@ -493,7 +493,7 @@ class DocumentationGovernanceV2ReportTaskTest {
     }
 
     @Test
-    fun `discovery is deterministic and unbaselined debt is blocking`() {
+    fun `discovery is deterministic and every issue is blocking in strict mode`() {
         val repository = temporaryFolder.newFolder("report-repository")
         val contractRoot = repository.resolve(
             "docs/project/contracts/documentation-governance-v2",
@@ -608,7 +608,7 @@ class DocumentationGovernanceV2ReportTaskTest {
                 """.trimIndent(),
             )
         }
-        val baseline = repository.resolve(
+        val forbiddenException = repository.resolve(
             "docs/project/records/documentation-governance-v2/exceptions/DOC-0001.json",
         ).apply {
             parentFile.mkdirs()
@@ -632,7 +632,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         val first = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
@@ -642,7 +642,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         val second = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs.reversed().toSet(),
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(legacyDocument, currentDocument),
             localeMirrorFiles = setOf(localeMirror),
@@ -676,13 +676,28 @@ class DocumentationGovernanceV2ReportTaskTest {
         assertFalse(first.report.contains("HiddenDsl"))
         assertTrue(first.report.contains("website/i18n/zh-CN"))
         assertTrue(first.report.contains("\"versionState\": \"next\""))
-        assertTrue(first.report.contains("\"exactEntryCount\": 1"))
-        assertTrue(first.report.contains("\"unbaselinedIssueCount\": 4"))
-        assertEquals(4, first.ratchetViolations.size)
+        assertTrue(first.report.contains("\"mode\": \"strict\""))
+        assertEquals(5, first.strictViolations.size)
         assertTrue(first.report.contains("\"status\": \"failed\""))
         assertTrue(first.report.contains("\"contractViolations\": []"))
-        assertTrue(first.report.contains("\"ratchetViolations\": ["))
-        assertTrue(first.humanReport.contains("Gate: failed; violations: 4"))
+        assertTrue(first.report.contains("\"strictViolations\": ["))
+        assertTrue(first.humanReport.contains("Gate: failed; violations: 5"))
+
+        val rejectedException = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(forbiddenException),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+        )
+        assertTrue(
+            rejectedException.strictViolations.any { violation ->
+                violation.contains("strict mode requires zero exception records")
+            },
+        )
 
         val committedReference = repository.resolve(
             "website/src/data/capability-reference.json",
@@ -693,7 +708,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         val freshReference = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
@@ -706,7 +721,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         val staleReference = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
@@ -717,7 +732,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         assertEquals(first.issueCount + 1, staleReference.issueCount)
         assertTrue(staleReference.report.contains("stale-generated-output"))
         assertTrue(
-            staleReference.ratchetViolations.any { violation ->
+            staleReference.strictViolations.any { violation ->
                 violation.contains("website/src/data/capability-reference.json")
             },
         )
@@ -725,13 +740,13 @@ class DocumentationGovernanceV2ReportTaskTest {
         val undocumentedPublicEntry = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
             publishingFiles = setOf(publishing, releases),
             documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
-            ratchetContext = DocumentationGovernanceV2RatchetContext(
+            verificationContext = DocumentationGovernanceV2VerificationContext(
                 verificationBase = "base",
                 changedSourceFiles = listOf(
                     DocumentationGovernanceV2SourceChange(
@@ -746,7 +761,7 @@ class DocumentationGovernanceV2ReportTaskTest {
             ),
         )
         assertTrue(
-            undocumentedPublicEntry.ratchetViolations.any { violation ->
+            undocumentedPublicEntry.strictViolations.any { violation ->
                 violation.contains("example.Modifier.visibleModifier added public API change")
             },
         )
@@ -754,13 +769,13 @@ class DocumentationGovernanceV2ReportTaskTest {
         val changedDefaultValue = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
             publishingFiles = setOf(publishing, releases),
             documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
-            ratchetContext = DocumentationGovernanceV2RatchetContext(
+            verificationContext = DocumentationGovernanceV2VerificationContext(
                 verificationBase = "base",
                 changedSourceFiles = listOf(
                     DocumentationGovernanceV2SourceChange(
@@ -775,7 +790,7 @@ class DocumentationGovernanceV2ReportTaskTest {
             ),
         )
         assertTrue(
-            changedDefaultValue.ratchetViolations.any { violation ->
+            changedDefaultValue.strictViolations.any { violation ->
                 violation.contains("example.Modifier.visibleModifier changed public API change")
             },
         )
@@ -785,7 +800,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         val staleMirror = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
@@ -798,7 +813,7 @@ class DocumentationGovernanceV2ReportTaskTest {
             ),
         )
         assertTrue(
-            staleMirror.ratchetViolations.any { violation ->
+            staleMirror.strictViolations.any { violation ->
                 violation.contains("taxonomy-mismatch")
             },
         )
@@ -814,7 +829,7 @@ class DocumentationGovernanceV2ReportTaskTest {
         val incompleteMarker = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
@@ -835,72 +850,54 @@ class DocumentationGovernanceV2ReportTaskTest {
         val broadened = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = setOf(baseline),
+            recordFiles = emptySet(),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
             publishingFiles = setOf(publishing, releases),
             documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
         )
-        assertTrue(broadened.report.contains("\"status\": \"broadened\""))
-        assertTrue(broadened.report.contains("\"actualCount\": 2"))
+        assertEquals(first.issueCount + 2, broadened.issueCount)
         assertTrue(
-            broadened.ratchetViolations.any { violation ->
-                violation.contains("DOC-0001 is broadened")
+            broadened.strictViolations.any { violation ->
+                violation.contains("unclassified-sample")
             },
         )
     }
 
     @Test
-    fun `git ratchet permits only monotonic violation count reduction`() {
-        val repository = temporaryFolder.newFolder("ratchet-repository")
+    fun `git strict policy rejects a modified exception`() {
+        val repository = temporaryFolder.newFolder("strict-policy-repository")
         val path =
             "docs/project/records/documentation-governance-v2/exceptions/DOC-0001.json"
-        val current = repository.resolve(path).apply {
-            parentFile.mkdirs()
-            writeText(exceptionFixture(count = 2))
-        }
-        val previous = exceptionFixture(count = 3)
-        val executor = ratchetExecutor(
-            diff = "M\t$path\n",
-            baseFiles = mapOf(path to previous),
-        )
 
-        val reduced = DocumentationGovernanceV2GitRatchet.inspect(
+        val modified = DocumentationGovernanceV2GitPolicy.inspect(
             repository = repository,
             explicitBaseRevision = "base",
-            executor = executor,
-        )
-        assertTrue(reduced.violations.joinToString("\n"), reduced.violations.isEmpty())
-
-        current.writeText(exceptionFixture(count = 2, category = "taxonomy-mismatch"))
-        val retargeted = DocumentationGovernanceV2GitRatchet.inspect(
-            repository = repository,
-            explicitBaseRevision = "base",
-            executor = executor,
+            executor = policyExecutor(diff = "M\t$path\n"),
         )
         assertTrue(
-            retargeted.violations.single().contains("immutable exception identity"),
+            modified.violations.single().contains("strict mode only permits deletion"),
         )
     }
 
     @Test
-    fun `git ratchet rejects a new exception and permits deletion`() {
-        val repository = temporaryFolder.newFolder("ratchet-add-delete")
+    fun `git strict policy rejects a new exception and permits deletion`() {
+        val repository = temporaryFolder.newFolder("strict-add-delete")
         val path =
             "docs/project/records/documentation-governance-v2/exceptions/DOC-0312.json"
 
-        val added = DocumentationGovernanceV2GitRatchet.inspect(
+        val added = DocumentationGovernanceV2GitPolicy.inspect(
             repository = repository,
             explicitBaseRevision = "base",
-            executor = ratchetExecutor(diff = "A\t$path\n"),
+            executor = policyExecutor(diff = "A\t$path\n"),
         )
-        assertTrue(added.violations.single().contains("cannot grow or re-add"))
+        assertTrue(added.violations.single().contains("strict mode only permits deletion"))
 
-        val deleted = DocumentationGovernanceV2GitRatchet.inspect(
+        val deleted = DocumentationGovernanceV2GitPolicy.inspect(
             repository = repository,
             explicitBaseRevision = "base",
-            executor = ratchetExecutor(diff = "D\t$path\n"),
+            executor = policyExecutor(diff = "D\t$path\n"),
         )
         assertTrue(deleted.violations.joinToString("\n"), deleted.violations.isEmpty())
     }
@@ -1018,9 +1015,9 @@ class DocumentationGovernanceV2ReportTaskTest {
         }
         val impactPath =
             "docs/project/records/documentation-governance-v2/impacts/impact-example.json"
-        val executor = ratchetExecutor(diff = "A\t$sourcePath\nM\t$impactPath\n")
+        val executor = policyExecutor(diff = "A\t$sourcePath\nM\t$impactPath\n")
 
-        val audit = DocumentationGovernanceV2GitRatchet.inspect(
+        val audit = DocumentationGovernanceV2GitPolicy.inspect(
             repository = repository,
             explicitBaseRevision = "base",
             executor = executor,
@@ -1053,37 +1050,15 @@ class DocumentationGovernanceV2ReportTaskTest {
         recordId = recordId,
     )
 
-    private fun ratchetExecutor(
-        diff: String,
-        baseFiles: Map<String, String> = emptyMap(),
-    ) = DocumentationGovernanceV2GitCommandExecutor { arguments ->
+    private fun policyExecutor(diff: String) = DocumentationGovernanceV2GitCommandExecutor { arguments ->
         val output = when (arguments.firstOrNull()) {
             "rev-parse" -> "base\n"
             "diff" -> diff
             "ls-files" -> ""
-            "show" -> baseFiles.getValue(arguments.last().substringAfter(':'))
             else -> error("Unexpected git arguments: $arguments")
         }
         DocumentationGovernanceV2GitCommandResult(exitCode = 0, output = output)
     }
-
-    private fun exceptionFixture(
-        count: Int,
-        category: String = "unclassified-sample",
-    ): String =
-        """
-        {
-          "schema_version": 2,
-          "exception_id": "DOC-0001",
-          "target": {"file": "docs/guides/legacy.md"},
-          "category": "$category",
-          "reason": "The legacy fence still needs a compiled source owner.",
-          "owner": "documentation-governance",
-          "created_on": "2026-08-26",
-          "removal_condition": "Delete this exact entry when the legacy fence is registered.",
-          "violation_count": $count
-        }
-        """.trimIndent()
 
     private fun fixtureContract(contractRoot: File) {
         contractRoot.resolve("fixtures/accepted").mkdirs()
@@ -1106,7 +1081,7 @@ class DocumentationGovernanceV2ReportTaskTest {
                 {
                   "id": "exception",
                   "schema": "exception.schema.json",
-                  "accepted": ["fixtures/accepted/exception.json"],
+                  "accepted": [],
                   "rejected": [
                     {
                       "fixture": "fixtures/rejected/exception.json",
@@ -1145,9 +1120,6 @@ class DocumentationGovernanceV2ReportTaskTest {
               }
             }
             """.trimIndent(),
-        )
-        contractRoot.resolve("fixtures/accepted/exception.json").writeText(
-            """{"exception_id":"DOC-0001","target":{"file":"docs/a.md"},"category":"missing-metadata","violation_count":1}""",
         )
         contractRoot.resolve("fixtures/rejected/exception.json").writeText("{}\n")
     }

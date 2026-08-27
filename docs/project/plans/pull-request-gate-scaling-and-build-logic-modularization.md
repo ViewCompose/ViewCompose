@@ -256,7 +256,7 @@ revision outputs.
 ## Coordinated execution with Documentation Governance V2
 
 This plan supplies the compiled ownership and pull-request execution model required by
-[`documentation-system-governance-v2.md`](documentation-system-governance-v2.md). The two plans
+[`documentation-system-governance-v2.md`](../../archive/documentation-system-governance-v2.md). The two plans
 must not be implemented independently or completed one after the other. Use this dependency order:
 
 1. complete this plan's Phase 0 before any new documentation gate changes the accepted task graph;

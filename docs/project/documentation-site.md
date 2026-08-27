@@ -91,8 +91,8 @@ for every assembly. `VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS` accepts only `
 it at `1` until an accepted hosted-runner process-tree memory measurement justifies two concurrent
 2 GiB Gradle/Dokka processes.
 
-Governance V2 assets are repository inputs, not another site registry: Phase 0A freezes schemas,
-Phase 0B reports through compiled quality ownership, and Phase 2 blocks new debt. The committed
+Governance V2 assets are repository inputs, not another site registry: schemas and deterministic
+discovery feed the compiled zero-exception strict gate, where every issue blocks. The committed
 `website/src/data/capability-reference.json` dataset is intentionally rewritten with
 `./gradlew updateDocumentationCapabilityReference`; verification independently derives and
 byte-compares the expected model. The localized `/reference/` page consumes that one tree, while
@@ -149,7 +149,7 @@ index, and 120 seconds for the Docusaurus build. Locale-prefixed API copies rema
 
 The ceiling rose from 41 MiB to 46.9 MiB only after paired attribution and consolidation. In the
 2026-08-26 Governance V2 gate change, one same-corpus build reached 49,185,235 B, 7,020.6 B
-(+0.0143%) over the limit. Consolidating repeated prose while retaining the active ratchet contract
+(+0.0143%) over the limit. Consolidating repeated prose while retaining the then-active ratchet contract
 and pruning the unused locale social-card copy reduced it by 769,236 B (-1.5640%) to 48,415,999 B,
 leaving 762,215.4 B (1.5499%) headroom: the result is `improved`. The measurement covers one local
 production build; the stop condition remains unchanged: do not raise the threshold, and make the

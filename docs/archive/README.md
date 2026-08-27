@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `documentation-system-governance-v2.md` | Governance V2 已从 733 条历史 finding 和 311 条精确 Exception 收敛为 531 个公开入口、123 个双语公共页面、201 个可执行代码块全部结构化归属；生成 Reference、公开 API impact、信息架构、样例与语言门禁均已闭环，临时基线及兼容路径已硬切删除，永久门禁以零 issue、零 Exception 的 blocking strict mode 运行 |
 | `system-navigation-delivery-history.md` | Navigation Stage 1–10 的临时交付顺序已完成；当前事务、生命周期与所有权不变量已迁至 Architecture，应用验收迁至聚焦 Guide |
 | `paging3-integration.md` | AndroidX `PagingDataPresenter` 可选前端、紧凑占位表、生命周期与 mediator 契约、受控 Demo、百万位置真机证明、Release 固定频率绝对基线、Maven 消费和完整仓库门禁均已闭环；首个基线不作相对性能结论，Row/Grid、真实 I/O 或替代引擎需重新立项 |
 | `third-party-android-view-integrations.md` | The typed Android View adapter, lifecycle and saved-state coordination, Media3, legacy ExoPlayer 2, Google Maps, and CameraX integrations are complete; exact ownership, physical-device evidence, bilingual manuals, consumer gates, and release changesets are closed, and future integrations require a new attributed plan |

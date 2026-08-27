@@ -1,19 +1,11 @@
 {
   "schemaVersion": 1,
   "governanceVersion": 2,
-  "status": "phase-2-capability-impact-gate",
+  "status": "strict",
   "recordPlacement": "docs/project/records/documentation-governance-v2",
   "scannerImplementation": "tools/viewcompose-quality-build:verifyDocumentationGovernanceV2",
   "reportOutput": "build/reports/viewcompose-quality/documentation-governance-v2-report.json",
   "humanReportOutput": "build/reports/viewcompose-quality/documentation-governance-v2-report.txt",
-  "debtBaseline": {
-    "placement": "docs/project/records/documentation-governance-v2/exceptions",
-    "entryCount": 311,
-    "issueCount": 733,
-    "grouping": "exact target, category, and violation count",
-    "stableIssueId": "SHA-256(category + canonical identity), first 16 hexadecimal characters",
-    "mutationPolicy": "records may be deleted or retain identity with a lower exact violation count; additions, retargeting, widening, and re-addition are blocked"
-  },
   "contracts": [
     {
       "id": "capability",
@@ -23,6 +15,10 @@
         {
           "fixture": "fixtures/rejected/capability-missing-reference.json",
           "rule": "reference_owner is required"
+        },
+        {
+          "fixture": "fixtures/rejected/capability-exception-owner.json",
+          "rule": "sample_owner must resolve directly to a compiled sample"
         }
       ],
       "reviewerOwned": ["capability grouping is cohesive", "document owners are appropriate for user need"]
@@ -66,20 +62,20 @@
     {
       "id": "exception",
       "schema": "exception.schema.json",
-      "accepted": ["fixtures/accepted/exception.json"],
+      "accepted": [],
       "rejected": [
         {
           "fixture": "fixtures/rejected/wildcard-exception.json",
           "rule": "exception targets must be exact and cannot contain wildcards"
         }
       ],
-      "reviewerOwned": ["the reason is temporary and credible", "the removal condition is actionable"]
+      "reviewerOwned": []
     }
   ],
   "enforcement": {
-    "phase0A": "reviewed schemas and fixtures only",
-    "phase0B": "compiled report-only parsing and fixture validation",
-    "phase1": "complete deterministic discovery and exact debt baseline",
-    "phase2": "blocking no-new-debt and capability-impact gates"
+    "mode": "blocking strict verification",
+    "issues": "every discovered issue blocks",
+    "exceptions": "all exception records are forbidden",
+    "publicCapabilityImpact": "every detected public capability change requires one newly added exact immutable impact record"
   }
 }

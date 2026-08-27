@@ -100,19 +100,19 @@ Link between focused pages instead.
 
 ## Governance V2 structured contract
 
-Governance V2 adds stable identities and machine-readable records. Its frozen Phase 2 baseline is
-enforced by `verifyDocumentationGovernanceV2` through `verifyDocumentationStructure`; detailed
-ownership, record, and ratchet rules follow.
+Governance V2 adds stable identities and machine-readable records. Its zero-exception strict gate
+is enforced by `verifyDocumentationGovernanceV2` through `verifyDocumentationStructure`; detailed
+ownership, record, and blocking rules follow.
 
 ### Capability identity and ownership
 
 Every application-facing DSL, Modifier, component, host, integration, or tooling entry resolves as
-`symbol -> capability_id -> artifact/version -> generated Reference -> sample or exception ->`
+`symbol -> capability_id -> artifact/version -> generated Reference -> compiled sample ->`
 applicable handwritten owners.
 
 A capability groups only overloads or symbols representing one user decision. Its record contains
 kind, responsible owner, one artifact and version state, exact symbols, generated Reference,
-sample or exception, and applicable document owners. Moves, deprecations, and deletions update that
+compiled sample, and applicable document owners. Moves, deprecations, and deletions update that
 identity, impact, migration, and redirects together. Internal, test, Demo-only, generated, and
 renderer-only declarations stay outside the application catalog.
 
@@ -213,22 +213,23 @@ low-level public implementation type. Those cases retain the same impact-record 
 must be identified by the author/reviewer together with the source-documentation and release
 checks; this machine boundary is not a `No documentation impact` exemption.
 
-### Exceptions and debt ratchet
+### Strict issues and forbidden exceptions
 
-An exception has a stable ID, exact file/symbol, category, reason, owner, creation date, removal
-condition, count, and optional expiry; wildcards and permanent legacy buckets are forbidden. The
-active ratchet blocks unbaselined, wider, increased, re-added, or identity-mutated debt; only exact
-count reductions and resolved-record deletions pass. Completion requires an empty baseline and
-strict local, PR, and deployment gates.
+Every discovered governance issue blocks local, pull-request, and deployment verification. The
+repository retains no debt baseline, allowlist, count-reduction path, or capability-to-exception
+fallback. Exception records are recognized only so the verifier can reject them with a direct
+diagnostic; the Git policy permits deletion but rejects additions, modifications, renames, and
+copies. A missing compiled sample or other owner must be repaired in the same change.
 
 ### Contract assets and enforcement boundary
 
 The V2 manifest in `docs/project/contracts/` freezes schemas, fixtures, and record/task/report
 locations. Documents use front matter; other records use plural subdirectories. Fixtures fail
-closed; Phase 2 enforces the frozen exact baseline.
+closed; the manifest declares blocking strict mode, and the report must contain zero issues and
+zero exception records.
 
-Machines own shape, identity, discovery, uniqueness, source/lane/route consistency, ratchet, and
-freshness; reviewers own cohesion, purpose, evidence, exception credibility, and rationale.
+Machines own shape, identity, discovery, uniqueness, source/lane/route consistency, strict issue
+blocking, and freshness; reviewers own cohesion, purpose, evidence, and rationale.
 Automation never overrides review.
 
 ## Framework and module boundaries
@@ -532,7 +533,7 @@ Use this matrix before implementation and again during review:
 
 | Change | Required documentation impact |
 | --- | --- |
-| New or changed public/protected symbol | Structured capability-impact record; capability owner; KDoc/Javadoc; module page; generated Reference; sample or exact exception; explicit Tutorial/Guide/Architecture/Migration/redirect dispositions |
+| New or changed public/protected symbol | Structured capability-impact record; capability owner; KDoc/Javadoc; module page; generated Reference; compiled sample; explicit Tutorial/Guide/Architecture/Migration/redirect dispositions |
 | New published module | Publishing metadata; module catalog; module `README`; API reference pipeline; dependency guide |
 | Published artifact source or release-input change | Immutable per-PR Changeset; owning module/API documentation as applicable; deterministic release-plan validation |
 | Dependency or compatibility change | Module page and affected cross-module compatibility matrix |

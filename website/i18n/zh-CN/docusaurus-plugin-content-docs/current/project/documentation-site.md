@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: c46eac7e8cc58885612337dd0779b7b73307ff998c49997bc3c1b169a2424714
+translation_source_hash: 7bfd4d0f85b43870487a507dd996eb9dad8b2eda0d72482b1b307e73487ab065
 translation_status: current
 ---
 
@@ -66,8 +66,8 @@ npm run build
 `VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS` 只接受 `1` 或 `2`；在获得可接受的托管 runner
 进程树内存测量、确认两个 2 GiB Gradle/Dokka 进程可以并行前，CI 固定为 `1`。
 
-Governance V2 资产是仓库输入，不是第二份站点注册表：Phase 0A 冻结 schema，Phase 0B 通过
-compiled quality owner 报告，Phase 2 阻止新债务。已提交的
+Governance V2 资产是仓库输入，不是第二份站点注册表：schema 与确定性发现共同输入 compiled
+零 Exception strict gate，所有 issue 都会阻断。已提交的
 `website/src/data/capability-reference.json` 数据集只能通过
 `./gradlew updateDocumentationCapabilityReference` 主动重写；校验会独立派生并逐字节比较预期
 模型。本地化 `/reference/` 页面消费这一棵树，`/api/` 则继续提供按产物和版本生成的完整
