@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-lifecycle-androidx/README.md
-translation_source_hash: b3f4c681027a381c61871fe4808051a177c9c442e4b89cc769f9c4fed522790b
+translation_source_hash: 4bb707a0e4c3691914e517d3a350f8689258bfae664002afc8f690c4e1798968
 translation_status: current
 ---
 
@@ -13,6 +13,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lifecycle-androidx-module-dependency" sample_id="module.lifecycle-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01")
@@ -41,6 +42,20 @@ Android Host 还会安装 `LocalSavedStateRegistryOwner`。两个 Local 有意�
 Destination 或 Graph 则会为两个 Local 安装自己的 Owner。自定义 Host 只有在 Registry 已完成
 Attach 和 Restore 后才能使用 `ProvideSavedStateRegistryOwner(owner) { ... }`。
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-owner-boundary" sample_id="module.lifecycle-owner-boundary" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.provideLifecycleOwnerSample(
+    source: StateFlow<String>,
+    owner: LifecycleOwner,
+): State<String> {
+    lateinit var state: State<String>
+    ProvideLifecycleOwner(owner) {
+        state = source.collectAsStateWithLifecycle()
+    }
+    return state
+}
+```
+
 ## 绑定 Lifecycle 的 Android View
 
 可复用 SDK 集成应继承 `LifecycleAndroidViewAdapter<V, S>`，并在不可变 Adapter State 中捕获
@@ -59,6 +74,51 @@ Binding：错误重新抛出前会尝试完成有界的下降清理与 Observer 
 Cleanup Hook。所有回调都是主线程同步工作，不能发出由应用拥有的 Lifecycle 命令，也不能阻塞
 分发。
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-android-view" sample_id="module.lifecycle-android-view" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+private data class LifecycleLabelState(
+    val owner: LifecycleOwner,
+    val text: String,
+)
+
+private object LifecycleLabelAdapter : LifecycleAndroidViewAdapter<TextView, LifecycleLabelState>() {
+    override fun lifecycleOwner(state: LifecycleLabelState): LifecycleOwner = state.owner
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: LifecycleLabelState) {
+        scope.view.text = state.text
+    }
+
+    override fun onLifecycleEvent(
+        scope: AndroidViewLifecycleEventScope<TextView>,
+        state: LifecycleLabelState,
+        event: Lifecycle.Event,
+    ) {
+        when (event) {
+            Lifecycle.Event.ON_START -> scope.view.isActivated = true
+            Lifecycle.Event.ON_STOP,
+            Lifecycle.Event.ON_DESTROY,
+            -> scope.view.isActivated = false
+
+            else -> Unit
+        }
+    }
+}
+
+/** Mounts a View whose AndroidX owner is caught up only after the View transaction commits. */
+fun UiTreeBuilder.lifecycleAndroidViewAdapterSample(
+    owner: LifecycleOwner,
+    text: String,
+) {
+    AndroidView(
+        adapter = LifecycleLabelAdapter,
+        state = LifecycleLabelState(owner = owner, text = text),
+        key = "lifecycle-label",
+    )
+}
+```
+
 ## 已提交 Android View 的 SavedState
 
 当 SDK View 拥有 Bundle Payload（例如 `MapView` State）时，在 `onViewCommit` 中调用
@@ -73,12 +133,72 @@ Bundle 或 `null`。相同 Owner、Key 与 Version 的后续 Commit 返回 `Reta
 Provider；原始 `AndroidViewAdapter` 必须在自己的最终清理中调用
 `clearAndroidViewSavedStateBinding()`。
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-android-view-saved-state" sample_id="module.lifecycle-android-view-saved-state" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+private data class SavedLabelState(
+    val lifecycleOwner: LifecycleOwner,
+    val savedStateOwner: SavedStateRegistryOwner,
+    val text: String,
+)
+
+private object SavedLabelAdapter : LifecycleAndroidViewAdapter<TextView, SavedLabelState>() {
+    override fun lifecycleOwner(state: SavedLabelState): LifecycleOwner = state.lifecycleOwner
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: SavedLabelState) {
+        scope.view.text = state.text
+    }
+
+    override fun onViewCommit(scope: AndroidViewCommitScope<TextView>, state: SavedLabelState) {
+        val result = scope.bindAndroidViewSavedState(
+            owner = state.savedStateOwner,
+            key = "saved-label",
+            formatVersion = 1,
+        ) {
+            Bundle().apply { putString("text", view.text.toString()) }
+        }
+        if (result is AndroidViewSavedStateBindResult.Initial) {
+            result.restoredState?.getString("text")?.let(scope.view::setText)
+        }
+    }
+
+    override fun onLifecycleEvent(
+        scope: AndroidViewLifecycleEventScope<TextView>,
+        state: SavedLabelState,
+        event: Lifecycle.Event,
+    ) = Unit
+}
+
+/** Registers SDK Bundle state from commit and restores it before lifecycle catch-up. */
+fun UiTreeBuilder.androidViewSavedStateBindingSample(
+    lifecycleOwner: LifecycleOwner,
+    savedStateOwner: SavedStateRegistryOwner,
+    text: String,
+) {
+    AndroidView(
+        adapter = SavedLabelAdapter,
+        state = SavedLabelState(
+            lifecycleOwner = lifecycleOwner,
+            savedStateOwner = savedStateOwner,
+            text = text,
+        ),
+        key = "saved-label",
+    )
+}
+```
+
 ## 组合生命周期收集
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-flow-composition" sample_id="module.lifecycle-flow-composition" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-fun UiTreeBuilder.Profile(model: ProfileModel) {
-    val profile = model.profile.collectAsState().value
-    Text(profile.displayName)
+fun UiTreeBuilder.collectStateFlowSample(source: StateFlow<String>): State<String> {
+    return source.collectAsState()
+}
+
+/** Supplies the first-frame value required by a general flow. */
+fun UiTreeBuilder.collectFlowSample(source: Flow<String>): State<String> {
+    return source.collectAsState(initial = "Loading")
 }
 ```
 
@@ -91,10 +211,28 @@ remembered State holder 及其最新值。
 
 ## 感知 Lifecycle 的收集
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-flow-aware" sample_id="module.lifecycle-flow-aware" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-fun UiTreeBuilder.Profile(model: ProfileModel) {
-    val profile = model.profile.collectAsStateWithLifecycle().value
-    Text(profile.displayName)
+fun UiTreeBuilder.collectWithLifecycleSample(
+    source: StateFlow<String>,
+    owner: LifecycleOwner,
+): State<String> {
+    return source.collectAsStateWithLifecycle(
+        lifecycleOwner = owner,
+        minActiveState = Lifecycle.State.STARTED,
+    )
+}
+
+/** Uses a Lifecycle directly when no owner object is available. */
+fun UiTreeBuilder.collectWithExplicitLifecycleSample(
+    source: Flow<String>,
+    lifecycle: Lifecycle,
+): State<String> {
+    return source.collectAsStateWithLifecycle(
+        initial = "Loading",
+        lifecycle = lifecycle,
+        minActiveState = Lifecycle.State.RESUMED,
+    )
 }
 ```
 
@@ -130,6 +268,39 @@ Setup 并抛出，Effect 会保持 Pending 并在后续 Commit 重试，因此 S
 
 `Lifecycle.currentStateAsState()` 返回稳定、归组合所有的 Holder；它在 Commit 后观察每次状态
 转换，协调首次安装期间竞态的转换，并在离开组合时移除 Observer。
+
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-effects" sample_id="module.lifecycle-effects" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.lifecycleStartEffectSample(
+    owner: LifecycleOwner,
+    trackerId: String,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+) {
+    LifecycleStartEffect(trackerId, lifecycleOwner = owner) {
+        onStart()
+        onStopOrDispose(onStop)
+    }
+}
+
+/** Acquires and releases foreground-only work with resumed lifecycle state. */
+fun UiTreeBuilder.lifecycleResumeEffectSample(
+    owner: LifecycleOwner,
+    requestId: String,
+    onResume: () -> Unit,
+    onPause: () -> Unit,
+) {
+    LifecycleResumeEffect(requestId, lifecycleOwner = owner) {
+        onResume()
+        onPauseOrDispose(onPause)
+    }
+}
+
+/** Exposes the latest lifecycle state as ViewCompose observable state. */
+fun UiTreeBuilder.lifecycleCurrentStateSample(
+    owner: LifecycleOwner,
+): State<Lifecycle.State> = owner.lifecycle.currentStateAsState()
+```
 
 ## Coroutine Context 与结构化 Ownership
 

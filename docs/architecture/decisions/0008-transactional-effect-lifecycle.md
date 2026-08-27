@@ -1,3 +1,25 @@
+---
+schema_version: 2
+document_id: architecture.transactional-effect-lifecycle
+doc_type: architecture
+owner:
+  kind: capability
+  id: lifecycle.effects
+version_lane: released
+capability_ids:
+  - lifecycle.effects
+artifact_ids:
+  - viewcompose-runtime
+  - viewcompose-ui-foundation
+  - viewcompose-lifecycle-androidx
+sample_ids: []
+invariants:
+  - Candidate composition cannot publish effect state before commit.
+  - Outgoing effect ownership terminates before incoming ownership begins.
+evidence:
+  - Runtime effect tests, UI Foundation effect tests, Lifecycle effect tests, and compiled module samples.
+---
+
 # ADR-0008: Transactional effect lifecycle
 
 - Status: Accepted

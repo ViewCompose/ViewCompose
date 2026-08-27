@@ -1,3 +1,30 @@
+---
+schema_version: 2
+document_id: module.viewcompose-lifecycle-androidx
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-lifecycle-androidx
+version_lane: released
+capability_ids:
+  - lifecycle.owner-boundaries
+  - lifecycle.flow-collection
+  - lifecycle.effects
+  - lifecycle.android-view
+artifact_ids:
+  - viewcompose-lifecycle-androidx
+sample_ids:
+  - module.lifecycle-dependency
+  - module.lifecycle-owner-boundary
+  - module.lifecycle-flow-composition
+  - module.lifecycle-flow-aware
+  - module.lifecycle-effects
+  - module.lifecycle-android-view
+  - module.lifecycle-android-view-saved-state
+coordinate: com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01
+minimal_usage_sample_id: module.lifecycle-dependency
+---
+
 # AndroidX Lifecycle Integration
 
 `viewcompose-lifecycle-androidx` connects Kotlin `Flow` collection, ViewCompose composition work,
@@ -7,6 +34,7 @@ observable lifecycle state, and the typed boundary used by SDK View integrations
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lifecycle-androidx-module-dependency" sample_id="module.lifecycle-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01")
@@ -40,6 +68,20 @@ saved state, while a navigation destination or graph installs its own object for
 may use `ProvideSavedStateRegistryOwner(owner) { ... }` only after that registry is attached and
 restored.
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-owner-boundary" sample_id="module.lifecycle-owner-boundary" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.provideLifecycleOwnerSample(
+    source: StateFlow<String>,
+    owner: LifecycleOwner,
+): State<String> {
+    lateinit var state: State<String>
+    ProvideLifecycleOwner(owner) {
+        state = source.collectAsStateWithLifecycle()
+    }
+    return state
+}
+```
+
 ## Lifecycle-bound Android Views
 
 Reusable SDK integrations subclass `LifecycleAndroidViewAdapter<V, S>` and capture the nearest
@@ -61,6 +103,51 @@ state active. Reset and release always remove both bindings before the protected
 hooks run. The callbacks are synchronous main-thread work and must not issue application-owned
 lifecycle commands or block dispatch.
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-android-view" sample_id="module.lifecycle-android-view" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+private data class LifecycleLabelState(
+    val owner: LifecycleOwner,
+    val text: String,
+)
+
+private object LifecycleLabelAdapter : LifecycleAndroidViewAdapter<TextView, LifecycleLabelState>() {
+    override fun lifecycleOwner(state: LifecycleLabelState): LifecycleOwner = state.owner
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: LifecycleLabelState) {
+        scope.view.text = state.text
+    }
+
+    override fun onLifecycleEvent(
+        scope: AndroidViewLifecycleEventScope<TextView>,
+        state: LifecycleLabelState,
+        event: Lifecycle.Event,
+    ) {
+        when (event) {
+            Lifecycle.Event.ON_START -> scope.view.isActivated = true
+            Lifecycle.Event.ON_STOP,
+            Lifecycle.Event.ON_DESTROY,
+            -> scope.view.isActivated = false
+
+            else -> Unit
+        }
+    }
+}
+
+/** Mounts a View whose AndroidX owner is caught up only after the View transaction commits. */
+fun UiTreeBuilder.lifecycleAndroidViewAdapterSample(
+    owner: LifecycleOwner,
+    text: String,
+) {
+    AndroidView(
+        adapter = LifecycleLabelAdapter,
+        state = LifecycleLabelState(owner = owner, text = text),
+        key = "lifecycle-label",
+    )
+}
+```
+
 ## Committed Android View saved state
 
 Call `AndroidViewCommitScope.bindAndroidViewSavedState(...)` from `onViewCommit` when an SDK View
@@ -76,12 +163,72 @@ is isolated as absent state without blocking the new provider. Lifecycle-aware a
 provider automatically on reset, release, or owner destruction; a raw `AndroidViewAdapter` must
 call `clearAndroidViewSavedStateBinding()` from its own final cleanup.
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-android-view-saved-state" sample_id="module.lifecycle-android-view-saved-state" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+private data class SavedLabelState(
+    val lifecycleOwner: LifecycleOwner,
+    val savedStateOwner: SavedStateRegistryOwner,
+    val text: String,
+)
+
+private object SavedLabelAdapter : LifecycleAndroidViewAdapter<TextView, SavedLabelState>() {
+    override fun lifecycleOwner(state: SavedLabelState): LifecycleOwner = state.lifecycleOwner
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: SavedLabelState) {
+        scope.view.text = state.text
+    }
+
+    override fun onViewCommit(scope: AndroidViewCommitScope<TextView>, state: SavedLabelState) {
+        val result = scope.bindAndroidViewSavedState(
+            owner = state.savedStateOwner,
+            key = "saved-label",
+            formatVersion = 1,
+        ) {
+            Bundle().apply { putString("text", view.text.toString()) }
+        }
+        if (result is AndroidViewSavedStateBindResult.Initial) {
+            result.restoredState?.getString("text")?.let(scope.view::setText)
+        }
+    }
+
+    override fun onLifecycleEvent(
+        scope: AndroidViewLifecycleEventScope<TextView>,
+        state: SavedLabelState,
+        event: Lifecycle.Event,
+    ) = Unit
+}
+
+/** Registers SDK Bundle state from commit and restores it before lifecycle catch-up. */
+fun UiTreeBuilder.androidViewSavedStateBindingSample(
+    lifecycleOwner: LifecycleOwner,
+    savedStateOwner: SavedStateRegistryOwner,
+    text: String,
+) {
+    AndroidView(
+        adapter = SavedLabelAdapter,
+        state = SavedLabelState(
+            lifecycleOwner = lifecycleOwner,
+            savedStateOwner = savedStateOwner,
+            text = text,
+        ),
+        key = "saved-label",
+    )
+}
+```
+
 ## Composition-scoped collection
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-flow-composition" sample_id="module.lifecycle-flow-composition" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-fun UiTreeBuilder.Profile(model: ProfileModel) {
-    val profile = model.profile.collectAsState().value
-    Text(profile.displayName)
+fun UiTreeBuilder.collectStateFlowSample(source: StateFlow<String>): State<String> {
+    return source.collectAsState()
+}
+
+/** Supplies the first-frame value required by a general flow. */
+fun UiTreeBuilder.collectFlowSample(source: Flow<String>): State<String> {
+    return source.collectAsState(initial = "Loading")
 }
 ```
 
@@ -96,10 +243,28 @@ the same remembered state holder and its latest value.
 
 ## Lifecycle-aware collection
 
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-flow-aware" sample_id="module.lifecycle-flow-aware" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-fun UiTreeBuilder.Profile(model: ProfileModel) {
-    val profile = model.profile.collectAsStateWithLifecycle().value
-    Text(profile.displayName)
+fun UiTreeBuilder.collectWithLifecycleSample(
+    source: StateFlow<String>,
+    owner: LifecycleOwner,
+): State<String> {
+    return source.collectAsStateWithLifecycle(
+        lifecycleOwner = owner,
+        minActiveState = Lifecycle.State.STARTED,
+    )
+}
+
+/** Uses a Lifecycle directly when no owner object is available. */
+fun UiTreeBuilder.collectWithExplicitLifecycleSample(
+    source: Flow<String>,
+    lifecycle: Lifecycle,
+): State<String> {
+    return source.collectAsStateWithLifecycle(
+        initial = "Loading",
+        lifecycle = lifecycle,
+        minActiveState = Lifecycle.State.RESUMED,
+    )
 }
 ```
 
@@ -139,6 +304,39 @@ thread.
 `Lifecycle.currentStateAsState()` returns one stable composition-owned holder, observes every state
 transition after commit, reconciles a transition that races initial installation, and removes its
 observer on composition exit.
+
+{/* compiled-region source="viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt" region="lifecycle-effects" sample_id="module.lifecycle-effects" build_target=":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.lifecycleStartEffectSample(
+    owner: LifecycleOwner,
+    trackerId: String,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+) {
+    LifecycleStartEffect(trackerId, lifecycleOwner = owner) {
+        onStart()
+        onStopOrDispose(onStop)
+    }
+}
+
+/** Acquires and releases foreground-only work with resumed lifecycle state. */
+fun UiTreeBuilder.lifecycleResumeEffectSample(
+    owner: LifecycleOwner,
+    requestId: String,
+    onResume: () -> Unit,
+    onPause: () -> Unit,
+) {
+    LifecycleResumeEffect(requestId, lifecycleOwner = owner) {
+        onResume()
+        onPauseOrDispose(onPause)
+    }
+}
+
+/** Exposes the latest lifecycle state as ViewCompose observable state. */
+fun UiTreeBuilder.lifecycleCurrentStateSample(
+    owner: LifecycleOwner,
+): State<Lifecycle.State> = owner.lifecycle.currentStateAsState()
+```
 
 ## Coroutine context and structured ownership
 

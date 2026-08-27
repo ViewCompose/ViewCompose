@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lifecycle-and-saved-state.md
-translation_source_hash: e551c2242d25e21c7a9b814805e1e8edc99f5d41174f6bbcb62af6531bc7f084
+translation_source_hash: bb0e258c115b67ffc822152050161913dc9d7d5b94d61dd3032a3b1b862e3041
 translation_status: current
 ---
 

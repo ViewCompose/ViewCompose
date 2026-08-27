@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /** Collects a hot state source for the lifetime of this composition call. */
+// DOCS_REGION_START(lifecycle-flow-composition)
 fun UiTreeBuilder.collectStateFlowSample(source: StateFlow<String>): State<String> {
     return source.collectAsState()
 }
@@ -34,8 +35,10 @@ fun UiTreeBuilder.collectStateFlowSample(source: StateFlow<String>): State<Strin
 fun UiTreeBuilder.collectFlowSample(source: Flow<String>): State<String> {
     return source.collectAsState(initial = "Loading")
 }
+// DOCS_REGION_END(lifecycle-flow-composition)
 
 /** Uses an explicit owner when the current host is not the intended lifecycle boundary. */
+// DOCS_REGION_START(lifecycle-flow-aware)
 fun UiTreeBuilder.collectWithLifecycleSample(
     source: StateFlow<String>,
     owner: LifecycleOwner,
@@ -57,8 +60,10 @@ fun UiTreeBuilder.collectWithExplicitLifecycleSample(
         minActiveState = Lifecycle.State.RESUMED,
     )
 }
+// DOCS_REGION_END(lifecycle-flow-aware)
 
 /** Installs a nested lifecycle boundary used by the default-owner overload. */
+// DOCS_REGION_START(lifecycle-owner-boundary)
 fun UiTreeBuilder.provideLifecycleOwnerSample(
     source: StateFlow<String>,
     owner: LifecycleOwner,
@@ -69,8 +74,10 @@ fun UiTreeBuilder.provideLifecycleOwnerSample(
     }
     return state
 }
+// DOCS_REGION_END(lifecycle-owner-boundary)
 
 /** Starts and stops a synchronous tracker with the supplied Android lifecycle. */
+// DOCS_REGION_START(lifecycle-effects)
 fun UiTreeBuilder.lifecycleStartEffectSample(
     owner: LifecycleOwner,
     trackerId: String,
@@ -100,6 +107,7 @@ fun UiTreeBuilder.lifecycleResumeEffectSample(
 fun UiTreeBuilder.lifecycleCurrentStateSample(
     owner: LifecycleOwner,
 ): State<Lifecycle.State> = owner.lifecycle.currentStateAsState()
+// DOCS_REGION_END(lifecycle-effects)
 
 /** Installs the saved-state owner used by SDK-specific committed Android View state. */
 fun UiTreeBuilder.provideSavedStateRegistryOwnerSample(
@@ -109,6 +117,7 @@ fun UiTreeBuilder.provideSavedStateRegistryOwnerSample(
     ProvideSavedStateRegistryOwner(owner, content)
 }
 
+// DOCS_REGION_START(lifecycle-android-view)
 private data class LifecycleLabelState(
     val owner: LifecycleOwner,
     val text: String,
@@ -150,7 +159,9 @@ fun UiTreeBuilder.lifecycleAndroidViewAdapterSample(
         key = "lifecycle-label",
     )
 }
+// DOCS_REGION_END(lifecycle-android-view)
 
+// DOCS_REGION_START(lifecycle-android-view-saved-state)
 private data class SavedLabelState(
     val lifecycleOwner: LifecycleOwner,
     val savedStateOwner: SavedStateRegistryOwner,
@@ -202,3 +213,4 @@ fun UiTreeBuilder.androidViewSavedStateBindingSample(
         key = "saved-label",
     )
 }
+// DOCS_REGION_END(lifecycle-android-view-saved-state)

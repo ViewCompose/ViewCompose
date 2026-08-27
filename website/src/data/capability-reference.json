@@ -4888,139 +4888,591 @@
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.android-view",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "AndroidViewCommitScope<V>",
+          "referenceId": "reference.lifecycle.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-android-view-saved-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.AndroidViewCommitScope.bindAndroidViewSavedState"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.android-view",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
+          "referenceId": "reference.lifecycle.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-android-view-saved-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.AndroidViewLifecycleEventScope"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.android-view",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
+          "referenceId": "reference.lifecycle.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-android-view-saved-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.AndroidViewSaveStateScope"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.android-view",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
+          "referenceId": "reference.lifecycle.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-android-view-saved-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.AndroidViewSavedStateBindResult"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.flow-collection",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "Flow<T>",
+          "referenceId": "reference.lifecycle.flow-collection",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-flow-aware",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.Flow.collectAsState"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.flow-collection",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 2,
           "receiver": "Flow<T>",
+          "referenceId": "reference.lifecycle.flow-collection",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-flow-aware",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.Flow.collectAsStateWithLifecycle"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.effects",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "Lifecycle",
+          "referenceId": "reference.lifecycle.effects",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "architecture.transactional-effect-lifecycle",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-effects",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.Lifecycle.currentStateAsState"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.effects",
           "deprecated": true,
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 3,
+          "referenceId": "reference.lifecycle.effects",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "architecture.transactional-effect-lifecycle",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-effects",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.LifecycleResumeEffect"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.effects",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
+          "referenceId": "reference.lifecycle.effects",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "architecture.transactional-effect-lifecycle",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-effects",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.LifecycleResumePauseEffectScope"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.effects",
           "deprecated": true,
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 3,
+          "referenceId": "reference.lifecycle.effects",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "architecture.transactional-effect-lifecycle",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-effects",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.LifecycleStartEffect"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.effects",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
+          "referenceId": "reference.lifecycle.effects",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "architecture.transactional-effect-lifecycle",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-effects",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.LifecycleStartStopEffectScope"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.owner-boundaries",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
+          "referenceId": "reference.lifecycle.owner-boundaries",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-owner-boundary",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.LocalLifecycleOwner"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.owner-boundaries",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
+          "referenceId": "reference.lifecycle.owner-boundaries",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-owner-boundary",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.LocalSavedStateRegistryOwner"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.flow-collection",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "StateFlow<T>",
+          "referenceId": "reference.lifecycle.flow-collection",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-flow-aware",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.StateFlow.collectAsState"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.flow-collection",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "StateFlow<T>",
+          "referenceId": "reference.lifecycle.flow-collection",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-flow-aware",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.StateFlow.collectAsStateWithLifecycle"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.owner-boundaries",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lifecycle.owner-boundaries",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-owner-boundary",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.UiTreeBuilder.ProvideLifecycleOwner"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.owner-boundaries",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lifecycle.owner-boundaries",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-owner-boundary",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.UiTreeBuilder.ProvideSavedStateRegistryOwner"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.android-view",
           "kind": "integration",
           "namespace": "com.viewcompose.lifecycle",
           "overloadCount": 1,
           "receiver": "View",
+          "referenceId": "reference.lifecycle.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-android-view-saved-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.lifecycle.View.clearAndroidViewSavedStateBinding"
         },
         {
@@ -9519,7 +9971,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 318,
+    "ownedEntryCount": 336,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

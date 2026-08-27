@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.lifecycle-owner-boundary",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "lifecycle.owner-boundaries",
+  "document_ids": ["module.viewcompose-lifecycle-androidx"],
+  "version_lane": "released",
+  "source": "viewcompose-lifecycle-androidx/src/test/samples/com/viewcompose/lifecycle/samples/LifecycleSamples.kt",
+  "region": "lifecycle-owner-boundary",
+  "build_target": ":viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Lifecycle AndroidX owner, Flow, effect, and native View documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-lifecycle-androidx",
+      "reason": "Only test-only compiled documentation fixtures gain exact source-region comments; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

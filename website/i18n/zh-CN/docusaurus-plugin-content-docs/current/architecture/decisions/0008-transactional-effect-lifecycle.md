@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0008-transactional-effect-lifecycle.md
-translation_source_hash: cd8512d0cf618615e7b7886cad9379c4e05ef66482a28ba7aa417a3e8c5e43f9
+translation_source_hash: b447f624212c674640014477ac81643df7fc115fcdf337eb1c47cc42ad3c2a76
 translation_status: current
 ---
 
