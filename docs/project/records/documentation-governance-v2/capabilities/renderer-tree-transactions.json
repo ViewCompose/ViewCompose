@@ -17,6 +17,7 @@
   "reference_owner": { "reference_id": "reference.renderer.tree-transactions", "generated": true },
   "sample_owner": { "sample_id": "module.renderer-tree-transaction" },
   "document_owners": {
+    "architecture": ["architecture.effects"],
     "module": ["module.viewcompose-renderer-android", "module.viewcompose-ui-contract"]
   }
 }

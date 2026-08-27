@@ -29,6 +29,12 @@
       "kind": "function",
       "visibility": "public",
       "source": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.runtime.snapshotFlow",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/SnapshotFlow.kt"
     }
   ],
   "reference_owner": {
@@ -39,6 +45,9 @@
     "sample_id": "module.runtime-state"
   },
   "document_owners": {
+    "architecture": [
+      "architecture.effects"
+    ],
     "module": [
       "module.viewcompose-runtime"
     ],

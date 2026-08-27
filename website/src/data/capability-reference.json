@@ -499,6 +499,27 @@
       }
     },
     {
+      "capabilityId": "foundation.effects",
+      "referenceId": "reference.foundation.effects",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "architecture.effects-local-capture",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "foundation.environment",
       "referenceId": "reference.foundation.environment",
       "relatedDocuments": [
@@ -825,6 +846,11 @@
       "capabilityId": "lifecycle.effects",
       "referenceId": "reference.lifecycle.effects",
       "relatedDocuments": [
+        {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
+        },
         {
           "documentId": "architecture.lifecycle-saved-state",
           "documentType": "architecture",
@@ -1488,6 +1514,11 @@
       "referenceId": "reference.renderer.tree-transactions",
       "relatedDocuments": [
         {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
+        },
+        {
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
           "path": "/modules/viewcompose-renderer-android"
@@ -1522,6 +1553,11 @@
           "documentId": "tutorial.state-and-events",
           "documentType": "tutorial",
           "path": "/tutorials/state-and-events"
+        },
+        {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
         },
         {
           "documentId": "module.viewcompose-runtime",
