@@ -63,7 +63,7 @@ class PullRequestImpactTest {
         )
         assertEquals(
             PullRequestWorkflowSelection(
-                qaQuick = false,
+                qaQuickMode = PullRequestQaQuickMode.Skip,
                 qaPreview = false,
                 documentation = true,
             ),
@@ -97,6 +97,7 @@ class PullRequestImpactTest {
             plan.reverseDependentClosure,
         )
         assertTrue(plan.workflows.qaQuick)
+        assertEquals(PullRequestQaQuickMode.AffectedWithShadow, plan.workflows.qaQuickMode)
         assertTrue(plan.workflows.qaPreview)
         assertFalse(plan.workflows.documentation)
     }
@@ -112,6 +113,7 @@ class PullRequestImpactTest {
             assertTrue(PullRequestGateFamily.ApiDocumentation in plan.gateFamilies)
             assertTrue(PullRequestGateFamily.DocumentationGovernance in plan.gateFamilies)
             assertTrue(plan.workflows.qaQuick)
+            assertEquals(PullRequestQaQuickMode.AffectedWithShadow, plan.workflows.qaQuickMode)
             assertTrue(plan.workflows.documentation)
             assertFalse(plan.workflows.qaPreview)
         }
@@ -126,6 +128,30 @@ class PullRequestImpactTest {
         assertTrue(PullRequestGateFamily.Samples in plan.gateFamilies)
         assertTrue(PullRequestGateFamily.DocumentationGovernance in plan.gateFamilies)
         assertTrue(plan.workflows.qaQuick)
+        assertEquals(PullRequestQaQuickMode.AffectedWithShadow, plan.workflows.qaQuickMode)
+        assertTrue(plan.workflows.documentation)
+    }
+
+    @Test
+    fun `accepted documentation sample scope runs affected verification without shadow`() {
+        val plan = plan(
+            change('M', "docs/tutorials/counter.md"),
+            change('M', "samples/tutorials/src/main/kotlin/Counter.kt"),
+        )
+
+        assertFalse(plan.fullFallback)
+        assertEquals(
+            setOf(
+                PullRequestGateFamily.DocumentationGovernance,
+                PullRequestGateFamily.DocumentationSite,
+                PullRequestGateFamily.Samples,
+            ),
+            plan.gateFamilies,
+        )
+        assertEquals(setOf(":samples:tutorials"), plan.directProjects)
+        assertEquals(PullRequestQaQuickMode.Affected, plan.workflows.qaQuickMode)
+        assertTrue(plan.workflows.qaQuick)
+        assertFalse(plan.workflows.qaPreview)
         assertTrue(plan.workflows.documentation)
     }
 
@@ -136,6 +162,7 @@ class PullRequestImpactTest {
         assertFalse(plan.fullFallback)
         assertTrue(PullRequestGateFamily.Preview in plan.gateFamilies)
         assertTrue(plan.workflows.qaQuick)
+        assertEquals(PullRequestQaQuickMode.AffectedWithShadow, plan.workflows.qaQuickMode)
         assertTrue(plan.workflows.qaPreview)
         assertTrue(plan.workflows.documentation)
     }
@@ -177,7 +204,11 @@ class PullRequestImpactTest {
             )
             assertEquals(PullRequestGateFamily.values().toSet(), plan.gateFamilies)
             assertEquals(
-                PullRequestWorkflowSelection(true, true, true),
+                PullRequestWorkflowSelection(
+                    qaQuickMode = PullRequestQaQuickMode.Complete,
+                    qaPreview = true,
+                    documentation = true,
+                ),
                 plan.workflows,
             )
         }
@@ -263,10 +294,12 @@ class PullRequestImpactTest {
 
         assertEquals(first.toJson(), second.toJson())
         val json = JsonSlurper().parseText(first.toJson()) as Map<*, *>
-        assertEquals(2, (json["schemaVersion"] as Number).toInt())
+        assertEquals(3, (json["schemaVersion"] as Number).toInt())
         assertEquals(false, json["fullFallback"])
+        assertEquals("skip", (json["workflows"] as Map<*, *>)["qaQuickMode"])
         assertEquals(
             "qa_quick=false\n" +
+                "qa_quick_mode=skip\n" +
                 "qa_preview=false\n" +
                 "documentation=true\n" +
                 "full_fallback=false\n" +

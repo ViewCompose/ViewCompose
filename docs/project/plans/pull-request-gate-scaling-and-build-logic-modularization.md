@@ -20,8 +20,8 @@ ordered_work:
   - Extract gates, classify impact, cache immutable API output, and verify affected modules.
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
-last_verified: 2026-08-26
-next_action: Continue Governance V2 content pull requests as hosted observations and optimize measured pipeline stages before considering website-stack changes.
+last_verified: 2026-08-28
+next_action: Merge the accepted documentation-sample no-shadow mode, record its first eligible hosted critical path, and retain complete shadow comparison for module and production change classes.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -39,14 +39,15 @@ maven_release_changesets:
 Active. Phases 0 through 5 are complete. Phase 6 operational stabilization and hosted observation
 are in progress.
 
-Last verified: 2026-08-26.
+Last verified: 2026-08-28.
 
-Next action: continue Governance V2 content pull requests as hosted shadow observations and target
-measured source/API pipeline stages before considering website-stack changes. Build-cache and
+Next action: merge the evidence-backed no-shadow mode for the exact documentation/Tutorial-sample
+class, then record the first eligible hosted critical path after rollout. Module, production,
+Preview, Demo, integration, benchmark, release, shared-input, and unknown-path classes retain the
+complete shadow or full fallback until their own observation corpus qualifies. Build-cache and
 configuration-cache probes are complete but neither option is enabled; adoption requires evidence
-beyond the accepted local samples. The Phase 0
-task-graph fixtures remain the immutable pre-extraction comparator rather than being rewritten for
-later intentional gates.
+beyond the accepted local samples. The Phase 0 task-graph fixtures remain the immutable
+pre-extraction comparator rather than being rewritten for later intentional gates.
 
 ## Maven release changesets
 
@@ -799,6 +800,43 @@ documentation child completed in `5 min 12 s`; source and translation verificati
 complete API generation and verification `115 s`, catalog generation `1 s`, type checking `2 s`,
 and Docusaurus `53 s` (`17.0%` of child wall time). Four content samples remain below the required
 ten-per-class corpus, so keep shadow comparison active and continue collecting the same fields.
+
+The completed Governance V2 sequence then supplied an accepted homogeneous documentation/Tutorial-
+sample corpus across pull requests #177, #178, #179, #180, #182, #183, #184, #185, #203, #204,
+and #205. Each plan selected exactly documentation governance, documentation site, and Tutorial
+samples; `:samples:tutorials` was the only non-published project, no published artifact was selected,
+and both the 1,176-task candidate and following 2,342-task complete shadow succeeded. There were
+zero candidate/complete correctness divergences. Using hosted check timestamps, the projected
+no-shadow required critical path is the maximum of candidate completion from job start and the
+parallel documentation-child duration: the eleven values were `437`, `377`, `378`, `337`, `433`,
+`418`, `362`, `401`, `369`, `382`, and `423` seconds. Nearest-rank P50 is therefore `382 s`
+(`6 min 22 s`) and P95 is `437 s` (`7 min 17 s`), satisfying the accepted `8 min`/`12 min`
+thresholds. Every documentation child reused `5/5` immutable API groups with zero generation or
+invalid group, so the exact cache-hit rate is `11/11` (`100%`). Scope and cache conclusions are
+**improved** and correctness is **no material change**. Timing remains **inconclusive** as an actual
+post-cut result because the distribution is reconstructed from shadow runs.
+
+The accepted implementation hard-cuts execution into typed `skip`, `complete`,
+`affected-with-shadow`, and `affected` modes. Only the exact class above enters `affected` and omits
+the complete shadow. All other scoped Android classes stay `affected-with-shadow`; main, manual,
+full-fallback, shared-input, and unknown changes stay `complete`. Workflow/build-logic changes in
+the rollout pull request themselves force complete verification, so the next eligible
+documentation/Tutorial-sample pull request must record the first actual post-cut critical path
+before this slice is called operationally accepted. The broader Phase 6 observation requirement
+also remains open for module and production change classes.
+
+Local rollout acceptance on 2026-08-28 passed the complete `qaQuick` matrix in `9 min 7 s` with
+2,342 actionable tasks (2,262 executed and 80 up-to-date). This is completeness evidence rather
+than a latency comparison. Focused classifier tests and all six workflow-wiring tests passed;
+historical diff replay assigned #203 to `affected` while #190, which owned a published-module test
+sample and Preview closure, remained `affected-with-shadow`. The bilingual production site audited
+454 pages and 30 redirects, verified 100 immutable API versions, 100 module manuals, and 100 Chinese
+fallback routes, and produced 49,113,039 non-API bytes. That is 27,736 bytes (`0.0565%`) above the
+strict-closeout baseline and leaves 65,175.4 bytes below the unchanged 46.9 MiB limit, so size is
+**no material change**. Docusaurus completed in `28.6 s`, `32.9%` below the preceding `42.6 s`, but
+cache and process state differ, so timing is **inconclusive**. Release intent detected zero release
+artifacts, ignored artifacts, or shared publication paths; this repository workflow/build-logic
+change adds no Maven Changeset.
 
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:

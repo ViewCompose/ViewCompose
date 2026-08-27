@@ -163,11 +163,23 @@ test('required contexts remain always-reported facades around classified child w
     /\.\/gradlew -p tools\/viewcompose-quality-build planPullRequestImpact/u,
   );
   assert.match(qaQuickWork, /if: needs\.classify\.outputs\.qa_quick == 'true'/u);
+  assert.match(ciWorkflow, /qa_quick_mode: \$\{\{ steps\.impact\.outputs\.qa_quick_mode \}\}/u);
   assert.match(qaQuickWork, /name: Run affected qaQuick candidate/u);
-  assert.match(qaQuickWork, /if: needs\.classify\.outputs\.full_fallback != 'true'/u);
+  assert.match(
+    qaQuickWork,
+    /qa_quick_mode == 'affected'[\s\S]*qa_quick_mode == 'affected-with-shadow'/u,
+  );
   assert.match(qaQuickWork, /qaAffected/u);
-  assert.match(qaQuickWork, /name: Run complete qaQuick shadow/u);
-  assert.match(qaQuickWork, /name: Report affected versus complete qaQuick/u);
+  assert.match(qaQuickWork, /name: Run complete qaQuick/u);
+  assert.match(
+    qaQuickWork,
+    /qa_quick_mode == 'complete'[\s\S]*qa_quick_mode == 'affected-with-shadow'/u,
+  );
+  assert.match(qaQuickWork, /name: Report qaQuick execution mode/u);
+  assert.match(qaQuickWork, /case "\$QA_QUICK_MODE" in/u);
+  for (const mode of ['complete', 'affected-with-shadow', 'affected']) {
+    assert.match(qaQuickWork, new RegExp(`\\n\\s+${mode}\\)`, 'u'));
+  }
   assert.ok(
     qaQuickWork.indexOf('qaAffected') < qaQuickWork.indexOf('qaQuick\n'),
     'affected verification must run before the complete shadow gate',

@@ -21,6 +21,13 @@ internal enum class PullRequestGateFamily(val encoded: String) {
     Samples("samples"),
 }
 
+internal enum class PullRequestQaQuickMode(val encoded: String) {
+    Skip("skip"),
+    Complete("complete"),
+    AffectedWithShadow("affected-with-shadow"),
+    Affected("affected"),
+}
+
 internal data class PullRequestPathChange(
     val status: Char,
     val paths: List<String>,
@@ -31,10 +38,13 @@ internal data class PullRequestPathChange(
 }
 
 internal data class PullRequestWorkflowSelection(
-    val qaQuick: Boolean,
+    val qaQuickMode: PullRequestQaQuickMode,
     val qaPreview: Boolean,
     val documentation: Boolean,
-)
+) {
+    val qaQuick: Boolean
+        get() = qaQuickMode != PullRequestQaQuickMode.Skip
+}
 
 internal data class PullRequestImpactPlan(
     val baseRevision: String,
@@ -52,7 +62,7 @@ internal data class PullRequestImpactPlan(
 ) {
     fun toJson(): String = buildString {
         appendLine("{")
-        appendLine("  \"schemaVersion\": 2,")
+        appendLine("  \"schemaVersion\": 3,")
         appendLine("  \"baseRevision\": ${baseRevision.jsonString()},")
         appendLine("  \"headRevision\": ${headRevision.jsonString()},")
         appendLine("  \"changedFiles\": $changedFiles,")
@@ -71,6 +81,7 @@ internal data class PullRequestImpactPlan(
         appendLine("  \"reasons\": ${reasons.jsonArray()},")
         appendLine("  \"workflows\": {")
         appendLine("    \"qaQuick\": ${workflows.qaQuick},")
+        appendLine("    \"qaQuickMode\": ${workflows.qaQuickMode.encoded.jsonString()},")
         appendLine("    \"qaPreview\": ${workflows.qaPreview},")
         appendLine("    \"documentation\": ${workflows.documentation}")
         appendLine("  }")
@@ -88,6 +99,7 @@ internal data class PullRequestImpactPlan(
             "- Workflows: `qaQuick=${workflows.qaQuick}`, " +
                 "`qaPreview=${workflows.qaPreview}`, `documentation=${workflows.documentation}`",
         )
+        appendLine("- qaQuick mode: `${workflows.qaQuickMode.encoded}`")
         appendLine()
         appendLine("### Selected gate families")
         appendLine()
@@ -124,6 +136,7 @@ internal data class PullRequestImpactPlan(
 
     fun toGitHubOutputs(): String = buildString {
         appendLine("qa_quick=${workflows.qaQuick}")
+        appendLine("qa_quick_mode=${workflows.qaQuickMode.encoded}")
         appendLine("qa_preview=${workflows.qaPreview}")
         appendLine("documentation=${workflows.documentation}")
         appendLine("full_fallback=$fullFallback")
@@ -231,6 +244,11 @@ internal object PullRequestArtifactGraph {
 internal object PullRequestImpactPlanner {
     private val appendOnlyChangeset = Regex("^release/changes/[^/]+\\.json$")
     private val fullGateFamilies = PullRequestGateFamily.values().toSet()
+    private val acceptedDocumentationSampleGateFamilies = setOf(
+        PullRequestGateFamily.DocumentationGovernance,
+        PullRequestGateFamily.DocumentationSite,
+        PullRequestGateFamily.Samples,
+    )
     private val previewArtifacts = setOf(
         "viewcompose-graphics",
         "viewcompose-graphics-core",
@@ -364,27 +382,32 @@ internal object PullRequestImpactPlanner {
             gates += fullGateFamilies
             reasons += fullReasons.map { reason -> "full fallback: $reason" }
         }
-        val workflows = if (fullFallback) {
-            PullRequestWorkflowSelection(qaQuick = true, qaPreview = true, documentation = true)
-        } else {
-            PullRequestWorkflowSelection(
-                qaQuick = gates.any { family ->
-                    family !in setOf(
-                        PullRequestGateFamily.ApiDocumentation,
-                        PullRequestGateFamily.DocumentationGovernance,
-                        PullRequestGateFamily.DocumentationSite,
-                    )
-                },
-                qaPreview = PullRequestGateFamily.Preview in gates,
-                documentation = gates.any { family ->
-                    family in setOf(
-                        PullRequestGateFamily.ApiDocumentation,
-                        PullRequestGateFamily.DocumentationGovernance,
-                        PullRequestGateFamily.DocumentationSite,
-                    )
-                },
+        val selectsQaQuick = fullFallback || gates.any { family ->
+            family !in setOf(
+                PullRequestGateFamily.ApiDocumentation,
+                PullRequestGateFamily.DocumentationGovernance,
+                PullRequestGateFamily.DocumentationSite,
             )
         }
+        val qaQuickMode = when {
+            fullFallback -> PullRequestQaQuickMode.Complete
+            !selectsQaQuick -> PullRequestQaQuickMode.Skip
+            gates == acceptedDocumentationSampleGateFamilies &&
+                directArtifacts.isEmpty() &&
+                directProjects == setOf(":samples:tutorials") -> PullRequestQaQuickMode.Affected
+            else -> PullRequestQaQuickMode.AffectedWithShadow
+        }
+        val workflows = PullRequestWorkflowSelection(
+            qaQuickMode = qaQuickMode,
+            qaPreview = fullFallback || PullRequestGateFamily.Preview in gates,
+            documentation = fullFallback || gates.any { family ->
+                family in setOf(
+                    PullRequestGateFamily.ApiDocumentation,
+                    PullRequestGateFamily.DocumentationGovernance,
+                    PullRequestGateFamily.DocumentationSite,
+                )
+            },
+        )
         return PullRequestImpactPlan(
             baseRevision = baseRevision,
             headRevision = headRevision,

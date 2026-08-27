@@ -358,6 +358,17 @@ identity token.
   correctness are **improved**. This is only the fourth post-stabilization content sample; retain
   the current website stack and shadow comparison until the required corpus is complete.
 
+- **2026-08-28, documentation/Tutorial-sample corpus acceptance:** eleven comparable pull requests
+  (#177, #178, #179, #180, #182, #183, #184, #185, #203, #204, and #205) each selected the same
+  1,176-task candidate, no published artifact, and the documentation child. Every candidate and
+  following 2,342-task complete shadow agreed on success. The reconstructed no-shadow required
+  critical path has nearest-rank P50 `6 min 22 s` and P95 `7 min 17 s`; every documentation child
+  verified an exact `5/5` immutable-API cache hit with zero generation or invalid group, for an
+  `11/11` (`100%`) hit rate. Scope and cache reuse are **improved**, correctness shows **no material
+  change**, and post-cut timing remains **inconclusive** until the first eligible hosted run records
+  its actual path. The accepted action is a narrow no-shadow mode for this exact class, not a
+  website-stack migration; source verification, API reuse, and the complete site remain unchanged.
+
 - **2026-08-26, Governance V2 Text Input local acceptance:** the first four-page task split built
   successfully but produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB
   limit. Consolidating adjacent editing/IME and rich/Receive Content tasks into two Guides retained

@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 7bfd4d0f85b43870487a507dd996eb9dad8b2eda0d72482b1b307e73487ab065
+translation_source_hash: 99b8539e339fbbaf4bdb6062acf32f8e3671acc1fbd1a8419d37bc7468aad62c
 translation_status: current
 ---
 
@@ -269,6 +269,15 @@ identity token。
   `39.4%`，且结论相同。串行 Shadow 观察仍延长必需关键路径，因此总体结论为 **mixed**；
   范围选择和正确性为 **improved**。这只是稳定后的第四个内容样本；在满足语料要求之前，
   保留当前 Website 技术栈和 Shadow 对照。
+
+- **2026-08-28，文档/Tutorial-sample 语料验收：**11 个可比较的 PR（#177、#178、#179、#180、
+  #182、#183、#184、#185、#203、#204、#205）都选择相同的 1,176 任务候选、不含发布产物，
+  并选择文档 Child Job；每个候选都与随后 2,342 任务的完整 Shadow 得到相同成功结论。重建的
+  无 Shadow required critical path 近邻秩 P50 为 `6 min 22 s`、P95 为 `7 min 17 s`；所有文档
+  Child Job 都精确命中 `5/5` 个不可变 API 缓存组，生成组与无效组均为零，命中率为 `11/11`
+  （`100%`）。范围与缓存复用结论为 **improved**，正确性为 **no material change**；硬切后的
+  时延仍为 **inconclusive**，直到首个符合条件的托管运行记录实际路径。本次只为该精确类别启用
+  无 Shadow 模式，不迁移 Website 技术栈；源码校验、API 复用和完整站点均保持不变。
 
 - **2026-08-26，Governance V2 Text Input 本地验收：**首次四页面任务拆分虽然构建成功，但生成
   49,245,936 个非 API 字节，超过不变的 46.9 MiB 上限 67,722 字节。把相邻的编辑/IME 与富文本/

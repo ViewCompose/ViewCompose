@@ -24,6 +24,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       qa_quick: ${{ steps.impact.outputs.qa_quick }}
+      qa_quick_mode: ${{ steps.impact.outputs.qa_quick_mode }}
       qa_preview: ${{ steps.impact.outputs.qa_preview }}
       full_fallback: ${{ steps.impact.outputs.full_fallback }}
       gate_families: ${{ steps.impact.outputs.gate_families }}
@@ -109,7 +110,9 @@ jobs:
 
       - name: Run affected qaQuick candidate
         id: affected
-        if: needs.classify.outputs.full_fallback != 'true'
+        if: >-
+          needs.classify.outputs.qa_quick_mode == 'affected' ||
+          needs.classify.outputs.qa_quick_mode == 'affected-with-shadow'
         continue-on-error: true
         env:
           VIEWCOMPOSE_AFFECTED_GATE_FAMILIES: ${{ needs.classify.outputs.gate_families }}
@@ -124,12 +127,15 @@ jobs:
           qaAffected
           --stacktrace
 
-      - name: Run complete qaQuick shadow
+      - name: Run complete qaQuick
         id: complete
-        if: always()
+        if: >-
+          always() &&
+          (needs.classify.outputs.qa_quick_mode == 'complete' ||
+          needs.classify.outputs.qa_quick_mode == 'affected-with-shadow')
         continue-on-error: true
         # Release R8, lint, and documentation generation share this Gradle process. Keep the
-        # complete shadow while preventing the hosted runner's default 2 GiB heap from exhausting.
+        # selected complete path below the hosted runner's default 2 GiB heap ceiling.
         run: >-
           ./gradlew
           -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8"
@@ -137,9 +143,10 @@ jobs:
           qaQuick
           --stacktrace
 
-      - name: Report affected versus complete qaQuick
+      - name: Report qaQuick execution mode
         if: always()
         env:
+          QA_QUICK_MODE: ${{ needs.classify.outputs.qa_quick_mode }}
           FULL_FALLBACK: ${{ needs.classify.outputs.full_fallback }}
           AFFECTED_OUTCOME: ${{ steps.affected.outcome }}
           COMPLETE_OUTCOME: ${{ steps.complete.outcome }}
@@ -147,20 +154,31 @@ jobs:
           if [[ -f build/reports/viewcompose-quality/affected-verification.md ]]; then
             cat build/reports/viewcompose-quality/affected-verification.md >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "Affected candidate=$AFFECTED_OUTCOME complete shadow=$COMPLETE_OUTCOME full fallback=$FULL_FALLBACK" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$FULL_FALLBACK" == "true" ]]; then
-            if [[ -n "$AFFECTED_OUTCOME" && "$AFFECTED_OUTCOME" != "skipped" ]]; then
-              echo "Full fallback unexpectedly ran affected candidate with outcome: $AFFECTED_OUTCOME" >&2
+          echo "qaQuick mode=$QA_QUICK_MODE affected candidate=$AFFECTED_OUTCOME complete=$COMPLETE_OUTCOME full fallback=$FULL_FALLBACK" >> "$GITHUB_STEP_SUMMARY"
+          case "$QA_QUICK_MODE" in
+            complete)
+              if [[ "$FULL_FALLBACK" != "true" || "$AFFECTED_OUTCOME" != "skipped" || "$COMPLETE_OUTCOME" != "success" ]]; then
+                echo "Complete qaQuick mode produced fallback=$FULL_FALLBACK affected=$AFFECTED_OUTCOME complete=$COMPLETE_OUTCOME" >&2
+                exit 1
+              fi
+              ;;
+            affected-with-shadow)
+              if [[ "$FULL_FALLBACK" == "true" || "$AFFECTED_OUTCOME" != "success" || "$COMPLETE_OUTCOME" != "success" ]]; then
+                echo "Affected-with-shadow mode produced fallback=$FULL_FALLBACK affected=$AFFECTED_OUTCOME complete=$COMPLETE_OUTCOME" >&2
+                exit 1
+              fi
+              ;;
+            affected)
+              if [[ "$FULL_FALLBACK" == "true" || "$AFFECTED_OUTCOME" != "success" || "$COMPLETE_OUTCOME" != "skipped" ]]; then
+                echo "Affected qaQuick mode produced fallback=$FULL_FALLBACK affected=$AFFECTED_OUTCOME complete=$COMPLETE_OUTCOME" >&2
+                exit 1
+              fi
+              ;;
+            *)
+              echo "Selected qaQuick work received unsupported mode: $QA_QUICK_MODE" >&2
               exit 1
-            fi
-          elif [[ "$AFFECTED_OUTCOME" != "success" ]]; then
-            echo "Affected qaQuick candidate ended with outcome: $AFFECTED_OUTCOME" >&2
-            exit 1
-          fi
-          if [[ "$COMPLETE_OUTCOME" != "success" ]]; then
-            echo "Complete qaQuick shadow ended with outcome: $COMPLETE_OUTCOME" >&2
-            exit 1
-          fi
+              ;;
+          esac
 
   qaQuick:
     name: qaQuick

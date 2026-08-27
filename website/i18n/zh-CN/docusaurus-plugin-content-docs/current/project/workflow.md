@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 965e362d893b132a194a161667eec57ab8e860a78d2a96ad782bb08ae83bc20f
+translation_source_hash: f0a32020cd5c59e8a1334113a6a0d3db7dfef4ef710a12d3720180f9642f0164
 translation_status: current
 ---
 
@@ -155,16 +155,23 @@ partial、miss、recovery、复用/生成组数、无效组、有界并行度和
 `verifyDocumentationStructure` 只运行一次；CI 只生成一次站点目录，再调用 prepared type-check
 与构建入口，避免重复 npm 预构建钩子。
 
-Phase 5 影子期内，范围可收敛的 `qaQuick` 选择会先用 4 GiB Gradle heap 和最多两个 worker 运行
-`qaAffected`。根构建独立重建当前 `api`/`implementation`/`compileOnly`/`runtimeOnly` 项目图，
+除了稳定的 `qa_quick` 工作流选择外，分类器还统一持有类型化的 `qaQuick` 执行模式。`skip` 跳过
+Android 工作，`complete` 只运行完整 `qaQuick`，`affected-with-shadow` 依次运行 `qaAffected` 与完整
+`qaQuick`，`affected` 则只运行 `qaAffected`。工作流会在必需的 `qaQuick` 门面通过前校验所选模式和
+两个步骤的结果；不支持的模式或非预期的执行/跳过结果都会关闭式失败。
+
+范围候选使用 4 GiB Gradle heap 和最多两个 worker。根构建独立重建当前
+`api`/`implementation`/`compileOnly`/`runtimeOnly` 项目图，
 分类器闭包只要与真实图不一致就失败；编译和单测任务从已配置项目动态选择，不读取手写产物任务表。
 Demo、sample、集成测试和 benchmark 选择各自项目任务；只有依赖 Maven 坐标的 sample 消费者才
 加入本地发布。文档与 Preview 继续由各自独立可见的工作流负责。
 
-同一 Job 随后在相同资源边界下运行完整 `qaQuick`。两者都必须成功；候选成功但全量失败，或只有
-候选失败，都会阻断 PR 并视为分类器缺陷。`main`、手工运行和任何全量回退 PR 会跳过候选，只运行
-完整 `qaQuick`。该影子契约先收集正确性证据，尚不缩短 required path，也不改变项目级本地 Gradle
-默认配置。
+无 Shadow 的 `affected` 模式被严格限定为：门禁所有权必须精确等于文档治理、文档站点和 Tutorial
+sample，`:samples:tutorials` 是唯一非发布项目，不含发布产物，也没有全量回退原因。其他所有范围
+可收敛的 Android 变更仍使用 `affected-with-shadow`，候选与完整门禁都必须成功。`main`、手工运行
+和所有全量回退 PR 使用 `complete`。因此模块、生产代码、Preview、Demo、集成测试、benchmark、
+发布、共享输入和未知变更仍保留完整对照，直到各自类别满足观察条件；项目级本地 Gradle 默认配置
+不变。
 
 2026-08-26 的本地验收使用了一份真实 Paging 历史 diff。`qaAffected` 为一个直接产物和十个依赖
 产物选择 39 条任务路径，以 `2 分 6 秒` 通过（215 个 actionable task，其中 188 个执行、27 个
@@ -179,6 +186,17 @@ PR #173 提供了该实现的第一份托管全量回退验收。候选按预期
 PR，`qaQuick` 变化 `-0.17%`，`qaPreview` 变化 `-0.19%`，两者均为**无实质变化**。文档耗时变化
 `-14.8%`，但不可变缓存状态和输入不同，因此延迟结果为**结论不足**。一个全量回退样本可以证明
 行为正确，不能代表分布；下一步仍是收集各类范围可收敛变更的观察数据。
+
+11 个可比较的托管文档/Tutorial-sample PR（#177、#178、#179、#180、#182、#183、#184、#185、
+#203、#204、#205）构成了已验收的无 Shadow 语料。每个候选都选择 1,176 个 actionable task，
+不含发布产物，并与随后 2,342 个任务的完整 Shadow 得到相同成功结论。把 required critical path
+重建为“从 Job 开始到候选完成的时间”与并行文档 Child Job 耗时两者中的较大值后，近邻秩 P50 为
+`6 min 22 s`，P95 为 `7 min 17 s`，均满足 `8 min`/`12 min` 阈值。11 个文档 Child Job 全部精确
+恢复并验证 `5/5` 个不可变 API 组，生成组和无效组均为零，精确命中率 `100%`。范围与缓存结论为
+**improved**，零分歧的正确性结论为 **no material change**。由于这些时间由 Shadow 运行重建，
+并非硬切后的实际观察，因此时延结论仍为 **inconclusive**；上线后首个符合条件的 PR 必须记录实际
+critical path。该证据只允许上述精确类别进入 `affected`，其他范围类别继续使用
+`affected-with-shadow`。
 
 所有调用 Gradle 的工作流都由 `gradle/actions/setup-gradle` 单独负责 Gradle User Home 缓存。
 `actions/setup-java` 只安装所需 JDK，不再另行缓存 Gradle。每个 `setup-gradle` 都显式设置
