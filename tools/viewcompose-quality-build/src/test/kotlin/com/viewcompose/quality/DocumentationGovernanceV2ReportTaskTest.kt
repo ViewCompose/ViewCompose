@@ -42,6 +42,34 @@ class DocumentationGovernanceV2ReportTaskTest {
     }
 
     @Test
+    fun `document contract permits stable Docusaurus title and slug metadata`() {
+        val repository = locateRepository()
+        @Suppress("UNCHECKED_CAST")
+        val schema = JsonSlurper().parse(
+            repository.resolve(
+                "docs/project/contracts/documentation-governance-v2/document.schema.json",
+            ),
+        ) as Map<String, Any?>
+        val document = mapOf(
+            "title" to "ViewCompose Documentation",
+            "slug" to "/documentation",
+            "schema_version" to 2,
+            "document_id" to "project.documentation-index",
+            "doc_type" to "project",
+            "owner" to mapOf("kind" to "project", "id" to "documentation-governance"),
+            "version_lane" to "version-agnostic",
+            "capability_ids" to emptyList<String>(),
+            "artifact_ids" to emptyList<String>(),
+            "sample_ids" to emptyList<String>(),
+            "workflow" to "Route readers into the active documentation system.",
+            "validation" to listOf("./gradlew verifyDocumentationStructure"),
+            "lifecycle" to "Update when the public documentation route graph changes.",
+        )
+
+        assertTrue(FrozenJsonSchemaValidator.validate(document, schema).isEmpty())
+    }
+
+    @Test
     fun `renderer application packages expose host tooling and integration capability entries`() {
         val repository = temporaryFolder.newFolder("renderer-capability-repository")
         val contractRoot = repository.resolve(

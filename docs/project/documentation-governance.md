@@ -135,6 +135,8 @@ the artifact-contract owner, and versioned Dokka remains the exhaustive signatur
 Every canonical active handwritten public page declares stable document/type/owner identities, one
 version lane, and explicit capability, artifact, and sample sets. Locale mirrors inherit that
 record and add only translation metadata. Directory and `doc_type` must agree.
+Optional Docusaurus `title` and absolute `slug` fields are presentation and stable-route metadata;
+they do not replace `document_id`, ownership, or the locale-aware redirect contract.
 
 | `doc_type` | Machine-required metadata | Reviewer-owned purpose and evidence |
 | --- | --- | --- |

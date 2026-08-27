@@ -1,6 +1,58 @@
 ---
+schema_version: 2
+document_id: project.module-catalog
+doc_type: project
+owner:
+  kind: project
+  id: publishing
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids:
+  - viewcompose-runtime
+  - viewcompose-text-core
+  - viewcompose-ui-contract
+  - viewcompose-navigation-core
+  - viewcompose-navigation-android
+  - viewcompose-renderer-android
+  - viewcompose-ui-foundation
+  - viewcompose-diagnostics
+  - viewcompose-host-android
+  - viewcompose-material3
+  - viewcompose-material3-android
+  - viewcompose-oneui7
+  - viewcompose-android
+  - viewcompose-overlay-android
+  - viewcompose-overlay-material3-android
+  - viewcompose-overlay-oneui7-android
+  - viewcompose-image-coil
+  - viewcompose-image-glide
+  - viewcompose-lifecycle-androidx
+  - viewcompose-viewmodel-androidx
+  - viewcompose-preview-core
+  - viewcompose-preview-gradle-plugin
+  - viewcompose-preview-runner
+  - viewcompose-preview-worker-host
+  - viewcompose-preview
+  - viewcompose-animation-core
+  - viewcompose-animation
+  - viewcompose-gesture-core
+  - viewcompose-gesture
+  - viewcompose-graphics-core
+  - viewcompose-graphics
+  - viewcompose-shadow-android
+  - viewcompose-constraintlayout-androidx
+  - viewcompose-media3-androidx
+  - viewcompose-exoplayer2-android
+  - viewcompose-google-maps-android
+  - viewcompose-camerax-androidx
+  - viewcompose-paging-androidx
+sample_ids: []
+workflow: 让公共制品登记、所属模块手册与发布清单严格同步。
+validation:
+  - ./gradlew verifyDocumentationStructure verifyViewComposePublishingConfiguration
+lifecycle: 公共制品新增、重命名、退役、发布或调整模块分类时更新。
 translation_source: modules/README.md
-translation_source_hash: 4eb16ca0ca7ad36abb2fd01919213bc399eff4cf97fd3498108efb55dfe7e1d0
+translation_source_hash: 809d74a1ea509f399504d80d46b9177e4da3bdd31d9cbc4c1a6d03af31013199
 translation_status: current
 ---
 

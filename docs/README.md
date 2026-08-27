@@ -1,6 +1,21 @@
 ---
 title: ViewCompose Documentation
 slug: /documentation
+schema_version: 2
+document_id: project.documentation-index
+doc_type: project
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Route readers and maintainers from one canonical entrance to the current Tutorial, Guide, Architecture, Migration, Module, Tooling, and Project owners.
+validation:
+  - ./gradlew verifyDocumentationStructure
+  - cd website && npm run build
+lifecycle: Update whenever the public documentation hierarchy, canonical entry routes, or active ownership links change.
 ---
 
 # ViewCompose Documentation

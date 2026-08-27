@@ -1,8 +1,23 @@
 ---
 title: ViewCompose 文档
 slug: /documentation
+schema_version: 2
+document_id: project.documentation-index
+doc_type: project
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: 从一个权威入口把读者和维护者路由到当前 Tutorial、Guide、Architecture、Migration、Module、Tooling 与 Project owner。
+validation:
+  - ./gradlew verifyDocumentationStructure
+  - cd website && npm run build
+lifecycle: 公共文档层级、权威入口路由或有效所有权链接变化时更新。
 translation_source: README.md
-translation_source_hash: 8ba2f4d8b550b4330fd4fa722e19c9bf05fb4340e957993cdcd07666b708ea00
+translation_source_hash: 14f81670f169a7252957898fcf84c3936bec504b506c88080ef3fdbe6401712e
 translation_status: current
 ---
 

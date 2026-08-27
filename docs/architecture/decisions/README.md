@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: architecture.decisions-index
+doc_type: architecture
+owner:
+  kind: project
+  id: architecture
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+invariants:
+  - Accepted decisions preserve their original rationale and are superseded by a new numbered ADR rather than rewritten to hide historical trade-offs.
+  - A decision that changes current behavior updates its active Architecture and Module owners in the same change.
+evidence:
+  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0022-in-memory-development-tooling-installation.md
+  - ./gradlew verifyDocumentationStructure
+---
+
 # Architecture Decisions
 
 Architecture decision records preserve decisions that are expensive to reverse, affect multiple
