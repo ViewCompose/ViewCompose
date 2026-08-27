@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Runtime, Text Core, and UI Contract module-manual ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-runtime",
+      "reason": "Only test-only compiled documentation samples and governance records are changed; production sources, public signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-text-core",
+      "reason": "Only test-only compiled documentation samples and governance records are changed; production sources, public signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-ui-contract",
+      "reason": "Only test-only compiled documentation samples and governance records are changed; production sources, public signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

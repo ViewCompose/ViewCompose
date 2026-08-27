@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Paging ownership slice, then hard-cut Runtime, Text Core, and UI Contract module-manual ownership as the next Phase 3 boundary.
+next_action: Merge the core-manual ownership slice, then hard-cut Getting Started and State/Event tutorial ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -38,6 +38,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-ui-foundation-phase3.json
   - release/changes/20260827-governance-design-systems-phase3.json
   - release/changes/20260827-governance-paging-phase3.json
+  - release/changes/20260827-governance-core-manuals-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -127,6 +128,10 @@ report to 87 issues.
 The accepted Paging hard cut now assigns the final seven orphan symbols to one AndroidX integration
 capability, registers four exact compiled module samples, removes six resolved exceptions, reduces
 the report to 75 issues, and brings orphan-symbol debt to zero.
+The accepted Runtime, Text Core, and UI Contract module-manual hard cut now registers one Runtime
+state capability, extends two existing capability owners across their low-level module manuals,
+registers ten exact compiled module samples, removes six resolved exceptions, and reduces the
+report to 62 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -135,8 +140,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Paging ownership slice, then hard-cut Runtime, Text Core, and UI Contract
-module-manual ownership as the next Phase 3 boundary. Pull-request gate scaling
+Next action: merge the Runtime, Text Core, and UI Contract ownership slice, then hard-cut Getting
+Started and State/Event tutorial ownership as the next Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -209,15 +214,20 @@ remains owned by this plan after the Phase 3 content owners move.
   because only test-only compiled documentation samples and governance records were added. Test
   sources are excluded from published artifacts; production source, public signatures, runtime
   behavior, publication metadata, and generated artifact content remain unchanged.
+- `release/changes/20260827-governance-core-manuals-phase3.json` explicitly ignores Runtime, Text
+  Core, and UI Contract because only test-only compiled documentation samples and governance
+  records were added. Test sources are excluded from published artifacts; production source,
+  public signatures, runtime behavior, publication metadata, and generated artifact content remain
+  unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
-ignored test-sample-only artifact, and zero shared-path classifications against
-`3bd90d8a1d67819cb097a738824d13c0d1d8f091`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, three explicitly
+ignored test-sample-only artifacts, and zero shared-path classifications against
+`fdcde529eaa9b621f7e4c1265c4981ab4d19f1cf`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1490,6 +1500,43 @@ Accepted Paging AndroidX module ownership slice on 2026-08-27:
   visual, bounded-memory, and fixed-clock evidence and makes no new runtime, visual, power, or
   performance claim. The next action is Runtime, Text Core, and UI Contract module-manual
   ownership.
+
+Accepted Runtime, Text Core, and UI Contract module-manual ownership slice on 2026-08-27:
+
+- retained all three stable module routes and registered `runtime.state` for mutable and derived
+  state plus mutable Snapshot transactions. Text Core reuses `text.input`, and UI Contract reuses
+  `renderer.tree-transactions`, so the lower-level manuals extend the existing capability model
+  instead of inventing duplicate text or renderer owners;
+- registered ten exact compiled regions: three Runtime dependency, state, and Snapshot decisions;
+  five Text Core dependency, rich-document, edit-state, transformation, and save-codec decisions;
+  and two UI Contract dependency and node-model decisions. Compilation exposed a stale
+  `Modifier.size(24.dp)` example that no longer matched the two-dimensional API; the sample and
+  both manual locales were hard-corrected to named `width` and `height` arguments;
+- removed six resolved metadata and sample exception records. The report changed from 75 to 62
+  issues: missing metadata 43 to 40 and unclassified samples 32 to 22. Orphan symbols remained
+  zero, and taxonomy mismatches, duplicate owners, orphan documents, version conflicts, stale
+  generated output, unbaselined debt, and blocking violations remained zero;
+- the generated Reference retained 531 entries while its normalized catalog grew from 234,296 to
+  235,070 bytes, an increase of 774 bytes (`0.3303%`), for the Runtime capability and three module
+  ownership links. Every generated module link resolves to its existing stable route;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,057,957 non-API
+  bytes, and left 120,257 bytes under the unchanged 46.9 MiB limit. This is 25,755 bytes
+  (`0.0525%`) above the Paging slice and is `no material change`. Docusaurus completed in `63.9 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- Tutorial, Runtime, Text Core, and UI Contract sample compilation, exact bilingual region
+  identity, Governance V2, documentation structure, language and translation review, generated
+  Reference freshness, release intent, and the complete bilingual site passed. Complete
+  single-worker `qaQuick` passed 2,342 actionable tasks in `1 min 34 s` (213 executed and 2,129
+  up-to-date); this is completeness evidence rather than a speed comparison because it reused
+  previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: the three low-level module manuals now have exact
+  capability and compiled-sample ownership, and the invalid UI Contract example is corrected,
+  without changing public API, production runtime behavior, routes, or published artifacts.
+  Release intent found zero release artifacts and explicitly ignored the three test-sample-only
+  artifacts. This slice reuses existing unit, renderer, device, visual, and performance evidence
+  and makes no new runtime, visual, power, or performance claim. The next action is Getting Started
+  and State/Event tutorial ownership.
 
 | Current area | Required target |
 | --- | --- |

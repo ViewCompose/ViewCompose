@@ -1456,11 +1456,32 @@
           "documentId": "module.viewcompose-renderer-android",
           "documentType": "module",
           "path": "/modules/viewcompose-renderer-android"
+        },
+        {
+          "documentId": "module.viewcompose-ui-contract",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-contract"
         }
       ],
       "sample": {
         "sampleClass": "compiled-region",
         "sampleId": "module.renderer-tree-transaction",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "runtime.state",
+      "referenceId": "reference.runtime.state",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-runtime",
+          "documentType": "module",
+          "path": "/modules/viewcompose-runtime"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.runtime-state",
         "versionLane": "released"
       }
     },
@@ -1539,6 +1560,11 @@
           "documentId": "architecture.text-input-runtime",
           "documentType": "architecture",
           "path": "/architecture/text-input"
+        },
+        {
+          "documentId": "module.viewcompose-text-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-text-core"
         },
         {
           "documentId": "module.viewcompose-ui-foundation",

@@ -1,3 +1,25 @@
+---
+schema_version: 2
+document_id: module.viewcompose-text-core
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-text-core
+version_lane: released
+capability_ids:
+  - text.input
+artifact_ids:
+  - viewcompose-text-core
+sample_ids:
+  - module.text-core-dependency
+  - module.text-core-document
+  - module.text-core-state
+  - module.text-core-transformation
+  - module.text-core-save
+coordinate: com.viewcompose:viewcompose-text-core:0.1.0-alpha03
+minimal_usage_sample_id: module.text-core-state
+---
+
 # Text Core
 
 `viewcompose-text-core` is ViewCompose's platform-neutral text editing model. It defines immutable
@@ -10,6 +32,7 @@ and rich-text span adapters live in renderer and host modules and translate to t
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="text-core-module-dependency" sample_id="module.text-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
@@ -33,6 +56,7 @@ text.
 
 ## Rich-text documents
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-document" sample_id="module.text-core-document" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
 val document = textDocument {
     append("ViewCompose", TextSpanStyle(fontWeight = 700))
@@ -68,6 +92,7 @@ position, and removes attachments whose placeholders were replaced.
 
 ## Text-field state and edit transactions
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-state" sample_id="module.text-core-state" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
 val state = TextFieldState()
 
@@ -80,7 +105,9 @@ state.edit {
     replace(selection.min, selection.max, "ViewCompose")
 }
 
-state.undo()
+check(state.text == "ViewCompose")
+check(state.undo())
+check(state.text == "Hello")
 ```
 
 `TextFieldState` exposes a stable observable owner around immutable `TextFieldValue` snapshots. Its
@@ -102,11 +129,19 @@ transaction, so observers cannot receive a committed text value paired with stal
 `InputTransformation` receives an isolated buffer for a platform-proposed user edit. It may rewrite
 that proposal or reject it with `revertAllChanges()`:
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-transformation" sample_id="module.text-core-transformation" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
 val policy = InputTransformation.digitsOnly()
     .then(InputTransformation.maxCodePoints(6))
+val state = TextFieldState()
 
-state.updateFromInput(proposedValue, policy)
+state.updateFromInput(
+    proposedValue = state.value.copy(
+        document = TextDocument.plain("123456"),
+        selection = TextRange(6),
+    ),
+    inputTransformation = policy,
+)
 ```
 
 Chained policies share the same buffer and execute in declaration order. `maxCodePoints` counts
@@ -129,9 +164,13 @@ editing so history and input policy remain coherent.
 
 ## Save and restore
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-save" sample_id="module.text-core-save" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
-val saved: Map<String, Any?> = TextDocumentSaveCodec.encode(document)
-val restored: TextDocument = TextDocumentSaveCodec.decode(saved)
+val original = richTextDocumentSample()
+val saved = TextDocumentSaveCodec.encode(original)
+val restored = TextDocumentSaveCodec.decode(saved)
+
+check(restored == original)
 ```
 
 The versioned codec preserves text, styles, paragraph data, and attachments using only strings,

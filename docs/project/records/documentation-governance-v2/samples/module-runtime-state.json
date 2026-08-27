@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.runtime-state",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "runtime.state",
+  "document_ids": ["module.viewcompose-runtime"],
+  "version_lane": "released",
+  "source": "viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt",
+  "region": "runtime-module-state",
+  "build_target": ":viewcompose-runtime:compileTestKotlin"
+}

@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: module.viewcompose-ui-contract
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-ui-contract
+version_lane: released
+capability_ids:
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+sample_ids:
+  - module.ui-contract-dependency
+  - module.ui-contract-node
+coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04
+minimal_usage_sample_id: module.ui-contract-node
+---
+
 # UI Contract
 
 `viewcompose-ui-contract` defines the platform-neutral model shared by ViewCompose DSL modules and
@@ -14,6 +33,7 @@ runtime, widget, renderer, and host modules.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-contract-module-dependency" sample_id="module.ui-contract-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
@@ -30,13 +50,14 @@ dependencies {
 
 ## Minimal contract usage
 
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-node" sample_id="module.ui-contract-node" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
 ```kotlin
 val gap = VNode(
     type = NodeType.Spacer,
     key = "content-gap",
     spec = EmptyNodeSpec,
     modifier = Modifier
-        .size(24.dp)
+        .size(width = 24.dp, height = 24.dp)
         .testTag("content-gap"),
 )
 ```

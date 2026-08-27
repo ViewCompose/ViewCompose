@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "capability_id": "runtime.state",
+  "kind": "dsl",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-runtime"
+  },
+  "artifact": "viewcompose-runtime",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha03"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.runtime.Snapshot.withMutableSnapshot",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/Snapshot.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.runtime.derivedStateOf",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.runtime.mutableStateOf",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.runtime.state",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.runtime-state"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-runtime"
+    ]
+  }
+}
