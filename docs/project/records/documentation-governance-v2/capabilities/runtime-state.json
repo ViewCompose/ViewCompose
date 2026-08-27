@@ -41,6 +41,11 @@
   "document_owners": {
     "module": [
       "module.viewcompose-runtime"
+    ],
+    "tutorial": [
+      "tutorial.catalog",
+      "tutorial.getting-started",
+      "tutorial.state-and-events"
     ]
   }
 }

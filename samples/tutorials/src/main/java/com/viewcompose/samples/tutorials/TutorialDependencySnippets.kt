@@ -187,6 +187,28 @@ dependencies {
     // DOCS_REGION_END(paging-module-dependency)
 }
 
+private val gettingStartedDependencies = run {
+    // DOCS_REGION_START(getting-started-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(getting-started-dependencies)
+}
+
+private val stateAndEventsDependencies = run {
+    // DOCS_REGION_START(state-and-events-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+    // DOCS_REGION_END(state-and-events-dependencies)
+}
+
 private val rendererAndroidModuleDependency = run {
     // DOCS_REGION_START(renderer-android-module-dependency)
 dependencies {

@@ -62,6 +62,7 @@
   "reference_owner": { "reference_id": "reference.foundation.components", "generated": true },
   "sample_owner": { "sample_id": "module.ui-foundation-profile-summary" },
   "document_owners": {
-    "module": ["module.viewcompose-ui-foundation"]
+    "module": ["module.viewcompose-ui-foundation"],
+    "tutorial": ["tutorial.getting-started", "tutorial.state-and-events"]
   }
 }

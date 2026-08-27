@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.catalog",
+  "sample_class": "non-executable",
+  "language": "text",
+  "capability_id": "runtime.state",
+  "document_ids": ["tutorial.catalog"],
+  "version_lane": "released",
+  "reason": "The tutorial catalog is a route selector rather than an executable application task.",
+  "visible_explanation": "Every linked tutorial declares its own standalone dependencies, compiled source, expected result, and verification action."
+}

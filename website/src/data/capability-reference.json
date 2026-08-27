@@ -477,6 +477,16 @@
       "referenceId": "reference.foundation.components",
       "relatedDocuments": [
         {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        },
+        {
+          "documentId": "tutorial.state-and-events",
+          "documentType": "tutorial",
+          "path": "/tutorials/state-and-events"
+        },
+        {
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
@@ -1309,6 +1319,11 @@
       "referenceId": "reference.preview.core.annotations",
       "relatedDocuments": [
         {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        },
+        {
           "documentId": "module.viewcompose-preview-core",
           "documentType": "module",
           "path": "/modules/viewcompose-preview-core"
@@ -1340,6 +1355,11 @@
       "capabilityId": "preview.gradle",
       "referenceId": "reference.preview.gradle",
       "relatedDocuments": [
+        {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        },
         {
           "documentId": "module.viewcompose-preview-gradle-plugin",
           "documentType": "module",
@@ -1473,6 +1493,21 @@
       "capabilityId": "runtime.state",
       "referenceId": "reference.runtime.state",
       "relatedDocuments": [
+        {
+          "documentId": "tutorial.catalog",
+          "documentType": "tutorial",
+          "path": "/tutorials"
+        },
+        {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        },
+        {
+          "documentId": "tutorial.state-and-events",
+          "documentType": "tutorial",
+          "path": "/tutorials/state-and-events"
+        },
         {
           "documentId": "module.viewcompose-runtime",
           "documentType": "module",

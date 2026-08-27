@@ -82,7 +82,7 @@ class SampleDocumentationParityTest {
     }
 
     @Test
-    fun `tutorial snippet drift preserves page contract and getting-started input`() {
+    fun `tutorial snippet drift ignores structured front matter when locating top dependencies`() {
         val sourcePath =
             "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt"
         val pagePath = "docs/tutorials/state-and-events.md"
@@ -93,15 +93,22 @@ class SampleDocumentationParityTest {
                 "repositories { mavenCentral() }\n" +
                 "implementation(\"com.viewcompose:viewcompose-material3-android:1.0.0\")\n" +
                 "```\n"
+        val structuredFrontMatter =
+            "---\n" +
+                "schema_version: 2\n" +
+                "expected_result: ${"verified ".repeat(220)}\n" +
+                "---\n"
         val repository = fixtureRepository(
             label = "tutorial-snippet",
             sourcePath to
                 "// DOCS_REGION_START(state)\ncurrent()\n// DOCS_REGION_END(state)\n",
             pagePath to
+                structuredFrontMatter +
                 dependencyBlock +
                 "{/* tutorial-sample sample_id=\"tutorial.state-and-events\" source=\"$sourcePath\" region=\"state\" */}\n" +
                 "```kotlin\nstale()\n```\n{/* tutorial-sample-end */}\n",
             gettingStartedPath to
+                structuredFrontMatter +
                 dependencyBlock +
                 "id(\"com.viewcompose.preview\") version \"1.0.0\"\n" +
                 "com.viewcompose:viewcompose-preview-core:1.0.0\n" +

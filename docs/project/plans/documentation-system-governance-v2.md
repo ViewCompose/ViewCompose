@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the core-manual ownership slice, then hard-cut Getting Started and State/Event tutorial ownership as the next Phase 3 boundary.
+next_action: Merge the onboarding-tutorial ownership slice, then hard-cut lazy-collection revision and reuse migration ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -132,6 +132,12 @@ The accepted Runtime, Text Core, and UI Contract module-manual hard cut now regi
 state capability, extends two existing capability owners across their low-level module manuals,
 registers ten exact compiled module samples, removes six resolved exceptions, and reduces the
 report to 62 issues.
+The accepted Getting Started and State/Event tutorial hard cut now assigns all three onboarding
+pages to exact capability owners, registers six compiled sample decisions plus one explicitly
+non-executable catalog decision, removes five resolved exceptions, and reduces the report to 54
+issues. It also hard-corrects stale application-package and localized Preview-version examples and
+repairs tutorial dependency placement verification so structured front matter is excluded from the
+top-of-body boundary.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -140,9 +146,9 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Runtime, Text Core, and UI Contract ownership slice, then hard-cut Getting
-Started and State/Event tutorial ownership as the next Phase 3 boundary. Pull-request gate scaling
-Phases 3 through 5 are complete, so these scoped content
+Next action: merge the Getting Started and State/Event tutorial ownership slice, then hard-cut
+lazy-collection revision and reuse migration ownership as the next Phase 3 boundary. Pull-request
+gate scaling Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
 
@@ -1537,6 +1543,48 @@ Accepted Runtime, Text Core, and UI Contract module-manual ownership slice on 20
   artifacts. This slice reuses existing unit, renderer, device, visual, and performance evidence
   and makes no new runtime, visual, power, or performance claim. The next action is Getting Started
   and State/Event tutorial ownership.
+
+Accepted Getting Started and State/Event tutorial ownership slice on 2026-08-27:
+
+- retained the three stable Tutorial routes and assigned the catalog, Getting Started, and
+  State/Event pages to `runtime.state`, with the focused Foundation and Preview capabilities added
+  only where their contracts are actually taught;
+- registered seven exact sample decisions: six compiled dependency, application, state/event, and
+  Preview regions plus one explicitly non-executable catalog route-selection decision. Existing
+  Preview source regions are reused rather than copied into a second sample owner;
+- compilation and bilingual exact-region verification exposed two stale examples. The Getting
+  Started application package was hard-corrected from `com.example.counter` to the compiled
+  `com.viewcompose.samples.counter` package, and the Chinese Preview installation example was
+  aligned from `1.0.1` to the canonical `1.1.0` version;
+- removed five resolved metadata and sample exception records. The report changed from 62 to 54
+  issues: missing metadata 40 to 37 and unclassified samples 22 to 17. Orphan symbols remained
+  zero, and taxonomy mismatches, duplicate owners, orphan documents, version conflicts, stale
+  generated output, unbaselined debt, and blocking violations remained zero;
+- the generated Reference retained 531 entries while its normalized catalog grew from 235,070 to
+  236,156 bytes, an increase of 1,086 bytes (`0.4620%`), for the onboarding ownership links;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,058,605 non-API
+  bytes, and left 119,609 bytes under the unchanged 46.9 MiB limit. This is 648 bytes (`0.0013%`)
+  above the core-manual slice and is `no material change`. Docusaurus completed in `31.7 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- the first complete validation exposed that tutorial dependency placement was measured from the
+  beginning of the file, so valid structured front matter could push the first dependency fence
+  beyond the legacy absolute offset. The verifier was hard-corrected to measure from the Markdown
+  body boundary and now has a regression test with front matter longer than the previous limit;
+- Tutorial and Counter sample compilation, exact bilingual region identity, Governance V2,
+  documentation structure, language and translation review, generated Reference freshness,
+  release intent, the verifier regression suite, and the complete bilingual site passed. A
+  transient Dokka failure in Animation passed on isolated reproduction; the subsequent complete
+  single-worker `qaQuick` passed 2,342 actionable tasks in `15 min 55 s` (2,127 executed and 215
+  up-to-date). This is completeness evidence rather than a speed comparison because the quality
+  plugin correction invalidated publication documentation and module build outputs;
+- the overall conclusion is `improved`: all onboarding pages now have exact capability and sample
+  ownership, stale executable guidance is corrected, and structured metadata no longer weakens the
+  tutorial top-dependency contract. Release intent found zero release artifacts, zero ignored
+  artifacts, and zero shared-path classifications against `7694f3fa481db1f53f3c2a93a67e6f3d16ce2d41`.
+  This slice changes no public API or production runtime behavior and makes no new runtime, visual,
+  power, or performance claim. The next action is lazy-collection revision and reuse migration
+  ownership.
 
 | Current area | Required target |
 | --- | --- |

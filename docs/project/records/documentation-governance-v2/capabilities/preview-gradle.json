@@ -10,5 +10,8 @@
   ],
   "reference_owner": { "reference_id": "reference.preview.gradle", "generated": true },
   "sample_owner": { "sample_id": "module.preview-gradle-apply" },
-  "document_owners": { "module": ["module.viewcompose-preview-gradle-plugin"] }
+  "document_owners": {
+    "module": ["module.viewcompose-preview-gradle-plugin"],
+    "tutorial": ["tutorial.getting-started"]
+  }
 }

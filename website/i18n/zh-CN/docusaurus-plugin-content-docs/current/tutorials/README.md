@@ -3,7 +3,7 @@ title: 能力教程
 sidebar_position: 2
 slug: /tutorials
 translation_source: tutorials/README.md
-translation_source_hash: 3fb6e9833f9419c5a46103ab3c30bc94d2593bdebdbf25288391978fee35185f
+translation_source_hash: 844bf73ab382792f1f385e5b5925ce00f4e33f58220688ebfa584b3dfb596ca0
 translation_status: current
 ---
 

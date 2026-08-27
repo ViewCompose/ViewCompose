@@ -1,3 +1,4 @@
+// DOCS_REGION_START(getting-started-app)
 package com.viewcompose.samples.counter
 
 import android.os.Bundle
@@ -48,3 +49,4 @@ internal fun UiTreeBuilder.CounterScreen() {
         )
     }
 }
+// DOCS_REGION_END(getting-started-app)

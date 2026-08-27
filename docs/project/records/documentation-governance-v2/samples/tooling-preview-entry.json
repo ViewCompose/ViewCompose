@@ -4,7 +4,7 @@
   "sample_class": "compiled-region",
   "language": "kotlin",
   "capability_id": "preview.core.annotations",
-  "document_ids": ["tooling.preview", "module.viewcompose-preview-core"],
+  "document_ids": ["tooling.preview", "module.viewcompose-preview-core", "tutorial.getting-started"],
   "version_lane": "released",
   "source": "samples/counter/src/debug/java/com/viewcompose/samples/counter/CounterPreview.kt",
   "region": "preview-entry",

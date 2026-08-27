@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.getting-started-app",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "runtime.state",
+  "document_ids": ["tutorial.getting-started"],
+  "version_lane": "released",
+  "source": "samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt",
+  "region": "getting-started-app",
+  "build_target": ":samples:counter:compileDebugKotlin"
+}
