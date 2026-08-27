@@ -160,21 +160,26 @@ runs `qaAffected` followed by full `qaQuick`, and `affected` runs only `qaAffect
 validates the selected mode and both step outcomes before its required `qaQuick` facade can pass;
 an unsupported mode or an unexpected executed/skipped outcome fails closed.
 
-A scoped candidate uses a 4 GiB Gradle heap and at most two workers. The root build independently reconstructs the current
+A scoped candidate uses a 4 GiB Gradle heap and at most two workers. The root build independently
+reconstructs the current
 `api`/`implementation`/`compileOnly`/`runtimeOnly` project graph, rejects any classifier closure
 drift, and selects compile plus unit-test tasks from the configured projects rather than an artifact
 task list. Demo, sample, integration-test, and benchmark ownership selects its project-specific
 tasks; local Maven publication is included only for sample consumers. Documentation and Preview
 remain owned by their independently visible workflows.
 
-The no-shadow `affected` mode is deliberately narrow: it requires exactly documentation-governance,
-documentation-site, and Tutorial-sample gate ownership, `:samples:tutorials` as the sole
-non-published project, no published artifact, and no full-fallback reason. Every other scoped
-Android change remains `affected-with-shadow`, where both the candidate and complete gate must
-succeed. `main`, manual runs, and every full-fallback pull request use `complete`. This distinction
-keeps module, production, Preview, Demo, integration, benchmark, release, shared-input, and unknown
-changes under the complete comparison until their own observation classes qualify. It does not
-change the project-wide local Gradle default.
+The no-shadow `affected` mode is deliberately narrow. One accepted class requires exactly
+documentation-governance, documentation-site, and Tutorial-sample gate ownership,
+`:samples:tutorials` as the sole non-published project, no published artifact, and no full-fallback
+reason. The second requires the exact documentation-governance, documentation-site,
+module-verification, Preview, release-intent, and sample families plus at least one published-module
+`src/test/samples` source. Its remaining paths are limited to documentation, current Chinese
+mirrors, the generated capability catalog, append-only Changesets, Tutorial main sources, and an
+optional Counter debug Preview source. Module production, build scripts, ordinary tests, and
+deleted or renamed code stay `affected-with-shadow`, where both candidate and complete gates must
+succeed. `main`, manual runs, and every full-fallback pull request use `complete`. Demo,
+integration, benchmark, shared-input, unknown, and every unaccepted module class also retain the
+complete comparison. This does not change the project-wide local Gradle default.
 
 The 2026-08-26 local acceptance used one real historical Paging diff. `qaAffected` selected 39 task
 paths across one direct and ten dependency artifacts and passed in `2 min 6 s` (215 actionable;
@@ -205,8 +210,22 @@ zero generation or invalid group, a `100%` exact-hit rate. The scope and cache c
 **improved**, and correctness is **no material change** with zero divergence. The timing result is
 still **inconclusive** as an observed post-cut result because it is reconstructed from shadow runs;
 the first eligible pull request after rollout must record its actual critical path. This evidence
-enables `affected` only for the exact class above while every other scoped class retains
-`affected-with-shadow`.
+enables the first exact `affected` class.
+
+Eleven hosted module-documentation/compiled-sample pull requests (#186, #187, #188, #189, #190,
+#191, #194, #195, #198, #199, and #200) supplied the second accepted no-shadow corpus. Each changed
+only documentation/governance records, compiled module `src/test/samples`, bounded Tutorial or
+Counter sample sources, an append-only Changeset, Chinese mirrors, and the generated capability
+catalog. All affected candidates and following complete shadows succeeded with zero divergence.
+The reconstructed no-shadow execution path has nearest-rank P50 `8 min 5 s` and P95 `10 min 4 s`;
+end-to-end P50 is `9 min 13 s` and P95 is `11 min 18 s`. Execution P50 is `64.4%` below the Phase 0
+`22 min 43 s` comparator. All eleven documentation children reused `5/5` immutable API groups with
+zero generation or invalid group. A separate eleven-run successful `main` corpus has complete
+`qaQuick` job P95 `20 min 41 s`, `16.2%` below Phase 0, so the full path did not regress. Scope,
+cache reuse, and latency are **improved**; correctness is **no material change**. Pull request #196
+remains `affected-with-shadow` because it changed a module build script, and production source,
+ordinary tests, code deletion/rename, sensitive tooling, and unrecognized paths remain outside this
+hard cut. The first eligible hosted run after rollout must still record actual post-cut timing.
 
 `gradle/actions/setup-gradle` is the sole owner of Gradle User Home caching in every workflow that
 invokes Gradle. `actions/setup-java` installs the required JDK but does not separately cache

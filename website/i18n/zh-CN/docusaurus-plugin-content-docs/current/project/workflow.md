@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: f0a32020cd5c59e8a1334113a6a0d3db7dfef4ef710a12d3720180f9642f0164
+translation_source_hash: be3d16eabfc2d33a53b8932bcfbf5f0243bd7325df5f32c5d9cd238c9bab69b4
 translation_status: current
 ---
 
@@ -166,12 +166,14 @@ Android 工作，`complete` 只运行完整 `qaQuick`，`affected-with-shadow` �
 Demo、sample、集成测试和 benchmark 选择各自项目任务；只有依赖 Maven 坐标的 sample 消费者才
 加入本地发布。文档与 Preview 继续由各自独立可见的工作流负责。
 
-无 Shadow 的 `affected` 模式被严格限定为：门禁所有权必须精确等于文档治理、文档站点和 Tutorial
-sample，`:samples:tutorials` 是唯一非发布项目，不含发布产物，也没有全量回退原因。其他所有范围
-可收敛的 Android 变更仍使用 `affected-with-shadow`，候选与完整门禁都必须成功。`main`、手工运行
-和所有全量回退 PR 使用 `complete`。因此模块、生产代码、Preview、Demo、集成测试、benchmark、
-发布、共享输入和未知变更仍保留完整对照，直到各自类别满足观察条件；项目级本地 Gradle 默认配置
-不变。
+无 Shadow 的 `affected` 模式被严格限定为两个类别。第一类要求门禁所有权精确等于文档治理、文档
+站点和 Tutorial sample，`:samples:tutorials` 是唯一非发布项目，不含发布产物，也没有全量回退原因。
+第二类要求精确选择文档治理、文档站点、模块验证、Preview、发布意图和 sample，并至少包含一个发布
+模块的 `src/test/samples` 源码；其他路径只能是文档、当前中文镜像、生成的能力目录、仅追加的
+Changeset、Tutorial 主源码，以及可选的 Counter debug Preview 源码。模块生产源码、构建脚本、普通
+测试以及删除或重命名的代码继续使用 `affected-with-shadow`，候选与完整门禁都必须成功。`main`、
+手工运行和所有全量回退 PR 使用 `complete`；Demo、集成测试、benchmark、共享输入、未知路径和所有
+未验收模块类别也保留完整对照。项目级本地 Gradle 默认配置不变。
 
 2026-08-26 的本地验收使用了一份真实 Paging 历史 diff。`qaAffected` 为一个直接产物和十个依赖
 产物选择 39 条任务路径，以 `2 分 6 秒` 通过（215 个 actionable task，其中 188 个执行、27 个
@@ -195,8 +197,19 @@ PR，`qaQuick` 变化 `-0.17%`，`qaPreview` 变化 `-0.19%`，两者均为**无
 恢复并验证 `5/5` 个不可变 API 组，生成组和无效组均为零，精确命中率 `100%`。范围与缓存结论为
 **improved**，零分歧的正确性结论为 **no material change**。由于这些时间由 Shadow 运行重建，
 并非硬切后的实际观察，因此时延结论仍为 **inconclusive**；上线后首个符合条件的 PR 必须记录实际
-critical path。该证据只允许上述精确类别进入 `affected`，其他范围类别继续使用
-`affected-with-shadow`。
+critical path。该证据为第一个精确类别启用 `affected`。
+
+11 个托管模块文档/编译样例 PR（#186、#187、#188、#189、#190、#191、#194、#195、#198、
+#199、#200）构成了第二个已验收的无 Shadow 语料。每个 PR 只修改文档/治理记录、模块
+`src/test/samples` 编译样例、受限的 Tutorial 或 Counter sample 源码、仅追加 Changeset、中文镜像
+和生成的能力目录；11 个候选都与随后完整 Shadow 得到相同成功结论，分歧为零。重建的无 Shadow
+执行路径近邻秩 P50 为 `8 min 5 s`、P95 为 `10 min 4 s`；端到端 P50 为 `9 min 13 s`、P95 为
+`11 min 18 s`。执行 P50 比 Phase 0 的 `22 min 43 s` 低 `64.4%`。11 个文档 Child Job 全部复用
+`5/5` 个不可变 API 组，生成组与无效组均为零。另一组 11 个成功 `main` 样本的完整 `qaQuick` Job
+P95 为 `20 min 41 s`，比 Phase 0 低 `16.2%`，完整路径没有回退。范围、缓存复用和时延结论为
+**improved**，正确性为 **no material change**。PR #196 因修改模块构建脚本继续使用
+`affected-with-shadow`；生产源码、普通测试、代码删除/重命名、敏感工具和未知路径也不进入本次硬切。
+上线后首个符合条件的托管运行仍须记录实际硬切时延。
 
 所有调用 Gradle 的工作流都由 `gradle/actions/setup-gradle` 单独负责 Gradle User Home 缓存。
 `actions/setup-java` 只安装所需 JDK，不再另行缓存 Gradle。每个 `setup-gradle` 都显式设置

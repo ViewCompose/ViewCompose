@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 99b8539e339fbbaf4bdb6062acf32f8e3671acc1fbd1a8419d37bc7468aad62c
+translation_source_hash: 7f61cf5e54de4619d7197a1ae2c82a477a4e14c73ac03e39863cc2bc04f94269
 translation_status: current
 ---
 
@@ -278,6 +278,17 @@ identity token。
   （`100%`）。范围与缓存复用结论为 **improved**，正确性为 **no material change**；硬切后的
   时延仍为 **inconclusive**，直到首个符合条件的托管运行记录实际路径。本次只为该精确类别启用
   无 Shadow 模式，不迁移 Website 技术栈；源码校验、API 复用和完整站点均保持不变。
+
+- **2026-08-28，模块文档/编译样例语料验收：**11 个范围可收敛的 PR（#186、#187、#188、
+  #189、#190、#191、#194、#195、#198、#199、#200）只修改文档/治理记录、发布模块的
+  `src/test/samples`、受限的 Tutorial 或 Counter sample 源码、仅追加 Changeset、中文镜像和生成的
+  能力目录；11 个候选都与完整 Shadow 得到相同成功结论。重建的无 Shadow 执行 P50/P95 为
+  `8 min 5 s`/`10 min 4 s`，端到端 P50/P95 为 `9 min 13 s`/`11 min 18 s`。每个文档 Child Job
+  都复用 `5/5` 个不可变 API 组，生成组和无效组均为零。另一组 11 个成功 `main` 样本的完整
+  `qaQuick` P95 为 `20 min 41 s`，比 Phase 0 低 `16.2%`。范围、缓存复用和时延结论为
+  **improved**，正确性为 **no material change**。本次只对这一精确路径类别移除完整 Shadow；模块
+  生产源码、构建脚本、普通测试、代码删除/重命名和敏感工具仍保留 Shadow。Website 技术栈迁移
+  仍无证据支持。
 
 - **2026-08-26，Governance V2 Text Input 本地验收：**首次四页面任务拆分虽然构建成功，但生成
   49,245,936 个非 API 字节，超过不变的 46.9 MiB 上限 67,722 字节。把相邻的编辑/IME 与富文本/
