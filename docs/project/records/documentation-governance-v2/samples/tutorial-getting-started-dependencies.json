@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "sample_id": "tooling.preview-native-install",
+  "sample_id": "tutorial.getting-started-dependencies",
   "sample_class": "compiled-region",
   "language": "kotlin",
-  "capability_id": "preview.gradle",
-  "document_ids": ["tooling.preview", "tutorial.getting-started"],
+  "capability_id": "runtime.state",
+  "document_ids": ["tutorial.getting-started"],
   "version_lane": "released",
   "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
-  "region": "preview-native-install",
+  "region": "getting-started-dependencies",
   "build_target": ":samples:tutorials:compileDebugKotlin"
 }

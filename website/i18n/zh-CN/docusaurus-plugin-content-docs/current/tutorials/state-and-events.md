@@ -2,7 +2,7 @@
 title: 使用状态与事件
 sidebar_position: 3
 translation_source: tutorials/state-and-events.md
-translation_source_hash: ccdd6d5aa61def1a89af043dd9cd33af5f678dcb90c239dab169af5410d1a3b5
+translation_source_hash: 69e7175655192d9f6eda795d966f549c1999eec64b2f7b8f25a515361674d29a
 translation_status: current
 ---
 
@@ -13,6 +13,7 @@ translation_status: current
 本页可以独立使用。复制示例前，先添加 Maven Central 和 Android 宿主。宿主会传递引入 runtime
 状态与 widget API：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="state-and-events-dependencies" sample_id="tutorial.state-and-events-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

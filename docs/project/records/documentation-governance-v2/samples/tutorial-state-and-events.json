@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.state-and-events",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "runtime.state",
+  "document_ids": ["tutorial.state-and-events"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt",
+  "region": "state",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

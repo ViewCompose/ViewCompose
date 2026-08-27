@@ -1,6 +1,29 @@
 ---
-title: Build your first application
-sidebar_position: 1
+schema_version: 2
+document_id: tutorial.getting-started
+doc_type: tutorial
+owner:
+  kind: capability
+  id: runtime.state
+version_lane: released
+capability_ids:
+  - runtime.state
+  - foundation.components
+  - preview.core.annotations
+  - preview.gradle
+artifact_ids:
+  - viewcompose-material3-android
+  - viewcompose-preview-gradle-plugin
+  - viewcompose-preview-core
+  - viewcompose-preview-worker-host
+  - viewcompose-preview-runner
+sample_ids:
+  - tutorial.getting-started-dependencies
+  - tooling.preview-native-install
+  - tutorial.getting-started-app
+  - tooling.preview-entry
+expected_result: A runnable counter whose visible value increments and whose light and dark previews reuse the same compiled screen.
+verification_action: Run the counter click regression and verify both static preview variants are discovered from CounterPreview.
 ---
 
 # Build your first ViewCompose application
@@ -17,6 +40,7 @@ also verifies that preview discovery stays connected to the compiled function.
 
 Make sure the application resolves Maven Central, then add the named Material Android aggregate:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="getting-started-dependencies" sample_id="tutorial.getting-started-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -33,6 +57,7 @@ aggregate.
 The counter runs without preview tooling. To follow the optional preview section, also add the
 published plugin and its debug-only artifacts now:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="preview-native-install" sample_id="tooling.preview-native-install" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts (optional preview)"
 plugins {
     id("com.viewcompose.preview") version "0.1.0-alpha03"
@@ -120,8 +145,9 @@ the host's light/dark configuration and Android theme bridge; no Compose theme i
 Replace the generated Activity content with the compiled
 [`MainActivity.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt):
 
+{/* compiled-region source="samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt" region="getting-started-app" sample_id="tutorial.getting-started-app" build_target=":samples:counter:compileDebugKotlin" */}
 ```kotlin
-package com.example.counter
+package com.viewcompose.samples.counter
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -193,18 +219,8 @@ and an external application both use the published plugin artifacts.
 The sample's debug source set exposes the same `CounterScreen` through a public static-preview
 entry point:
 
+{/* compiled-region source="samples/counter/src/debug/java/com/viewcompose/samples/counter/CounterPreview.kt" region="preview-entry" sample_id="tooling.preview-entry" build_target=":samples:counter:compileDebugKotlin" */}
 ```kotlin title="CounterPreview.kt"
-package com.viewcompose.samples.counter
-
-import com.viewcompose.preview.tooling.PreviewTheme
-import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.ui.foundation.UiTreeBuilder
-
-/**
- * Renders the initial counter state through the native static-preview toolchain.
- *
- * @receiver DSL tree builder supplied by the static preview runner.
- */
 @ViewComposePreview(
     name = "Counter · Light",
     group = "Samples/Getting started",

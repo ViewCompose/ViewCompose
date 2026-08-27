@@ -1,7 +1,18 @@
 ---
-title: Capability tutorials
-sidebar_position: 2
-slug: /tutorials
+schema_version: 2
+document_id: tutorial.catalog
+doc_type: tutorial
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: released
+capability_ids:
+  - runtime.state
+artifact_ids: []
+sample_ids:
+  - tutorial.catalog
+expected_result: A capability selection page that routes readers to one independently runnable tutorial.
+verification_action: Select a capability row and confirm the linked tutorial declares dependencies, source, and verification independently.
 ---
 
 # ViewCompose capability tutorials

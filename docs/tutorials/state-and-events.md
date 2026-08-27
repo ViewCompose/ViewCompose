@@ -1,6 +1,21 @@
 ---
-title: Use state and events
-sidebar_position: 3
+schema_version: 2
+document_id: tutorial.state-and-events
+doc_type: tutorial
+owner:
+  kind: capability
+  id: runtime.state
+version_lane: released
+capability_ids:
+  - runtime.state
+  - foundation.components
+artifact_ids:
+  - viewcompose-material3-android
+sample_ids:
+  - tutorial.state-and-events-dependencies
+  - tutorial.state-and-events
+expected_result: A counter screen whose visible value starts at zero and increments after every button press.
+verification_action: Run the sample, press Increment, and confirm the existing native text View displays the next count.
 ---
 
 # Use state and events
@@ -10,6 +25,7 @@ sidebar_position: 3
 This page is standalone. Add Maven Central and the Android host before copying the example. The
 host supplies runtime state and widget APIs transitively:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="state-and-events-dependencies" sample_id="tutorial.state-and-events-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

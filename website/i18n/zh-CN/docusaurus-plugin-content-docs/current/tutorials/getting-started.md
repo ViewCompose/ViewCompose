@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 425b3659253b2086d7d50a1ad2d6daea496775efec719fd1d84f814a47860511
+translation_source_hash: 6fb39077861dc7a8beb87a97aa433e560474d7754f210f1afa184ff11d820cc2
 translation_status: current
 ---
 
@@ -20,6 +20,7 @@ translation_status: current
 
 确认应用可以解析 Maven Central，然后添加具名 Material Android 聚合包：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="getting-started-dependencies" sample_id="tutorial.getting-started-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -35,6 +36,7 @@ ViewModel API；需要使用高级 API 时仍可有意添加直接依赖。只�
 计数器不依赖 Preview 工具。如果要继续完成可选 Preview 部分，现在还要添加已发布插件和仅用于
 debug 的产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="preview-native-install" sample_id="tooling.preview-native-install" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts（可选 Preview）"
 plugins {
     id("com.viewcompose.preview") version "0.1.0-alpha03"
@@ -56,7 +58,7 @@ dependencies {
 这些预览配置只会建立原生渲染链路，不会安装 Android Studio 界面。打开预览前，请进入
 `Settings | Plugins | Marketplace`，搜索并安装 `ViewCompose Preview`；如果 IDE 提示，请重启
 Android Studio。IDE 插件与 `id("com.viewcompose.preview")` 是两项独立安装；当前 Marketplace
-版本线为 `1.0.1`，支持 Android Studio `261.*` Build Family。
+版本线为 `1.1.0`，支持 Android Studio `261.*` Build Family。
 
 ## 将要构建的内容
 
@@ -120,8 +122,9 @@ ViewCompose 产物独立演进。混用比本教程更新的版本前，请检�
 [`MainActivity.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt)
 替换生成的 Activity 内容：
 
+{/* compiled-region source="samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt" region="getting-started-app" sample_id="tutorial.getting-started-app" build_target=":samples:counter:compileDebugKotlin" */}
 ```kotlin
-package com.example.counter
+package com.viewcompose.samples.counter
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -189,18 +192,8 @@ internal fun UiTreeBuilder.CounterScreen() {
 
 示例的 debug source set 通过公开静态 Preview 入口复用同一个 `CounterScreen`：
 
+{/* compiled-region source="samples/counter/src/debug/java/com/viewcompose/samples/counter/CounterPreview.kt" region="preview-entry" sample_id="tooling.preview-entry" build_target=":samples:counter:compileDebugKotlin" */}
 ```kotlin title="CounterPreview.kt"
-package com.viewcompose.samples.counter
-
-import com.viewcompose.preview.tooling.PreviewTheme
-import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.ui.foundation.UiTreeBuilder
-
-/**
- * Renders the initial counter state through the native static-preview toolchain.
- *
- * @receiver DSL tree builder supplied by the static preview runner.
- */
 @ViewComposePreview(
     name = "Counter · Light",
     group = "Samples/Getting started",

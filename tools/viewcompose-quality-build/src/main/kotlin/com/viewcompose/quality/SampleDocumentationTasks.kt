@@ -212,6 +212,14 @@ internal object SampleDocumentationVerifiers {
         val publishingProperties = Properties().apply {
             publishingPropertiesFile.inputStream().use(::load)
         }
+        fun markdownBodyStart(pageText: String): Int {
+            if (!pageText.startsWith("---\n")) return 0
+            val closingBoundary = pageText.indexOf("\n---\n", startIndex = 4)
+            return if (closingBoundary >= 0) closingBoundary + "\n---\n".length else 0
+        }
+        fun dependencyAppearsAtTop(pageText: String, dependencyBlock: MatchResult?): Boolean =
+            dependencyBlock != null &&
+                dependencyBlock.range.first - markdownBodyStart(pageText) <= 1_500
         fun publishedVersion(artifact: String): String =
             publishingProperties.getProperty("module.$artifact.version")
                 ?: error("Missing published version for tutorial artifact '$artifact'.")
@@ -309,9 +317,10 @@ internal object SampleDocumentationVerifiers {
                 }
 
                 val dependencyBlock = DEPENDENCY_BLOCK_REGEX.find(pageText)
-                if (dependencyBlock == null || dependencyBlock.range.first > 1_500) {
+                if (!dependencyAppearsAtTop(pageText, dependencyBlock)) {
                     violations += "$pagePath -> complete Maven dependencies must appear at the top"
                 } else {
+                    check(dependencyBlock != null)
                     val dependencySnippet = dependencyBlock.groupValues[1]
                     val actualArtifacts = COORDINATE_REGEX.findAll(dependencySnippet)
                         .map { match -> match.groupValues[1] to match.groupValues[2] }
@@ -341,11 +350,12 @@ internal object SampleDocumentationVerifiers {
             } else {
                 val pageText = gettingStartedPage.readText().replace("\r\n", "\n")
                 val dependencyBlock = DEPENDENCY_BLOCK_REGEX.find(pageText)
-                val leadingContent = pageText.take(5_000)
-                if (dependencyBlock == null || dependencyBlock.range.first > 1_500) {
+                val leadingContent = pageText.substring(markdownBodyStart(pageText)).take(5_000)
+                if (!dependencyAppearsAtTop(pageText, dependencyBlock)) {
                     violations +=
                         "$gettingStartedPath -> complete Maven dependencies must appear at the top"
                 } else {
+                    check(dependencyBlock != null)
                     val actualArtifacts = COORDINATE_REGEX.findAll(dependencyBlock.groupValues[1])
                         .map { match -> match.groupValues[1] to match.groupValues[2] }
                         .toList()

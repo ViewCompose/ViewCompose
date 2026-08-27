@@ -27,5 +27,8 @@
   ],
   "reference_owner": { "reference_id": "reference.preview.core.annotations", "generated": true },
   "sample_owner": { "sample_id": "tooling.preview-entry" },
-  "document_owners": { "module": ["module.viewcompose-preview-core"] }
+  "document_owners": {
+    "module": ["module.viewcompose-preview-core"],
+    "tutorial": ["tutorial.getting-started"]
+  }
 }
