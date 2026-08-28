@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: cfc5c21f72dcaffd6b3aa2b8c2fcd9de4a16f5d29bd02c0afca053116d7a3d27
+translation_source_hash: 2673b8427e6e81dea5e53a7ee51d3ac464f262b6a3c21c119b5355c28329db67
 translation_status: current
 ---
 
@@ -36,7 +36,10 @@ translation_status: current
    负责具名 `setMaterial3UiContent` Context 适配；底层 `:viewcompose-host-android` 引擎负责
    `renderInto`、`RenderSession` 与挂载树生命周期，但不选择设计系统
 5. `system bars insets` 已转为组件侧 `Modifier.systemBarsInsetsPadding(...)`
-6. 生命周期与 ViewModel 协作 API 已拆分为 `:viewcompose-lifecycle-androidx` 与 `:viewcompose-viewmodel-androidx`，并统一到新包 `com.viewcompose.lifecycle` / `com.viewcompose.viewmodel`
+6. 生命周期与 ViewModel 协作 API 已拆分为 `:viewcompose-lifecycle-androidx` 与
+   `:viewcompose-viewmodel-androidx`，并统一到 `com.viewcompose.lifecycle` /
+   `com.viewcompose.viewmodel`；逻辑导航页面与 Graph 现在拥有受限 Lifecycle、SavedState 与
+   Retained ViewModel Scope，不再借用 Activity 生命周期
 7. 重组模型已硬切到 `SlotTable Lite` 节点组级脏区重组（无旧全量重建开关）
 8. 运行时职责按 Kernel、UI Foundation、Android Engine、Design System 与 Integrations 五层划分；
    `viewcompose-android` 与 `viewcompose-material3-android` 是经审查的应用聚合层，不是第六层
@@ -115,7 +118,7 @@ translation_status: current
 | Text Editing | `TextDocument + TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持富文本、段落、行内附件、selection/composition/undo/save 与统一 Receive Content | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘、拖放和第三方内容提供方 |
 | Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport`、`AndroidView.onCommit` 副作用边界与可选有界故障聚合已落地 | 维护已交付的隐私与非激活路径契约；调度、同意、持久化与上传仍由应用 Exporter 持有 |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
-| Lifecycle / ViewModel Integration | 模块拆分与 API 硬切、串行 lifecycle collection、事务化 SavedState claim、destroyed host 与损坏 Bundle 隔离均已完成 | 扩展多窗口/后台进程回收真实设备矩阵 |
+| Lifecycle / ViewModel Integration | 模块拆分、串行 Lifecycle Collection、事务化 SavedState Claim、Retained Subtree/Destination/Graph ViewModel Scope、ViewTree Host Discovery、单 Owner `SavedStateHandle`、Terminal Clear，以及 Android 9 Activity Root 与多 Stack 进程恢复证据均已完成 | 扩展 Release 构建、多窗口、API Level 与后台进程恢复矩阵；内存与运行时性能结论继续要求独立证据 |
 | Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 List State、Sticky Header、Content Type/Span、预取、中立紧凑 `LazyItemTable` 边界，以及支持显式 Placeholder、Page Drop、Load State 投影、Lifecycle/Mediator Fixture、受控状态 Demo、百万位置真机证明与稳定首份 Release 基线的可选 AndroidX Paging `PagingLazyColumn` 已落地 | [已归档 Paging 3 集成计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/paging3-integration.md)已完成 Phase 0--7。Paging 仍位于核心契约之外；Row/Grid 支持、真实 I/O 或更广纵向性能需要新建可归因计划 |
 | Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
 | Theming | 已完成 token 收口、Android 动态色策略、完整 shape 桥接与配置变化 token 生命周期，并提供 `Diagnostics -> 主题诊断` 权威人工验证入口 | 扩展多窗口、厂商主题和动态色设备矩阵 |

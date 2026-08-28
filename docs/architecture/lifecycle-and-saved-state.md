@@ -11,17 +11,29 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.effects
   - lifecycle.android-view
+  - navigation.host
+  - viewmodel.owner-boundaries
+  - viewmodel.scoped-owners
+  - viewmodel.store-resolution
 artifact_ids:
   - viewcompose-ui-foundation
   - viewcompose-host-android
   - viewcompose-lifecycle-androidx
   - viewcompose-android
+  - viewcompose-navigation-android
+  - viewcompose-viewmodel-androidx
 sample_ids: []
 invariants:
   - Lifecycle and saved-state ownership begins only at a committed host, composition, or native View boundary.
   - Replacement, destruction, and rollback complete old ownership before publishing a new owner.
+  - Every logical page or graph owns one capped lifecycle, saved-state registry, and ViewModelStore lifetime.
+  - ViewModelStore is the only ViewModel instance cache, and restored business state has one business ViewModel writer.
 evidence:
   - Lifecycle module tests, Android host integration tests, compiled module samples, and retained-session tests.
+  - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeProviderTest.kt
+  - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/SavedStateViewModelIntegrationTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
+  - tools/navigation/validate_android_process_death.sh
 ---
 
 # Lifecycle and Saved State
@@ -39,6 +51,9 @@ Core principles:
 4. A Flow has at most one active collector while the lifecycle changes rapidly.
 5. A destroyed host cannot create a new render session or SavedState binding.
 6. A renderer-owned View cannot observe or publish an external owner before its transaction commits.
+7. A logical page cannot borrow the Activity's full active lifetime merely because its ViewGroup
+   remains attached or retained.
+8. UI-only saveable state and restored business state cannot have two writable owners.
 
 ## 2. Host lifecycle
 
@@ -144,7 +159,34 @@ providers and restored claims. See
 [ADR-0010](./decisions/0010-hierarchical-saveable-state-ownership.md) for the hard-cut rationale and
 compatibility boundary.
 
-## 7. Android Bundle boundary
+## 7. ViewModel and logical-page ownership
+
+Activity and Fragment remain root owner sources, but they do not define every logical page's
+lifetime. A retained navigation entry or graph composes a page owner from four coordinated
+contracts: capped `LifecycleOwner`, `SavedStateRegistryOwner`, `ViewModelStoreOwner`, and default
+Factory/`CreationExtras` support. The page lifecycle is derived from both the host lifecycle and
+navigation visibility; View attachment alone never promotes hidden content to `RESUMED`.
+
+Configuration recreation preserves the navigation host-scope identity and leases the same child
+stores from `ViewModelScopeProvider`. Permanent pop or graph removal sends the explicit terminal
+signal and clears the store exactly once, which in turn delivers AndroidX `ViewModel.onCleared()`.
+Temporary composition absence, transition overlap, Pager/lazy reorder, and a destroyed Activity
+during configuration change release composition leases without falsely declaring logical removal.
+
+Ordinary retained subtrees use the same provider core. Composition remembers only a provider
+binding and a reference-owning lease; it never caches a ViewModel instance. `viewModel()` always
+asks AndroidX `ViewModelProvider` to resolve against the selected `ViewModelStore`. Explicit owners
+win over the nearest `LocalViewModelStoreOwner`; Activity and Fragment host APIs install the nearest
+ViewTree owner, while low-level `renderInto` deliberately installs none.
+
+Restored business state belongs to the business ViewModel. It receives one `SavedStateHandle`
+through the owner's default Factory or through `createSavedStateHandle()` inside the initializer
+overload, and exposes read-only domain state or operations. UI-only presentation state remains in
+`rememberSaveable`. The removed standalone handle helper and holder have no runtime, source, or
+compatibility path; their released capability record remains only as the historical identity
+required by immutable deletion-impact records.
+
+## 8. Android Bundle boundary
 
 The Android host saves:
 
@@ -168,7 +210,7 @@ copies, replacement, and cleanup. A format mismatch or corrupt nested SDK payloa
 absent without invalidating other providers. Later commits replace only the saver so host saving
 always reads the latest committed View.
 
-## 8. Verification
+## 9. Verification
 
 Core regression coverage includes:
 
@@ -182,4 +224,8 @@ Core regression coverage includes:
 8. unknown Bundle versions and isolation of one corrupt entry;
 9. Android View post-commit lifecycle catch-up, serial owner replacement, and callback failure;
 10. retained-destination lifecycle capping, SDK Bundle recreation, format isolation, and provider
-    cleanup.
+    cleanup;
+11. retained ViewModel scope reference counting, rollback, recreation, terminal clear, and no
+    resurrection;
+12. destination/graph owner isolation, default Factory/CreationExtras propagation, `onCleared()`,
+    repeated process-style restoration, and real multi-stack process recreation.

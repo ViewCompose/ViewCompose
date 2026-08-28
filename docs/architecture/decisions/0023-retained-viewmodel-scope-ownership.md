@@ -23,7 +23,7 @@ invariants:
   - Every child scope has caller-owned stable identity, reference-protected temporary retention, and an explicit terminal-removal signal.
   - Navigation, ordinary composition subtrees, and custom retained containers use one provider core while keeping their distinct lifecycle adapters.
 evidence:
-  - docs/project/plans/viewmodel-androidx-optimal-architecture-and-compose-parity.md
+  - docs/archive/viewmodel-androidx-optimal-architecture-and-compose-parity.md
   - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeProviderTest.kt
   - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeCompositionTest.kt
   - AndroidX Lifecycle 2.11 ViewModelStoreProvider reference and source contracts
@@ -141,6 +141,10 @@ reference counter for child stores.
    `rememberSaveable`; ViewModel business state uses `SavedStateHandle.getMutableStateFlow()` and is
    observed through the existing state-collection integration. This preserves one writable owner
    and one restoration path instead of creating API symmetry with two sources of truth.
+5. The released `viewmodel.saved-state` capability record remains only as the alpha01 historical
+   identity required by immutable deletion-impact records. Current generated Reference entries are
+   derived from compiled declarations and expose neither removed symbol; the record is not a
+   compatibility API or an alternate ownership path.
 
 ## Frozen public surface
 
@@ -230,10 +234,11 @@ constructor/factory model and reserves an application-visible store key.
    `rememberSaveable` owns UI-only state, while one business ViewModel owns each mutable
    `SavedStateHandle` flow. Conclusion: **improved**. JVM restoration does not replace a device
    process-kill journey, which remains **inconclusive** for Phase 5.
-5. Phase 5 passed all 52/52 owning-module tests after adding seven negative and deletion guards.
-   On a Xiaomi MI 6 running Android 9/API 28, two Debug process-death journeys changed PID and
-   preserved the normalized Activity-root and multi-stack navigation state exactly. Conclusion:
-   **improved**. One device does not establish release-mode, memory, performance, or platform-matrix
-   behavior; those dimensions remain **inconclusive**.
+5. Phase 5 passed all 52/52 owning-module tests after adding seven negative and deletion guards;
+   the clean affected-layer run passed 276/276 tests, and repository `qaQuick qaPreview` completed
+   all 2,270 tasks. On a Xiaomi MI 6 running Android 9/API 28, two Debug process-death journeys
+   changed PID and preserved the normalized Activity-root and multi-stack navigation state exactly.
+   Conclusion: **improved**. One device does not establish release-mode, memory, performance, or
+   platform-matrix behavior; those dimensions remain **inconclusive**.
 6. Each phase lands Q3 KDoc, compiled samples, capability-impact records, module and migration
    documentation, immutable release intent, and focused tests with interpreted evidence.
