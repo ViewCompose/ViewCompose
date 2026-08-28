@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 28e215c8e9db3841a6df3245d3c2d84e6df760d7af0d390c9e152d7515b1f299
+translation_source_hash: 3c30fd7e1640164b7b92fe6a849b4a0066112b272dc2514f3a8b04b0858cc334
 translation_status: current
 ---
 
@@ -195,9 +195,15 @@ PR，`qaQuick` 变化 `-0.17%`，`qaPreview` 变化 `-0.19%`，两者均为**无
 重建为“从 Job 开始到候选完成的时间”与并行文档 Child Job 耗时两者中的较大值后，近邻秩 P50 为
 `6 min 22 s`，P95 为 `7 min 17 s`，均满足 `8 min`/`12 min` 阈值。11 个文档 Child Job 全部精确
 恢复并验证 `5/5` 个不可变 API 组，生成组和无效组均为零，精确命中率 `100%`。范围与缓存结论为
-**improved**，零分歧的正确性结论为 **no material change**。由于这些时间由 Shadow 运行重建，
-并非硬切后的实际观察，因此时延结论仍为 **inconclusive**；上线后首个符合条件的 PR 必须记录实际
-critical path。该证据为第一个精确类别启用 `affected`。
+**improved**，零分歧的正确性结论为 **no material change**。验收当时，这些时间仍由 Shadow
+运行重建，并非硬切后的实际观察，因此时延结论为 **inconclusive**，仍需一条真实 critical path。
+该证据为第一个精确类别启用了 `affected`。
+
+PR #225 提供了该类别硬切后的首个真实无 Shadow 运行。五条候选任务只覆盖
+`:samples:tutorials`，以 `6 min 9 s` 通过，从工作流创建到必需门面完成用时 `8 min 12 s`，完整工作
+按预期跳过。执行与端到端耗时分别比 Phase 0 P50 低 `72.9%` 和 `66.0%`。范围和时延结论为
+**improved**，正确性为 **no material change**。单个运行不能建立分布；评估该类别 P50/P95 前还需
+从自然出现的合格工作中累计九次成功运行。
 
 11 个托管模块文档/编译样例 PR（#186、#187、#188、#189、#190、#191、#194、#195、#198、
 #199、#200）构成了第二个已验收的无 Shadow 语料。每个 PR 只修改文档/治理记录、模块
@@ -209,7 +215,15 @@ critical path。该证据为第一个精确类别启用 `affected`。
 P95 为 `20 min 41 s`，比 Phase 0 低 `16.2%`，完整路径没有回退。范围、缓存复用和时延结论为
 **improved**，正确性为 **no material change**。PR #196 因修改模块构建脚本继续使用
 `affected-with-shadow`；生产源码、普通测试、代码删除/重命名、敏感工具和未知路径也不进入本次硬切。
-上线后首个符合条件的托管运行仍须记录实际硬切时延。
+硬切上线时，仍需首个符合条件的托管运行记录实际时延。
+
+PR #226 提供了该类别硬切后的首个真实无 Shadow 运行。68 条候选任务覆盖 23 个发布产物和
+`:samples:tutorials`，以 `7 min 48 s` 通过，从工作流创建到必需门面完成用时 `9 min 42 s`，完整
+工作按预期跳过。执行与端到端耗时分别比 Phase 0 低 `65.7%` 和 `59.8%`。范围和时延结论为
+**improved**，正确性为 **no material change**，因为所选闭包、Preview、文档和全部门面均通过。
+合入后的 `main` 随后以 `15 min 23 s` 通过完整 `qaQuick`，工作 Job 用时 `16 min 38 s`，比已验收的
+完整主分支 P95 低 `19.6%`，因此完整路径的安全性保持 **no material change**。单个运行不能建立
+分布；评估该类别 P50/P95 前还需从自然出现的合格工作中累计九次成功运行。
 
 第一组硬切后控制窗口（#219--#223）没有出现符合条件的无 Shadow `affected` 运行。#219 只修改
 激活计划并正确选择 `skip`；从工作流创建到 `qaQuick` 门面完成用时 `70 s`，文档门面以
@@ -222,7 +236,8 @@ P95 为 `20 min 41 s`，比 Phase 0 低 `16.2%`，完整路径没有回退。范
 `29.9%`/`45.2%`。所有门禁和必需门面均通过。安全性保持 **no material change**，这组小型、
 异构的完整路径样本相较 Phase 0 为 **improved**；由于目标类别运行数为零，实际无 Shadow 时延仍
 为 **inconclusive**。这五个同日且偏重发布的变更只是控制证据，不能代表变更类别分布。继续等待
-自然出现的文档/Tutorial-sample 或模块文档/编译样例 PR；不得仅为制造观察数据而修改样例。
+自然出现的文档/Tutorial-sample 或模块文档/编译样例 PR 来扩展两类硬切后语料；不得仅为制造观察
+数据而修改样例。
 
 所有调用 Gradle 的工作流都由 `gradle/actions/setup-gradle` 单独负责 Gradle User Home 缓存。
 `actions/setup-java` 只安装所需 JDK，不再另行缓存 Gradle。每个 `setup-gradle` 都显式设置

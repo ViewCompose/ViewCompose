@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-28
-next_action: Record the first eligible hosted affected run for the module-documentation and compiled-sample no-shadow class, while retaining complete shadow comparison for production and unaccepted module changes.
+next_action: Accumulate nine more naturally eligible successful no-shadow runs in each enabled affected class, then evaluate the ten-run distributions while retaining complete verification for production and unaccepted module changes.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -42,11 +42,11 @@ are in progress.
 
 Last verified: 2026-08-28.
 
-Next action: record the first eligible hosted `affected` run for the exact module-documentation/
-compiled-sample class. The documentation/Tutorial-sample class has one accepted no-shadow hosted
-observation. Production source,
-module build scripts, ordinary tests, code deletion/rename, Demo, integration, benchmark, shared-
-input, sensitive-tooling, and unknown-path classes retain the complete shadow or full fallback.
+Next action: accumulate nine more naturally eligible successful no-shadow runs in each of the
+documentation/Tutorial-sample and module-documentation/compiled-sample classes, then evaluate each
+ten-run distribution. Both classes now have one accepted post-cut hosted observation. Production
+source, module build scripts, ordinary tests, code deletion/rename, Demo, integration, benchmark,
+shared-input, sensitive-tooling, and unknown-path classes retain complete verification.
 Build-cache and
 configuration-cache probes are complete but neither option is enabled; adoption requires evidence
 beyond the accepted local samples. The Phase 0 task-graph fixtures remain the immutable
@@ -996,8 +996,30 @@ end-to-end P50 of `24 min 8 s`, the `8 min 12 s` critical path is `66.0%` lower.
 shadow absence; this first-class latency observation is **improved** against the frozen Phase 0
 comparator. The limitation is one hosted runner/cache state and one Tutorial project, so it closes
 the first-observation requirement for this class but does not establish the ten-PR distributional
-acceptance target. The next observation remains the accepted module-documentation/compiled-sample
-class.
+acceptance target.
+
+Pull request #226 supplied the first real module-documentation/compiled-sample no-shadow
+observation. The classifier selected `affected` with no full fallback; the 68 selected tasks covered
+23 published artifacts plus `:samples:tutorials`, the complete shadow was explicitly skipped, and
+all selected gates and required facades passed. The affected Gradle step completed in `7 min 48 s`
+with 1,758 executed actionable tasks, its hosted work job completed in `8 min 34 s`, and the required
+critical path completed `9 min 42 s` after workflow creation. Preview work passed in `5 min 19 s`.
+The parallel documentation work passed in `3 min 54 s`, reused `6/6` immutable API groups with zero
+generation or invalid group in `4.5 s`, and kept the production site inside every unchanged budget
+at 469.0 MiB total, 46.7/46.9 MiB non-API, and `43.0 s` build time. Relative to the Phase 0 execution
+P50 of `22 min 43 s`, the affected Gradle step is `65.7%` lower; relative to the Phase 0 required
+end-to-end P50 of `24 min 8 s`, the critical path is `59.8%` lower. The execution step is `3.5%`
+below the reconstructed pre-cut class P50 of `8 min 5 s`, while end-to-end time is `5.2%` above its
+`9 min 13 s` comparator; both are **no material change** within one hosted sample, and both remain
+**improved** against Phase 0. Correctness is **no material change** because the selected closure,
+Preview, documentation, and stable facades all passed with the intended shadow absence. Both
+enabled no-shadow classes now have one accepted real observation. The merged `main` revision then
+passed complete `qaQuick` in `15 min 23 s` with its work job at `16 min 38 s`, Preview at
+`7 min 10 s`, and documentation build/deployment successful. The complete job is `19.6%` below the
+accepted `20 min 41 s` full-main P95, so safety remains **no material change** with no full-path
+regression. Phase 6 remains active because one sample per class cannot establish the required
+ten-run P50/P95 distribution; collect the remaining nine per class only from naturally eligible
+work.
 
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:

@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 06b0a3361a7b32ac0fdc3883cbc5368bc6c3f31a4ebbdff7a5fdbebc4157e992
+translation_source_hash: 8c55ca4c057c8418b22ddb4f6537cebaaf220b19ea95a7e3a2c2453de1aff68b
 translation_status: current
 ---
 
@@ -338,8 +338,17 @@ identity token。
   站点都满足不变预算；随后 #223 的 `main` 工作流完成构建、部署和线上模块路由验证。缓存判别和
   部署正确性为 **no material change**；有意的完整或局部失效成本高于精确复用，因此时延结论为
   **mixed**。这些工具/发布输入彼此异构，输出分别包含 100、127 和 133 个版本，归一化 Child Job
-  时间不能代表稳态性能。下一步是在自然出现的首个硬切后 `affected` PR 上观察精确命中；工具或
-  历史漂移仍必须只重建其指纹实际失效的组。
+  时间不能代表稳态性能。工具或历史漂移仍必须只重建其指纹实际失效的组。
+
+- **2026-08-28，硬切后前两次精确命中观察：**#225 和 #226 都恢复并验证了 `6/6` 个不可变 API
+  组，生成组和无效组均为零。缓存工作分别用时 `7.1 s` 和 `4.5 s`，文档 Child Job 分别为
+  `3 min 58 s` 和 `3 min 54 s`，生产站点 Wrapper 分别为 `47.3 s` 和 `43.0 s`。两个站点都保持
+  469.0 MiB 总输出和 46.7/46.9 MiB 非 API 输出，API、JavaScript、CSS、无障碍和路由预算均未
+  改变。从 #225 到 #226，文档 Child 耗时变化 `-1.7%`，站点耗时变化 `-9.1%`，取整后的体积没有
+  变化。这两次硬切后样本的精确命中率为 `100%`，缓存正确性和精确命中行为结论为
+  **no material change**；由于 Runner 与依赖状态不同，站点时延也为 **no material change**。
+  这证明两个已验收无 Shadow 类别都保持文档完整性，但尚不能构成 P50/P95 语料。后续只从自然出现
+  的合格工作中继续收集，并在任何已验证指纹失配时保持按组重建；仍没有理由迁移网站技术栈。
 
 - **2026-08-26，Governance V2 Text Input 本地验收：**首次四页面任务拆分虽然构建成功，但生成
   49,245,936 个非 API 字节，超过不变的 46.9 MiB 上限 67,722 字节。把相邻的编辑/IME 与富文本/
