@@ -12,13 +12,17 @@ class PreviewAndroidEnvironmentTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `compile SDK is derived from Android boot classpath`() {
+    fun `compile SDK accepts versioned platform directories and ignores build tool stubs`() {
         val androidJar = File(
             temporaryFolder.root,
-            "sdk/platforms/android-35/android.jar",
+            "sdk/platforms/android-37.0/android.jar",
+        )
+        val lambdaStubs = File(
+            temporaryFolder.root,
+            "sdk/build-tools/36.0.0/core-lambda-stubs.jar",
         )
 
-        assertEquals(35, resolveCompileSdk(listOf(androidJar)))
+        assertEquals(37, resolveCompileSdk(listOf(androidJar, lambdaStubs)))
     }
 
     @Test
