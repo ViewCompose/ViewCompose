@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/navigation.md
-translation_source_hash: acc2370aca5bbb6717a0d444f7caf358f23c8d82210e19ea89fbaf0b0f59bc7d
+translation_source_hash: 23788a2066e1ed72a8bc06395057c7b9b63c0f3025280706aaf174af0c8cd37e
 translation_status: current
 ---
 
@@ -17,6 +17,7 @@ repositories { mavenCentral() }
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -26,12 +27,13 @@ dependencies {
 
 创建 `NavigationTutorialActivity.kt`：
 
-{/* tutorial-sample sample_id="tutorial.navigation" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt" region="navigation" required_artifacts="viewcompose-navigation-android" */}
+{/* tutorial-sample sample_id="tutorial.navigation" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt" region="navigation" required_artifacts="viewcompose-navigation-android,viewcompose-viewmodel-androidx" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.ViewModel
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.rememberNavHostController
@@ -44,6 +46,7 @@ import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.viewmodel.viewModel
 
 private const val HOME = "home"
 private const val DETAILS = "details"
@@ -69,7 +72,8 @@ class NavigationTutorialActivity : ComponentActivity() {
                             )
                         }
                         DETAILS -> {
-                            Text("Details", style = TextDefaults.titleLargeStyle())
+                            val model = viewModel<DetailsViewModel>()
+                            Text(model.title, style = TextDefaults.titleLargeStyle())
                             Button("Back", onClick = controller::popBackStack)
                         }
                         else -> error("Unknown route ${entry.route.name}")
@@ -79,11 +83,20 @@ class NavigationTutorialActivity : ComponentActivity() {
         }
     }
 }
+
+class DetailsViewModel : ViewModel() {
+    val title: String = "Details"
+}
 ```
 {/* tutorial-sample-end */}
 
 remember 的 Controller 持有已提交返回栈。`NavHost` 渲染当前 `NavRoute`，并把 Android 系统
 返回接到同一个栈。Host 挂载后，从 UI 事件调用 `navigate` 或 `popBackStack`。
+
+本示例运行于 Activity `setUiContent` 中，因此已经获得 `NavHost` 要求的 Lifecycle 与
+`LocalViewModelStoreOwner`。如果改用底层 `renderInto` 挂载同一内容，必须显式提供这些 Owner
+Local。每个 Destination 随后都会得到自己的 Lifecycle、Saved-state Namespace，以及从保留式
+父 Store 租用的 ViewModelStore。
 
 ## 验证结果
 

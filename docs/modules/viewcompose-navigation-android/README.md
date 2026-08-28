@@ -20,9 +20,9 @@ minimal_usage_sample_id: module.navigation-android-dependency
 # Navigation Android
 
 `viewcompose-navigation-android` mounts `viewcompose-navigation-core` state as native Android View pages. It
-owns destination and graph lifecycle boundaries, ViewModel stores, SavedStateRegistry namespaces,
-child render sessions, transactional failure recovery, Android system and predictive Back,
-adaptive pane layout, and command-aware View motion.
+owns destination and graph lifecycle boundaries, scoped ViewModel owner leases, SavedStateRegistry
+namespaces, child render sessions, transactional failure recovery, Android system and predictive
+Back, adaptive pane layout, and command-aware View motion.
 
 The application still uses an Activity or Window as its outer Android host, but individual pages do
 not require an Activity or Fragment. The platform-neutral back stack remains in
@@ -113,7 +113,8 @@ maintaining a second source of truth.
 Every destination entry receives an independent Android owner containing:
 
 - a Lifecycle capped by the host and pane visibility;
-- a ViewModelStore cleared only after the entry leaves all retained state;
+- a ViewModelStore leased from the shared Lifecycle 2.11 scoped-owner provider and cleared only
+  after the entry leaves all retained state;
 - a SavedStateRegistry and default SavedStateHandle arguments derived from `NavRoute`;
 - a ViewCompose saveable-state registry namespace.
 
@@ -125,12 +126,21 @@ destination keeps its owner identity and persisted data but receives a capped li
 
 Pushing the same route twice creates two owners and does not share page state.
 
-At native `NavHost` creation, destination and graph owners capture the nearest
-`LocalViewModelStoreOwner`. If it implements `HasDefaultViewModelProviderFactory`, its default
-Factory and starting `CreationExtras` are inherited. Each child owner then replaces only the
-ViewModelStore owner, saved-state owner, and route or graph default arguments, preserving unrelated
-Application and DI extras. A different parent-owner identity recreates the native host; retained
-stacks therefore never mix provider contracts from two parents.
+`NavHost` requires the nearest `LocalViewModelStoreOwner`; there is no private fallback store.
+Standard Activity and Fragment `setUiContent` hosts install it, while callers of low-level
+`renderInto` must use `ProvideViewModelStoreOwner` explicitly. If the parent implements
+`HasDefaultViewModelProviderFactory`, its default Factory and starting `CreationExtras` are
+inherited. Each child owner then replaces only the ViewModelStore owner, saved-state owner, and
+route or graph default arguments, preserving unrelated Application and DI extras. A different
+parent-owner identity recreates the native host; retained stacks therefore never mix provider
+contracts from two parents.
+
+The controller persists a private host-scope identity beside its stack state. Recreating a host
+under the same retained parent store and restored controller identity rebuilds destination
+Lifecycle and saved-state owners while leasing the same entry and graph ViewModelStores. Normal
+host removal, permanent pop, graph removal, or controller replacement sends terminal clear. This
+separates Android presentation lifetime from logical page-state lifetime without a navigation-only
+store allocator.
 
 Nested graph instances receive `NavGraphOwner` boundaries. Destinations in one graph instance share
 its Lifecycle, ViewModelStore, and SavedStateRegistry until the last descendant leaves the stack.
@@ -169,12 +179,18 @@ surfaced as `NavHostException` with the original cause, failed entry, and render
 - ViewCompose saveable values owned by each page or graph.
 
 Pending transactions, running animations, Views, sessions, LifecycleRegistry instances, and
-ViewModelStore contents are not serialized.
+ViewModelStore contents are not serialized. Configuration recreation may retain live ViewModels
+through the parent store; process recreation restores their saved-state inputs into newly created
+instances.
 
 Restore is defensive. Unknown versions, malformed collection types, excessive entry counts,
 configuration mismatch, or graph hierarchy changes discard incompatible saved state and create the
 configured initial state. This fail-closed behavior avoids attaching an old saved-state namespace to
 a different page owner after an application upgrade.
+
+The current format also accepts the immediately preceding version-4 snapshot. It assigns a fresh
+host-scope identity while preserving valid stacks and destination state, because no live parent
+store can cross a process or application-code restart.
 
 ## Android system and predictive Back
 
@@ -258,12 +274,34 @@ already retains each stack and owns selection history.
 The complete generated reference is available in the
 [`viewcompose-navigation-android` API tree](https://docs.viewcompose.com/api/viewcompose-navigation-android/current/).
 
+## Phase 3 acceptance
+
+The comparison baseline was the 148-test Navigation Android suite with navigation-owned
+ViewModelStore allocation and direct Activity/Fragment owner injection. The clean Phase 3 run
+passed 151/151 Navigation Android tests and 21/21 aggregate Android host cases with zero skips,
+failures, or errors. Three new navigation contracts cover missing-owner failure, retained
+ViewModel identity across host recreation, and version-4 state migration; aggregate host source
+coverage increased from 10 to 11 test methods and now distinguishes Activity ViewTree discovery
+from Fragment explicit-owner precedence.
+
+Conclusion: **improved**. Navigation now shares the general Lifecycle 2.11 provider, retains
+ViewModels across configuration recreation, clears them at logical removal, and allocates no
+private ViewModelStore. The result is JVM/Robolectric evidence; it does not measure device memory,
+process-kill behavior, frame time, or OEM lifecycle ordering, so those dimensions remain
+**inconclusive**. Phase 4 next removes the standalone SavedStateHandle holder path; the separate
+navigation lifecycle-and-scene plan retains device, memory, presentation-retention, and transition
+projection acceptance.
+
 ## Compatibility notes
 
 The `0.1.0-alpha01` line establishes one-controller/one-host attachment, main-thread serialized
 commands, destination and graph ownership, defensive process-death restore, predictive-Back
 preview, Android-aligned native View motion, and up to three adaptive panes. Persist controller state
 through `rememberNavHostController`; do not retain Android owner or session objects outside the host.
+
+The Lifecycle 2.11 hard cut requires `NavHost` to run below a `LocalViewModelStoreOwner`. Existing
+Activity and Fragment `setUiContent` integrations satisfy the requirement. A custom `renderInto`
+host must add `ProvideViewModelStoreOwner`; no implicit root store or compatibility alias is kept.
 
 Typed shared-content markers are additive Q3 UI Contract APIs, but they require a renderer that
 publishes the stable endpoint tag and this navigation-host implementation to produce motion. Older

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Move navigation destination and graph ViewModel stores onto the shared Lifecycle 2.11 scoped-owner provider, preserve them across parent-store recreation, and require an explicit host ViewModelStoreOwner boundary.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-android", "impact": "breaking" },
+    { "artifact": "viewcompose-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-controller-retained-scope-lifecycle211",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.NavHostController",
+  "capability_id": "navigation.host",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "failure",
+    "android",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.navigation.NavHostController"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-navigation-android"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "tutorial.navigation"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.navigation.host"
+      ]
+    },
+    "tutorial": {
+      "status": "updated",
+      "targets": [
+        "tutorial.navigation"
+      ]
+    },
+    "guide": {
+      "status": "updated",
+      "targets": [
+        "guide.navigation-production-host"
+      ]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.navigation-runtime",
+        "architecture.retained-viewmodel-scope-ownership"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": [
+        "migration.compose-navigation",
+        "migration.compose-host-lifecycle-android-interop"
+      ]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The retained-scope identity changes controller state behavior without moving a public symbol or documentation route."
+    }
+  }
+}

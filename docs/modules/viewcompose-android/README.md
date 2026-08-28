@@ -72,6 +72,13 @@ fun activityHostSample(activity: ComponentActivity) {
 - the animation coroutine context and Choreographer frame clock; and
 - the neutral Android overlay transport, with an injectable replacement factory.
 
+The Activity host resolves `LocalViewModelStoreOwner` from the installed root's
+`ViewTreeViewModelStoreOwner`. The Fragment receiver remains the explicit ViewModel owner and wins
+over its root ViewTree's shorter-lived `FragmentViewLifecycleOwner`, so Fragment-scoped models
+survive View recreation. A nested `ProvideViewModelStoreOwner` still overrides either host for that
+subtree. The lower-level `renderInto` API in `viewcompose-host-android` performs no owner discovery
+or installation.
+
 They do not resolve Material XML, dynamic color, or design tokens. Without an explicit provider,
 content reads the deterministic `UiThemeDefaults.light()` framework baseline. The optional
 `rootContext` parameter defaults to the Activity or Fragment context and is shared by the root,
@@ -105,6 +112,12 @@ application locale/theme wrapper mutation that emits no callback, pass one
 `AndroidResourceRefreshController` to `setUiContent`, replace the stable `rootContext` resources,
 then call `refresh()`. Constructor-sensitive Context or design-system changes still require another
 `setUiContent` call and root reconstruction.
+
+The Phase 3 owner-boundary run passed all 21 aggregate-host executed cases. The new Activity
+contract proves ViewTree discovery and nested explicit precedence; the Fragment recreation
+contract proves that the ViewTree View owner changes while the content's explicit Fragment
+ViewModel owner remains stable. Conclusion: **improved** owner selection. The result is
+Robolectric evidence and does not establish device process-kill, memory, or performance behavior.
 
 ## Dependency rule
 

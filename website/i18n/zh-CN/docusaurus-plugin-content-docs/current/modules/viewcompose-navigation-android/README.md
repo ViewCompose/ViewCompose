@@ -1,14 +1,15 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: f3d8b096624ecd143fa83adf5632789e60b50cf81a49ee9d7af96ddb8ff6a72f
+translation_source_hash: 5a15badc6d154885135b564b6a4cf73b483d561c58036f67cb318d7bafc2c4f2
 translation_status: current
 ---
 
 # Android Navigation 模块
 
 `viewcompose-navigation-android` 把 `viewcompose-navigation-core` 状态挂载为原生 Android View 页面。
-它负责目的地和图的生命周期边界、ViewModelStore、SavedStateRegistry 命名空间、子渲染会话、
-事务失败恢复、Android 系统返回与预测性返回、自适应 pane 布局，以及感知命令类型的 View motion。
+它负责目的地和图的生命周期边界、带作用域的 ViewModel Owner Lease、SavedStateRegistry
+命名空间、子渲染会话、事务失败恢复、Android 系统返回与预测性返回、自适应 pane 布局，以及
+感知命令类型的 View motion。
 
 应用仍使用 Activity 或 Window 作为最外层 Android 宿主，但单个页面不需要 Activity 或 Fragment。
 平台无关返回栈仍位于 `viewcompose-navigation-core`；本模块是它的 Android 执行边界。
@@ -88,7 +89,8 @@ Controller 提供即时不可变 `snapshot` 和 `stackState`，以及可观察 `
 每个目的地 entry 都拥有独立 Android owner，其中包括：
 
 - 受宿主和 pane 可见性限制的 Lifecycle；
-- 仅在 entry 离开所有保留状态后清理的 ViewModelStore；
+- 从共享 Lifecycle 2.11 Scoped-owner Provider 租用、仅在 Entry 离开所有保留状态后清理的
+  ViewModelStore；
 - 从 `NavRoute` 派生默认 SavedStateHandle 参数的 SavedStateRegistry；
 - 页面独享的 ViewCompose saveable-state registry 命名空间。
 
@@ -99,11 +101,18 @@ Lifecycle，因此 `LifecycleAndroidViewAdapter` 无需依赖物理移除就能�
 
 同一个 route 连续 push 两次会创建两个 owner，不会共享页面状态。
 
-原生 `NavHost` 创建时，目的地和 graph owner 会捕获最近的 `LocalViewModelStoreOwner`。若它实现
-`HasDefaultViewModelProviderFactory`，则继承其默认 Factory 和初始 `CreationExtras`。每个子
-owner 只替换自己的 ViewModelStore owner、saved-state owner 以及 route 或 graph 默认参数，
-保留无关的 Application 与 DI extra。父 owner 身份变化会重建原生 host，因此保留栈不会混用
-两个父级的 provider 契约。
+`NavHost` 要求最近的 `LocalViewModelStoreOwner`，不会创建私有兜底 Store。标准 Activity 和
+Fragment `setUiContent` Host 会安装该 Owner；使用底层 `renderInto` 时则必须显式调用
+`ProvideViewModelStoreOwner`。若父 Owner 实现 `HasDefaultViewModelProviderFactory`，子 Owner
+会继承其默认 Factory 和初始 `CreationExtras`，再只替换 ViewModelStore Owner、Saved-state
+Owner 以及 Route 或 Graph 默认参数，保留无关的 Application 与 DI Extra。父 Owner 身份变化会
+重建原生 Host，因此保留栈不会混用两套父级 Provider 契约。
+
+Controller 会把私有 Host Scope 身份与栈状态一并保存。在同一个保留式父 Store 下，以恢复后的
+Controller 身份重建 Host 时，会重建 Destination Lifecycle 与 Saved-state Owner，但重新租用
+相同 Entry/Graph ViewModelStore。正常移除 Host、永久 Pop、移除 Graph 或替换 Controller 都会
+发出终态清理信号。这样 Android 展示生命周期与逻辑页面状态生命周期得以分离，也不再需要导航
+专用 Store Allocator。
 
 嵌套图实例拥有 `NavGraphOwner`。同一个图实例内的目的地共享 Lifecycle、ViewModelStore 和
 SavedStateRegistry，直到最后一个后代离栈。之后再次进入同名图 route 会创建新 owner。
@@ -137,9 +146,13 @@ Android 宿主保持 navigation core 的两阶段保证：先准备新目的地�
 - 每个页面或图拥有的 ViewCompose saveable 值。
 
 待处理事务、运行动画、View、会话、LifecycleRegistry 实例和 ViewModelStore 内容不会序列化。
+配置重建可以通过父 Store 保留活跃 ViewModel；进程重建则会根据恢复后的状态输入创建新实例。
 
 恢复采用防御式策略。未知版本、错误集合类型、过多 entry、配置不匹配或图层级变化都会丢弃不兼容
 状态并重建初始状态，避免应用升级后把旧 Saved State 命名空间挂到另一个页面 owner。
+
+当前格式还接受紧邻的 Version 4 快照：保留合法栈和 Destination 状态，同时分配新的 Host Scope
+身份。进程或应用代码重启不会保留活跃父 Store，因此该迁移不会错误复用旧实例。
 
 ## Android 系统返回与预测性返回
 
@@ -210,12 +223,31 @@ String、Android `Uri` 和 `ACTION_VIEW Intent` 入口都使用同一个严格�
 完整生成参考位于
 [`viewcompose-navigation-android` API 树](https://docs.viewcompose.com/api/viewcompose-navigation-android/current/)。
 
+## Phase 3 验收
+
+对比基线是 148 项 Navigation Android 测试，其 ViewModelStore 由导航自行分配，Activity 与
+Fragment Owner 直接注入。Phase 3 的 Clean Run 通过 151/151 项 Navigation Android 测试和
+21/21 项 Android Aggregate Host Case，无 Skip、Failure 或 Error。新增三项导航契约分别覆盖
+缺少 Owner 时失败、Host 重建时保留 ViewModel Identity，以及 Version 4 状态迁移；Aggregate
+Host 的源码测试方法由 10 增至 11 项，并区分 Activity ViewTree 发现与 Fragment 显式 Owner
+优先级。
+
+结论为 **improved**。导航现已共享通用 Lifecycle 2.11 Provider，可跨配置重建保留 ViewModel，
+在逻辑移除时清理，且不再私有分配 ViewModelStore。这些结果属于 JVM/Robolectric 证据；没有测量
+真机内存、进程终止、帧耗时或 OEM 生命周期顺序，因此这些维度仍为 **inconclusive**。Phase 4
+将继续删除独立 SavedStateHandle Holder；单独的导航 Lifecycle/Scene Plan 仍负责设备、内存、
+Presentation Retention 与 Transition Projection 验收。
+
 ## 兼容性说明
 
 `0.1.0-alpha01` 确立了一个 controller 对一个 host 的连接、主线程串行命令、目的地和图 ownership、
 防御式进程死亡恢复、预测性返回 preview、对齐 Android 的原生 View motion，以及最多三个自适应
 pane。请通过 `rememberNavHostController` 持久化 controller 状态，不要在宿主之外保留 Android
 owner 或 session 对象。
+
+Lifecycle 2.11 硬切要求 `NavHost` 位于 `LocalViewModelStoreOwner` 下。现有 Activity 与 Fragment
+`setUiContent` 集成已满足要求；自定义 `renderInto` Host 必须补充
+`ProvideViewModelStoreOwner`，不会保留隐式 Root Store 或兼容别名。
 
 类型化 Shared-content Marker 是新增 Q3 UI Contract API，但只有发布稳定端点 Tag 的 Renderer 与
 本 Navigation Host 实现组合时才产生动效；旧版或自定义 Renderer 可以把 Marker 视为无效。

@@ -39,9 +39,10 @@ completion:
   - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
   - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
 last_verified: 2026-08-29
-next_action: Implement Phase 3's navigation migration onto the shared scoped-owner provider and host-owned ViewTree discovery with explicit-owner precedence.
+next_action: Implement Phase 4's SavedStateHandle redesign and saveable-state interoperability hard cut.
 maven_release_changesets:
   - release/changes/20260829-lifecycle-toolchain-prerequisite.json
+  - release/changes/20260829-navigation-shared-viewmodel-scopes.json
   - release/changes/20260829-viewmodel-scoped-owners.json
   - release/changes/20260829-viewmodel-store-resolution.json
 ---
@@ -50,17 +51,18 @@ maven_release_changesets:
 
 ## Status
 
-Active. The audit baseline, Phase 0 contract freeze, Phase 1 store-resolution hard cut, and Phase 2
-general retained scoped-owner provider are complete.
+Active. The audit baseline, Phase 0 contract freeze, Phase 1 store-resolution hard cut, Phase 2
+general retained scoped-owner provider, and Phase 3 navigation/host convergence are complete.
 
 Last verified: 2026-08-29.
 
-Next action: implement Phase 3's navigation migration onto the shared scoped-owner provider and
-host-owned ViewTree discovery with explicit-owner precedence.
+Next action: implement Phase 4's SavedStateHandle redesign and saveable-state interoperability hard
+cut.
 
 ## Maven release changesets
 
 - `release/changes/20260829-lifecycle-toolchain-prerequisite.json`
+- `release/changes/20260829-navigation-shared-viewmodel-scopes.json`
 - `release/changes/20260829-viewmodel-scoped-owners.json`
 - `release/changes/20260829-viewmodel-store-resolution.json`
 
@@ -76,6 +78,11 @@ record. The release planner, not this plan, derives reverse-dependency propagati
 The Phase 2 provider API, composition adapters, and compiled sample are classified by
 `release/changes/20260829-viewmodel-scoped-owners.json` as one additive feature for
 `viewcompose-viewmodel-androidx`.
+
+Phase 3 is classified by
+`release/changes/20260829-navigation-shared-viewmodel-scopes.json`: Navigation Android receives a
+breaking owner-boundary and shared-store migration, while the Android aggregate receives
+ViewTree-owner discovery hardening without changing its public signatures.
 
 ## Objective
 
@@ -415,7 +422,7 @@ with a failing contract or characterization test and lands with its complete mat
 | 0 | capability/Q3 contract, hard-cut list, ADR, dependency and test matrix | decision and test names reviewed before production edits | Complete |
 | 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Complete |
 | 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Complete |
-| 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Not started |
+| 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Complete |
 | 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Not started |
 | 5 | coverage closure and defect-pressure matrix | every matrix row maps to executable evidence and mutation/negative guards detect regressions | Not started |
 | 6 | deletion, documentation, release evidence, and archive | no obsolete path remains; full gates pass; durable conclusions move to active docs | Not started |
@@ -461,6 +468,23 @@ with a failing contract or characterization test and lands with its complete mat
 3. Add host-owned ViewTree discovery and explicit-owner precedence at the narrowest aggregate or
    host adapter that owns the Android View.
 4. Preserve and test `renderInto` as an explicit no-owner low-level API.
+
+Phase 3 completed locally on 2026-08-29. Navigation entry and graph owners now lease keyed stores
+from the general `ViewModelScopeProvider`; a saved host-scope identity retains those stores across
+configuration recreation, while pop, graph removal, normal host removal, and parent-store teardown
+provide terminal cleanup. `NavHost` requires `LocalViewModelStoreOwner` and no longer has an
+ownerless fallback. Activity aggregate roots discover their ViewTree owner, explicit Fragment
+ownership wins over the shorter View-lifecycle owner, nested explicit providers retain precedence,
+and `renderInto` remains unchanged.
+
+The clean focused run passed 151/151 Navigation Android tests and 21/21 Android aggregate-host
+cases with zero skips, failures, or errors. The navigation baseline was 148 tests; three added
+contracts cover missing-owner failure, configuration-retained ViewModel identity, and version-4
+state migration. Aggregate source coverage increased from 10 to 11 test methods and adds Activity
+ViewTree/nested-override evidence while strengthening the existing Fragment recreation test.
+Conclusion: **improved** for instance retention, terminal cleanup, and owner selection. This is
+JVM/Robolectric evidence rather than device process-kill, memory, leak, or frame-time evidence, so
+those dimensions remain **inconclusive**. Phase 4 is next.
 
 ### Phase 4: SavedStateHandle redesign
 

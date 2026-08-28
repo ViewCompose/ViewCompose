@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0023-retained-viewmodel-scope-ownership.md
-translation_source_hash: b6e4af343e585b03e6219fb737fa1fdfcdc1fa323a514ee6919ba8b9af1131f3
+translation_source_hash: 34923668518e081f6b4be1ce9617762340d9be33d69f233d2490d978ca1e58d9
 translation_status: current
 ---
 
@@ -156,8 +156,8 @@ Key，并绕过 AndroidX 通过配置保留的父 Store。
 - AndroidX State 外增加一个 Provider 与轻量 Lease 对象。之所以接受 Wrapper 复杂度，是因为它
   保护 Raw Adapter 无法表达的 Prepared Composition Rollback、Terminal Clear、Delayed Reference
   与 No-resurrection 行为。
-- Navigation 必须在 Entry、Graph、Multi-stack、Restoration、Transition 与 Cleanup 等价测试通过
-  后一次性迁移。
+- Navigation 已在 Entry、Graph、Multi-stack、Restoration、Transition 与 Cleanup 等价测试通过后
+  一次性迁移。它仍负责 Identity/Lifecycle 协调，但不再分配独立 ViewModelStore。
 - 使用 Blank Key 或 Standalone SavedStateHandle Helper 的应用会遇到带明确迁移说明的编译期或
   行为 Breaking Change；不提供 Deprecated 兼容窗口。
 
@@ -169,8 +169,12 @@ Key，并绕过 AndroidX 通过配置保留的父 Store。
    临时缺席、Terminal Clear、禁止复活、配置重建、Provider Disposal、Saved State Default、
    Pager/Lazy/Overlay 重排与 Lifecycle 边界诊断；结合 Phase 1 的解析覆盖，所属模块全部 44 项
    测试通过。
-3. Phase 3 在删除 `NavEntryOwnerStore` 前，让现有 Navigation Matrix 全量运行于共享 Provider；Host
-   测试验证显式 Owner 与 ViewTree 优先级。
+3. Phase 3 通过 151/151 项 Navigation Android 测试和 21/21 项 Aggregate Host Case。Navigation
+   现在从共享 Provider 租用 Entry/Graph Store，以保存的 Host Scope Identity 跨配置重建保留，
+   并在永久移除时清理。Activity Host 发现已安装的 ViewTree Owner；显式 Fragment Owner 压过
+   生命周期更短的 View Owner；嵌套显式 Provider 仍拥有最高优先级；`renderInto` 继续不安装
+   Owner。相较 148 项导航基线，Ownership 与 Retention 结论为 **improved**。真机进程终止、内存
+   与性能证据仍为 **inconclusive**。
 4. Phase 4 在删除 Holder API 前，验证 Constructor/Initializer `SavedStateHandle` 恢复以及单 Owner
    的 `rememberSaveable`/`StateFlow` 方案。
 5. 每个 Phase 同步落地 Q3 KDoc、Compiled Sample、Capability Impact Record、Module/Migration 文档、

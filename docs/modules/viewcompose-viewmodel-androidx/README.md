@@ -271,8 +271,12 @@ The holder class is public only so AndroidX factories can construct it. Applicat
 
 ## Navigation ownership
 
+- Navigation entries and graphs lease stores from the same `ViewModelScopeProvider` used by
+  arbitrary retained subtrees; navigation owns identity, lifecycle, and terminal signals rather
+  than a second store allocator.
 - A destination-scoped ViewModel survives recomposition, transition, temporary invisibility, and
-  retained-tab switching, then clears when its entry permanently leaves all stacks.
+  retained-tab switching, and configuration recreation below the same parent store, then clears
+  when its entry permanently leaves all stacks.
 - A graph-scoped ViewModel survives destination changes inside that graph instance and clears after
   its final descendant leaves retained navigation state.
 - Pushing the same route twice creates separate destination owners.
@@ -292,9 +296,15 @@ idempotent close, temporary absence, terminal clear, no resurrection, parent-sto
 Factory/extras/default arguments, inconsistent saved-state boundaries, composition commit and
 abort, configuration recreation, delayed-local capture, Pager/lazy/overlay reorder, and
 `INITIALIZED`/`DESTROYED` lifecycle diagnostics.
-Conclusion: **improved**. Lookup, creation, and general scoped ownership now have direct evidence;
-navigation integration, process restoration, and the standalone handle hard cut remain for Phases
-3 through 5.
+Phase 3 additionally passes 151/151 Navigation Android tests and 21/21 aggregate-host cases. The
+navigation suite grew from 148 tests with three focused contracts for missing-owner failure,
+configuration-retained entry ViewModels, and prior-format state migration. Aggregate-host source
+coverage grew from 10 to 11 test methods and now distinguishes Activity ViewTree discovery from
+Fragment explicit-owner precedence.
+
+Conclusion: **improved**. Lookup, creation, general scoped ownership, navigation integration, and
+host owner selection now have direct evidence. Process-kill device behavior remains
+**inconclusive**, and the standalone handle hard cut remains for Phases 4 and 5.
 
 Use a real `ViewModelStore` in unit tests, render the same call repeatedly, and clear the store
 during teardown. Saved-state-aware Robolectric or instrumented owners remain required for process-

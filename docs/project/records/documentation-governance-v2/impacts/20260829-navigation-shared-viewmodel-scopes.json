@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-shared-viewmodel-scopes-lifecycle211",
+  "change": "changed",
+  "breaking": true,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.UiTreeBuilder.NavHost",
+  "capability_id": "navigation.host",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.navigation.UiTreeBuilder.NavHost"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-navigation-android"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["tutorial.navigation"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.navigation.host"]
+    },
+    "tutorial": {
+      "status": "updated",
+      "targets": ["tutorial.navigation"]
+    },
+    "guide": {
+      "status": "updated",
+      "targets": ["guide.navigation-production-host"]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.navigation-runtime",
+        "architecture.retained-viewmodel-scope-ownership"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": [
+        "migration.compose-navigation",
+        "migration.compose-host-lifecycle-android-interop"
+      ]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The hard cut changes owner requirements and storage policy without moving a symbol or documentation route."
+    }
+  }
+}

@@ -9,6 +9,7 @@ version_lane: released
 capability_ids:
   - navigation.host
   - viewmodel.owner-boundaries
+  - viewmodel.scoped-owners
   - viewmodel.store-resolution
   - viewmodel.saved-state
 artifact_ids:
@@ -19,6 +20,7 @@ sample_ids:
 invariants:
   - Navigation state commits only after required destination sessions and owners are prepared successfully.
   - Each retained destination and graph instance keeps stable lifecycle, saved-state, ViewModel, and render-session ownership.
+  - Navigation entry and graph stores are allocated only by the shared Lifecycle 2.11 scoped-owner provider.
   - Visual transitions and predictive Back never become a second source of navigation state.
   - Restored state is accepted only when it remains compatible with the current graph and stack configuration.
 evidence:
@@ -27,6 +29,7 @@ evidence:
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostSavedStateTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostTransitionCoordinatorTest.kt
+  - viewcompose-android/src/test/java/com/viewcompose/android/FragmentHostLifecycleIntegrationTest.kt
 ---
 
 # Navigation runtime architecture
@@ -64,11 +67,12 @@ stack is still authoritative.
 
 ## 3. Destination and graph identity
 
-Every destination entry owns a stable child render session, Lifecycle, ViewModelStore,
-SavedStateRegistry namespace, and ViewCompose saveable-state namespace. Pushing the same route
-twice creates two entry identities. Hidden retained entries keep their identity and stored state,
-but frame-driven work is capped by lifecycle and rendering resumes before the page becomes visible
-again.
+Every destination entry owns a stable child render session, Lifecycle, SavedStateRegistry
+namespace, ViewCompose saveable-state namespace, and lease on a keyed ViewModelStore. The store is
+allocated by the shared Lifecycle 2.11 `ViewModelScopeProvider`, not by a navigation-specific map.
+Pushing the same route twice creates two entry identities. Hidden retained entries keep their
+identity and stored state, but frame-driven work is capped by lifecycle and rendering resumes
+before the page becomes visible again.
 
 Nested graph instances have independent `NavGraphOwner` identities. Descendants in one graph
 instance share its lifecycle, saved state, and ViewModels until the last retained descendant is
@@ -76,10 +80,18 @@ removed. Entering the same graph route later creates a new owner. The root-to-le
 available only while rendering destination content; it cannot be used to manufacture ownership
 outside the active host.
 
-The nearest parent ViewModelStore owner supplies its default factory and creation extras. A child
-navigation owner replaces only the store owner, saved-state owner, and route or graph arguments.
-Changing the parent owner identity recreates the native host so retained entries never combine two
-provider contracts.
+The nearest parent ViewModelStore owner is mandatory and supplies its default factory and creation
+extras. A child navigation owner replaces only the store owner, saved-state owner, and route or
+graph arguments. The controller's saved host-scope identity namespaces all child stores below that
+parent. Changing the parent owner identity recreates the native host so retained entries never
+combine two provider contracts.
+
+Lifecycle and storage termination are ordered but distinct. Permanent entry or graph removal first
+requests terminal clear, then sends `ON_DESTROY`; the active lease defers physical ViewModel clear
+until owner destruction closes it. Normal host removal clears the complete provider. Host disposal
+after the parent lifecycle reaches `DESTROYED` closes presentation owners without terminally
+removing stores, allowing a configuration-recreated host with the same parent store and saved scope
+identity to lease the existing ViewModels. A finishing parent remains the final clear boundary.
 
 ## 4. Lifecycle projection
 
@@ -102,14 +114,17 @@ reintroduced.
 ## 5. Restoration boundary
 
 Remembered controllers persist committed stacks, route arguments, destination and graph identities,
-selection history, destination and graph SavedStateRegistry bundles, and ViewCompose saveable
-values. They do not serialize Views, render sessions, LifecycleRegistry instances, ViewModelStore
-contents, pending transactions, or running animations.
+selection history, a private host-scope identity, destination and graph SavedStateRegistry bundles,
+and ViewCompose saveable values. They do not serialize Views, render sessions, LifecycleRegistry
+instances, ViewModelStore contents, pending transactions, or running animations. Configuration
+recreation can retain live ViewModels through the parent store; process recreation creates new
+instances from restored owner state.
 
 Restore validates format limits, stack configuration, route existence, leaf resolution, and graph
 hierarchy. Incompatible or malformed state is discarded and the configured initial state is used.
-Failing closed prevents an old SavedState or ViewModel namespace from being attached to a different
-destination after an application update.
+The immediately preceding version-4 format is migrated by assigning a fresh host-scope identity;
+newer unknown formats remain fail-closed. These rules prevent an old SavedState or ViewModel
+namespace from being attached to a different destination after an application update.
 
 ## 6. Back and visual motion
 
@@ -131,7 +146,10 @@ The invariant boundary is covered at three levels:
 - Navigation Core tests exercise two-phase transactions, deterministic retained stacks, graph
   validation, strict deep links, lifecycle plans, and pane-scene validation.
 - Navigation Android tests exercise candidate rollback, retained owner identity, lifecycle order,
-  SavedState compatibility, queued commands, transition redirection, and predictive Back.
+  shared scoped-store recreation and terminal cleanup, SavedState compatibility, queued commands,
+  transition redirection, and predictive Back.
+- Android aggregate-host tests exercise Activity ViewTree owner discovery, nested explicit-owner
+  precedence, and Fragment owner retention across View recreation.
 - The compiled [navigation tutorial](../tutorials/navigation.md) and the
   [production-host guide](../guides/navigation.md) provide the public first-success and manual
   acceptance paths.
@@ -139,3 +157,9 @@ The invariant boundary is covered at three levels:
 Run `./gradlew :viewcompose-navigation-core:test :viewcompose-navigation-android:testDebugUnitTest`
 for the deterministic architecture suite. Device behavior is accepted only when the guide's real
 Back, recreation, predictive-Back, and failure journey also passes.
+
+The clean Phase 3 comparison passed 151/151 Navigation Android tests and 21/21 aggregate-host
+executed cases. This is an **improved** ownership result over the 148-test navigation baseline:
+allocation is shared, missing boundaries fail directly, and recreation/cleanup are executable.
+The result is not device, memory, leak, or performance evidence; those dimensions remain
+**inconclusive** and stay assigned to the active navigation lifecycle-and-scene plan.
