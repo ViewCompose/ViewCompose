@@ -37,8 +37,8 @@ completion:
   - The ViewModelStore is the only ViewModel instance cache, and arbitrary subtree scopes survive recreation and clear exactly at permanent removal.
   - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
   - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
-last_verified: 2026-08-28
-next_action: Complete Phase 0 by recording the new scoped-owner capability identity and Q3 contract, accepting the hard-cut API removal list, and writing the architecture decision before production changes begin.
+last_verified: 2026-08-29
+next_action: Begin Phase 1 by upgrading Lifecycle to 2.11 and landing the store-only resolver, AndroidX-compatible key semantics, initializer overloads, Q3 evidence, and the first immutable release Changeset.
 maven_release_changesets: []
 ---
 
@@ -46,14 +46,13 @@ maven_release_changesets: []
 
 ## Status
 
-Active. The audit baseline is complete and Phase 0 contract freeze is next. No production change
-has started under this plan.
+Active. The audit baseline and Phase 0 contract freeze are complete. No production change has
+started under this plan.
 
-Last verified: 2026-08-28.
+Last verified: 2026-08-29.
 
-Next action: resolve the stable capability identity for arbitrary scoped owners, assign its Q3
-contract fields, accept the hard-cut removal list, and record the cross-module architecture
-decision before changing public or protected API.
+Next action: upgrade Lifecycle to 2.11 and land the store-only resolver, AndroidX-compatible key
+semantics, initializer overloads, Q3 evidence, and the first immutable release Changeset.
 
 ## Maven release changesets
 
@@ -152,6 +151,45 @@ so the implementation uses the following rules:
 9. Every public/protected API slice resolves capability impact, Q level, contract fields,
    canonical-English KDoc/Javadoc, compiled Q3 samples, module documentation, and its immutable
    Changeset before merge.
+
+## Phase 0 contract freeze
+
+Phase 0 accepts
+[ADR-0023](../../architecture/decisions/0023-retained-viewmodel-scope-ownership.md) and freezes the
+following decisions before production work:
+
+- `viewmodel.scoped-owners` is the stable capability ID. Its capability record lands with the first
+  compiled declaration because governance capability records describe the current public inventory
+  and cannot be pre-created.
+- `ViewModelScopeProvider` is the one module-owned provider facade over Lifecycle 2.11
+  `ViewModelStoreProvider`. `ViewModelStoreOwnerLease` is its reference-owning core adapter;
+  `rememberViewModelScopeProvider` and `rememberViewModelStoreOwner` are its composition adapters;
+  existing `ProvideViewModelStoreOwner` remains the local-publication adapter.
+- Provider and child identities are explicit, non-null, caller-owned stable values. There is no
+  position-derived retained-provider overload and no specialized Pager, lazy, overlay, tab, or
+  navigation store API.
+- Closing a lease means temporary reference release. `clear(key)` or `clearAll()` means terminal
+  removal. A removal request waits for active leases, rejects resurrection, and permits a fresh
+  scope with the same key only after old references finish.
+- Candidate commit/abort is transactional: an aborted new scope is cleared, an already committed
+  scope is preserved, restored state is not consumed by a failed candidate, and no token leaks.
+- The initializer additions are reified and `KClass` `CreationExtras.() -> VM` overloads. The
+  removals are `savedStateHandle()` and `SavedStateHandleHolderViewModel`, with no aliases.
+- The state-interoperability disposition is final: `rememberSaveable` owns UI-only state;
+  constructor/initializer-created `SavedStateHandle` plus `getMutableStateFlow()` owns ViewModel
+  business state. No snapshot-state adapter or second writable source is introduced.
+
+All changed or added public declarations are Q3. The applicable contract fields are `behavior`,
+`inputs`, `outputs`, `state`, `lifecycle`, `concurrency`, `failure`, `android`, `performance`, and
+`compatibility`; lease cleanup and initializer callbacks additionally document callback timing and
+ordering. Phase implementation impact records must use those fields, canonical-English KDoc,
+compiled samples, generated Reference, module owners, and breaking migration dispositions.
+
+The frozen named test owners are `ViewModelCompositionTest` for lookup and creation,
+`ViewModelScopeProviderTest` for provider/lease state, `ViewModelScopeCompositionTest` for commit,
+abort, locals, and delayed sessions, `ViewModelSavedStateRestorationTest` for process-style state,
+and the existing navigation and host integration suites for cross-module convergence. Test methods
+must state the contract in their names; counts alone cannot close a row.
 
 ## Target architecture
 
@@ -286,7 +324,7 @@ with a failing contract or characterization test and lands with its complete mat
 
 | Phase | Deliverable | Completion gate | Status |
 | --- | --- | --- | --- |
-| 0 | capability/Q3 contract, hard-cut list, ADR, dependency and test matrix | decision and test names reviewed before production edits | Not started |
+| 0 | capability/Q3 contract, hard-cut list, ADR, dependency and test matrix | decision and test names reviewed before production edits | Complete |
 | 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Not started |
 | 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Not started |
 | 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Not started |

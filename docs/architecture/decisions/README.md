@@ -13,7 +13,7 @@ invariants:
   - Accepted decisions preserve their original rationale and are superseded by a new numbered ADR rather than rewritten to hide historical trade-offs.
   - A decision that changes current behavior updates its active Architecture and Module owners in the same change.
 evidence:
-  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0022-in-memory-development-tooling-installation.md
+  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0023-retained-viewmodel-scope-ownership.md
   - ./gradlew verifyDocumentationStructure
 ---
 
@@ -47,6 +47,7 @@ architecture pages describe how the system works now.
 - [ADR-0020: Separate animation value and velocity domains](./0020-separate-animation-value-and-velocity-domains.md)
 - [ADR-0021: Correlated render diagnostics ownership](./0021-correlated-render-diagnostics-ownership.md)
 - [ADR-0022: In-memory development-tooling installation](./0022-in-memory-development-tooling-installation.md)
+- [ADR-0023: Retained ViewModel scope ownership](./0023-retained-viewmodel-scope-ownership.md)
 
 ## Rules
 
