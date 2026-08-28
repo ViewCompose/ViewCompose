@@ -2,7 +2,7 @@
 title: 使用 AndroidView
 sidebar_position: 10
 translation_source: tutorials/android-view.md
-translation_source_hash: 2a8a9a1bc0c6e1d65df7a4579c1af6b1dcde812c3f7831f84b80012b1a627696
+translation_source_hash: 082bb7216d32298ff010a06d114b70ad4c19c42eb6afce643092287a7a056dc9
 translation_status: current
 ---
 
@@ -32,6 +32,7 @@ dependencies {
 package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.viewcompose.host.android.AndroidView
@@ -58,9 +59,12 @@ class AndroidViewTutorialActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize().padding(24.dp),
             ) {
                 AndroidView(
-                    factory = { context -> TextView(context) },
+                    factory = { context ->
+                        TextView(context).apply { id = View.generateViewId() }
+                    },
                     update = { view ->
-                        (view as TextView).text = "Native TextView count: ${count.value}"
+                        (view as TextView).text =
+                            "Native TextView #${view.id} count: ${count.value}"
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -72,9 +76,9 @@ class AndroidViewTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-只有 reconciliation 需要新节点时，`factory` 才创建原生 View。`update` 把最新状态应用到保留的
-View，而且必须允许 rollback 或 rebind 时再次执行；不要在其中执行一次性的外部副作用。这种
-Callback 形式是简洁的底层逃生路径。
+只有 reconciliation 需要新节点时，`factory` 才创建原生 View，因此生成的 View ID 为已挂载
+实例提供了可见身份。`update` 把最新状态应用到这个保留的 View，而且必须允许 rollback 或
+rebind 时再次执行；不要在其中执行一次性的外部副作用。这种 Callback 形式是简洁的底层逃生路径。
 
 ## 提取可复用的类型安全 Adapter
 
@@ -120,7 +124,8 @@ Mounted Tree 复用的集成。
 
 ## 验证结果
 
-点击 `Increment`，确认已经挂载的原生 `TextView` 会更新。编译命令：
+记下 `Native TextView #` 后面的数字，点击 `Increment`，确认计数发生变化而 View ID 保持
+不变。这样可以区分更新已挂载实例与替换实例。编译命令：
 
 ```bash
 ./gradlew :samples:tutorials:assembleDebug

@@ -15,8 +15,8 @@ sample_ids:
   - tutorial.android-view-dependencies
   - tutorial.android-view
   - module.host-android-view-adapter
-expected_result: A retained native TextView whose displayed count updates through ViewCompose state.
-verification_action: Run the sample, press Increment, and verify the same native TextView displays the updated count.
+expected_result: A native TextView whose displayed count changes while its factory-assigned View ID remains stable.
+verification_action: Run the sample, record the displayed View ID, press Increment, and verify that the count changes without changing the ID.
 ---
 
 # Use AndroidView
@@ -46,6 +46,7 @@ Create `AndroidViewTutorialActivity.kt`:
 package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.viewcompose.host.android.AndroidView
@@ -72,9 +73,12 @@ class AndroidViewTutorialActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize().padding(24.dp),
             ) {
                 AndroidView(
-                    factory = { context -> TextView(context) },
+                    factory = { context ->
+                        TextView(context).apply { id = View.generateViewId() }
+                    },
                     update = { view ->
-                        (view as TextView).text = "Native TextView count: ${count.value}"
+                        (view as TextView).text =
+                            "Native TextView #${view.id} count: ${count.value}"
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -86,10 +90,10 @@ class AndroidViewTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-`factory` creates the native View only when reconciliation needs a new node. `update` applies the
-latest observable state to a retained View and must be safe to run again during rollback or
-rebind. Keep external one-shot work out of `update`. This callback form is the concise low-level
-escape hatch.
+`factory` creates the native View only when reconciliation needs a new node, so the generated View
+ID gives the mounted instance a visible identity. `update` applies the latest observable state to
+that retained View and must be safe to run again during rollback or rebind. Keep external one-shot
+work out of `update`. This callback form is the concise low-level escape hatch.
 
 ## Extract a reusable typed adapter
 
@@ -136,7 +140,9 @@ into cross-key mounted-tree reuse with `AndroidViewReusePolicy.Resettable`.
 
 ## Verify the result
 
-Press `Increment` and confirm that the mounted native `TextView` changes. Compile with:
+Record the number after `Native TextView #`, press `Increment`, and confirm that the count changes
+while that View ID remains the same. This distinguishes an update of the mounted instance from a
+replacement. Compile with:
 
 ```bash
 ./gradlew :samples:tutorials:assembleDebug

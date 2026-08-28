@@ -2,6 +2,7 @@
 package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.viewcompose.host.android.AndroidView
@@ -28,9 +29,12 @@ class AndroidViewTutorialActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize().padding(24.dp),
             ) {
                 AndroidView(
-                    factory = { context -> TextView(context) },
+                    factory = { context ->
+                        TextView(context).apply { id = View.generateViewId() }
+                    },
                     update = { view ->
-                        (view as TextView).text = "Native TextView count: ${count.value}"
+                        (view as TextView).text =
+                            "Native TextView #${view.id} count: ${count.value}"
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
