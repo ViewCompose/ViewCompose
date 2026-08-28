@@ -123,8 +123,8 @@ Plugin 9.1.1, and Kotlin 2.2.10. Published runtime libraries still target Java 1
 repository temporarily retains the explicit Kotlin Android plugin and legacy Android DSL through
 `android.builtInKotlin=false` and `android.newDsl=false`; remove both only in one coordinated
 convention-plugin/publication migration because AGP 10 removes that opt-out. Preview compiles
-against SDK 37, while Robolectric-only Preview tests are deliberately pinned to its supported SDK
-35 runtime; that test pin does not lower the production compile SDK.
+against SDK 37. One repository-owned test resource deliberately pins every Android Robolectric
+suite to its supported SDK 35 runtime; that test pin does not lower any production compile SDK.
 
 Pull-request workflows first run the standalone `planPullRequestImpact` entry point from
 `tools/viewcompose-quality-build`; this configures only that included build, not the Android

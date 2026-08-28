@@ -18,6 +18,10 @@
   ],
   "shared": [
     {
+      "path": "build.gradle.kts",
+      "reason": "Install one repository-owned SDK-35 Robolectric test resource across Android test source sets; it changes test execution only and is excluded from every published artifact."
+    },
+    {
       "path": "gradle/libs.versions.toml",
       "reason": "Upgrade the shared compiler, Android plugin, and Paparazzi versions for the Lifecycle 2.11 prerequisite; direct published-artifact effects are classified above and other artifacts retain their API and bytecode contracts."
     },
