@@ -38,7 +38,7 @@ no optional diagnostics artifact is required:
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -160,7 +160,7 @@ consent model, upload endpoint, or telemetry vendor.
 
 ## Inspect the same app from Android Studio
 
-Add `debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")`, run the debuggable
+Add `debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha05")`, run the debuggable
 app, and choose **Inspect Device Diagnostics** in Android Studio. Select the Host Session once. Its
 summary keeps the latest committed frame separate from a later rolled-back attempt and shows only a
 safe failure phase, recovery, exception type, and optional Android View operation.

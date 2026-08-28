@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-android/README.md
-translation_source_hash: c1f966baaa3b15f3436fb9ed4c36e98bbd550813ac16d01456815cbf4c9489b8
+translation_source_hash: 1c28b087f38d859ef9bd2ec4f8c24b4221431288a3736753cdb5458514522470
 translation_status: current
 ---
 
@@ -20,7 +20,7 @@ Fragment 的 `setUiContent` 入口。
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="android-module-dependency" sample_id="module.android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha02")
 }
 ```
 

@@ -2,6 +2,8 @@ import {spawn} from 'node:child_process';
 import {mkdir, writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {performance} from 'node:perf_hooks';
+import {compactDokkaHtmlTree} from './compact-dokka-html.mjs';
+import {freezeVersionedModuleManuals} from './freeze-versioned-module-manuals.mjs';
 import {websiteRoot} from './site-quality-lib.mjs';
 import {pruneLocalizedApiCopies} from './prune-localized-api-copies.mjs';
 import {pruneLocalizedStaticCopies} from './prune-localized-static-copies.mjs';
@@ -36,6 +38,8 @@ if (exitCode !== 0) {
     const buildDurationSeconds = (performance.now() - startedAt) / 1000;
     await pruneLocalizedApiCopies();
     await pruneLocalizedStaticCopies();
+    const staticModuleManuals = await freezeVersionedModuleManuals();
+    const compactedDokka = await compactDokkaHtmlTree();
     const versionedDocumentation = await verifyVersionedDocumentation();
     const siteShell = await verifySiteShell();
     const accessibility = await verifyAccessibility();
@@ -43,7 +47,14 @@ if (exitCode !== 0) {
     await mkdir(qualityReportDirectory, {recursive: true});
     await writeFile(
       qualityReportPath,
-      `${JSON.stringify({versionedDocumentation, siteShell, accessibility, budgets}, null, 2)}\n`,
+      `${JSON.stringify({
+        versionedDocumentation,
+        staticModuleManuals,
+        compactedDokka,
+        siteShell,
+        accessibility,
+        budgets,
+      }, null, 2)}\n`,
       'utf8',
     );
   } catch (error) {

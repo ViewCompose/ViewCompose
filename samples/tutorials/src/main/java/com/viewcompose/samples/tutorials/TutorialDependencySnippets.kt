@@ -35,8 +35,8 @@ private val animationTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha05")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -46,7 +46,7 @@ dependencies {
 private val animationModuleDependency = run {
     // DOCS_REGION_START(animation-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha05")
 }
     // DOCS_REGION_END(animation-module-dependency)
 }
@@ -54,7 +54,7 @@ dependencies {
 private val animationCoreModuleDependency = run {
     // DOCS_REGION_START(animation-core-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha05")
 }
     // DOCS_REGION_END(animation-core-module-dependency)
 }
@@ -62,7 +62,7 @@ dependencies {
 private val gestureCoreModuleDependency = run {
     // DOCS_REGION_START(gesture-core-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha05")
 }
     // DOCS_REGION_END(gesture-core-module-dependency)
 }
@@ -70,7 +70,7 @@ dependencies {
 private val gestureModuleDependency = run {
     // DOCS_REGION_START(gesture-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha05")
 }
     // DOCS_REGION_END(gesture-module-dependency)
 }
@@ -86,7 +86,7 @@ dependencies {
 private val graphicsModuleDependency = run {
     // DOCS_REGION_START(graphics-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha05")
 }
     // DOCS_REGION_END(graphics-module-dependency)
 }
@@ -94,7 +94,7 @@ dependencies {
 private val hostAndroidModuleDependency = run {
     // DOCS_REGION_START(host-android-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha05")
 }
     // DOCS_REGION_END(host-android-module-dependency)
 }
@@ -102,7 +102,7 @@ dependencies {
 private val androidModuleDependency = run {
     // DOCS_REGION_START(android-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha02")
 }
     // DOCS_REGION_END(android-module-dependency)
 }
@@ -110,7 +110,7 @@ dependencies {
 private val runtimeModuleDependency = run {
     // DOCS_REGION_START(runtime-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha04")
 }
     // DOCS_REGION_END(runtime-module-dependency)
 }
@@ -118,7 +118,7 @@ dependencies {
 private val textCoreModuleDependency = run {
     // DOCS_REGION_START(text-core-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha04")
 }
     // DOCS_REGION_END(text-core-module-dependency)
 }
@@ -126,7 +126,7 @@ dependencies {
 private val uiContractModuleDependency = run {
     // DOCS_REGION_START(ui-contract-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha05")
 }
     // DOCS_REGION_END(ui-contract-module-dependency)
 }
@@ -134,7 +134,7 @@ dependencies {
 private val lifecycleAndroidxModuleDependency = run {
     // DOCS_REGION_START(lifecycle-androidx-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha02")
 }
     // DOCS_REGION_END(lifecycle-androidx-module-dependency)
 }
@@ -142,7 +142,7 @@ dependencies {
 private val viewModelAndroidxModuleDependency = run {
     // DOCS_REGION_START(viewmodel-androidx-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha02")
 }
     // DOCS_REGION_END(viewmodel-androidx-module-dependency)
 }
@@ -150,7 +150,7 @@ dependencies {
 private val uiFoundationModuleDependency = run {
     // DOCS_REGION_START(ui-foundation-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02")
 }
     // DOCS_REGION_END(ui-foundation-module-dependency)
 }
@@ -158,7 +158,7 @@ dependencies {
 private val material3ModuleDependency = run {
     // DOCS_REGION_START(material3-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha02")
 }
     // DOCS_REGION_END(material3-module-dependency)
 }
@@ -166,7 +166,7 @@ dependencies {
 private val material3AndroidModuleDependency = run {
     // DOCS_REGION_START(material3-android-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 }
     // DOCS_REGION_END(material3-android-module-dependency)
 }
@@ -174,7 +174,7 @@ dependencies {
 private val oneUi7ModuleDependency = run {
     // DOCS_REGION_START(oneui7-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha02")
 }
     // DOCS_REGION_END(oneui7-module-dependency)
 }
@@ -192,7 +192,7 @@ private val gettingStartedDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 }
     // DOCS_REGION_END(getting-started-dependencies)
 }
@@ -202,7 +202,7 @@ private val stateAndEventsDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -212,7 +212,7 @@ dependencies {
 private val rendererAndroidModuleDependency = run {
     // DOCS_REGION_START(renderer-android-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02")
 }
     // DOCS_REGION_END(renderer-android-module-dependency)
 }
@@ -222,7 +222,7 @@ private val androidViewTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -234,8 +234,8 @@ private val navigationTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -253,7 +253,7 @@ dependencies {
 private val navigationAndroidModuleDependency = run {
     // DOCS_REGION_START(navigation-android-module-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02")
 }
     // DOCS_REGION_END(navigation-android-module-dependency)
 }
@@ -263,7 +263,7 @@ private val themingTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -275,7 +275,7 @@ private val textInputTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -287,7 +287,7 @@ private val lazyCollectionsTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -299,7 +299,7 @@ private val layoutsAndModifiersTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -311,8 +311,8 @@ private val gesturesTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha05")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -322,7 +322,7 @@ dependencies {
 private val shadowModuleDependency = run {
     // DOCS_REGION_START(shadow-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha05")
 }
     // DOCS_REGION_END(shadow-dependency)
 }
@@ -332,8 +332,8 @@ private val overlaysTutorialDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -343,7 +343,7 @@ dependencies {
 private val neutralOverlayModuleDependency = run {
     // DOCS_REGION_START(overlay-android-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha05")
 }
     // DOCS_REGION_END(overlay-android-dependency)
 }
@@ -351,7 +351,7 @@ dependencies {
 private val materialOverlayModuleDependency = run {
     // DOCS_REGION_START(overlay-material3-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha02")
 }
     // DOCS_REGION_END(overlay-material3-dependency)
 }
@@ -359,8 +359,8 @@ dependencies {
 private val oneUiOverlayModuleDependency = run {
     // DOCS_REGION_START(overlay-oneui7-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha02")
 }
     // DOCS_REGION_END(overlay-oneui7-dependency)
 }
@@ -368,7 +368,7 @@ dependencies {
 private val imageCoilModuleDependency = run {
     // DOCS_REGION_START(image-coil-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha05")
 }
     // DOCS_REGION_END(image-coil-dependency)
 }
@@ -376,7 +376,7 @@ dependencies {
 private val imageGlideModuleDependency = run {
     // DOCS_REGION_START(image-glide-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha03")
 }
     // DOCS_REGION_END(image-glide-dependency)
 }
@@ -384,7 +384,7 @@ dependencies {
 private val constraintLayoutModuleDependency = run {
     // DOCS_REGION_START(constraintlayout-dependency)
 dependencies {
-    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha02")
 }
     // DOCS_REGION_END(constraintlayout-dependency)
 }
@@ -429,7 +429,7 @@ private val renderDiagnosticsDependencies = run {
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -458,7 +458,7 @@ dependencies {
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05",
     )
 }
     // DOCS_REGION_END(preview-native-install)

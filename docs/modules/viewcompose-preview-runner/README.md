@@ -12,7 +12,7 @@ artifact_ids:
   - viewcompose-preview-runner
 sample_ids:
   - module.preview-runner-render
-coordinate: com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05
 minimal_usage_sample_id: module.preview-runner-render
 ---
 

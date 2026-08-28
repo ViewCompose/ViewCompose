@@ -2,7 +2,7 @@
 title: 使用布局与 Modifier
 sidebar_position: 4
 translation_source: tutorials/layouts-and-modifiers.md
-translation_source_hash: d2d701c3e6edd7bed4c917fe3f8cfee42c9711cbd1eb4b3251ddb0112a16c904
+translation_source_hash: a6ebcf99587263c8cfb3c1e88436cf5a35b5d42f51f32a577070b6f105996515
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

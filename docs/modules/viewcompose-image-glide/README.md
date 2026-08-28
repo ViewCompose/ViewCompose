@@ -12,7 +12,7 @@ artifact_ids:
   - viewcompose-image-glide
 sample_ids:
   - module.image-glide-dependency
-coordinate: com.viewcompose:viewcompose-image-glide:0.1.0-alpha02
+coordinate: com.viewcompose:viewcompose-image-glide:0.1.0-alpha03
 minimal_usage_sample_id: module.image-glide-dependency
 ---
 
@@ -27,7 +27,7 @@ the renderer or widget modules depend on Glide.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="image-glide-dependency" sample_id="module.image-glide-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha03")
 }
 ```
 

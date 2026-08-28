@@ -12,7 +12,7 @@ artifact_ids:
   - viewcompose-overlay-material3-android
 sample_ids:
   - module.overlay-material3-dependency
-coordinate: com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha02
 minimal_usage_sample_id: module.overlay-material3-dependency
 ---
 
@@ -29,7 +29,7 @@ containers, or service-provider selection.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-material3-dependency" sample_id="module.overlay-material3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha02")
 }
 ```
 

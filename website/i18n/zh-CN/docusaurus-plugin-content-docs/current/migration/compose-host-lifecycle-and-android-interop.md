@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: 1dd1fcff28083a217d9a4cf626a66b842113bcc3f1a00cfcae096191563cec27
+translation_source_hash: 6c12f4933df6ebd92284b768eeffaf90724c3c301052dff3909eaef1fd6bdd78
 translation_status: current
 ---
 
@@ -12,8 +12,8 @@ translation_status: current
 - **来源状态：** Jetpack Compose UI 与 Runtime 1.12.0、Activity 1.13.0、Lifecycle 2.11.0
   和 SavedState 1.5.0。
 - **目标状态：** `viewcompose-android`、`viewcompose-lifecycle-androidx`、
-  `viewcompose-viewmodel-androidx` 与 `viewcompose-renderer-android` 0.1.0-alpha01，以及底层
-  `viewcompose-host-android` 0.1.0-alpha04 引擎。
+  `viewcompose-viewmodel-androidx` 与 `viewcompose-renderer-android` 0.1.0-alpha02，以及底层
+  `viewcompose-host-android` 0.1.0-alpha05 引擎。
 - **最后核验：** 2026-08-27。
 - **重新核验负责人：** `viewcompose-android`、`viewcompose-host-android`、
   `viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` 和
@@ -174,7 +174,7 @@ owner 迁移是语义迁移，不是类型名替换：
 
 Lifecycle 2.11 为任意 Compose UI 区域增加了通用 scoped ViewModel。`ViewModelStoreProvider`
 可以让子 store 跨配置变更保留、在对应 UI 作用域永久离开时清理，并继承父级 factory 和
-`CreationExtras`。ViewCompose 0.1.0-alpha04 对导航 entry 和 graph owner 的永久删除提供了
+`CreationExtras`。ViewCompose 0.1.0-alpha05 对导航 entry 和 graph owner 的永久删除提供了
 可比行为，但没有为任意 UI 子树公开等价的通用 provider。若没有额外实现与测试，也不得把其
 导航 owner factory 行为描述为完整传播父级 factory 或 `CreationExtras`。
 
@@ -212,7 +212,7 @@ Constructor、Renderer/Session 内部对象或可变 Transaction。
 
 ## 不支持的直接互操作 {/* #unsupported-direct-interop */}
 
-ViewCompose 0.1.0-alpha04 没有 Compose `AndroidViewBinding` 或 `AndroidFragment` 的直接
+ViewCompose 0.1.0-alpha05 没有 Compose `AndroidViewBinding` 或 `AndroidFragment` 的直接
 对应能力。factory 可以 inflate XML 布局，但 ViewBinding 生命周期管理和 Fragment 所有权
 仍由应用负责。不要把 Fragment 直接放入 ViewCompose 渲染树，也不要因为能托管其根 View 就
 推断已支持 Fragment。

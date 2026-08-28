@@ -21,7 +21,7 @@ sample_ids:
   - module.host-android-resources
   - module.host-android-animation
   - module.host-android-graphics
-coordinate: com.viewcompose:viewcompose-host-android:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-host-android:0.1.0-alpha05
 minimal_usage_sample_id: module.host-android-dependency
 ---
 
@@ -43,7 +43,7 @@ APIs without the standard Activity/Fragment integration.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="host-android-module-dependency" sample_id="module.host-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha05")
 }
 ```
 

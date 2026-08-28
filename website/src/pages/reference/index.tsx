@@ -4,6 +4,7 @@ import {translate} from '@docusaurus/Translate';
 import Heading from '@theme/Heading';
 import Layout from '@theme/Layout';
 import catalogData from '@site/src/data/capability-reference.json';
+import StaticDocumentLink from '@site/src/components/StaticDocumentLink';
 import styles from './styles.module.css';
 
 type RelatedDocument = {
@@ -177,12 +178,12 @@ function EntryCard({entry}: {entry: ReferenceEntry}): ReactNode {
         </div>
       </dl>
       <div className={styles.links}>
-        <Link to={artifact.apiReference} data-noBrokenLinkCheck>
+        <StaticDocumentLink to={artifact.apiReference}>
           {translate({id: 'reference.entry.api', message: 'API / KDoc'})}
-        </Link>
-        <Link to={artifact.moduleManual}>
+        </StaticDocumentLink>
+        <StaticDocumentLink to={artifact.moduleManual}>
           {translate({id: 'reference.entry.manual', message: 'Module manual'})}
-        </Link>
+        </StaticDocumentLink>
         {(capability?.relatedDocumentIds ?? []).map((documentId) => {
           const document = catalog.documents[documentId];
           return document?.path ? (

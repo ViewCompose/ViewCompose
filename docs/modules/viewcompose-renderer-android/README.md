@@ -20,7 +20,7 @@ sample_ids:
   - module.renderer-reconciliation
   - module.renderer-timing
   - module.renderer-decoration-backend
-coordinate: com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02
 minimal_usage_sample_id: module.renderer-dependency
 ---
 
@@ -45,7 +45,7 @@ modules.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="renderer-android-module-dependency" sample_id="module.renderer-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02")
 }
 ```
 

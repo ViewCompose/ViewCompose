@@ -21,7 +21,7 @@ sample_ids:
   - module.animation-content
   - module.animation-content-size
   - module.animation-bounds
-coordinate: com.viewcompose:viewcompose-animation:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-animation:0.1.0-alpha05
 minimal_usage_sample_id: module.animation-dependency
 ---
 
@@ -37,7 +37,7 @@ channels, visibility/content transitions, measured-size animation, and real layo
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-module-dependency" sample_id="module.animation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha05")
 }
 ```
 

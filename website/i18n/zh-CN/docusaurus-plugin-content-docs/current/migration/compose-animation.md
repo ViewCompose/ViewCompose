@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: aee87a32a7965c18fae36f6cda7b1a4d3e8d581519e0227c6164e28fb453afc0
+translation_source_hash: 78a27a9d7ac89e584ecfd7895cc1460922c82cef63e84dc249530d0b8758139f
 translation_status: current
 ---
 
@@ -20,8 +20,8 @@ Navigation、Preview 与 Studio 工具的维护者**
 
 | 产物 | 版本 | 当前职责 |
 | --- | --- | --- |
-| `viewcompose-animation-core` | `0.1.0-alpha04` | 平台中立的时长/物理采样、类型化速度、Mutation、运动策略与显式 Transition 协调 |
-| `viewcompose-animation` | `0.1.0-alpha04` | 组合所有的物理/状态动画、泛型与 Seekable Transition、可见性、Crossfade 与内容尺寸动画 |
+| `viewcompose-animation-core` | `0.1.0-alpha05` | 平台中立的时长/物理采样、类型化速度、Mutation、运动策略与显式 Transition 协调 |
+| `viewcompose-animation` | `0.1.0-alpha05` | 组合所有的物理/状态动画、泛型与 Seekable Transition、可见性、Crossfade 与内容尺寸动画 |
 
 上游稳定语义基线是 2026-08-12 发布的 Compose Animation `1.12.0`。验证依据为官方
 [Compose Animation 发布说明](https://developer.android.com/jetpack/androidx/releases/compose-animation)、

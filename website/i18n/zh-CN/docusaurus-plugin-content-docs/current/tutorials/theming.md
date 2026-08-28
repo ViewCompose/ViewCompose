@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/theming.md
-translation_source_hash: 3dad3cf688c1894df48f09091c26c6e47ad01c1b38ee3b7202d9f35e1050f702
+translation_source_hash: 116f7d36363d173c4e39f39ec469849db0229a772f22abf4ef62759bc2a929c5
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

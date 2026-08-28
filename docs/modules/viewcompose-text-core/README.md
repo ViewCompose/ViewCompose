@@ -16,7 +16,7 @@ sample_ids:
   - module.text-core-state
   - module.text-core-transformation
   - module.text-core-save
-coordinate: com.viewcompose:viewcompose-text-core:0.1.0-alpha03
+coordinate: com.viewcompose:viewcompose-text-core:0.1.0-alpha04
 minimal_usage_sample_id: module.text-core-state
 ---
 
@@ -35,7 +35,7 @@ and rich-text span adapters live in renderer and host modules and translate to t
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="text-core-module-dependency" sample_id="module.text-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha04")
 }
 ```
 

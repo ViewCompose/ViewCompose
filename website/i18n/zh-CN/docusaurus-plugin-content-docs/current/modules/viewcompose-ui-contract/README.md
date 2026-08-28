@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 670d7bd2eba02d7fb4458ca5c59c1ff6f9b7529a8406992d904805fc19b97078
+translation_source_hash: d4870c0b38ef499d3e4e650c6a194b51e640b3553eef8b69706317f272d00b7f
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-ui-contract
@@ -20,7 +20,7 @@ sample_ids:
   - module.ui-contract-font-family
   - module.ui-contract-lazy-session-reuse
   - module.ui-contract-node
-coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha05
 minimal_usage_sample_id: module.ui-contract-node
 ---
 
@@ -41,7 +41,7 @@ Pager 状态。
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-contract-module-dependency" sample_id="module.ui-contract-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha05")
 }
 ```
 

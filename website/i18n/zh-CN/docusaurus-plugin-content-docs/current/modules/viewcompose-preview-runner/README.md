@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-runner/README.md
-translation_source_hash: 10cae3958683a135b6198ea01653e0c69955be4a338f52a146b8b9556d85d7e3
+translation_source_hash: c04280d24375571827a1c5b242a65c42f41a2dcd95ce507a13baa8b2cd1a0127
 translation_status: current
 ---
 

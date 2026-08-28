@@ -4,6 +4,7 @@ import {translate} from '@docusaurus/Translate';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import modules from '@site/src/generated/moduleCatalog.json';
+import StaticDocumentLink from '@site/src/components/StaticDocumentLink';
 import styles from './styles.module.css';
 
 type ModuleEntry = {
@@ -98,9 +99,10 @@ function ApiReference(): ReactNode {
                               data-noBrokenLinkCheck>
                               {translate({id: 'api.module.openApi', message: 'API'})}
                             </Link>
-                            <Link to={`/modules/${module.artifact}/${release.version}/`}>
+                            <StaticDocumentLink
+                              to={`/modules/${module.artifact}/${release.version}/`}>
                               {translate({id: 'api.module.openManual', message: 'Manual'})}
-                            </Link>
+                            </StaticDocumentLink>
                           </span>
                         </div>
                       ))}

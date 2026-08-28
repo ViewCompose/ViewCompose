@@ -151,6 +151,8 @@ custom_edit_url: null
 > [source revision \`${entry.sourceRevision.slice(0, 8)}\`](${revisionUrl}). For current guidance,
 > open the [current module catalog](/modules/).
 
+<span data-viewcompose-static-release-manual="source"></span>
+
 ${body.trim()}\n`;
 }
 

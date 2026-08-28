@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: a75ad3978fae3391fb5bfa895260f12e416272828489315cf0bae2692f27240d
+translation_source_hash: 04107524af586d006b0fb25962b662a1b35e12ef39f8768b6bb4ef58c68321af
 translation_status: current
 schema_version: 2
 document_id: tooling.diagnostics
@@ -25,9 +25,9 @@ sample_ids:
   - tooling.diagnostics-session-inspection
   - tooling.diagnostics-node-timing
 supported_versions:
-  - UI Foundation、Android Renderer 与 Diagnostics 0.1.0-alpha01
-  - Preview Android 集成 0.1.0-alpha04
-  - ViewCompose Preview Android Studio 插件 1.1.0，适配 261.* 构建家族
+  - UI Foundation 与 Android Renderer 0.1.0-alpha02，Diagnostics 0.1.0-alpha01
+  - Preview Android 集成 0.1.0-alpha05
+  - ViewCompose Preview Android Studio 插件 1.2.0，适配 261.* 构建家族
 verification_commands:
   - ./gradlew :viewcompose-ui-foundation:testDebugUnitTest :viewcompose-diagnostics:testDebugUnitTest
   - ./gradlew :samples:tutorials:assembleDebug

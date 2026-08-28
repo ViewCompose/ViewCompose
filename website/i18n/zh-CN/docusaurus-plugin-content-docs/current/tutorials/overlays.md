@@ -2,7 +2,7 @@
 title: 使用 Overlay
 sidebar_position: 9
 translation_source: tutorials/overlays.md
-translation_source_hash: 194ef8c844733e01222d19af430e1c2beff5dec4700f1eca4a3ccb04212f7f0c
+translation_source_hash: d7ab975cf43ea9c0ca0c472078fbe34429aad1659da1cd92436c0032e8f0d922
 translation_status: current
 ---
 
@@ -17,8 +17,8 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

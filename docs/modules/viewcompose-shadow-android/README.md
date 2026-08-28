@@ -14,7 +14,7 @@ artifact_ids:
 sample_ids:
   - module.shadow-dependency
   - module.shadow-backend-selection
-coordinate: com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-shadow-android:0.1.0-alpha05
 minimal_usage_sample_id: module.shadow-dependency
 ---
 
@@ -29,7 +29,7 @@ multi-layer effects, and connects them to the renderer's parent drawing planes.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="shadow-dependency" sample_id="module.shadow-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha05")
 }
 ```
 

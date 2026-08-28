@@ -16,7 +16,7 @@ sample_ids:
   - module.gesture-combined-click
   - module.gesture-anchored-drag
   - module.gesture-toggle-drag
-coordinate: com.viewcompose:viewcompose-gesture:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-gesture:0.1.0-alpha05
 minimal_usage_sample_id: module.gesture-dependency
 ---
 
@@ -32,7 +32,7 @@ the Android renderer owns the native pointer stream and recognition engine.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gesture-module-dependency" sample_id="module.gesture-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha05")
 }
 ```
 

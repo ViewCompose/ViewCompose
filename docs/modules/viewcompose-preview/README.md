@@ -13,7 +13,7 @@ artifact_ids:
 sample_ids:
   - module.preview-theme-provider
   - module.preview-compose-bridge
-coordinate: com.viewcompose:viewcompose-preview:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-preview:0.1.0-alpha05
 minimal_usage_sample_id: module.preview-theme-provider
 ---
 
@@ -21,7 +21,7 @@ minimal_usage_sample_id: module.preview-theme-provider
 
 `viewcompose-preview` is the optional Android API used by application-owned preview themes, Compose
 Preview bridging, Paparazzi catalog tests, and request-driven running-device inspection. Keep
-`com.viewcompose:viewcompose-preview:0.1.0-alpha04` in `debugImplementation`, tests, or a dedicated
+`com.viewcompose:viewcompose-preview:0.1.0-alpha05` in `debugImplementation`, tests, or a dedicated
 tooling source set. Runtime support starts at API 24.
 
 ## Application theme provider

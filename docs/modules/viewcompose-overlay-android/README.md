@@ -12,7 +12,7 @@ artifact_ids:
   - viewcompose-overlay-android
 sample_ids:
   - module.overlay-android-dependency
-coordinate: com.viewcompose:viewcompose-overlay-android:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-overlay-android:0.1.0-alpha05
 minimal_usage_sample_id: module.overlay-android-dependency
 ---
 
@@ -32,7 +32,7 @@ The artifact does not depend on Material Components, AppCompat, `viewcompose-mat
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-android-dependency" sample_id="module.overlay-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha05")
 }
 ```
 

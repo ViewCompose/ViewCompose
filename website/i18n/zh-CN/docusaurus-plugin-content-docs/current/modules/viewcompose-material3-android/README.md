@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3-android/README.md
-translation_source_hash: 0eaab15b0a9b9d007ba6ce63432623ca3aaf6aaf4a24b0d4d6e52292c917f0d9
+translation_source_hash: 930362b73b74e84f609fc5a85d471e3453bcc5f57eb612700f2660196b96f7e3
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-android-module-dependency" sample_id="module.material3-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 }
 ```
 

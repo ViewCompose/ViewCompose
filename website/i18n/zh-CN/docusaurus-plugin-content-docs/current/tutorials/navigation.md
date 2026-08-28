@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/navigation.md
-translation_source_hash: b59593695fc6b94ebe51fa7fe7a50c0c1fb84685e15a5eb09d231030418cb372
+translation_source_hash: acc2370aca5bbb6717a0d444f7caf358f23c8d82210e19ea89fbaf0b0f59bc7d
 translation_status: current
 ---
 
@@ -15,8 +15,8 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

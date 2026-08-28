@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-glide/README.md
-translation_source_hash: 9398c865144dc308870ddb92a6cc6c8573dc3dbb1a1a6bdda743e2495eda3d89
+translation_source_hash: b51b6fcb5cc315ac797490fe5898f997a8b6513beddda87aa7d7c0053350214f
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="image-glide-dependency" sample_id="module.image-glide-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha03")
 }
 ```
 

@@ -29,7 +29,7 @@ android {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 
     debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
     add(
@@ -38,7 +38,7 @@ dependencies {
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05",
     )
 
     implementation("androidx.activity:activity:1.12.4")

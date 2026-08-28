@@ -21,7 +21,7 @@ sample_ids:
   - module.lifecycle-effects
   - module.lifecycle-android-view
   - module.lifecycle-android-view-saved-state
-coordinate: com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha02
 minimal_usage_sample_id: module.lifecycle-dependency
 ---
 
@@ -37,7 +37,7 @@ observable lifecycle state, and the typed boundary used by SDK View integrations
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lifecycle-androidx-module-dependency" sample_id="module.lifecycle-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha02")
 }
 ```
 

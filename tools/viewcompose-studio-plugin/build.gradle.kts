@@ -195,12 +195,14 @@ intellijPlatform {
             code.</p>
         """.trimIndent()
         changeNotes = """
-            <p>Device-to-source navigation for running ViewCompose screens.</p>
+            <p>Unified, request-driven diagnostics for running ViewCompose screens.</p>
             <ul>
-              <li>Locate the ViewCompose DSL currently visible on a connected debuggable device.</li>
-              <li>Choose explicitly between multiple devices or equally visible page sessions.</li>
-              <li>Prefer authored content over shared scaffold callers and request snapshots only
-              when the action is invoked.</li>
+              <li>Inspect the correlated Session tree, latest frame, safe failures, and authored
+              source from one panel.</li>
+              <li>Highlight mounted nodes and capture finite, source-aware top-cost timings,
+              including the next lazy item.</li>
+              <li>Inspect a bounded read-only animation timeline without adding inactive runtime
+              polling or recurring hot-path work.</li>
             </ul>
         """.trimIndent()
         ideaVersion {

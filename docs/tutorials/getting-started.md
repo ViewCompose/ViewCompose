@@ -45,7 +45,7 @@ Make sure the application resolves Maven Central, then add the named Material An
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 }
 ```
 
@@ -71,7 +71,7 @@ dependencies {
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05",
     )
 }
 ```
@@ -79,7 +79,7 @@ dependencies {
 These preview entries configure the native render pipeline but do not install its Android Studio
 interface. Before opening the preview, go to **Settings | Plugins | Marketplace**, search for
 `ViewCompose Preview`, and install it. Restart Android Studio if prompted. The IDE plugin is a
-separate installation from `id("com.viewcompose.preview")`; the current Marketplace line is `1.1.0`
+separate installation from `id("com.viewcompose.preview")`; the current Marketplace line is `1.2.0`
 for Android Studio build family `261.*`.
 
 ## What you will build
@@ -105,19 +105,19 @@ released to Maven Central:
 
 | Artifact | Version | How it is supplied |
 | --- | --- | --- |
-| `viewcompose-material3-android` | `0.1.0-alpha01` | Explicit application dependency |
-| `viewcompose-android` | `0.1.0-alpha01` | Transitive neutral application aggregate |
-| `viewcompose-host-android` | `0.1.0-alpha03` | Transitive low-level engine dependency |
-| `viewcompose-runtime` | `0.1.0-alpha02` | Transitive foundation dependency |
-| `viewcompose-ui-contract` | `0.1.0-alpha03` | Transitive foundation dependency |
-| `viewcompose-ui-foundation` | `0.1.0-alpha01` | Transitive UI Foundation dependency |
-| `viewcompose-material3` | `0.1.0-alpha01` | Transitive design-system dependency |
-| `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | Transitive AndroidX integration |
-| `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | Transitive AndroidX integration |
+| `viewcompose-material3-android` | `0.1.0-alpha02` | Explicit application dependency |
+| `viewcompose-android` | `0.1.0-alpha02` | Transitive neutral application aggregate |
+| `viewcompose-host-android` | `0.1.0-alpha05` | Transitive low-level engine dependency |
+| `viewcompose-runtime` | `0.1.0-alpha04` | Transitive foundation dependency |
+| `viewcompose-ui-contract` | `0.1.0-alpha05` | Transitive foundation dependency |
+| `viewcompose-ui-foundation` | `0.1.0-alpha02` | Transitive UI Foundation dependency |
+| `viewcompose-material3` | `0.1.0-alpha02` | Transitive design-system dependency |
+| `viewcompose-lifecycle-androidx` | `0.1.0-alpha02` | Transitive AndroidX integration |
+| `viewcompose-viewmodel-androidx` | `0.1.0-alpha02` | Transitive AndroidX integration |
 | `viewcompose-preview-gradle-plugin` | `0.1.0-alpha03` | Optional explicit plugin |
 | `viewcompose-preview-core` | `0.1.0-alpha03` | Optional debug dependency |
 | `viewcompose-preview-worker-host` | `0.1.0-alpha03` | Optional preview configuration |
-| `viewcompose-preview-runner` | `0.1.0-alpha04` | Optional preview configuration |
+| `viewcompose-preview-runner` | `0.1.0-alpha05` | Optional preview configuration |
 
 ViewCompose artifacts evolve independently. Check the
 [published module catalog](../modules/README.md) before mixing versions outside this verified set.

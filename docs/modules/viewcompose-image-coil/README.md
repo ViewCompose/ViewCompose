@@ -12,7 +12,7 @@ artifact_ids:
   - viewcompose-image-coil
 sample_ids:
   - module.image-coil-dependency
-coordinate: com.viewcompose:viewcompose-image-coil:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-image-coil:0.1.0-alpha05
 minimal_usage_sample_id: module.image-coil-dependency
 ---
 
@@ -27,7 +27,7 @@ the renderer or widget modules depend on a networking or image-loading implement
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="image-coil-dependency" sample_id="module.image-coil-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha05")
 }
 ```
 

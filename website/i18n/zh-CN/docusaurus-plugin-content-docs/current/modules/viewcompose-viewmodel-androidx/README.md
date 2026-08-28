@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: 6531992379b27a4a979b8127f7555b67363b31b36eb196f2ced06a97fb14686d
+translation_source_hash: 7b07281b909e87e88fc79b1c75b8ad302f54919dcf4adbb940b5ead1051a4eb9
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="viewmodel-androidx-module-dependency" sample_id="module.viewmodel-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha02")
 }
 ```
 

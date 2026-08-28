@@ -14,7 +14,7 @@ sample_ids:
   - module.graphics-dependency
   - module.graphics-canvas
   - module.graphics-cache
-coordinate: com.viewcompose:viewcompose-graphics:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-graphics:0.1.0-alpha05
 minimal_usage_sample_id: module.graphics-dependency
 ---
 
@@ -29,7 +29,7 @@ aliases for the platform-neutral graphics contracts. Android execution is suppli
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="graphics-module-dependency" sample_id="module.graphics-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha05")
 }
 ```
 

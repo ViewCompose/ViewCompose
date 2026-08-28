@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: ea4b4e1717d4c56adf8e71a65fff79e05a76f8ce571de1b3241dfb7e1ff00df4
+translation_source_hash: 24a6dc9c77d525dec1509b601ce461ed55b9513eabf47e683dd7b2f35b681d9c
 translation_status: current
 ---
 
@@ -8,7 +8,7 @@ translation_status: current
 
 `viewcompose-preview` 是 Application Theme、Compose Preview Bridge、Paparazzi Catalog Test 与按请求
 运行的真机检查工具所使用的可选 Android API。把
-`com.viewcompose:viewcompose-preview:0.1.0-alpha04` 放在 `debugImplementation`、Test 或专用
+`com.viewcompose:viewcompose-preview:0.1.0-alpha05` 放在 `debugImplementation`、Test 或专用
 Tooling Source Set。Runtime 从 API 24 开始支持。
 
 ## 应用主题提供方

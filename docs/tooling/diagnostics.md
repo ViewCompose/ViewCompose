@@ -22,9 +22,9 @@ sample_ids:
   - tooling.diagnostics-session-inspection
   - tooling.diagnostics-node-timing
 supported_versions:
-  - UI Foundation, Android Renderer, and Diagnostics 0.1.0-alpha01
-  - Preview Android integration 0.1.0-alpha04
-  - ViewCompose Preview Android Studio plugin 1.1.0 on build family 261.*
+  - UI Foundation and Android Renderer 0.1.0-alpha02, and Diagnostics 0.1.0-alpha01
+  - Preview Android integration 0.1.0-alpha05
+  - ViewCompose Preview Android Studio plugin 1.2.0 on build family 261.*
 verification_commands:
   - ./gradlew :viewcompose-ui-foundation:testDebugUnitTest :viewcompose-diagnostics:testDebugUnitTest
   - ./gradlew :samples:tutorials:assembleDebug

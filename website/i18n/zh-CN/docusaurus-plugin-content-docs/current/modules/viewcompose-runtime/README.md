@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 6d0403ca59b8afadca3384bc49e732cd3eccb946f5026f7d6be4edc781f80a4d
+translation_source_hash: 735987155f91893b9a40f6f5bb33528fa95ae69c3dac2a88bbfc207fdf3e71f1
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-runtime
@@ -19,7 +19,7 @@ sample_ids:
   - module.runtime-reusable-content
   - module.runtime-state
   - module.runtime-snapshot
-coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha03
+coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha04
 minimal_usage_sample_id: module.runtime-state
 ---
 
@@ -37,7 +37,7 @@ minimal_usage_sample_id: module.runtime-state
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="runtime-module-dependency" sample_id="module.runtime-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha04")
 }
 ```
 
