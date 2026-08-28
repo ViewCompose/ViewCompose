@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: ce736b28e1b97e06a63cd3d084a3a6286cf96bdc1918d9583fd2097f692d2ef2
+translation_source_hash: 6003ca432267352c66adc2ddd672ecedfcd4cb82579280a1bf014d7d86214954
 translation_status: current
 ---
 
@@ -107,7 +107,7 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 | 现有 View 层级 | `ComposeView` 提供 Composition 释放策略并发现 ViewTree owner。 | `renderInto` 渲染到指定的 `ViewGroup`；它不提供生命周期、ViewModel、保存状态、环境、主题或帧时钟 owner，并要求显式释放会话。 | Partially supported | [`RenderInto.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt)以及 [`AndroidEntrySamples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt)中已编译的 `renderIntoSample`。 |
 | 生命周期 owner 传播 | Compose 宿主集成从 Activity、Fragment View 或 ViewTree 解析 AndroidX owner。 | Activity 内容接收 Activity Owner，Fragment 内容接收当前 View Owner；自定义 `renderInto` 容器不会自动获得 Owner。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、`FragmentHostLifecycleIntegrationTest.kt` 和 [`LifecycleHostGuards.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/LifecycleHostGuards.kt)。剩余差异是底层自定义宿主的显式所有权。 |
 | ViewModel owner 传播 | Lifecycle 2.11 用 `ViewModelStoreProvider` 创建任意保留型子 UI Scope，继承父 Factory 与 `CreationExtras`，并用 Reference Token 保护退出动画等临时使用方。Compose 拥有的 Root 会发现 ViewTree owner。 | Activity Root 发现其 `ViewTreeViewModelStoreOwner`；Fragment 宿主显式保留 Fragment owner，而不是生命周期更短的 View owner；嵌套显式 Provider 优先。`ViewModelScopeProvider` 基于同一 AndroidX 原语，为任意子树、导航 Entry 和导航 Graph 提供具有稳定身份、终态清理和禁止复活语义的 Store。与 Compose 的位置便利形式不同，ViewCompose 始终要求调用方提供 Provider Key。 | Intentionally different | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、[`ViewModelScopeProvider.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/ViewModelScopeProvider.kt)、`FragmentHostLifecycleIntegrationTest.kt`，以及 `NavEntryOwnerStoreTest.kt` 中的导航配置重建覆盖。 |
-| 保存状态 | Compose 宿主集成组合使用 `SavedStateRegistryOwner`、`SavedStateHandle` 与 saveable-state 设施。 | ViewCompose 宿主安装 ViewCompose `SaveableStateRegistry`；适用的 Activity、Fragment 和导航 owner 也参与 AndroidX 保存状态。这些是相关但不可互换的 owner 层。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、[`NavEntryOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的保存状态覆盖。 |
+| 保存状态 | Compose 宿主集成组合使用 `SavedStateRegistryOwner`、`SavedStateHandle` 与 saveable-state 设施。 | ViewCompose 宿主安装 ViewCompose `SaveableStateRegistry`；Activity、Fragment、Destination 与 Graph Owner 也支持 AndroidX 保存状态。UI 专属值使用 `rememberSaveable`，恢复型业务值只有一个 ViewModel 持有的 `SavedStateHandle` Flow。 | Intentionally different | `SavedStateViewModelIntegrationTest.kt` 与 `NavHostPublicApiTest.kt` 中的保存状态覆盖。 |
 | 帧调度与显式渲染 | Compose 重组由 Recomposer 和帧时钟协调。 | 显式 `render` 是同步的。状态失效会合并到 Android 帧；处于 inactive 状态的会话会保留失效请求，直到再次激活。 | Intentionally different | [`AndroidFrameAlignedRenderSessionRuntime.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntime.kt)和 [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt)。 |
 | Effect 所有权与终结性释放 | Effect 随其 Composition 作用域退出；释放 `Composition` 是终结操作。 | 一个 `RenderSession` 拥有 Composition 协程 Scope、渲染状态、Overlay、原生 View 和清理逻辑。Dispose 幂等；之后的公共 Render/Activation 工作快速失败，已排队的内部回调安全 no-op。 | Supported | [`RenderSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt)、[`RenderSessionFailureTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt)与 `AndroidFrameAlignedRenderSessionRuntimeTest.kt`。 |
 | Android View factory 与 update | `AndroidView` 为一个实例创建一次 View，并在适用的重组中运行 `update`。 | 类型安全的 `AndroidViewAdapter<V, S>` 与 Callback 逃生路径会为一个构造身份创建 View，并在事务式原生树 Patch 内应用完整、可安全重放的状态。Adapter 类或 `constructionKey` 变化时先创建尚未挂载的候选节点；失败会保留已提交 View。 | Supported | [`AndroidViewAdapter.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidViewAdapter.kt)、[`ViewTreePatchPipeline.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt)和 [`AndroidInteropRenderingUiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/app/src/androidTest/java/com/viewcompose/AndroidInteropRenderingUiTest.kt)。 |
@@ -199,9 +199,15 @@ ViewModel Lookup 现在与 AndroidX Key 和 Creation 语义一致。只有 `null
 单 Class Factory。Owner 的 `ViewModelStore` 是唯一实例缓存，清理后会在下一次实际执行的
 Composition 调用中被观察到。
 
+独立 `savedStateHandle()` 函数与 `SavedStateHandleHolderViewModel` 已无别名删除。把旧 Helper
+Key 迁移为真实业务 ViewModel Key，通过 Owner 默认 Factory 注入 Handle，或在 Initializer 内创建
+它，并把每个恢复型业务值移入该 ViewModel。不要保留兼容 Holder，不要用 `rememberSaveable` 与
+`SavedStateHandle` 双写同一个值，也不要只为复制 Compose API 外形而增加 Snapshot Adapter。
+
 ViewCompose `SaveableStateRegistry`、AndroidX `SavedStateRegistryOwner` 和
 `SavedStateHandle` 服务于不同层次。迁移时应明确每个值由哪一层拥有，并把进程重建与内存中
-配置变更分别验证。
+配置变更分别验证。`rememberSaveable` 继续持有 UI 专属状态；
+`SavedStateHandle.getMutableStateFlow()` 继续作为业务状态路径。
 
 ## 会话、帧、Effect 与释放语义 {/* #session-frame-effect-and-disposal-semantics */}
 

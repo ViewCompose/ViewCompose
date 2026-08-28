@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.saved-state-holder-viewmodel-deletion",
+  "change": "deleted",
+  "breaking": true,
+  "artifact": "viewcompose-viewmodel-androidx",
+  "symbol_id": "com.viewcompose.viewmodel.SavedStateHandleHolderViewModel",
+  "capability_id": "viewmodel.saved-state",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.viewmodel.viewModel"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-viewmodel-androidx"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.viewmodel-saved-state"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.viewmodel.saved-state"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "No active application tutorial exposes the removed holder implementation type."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The focused module manual and migration page own this breaking state-ownership migration."
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.navigation-runtime",
+        "architecture.retained-viewmodel-scope-ownership"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-host-lifecycle-android-interop"]
+    },
+    "redirect": {
+      "status": "updated",
+      "targets": ["com.viewcompose.viewmodel.viewModel"]
+    }
+  }
+}

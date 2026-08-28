@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0023-retained-viewmodel-scope-ownership.md
-translation_source_hash: 34923668518e081f6b4be1ce9617762340d9be33d69f233d2490d978ca1e58d9
+translation_source_hash: 2c7246979c55c3baf82f2a6a734531aecfc71ab87a08e6b92b7e9700898cf595
 translation_status: current
 ---
 
@@ -11,8 +11,8 @@ translation_status: current
 
 ## 背景
 
-ViewCompose 当前能够解析 Activity、Fragment、导航条目与导航图作用域的 ViewModel，但还没有
-面向 Pager 页面、Tab、Lazy Item、Overlay 或应用容器的通用子作用域能力。导航通过专用
+本决策落地前，ViewCompose 能够解析 Activity、Fragment、导航条目与导航图作用域的 ViewModel，
+但没有面向 Pager 页面、Tab、Lazy Item、Overlay 或应用容器的通用子作用域能力。导航通过专用
 `NavEntryOwnerStore` 补偿这一缺口；与此同时，`viewModel()` 还会在 Composition 中 Remember
 已解析实例，尽管 `ViewModelStore` 已经拥有这份身份。独立 `savedStateHandle()` Helper 又引入
 第二套 Holder 模型，没有复用 ViewModel 构造与 `CreationExtras`。
@@ -94,7 +94,7 @@ Map。Metadata 只弱引用活跃的 Lifecycle 与 Saved State Owner，并在最
 2. 保留现有 Reified 与 `KClass` Factory/Extras Overload；新增两种 Initializer Overload：Reified
    形式与 `KClass` 形式，`CreationExtras.() -> VM` Initializer 接收已解析 Owner 的默认 Extras。
    所有 Overload 委托给同一个只查询 Store 的内部 Resolver。
-3. 无别名删除 `savedStateHandle()` 与 `SavedStateHandleHolderViewModel`。业务状态在 ViewModel
+3. 已无别名删除 `savedStateHandle()` 与 `SavedStateHandleHolderViewModel`。业务状态在 ViewModel
    Constructor 或 Initializer 内通过 `CreationExtras.createSavedStateHandle()` 获取 Handle。
 4. 不增加 `SavedStateHandle` 到 ViewCompose Snapshot State 的 Adapter。UI 专属状态使用
    `rememberSaveable`；ViewModel 业务状态使用 `SavedStateHandle.getMutableStateFlow()`，并通过
@@ -175,7 +175,9 @@ Key，并绕过 AndroidX 通过配置保留的父 Store。
    生命周期更短的 View Owner；嵌套显式 Provider 仍拥有最高优先级；`renderInto` 继续不安装
    Owner。相较 148 项导航基线，Ownership 与 Retention 结论为 **improved**。真机进程终止、内存
    与性能证据仍为 **inconclusive**。
-4. Phase 4 在删除 Holder API 前，验证 Constructor/Initializer `SavedStateHandle` 恢复以及单 Owner
-   的 `rememberSaveable`/`StateFlow` 方案。
+4. Phase 4 的 Constructor/默认 Factory 与 Initializer 两项进程式恢复契约均通过，所属模块
+   45/45 项测试全部通过。Holder API 与保留 Key 已不存在；`rememberSaveable` 只持有 UI 状态，
+   每份可变 `SavedStateHandle` Flow 只由一个业务 ViewModel 持有。结论为 **improved**。JVM 恢复
+   不能替代真机进程终止旅程，后者在 Phase 5 前仍为 **inconclusive**。
 5. 每个 Phase 同步落地 Q3 KDoc、Compiled Sample、Capability Impact Record、Module/Migration 文档、
    Immutable Release Intent，以及带解释的 Focused Test Evidence。

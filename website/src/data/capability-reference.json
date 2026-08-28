@@ -4513,14 +4513,6 @@
         },
         {
           "artifact": "viewcompose-viewmodel-androidx",
-          "capabilityId": "viewmodel.saved-state",
-          "kind": "integration",
-          "namespace": "com.viewcompose.viewmodel",
-          "overloadCount": 1,
-          "symbol": "com.viewcompose.viewmodel.SavedStateHandleHolderViewModel"
-        },
-        {
-          "artifact": "viewcompose-viewmodel-androidx",
           "capabilityId": "viewmodel.owner-boundaries",
           "kind": "integration",
           "namespace": "com.viewcompose.viewmodel",
@@ -4562,14 +4554,6 @@
         },
         {
           "artifact": "viewcompose-viewmodel-androidx",
-          "capabilityId": "viewmodel.saved-state",
-          "kind": "integration",
-          "namespace": "com.viewcompose.viewmodel",
-          "overloadCount": 1,
-          "symbol": "com.viewcompose.viewmodel.savedStateHandle"
-        },
-        {
-          "artifact": "viewcompose-viewmodel-androidx",
           "capabilityId": "viewmodel.store-resolution",
           "kind": "integration",
           "namespace": "com.viewcompose.viewmodel",
@@ -4577,7 +4561,7 @@
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
-      "entryCount": 170,
+      "entryCount": 168,
       "groupId": "integrations"
     },
     {
@@ -6335,13 +6319,13 @@
       "component": 72,
       "dsl": 33,
       "host": 53,
-      "integration": 170,
+      "integration": 168,
       "modifier": 77,
       "tooling": 130
     },
-    "entryCount": 535,
+    "entryCount": 533,
     "groupCount": 15,
-    "ownedEntryCount": 535,
-    "sourceFingerprint": "a4599496b84e22d435b78f97db0681efc912bf10d4df59b70e21bf7ef95b31dd"
+    "ownedEntryCount": 533,
+    "sourceFingerprint": "fc101529fa0a047f346c465d8ffbceee326d6d15b8366a03fc751fc2c6992b56"
   }
 }

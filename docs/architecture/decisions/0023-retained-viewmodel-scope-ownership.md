@@ -36,12 +36,12 @@ evidence:
 
 ## Context
 
-ViewCompose currently resolves Activity-, Fragment-, navigation-entry-, and navigation-graph-scoped
-ViewModels, but it has no general child-scope facility for Pager pages, tabs, lazy items, overlays,
-or application containers. Navigation compensates with a specialized `NavEntryOwnerStore`, while
-`viewModel()` also remembers the resolved instance in composition even though `ViewModelStore`
-already owns that identity. The standalone `savedStateHandle()` helper adds a second holder model
-instead of using ViewModel construction and `CreationExtras`.
+Before this decision, ViewCompose resolved Activity-, Fragment-, navigation-entry-, and navigation-
+graph-scoped ViewModels but had no general child-scope facility for Pager pages, tabs, lazy items,
+overlays, or application containers. Navigation compensated with a specialized
+`NavEntryOwnerStore`, while `viewModel()` also remembered the resolved instance in composition even
+though `ViewModelStore` already owned that identity. The standalone `savedStateHandle()` helper
+added a second holder model instead of using ViewModel construction and `CreationExtras`.
 
 AndroidX Lifecycle 2.11 adds
 [`ViewModelStoreProvider`](https://developer.android.com/reference/kotlin/androidx/lifecycle/viewmodel/ViewModelStoreProvider),
@@ -134,8 +134,8 @@ reference counter for child stores.
 2. The existing reified and `KClass` factory/extras overloads remain. Two initializer overloads are
    added: a reified form and a `KClass` form whose `CreationExtras.() -> VM` initializer receives the
    resolved owner's default extras. All overloads delegate to one store-only internal resolver.
-3. `savedStateHandle()` and `SavedStateHandleHolderViewModel` are removed without aliases. Business
-   state obtains a handle in a ViewModel constructor or initializer through
+3. `savedStateHandle()` and `SavedStateHandleHolderViewModel` have been removed without aliases.
+   Business state obtains a handle in a ViewModel constructor or initializer through
    `CreationExtras.createSavedStateHandle()`.
 4. No ViewCompose snapshot-state adapter for `SavedStateHandle` is added. UI-only state uses
    `rememberSaveable`; ViewModel business state uses `SavedStateHandle.getMutableStateFlow()` and is
@@ -225,7 +225,10 @@ constructor/factory model and reserves an application-visible store key.
    owner-free. Conclusion: **improved** for ownership and retention relative to the 148-test
    navigation baseline. Device process-kill, memory, and performance evidence remains
    **inconclusive**.
-4. Phase 4 proves constructor/initializer `SavedStateHandle` restoration and the single-owner
-   `rememberSaveable`/`StateFlow` disposition before deleting the holder APIs.
+4. Phase 4 passed both constructor/default-Factory and initializer process-style restoration
+   contracts and all 45/45 owning-module tests. The holder APIs and reserved key are absent;
+   `rememberSaveable` owns UI-only state, while one business ViewModel owns each mutable
+   `SavedStateHandle` flow. Conclusion: **improved**. JVM restoration does not replace a device
+   process-kill journey, which remains **inconclusive** for Phase 5.
 5. Each phase lands Q3 KDoc, compiled samples, capability-impact records, module and migration
    documentation, immutable release intent, and focused tests with interpreted evidence.
