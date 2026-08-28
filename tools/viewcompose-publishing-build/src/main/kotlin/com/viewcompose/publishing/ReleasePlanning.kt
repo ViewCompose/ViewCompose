@@ -417,14 +417,25 @@ internal class ViewComposeReleasePlanner(
                 changeSet.changes.filter { change -> change.artifact == artifact }
                     .map { change -> change to changeSet.file.name }
             }
+            val ignoredClassifications = changeSets.flatMap { changeSet ->
+                changeSet.ignored.filter { ignored -> ignored.artifact == artifact }
+                    .map { ignored -> ignored to changeSet.file.name }
+            }
             val ownedPaths = ReleaseOwnership.classify(
                 changedPaths,
                 artifacts,
             ).artifactPaths[artifact].orEmpty()
-            check(ownedPaths.isEmpty() || declarations.isNotEmpty()) {
+            check(
+                ownedPaths.isEmpty() ||
+                    declarations.isNotEmpty() ||
+                    ignoredClassifications.isNotEmpty(),
+            ) {
                 buildString {
                     val boundary = baseline.publishedTag?.name ?: "repository inception"
-                    appendLine("Artifact '$artifact' changed after $boundary without a changeset:")
+                    appendLine(
+                        "Artifact '$artifact' changed after $boundary without a release-intent " +
+                            "classification:",
+                    )
                     ownedPaths.forEach { appendLine("- $it") }
                 }
             }

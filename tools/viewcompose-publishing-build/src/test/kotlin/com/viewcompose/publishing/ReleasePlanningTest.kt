@@ -8,6 +8,54 @@ import org.junit.Test
 
 class ReleasePlanningTest {
     @Test
+    fun `ignored ownership does not schedule a published artifact release`() {
+        val artifact = "viewcompose-runtime"
+        val planner = singleArtifactPlanner(
+            artifact = artifact,
+            published = true,
+            changeSetJson =
+                """
+                {
+                  "schemaVersion": 1,
+                  "summary": "Classify a compiled documentation fixture without publishing runtime.",
+                  "ignored": [{
+                    "artifact":"$artifact",
+                    "reason":"Only a test-only compiled documentation fixture changed."
+                  }]
+                }
+                """.trimIndent(),
+        )
+
+        assertTrue(planner.plan().releases.isEmpty())
+    }
+
+    @Test
+    fun `ignored ownership cannot replace a first release declaration`() {
+        val artifact = "viewcompose-new"
+        val planner = singleArtifactPlanner(
+            artifact = artifact,
+            published = false,
+            changeSetJson =
+                """
+                {
+                  "schemaVersion": 1,
+                  "summary": "Attempt to ignore every publication path before the first release.",
+                  "ignored": [{
+                    "artifact":"$artifact",
+                    "reason":"The detected source is claimed to be release-neutral."
+                  }]
+                }
+                """.trimIndent(),
+        )
+
+        val error = assertThrows(IllegalStateException::class.java) {
+            planner.plan()
+        }
+
+        assertTrue(error.message.orEmpty().contains("no release changeset"))
+    }
+
+    @Test
     fun `first release planning accepts retired artifacts in historical changesets`() {
         val directory = Files.createTempDirectory("retired-release-history").toFile()
         val rootRevision = "1111111111111111111111111111111111111111"
@@ -339,5 +387,70 @@ class ReleasePlanningTest {
         assertTrue(publishing.readText().contains("version=0.1.0-alpha01"))
         assertTrue(publishing.readText().contains("sourceRevision=$frozenSourceRevision"))
         assertEquals(originalHistory, history.readText())
+    }
+
+    private fun singleArtifactPlanner(
+        artifact: String,
+        published: Boolean,
+        changeSetJson: String,
+    ): ViewComposeReleasePlanner {
+        val directory = Files.createTempDirectory("release-planning-classification").toFile()
+        val rootRevision = "1111111111111111111111111111111111111111"
+        val sourceRevision = "2222222222222222222222222222222222222222"
+        val releaseRevision = "3333333333333333333333333333333333333333"
+        val headRevision = "4444444444444444444444444444444444444444"
+        val version = MavenVersion.parse("0.1.0-alpha01")
+        val tag = "maven/$artifact/$version"
+        val changeSetPath = "release/changes/classify-owned-artifact.json"
+        val ownedPath = "$artifact/src/test/samples/CompiledSample.kt"
+        directory.resolve(changeSetPath).apply {
+            parentFile.mkdirs()
+            writeText(changeSetJson)
+        }
+        val comparisonRevision = if (published) releaseRevision else rootRevision
+        val git = GitRepository(
+            root = directory,
+            executor = CommandExecutor { arguments ->
+                when (arguments) {
+                    listOf("status", "--porcelain", "--untracked-files=all") ->
+                        CommandResult(0, "")
+                    listOf("rev-parse", "--verify", "HEAD^{commit}") ->
+                        CommandResult(0, headRevision)
+                    listOf("rev-parse", "--verify", "$sourceRevision^{commit}") ->
+                        CommandResult(0, sourceRevision)
+                    listOf("rev-list", "--max-parents=0", "HEAD") ->
+                        CommandResult(0, rootRevision)
+                    listOf("tag", "--list", "maven/$artifact/*") ->
+                        CommandResult(0, if (published) tag else "")
+                    listOf("cat-file", "-p", "refs/tags/$tag") ->
+                        CommandResult(
+                            0,
+                            "sourceRevision=$sourceRevision\n-----BEGIN PGP SIGNATURE-----",
+                        )
+                    listOf("tag", "-v", tag) ->
+                        CommandResult(0, "Good signature")
+                    listOf("rev-parse", "--verify", "$tag^{commit}") ->
+                        CommandResult(0, releaseRevision)
+                    listOf(
+                        "diff",
+                        "--name-only",
+                        "-z",
+                        "$comparisonRevision..$headRevision",
+                        "--",
+                    ) -> CommandResult(0, "$ownedPath\u0000$changeSetPath\u0000")
+                    else -> error("Unexpected Git command: ${arguments.joinToString(" ")}")
+                }
+            },
+        )
+        return ViewComposeReleasePlanner(
+            root = directory,
+            git = git,
+            artifacts = setOf(artifact),
+            declaredVersions = mapOf(artifact to version),
+            declaredSourceRevisions = mapOf(artifact to sourceRevision),
+            unpublishedArtifacts = if (published) emptySet() else setOf(artifact),
+            retiredArtifacts = emptySet(),
+            dependencies = mapOf(artifact to emptySet()),
+        )
     }
 }

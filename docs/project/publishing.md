@@ -170,8 +170,11 @@ until a new `release/changes/<unique>.json` file classifies it. The machine-read
 
 Direct impact is exactly one of `breaking`, `feature`, or `fix`. Contributors never write
 `dependency`: the planner derives it when an independently published dependent must be republished
-against a changed dependency. `ignored` is a reviewed exception for an automatically detected
-artifact and requires a concrete reason. A `shared` entry may classify an ambiguous root build
+against a changed dependency. `ignored` is a reviewed no-release classification for an
+automatically detected artifact and requires a concrete reason. Either `changes` or `ignored`
+satisfies artifact-ownership completeness during pull-request verification and release planning,
+but only `changes` supplies direct impact, enters dependency propagation, or satisfies the direct
+declaration required for a first release. A `shared` entry may classify an ambiguous root build
 input such as `build.gradle.kts` as release-neutral; otherwise the Changeset must declare the
 artifacts affected by that shared input.
 
@@ -218,8 +221,10 @@ repository-history rule above. The planner then:
 
 1. loads Changesets and publication-relevant direct paths introduced between the release-tag target
    and `HEAD`;
-2. verifies that every direct change has a matching unconsumed declaration;
-3. takes the highest direct impact recorded for the artifact;
+2. verifies that every direct path has a matching unconsumed `changes` or `ignored`
+   classification;
+3. excludes `ignored` classifications from the release graph and takes the highest direct impact
+   recorded by `changes` for the artifact;
 4. derives the current project dependency graph from Gradle `api`, `implementation`,
    `compileOnly`, and `runtimeOnly` project dependencies;
 5. propagates a `dependency` release transitively to every published reverse dependent; and

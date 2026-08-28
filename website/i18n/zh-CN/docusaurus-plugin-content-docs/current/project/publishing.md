@@ -19,7 +19,7 @@ validation:
   - cd tools/viewcompose-studio-plugin && ./gradlew prepareMarketplaceRelease
 lifecycle: 产物身份、发布规划、依赖暴露、签名、远端发布、来源或 Marketplace 操作发生变化时同步更新。
 translation_source: project/publishing.md
-translation_source_hash: a3d3130f1e735935896c8279b5d9392c64b0be6098cf4c4025625b64eb49c035
+translation_source_hash: 3165956e3896405d4fb058cdce49c856da75b388705741b42930687c7c319543
 translation_status: current
 ---
 
@@ -152,9 +152,11 @@ ViewCompose 为每个 PR 保存一份不可变 Changeset，而不维护一份共
 ```
 
 直接影响只能是 `breaking`、`feature` 或 `fix`。贡献者不得填写 `dependency`；当独立发布的下游
-需要指向依赖的新版本时，由规划器自动推导。`ignored` 是对自动识别制品的审阅例外，必须说明具体
-理由。对于 `build.gradle.kts` 等语义不明确的根构建输入，可以用 `shared` 记录其不影响发布的理由；
-若确有影响，则 Changeset 必须声明受影响制品。
+需要指向依赖的新版本时，由规划器自动推导。`ignored` 是对自动识别制品审阅后作出的“不发布”分类，
+必须说明具体理由。在 PR 校验和发布规划中，`changes` 与 `ignored` 都能满足制品归属完整性；但只有
+`changes` 能提供直接影响等级、进入依赖传播，或满足首次发布所需的直接声明。对于
+`build.gradle.kts` 等语义不明确的根构建输入，可以用 `shared` 记录其不影响发布的理由；若确有影响，
+则 Changeset 必须声明受影响制品。
 
 自动归属覆盖每个登记制品的 `src/main`、`src/commonMain`、`src/androidMain`、`src/jvmMain`、
 `src/release`、影响发布的模块构建文件，以及会进入 API 文档的 `src/test/samples`。普通单元/
@@ -190,8 +192,8 @@ release commit，而不是可变的当前发布元数据，是统一的变更比
 规划器随后：
 
 1. 读取 release tag 目标到 `HEAD` 之间新增的 Changeset 与影响发布的直接路径；
-2. 确认每条直接变化都有尚未消费的对应声明；
-3. 取制品直接影响的最高等级；
+2. 确认每条直接路径都有尚未消费的 `changes` 或 `ignored` 分类；
+3. 从发布图中排除 `ignored`，只从该制品的 `changes` 取得最高直接影响等级；
 4. 从 Gradle `api`、`implementation`、`compileOnly`、`runtimeOnly` project dependency 推导当前依赖图；
 5. 向所有已发布反向依赖传递 `dependency` 发布；
 6. 生成确定性的 `build/release-plan.json` 和 `build/release-plan.md`，区分直接变化与依赖传播。
