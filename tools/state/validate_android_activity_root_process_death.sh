@@ -26,6 +26,10 @@ if ! command -v ruby >/dev/null 2>&1; then
     echo "ruby is required to read Android CLI layout output." >&2
     exit 1
 fi
+if ! command -v perl >/dev/null 2>&1; then
+    echo "perl is required to bound Android CLI layout polling." >&2
+    exit 1
+fi
 
 device_serial="${ANDROID_SERIAL:-}"
 if [[ -z "$device_serial" ]]; then
