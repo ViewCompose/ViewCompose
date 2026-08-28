@@ -1,10 +1,5 @@
 package com.viewcompose.lifecycle
 
-/*
- * 测试职责：覆盖 lifecycle integration 中的 Lifecycle Locals 行为，防止关键契约在后续重构中回退。
- * Test responsibility: covers Lifecycle Locals behavior in lifecycle integration and guards the contract against regressions.
- */
-
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -35,6 +30,32 @@ class LifecycleLocalsTest {
 
         assertSame(owner, inside)
         assertNull(LocalLifecycleOwner.current)
+    }
+
+    @Test
+    fun `nested lifecycle owner restores outer owner after declaration failure`() {
+        val outerOwner = TestLifecycleOwner()
+        val innerOwner = TestLifecycleOwner()
+        var restoredOwner: LifecycleOwner? = null
+
+        val error = runCatching {
+            buildVNodeTree {
+                ProvideLifecycleOwner(outerOwner) {
+                    runCatching {
+                        ProvideLifecycleOwner(innerOwner) {
+                            assertSame(innerOwner, LocalLifecycleOwner.current)
+                            error("declaration failed")
+                        }
+                    }
+                    restoredOwner = LocalLifecycleOwner.current
+                    error("propagate failure")
+                }
+            }
+        }.exceptionOrNull()
+
+        assertSame(outerOwner, restoredOwner)
+        assertNull(LocalLifecycleOwner.current)
+        org.junit.Assert.assertTrue(error is IllegalStateException)
     }
 
     @Test

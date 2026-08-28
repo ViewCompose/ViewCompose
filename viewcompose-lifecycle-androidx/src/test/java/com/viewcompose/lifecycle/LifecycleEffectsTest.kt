@@ -139,6 +139,33 @@ class LifecycleEffectsTest {
     }
 
     @Test
+    fun `start effect reconciles lifecycle activation between declaration and commit`() {
+        val harness = WidgetCoreRuntimeHarness()
+        val owner = TestLifecycleOwner()
+        val events = mutableListOf<String>()
+
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        val prepared = harness.prepareTree {
+            LifecycleStartEffect("tracker", lifecycleOwner = owner) {
+                events += "start"
+                onStopOrDispose {
+                    events += "stop"
+                }
+            }
+        }
+
+        owner.handle(Lifecycle.Event.ON_START)
+        assertTrue(events.isEmpty())
+
+        prepared.commit()
+        harness.commitSideEffects()
+        assertEquals(listOf("start"), events)
+
+        harness.dispose()
+        assertEquals(listOf("start", "stop"), events)
+    }
+
+    @Test
     fun `resume effect pairs every resume with pause or disposal`() {
         val harness = WidgetCoreRuntimeHarness()
         val owner = TestLifecycleOwner()
@@ -333,6 +360,45 @@ class LifecycleEffectsTest {
         harness.dispose()
         owner.handle(Lifecycle.Event.ON_RESUME)
         assertEquals(Lifecycle.State.STARTED, first.value)
+    }
+
+    @Test
+    fun `current state reconciles lifecycle change between declaration and commit`() {
+        val harness = WidgetCoreRuntimeHarness()
+        val owner = TestLifecycleOwner()
+        lateinit var state: com.viewcompose.runtime.State<Lifecycle.State>
+
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        val prepared = harness.prepareTree {
+            state = owner.lifecycle.currentStateAsState()
+        }
+        assertEquals(Lifecycle.State.CREATED, state.value)
+
+        owner.handle(Lifecycle.Event.ON_START)
+        assertEquals(Lifecycle.State.CREATED, state.value)
+
+        prepared.commit()
+        harness.commitSideEffects()
+        assertEquals(Lifecycle.State.STARTED, state.value)
+        harness.dispose()
+    }
+
+    @Test
+    fun `aborted current state candidate never installs an observer`() {
+        val harness = WidgetCoreRuntimeHarness()
+        val owner = TestLifecycleOwner()
+        lateinit var abandoned: com.viewcompose.runtime.State<Lifecycle.State>
+
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        harness.prepareTree {
+            abandoned = owner.lifecycle.currentStateAsState()
+        }.abort()
+
+        owner.handle(Lifecycle.Event.ON_START)
+        harness.commitSideEffects()
+
+        assertEquals(Lifecycle.State.CREATED, abandoned.value)
+        harness.dispose()
     }
 
     @Test
