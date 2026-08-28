@@ -8,11 +8,11 @@
       "versionState": "released"
     },
     {
-      "apiReference": "/api/viewcompose-camerax-androidx/current/",
+      "apiReference": "/api/viewcompose-camerax-androidx/0.1.0-alpha01/",
       "artifact": "viewcompose-camerax-androidx",
-      "moduleManual": "/modules/viewcompose-camerax-androidx/",
+      "moduleManual": "/modules/viewcompose-camerax-androidx/0.1.0-alpha01/",
       "version": "0.1.0-alpha01",
-      "versionState": "next"
+      "versionState": "released"
     },
     {
       "apiReference": "/api/viewcompose-constraintlayout-androidx/0.1.0-alpha02/",
@@ -22,18 +22,18 @@
       "versionState": "released"
     },
     {
-      "apiReference": "/api/viewcompose-diagnostics/current/",
+      "apiReference": "/api/viewcompose-diagnostics/0.1.0-alpha01/",
       "artifact": "viewcompose-diagnostics",
-      "moduleManual": "/modules/viewcompose-diagnostics/",
+      "moduleManual": "/modules/viewcompose-diagnostics/0.1.0-alpha01/",
       "version": "0.1.0-alpha01",
-      "versionState": "next"
+      "versionState": "released"
     },
     {
-      "apiReference": "/api/viewcompose-exoplayer2-android/current/",
+      "apiReference": "/api/viewcompose-exoplayer2-android/0.1.0-alpha01/",
       "artifact": "viewcompose-exoplayer2-android",
-      "moduleManual": "/modules/viewcompose-exoplayer2-android/",
+      "moduleManual": "/modules/viewcompose-exoplayer2-android/0.1.0-alpha01/",
       "version": "0.1.0-alpha01",
-      "versionState": "next"
+      "versionState": "released"
     },
     {
       "apiReference": "/api/viewcompose-gesture/0.1.0-alpha05/",
@@ -43,11 +43,11 @@
       "versionState": "released"
     },
     {
-      "apiReference": "/api/viewcompose-google-maps-android/current/",
+      "apiReference": "/api/viewcompose-google-maps-android/0.1.0-alpha01/",
       "artifact": "viewcompose-google-maps-android",
-      "moduleManual": "/modules/viewcompose-google-maps-android/",
+      "moduleManual": "/modules/viewcompose-google-maps-android/0.1.0-alpha01/",
       "version": "0.1.0-alpha01",
-      "versionState": "next"
+      "versionState": "released"
     },
     {
       "apiReference": "/api/viewcompose-graphics/0.1.0-alpha05/",
@@ -92,11 +92,11 @@
       "versionState": "released"
     },
     {
-      "apiReference": "/api/viewcompose-media3-androidx/current/",
+      "apiReference": "/api/viewcompose-media3-androidx/0.1.0-alpha01/",
       "artifact": "viewcompose-media3-androidx",
-      "moduleManual": "/modules/viewcompose-media3-androidx/",
+      "moduleManual": "/modules/viewcompose-media3-androidx/0.1.0-alpha01/",
       "version": "0.1.0-alpha01",
-      "versionState": "next"
+      "versionState": "released"
     },
     {
       "apiReference": "/api/viewcompose-navigation-android/0.1.0-alpha02/",
@@ -134,11 +134,11 @@
       "versionState": "released"
     },
     {
-      "apiReference": "/api/viewcompose-paging-androidx/current/",
+      "apiReference": "/api/viewcompose-paging-androidx/0.1.0-alpha01/",
       "artifact": "viewcompose-paging-androidx",
-      "moduleManual": "/modules/viewcompose-paging-androidx/",
+      "moduleManual": "/modules/viewcompose-paging-androidx/0.1.0-alpha01/",
       "version": "0.1.0-alpha01",
-      "versionState": "next"
+      "versionState": "released"
     },
     {
       "apiReference": "/api/viewcompose-preview/0.1.0-alpha05/",

@@ -551,6 +551,22 @@ identity token.
   behavior and separately budgeted API output; Phase 0B must reuse the compiled model and preserve
   the ceiling.
 
+- **2026-08-28, coordinated-release documentation closeout:** after six first-release artifacts
+  moved from `current` to immutable `0.1.0-alpha01` history, the complete verifier reused `5/6`
+  source-revision groups, regenerated the expanded `2d37ff2e` group, and rejected zero cached
+  groups. The production build served 133 API versions, 133 module manuals, and 133 Chinese
+  fallback routes; audited 522 site pages; produced 468.9 MiB total and 46.7 MiB non-API output;
+  kept JavaScript at 6.6/8.0 MiB, the largest chunk at 650/768 KiB, CSS at 112/128 KiB, and average
+  API trees at 3.2/4.5 MiB; and completed the site wrapper in `38.4 s`. Relative to the pre-release
+  127-version, 510-page, 468.5 MiB/46.3 MiB, `42.5 s` comparator, immutable coverage increased by
+  six versions (`+4.7%`) and 12 pages (`+2.4%`), rounded total and non-API output each increased by
+  approximately 0.4 MiB, and wrapper time decreased by `4.1 s` (`-9.6%`). The result is **mixed**:
+  released-route coverage and time improved while size headroom narrowed without exceeding any
+  gate. This is one warm local comparison using rounded size summaries and does not establish
+  hosted cache, deployment, CDN, or latency behavior. The next action is the post-merge hosted
+  build and route verification; further content growth must recover non-API headroom rather than
+  raising the limit.
+
 Git history preserves earlier Paging and site checkpoints. They do not authorize deleting current
 contracts, raising the limit without evidence, or re-expanding completed copies.
 
