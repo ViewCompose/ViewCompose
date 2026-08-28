@@ -9,6 +9,7 @@ owner:
 version_lane: version-agnostic
 capability_ids:
   - viewmodel.owner-boundaries
+  - viewmodel.scoped-owners
   - viewmodel.store-resolution
   - viewmodel.saved-state
 artifact_ids:
@@ -23,6 +24,8 @@ invariants:
   - Navigation, ordinary composition subtrees, and custom retained containers use one provider core while keeping their distinct lifecycle adapters.
 evidence:
   - docs/project/plans/viewmodel-androidx-optimal-architecture-and-compose-parity.md
+  - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeProviderTest.kt
+  - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeCompositionTest.kt
   - AndroidX Lifecycle 2.11 ViewModelStoreProvider reference and source contracts
 ---
 
@@ -64,6 +67,13 @@ insufficient for ViewCompose's prepared-composition, delayed-session, and retain
    rollback, no-resurrection, and terminal-disposal state. `ViewModelStoreOwnerLease` is the core
    reference-owning handle used by navigation and custom retained containers. Closing a lease ends
    one use; it does not by itself declare the logical scope permanently removed.
+
+The wrapper namespaces provider and child identities before passing them to AndroidX. Private
+provider and child metadata ViewModels live in AndroidX-owned marker and child stores, so commit,
+terminal, and no-resurrection state survives recreation of the facade without introducing a second
+child-store map. Metadata keeps only weak references to active lifecycle and saved-state owners and
+releases those references when the last lease closes. AndroidX remains the sole allocator and
+reference counter for child stores.
 5. `rememberViewModelScopeProvider` is the composition adapter. It binds provider lifetime to a
    retained parent `ViewModelStoreOwner`, a parent `LifecycleOwner`, and a caller-supplied stable
    provider key. `rememberViewModelStoreOwner` is the child adapter. Existing
@@ -202,7 +212,8 @@ constructor/factory model and reserves an application-visible store key.
    failure, `onCleared`, and lookup after clear.
 2. Phase 2 proves provider sharing/isolation, commit/abort, multiple leases, temporary absence,
    terminal clear, no resurrection, configuration recreation, provider disposal, saved-state
-   defaults, and main-thread diagnostics.
+   defaults, and boundary diagnostics through 16 focused scoped-owner contracts. The owning module
+   passes all 40 tests after combining this evidence with Phase 1 resolution coverage.
 3. Phase 3 runs the existing navigation matrix against the shared provider before deleting
    `NavEntryOwnerStore`; host tests prove explicit-owner and ViewTree precedence.
 4. Phase 4 proves constructor/initializer `SavedStateHandle` restoration and the single-owner

@@ -1266,6 +1266,20 @@
       }
     },
     {
+      "capabilityId": "viewmodel.scoped-owners",
+      "referenceId": "reference.viewmodel.scoped-owners",
+      "relatedDocumentIds": [
+        "architecture.retained-viewmodel-scope-ownership",
+        "module.viewcompose-viewmodel-androidx",
+        "migration.compose-host-lifecycle-android-interop"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.viewmodel-scoped-owners",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "viewmodel.store-resolution",
       "referenceId": "reference.viewmodel.store-resolution",
       "relatedDocumentIds": [
@@ -1388,6 +1402,10 @@
     "architecture.renderer-neutral-interaction-indication": {
       "documentType": "architecture",
       "path": "/architecture/decisions/renderer-neutral-interaction-indication"
+    },
+    "architecture.retained-viewmodel-scope-ownership": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/retained-viewmodel-scope-ownership"
     },
     "architecture.state-snapshots": {
       "documentType": "architecture",
@@ -4512,6 +4530,38 @@
         },
         {
           "artifact": "viewcompose-viewmodel-androidx",
+          "capabilityId": "viewmodel.scoped-owners",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.viewmodel.ViewModelScopeProvider"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "capabilityId": "viewmodel.scoped-owners",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.viewmodel.ViewModelStoreOwnerLease"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "capabilityId": "viewmodel.scoped-owners",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.viewmodel.rememberViewModelScopeProvider"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "capabilityId": "viewmodel.scoped-owners",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.viewmodel.rememberViewModelStoreOwner"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
           "capabilityId": "viewmodel.saved-state",
           "kind": "integration",
           "namespace": "com.viewcompose.viewmodel",
@@ -4527,7 +4577,7 @@
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
-      "entryCount": 166,
+      "entryCount": 170,
       "groupId": "integrations"
     },
     {
@@ -6285,13 +6335,13 @@
       "component": 72,
       "dsl": 33,
       "host": 53,
-      "integration": 166,
+      "integration": 170,
       "modifier": 77,
       "tooling": 130
     },
-    "entryCount": 531,
+    "entryCount": 535,
     "groupCount": 15,
-    "ownedEntryCount": 531,
-    "sourceFingerprint": "0555ff9f71cc1247bbd8b1b906ada2241e583039d39ae3fe3235eb1e24931122"
+    "ownedEntryCount": 535,
+    "sourceFingerprint": "b59d0bc24258ebf10f5c2278245f424297b9affad92e112d8219dd29d9f4aaa8"
   }
 }

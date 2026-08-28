@@ -193,7 +193,7 @@ class ViewModelScopeProviderTest {
         val provider = ViewModelScopeProvider(
             parentOwner = parent,
             providerKey = "provider",
-            defaultArguments = arguments,
+            defaultArgs = arguments,
         )
         parentExtras[TestIndexKey] = 99
         arguments.putString("profile", "mutated")

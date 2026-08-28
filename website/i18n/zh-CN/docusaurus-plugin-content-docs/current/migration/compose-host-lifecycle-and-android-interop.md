@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: d00f0b786cfe3cb0229c431d83dc72efd1e4992760c49c9a85611ea695390147
+translation_source_hash: efe829deebcdc5ae44af0440535dc7cf52576a2d45bce6739a860f5714364fdd
 translation_status: current
 ---
 
@@ -106,7 +106,7 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 | Fragment 宿主 | Fragment 中的 `ComposeView` 通常通过 `DisposeOnViewTreeLifecycleDestroyed` 随 Fragment View 树一起释放。 | 中立 `Fragment.setUiContent` 与具名 Material `setMaterial3UiContent` 为 `onCreateView` 返回 Root，在该 Root 的 `viewLifecycleOwner` 发布后启动 Session，把该 Owner 提供给内容，并在 `onDestroyView` 释放。 | Supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)与 `FragmentHostLifecycleIntegrationTest.kt` 验证 Owner Identity、View 重建、清理，以及独立保留的 Fragment Scope ViewModel/Saveable 所有权。 |
 | 现有 View 层级 | `ComposeView` 提供 Composition 释放策略并发现 ViewTree owner。 | `renderInto` 渲染到指定的 `ViewGroup`；它不提供生命周期、ViewModel、保存状态、环境、主题或帧时钟 owner，并要求显式释放会话。 | Partially supported | [`RenderInto.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt)以及 [`AndroidEntrySamples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt)中已编译的 `renderIntoSample`。 |
 | 生命周期 owner 传播 | Compose 宿主集成从 Activity、Fragment View 或 ViewTree 解析 AndroidX owner。 | Activity 内容接收 Activity Owner，Fragment 内容接收当前 View Owner；自定义 `renderInto` 容器不会自动获得 Owner。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、`FragmentHostLifecycleIntegrationTest.kt` 和 [`LifecycleHostGuards.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/LifecycleHostGuards.kt)。剩余差异是底层自定义宿主的显式所有权。 |
-| ViewModel owner 传播 | Lifecycle 2.11 可用 `ViewModelStoreProvider` 为任意 UI 创建子作用域，并继承父级 factory 与 `CreationExtras`。 | 已有 Activity、Fragment、导航 entry 和导航 graph 作用域。导航 owner 会继承最近宿主的默认 Factory 与初始 `CreationExtras`，再替换子级所有权和默认参数；任意 ViewCompose UI 子树仍没有等价的公共 provider。 | Partially supported | [`NavEntryOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt)、[`NavGraphOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt)、[`NavEntryOwnerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt)与 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的 Factory/extra 覆盖，以及 Lifecycle 2.11 官方语义证据。 |
+| ViewModel owner 传播 | Lifecycle 2.11 用 `ViewModelStoreProvider` 创建任意保留型子 UI Scope，继承父 Factory 与 `CreationExtras`，并用 Reference Token 保护退出动画等临时使用方。 | Activity、Fragment、导航 Entry 与导航 Graph Scope 保持不变。`ViewModelScopeProvider` 现在基于同一 AndroidX 原语提供任意子树 Scope，并补充事务感知的 `remember` Adapter、稳定 Provider/子身份、引用保护的终态清理以及禁止复活。与 Compose 的位置便利形式不同，ViewCompose 始终要求调用方提供 Provider Key。 | Intentionally different | [`ViewModelScopeProvider.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/ViewModelScopeProvider.kt)、[`ViewModelScopeComposition.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/ViewModelScopeComposition.kt)，以及 `ViewModelScopeProviderTest.kt` 和 `ViewModelScopeCompositionTest.kt` 中的 16 项契约。 |
 | 保存状态 | Compose 宿主集成组合使用 `SavedStateRegistryOwner`、`SavedStateHandle` 与 saveable-state 设施。 | ViewCompose 宿主安装 ViewCompose `SaveableStateRegistry`；适用的 Activity、Fragment 和导航 owner 也参与 AndroidX 保存状态。这些是相关但不可互换的 owner 层。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、[`NavEntryOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的保存状态覆盖。 |
 | 帧调度与显式渲染 | Compose 重组由 Recomposer 和帧时钟协调。 | 显式 `render` 是同步的。状态失效会合并到 Android 帧；处于 inactive 状态的会话会保留失效请求，直到再次激活。 | Intentionally different | [`AndroidFrameAlignedRenderSessionRuntime.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntime.kt)和 [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt)。 |
 | Effect 所有权与终结性释放 | Effect 随其 Composition 作用域退出；释放 `Composition` 是终结操作。 | 一个 `RenderSession` 拥有 Composition 协程 Scope、渲染状态、Overlay、原生 View 和清理逻辑。Dispose 幂等；之后的公共 Render/Activation 工作快速失败，已排队的内部回调安全 no-op。 | Supported | [`RenderSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt)、[`RenderSessionFailureTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt)与 `AndroidFrameAlignedRenderSessionRuntimeTest.kt`。 |
@@ -174,9 +174,16 @@ owner 迁移是语义迁移，不是类型名替换：
 
 Lifecycle 2.11 为任意 Compose UI 区域增加了通用 scoped ViewModel。`ViewModelStoreProvider`
 可以让子 store 跨配置变更保留、在对应 UI 作用域永久离开时清理，并继承父级 factory 和
-`CreationExtras`。ViewCompose 0.1.0-alpha05 对导航 entry 和 graph owner 的永久删除提供了
-可比行为。导航测试已证明这些 owner 会继承最近宿主的默认 Factory 与初始 `CreationExtras`，
-替换自身的子级 owner/默认参数条目，并保留无关 extra；但任意 UI 子树仍没有等价的通用 provider。
+`CreationExtras`。ViewCompose 在 `ViewModelScopeProvider` 内使用同一个原语。普通 DSL 代码组合
+`rememberViewModelScopeProvider`、`rememberViewModelStoreOwner` 与
+`ProvideViewModelStoreOwner`；保留型容器引擎则直接获取并关闭 `ViewModelStoreOwnerLease`。
+Lease 关闭表示临时释放，`clear(key)` 与 `clearAll()` 才是终态信号。活动 Lease 会延迟清理，并在
+旧生命周期结束前阻止复活。父 Lifecycle 已销毁时会为配置重建保留共享状态，Provider 正常移除时
+则执行清理。
+
+ViewCompose 有意要求显式稳定 Provider/子 Key，不提供按位置派生的保留型 Provider Overload。
+同一父级下相等的 Provider Key 共享状态，相等的子 Key 只在对应 Provider 内共享。导航 Entry 与
+Graph Owner 在本阶段保持现有已验证语义，下一次硬切再把独立 Store 分配路径迁移到共享 Provider。
 
 ViewModel Lookup 现在与 AndroidX Key 和 Creation 语义一致。只有 `null` 选择按 Class 派生的
 默认 Key；空字符串和仅空白字符串都是显式 Key。此前用 Blank String 作为默认 Sentinel 的迁移
@@ -229,8 +236,8 @@ ViewCompose 0.1.0-alpha05 没有 Compose `AndroidViewBinding` 或 `AndroidFragme
 - Fragment 内容会在 `setUiContent` 返回后、Android 发布 View Owner 时开始；代码不能要求
   Content 内工作在 `onCreateView` 本身返回前完成。
 - 隐藏导航目的地在帧渲染 inactive 时仍保留 composition 作用域和 Effect。
-- Lifecycle 2.11 任意 scoped ViewModel 尚无 ViewCompose 对等证据；导航 entry/graph 的父级
-  Factory 与 `CreationExtras` 继承已有证据。
+- 保留型子 Scope 要求稳定的 Provider/子身份，并明确区分临时 Lease 释放与终态 `clear`；把位置或
+  可见性误作任一信号，都可能重建状态或过早清理。
 - `renderInto` 不会自动发现 ViewTree owner，也没有 Composition 释放策略。
 - 不支持直接 ViewBinding 与渲染树内 Fragment 互操作。
 

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add Lifecycle 2.11-backed retained ViewModel child scopes with stable identity, reference-protected cleanup, transaction-aware composition adapters, and terminal no-resurrection behavior.",
+  "changes": [
+    { "artifact": "viewcompose-viewmodel-androidx", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

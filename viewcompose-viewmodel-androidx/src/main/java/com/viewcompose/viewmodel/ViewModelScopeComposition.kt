@@ -22,7 +22,7 @@ import com.viewcompose.ui.foundation.remember
  * parent clear them through its own store.
  *
  * Provider creation is transactional: an abandoned first candidate is cleared, while an aborted
- * candidate for a previously committed provider leaves that provider intact. [defaultArguments],
+ * candidate for a previously committed provider leaves that provider intact. [defaultArgs],
  * [defaultCreationExtras], and [defaultFactory] are read only when a new remembered provider is
  * created. All work is Android-main-thread-confined and bounded in memory.
  *
@@ -30,7 +30,7 @@ import com.viewcompose.ui.foundation.remember
  * @param parentOwner retained store owner; defaults to [LocalViewModelStoreOwner]
  * @param lifecycleOwner lifecycle used to distinguish normal removal from parent destruction;
  *   defaults to [parentOwner] when it implements [LifecycleOwner]
- * @param defaultArguments default saved-state arguments inherited by child owners
+ * @param defaultArgs default saved-state arguments inherited by child owners
  * @param defaultCreationExtras initial child creation extras
  * @param defaultFactory initial child ViewModel factory
  * @return one remembered provider for the resolved parent and key
@@ -44,7 +44,7 @@ fun rememberViewModelScopeProvider(
     key: Any,
     parentOwner: ViewModelStoreOwner = requireLocalViewModelStoreOwner(),
     lifecycleOwner: LifecycleOwner = requireLifecycleOwner(parentOwner),
-    defaultArguments: Bundle = Bundle(),
+    defaultArgs: Bundle = Bundle(),
     defaultCreationExtras: CreationExtras = parentOwner.defaultCreationExtrasForScope(),
     defaultFactory: ViewModelProvider.Factory = parentOwner.defaultFactoryForScope(),
 ): ViewModelScopeProvider {
@@ -56,7 +56,7 @@ fun rememberViewModelScopeProvider(
         val provider = ViewModelScopeProvider(
             parentOwner = parentOwner,
             providerKey = key,
-            defaultArguments = defaultArguments,
+            defaultArgs = defaultArgs,
             defaultCreationExtras = defaultCreationExtras,
             defaultFactory = defaultFactory,
         )

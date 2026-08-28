@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0023-retained-viewmodel-scope-ownership.md
-translation_source_hash: 3ceed9812a78c76e5a0a62fa2a86787eaad5b7d8c003a39bff2831c22644d2d1
+translation_source_hash: b0568c16b0d63a7ecb978c97981006f92c2cdbb5bc1db020c46e50f037dbe85b
 translation_status: current
 ---
 
@@ -37,6 +37,13 @@ AndroidX Lifecycle 2.11 新增
 4. 模块自有的 `ViewModelScopeProvider` 在 AndroidX Provider 外补充 ViewCompose Commit、
    Rollback、禁止复活与终止释放状态。`ViewModelStoreOwnerLease` 是导航和自定义 Retained
    Container 共同使用的引用持有句柄。关闭 Lease 只结束一次使用，不代表逻辑作用域永久移除。
+
+Wrapper 会先对 Provider 与 Child Identity 分别建立 Namespace，再交给 AndroidX。私有的 Provider
+与 Child Metadata ViewModel 位于 AndroidX 管理的 Marker Store 和 Child Store 中，因此即使 Facade
+在配置重建后重新创建，Commit、Terminal 与禁止复活状态仍能延续，同时不会引入第二套 Child Store
+Map。Metadata 只弱引用活跃的 Lifecycle 与 Saved State Owner，并在最后一个 Lease 关闭时释放这些
+引用。AndroidX 始终是 Child Store 唯一的分配器与引用计数器。
+
 5. `rememberViewModelScopeProvider` 是 Composition Adapter：把 Provider 生命周期绑定到保留式
    父 `ViewModelStoreOwner`、父 `LifecycleOwner` 与调用方提供的稳定 Provider Key。
    `rememberViewModelStoreOwner` 是 Child Adapter。现有 `ProvideViewModelStoreOwner` 仍是唯一的
@@ -157,8 +164,9 @@ Key，并绕过 AndroidX 通过配置保留的父 Store。
 
 1. Phase 1 验证 Store-only Lookup、Null/Non-null Key、Factory/Extras 优先级、Initializer Failure、
    `onCleared` 与 Clear 后重新查询。
-2. Phase 2 验证 Provider 共享/隔离、Commit/Abort、多 Lease、临时缺席、Terminal Clear、禁止复活、
-   配置重建、Provider Disposal、Saved State Default 与主线程诊断。
+2. Phase 2 通过 16 项聚焦 Scoped Owner 契约验证 Provider 共享/隔离、Commit/Abort、多 Lease、
+   临时缺席、Terminal Clear、禁止复活、配置重建、Provider Disposal、Saved State Default 与边界
+   诊断；结合 Phase 1 的解析覆盖，所属模块全部 40 项测试通过。
 3. Phase 3 在删除 `NavEntryOwnerStore` 前，让现有 Navigation Matrix 全量运行于共享 Provider；Host
    测试验证显式 Owner 与 ViewTree 优先级。
 4. Phase 4 在删除 Holder API 前，验证 Constructor/Initializer `SavedStateHandle` 恢复以及单 Owner

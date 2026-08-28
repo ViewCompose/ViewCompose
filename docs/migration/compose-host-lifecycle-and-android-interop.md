@@ -13,6 +13,7 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.android-view
   - viewmodel.owner-boundaries
+  - viewmodel.scoped-owners
   - viewmodel.store-resolution
   - viewmodel.saved-state
 artifact_ids:
@@ -133,7 +134,7 @@ and **Unsupported**.
 | Fragment host | A Fragment-hosted `ComposeView` is normally disposed with the Fragment view tree through `DisposeOnViewTreeLifecycleDestroyed`. | Neutral `Fragment.setUiContent` and named Material `setMaterial3UiContent` return a root for `onCreateView`, start its session when that root's `viewLifecycleOwner` is published, provide that owner to content, and dispose at `onDestroyView`. | Supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt) and [`FragmentHostLifecycleIntegrationTest.kt`](../../viewcompose-android/src/test/java/com/viewcompose/android/FragmentHostLifecycleIntegrationTest.kt) verify owner identity, View recreation, cleanup, and independently retained Fragment-scoped ViewModel/saveable ownership. |
 | Existing View hierarchy | `ComposeView` supplies composition disposal strategies and discovers ViewTree owners. | `renderInto` renders into a supplied `ViewGroup`; it supplies no lifecycle, ViewModel, saved-state, environment, theme, or frame-clock owner and requires explicit session disposal. | Partially supported | [`RenderInto.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt) and the compiled `renderIntoSample` in [`HostAndroidSamples.kt`](../../viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt). |
 | Lifecycle owner propagation | Compose host integrations resolve AndroidX owners from the Activity, Fragment view, or ViewTree. | Activity content receives the Activity owner, and Fragment content receives its current View owner. Custom `renderInto` containers receive no automatic owner. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`FragmentHostLifecycleIntegrationTest.kt`](../../viewcompose-android/src/test/java/com/viewcompose/android/FragmentHostLifecycleIntegrationTest.kt), and [`LifecycleHostGuards.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/LifecycleHostGuards.kt). The remaining difference is deliberate low-level custom-host ownership. |
-| ViewModel owner propagation | Lifecycle 2.11 can create arbitrary child UI scopes with `ViewModelStoreProvider` and can inherit parent factories and `CreationExtras`. | Activity, Fragment, navigation-entry, and navigation-graph scopes exist. Navigation owners inherit the nearest host's default Factory and starting `CreationExtras`, then replace their child ownership/default arguments; no equivalent public provider exists for arbitrary ViewCompose UI subtrees. | Partially supported | [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), [`NavGraphOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt), Factory/extras coverage in [`NavEntryOwnerTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt) and [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt), and Lifecycle 2.11 official semantic evidence. |
+| ViewModel owner propagation | Lifecycle 2.11 creates arbitrary retained child UI scopes with `ViewModelStoreProvider`, inherits parent factories and `CreationExtras`, and protects exit-animation users with reference tokens. | Activity, Fragment, navigation-entry, and navigation-graph scopes remain. `ViewModelScopeProvider` now adds arbitrary subtree scopes over the same AndroidX primitive, with transaction-aware `remember` adapters, stable provider/child identity, reference-protected terminal clear, and no resurrection. Unlike Compose's positional convenience, ViewCompose always requires a caller-owned provider key. | Intentionally different | [`ViewModelScopeProvider.kt`](../../viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/ViewModelScopeProvider.kt), [`ViewModelScopeComposition.kt`](../../viewcompose-viewmodel-androidx/src/main/java/com/viewcompose/viewmodel/ViewModelScopeComposition.kt), and 16 contracts in [`ViewModelScopeProviderTest.kt`](../../viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeProviderTest.kt) and [`ViewModelScopeCompositionTest.kt`](../../viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeCompositionTest.kt). |
 | Saved state | Compose host integrations combine `SavedStateRegistryOwner`, `SavedStateHandle`, and saveable-state facilities. | ViewCompose hosts install a ViewCompose `SaveableStateRegistry`; applicable Activity, Fragment, and navigation owners also participate in AndroidX saved state. These are related layers, not one interchangeable owner API. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), and saved-state coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
 | Frame scheduling and explicit rendering | Compose recomposition is coordinated by its Recomposer and frame clock. | An explicit `render` is synchronous. State invalidations are coalesced to an Android frame, and an inactive session retains invalidation until reactivated. | Intentionally different | [`AndroidFrameAlignedRenderSessionRuntime.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntime.kt) and [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](../../viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt). |
 | Effect ownership and terminal disposal | Effects leave with their Composition scope; disposing a `Composition` is terminal. | A `RenderSession` owns one composition coroutine scope, render state, overlays, native views, and cleanup. Disposal is idempotent; later public render or activation work fails fast, while already queued internal callbacks safely no-op. | Supported | [`RenderSession.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt), [`RenderSessionFailureTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt), and [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](../../viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt). |
@@ -208,10 +209,19 @@ Owner migration is a semantic task, not a type-name substitution:
 Lifecycle 2.11 adds general scoped ViewModels for arbitrary Compose UI regions. A
 `ViewModelStoreProvider` can keep child stores across configuration changes, clear them when their
 UI scope permanently leaves, and inherit the parent's factory and `CreationExtras`. ViewCompose
-0.1.0-alpha05 has comparable permanent-removal behavior for navigation entry and graph owners. Its
-navigation tests prove that those owners inherit the nearest host's default Factory and starting
-`CreationExtras`, replace their child owner/default-argument entries, and preserve unrelated extras.
-It still does not expose an equivalent general provider for arbitrary UI subtrees.
+uses that same primitive inside `ViewModelScopeProvider`. Ordinary DSL code combines
+`rememberViewModelScopeProvider`, `rememberViewModelStoreOwner`, and
+`ProvideViewModelStoreOwner`; retained container engines acquire and close
+`ViewModelStoreOwnerLease` directly. Lease closure means temporary release, while `clear(key)` and
+`clearAll()` are terminal signals. Active leases defer cleanup and block resurrection until the old
+lifetime finishes. A destroyed parent lifecycle preserves shared state for configuration
+recreation; normal provider removal clears it.
+
+ViewCompose deliberately requires explicit stable provider and child keys instead of exposing a
+position-derived retained-provider overload. Equal provider keys under one parent share state;
+equal child keys share only within that provider. Navigation entry and graph owners retain their
+existing tested semantics in this phase and migrate their independent store-allocation path onto
+the shared provider in the next hard cut.
 
 ViewModel lookup now matches AndroidX key and creation semantics. Only `null` selects the
 class-derived default key; empty and whitespace-only strings are explicit keys. Migration code that
@@ -270,8 +280,9 @@ ViewCompose render tree or infer support from the ability to host its root View.
   must not require content-side work to finish inside `onCreateView` itself.
 - A hidden navigation destination retains its composition scope and effects while frame rendering
   is inactive.
-- Lifecycle 2.11 arbitrary scoped ViewModels do not have ViewCompose parity evidence; navigation
-  entry/graph parent Factory and `CreationExtras` inheritance does.
+- Retained child scopes require stable provider/child identities and an explicit distinction
+  between temporary lease release and terminal `clear`; using position or visibility as either
+  signal can recreate or prematurely clear state.
 - `renderInto` has no automatic ViewTree-owner discovery or composition-disposal strategy.
 - Direct ViewBinding and Fragment-in-tree interoperability are unsupported.
 

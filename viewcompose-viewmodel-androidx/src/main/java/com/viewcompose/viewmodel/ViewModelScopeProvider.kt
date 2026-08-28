@@ -27,7 +27,7 @@ import java.lang.ref.WeakReference
  * closes. A later acquisition then creates a fresh scope rather than resurrecting the old store.
  *
  * The parent [ViewModelStore] retains child stores across configuration recreation and remains the
- * final cleanup boundary. [defaultArguments], [defaultCreationExtras], and [defaultFactory] are
+ * final cleanup boundary. [defaultArgs], [defaultCreationExtras], and [defaultFactory] are
  * copied or captured when this provider is created; later caller mutation does not reconfigure an
  * existing provider. Passing a [SavedStateRegistryOwner] to [acquireOwner] enables AndroidX
  * `SavedStateHandle` creation for that child.
@@ -37,7 +37,7 @@ import java.lang.ref.WeakReference
  *
  * @param parentOwner retained parent whose store owns this provider's AndroidX state holder
  * @param providerKey non-null stable identity that isolates this provider inside [parentOwner]
- * @param defaultArguments default saved-state arguments inherited by child owners
+ * @param defaultArgs default saved-state arguments inherited by child owners
  * @param defaultCreationExtras initial child creation extras; copied before AndroidX receives them
  * @param defaultFactory factory inherited by child owners unless their store already has an entry
  * @throws IllegalArgumentException when [providerKey] is null through a Java or reflective call
@@ -46,14 +46,14 @@ import java.lang.ref.WeakReference
 class ViewModelScopeProvider(
     parentOwner: ViewModelStoreOwner,
     providerKey: Any,
-    defaultArguments: Bundle = Bundle(),
+    defaultArgs: Bundle = Bundle(),
     defaultCreationExtras: CreationExtras = parentOwner.defaultCreationExtras(),
     defaultFactory: ViewModelProvider.Factory = parentOwner.defaultFactory(),
 ) {
     private val delegate = AndroidXViewModelStoreProvider(
         parentOwner = parentOwner,
         parentKey = ProviderStorageKey(requireStableKey(providerKey, "providerKey")),
-        defaultArgs = Bundle(defaultArguments),
+        defaultArgs = Bundle(defaultArgs),
         defaultCreationExtras = MutableCreationExtras(defaultCreationExtras),
         defaultFactory = defaultFactory,
     )
