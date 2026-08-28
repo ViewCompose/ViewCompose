@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Drive ordinary and predictive navigation transitions from frozen semantic scenes, prevent premature destination resume, and cap popped exiting owners at created until presentation disposal.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-android", "impact": "fix" }
+  ],
+  "ignored": [],
+  "shared": []
+}

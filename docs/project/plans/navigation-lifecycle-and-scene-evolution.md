@@ -44,9 +44,10 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 3 by making ordinary and predictive Android transitions publish semantic scenes and obey their lifecycle caps.
+next_action: Execute Phase 4 by separating logical entry retention from native presentation retention and measuring the safe default policy.
 maven_release_changesets:
   - release/changes/20260829-navigation-scene-projection.json
+  - release/changes/20260829-navigation-transition-lifecycle.json
 ---
 
 # Navigation Lifecycle and Scene Evolution Plan
@@ -54,16 +55,18 @@ maven_release_changesets:
 ## Status
 
 Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
-stabilization, and Phase 2 Core scene projection are complete.
+stabilization, Phase 2 Core scene projection, and Phase 3 Android transition lifecycle correction
+are complete.
 
 Last verified: 2026-08-29.
 
-Next action: execute Phase 3 by making the Android host's ordinary and predictive transitions
-publish semantic scenes and obey their lifecycle caps.
+Next action: execute Phase 4 by separating logical entry retention from native presentation
+retention and measuring the safe default policy.
 
 ## Maven release changesets
 
 - `release/changes/20260829-navigation-scene-projection.json`
+- `release/changes/20260829-navigation-transition-lifecycle.json`
 
 ## Release intent rationale
 
@@ -73,6 +76,13 @@ classifies Navigation Core as breaking. Navigation Android is explicitly ignored
 because its internal adapter preserves the existing settled ownership policy; Phase 3 owns the
 separate Android transition-behavior change. Release planning derives reverse-dependency
 propagation.
+
+Phase 3 classifies Navigation Android as a fix because public declarations remain unchanged while
+ordinary and predictive destination-owner timing now follows the already-published scene contract.
+The app debug host and instrumentation are unpublished evidence. Governance V2 detects no changed
+application-facing declaration, so its one-impact-per-detected-change rule admits no public API
+impact record; the Changeset and owning architecture, module, migration, and plan documents record
+the behavior correction.
 
 ## Objective
 
@@ -395,8 +405,8 @@ same slice that establishes its replacement:
 | 0 | Contract, capability, ownership, and ADR freeze | State matrices, hard cuts, Q3/API impacts, ViewModel-plan boundary, and ADR disposition accepted | Complete |
 | 1 | Generic Lifecycle DSL stabilization | One consumption surface passes host, race, replacement, failure, effect, and Flow contracts | Complete |
 | 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Complete |
-| 3 | Android transition lifecycle correction | Ordinary and predictive transitions, overlays, panes, and host caps match the matrix | Next |
-| 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Pending |
+| 3 | Android transition lifecycle correction | Ordinary, predictive, and pane transitions match the matrix; unsupported general overlay execution has an explicit disposition | Complete |
+| 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Next |
 | 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Pending |
 | 6 | Reducer and executor convergence | One typed plan owns stack, scene, lifecycle, presentation, focus, and effects; obsolete paths are absent | Pending |
 | 7 | Capability and test closure | Typed routes and ecosystem gaps have accepted dispositions; unit, device, coverage, memory, and performance gates pass | Pending |
@@ -558,9 +568,58 @@ execute Phase 3's Android transition lifecycle correction against this single se
    transitions.
 2. Keep incoming and active outgoing entries at `STARTED`; keep popped exiting entries at `CREATED`;
    promote only after terminal settlement.
-3. Integrate overlay coverage, pane changes, host lifecycle caps, focus transfer, and terminal
-   cleanup.
+3. Integrate pane changes, host lifecycle caps, and terminal cleanup while preserving the existing
+   transition-driver focus transfer. Do not claim overlay execution until Navigation Android
+   exposes a general overlay-navigation surface.
 4. Delete tests and code that encode premature resume or visible-set inference.
+
+#### Phase 3 acceptance
+
+Every ordinary transition and predictive preview now freezes exactly one `NavScene`. Owner
+reconciliation and later host-lifecycle changes consume that stored scene instead of re-inferring
+interactive IDs. Push, replace, reset, stack selection, deep-link, predictive preview, cancellation,
+commit, redirection, and adaptive panes therefore share one rule: all visible entries are
+non-interactive and no higher than `STARTED` during motion; a removed outgoing entry that still owns
+an exit presentation is `Exiting` and `CREATED`; terminal settlement alone resumes interactive
+entries. Reset disposes removed hidden sessions before owner teardown because they have no transition
+presentation to preserve.
+
+The Android host has no general overlay-navigation surface. Core overlay roles remain valid model
+vocabulary, but neither the unrelated overlay transport nor a model-only test is accepted as host
+execution evidence. Overlay scene execution and the one-plan focus boundary remain assigned to the
+destination-context and reducer phases rather than blocking this correction for every currently
+supported host scene.
+
+The fresh Navigation Android run passed 151 of 151 JVM/Robolectric tests with zero failures, errors,
+or skips. The absolute test count is unchanged from the Phase 2 Android baseline, a 0% count change,
+because this hard cut replaces ten assertions that encoded the rejected timing instead of keeping
+both behaviors. The 20-test transition/adaptive subset passed 20 of 20 and directly covers push,
+pop, reset hidden cleanup, predictive cancel/commit, redirection, repeated host-cap changes, and up
+to three visible panes.
+
+The app debug and androidTest sources compiled, then two selected instrumentation cases passed on a
+physical Pixel 4 XL running API 33. One new case reads the nearest `LocalLifecycleOwner` captured
+inside destination DSL and verifies `RESUMED -> STARTED -> CREATED/RESUMED`, predictive preview,
+cancellation, committed popped exit, destruction, and terminal resume. The companion existing case
+revalidates predictive transforms and cancellation on real native Views. Lifecycle-specific device
+coverage moved from zero cases to one, so a percentage change from the zero baseline is not defined;
+the accepted absolute result is 2/2 for this slice.
+
+The full `qaQuick` gate passed all 2,268 actionable tasks: 201 executed and 2,067 were up to date.
+Documentation Governance V2 reported zero issues against base `4e4b538c`, translation verification
+reported 126 current and zero stale required Chinese pages, release-intent verification classified
+exactly one Navigation Android fix, and development-tooling isolation passed. `qaPreview` passed all
+1,209 actionable tasks: 140 executed and 1,069 were up to date, including Paparazzi verification and
+both Preview host suites. This adds **improved** repository-integration confidence and **no material
+change** in Preview behavior. Both mixed cache states are verification context, not performance
+evidence.
+
+Conclusion: **improved** lifecycle correctness with no premature `RESUMED` state in supported
+ordinary, predictive, or adaptive-pane scenes. The physical-device result closes the owner-state
+claim for the exercised API-33 dispatcher path. API-34 platform edge-gesture delivery, general
+navigation overlays, memory, leaks, and performance remain **inconclusive**. Next action: execute
+Phase 4's entry/presentation separation, retention-policy restoration matrix, and comparative device
+memory/frame measurements.
 
 ### Phase 4: split entry and presentation lifetime
 
