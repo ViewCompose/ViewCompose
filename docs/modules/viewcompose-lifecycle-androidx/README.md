@@ -377,9 +377,26 @@ participates in runtime observation and invalidates the owning composition scope
 Use a `LifecycleRegistry` to drive `ON_CREATE`, `ON_START`, `ON_STOP`, and destruction explicitly.
 Collection tests should verify initial value, inactive retention, restart delivery, cancellation on
 disposal, missing-owner failure, invalid thresholds, and non-overlapping collectors during rapid
-restarts. Native-View adapter tests should additionally verify post-commit catch-up, owner
-replacement ordering, hidden-destination capping, callback failure cleanup, process recreation,
-format mismatch isolation, and one-shot provider removal.
+restarts. They must also verify lifecycle activation between declaration and commit, state
+reconciliation at commit, serial owner replacement, aborted or failed candidate inertness, and
+nested local restoration after declaration failure. Native-View adapter tests should additionally
+verify post-commit catch-up, owner replacement ordering, hidden-destination capping, callback
+failure cleanup, process recreation, format mismatch isolation, and one-shot provider removal.
+
+## Navigation Phase 1 verification evidence
+
+The 2026-08-29 navigation Lifecycle DSL stabilization passed all 43 lifecycle-module JVM and
+Robolectric tests with zero failures. Compared with the prior 35-test baseline, this adds eight
+direct race, replacement, abort, and failure cases, a 22.9% increase. Existing Activity, Fragment,
+navigation entry and graph, Preview, and explicit custom-provider integration tests continue to
+cover the host boundaries. The fresh cross-host regression passed 227 of 227 tests: 43 lifecycle,
+21 Android aggregate, 151 Navigation Android, and 12 Preview Runner tests.
+
+The conclusion is **improved** contract coverage and **no material change** in runtime behavior.
+The current nearest-owner APIs and commit-aware implementation already satisfy the accepted host
+matrix, so the phase adds no host-specific façade, production declaration, compiled sample, or
+Maven Changeset. The result is JVM/Robolectric evidence rather than device or performance evidence;
+physical-device validation starts with the first changed Android navigation lifecycle behavior.
 
 ## Phase 2 verification evidence
 

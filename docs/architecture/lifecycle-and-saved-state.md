@@ -229,3 +229,16 @@ Core regression coverage includes:
     resurrection;
 12. destination/graph owner isolation, default Factory/CreationExtras propagation, `onCleared()`,
     repeated process-style restoration, and real multi-stack process recreation.
+13. Lifecycle DSL activation and state reconciliation between declaration and commit, owner
+    replacement and aborted replacement, failed or aborted composition inertness, and nested owner
+    restoration after declaration failure.
+
+The 2026-08-29 navigation Lifecycle DSL stabilization reran all 43 lifecycle-module JVM and
+Robolectric tests with zero failures. The preceding baseline contained 35 tests; the eight new cases
+increase the executable contract set by 22.9% and directly cover the races and failure paths in item
+13. The result is **improved** contract coverage and **no material change** in runtime behavior: the
+existing commit-aware effect and producer implementation already satisfied the accepted contract,
+so no production declaration or host-specific Lifecycle API was added. A fresh cross-host
+regression also passed 227 of 227 tests: 43 lifecycle, 21 Android aggregate, 151 Navigation Android,
+and 12 Preview Runner tests. This evidence is not a device or performance claim; the first changed
+Android navigation lifecycle behavior owns that validation.

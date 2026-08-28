@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-lifecycle-androidx/README.md
-translation_source_hash: 18410926e0e93c32beb7aeca11256500b09b83d45efa85fe30977dc1b844a15d
+translation_source_hash: a58709d40caec8f74a43fde4b27b575e3b88a18e207c3e742437421eebec936d
 translation_status: current
 ---
 
@@ -338,9 +338,23 @@ Flow identity、Lifecycle identity、活跃阈值和 Context 共同构成 produc
 
 使用 `LifecycleRegistry` 显式驱动 `ON_CREATE`、`ON_START`、`ON_STOP` 和销毁。Collection 测试
 应覆盖初始值、不活跃期间保留、重启后的 Emission、Dispose 取消、Owner 缺失失败、非法阈值，
-以及快速重启时 Collector 不重叠。原生 View Adapter 测试还应覆盖 Commit 后 Catch-up、Owner
-替换顺序、Hidden Destination 限制、回调失败清理、进程重建、Format 不匹配隔离和 Provider
-一次性移除。
+以及快速重启时 Collector 不重叠。还必须覆盖声明与 Commit 之间的 Lifecycle 激活、Commit 时 State
+对账、串行 Owner 替换、已 Abort 或失败 Candidate 的惰性，以及声明失败后的嵌套 Local 恢复。
+原生 View Adapter 测试还应覆盖 Commit 后 Catch-up、Owner 替换顺序、Hidden Destination 限制、
+回调失败清理、进程重建、Format 不匹配隔离和 Provider 一次性移除。
+
+## 导航 Phase 1 验证证据
+
+2026-08-29 的导航 Lifecycle DSL 稳定化通过了 Lifecycle 模块全部 43 个 JVM 与 Robolectric 测试，
+零失败。相较此前 35 个测试的基线，新增 8 个直接覆盖竞态、替换、Abort 与失败的 Case，增幅为
+22.9%。现有 Activity、Fragment、Navigation Entry 与 Graph、Preview 及显式 Custom Provider
+集成测试继续覆盖各宿主边界。Fresh Cross-host 回归通过了 227/227 个测试：43 个 Lifecycle、
+21 个 Android Aggregate、151 个 Navigation Android 和 12 个 Preview Runner 测试。
+
+结论是契约覆盖 **improved**、运行时行为 **no material change**。当前 Nearest-owner API 与
+Commit-aware 实现已满足已接受的宿主矩阵，因此本阶段不新增宿主专用 Facade、生产声明、编译 Sample
+或 Maven Changeset。结果属于 JVM/Robolectric 证据，并非真机或性能证据；真机验证从首次改变
+Android 导航生命周期行为的阶段开始。
 
 ## Phase 2 验证证据
 
