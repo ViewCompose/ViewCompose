@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0023-retained-viewmodel-scope-ownership.md
-translation_source_hash: 2c7246979c55c3baf82f2a6a734531aecfc71ab87a08e6b92b7e9700898cf595
+translation_source_hash: 543fce13854c9b5a389eb20612816e3e57ac2637dec3064fcf16aed5510fb5f7
 translation_status: current
 ---
 
@@ -179,5 +179,9 @@ Key，并绕过 AndroidX 通过配置保留的父 Store。
    45/45 项测试全部通过。Holder API 与保留 Key 已不存在；`rememberSaveable` 只持有 UI 状态，
    每份可变 `SavedStateHandle` Flow 只由一个业务 ViewModel 持有。结论为 **improved**。JVM 恢复
    不能替代真机进程终止旅程，后者在 Phase 5 前仍为 **inconclusive**。
-5. 每个 Phase 同步落地 Q3 KDoc、Compiled Sample、Capability Impact Record、Module/Migration 文档、
+5. Phase 5 新增七项负向与删除 Guard 后，所属模块 52/52 项测试全部通过。在 Android 9/API 28
+   的 Xiaomi MI 6 上，两条 Debug 进程终止旅程均改变 PID，并精确保留归一化后的 Activity Root
+   与多 Stack 导航状态。结论为 **improved**。单台设备不能证明 Release 模式、内存、性能或平台
+   矩阵行为；这些维度仍为 **inconclusive**。
+6. 每个 Phase 同步落地 Q3 KDoc、Compiled Sample、Capability Impact Record、Module/Migration 文档、
    Immutable Release Intent，以及带解释的 Focused Test Evidence。

@@ -39,7 +39,7 @@ completion:
   - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
   - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
 last_verified: 2026-08-29
-next_action: Implement Phase 5's coverage ledger, negative guards, and real-device process-restoration journey.
+next_action: Implement Phase 6 structural cleanup, full acceptance, and plan archival.
 maven_release_changesets:
   - release/changes/20260829-lifecycle-toolchain-prerequisite.json
   - release/changes/20260829-navigation-shared-viewmodel-scopes.json
@@ -54,12 +54,11 @@ maven_release_changesets:
 
 Active. The audit baseline, Phase 0 contract freeze, Phase 1 store-resolution hard cut, Phase 2
 general retained scoped-owner provider, Phase 3 navigation/host convergence, and Phase 4
-SavedStateHandle ownership hard cut are complete.
+SavedStateHandle ownership hard cut, and Phase 5 coverage closure are complete.
 
 Last verified: 2026-08-29.
 
-Next action: implement Phase 5's coverage ledger, negative guards, and real-device process-
-restoration journey.
+Next action: implement Phase 6 structural cleanup, full acceptance, and plan archival.
 
 ## Maven release changesets
 
@@ -427,7 +426,7 @@ with a failing contract or characterization test and lands with its complete mat
 | 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Complete |
 | 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Complete |
 | 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Complete |
-| 5 | coverage closure and defect-pressure matrix | every matrix row maps to executable evidence and mutation/negative guards detect regressions | Not started |
+| 5 | coverage closure and defect-pressure matrix | every matrix row maps to executable evidence and mutation/negative guards detect regressions | Complete |
 | 6 | deletion, documentation, release evidence, and archive | no obsolete path remains; full gates pass; durable conclusions move to active docs | Not started |
 
 ### Phase 0: freeze contracts before implementation
@@ -540,6 +539,61 @@ connected-device process-restoration journey.
    interpret results in the owning active documentation.
 4. Do not close a row with test count alone; record comparison context, absolute result, conclusion,
    limitations, and next action.
+
+#### Phase 5 executable evidence ledger
+
+| Capability requirement | Direct executable evidence | Disposition |
+| --- | --- | --- |
+| Activity and Fragment owner propagation | `AndroidHostThemeIntegrationTest.aggregate activity root discovers ViewTree ViewModel owner and explicit local wins`; `FragmentHostLifecycleIntegrationTest.content follows recreated Fragment view lifecycle owner` | Closed |
+| Explicit and local owner lookup | `ViewModelCompositionTest.explicit owner wins over an unrelated local owner`; `ViewModelLocalsTest.nested owner restores outer owner after child failure`; `ViewModelScopeCompositionTest.captured locals keep the scoped owner for delayed composition` | Closed |
+| Keys, Factory, and `CreationExtras` | `ViewModelCompositionTest` covers null/empty/blank/ordinary keys, model replacement, both Factory branches, explicit/default extras, existing-entry replacement, and both initializer forms | Closed |
+| Initializer-based creation | `ViewModelCompositionTest` proves reified and `KClass` parity and failure retry; `SavedStateViewModelIntegrationTest` proves `createSavedStateHandle()` restoration | Closed |
+| Arbitrary UI-subtree scopes | `ViewModelScopeProviderTest` and `ViewModelScopeCompositionTest` cover recreation, lease pressure, permanent removal, isolation, reorder, rollback, delayed locals, disposal, and no resurrection | Closed |
+| Navigation destination, graph, and multi-stack scopes | `NavEntryOwnerStoreTest`, `NavDestinationSessionStoreTest`, and `NavHostPublicApiTest` retain Navigation-owned lifecycle and identity after moving store allocation to `ViewModelScopeProvider` | Closed |
+| Host ViewTree fallback | Aggregate Activity discovery, Fragment explicit-owner precedence, nested explicit-provider precedence, and missing-owner failure are executable; low-level `renderInto` remains owner-free through its dependency boundary | Closed |
+| SavedStateHandle process restoration | `SavedStateViewModelIntegrationTest` covers defaults, mutation, isolated namespaces, one provider per key, and two successive recreations; navigation covers terminal stale-state rejection | Closed |
+| Saveable-state interoperability | `NavHostPublicApiTest.pop and host disposal release page resources while retaining committed saveable state` proves independent UI/business state lifetime; both device journeys restore without a second writable adapter | Closed |
+| Kotlin Multiplatform and Hilt | Plan metadata retains both as explicit non-goals; documentation governance verifies the disposition and no parity claim is made | Closed as non-goal |
+
+The Q3 contract fields map to the same evidence rather than a second suite. Behavior, inputs,
+outputs, and compatibility map to resolver and hard-cut guards; state and lifecycle map to scoped-
+owner and navigation suites; failure plus callback timing and ordering map to initializer/Factory
+retry, candidate rollback, lease close, and terminal-clear tests; Android behavior maps to
+Robolectric hosts and the device journeys. Concurrency is the documented Android-main-thread
+boundary and has no background execution branch. Performance is limited to the documented bounded
+in-memory operations: no runtime-performance improvement is claimed, so that dimension remains
+**inconclusive** instead of being closed by test count.
+
+#### Phase 5 acceptance
+
+The comparison baseline was Phase 4's 45/45 owning-module tests. Seven new defect-pressure tests
+raise the suite to 52/52, an absolute increase of seven and a normalized increase of 15.6%, with
+zero skips, failures, or errors. The new guards fail if explicit ownership falls back to an
+unrelated local, nested locals leak after an exception, handle namespaces merge, restoration
+replays an older snapshot, a key registers multiple initializer/provider paths, either removed
+handle API becomes loadable or declared again, `viewModel()` regains a composition instance cache
+or blank-key fallback, or Navigation allocates a private `ViewModelStore`.
+
+A clean rerun of every directly affected host layer passed 276/276 tests with zero skips, failures,
+or errors: 52 in `viewcompose-viewmodel-androidx`, 151 in `viewcompose-navigation-android`, 21 in
+`viewcompose-android`, and 52 in `viewcompose-host-android`. The normalized pass rate is 100%; the
+comparison is a coverage expansion rather than a runtime-performance measurement. This closes the
+previous host and aggregate rerun requirement while leaving performance explicitly inconclusive.
+
+Two Debug process-death journeys passed on one Xiaomi MI 6 running Android 9/API 28. Navigation
+changed PID from 19002 to 19078 and restored two stacks plus five seeded destination/graph state
+namespaces exactly. The ordinary Activity root changed PID from 19210 to 19286 and restored value
+41. The normalized pre/post status delta was zero in both journeys. The first navigation attempt
+also exposed an unbounded single `android layout` call; both runners now cap every layout process
+group at eight seconds and retry within their existing outer deadline, and the repeated journey
+passed through that recovery path.
+
+Conclusion: **improved**. Every capability row and applicable Q3 field now has an explicit evidence
+or non-goal disposition, regression guards exercise the prohibited designs, and real process
+recreation validates both ordinary and multi-stack ownership. One Android 9 device and Debug APK do
+not establish release-mode behavior, memory retention, runtime performance, or a platform matrix;
+those dimensions remain **inconclusive**. Phase 6 performs the final structural search, full gates,
+durable closeout, and archival decision.
 
 ### Phase 6: hard-cut cleanup and acceptance
 

@@ -230,5 +230,10 @@ constructor/factory model and reserves an application-visible store key.
    `rememberSaveable` owns UI-only state, while one business ViewModel owns each mutable
    `SavedStateHandle` flow. Conclusion: **improved**. JVM restoration does not replace a device
    process-kill journey, which remains **inconclusive** for Phase 5.
-5. Each phase lands Q3 KDoc, compiled samples, capability-impact records, module and migration
+5. Phase 5 passed all 52/52 owning-module tests after adding seven negative and deletion guards.
+   On a Xiaomi MI 6 running Android 9/API 28, two Debug process-death journeys changed PID and
+   preserved the normalized Activity-root and multi-stack navigation state exactly. Conclusion:
+   **improved**. One device does not establish release-mode, memory, performance, or platform-matrix
+   behavior; those dimensions remain **inconclusive**.
+6. Each phase lands Q3 KDoc, compiled samples, capability-impact records, module and migration
    documentation, immutable release intent, and focused tests with interpreted evidence.
