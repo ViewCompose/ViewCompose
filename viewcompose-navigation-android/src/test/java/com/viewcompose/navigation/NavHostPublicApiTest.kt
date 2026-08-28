@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import com.viewcompose.host.android.renderInto
@@ -36,7 +37,6 @@ import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
-import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
@@ -157,8 +157,7 @@ class NavHostPublicApiTest {
             },
         )
         val accountOwners = mutableMapOf<String, NavGraphOwner>()
-        val accountViewModels = mutableMapOf<String, ReleaseTrackingViewModel>()
-        val accountHandles = mutableMapOf<String, SavedStateHandle>()
+        val accountViewModels = mutableMapOf<String, RestorableReleaseTrackingViewModel>()
         val fixture = renderPublicHost(controller = controller) { entry ->
             val accountOwner = LocalNavGraphOwnerScope.current?.get("account")
             if (accountOwner != null) {
@@ -166,9 +165,9 @@ class NavHostPublicApiTest {
                 ProvideNavGraphOwner("account") {
                     accountViewModels[entry.route.name] = viewModel(
                         key = "account-vm",
-                        factory = ReleaseTrackingViewModelFactory,
-                    )
-                    accountHandles[entry.route.name] = savedStateHandle("account-handle")
+                    ) {
+                        RestorableReleaseTrackingViewModel(createSavedStateHandle())
+                    }
                     Text(entry.route.name)
                 }
             } else {
@@ -186,13 +185,13 @@ class NavHostPublicApiTest {
         )
         val profileOwner = checkNotNull(accountOwners["profile"])
         val profileViewModel = checkNotNull(accountViewModels["profile"])
-        checkNotNull(accountHandles["profile"])["selection"] = 7
+        profileViewModel.handle["selection"] = 7
         controller.navigate(NavRoute("security"))
 
         assertSame(profileOwner, accountOwners["security"])
         assertSame(profileViewModel, accountViewModels["security"])
-        assertEquals(42L, checkNotNull(accountHandles["security"])["userId"])
-        assertEquals(7, checkNotNull(accountHandles["security"])["selection"])
+        assertEquals(42L, checkNotNull(accountViewModels["security"]).handle["userId"])
+        assertEquals(7, checkNotNull(accountViewModels["security"]).handle["selection"])
         assertEquals(Lifecycle.State.RESUMED, profileOwner.lifecycle.currentState)
 
         controller.reset(NavRoute("home"))
@@ -339,11 +338,13 @@ class NavHostPublicApiTest {
                 NavEntryId(entryIds.removeFirst())
             },
         )
-        var firstHandle: SavedStateHandle? = null
+        var firstViewModel: RestorableReleaseTrackingViewModel? = null
         val first = renderPublicHost(controller = controller) { entry ->
             if (LocalNavGraphOwnerScope.current?.get("account") != null) {
                 ProvideNavGraphOwner("account") {
-                    firstHandle = savedStateHandle("account-handle")
+                    firstViewModel = viewModel(key = "account-vm") {
+                        RestorableReleaseTrackingViewModel(createSavedStateHandle())
+                    }
                     Text(entry.route.name)
                 }
             } else {
@@ -358,17 +359,19 @@ class NavHostPublicApiTest {
                 ),
             ),
         )
-        checkNotNull(firstHandle)["selection"] = 7
+        checkNotNull(firstViewModel).handle["selection"] = 7
         val expectedGraphEntry = controller.snapshot.top.graphEntries.last()
         val encoded = encodeNavHostState(controller.stateForSave())
         first.session.dispose()
 
         val restoredController = checkNotNull(navHostControllerSaver(graph).restore(encoded))
-        var restoredHandle: SavedStateHandle? = null
+        var restoredViewModel: RestorableReleaseTrackingViewModel? = null
         val restored = renderPublicHost(controller = restoredController) { entry ->
             if (LocalNavGraphOwnerScope.current?.get("account") != null) {
                 ProvideNavGraphOwner("account") {
-                    restoredHandle = savedStateHandle("account-handle")
+                    restoredViewModel = viewModel(key = "account-vm") {
+                        RestorableReleaseTrackingViewModel(createSavedStateHandle())
+                    }
                     Text(entry.route.name)
                 }
             } else {
@@ -377,8 +380,9 @@ class NavHostPublicApiTest {
         }
 
         assertEquals(expectedGraphEntry, restoredController.snapshot.top.graphEntries.last())
-        assertEquals(42L, checkNotNull(restoredHandle)["userId"])
-        assertEquals(7, checkNotNull(restoredHandle)["selection"])
+        assertNotSame(firstViewModel, restoredViewModel)
+        assertEquals(42L, checkNotNull(restoredViewModel).handle["userId"])
+        assertEquals(7, checkNotNull(restoredViewModel).handle["selection"])
         restored.session.dispose()
     }
 
@@ -662,23 +666,22 @@ class NavHostPublicApiTest {
     @Test
     fun `pop and host disposal release page resources while retaining committed saveable state`() {
         val owners = mutableMapOf<String, NavEntryOwner>()
-        val viewModels = mutableMapOf<String, ReleaseTrackingViewModel>()
+        val viewModels = mutableMapOf<String, RestorableReleaseTrackingViewModel>()
         val counters = mutableMapOf<String, RestorableCounter>()
-        val handles = mutableMapOf<String, SavedStateHandle>()
         val content: com.viewcompose.ui.foundation.UiTreeBuilder.(NavEntry) -> Unit = { entry ->
             val routeName = entry.route.name
             owners[routeName] = LocalLifecycleOwner.current as NavEntryOwner
             viewModels[routeName] = viewModel(
                 key = "release-vm",
-                factory = ReleaseTrackingViewModelFactory,
-            )
+            ) {
+                RestorableReleaseTrackingViewModel(createSavedStateHandle())
+            }
             counters[routeName] = rememberSaveable(
                 key = "release-counter",
                 saver = RestorableCounterSaver,
             ) {
                 RestorableCounter(-1)
             }
-            handles[routeName] = savedStateHandle(key = "release-handle")
             Text(routeName)
         }
         val controller = deterministicController()
@@ -690,14 +693,14 @@ class NavHostPublicApiTest {
         val originalHomeViewModel = checkNotNull(viewModels["home"])
         val originalHomeContainer = first.navHostView.getChildAt(0)
         checkNotNull(counters["home"]).value = 7
-        checkNotNull(handles["home"])["token"] = "home-state"
+        originalHomeViewModel.handle["token"] = "home-state"
 
         controller.navigate(NavRoute("details"))
         val removedDetailsOwner = checkNotNull(owners["details"])
         val removedDetailsViewModel = checkNotNull(viewModels["details"])
         val removedDetailsContainer = first.navHostView.getChildAt(1)
         checkNotNull(counters["details"]).value = 41
-        checkNotNull(handles["details"])["token"] = "removed-state"
+        removedDetailsViewModel.handle["token"] = "removed-state"
 
         controller.popBackStack()
 
@@ -714,7 +717,7 @@ class NavHostPublicApiTest {
         assertNotSame(removedDetailsOwner, replacementDetailsOwner)
         assertNotSame(removedDetailsViewModel, replacementDetailsViewModel)
         assertEquals(-1, checkNotNull(counters["details"]).value)
-        assertNull(checkNotNull(handles["details"]).get<String>("token"))
+        assertNull(replacementDetailsViewModel.handle.get<String>("token"))
 
         controller.popBackStack()
         first.session.dispose()
@@ -735,7 +738,7 @@ class NavHostPublicApiTest {
         assertNotSame(originalHomeOwner, restoredHomeOwner)
         assertNotSame(originalHomeViewModel, restoredHomeViewModel)
         assertEquals(7, checkNotNull(counters["home"]).value)
-        assertEquals("home-state", checkNotNull(handles["home"])["token"])
+        assertEquals("home-state", restoredHomeViewModel.handle["token"])
         assertEquals(Lifecycle.State.RESUMED, restoredHomeOwner.lifecycle.currentState)
         assertFalse(restoredHomeViewModel.cleared)
 
@@ -1212,6 +1215,17 @@ private class RememberedMultiStackHostFixture(
 }
 
 private class ReleaseTrackingViewModel : ViewModel() {
+    var cleared: Boolean = false
+        private set
+
+    override fun onCleared() {
+        cleared = true
+    }
+}
+
+private class RestorableReleaseTrackingViewModel(
+    val handle: SavedStateHandle,
+) : ViewModel() {
     var cleared: Boolean = false
         private set
 

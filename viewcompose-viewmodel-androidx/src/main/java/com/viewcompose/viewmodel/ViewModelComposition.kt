@@ -136,6 +136,8 @@ private fun <VM : ViewModel> resolveViewModel(
  * the owner/key entry. It may call AndroidX extras extensions such as `createSavedStateHandle()`.
  * Recomposition performs a store lookup but does not invoke the initializer again for an existing
  * entry. Only `null` selects the class-derived default key; every non-null string is explicit.
+ * Keep restored business state writable only through the created ViewModel, for example by exposing
+ * `SavedStateHandle.getMutableStateFlow()`; UI-only state remains a `rememberSaveable` concern.
  *
  * This function is main-thread confined and must run in an active ViewCompose composition. An
  * initializer exception propagates without publishing a ViewModel entry, so a later lookup may
@@ -171,7 +173,8 @@ inline fun <reified VM : ViewModel> viewModel(
  * This overload supports runtime-selected model classes while preserving the same owner, key,
  * `CreationExtras`, failure, threading, and store-only caching contract as the reified initializer
  * overload. The callback receives the owner's default extras and an existing entry ignores a later
- * callback object.
+ * callback object. A created ViewModel remains the sole writer for any `SavedStateHandle` obtained
+ * from those extras; no independent handle-only owner is installed.
  *
  * Factory construction and the provider query are bounded in-memory work. [initializer] runs
  * synchronously on the Android main thread and must not block, perform I/O, or retain its extras

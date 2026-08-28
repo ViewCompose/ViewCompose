@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: e2fb5bdaa66dce537fbcc24acb26195a70d35892b656262c342f0eae2a82c460
+translation_source_hash: 0128bd92a53cd92dd79f9c34cf4c8ea975e5b3cb56af78b112f3ef5d73b2cb56
 translation_status: current
 ---
 
@@ -32,8 +32,8 @@ dependencies {
 Owner；`ProvideNavGraphOwner` 会在子树中替换为选定图 Owner。因此页面 ViewModel 在 pop 时
 清理，而图级模型可以跨同一个图实例内的多个目的地存活。
 
-`LocalViewModelStoreOwner.current` 是 nullable，便于可选基础设施查询。`viewModel()` 和
-`savedStateHandle()` 要求存在 Owner，缺失时会报告明确配置错误。自定义宿主可使用
+`LocalViewModelStoreOwner.current` 是 nullable，便于可选基础设施查询。`viewModel()` 要求存在
+Owner，缺失时会报告明确配置错误。自定义宿主可使用
 `ProvideViewModelStoreOwner(owner) { ... }`。提供 Owner 不会清空 Store；创建它的组件必须在
 预期终态生命周期边界清理。
 
@@ -210,26 +210,36 @@ Factory 和 Extras 影响首次创建，不影响 Store 中已有条目。模型
 `createSavedStateHandle()`。Constructor、Initializer 与 Factory 失败会向调用方传播且不发布
 不完整 Model；可恢复创建失败应在 Host 边界显式建模。
 
-## SavedStateHandle 便捷入口
+## SavedStateHandle 所有权
 
 {/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-saved-state" sample_id="module.viewmodel-saved-state" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-/** Resolves an independent saved-state namespace under a stable key. */
-fun UiTreeBuilder.savedStateHandleSample(): SavedStateHandle {
-    return savedStateHandle(key = "profile-filters")
+class ProfileFiltersViewModel(
+    handle: SavedStateHandle,
+) : ViewModel() {
+    val selectedFilter = handle.getMutableStateFlow("selected-filter", "all")
+}
+
+/** Gives one ViewModel sole write ownership of restored business state. */
+fun UiTreeBuilder.savedStateViewModelSample(): ProfileFiltersViewModel {
+    return viewModel(key = "profile-filters") {
+        ProfileFiltersViewModel(createSavedStateHandle())
+    }
 }
 ```
 
-`savedStateHandle()` 把一个 Handle 存放在 `SavedStateHandleHolderViewModel` 中。同一 Owner/key
-重复调用返回同一个 Handle，Holder 会随 Store 跨配置变化存活。独立 Handle 命名空间应使用
-不同稳定 key；默认 key 表示每个 Owner 的一个通用 Handle。
+ViewModel 是恢复型业务状态唯一的可写 Owner。可以使用 Owner 默认 Saved State Factory 注入其
+构造器，也可以在 `viewModel` Initializer 内调用 `createSavedStateHandle()`。ViewModel 对外提供
+`getMutableStateFlow()` 或只读领域操作，并由 Lifecycle 集成负责观察。不要为同一个值再创建第二套
+Snapshot State Adapter 或仅持有 Handle 的 Model。
 
 进程死亡恢复还要求感知 Saved State 的 Owner、默认 Factory 与 CreationExtras。Activity、
 Fragment、导航目的地和导航图 Owner 已提供该集成。只有 `NewInstanceFactory` 的裸
 `ViewModelStoreOwner` 无法自动构造或持久化 Handle。
 
-Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用代码应使用
-`savedStateHandle()`，不要直接请求 Holder。
+仅属于 UI 的状态继续由 ViewCompose `rememberSaveable` 持有，不得同时写入 `SavedStateHandle`。
+已删除的 `savedStateHandle()` 与 `SavedStateHandleHolderViewModel` 不提供兼容别名。升级前，应把
+原有稳定 Key 迁移为真实业务 ViewModel Key，并把每个值移入该 Model 的 Handle。
 
 ## 导航 Ownership
 
@@ -257,8 +267,21 @@ Phase 3 还通过 151/151 项 Navigation Android 测试和 21/21 项 Aggregate H
 旧格式状态迁移。Aggregate Host 源码覆盖由 10 增至 11 个测试方法，并区分 Activity ViewTree
 发现与 Fragment 显式 Owner 优先级。
 
+Phase 4 用两项 `SavedStateViewModelIntegrationTest` 契约替换已删除的 Helper Guard：默认 Factory
+会把默认参数注入 Constructor Handle；Initializer 创建的 Handle 与 Mutable State Flow 能跨进程式
+新 Owner/新 Store 恢复。所属模块 45/45 项测试全部通过，无 Skip、Failure 或 Error；Navigation
+仍为 151/151，Preview Runner 仍为 12/12，迁移后的 Demo 也可编译。相较 Phase 3，模块 Suite 净增
+一项测试，因为两项恢复契约替换了一项仅针对 Helper 的 Guard。
+
+Phase 4 聚合验收命令 `./gradlew qaQuick qaPreview
+-PviewComposeReleaseBaseRevision=8c79f2b4` 同样成功完成：共 2270 个可执行任务，其中 237 个实际
+执行、2033 个为 Up-to-date。这证明硬切仍兼容仓库级 Quick 与 Preview Gate。由于聚合运行的大部分
+任务复用了已验证输出，上述干净 Focused Run 仍是绝对测试结果证据；聚合运行用于证明集成门禁，
+不构成一次新的性能对比。
+
 结论为 **improved**。解析、创建、通用 Scoped Ownership、导航集成与 Host Owner Selection 均有
-直接证据。进程终止真机行为仍为 **inconclusive**；独立 Handle 硬切继续由 Phase 4 和 Phase 5 完成。
+直接证据，恢复型业务状态也改由一个 ViewModel 持有，不再依赖框架 Holder。本次 JVM 聚焦运行不
+证明真机进程终止、内存保留或性能；这些维度在 Phase 5 前仍为 **inconclusive**。
 
 单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 Teardown 清理 Store。Process-death
 `SavedStateHandle` 测试仍应使用感知 Saved State 的 Robolectric 或真机 Owner。

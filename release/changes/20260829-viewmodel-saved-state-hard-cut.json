@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Remove standalone SavedStateHandle ownership and move restored business state into constructor- or initializer-created ViewModels with one writable StateFlow owner.",
+  "changes": [
+    { "artifact": "viewcompose-viewmodel-androidx", "impact": "breaking" }
+  ],
+  "ignored": [],
+  "shared": []
+}

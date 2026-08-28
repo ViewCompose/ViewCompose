@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: f9afa9e95c0bb68d201fc2a7efe1031fb9c42aac2c80b1a87e20e40c0ec1e7e7
+translation_source_hash: eacfe4e3b222f5ab12673333d9573b6b34827afac13ba2664013fdf5d3683eee
 translation_status: current
 ---
 
@@ -50,6 +50,12 @@ SavedState 和 ViewModel，直到最后一个保留后代被移除。以后再�
 Owner 只替换 Store Owner、SavedState Owner 以及 Route 或 Graph 参数。Controller 保存的 Host
 Scope 身份会把全部 Child Store 命名到该父级之下。父级 Owner 身份变化会重建原生 Host，防止
 保留 Entry 混用两套 Provider 契约。
+
+Destination 或 Graph Scope 的业务 ViewModel 通过构造器与 Owner 默认 Factory 获取
+`SavedStateHandle`，也可以在 `viewModel` Initializer 内调用 `createSavedStateHandle()`。Navigation
+提供 Owner Namespace 与参数，但不创建独立的 Handle-only ViewModel。UI 专属值使用
+`rememberSaveable`，恢复型业务值使用单个 ViewModel 持有的可变 Flow，因此页面只有一个写入者和
+一条恢复路径。
 
 Lifecycle 终止和 Store 终止按顺序执行，但不是同一事件。永久移除 Entry 或 Graph 时先请求终态
 清理，再发送 `ON_DESTROY`；活跃 Lease 会把物理 ViewModel Clear 延迟到 Owner 销毁并关闭 Lease

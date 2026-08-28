@@ -86,6 +86,12 @@ graph arguments. The controller's saved host-scope identity namespaces all child
 parent. Changing the parent owner identity recreates the native host so retained entries never
 combine two provider contracts.
 
+A destination- or graph-scoped business ViewModel receives `SavedStateHandle` through its
+constructor and the owner's default Factory, or inside a `viewModel` initializer through
+`createSavedStateHandle()`. Navigation provides the owner namespace and arguments but never creates
+a standalone handle-only ViewModel. UI-only values use `rememberSaveable`; restored business values
+use one ViewModel-owned mutable flow, so a page has one writer and one restoration path.
+
 Lifecycle and storage termination are ordered but distinct. Permanent entry or graph removal first
 requests terminal clear, then sends `ON_DESTROY`; the active lease defers physical ViewModel clear
 until owner destruction closes it. Normal host removal clears the complete provider. Host disposal

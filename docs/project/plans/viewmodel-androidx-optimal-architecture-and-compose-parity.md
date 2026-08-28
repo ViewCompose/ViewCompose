@@ -39,10 +39,11 @@ completion:
   - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
   - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
 last_verified: 2026-08-29
-next_action: Implement Phase 4's SavedStateHandle redesign and saveable-state interoperability hard cut.
+next_action: Implement Phase 5's coverage ledger, negative guards, and real-device process-restoration journey.
 maven_release_changesets:
   - release/changes/20260829-lifecycle-toolchain-prerequisite.json
   - release/changes/20260829-navigation-shared-viewmodel-scopes.json
+  - release/changes/20260829-viewmodel-saved-state-hard-cut.json
   - release/changes/20260829-viewmodel-scoped-owners.json
   - release/changes/20260829-viewmodel-store-resolution.json
 ---
@@ -52,17 +53,19 @@ maven_release_changesets:
 ## Status
 
 Active. The audit baseline, Phase 0 contract freeze, Phase 1 store-resolution hard cut, Phase 2
-general retained scoped-owner provider, and Phase 3 navigation/host convergence are complete.
+general retained scoped-owner provider, Phase 3 navigation/host convergence, and Phase 4
+SavedStateHandle ownership hard cut are complete.
 
 Last verified: 2026-08-29.
 
-Next action: implement Phase 4's SavedStateHandle redesign and saveable-state interoperability hard
-cut.
+Next action: implement Phase 5's coverage ledger, negative guards, and real-device process-
+restoration journey.
 
 ## Maven release changesets
 
 - `release/changes/20260829-lifecycle-toolchain-prerequisite.json`
 - `release/changes/20260829-navigation-shared-viewmodel-scopes.json`
+- `release/changes/20260829-viewmodel-saved-state-hard-cut.json`
 - `release/changes/20260829-viewmodel-scoped-owners.json`
 - `release/changes/20260829-viewmodel-store-resolution.json`
 
@@ -423,7 +426,7 @@ with a failing contract or characterization test and lands with its complete mat
 | 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Complete |
 | 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Complete |
 | 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Complete |
-| 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Not started |
+| 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Complete |
 | 5 | coverage closure and defect-pressure matrix | every matrix row maps to executable evidence and mutation/negative guards detect regressions | Not started |
 | 6 | deletion, documentation, release evidence, and archive | no obsolete path remains; full gates pass; durable conclusions move to active docs | Not started |
 
@@ -484,7 +487,36 @@ state migration. Aggregate source coverage increased from 10 to 11 test methods 
 ViewTree/nested-override evidence while strengthening the existing Fragment recreation test.
 Conclusion: **improved** for instance retention, terminal cleanup, and owner selection. This is
 JVM/Robolectric evidence rather than device process-kill, memory, leak, or frame-time evidence, so
-those dimensions remain **inconclusive**. Phase 4 is next.
+those dimensions remain **inconclusive**. Phase 4 followed this acceptance.
+
+### Phase 4: SavedStateHandle acceptance
+
+The comparison baseline was the 44-test owning module after Phase 2, with the standalone helper,
+public holder ViewModel, and reserved key still forming a second ownership model. Production and
+sample callers now put restored business values in their actual ViewModel through the owner's
+default Factory or a `CreationExtras.createSavedStateHandle()` initializer. UI-only values remain
+in `rememberSaveable`; no snapshot adapter, compatibility holder, alias, or dual writer was added.
+
+The clean focused run passed both new `SavedStateViewModelIntegrationTest` contracts and all 45/45
+owning-module tests with zero skips, failures, or errors. The module total grew by one because the
+two new contracts for default-argument constructor injection and process-style initializer/flow
+restoration replace one deleted helper-only guard. The same run passed 151/151 Navigation Android
+tests and 12/12 Preview runner tests, and compiled the migrated Demo. Source inspection finds no
+holder implementation, helper declaration, or reserved key outside the intentional migration,
+plan, and immutable governance records.
+
+The repository-wide acceptance command, `./gradlew qaQuick qaPreview
+-PviewComposeReleaseBaseRevision=8c79f2b4`, then completed successfully with 2270 actionable tasks:
+237 executed and 2033 up-to-date. This is positive integration-gate evidence for the hard cut; it
+does not replace the clean focused absolute results above or establish a performance change because
+most aggregate tasks reused verified outputs.
+
+Conclusion: **improved**. Restored business state now has one ViewModel-owned writable path and one
+AndroidX restoration path, while UI-only state remains independently owned by `rememberSaveable`.
+The evidence is JVM/Robolectric plus compilation and does not prove a real device process kill,
+memory retention, or runtime performance, so those dimensions remain **inconclusive**. Next action:
+Phase 5 maps every remaining contract to evidence, adds negative/deletion guards, and runs the
+connected-device process-restoration journey.
 
 ### Phase 4: SavedStateHandle redesign
 

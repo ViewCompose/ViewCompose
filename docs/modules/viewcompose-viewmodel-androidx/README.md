@@ -55,10 +55,10 @@ install a destination owner by default; `ProvideNavGraphOwner` replaces it with 
 owner for that subtree. This is what allows page ViewModels to clear on pop while graph-scoped models
 survive across multiple destinations in one graph instance.
 
-`LocalViewModelStoreOwner.current` is nullable for optional infrastructure. `viewModel()` and
-`savedStateHandle()` require an owner and report a direct configuration error when none is installed.
-Custom hosts can use `ProvideViewModelStoreOwner(owner) { ... }`. Providing an owner never clears its
-store; the component that created it must clear at the intended terminal lifecycle boundary.
+`LocalViewModelStoreOwner.current` is nullable for optional infrastructure. `viewModel()` requires
+an owner and reports a direct configuration error when none is installed. Custom hosts can use
+`ProvideViewModelStoreOwner(owner) { ... }`. Providing an owner never clears its store; the
+component that created it must clear at the intended terminal lifecycle boundary.
 
 Delayed child sessions capture this local with their declaration context, avoiding accidental
 fallback to a different Activity owner when overlay or retained navigation content renders later.
@@ -246,28 +246,39 @@ use the initializer overload and `createSavedStateHandle()`. Constructor, initia
 failures propagate without publishing a partial model; model recoverable creation failures
 explicitly at the host boundary.
 
-## SavedStateHandle convenience
+## SavedStateHandle ownership
 
 {/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-saved-state" sample_id="module.viewmodel-saved-state" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-/** Resolves an independent saved-state namespace under a stable key. */
-fun UiTreeBuilder.savedStateHandleSample(): SavedStateHandle {
-    return savedStateHandle(key = "profile-filters")
+class ProfileFiltersViewModel(
+    handle: SavedStateHandle,
+) : ViewModel() {
+    val selectedFilter = handle.getMutableStateFlow("selected-filter", "all")
+}
+
+/** Gives one ViewModel sole write ownership of restored business state. */
+fun UiTreeBuilder.savedStateViewModelSample(): ProfileFiltersViewModel {
+    return viewModel(key = "profile-filters") {
+        ProfileFiltersViewModel(createSavedStateHandle())
+    }
 }
 ```
 
-`savedStateHandle()` stores one handle inside `SavedStateHandleHolderViewModel`. Repeated calls with
-the same owner and key return the same handle, and the holder survives configuration changes with its
-store. Use distinct stable keys for independent handle namespaces; the default key represents one
-general-purpose handle per owner.
+The ViewModel is the only writable owner of restored business state. Use its constructor with the
+owner's default saved-state Factory, or call `createSavedStateHandle()` inside a `viewModel`
+initializer. Expose `getMutableStateFlow()` or read-only domain operations from the ViewModel and
+observe them through the lifecycle integration. Do not create a second snapshot-state adapter or
+handle-only model for the same value.
 
 Process-death restoration additionally requires a saved-state-aware owner, default factory, and
 creation extras. Activity, Fragment, navigation destination, and navigation graph owners provide
 that integration. A bare `ViewModelStoreOwner` with `NewInstanceFactory` cannot construct or persist
 the handle automatically.
 
-The holder class is public only so AndroidX factories can construct it. Application code should use
-`savedStateHandle()` rather than request the holder directly.
+UI-only state remains owned by ViewCompose `rememberSaveable`; it must not also be written through a
+`SavedStateHandle`. The removed `savedStateHandle()` and `SavedStateHandleHolderViewModel` APIs have
+no compatibility aliases. Migrate their stable key to the actual business ViewModel key and move
+each value into that model's handle before upgrading.
 
 ## Navigation ownership
 
@@ -302,9 +313,24 @@ configuration-retained entry ViewModels, and prior-format state migration. Aggre
 coverage grew from 10 to 11 test methods and now distinguishes Activity ViewTree discovery from
 Fragment explicit-owner precedence.
 
+Phase 4 replaces the removed helper guard with two `SavedStateViewModelIntegrationTest` contracts:
+the default Factory injects default arguments into a constructor handle, and an initializer-created
+handle plus mutable state flow survives a process-style new-owner/new-store restoration. The owning
+module now passes 45/45 tests with zero skips, failures, or errors; Navigation remains 151/151,
+Preview runner remains 12/12, and the migrated Demo compiles. Relative to Phase 3, the module suite
+has one net additional test because two restoration contracts replace one helper-only guard.
+
+The aggregate Phase 4 acceptance command, `./gradlew qaQuick qaPreview
+-PviewComposeReleaseBaseRevision=8c79f2b4`, also completed successfully: 2270 actionable tasks,
+with 237 executed and 2033 up-to-date. This confirms that the hard cut remains compatible with the
+repository-wide quick and preview gates. Because most aggregate tasks reused verified outputs, the
+clean focused runs above remain the absolute test-result evidence; the aggregate run is integration-
+gate evidence rather than a fresh performance comparison.
+
 Conclusion: **improved**. Lookup, creation, general scoped ownership, navigation integration, and
-host owner selection now have direct evidence. Process-kill device behavior remains
-**inconclusive**, and the standalone handle hard cut remains for Phases 4 and 5.
+host owner selection now have direct evidence, and restored business state has one ViewModel owner
+instead of a framework holder. The focused JVM run does not prove a real device process kill,
+memory retention, or performance; those dimensions remain **inconclusive** for Phase 5.
 
 Use a real `ViewModelStore` in unit tests, render the same call repeatedly, and clear the store
 during teardown. Saved-state-aware Robolectric or instrumented owners remain required for process-
