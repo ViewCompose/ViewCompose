@@ -1,10 +1,5 @@
 package com.viewcompose.lifecycle
 
-/*
- * 测试职责：覆盖 lifecycle integration 中的 Flow Collect As State With Lifecycle 行为，防止关键契约在后续重构中回退。
- * Test responsibility: covers Flow Collect As State With Lifecycle behavior in lifecycle integration and guards the contract against regressions.
- */
-
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -96,6 +91,144 @@ class FlowCollectAsStateWithLifecycleTest {
 
         source.value = 2
         awaitValue(state) { it == 2 }
+        harness.dispose()
+    }
+
+    @Test
+    fun `lifecycle activation between declaration and commit starts collection`() = runBlocking {
+        val harness = WidgetCoreRuntimeHarness()
+        val owner = TestLifecycleOwner()
+        val source = MutableStateFlow(7)
+        lateinit var state: State<Int>
+
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        val prepared = harness.prepareTree {
+            state = source.collectAsStateWithLifecycle(
+                initial = -1,
+                lifecycle = owner.lifecycle,
+                context = Dispatchers.Unconfined,
+            )
+        }
+        assertEquals(-1, state.value)
+
+        owner.handle(Lifecycle.Event.ON_START)
+        assertEquals(-1, state.value)
+
+        prepared.commit()
+        harness.commitSideEffects()
+        awaitValue(state) { it == 7 }
+        harness.dispose()
+    }
+
+    @Test
+    fun `lifecycle replacement detaches old owner before observing the new owner`() = runBlocking {
+        val harness = WidgetCoreRuntimeHarness()
+        val firstOwner = TestLifecycleOwner()
+        val secondOwner = TestLifecycleOwner()
+        val source = MutableStateFlow(1)
+        var lifecycle = firstOwner.lifecycle
+        lateinit var state: State<Int>
+
+        firstOwner.handle(Lifecycle.Event.ON_CREATE)
+        firstOwner.handle(Lifecycle.Event.ON_START)
+        secondOwner.handle(Lifecycle.Event.ON_CREATE)
+
+        fun render() {
+            val currentLifecycle = lifecycle
+            harness.renderTree {
+                state = source.collectAsStateWithLifecycle(
+                    initial = 0,
+                    lifecycle = currentLifecycle,
+                    context = Dispatchers.Unconfined,
+                )
+            }
+        }
+
+        render()
+        awaitValue(state) { it == 1 }
+
+        lifecycle = secondOwner.lifecycle
+        render()
+        source.value = 2
+        delay(50)
+        assertEquals(1, state.value)
+
+        firstOwner.handle(Lifecycle.Event.ON_STOP)
+        firstOwner.handle(Lifecycle.Event.ON_START)
+        source.value = 3
+        delay(50)
+        assertEquals(1, state.value)
+
+        secondOwner.handle(Lifecycle.Event.ON_START)
+        awaitValue(state) { it == 3 }
+        harness.dispose()
+    }
+
+    @Test
+    fun `aborted lifecycle replacement leaves committed collection active`() = runBlocking {
+        val harness = WidgetCoreRuntimeHarness()
+        val firstOwner = TestLifecycleOwner()
+        val secondOwner = TestLifecycleOwner()
+        val source = MutableStateFlow(1)
+        var lifecycle = firstOwner.lifecycle
+        lateinit var state: State<Int>
+
+        firstOwner.handle(Lifecycle.Event.ON_CREATE)
+        firstOwner.handle(Lifecycle.Event.ON_START)
+        secondOwner.handle(Lifecycle.Event.ON_CREATE)
+        secondOwner.handle(Lifecycle.Event.ON_START)
+
+        fun content(): com.viewcompose.ui.foundation.UiTreeBuilder.() -> Unit = {
+            val currentLifecycle = lifecycle
+            state = source.collectAsStateWithLifecycle(
+                initial = 0,
+                lifecycle = currentLifecycle,
+                context = Dispatchers.Unconfined,
+            )
+        }
+
+        harness.renderTree(content())
+        awaitValue(state) { it == 1 }
+
+        lifecycle = secondOwner.lifecycle
+        harness.prepareTree(content()).abort()
+        source.value = 2
+        awaitValue(state) { it == 2 }
+
+        firstOwner.handle(Lifecycle.Event.ON_STOP)
+        source.value = 3
+        delay(50)
+        assertEquals(2, state.value)
+        harness.dispose()
+    }
+
+    @Test
+    fun `failed composition never launches a lifecycle collector`() = runBlocking {
+        val harness = WidgetCoreRuntimeHarness()
+        val owner = TestLifecycleOwner()
+        var starts = 0
+        val source = flow {
+            starts += 1
+            emit(1)
+        }
+
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        owner.handle(Lifecycle.Event.ON_START)
+        val error = runCatching {
+            harness.prepareTree {
+                source.collectAsStateWithLifecycle(
+                    initial = 0,
+                    lifecycle = owner.lifecycle,
+                    context = Dispatchers.Unconfined,
+                )
+                error("composition failed")
+            }
+        }.exceptionOrNull()
+        harness.commitSideEffects()
+        delay(50)
+
+        assertTrue(error is IllegalStateException)
+        assertEquals(0, starts)
         harness.dispose()
     }
 

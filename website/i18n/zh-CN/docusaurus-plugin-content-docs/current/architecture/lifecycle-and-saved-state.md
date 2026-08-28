@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lifecycle-and-saved-state.md
-translation_source_hash: ce74ebcd7185a4749bb3bd72990c57ed25b73fb5385496e40be69e7b1bbad5e4
+translation_source_hash: 14aac3157260ee52e4f86f231ed9fc01009da2d13a08d9304948d955f889f734
 translation_status: current
 ---
 
@@ -172,3 +172,13 @@ Provider 失效。后续 Commit 只替换 Saver，保证 Host 保存时总是读
 11. Retained ViewModel Scope 引用计数、Rollback、Recreation、Terminal Clear 与 No-resurrection
 12. Destination/Graph Owner 隔离、默认 Factory/CreationExtras 传播、`onCleared()`、连续进程式恢复，
     以及真实多 Stack 进程重建
+13. Lifecycle DSL 在声明与 Commit 之间发生激活或 State 变化时的对账、Owner 替换与已 Abort 替换、
+    失败或已 Abort Composition 的惰性，以及声明失败后的嵌套 Owner 恢复
+
+2026-08-29 的导航 Lifecycle DSL 稳定化重新运行了 Lifecycle 模块全部 43 个 JVM 与 Robolectric
+测试，零失败。此前基线包含 35 个测试；新增 8 个 Case，使可执行契约数量增加 22.9%，并直接覆盖
+第 13 项的竞态与失败路径。结论是契约覆盖 **improved**、运行时行为 **no material change**：现有
+Commit-aware Effect 与 Producer 实现已经满足已接受契约，因此没有新增生产声明或宿主专用 Lifecycle
+API。Fresh Cross-host 回归也通过了 227/227 个测试：43 个 Lifecycle、21 个 Android Aggregate、
+151 个 Navigation Android 和 12 个 Preview Runner 测试。该证据不支持真机或性能结论；首次改变
+Android 导航生命周期行为的阶段负责对应验证。

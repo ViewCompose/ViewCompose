@@ -42,7 +42,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 1 by proving the existing host-neutral Lifecycle DSL across Activity, Fragment, destination, graph, preview, and custom-container boundaries before deciding whether any public declaration must change.
+next_action: Execute Phase 2 by replacing visible/interactive-only lifecycle decisions with a pure scene/entry-cap projection and exhaustive model tests.
 maven_release_changesets: []
 ---
 
@@ -50,14 +50,13 @@ maven_release_changesets: []
 
 ## Status
 
-Active. The architecture and test audit plus Phase 0 contract freeze are complete; no production
-source or public API has changed under this plan.
+Active. The architecture and test audit, Phase 0 contract freeze, and Phase 1 Lifecycle DSL
+stabilization are complete. No production source or public API has changed under this plan yet.
 
 Last verified: 2026-08-29.
 
-Next action: execute the Phase 1 host matrix for the existing Lifecycle DSL, close any
-declaration-to-commit, replacement, failure, rapid-event, or disposal gaps, and add no public API
-unless that evidence proves the current surface cannot express an accepted use case.
+Next action: execute Phase 2 by introducing the platform-neutral scene and entry-cap projection in
+Navigation Core, then hard-cut the visible/interactive-only lifecycle planner in the same slice.
 
 ## Maven release changesets
 
@@ -390,8 +389,8 @@ same slice that establishes its replacement:
 | Phase | Scope | Completion gate | Status |
 | --- | --- | --- | --- |
 | 0 | Contract, capability, ownership, and ADR freeze | State matrices, hard cuts, Q3/API impacts, ViewModel-plan boundary, and ADR disposition accepted | Complete |
-| 1 | Generic Lifecycle DSL stabilization | One consumption surface passes host, race, replacement, failure, effect, and Flow contracts | Next |
-| 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Pending |
+| 1 | Generic Lifecycle DSL stabilization | One consumption surface passes host, race, replacement, failure, effect, and Flow contracts | Complete |
+| 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Next |
 | 3 | Android transition lifecycle correction | Ordinary and predictive transitions, overlays, panes, and host caps match the matrix | Pending |
 | 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Pending |
 | 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Pending |
@@ -457,6 +456,40 @@ action: execute Phase 1's fresh host-neutral Lifecycle DSL matrix.
    overloads or diagnostics in the same slice.
 4. Update lifecycle architecture, module documentation, compiled samples, and locale mirrors for
    every durable contract change.
+
+#### Phase 1 acceptance
+
+The existing API family is sufficient and remains the single consumption surface:
+`LocalLifecycleOwner`, `ProvideLifecycleOwner`, `Lifecycle.currentStateAsState()`,
+`LifecycleStartEffect`, `LifecycleResumeEffect`, and `collectAsStateWithLifecycle(...)`. Activity,
+Fragment, navigation destination, navigation graph, Preview, and explicit custom-container hosts
+provide different owner boundaries, but DSL code consumes the same nearest-owner contract. No
+host-specific façade or new public declaration is justified.
+
+The fresh lifecycle-module suite passed 43 of 43 JVM and Robolectric tests, compared with the prior
+35-test baseline: eight additional tests, a 22.9% increase. The additions directly exercise
+activation and state changes between declaration and commit, lifecycle-owner replacement, aborted
+replacement, failed composition, aborted state observation, and nested local restoration after a
+declaration failure. The existing host suites continue to own Activity ViewTree, Fragment recreated
+View owner, navigation entry and graph locals, Preview owners, and explicit custom-provider
+integration.
+
+The fresh cross-host regression passed 227 of 227 tests: 43 lifecycle, 21 Android aggregate, 151
+Navigation Android, and 12 Preview Runner tests. This verifies the consumption surface across the
+currently supported host adapters without introducing a parallel host-specific API.
+
+The full `qaQuick` gate also passed all 2,268 actionable tasks: 170 executed and 2,098 were up to
+date. Documentation Governance V2 reported zero issues against the Phase 0 base, translation checks
+reported 126 current and zero stale required Chinese pages, and release-intent verification found
+zero affected artifacts. The mixed cache state is not performance evidence.
+
+Conclusion: **improved** contract coverage and **no material change** in runtime behavior. The
+evidence confirms the current commit-aware implementation rather than exposing a production defect;
+therefore this phase changes no production source, publication input, public API, or compiled sample
+and owns no Maven Changeset. JVM/Robolectric evidence does not establish physical-device lifecycle
+or performance behavior, but no new Android runtime path was introduced, so device validation is
+deferred to the first changed Android navigation behavior. Next action: execute Phase 2's pure
+scene/entry lifecycle projection and model tests.
 
 ### Phase 2: introduce scene and entry caps in core
 
