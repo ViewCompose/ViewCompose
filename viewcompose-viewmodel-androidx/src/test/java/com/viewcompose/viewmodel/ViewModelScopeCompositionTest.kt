@@ -198,6 +198,84 @@ class ViewModelScopeCompositionTest {
     }
 
     @Test
+    fun `pager lazy and overlay scopes survive reorder and temporary absence`() {
+        val parent = TestParentOwner()
+        val harness = WidgetCoreRuntimeHarness()
+        lateinit var provider: ViewModelScopeProvider
+        var visible = listOf("pager", "lazy", "overlay")
+
+        fun render(): Map<String, TrackingViewModel> {
+            val models = linkedMapOf<String, TrackingViewModel>()
+            harness.render {
+                provider = rememberViewModelScopeProvider("provider", parent)
+                visible.forEach { key ->
+                    val owner = rememberViewModelStoreOwner(key, provider)
+                    models[key] = viewModel(owner = owner) { TrackingViewModel() }
+                }
+            }
+            return models
+        }
+
+        val initial = render()
+        visible = listOf("overlay", "pager")
+        val temporarilyAbsent = render()
+        assertSame(initial.getValue("overlay"), temporarilyAbsent.getValue("overlay"))
+        assertSame(initial.getValue("pager"), temporarilyAbsent.getValue("pager"))
+        assertFalse(initial.getValue("lazy").cleared)
+
+        visible = listOf("lazy", "overlay", "pager")
+        val restored = render()
+        initial.forEach { (key, model) ->
+            assertSame(model, restored.getValue(key))
+        }
+
+        provider.clear("lazy")
+        visible = listOf("overlay", "pager")
+        render()
+        assertTrue(initial.getValue("lazy").cleared)
+        assertFalse(initial.getValue("overlay").cleared)
+        assertFalse(initial.getValue("pager").cleared)
+
+        harness.dispose()
+        assertTrue(initial.getValue("overlay").cleared)
+        assertTrue(initial.getValue("pager").cleared)
+        parent.viewModelStore.clear()
+    }
+
+    @Test
+    fun `initialized parent lifecycle still clears normally removed provider`() {
+        val parent = TestParentOwner(initialState = Lifecycle.State.INITIALIZED)
+        val harness = WidgetCoreRuntimeHarness()
+        val model = harness.render {
+            val provider = rememberViewModelScopeProvider("provider", parent)
+            val owner = rememberViewModelStoreOwner("child", provider)
+            viewModel(owner = owner) { TrackingViewModel() }
+        }
+
+        harness.dispose()
+
+        assertTrue(model.cleared)
+        parent.viewModelStore.clear()
+    }
+
+    @Test
+    fun `destroyed parent lifecycle rejects a new provider binding`() {
+        val parent = TestParentOwner(initialState = Lifecycle.State.DESTROYED)
+        val harness = WidgetCoreRuntimeHarness()
+
+        val failure = runCatching {
+            harness.render {
+                rememberViewModelScopeProvider("provider", parent)
+            }
+        }.exceptionOrNull()
+
+        assertTrue(failure.hasCause<IllegalStateException>())
+        assertTrue(failure.hasCauseMessage("destroyed parent Lifecycle"))
+        harness.dispose()
+        parent.viewModelStore.clear()
+    }
+
+    @Test
     fun `missing lifecycle requires the explicit split-boundary parameter`() {
         val parent = object : ViewModelStoreOwner {
             override val viewModelStore: ViewModelStore = ViewModelStore()
@@ -245,6 +323,7 @@ class ViewModelScopeCompositionTest {
 
     private class TestParentOwner(
         override val viewModelStore: ViewModelStore = ViewModelStore(),
+        initialState: Lifecycle.State = Lifecycle.State.CREATED,
     ) : ViewModelStoreOwner, LifecycleOwner {
         private val registry = LifecycleRegistry(this)
 
@@ -252,7 +331,12 @@ class ViewModelScopeCompositionTest {
             get() = registry
 
         init {
-            registry.currentState = Lifecycle.State.CREATED
+            if (initialState == Lifecycle.State.DESTROYED) {
+                registry.currentState = Lifecycle.State.CREATED
+                registry.currentState = Lifecycle.State.DESTROYED
+            } else {
+                registry.currentState = initialState
+            }
         }
 
         fun moveTo(state: Lifecycle.State) {

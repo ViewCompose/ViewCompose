@@ -100,10 +100,11 @@ reference counter for child stores.
    permanently removed. Active leases defer the underlying clear; after removal is requested, a new
    lease for that identity fails until the final old lease closes. Reusing the key afterward creates
    a fresh scope rather than resurrecting the removed store.
-5. Normal provider-subtree removal while its parent lifecycle is at least `CREATED` requests
-   provider-wide terminal cleanup. Disposal while the parent is `DESTROYED` does not request that
-   cleanup: configuration recreation must recover shared provider state, while a finishing parent
-   clears its own store. Clearing the parent store remains the final safety boundary.
+5. Normal provider-subtree removal while its parent lifecycle is not `DESTROYED` requests
+   provider-wide terminal cleanup, including removal before the parent reaches `CREATED`. Disposal
+   while the parent is `DESTROYED` does not request that cleanup: configuration recreation must
+   recover shared provider state, while a finishing parent clears its own store. Clearing the parent
+   store remains the final safety boundary.
 6. Provider creation, lease operations, ViewModel lookup, and clear operations are Android-main-
    thread confined. They perform bounded in-memory map, provider, and reference-count operations;
    they do no I/O, blocking, scheduling, or global discovery.
@@ -212,8 +213,9 @@ constructor/factory model and reserves an application-visible store key.
    failure, `onCleared`, and lookup after clear.
 2. Phase 2 proves provider sharing/isolation, commit/abort, multiple leases, temporary absence,
    terminal clear, no resurrection, configuration recreation, provider disposal, saved-state
-   defaults, and boundary diagnostics through 16 focused scoped-owner contracts. The owning module
-   passes all 40 tests after combining this evidence with Phase 1 resolution coverage.
+   defaults, Pager/lazy/overlay reorder, and lifecycle-boundary diagnostics through 20 focused
+   scoped-owner contracts. The owning module passes all 44 tests after combining this evidence with
+   Phase 1 resolution coverage.
 3. Phase 3 runs the existing navigation matrix against the shared provider before deleting
    `NavEntryOwnerStore`; host tests prove explicit-owner and ViewTree precedence.
 4. Phase 4 proves constructor/initializer `SavedStateHandle` restoration and the single-owner

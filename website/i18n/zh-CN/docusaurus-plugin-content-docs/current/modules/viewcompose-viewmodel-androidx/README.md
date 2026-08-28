@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: afd893c7160ce29fceac7db91986106fe8be60258f4b84229bba927b3613ccca
+translation_source_hash: 2c56148041a134af713a521fd45eb7c09a3a29761500559887c9cbf07d4640ba
 translation_status: current
 ---
 
@@ -245,12 +245,13 @@ Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用�
 ## 测试
 
 Phase 1 的同一测试 Owner 从此前 7 项增加到 21 项 Focused Resolution Test，即新增 14 项契约，
-标准化后的 Suite 规模为此前 3 倍（`+200%`）。Phase 2 再增加 16 项 Scoped Owner 契约测试，使
-所属模块达到 40/40 全部通过，且没有 Skip、Failure 或 Error。新增用例覆盖 Provider 共享与隔离、
+标准化后的 Suite 规模为此前 3 倍（`+200%`）。Phase 2 再增加 20 项 Scoped Owner 契约测试，使
+所属模块达到 44/44 全部通过，且没有 Skip、Failure 或 Error。新增用例覆盖 Provider 共享与隔离、
 多 Lease、幂等关闭、临时缺席、终态清理、禁止复活、父 Store 清理、Factory/Extras/默认参数、
-不一致 Saved State 边界、组合提交与中止、配置重建、延迟 Local 捕获以及 Lifecycle 缺失诊断。
-结论为 **improved**。解析、创建与通用 Scoped Ownership 已有直接证据；导航迁移、
-Pager/Lazy/Overlay 集成 Fixture、进程恢复和独立 Handle 硬切仍由 Phase 3 至 Phase 5 完成。
+不一致 Saved State 边界、组合提交与中止、配置重建、延迟 Local 捕获、Pager/Lazy/Overlay 重排以及
+`INITIALIZED`/`DESTROYED` Lifecycle 边界诊断。
+结论为 **improved**。解析、创建与通用 Scoped Ownership 已有直接证据；导航集成、进程恢复和独立
+Handle 硬切仍由 Phase 3 至 Phase 5 完成。
 
 单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 Teardown 清理 Store。Process-death
 `SavedStateHandle` 测试仍应使用感知 Saved State 的 Robolectric 或真机 Owner。

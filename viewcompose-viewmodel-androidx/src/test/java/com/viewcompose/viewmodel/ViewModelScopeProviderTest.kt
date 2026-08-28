@@ -139,6 +139,31 @@ class ViewModelScopeProviderTest {
     }
 
     @Test
+    fun `stable child identities survive acquisition reorder`() {
+        val parent = TestParentOwner()
+        val provider = ViewModelScopeProvider(parent, "provider")
+        val initial = listOf("pager", "lazy", "overlay").associateWith { key ->
+            provider.acquireOwner(key).use { lease ->
+                trackingViewModel(lease.owner)
+            }
+        }
+
+        val reordered = listOf("overlay", "pager", "lazy").associateWith { key ->
+            provider.acquireOwner(key).use { lease ->
+                trackingViewModel(lease.owner)
+            }
+        }
+
+        initial.forEach { (key, model) ->
+            assertSame(model, reordered.getValue(key))
+            provider.clear(key)
+            assertTrue(model.cleared)
+        }
+        provider.clearAll()
+        parent.viewModelStore.clear()
+    }
+
+    @Test
     fun `provider clear all rejects use and waits for active child leases`() {
         val parent = TestParentOwner()
         val provider = ViewModelScopeProvider(parent, "provider")

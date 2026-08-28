@@ -285,15 +285,16 @@ These rules keep page state independent without requiring Activity or Fragment p
 ## Testing
 
 Phase 1 runs 21 focused resolution tests, compared with seven in the same test owner before this
-change: 14 additional contracts and a normalized threefold suite size (`+200%`). Phase 2 adds 16
-scoped-owner contract tests, bringing the owning module to 40/40 passing tests with zero skips,
+change: 14 additional contracts and a normalized threefold suite size (`+200%`). Phase 2 adds 20
+scoped-owner contract tests, bringing the owning module to 44/44 passing tests with zero skips,
 failures, or errors. The new cases cover provider sharing and isolation, multiple leases,
 idempotent close, temporary absence, terminal clear, no resurrection, parent-store cleanup,
 Factory/extras/default arguments, inconsistent saved-state boundaries, composition commit and
-abort, configuration recreation, delayed-local capture, and missing lifecycle diagnostics.
+abort, configuration recreation, delayed-local capture, Pager/lazy/overlay reorder, and
+`INITIALIZED`/`DESTROYED` lifecycle diagnostics.
 Conclusion: **improved**. Lookup, creation, and general scoped ownership now have direct evidence;
-navigation migration, Pager/lazy/overlay integration fixtures, process restoration, and the
-standalone handle hard cut remain for Phases 3 through 5.
+navigation integration, process restoration, and the standalone handle hard cut remain for Phases
+3 through 5.
 
 Use a real `ViewModelStore` in unit tests, render the same call repeatedly, and clear the store
 during teardown. Saved-state-aware Robolectric or instrumented owners remain required for process-

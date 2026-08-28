@@ -17,7 +17,7 @@ import com.viewcompose.ui.foundation.remember
  * [key] is mandatory because retained identity must come from the caller rather than call position.
  * Equal keys in the same parent store share provider state. The binding survives configuration
  * recreation through the parent store. When committed composition removes the final binding while
- * [lifecycleOwner] is at least `CREATED`, all children receive terminal cleanup; removal after the
+ * [lifecycleOwner] is not `DESTROYED`, all children receive terminal cleanup. Removal after the
  * parent is `DESTROYED` preserves the stores for configuration recreation and lets a finishing
  * parent clear them through its own store.
  *

@@ -241,7 +241,7 @@ class ViewModelScopeProvider(
         @MainThread
         fun forget() {
             release(
-                requestTerminal = lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED),
+                requestTerminal = lifecycle.currentState != Lifecycle.State.DESTROYED,
             )
         }
 
