@@ -207,10 +207,17 @@ the maximum of candidate completion from job start and the parallel documentatio
 gives nearest-rank P50 `6 min 22 s` and P95 `7 min 17 s`; both satisfy the `8 min`/`12 min`
 thresholds. All 11 documentation children restored and verified `5/5` immutable API groups with
 zero generation or invalid group, a `100%` exact-hit rate. The scope and cache conclusions are
-**improved**, and correctness is **no material change** with zero divergence. The timing result is
-still **inconclusive** as an observed post-cut result because it is reconstructed from shadow runs;
-the first eligible pull request after rollout must record its actual critical path. This evidence
-enables the first exact `affected` class.
+**improved**, and correctness is **no material change** with zero divergence. At acceptance time,
+the observed post-cut timing was still **inconclusive** because it was reconstructed from shadow
+runs; an actual critical path was still required. This evidence enabled the first exact `affected`
+class.
+
+Pull request #225 supplied that class's first real post-cut no-shadow run. Its five-task candidate
+covered only `:samples:tutorials`, passed in `6 min 9 s`, and reached the required facade in
+`8 min 12 s` from workflow creation; complete work was skipped. This is `72.9%` below the Phase 0
+execution P50 and `66.0%` below its end-to-end P50. Scope and latency are **improved** and
+correctness is **no material change**. One run does not establish a distribution; nine more
+naturally eligible successful runs are required before evaluating this class's P50/P95.
 
 Eleven hosted module-documentation/compiled-sample pull requests (#186, #187, #188, #189, #190,
 #191, #194, #195, #198, #199, and #200) supplied the second accepted no-shadow corpus. Each changed
@@ -225,7 +232,18 @@ zero generation or invalid group. A separate eleven-run successful `main` corpus
 cache reuse, and latency are **improved**; correctness is **no material change**. Pull request #196
 remains `affected-with-shadow` because it changed a module build script, and production source,
 ordinary tests, code deletion/rename, sensitive tooling, and unrecognized paths remain outside this
-hard cut. The first eligible hosted run after rollout must still record actual post-cut timing.
+hard cut. At rollout, the first eligible hosted run was still required to record actual post-cut
+timing.
+
+Pull request #226 supplied that class's first real post-cut no-shadow run. Its 68 selected tasks
+covered 23 published artifacts and `:samples:tutorials`, passed in `7 min 48 s`, and reached the
+required facade in `9 min 42 s` from workflow creation; complete work was skipped. The execution
+and end-to-end paths are `65.7%` and `59.8%` below Phase 0. Scope and latency are **improved** and
+correctness is **no material change** because the selected closure, Preview, documentation, and
+facades all passed. The merged `main` revision then passed complete `qaQuick` in `15 min 23 s` with
+the work job at `16 min 38 s`, `19.6%` below the accepted full-main P95; the full path therefore
+shows **no material change** in safety. One run does not establish a distribution; nine more
+naturally eligible successful runs are required before evaluating this class's P50/P95.
 
 The first post-cut control window (#219--#223) produced no eligible no-shadow `affected` run. #219
 changed only the active plan and correctly selected `skip`; the `qaQuick` facade completed `70 s`
@@ -241,8 +259,8 @@ facade passed. Safety remains **no material change** and the small heterogeneous
 sample is **improved** relative to Phase 0; actual no-shadow latency remains **inconclusive** because
 the window contains no target-class run. These five same-day, release-heavy changes are control
 evidence rather than a representative distribution. Wait for a naturally eligible documentation/
-Tutorial-sample or module-documentation/compiled-sample pull request; do not alter samples only to
-produce an observation.
+Tutorial-sample or module-documentation/compiled-sample pull request to extend each post-cut corpus;
+do not alter samples only to produce an observation.
 
 `gradle/actions/setup-gradle` is the sole owner of Gradle User Home caching in every workflow that
 invokes Gradle. `actions/setup-java` installs the required JDK but does not separately cache

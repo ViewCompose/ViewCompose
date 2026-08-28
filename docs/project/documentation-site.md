@@ -444,9 +444,21 @@ identity token.
   module routes. Correct cache discrimination and deployment are **no material change**; latency is
   **mixed** because intentional full and partial invalidation cost more than exact reuse. These are
   heterogeneous release/tooling inputs with different 100-, 127-, and 133-version outputs, so the
-  normalized child times do not estimate steady-state performance. The next action remains an
-  exact-hit observation on the first naturally eligible post-cut `affected` pull request, while
-  tooling or history drift must continue regenerating only the groups its fingerprint invalidates.
+  normalized child times do not estimate steady-state performance. Tooling or history drift must
+  continue regenerating only the groups its fingerprint invalidates.
+
+- **2026-08-28, first two post-cut exact-hit observations:** #225 and #226 both restored and
+  verified `6/6` immutable API groups with zero generation or invalid group. Their cache work took
+  `7.1 s` and `4.5 s`, documentation children took `3 min 58 s` and `3 min 54 s`, and production
+  site wrappers took `47.3 s` and `43.0 s`. Both sites remained at 469.0 MiB total and 46.7/46.9
+  MiB non-API output with unchanged API, JavaScript, CSS, accessibility, and route budgets. From
+  #225 to #226, documentation-child time changed by `-1.7%`, site time by `-9.1%`, and rounded size
+  did not change. Cache correctness and exact-hit behavior are **no material change** with a `100%`
+  hit rate in this two-run post-cut sample; website latency is also **no material change** because
+  runner and dependency state differ. This confirms that both accepted no-shadow classes preserve
+  documentation integrity, but it is not a P50/P95 corpus. Continue collecting naturally eligible
+  runs and keep group-scoped regeneration for every verified fingerprint miss; a website-stack
+  migration remains unjustified.
 
 - **2026-08-26, Governance V2 Text Input local acceptance:** the first four-page task split built
   successfully but produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB
