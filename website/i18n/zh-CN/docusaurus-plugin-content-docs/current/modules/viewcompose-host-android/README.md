@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 4a904449f345e60bedb679018d0c1b5a413af92a8383c20fef9e2ebc32a09a02
+translation_source_hash: b48ae09c6dc7cfdc77895b3702cfad99b9b7141f631a734fbf7008b37d54d30e
 translation_status: current
 ---
 
@@ -240,7 +240,9 @@ fun platformGraphicsInteropSample(target: View): Modifier {
 安装的 `AndroidCoreRenderEngine` 还会把 UI Foundation 的 Q3 Observed-property SPI 转换为精确
 Android Renderer Target。Property-only Frame 会保持 Mounted Root List 与 Target Map 稳定，
 校验每个 Target 仍属于已提交 Frame，并只返回 Commit Effect、Failure 与可选诊断。外来或陈旧
-Target 会直接失败，不会触发整树渲染。
+Target 会直接失败，不会触发整树渲染。当 Lazy Presentation 跨 Renderer 创建的 Host Wrapper
+更换逻辑 Owner 时，Engine 只在同步 Render 期间传递该 Transaction Marker，并在 `finally` 中
+清除；Wrapper 因而不能隐藏 Key 所有的 State Replacement，也不能在失败后保留 Transfer 状态。
 
 ## 相关文档
 

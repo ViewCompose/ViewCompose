@@ -47,6 +47,23 @@ class LazyHolderRegistryTest {
     }
 
     @Test
+    fun `retained recycled holder stays owned until explicit disposal`() {
+        val events = mutableListOf<String>()
+        val registry = LazyHolderRegistry<String> { holder ->
+            events += "dispose:$holder"
+        }
+
+        registry.onBound("holder-A")
+        registry.onRecycled("holder-A", retainOwnership = true)
+        assertEquals(emptyList<String>(), events)
+
+        registry.dispose("holder-A")
+        registry.disposeAll()
+
+        assertEquals(listOf("dispose:holder-A"), events)
+    }
+
+    @Test
     fun `disposeDetachedWhere releases only matching detached holders once`() {
         val events = mutableListOf<String>()
         val registry = LazyHolderRegistry<String> { holder ->

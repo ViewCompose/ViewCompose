@@ -117,24 +117,36 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             previousMountedNodes = previous,
             nodes = nodes,
         )
+        val logicalOwnerTransfer =
+            androidContainer.getTag(R.id.viewcompose_lazy_logical_owner_transfer) == true
+        val propagatedOwnerTransfer = logicalOwnerTransfer && hostResolution.host !== androidContainer
+        if (propagatedOwnerTransfer) {
+            hostResolution.host.setTag(R.id.viewcompose_lazy_logical_owner_transfer, true)
+        }
         val rendererCollector = timingCollector?.toRendererTimingCollector()
-        val result = if (rendererCollector == null) {
-            ViewTreeRenderer.renderInto(
-                container = hostResolution.host,
-                previous = if (hostResolution.remounted) emptyList() else previous,
-                nodes = nodes,
-                collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
-                collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
-            )
-        } else {
-            ViewTreeRenderer.renderIntoWithTiming(
-                container = hostResolution.host,
-                previous = if (hostResolution.remounted) emptyList() else previous,
-                nodes = nodes,
-                timingCollector = rendererCollector,
-                collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
-                collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
-            )
+        val result = try {
+            if (rendererCollector == null) {
+                ViewTreeRenderer.renderInto(
+                    container = hostResolution.host,
+                    previous = if (hostResolution.remounted) emptyList() else previous,
+                    nodes = nodes,
+                    collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+                    collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
+                )
+            } else {
+                ViewTreeRenderer.renderIntoWithTiming(
+                    container = hostResolution.host,
+                    previous = if (hostResolution.remounted) emptyList() else previous,
+                    nodes = nodes,
+                    timingCollector = rendererCollector,
+                    collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+                    collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
+                )
+            }
+        } finally {
+            if (propagatedOwnerTransfer) {
+                hostResolution.host.setTag(R.id.viewcompose_lazy_logical_owner_transfer, null)
+            }
         }
         return CoreRenderFrame(
             mountedNodes = result.mountedNodes,
@@ -295,9 +307,18 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         timingCollector: CoreRenderTimingCollector?,
     ): CoreObservedPropertyFrame {
         container.requireAndroidViewGroup()
-        val androidMountedNodes = mountedNodes.filterIsInstance<MountedNode>()
-        check(androidMountedNodes.size == mountedNodes.size) {
-            "Observed-property transactions require Android MountedNode roots from this engine."
+        val rendererCollector = timingCollector?.toRendererTimingCollector()
+        val timedMountedRoots = if (rendererCollector == null) {
+            null
+        } else {
+            ArrayList<MountedNode>(mountedNodes.size)
+        }
+        mountedNodes.forEach { mountedNode ->
+            val androidMountedNode = mountedNode as? MountedNode
+                ?: error(
+                    "Observed-property transactions require Android MountedNode roots from this engine.",
+                )
+            timedMountedRoots?.add(androidMountedNode)
         }
         val rendererPatches = patches.map { patch ->
             val mountedNode = patch.target.handle as? MountedNode
@@ -312,7 +333,6 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                 next = patch.next,
             )
         }
-        val rendererCollector = timingCollector?.toRendererTimingCollector()
         val result = if (rendererCollector == null) {
             ViewTreeRenderer.patchObservedProperties(
                 patches = rendererPatches,
@@ -321,7 +341,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             )
         } else {
             ViewTreeRenderer.patchObservedPropertiesWithTiming(
-                mountedRoots = androidMountedNodes,
+                mountedRoots = checkNotNull(timedMountedRoots),
                 patches = rendererPatches,
                 timingCollector = rendererCollector,
                 collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,

@@ -7,10 +7,12 @@ package com.viewcompose.renderer.view
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyListItemSessionStrategy
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.ReusableItemPresentation
 import com.viewcompose.renderer.view.lazy.session.LazyItemBindOutcome
+import com.viewcompose.renderer.view.lazy.session.LazyItemSessionHost
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -541,6 +543,73 @@ class LazyItemSessionControllerTest {
 
         assertEquals(
             listOf("clear", "create:A:1", "render:A:1"),
+            events,
+        )
+    }
+
+    @Test
+    fun `retained compatible session transfers logical owner without recreation`() {
+        val events = mutableListOf<String>()
+        val strategy = object : LazyListItemSessionStrategy {
+            override fun create(
+                container: RenderContainerHandle,
+                item: LazyListItem,
+            ): LazyListItemSession = RecordingSession("seed", events)
+
+            override fun update(
+                session: LazyListItemSession,
+                item: LazyListItem,
+            ) {
+                (session as RecordingSession).updateLabel(item.key.toString())
+            }
+
+            override fun canReuseAcrossKeys(session: LazyListItemSession): Boolean =
+                session is RecordingSession
+        }
+        val controller = LazyItemSessionController(
+            host = object : LazyItemSessionHost {
+                override fun createSession(item: LazyListItem): LazyListItemSession =
+                    item.createSession(object : RenderContainerHandle {})
+
+                override fun clearContainer() {
+                    events += "clear"
+                }
+
+                override fun beginLogicalOwnerTransfer() {
+                    events += "begin-transfer"
+                }
+
+                override fun endLogicalOwnerTransfer() {
+                    events += "end-transfer"
+                }
+            },
+        )
+        fun reusableItem(key: String) = LazyListItem(
+            key = key,
+            contentRevision = key,
+            contentType = "row",
+            sessionStrategy = strategy,
+        )
+
+        controller.bind(reusableItem("A"), submissionRevision = 1L)
+        assertTrue(controller.retainForCrossKeyReuse())
+        assertTrue(controller.canReuseFor(reusableItem("B")))
+        assertEquals(
+            LazyItemBindOutcome.RenderedRevision,
+            controller.bind(reusableItem("B"), submissionRevision = 2L),
+        )
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:seed",
+                "update:A",
+                "render:A",
+                "begin-transfer",
+                "update:B",
+                "render:B",
+                "end-transfer",
+            ),
             events,
         )
     }

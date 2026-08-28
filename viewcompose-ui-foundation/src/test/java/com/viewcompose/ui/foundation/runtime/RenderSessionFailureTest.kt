@@ -15,6 +15,7 @@ import com.viewcompose.ui.focus.FocusDirection
 import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.node.RenderContainerHandle
+import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.asLazyItemTable
@@ -392,6 +393,100 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `observed lazy snapshot patches exact list without recomposing declaration`() {
+        val firstSnapshot = listOf(
+            ObservedLazyRow(id = 1, revision = 0),
+            ObservedLazyRow(id = 2, revision = 0),
+        ).toLazyItemsSnapshot()
+        val secondSnapshot = listOf(
+            ObservedLazyRow(id = 2, revision = 1),
+            ObservedLazyRow(id = 1, revision = 0),
+        ).toLazyItemsSnapshot()
+        val snapshot = mutableStateOf(firstSnapshot)
+        var declarations = 0
+        var selectorCalls = 0
+        val patchedKeys = mutableListOf<List<Any>>()
+        engine.renderBlock = { _, nodes -> observedFrame(nodes) }
+        engine.patchBlock = { _, patches ->
+            val props = patches.single().next.spec as LazyColumnNodeProps
+            patchedKeys += props.items.map { item -> item.key }
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            declarations += 1
+            LazyColumn(
+                items = observedValue { snapshot.value },
+                key = { row ->
+                    selectorCalls += 1
+                    row.id
+                },
+                contentRevision = ObservedLazyRow::revision,
+            ) { itemKey, row ->
+                Text(row.map { "row=${it.id} key=$itemKey" })
+            }
+        }
+
+        session.render()
+        snapshot.value = secondSnapshot
+        checkNotNull(latestRuntime).drainPending()
+        snapshot.value = firstSnapshot
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(1, declarations)
+        assertEquals(4, selectorCalls)
+        assertEquals(listOf(listOf(2, 1), listOf(1, 2)), patchedKeys)
+    }
+
+    @Test
+    fun `failed observed lazy patch does not publish its snapshot reuse candidate`() {
+        val firstSnapshot = listOf(
+            ObservedLazyRow(id = 1, revision = 0),
+            ObservedLazyRow(id = 2, revision = 0),
+        ).toLazyItemsSnapshot()
+        val secondSnapshot = listOf(
+            ObservedLazyRow(id = 2, revision = 1),
+            ObservedLazyRow(id = 1, revision = 0),
+        ).toLazyItemsSnapshot()
+        val snapshot = mutableStateOf(firstSnapshot)
+        var selectorCalls = 0
+        var failNextPatch = true
+        var patchCalls = 0
+        engine.renderBlock = { _, nodes -> observedFrame(nodes) }
+        engine.patchBlock = { _, _ ->
+            patchCalls += 1
+            if (failNextPatch) {
+                failNextPatch = false
+                error("lazy property patch failed")
+            }
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            LazyColumn(
+                items = observedValue { snapshot.value },
+                key = { row ->
+                    selectorCalls += 1
+                    row.id
+                },
+                contentRevision = ObservedLazyRow::revision,
+            ) { itemKey, row ->
+                Text(row.map { "row=${it.id} key=$itemKey" })
+            }
+        }
+
+        session.render()
+        snapshot.value = secondSnapshot
+        checkNotNull(latestRuntime).drainPending()
+        snapshot.value = firstSnapshot
+        checkNotNull(latestRuntime).drainPending()
+        snapshot.value = secondSnapshot
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(6, selectorCalls)
+        assertEquals(2, patchCalls)
+        assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
+    }
+
+    @Test
     fun `state shared by observed property and boundary still commits structural frame`() {
         val revision = mutableStateOf(0)
         val renderedValues = mutableListOf<List<String>>()
@@ -665,6 +760,75 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `cross key item reuse replaces effects and restores each saveable owner`() {
+        val events = mutableListOf<String>()
+        val renderedValues = mutableListOf<String>()
+        val holder = SaveableStateHolder.create(createSaveableStateRegistry())
+        holder.retainKeys(setOf("A", "B"))
+        fun content(owner: String): UiTreeBuilder.() -> Unit = {
+            val value = rememberSaveable(
+                saver = Saver<String, String>(
+                    save = { saved -> events += "save:$owner"; saved },
+                    restore = { restored -> restored },
+                ),
+            ) { "state:$owner" }
+            renderedValues += "$owner=$value"
+            DisposableEffect(Unit) {
+                events += "start:$owner"
+                onDispose { events += "dispose:$owner" }
+            }
+            Text(value)
+        }
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = LocalContext.snapshot(),
+            saveableStateHolder = holder,
+            saveableStateKey = "A",
+            content = content("A"),
+        )
+
+        assertTrue(
+            "errors=${NoOpRenderSessionDiagnostics.errors} events=$events values=$renderedValues",
+            itemSession.render(),
+        )
+        itemSession.updateContent(
+            saveableStateKey = "B",
+            localSnapshot = LocalContext.snapshot(),
+            content = DirectWidgetLazyItemContent,
+            contentPayload = content("B"),
+        )
+        assertTrue(
+            "errors=${NoOpRenderSessionDiagnostics.errors} events=$events values=$renderedValues",
+            itemSession.render(),
+        )
+        itemSession.updateContent(
+            saveableStateKey = "A",
+            localSnapshot = LocalContext.snapshot(),
+            content = DirectWidgetLazyItemContent,
+            contentPayload = content("A"),
+        )
+        assertTrue(itemSession.render())
+
+        assertEquals(
+            listOf("A=state:A", "B=state:B", "A=state:A"),
+            renderedValues,
+        )
+        assertEquals(
+            listOf(
+                "start:A",
+                "save:A",
+                "dispose:A",
+                "start:B",
+                "save:B",
+                "dispose:B",
+                "start:A",
+            ),
+            events,
+        )
+        itemSession.dispose()
+    }
+
+    @Test
     fun `prepared frame defers saveable provider registration until activation`() {
         val failures = mutableListOf<RenderFailure>()
         val registry = createSaveableStateRegistry()
@@ -819,6 +983,103 @@ class RenderSessionFailureTest {
         failComposition = false
         assertEquals(true, itemSession.render())
 
+        itemSession.dispose()
+    }
+
+    @Test
+    fun `observed lazy item payload patches properties without structural rerender`() {
+        var structuralFrames = 0
+        var propertyFrames = 0
+        engine.renderBlock = { _, nodes ->
+            structuralFrames += 1
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, patches ->
+            propertyFrames += 1
+            assertEquals("revision=1", patches.single().next.requireText())
+            observedPropertyFrame()
+        }
+        val content = ObservedTypedWidgetLazyItemContent<ObservedLazyRow> { _, row ->
+            Text(row.map { value -> "revision=${value.revision}" })
+        }
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = LocalContext.snapshot(),
+            saveableStateHolder = null,
+            saveableStateKey = 1,
+            content = content,
+            contentPayload = ObservedLazyRow(id = 1, revision = 0),
+        )
+
+        assertTrue(itemSession.render())
+        itemSession.updateContent(
+            saveableStateKey = 1,
+            localSnapshot = LocalContext.snapshot(),
+            content = content,
+            contentPayload = ObservedLazyRow(id = 1, revision = 1),
+        )
+        assertTrue(itemSession.render())
+
+        assertEquals(1, structuralFrames)
+        assertEquals(1, propertyFrames)
+        itemSession.dispose()
+    }
+
+    @Test
+    fun `observed lazy column retains item content identity across snapshot replays`() {
+        val firstSnapshot = listOf(
+            ObservedLazyRow(id = 1, revision = 0),
+            ObservedLazyRow(id = 2, revision = 0),
+        ).toLazyItemsSnapshot()
+        val secondSnapshot = listOf(
+            ObservedLazyRow(id = 2, revision = 0),
+            ObservedLazyRow(id = 1, revision = 1),
+        ).toLazyItemsSnapshot()
+        val snapshot = mutableStateOf(firstSnapshot)
+        lateinit var initialItem: LazyListItem
+        lateinit var updatedItem: LazyListItem
+        engine.renderBlock = { _, nodes ->
+            initialItem = (nodes.single().spec as LazyColumnNodeProps).items
+                .first { item -> item.key == 1 }
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, patches ->
+            updatedItem = (patches.single().next.spec as LazyColumnNodeProps).items
+                .first { item -> item.key == 1 }
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            LazyColumn(
+                items = observedValue { snapshot.value },
+                key = ObservedLazyRow::id,
+                contentRevision = ObservedLazyRow::revision,
+            ) { _, row ->
+                Text(row.map { value -> "revision=${value.revision}" })
+            }
+        }
+
+        session.render()
+        snapshot.value = secondSnapshot
+        checkNotNull(latestRuntime).drainPending()
+
+        var structuralFrames = 0
+        var propertyFrames = 0
+        engine.renderBlock = { _, nodes ->
+            structuralFrames += 1
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, patches ->
+            propertyFrames += 1
+            assertEquals("revision=1", patches.single().next.requireText())
+            observedPropertyFrame()
+        }
+        val itemSession = initialItem.createSession(childContainer())
+        assertTrue(itemSession.render())
+        updatedItem.updateSession(itemSession)
+        assertTrue(itemSession.render())
+
+        assertEquals(1, structuralFrames)
+        assertEquals(1, propertyFrames)
         itemSession.dispose()
     }
 
@@ -1157,6 +1418,58 @@ class RenderSessionFailureTest {
 
         assertEquals(1, policyCalls)
         assertEquals(1, registrationCalls)
+    }
+
+    @Test
+    fun `armed inspection registers and captures before the initial frame without nested render`() {
+        lateinit var capture: RenderNodeTimingCapture
+        var registrationCalls = 0
+        NoOpRenderSessionDiagnostics.inspectionTooling = object : RenderSessionInspectionTooling {
+            override fun inspectionPolicy(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+            ): RenderSessionInspectionPolicy =
+                RenderSessionInspectionPolicy.TrackSessionBeforeFirstFrame
+
+            override fun register(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+                sourceCandidates: List<List<UiSourceCallSite>>,
+                nodeInspection: RenderSessionNodeInspection,
+                diagnosticInspection: RenderSessionDiagnosticInspection,
+                timingInspection: RenderSessionTimingInspection,
+            ): RenderSessionInspectionRegistration? {
+                registrationCalls += 1
+                assertTrue(sourceCandidates.isEmpty())
+                assertTrue(engine.renderDiagnosticLevels.isEmpty())
+                val start = timingInspection.startCapture(
+                    RenderNodeTimingCaptureRequest(maxFrames = 1),
+                )
+                assertEquals(RenderNodeTimingStartStatus.Started, start.status)
+                capture = checkNotNull(start.capture)
+                return null
+            }
+        }
+        session = createSession(failures = mutableListOf()) {
+            Text("Cold timed node")
+        }
+
+        session.render()
+
+        val result = capture.snapshot()
+        assertEquals(1, registrationCalls)
+        assertEquals(1, engine.renderDiagnosticLevels.size)
+        assertEquals(1, result.completedFrames)
+        assertEquals(RenderNodeTimingEndReason.FrameLimit, result.endReason)
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Composition
+        })
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Reconciliation
+        })
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Binding
+        })
     }
 
     @Test
@@ -1716,6 +2029,11 @@ class RenderSessionFailureTest {
     private fun VNode.requireText(): String {
         return (spec as com.viewcompose.ui.node.spec.TextNodeProps).document.text
     }
+
+    private data class ObservedLazyRow(
+        val id: Int,
+        val revision: Int,
+    )
 
     private companion object {
         lateinit var engine: FakeRenderEngine

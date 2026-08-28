@@ -145,6 +145,7 @@ class DeviceDiagnosticsInspectorModelTest {
             sessionId = id,
             parentSessionId = parentId,
             role = role,
+            physicalContainerToken = id,
             renderingActive = true,
             attachedToWindow = true,
             shown = true,

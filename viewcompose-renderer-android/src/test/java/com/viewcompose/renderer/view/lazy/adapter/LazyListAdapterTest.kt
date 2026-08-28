@@ -8,6 +8,7 @@ import com.viewcompose.ui.unit.dp
  */
 
 import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyItemTable
@@ -37,6 +38,73 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class LazyListAdapterTest {
+    @Test
+    fun `alternating immutable cyclic tables reuse their validated transition plan`() {
+        CountingKey.equalityChecks = 0
+        val initial = List(100) { index ->
+            item(CountingKey(index))
+        }
+        val rotated = initial.drop(37) + initial.take(37)
+        val initialTable = initial.asLazyItemTable()
+        val rotatedTable = rotated.asLazyItemTable()
+        val adapter = LazyListAdapter()
+
+        adapter.submitItems(initialTable)
+        CountingKey.equalityChecks = 0
+        adapter.submitItems(rotatedTable)
+        assertTrue(CountingKey.equalityChecks > 0)
+        CountingKey.equalityChecks = 0
+        adapter.submitItems(initialTable)
+        assertTrue(CountingKey.equalityChecks > 0)
+
+        CountingKey.equalityChecks = 0
+        adapter.submitItems(rotatedTable)
+
+        // Finite-table predecessor probing compares the first item once; the 100-item rotation
+        // classifier must not run again for an already validated identity transition.
+        assertEquals(1, CountingKey.equalityChecks)
+    }
+
+    @Test
+    fun `idle preparation skips the adjacent prefetch position in either direction`() {
+        assertEquals(
+            12,
+            resolveIdlePreparationPosition(
+                firstVisiblePosition = 4,
+                lastVisiblePosition = 10,
+                direction = 1,
+                itemCount = 40,
+            ),
+        )
+        assertEquals(
+            2,
+            resolveIdlePreparationPosition(
+                firstVisiblePosition = 4,
+                lastVisiblePosition = 10,
+                direction = -1,
+                itemCount = 40,
+            ),
+        )
+        assertEquals(
+            androidx.recyclerview.widget.RecyclerView.NO_POSITION,
+            resolveIdlePreparationPosition(
+                firstVisiblePosition = 0,
+                lastVisiblePosition = 6,
+                direction = -1,
+                itemCount = 40,
+            ),
+        )
+        assertEquals(
+            androidx.recyclerview.widget.RecyclerView.NO_POSITION,
+            resolveIdlePreparationPosition(
+                firstVisiblePosition = 33,
+                lastVisiblePosition = 39,
+                direction = 1,
+                itemCount = 40,
+            ),
+        )
+    }
+
     @Test
     fun `spacing decoration reports whether item offsets changed`() {
         val decoration = LazyListSpacingDecoration(
@@ -199,6 +267,113 @@ class LazyListAdapterTest {
             events,
         )
         assertEquals(emptyList<String>(), observer.operations)
+    }
+
+    @Test
+    fun `moved semantic holder outside final viewport defers refresh until reattach`() {
+        val context = RuntimeEnvironment.getApplication()
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        val recyclerView = androidx.recyclerview.widget.RecyclerView(context).apply {
+            layoutManager = object : androidx.recyclerview.widget.LinearLayoutManager(context) {
+                override fun findFirstVisibleItemPosition(): Int = 0
+
+                override fun findLastVisibleItemPosition(): Int = 4
+            }
+            itemAnimator = null
+            this.adapter = adapter
+        }
+        val initial = List(20) { index ->
+            recordingItem(
+                label = "row-$index:first",
+                events = events,
+                key = index,
+                contentRevision = 1,
+            )
+        }
+        adapter.submitItems(initial)
+        val holder = adapter.onCreateViewHolder(recyclerView, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+        val rotated = (initial.drop(5) + initial.take(5)).map { oldItem ->
+            if (oldItem.key == 0) {
+                recordingItem(
+                    label = "row-0:second",
+                    events = events,
+                    key = 0,
+                    contentRevision = 2,
+                )
+            } else {
+                oldItem
+            }
+        }
+
+        adapter.submitItems(rotated)
+
+        assertEquals(listOf("update:row-0:first", "render:row-0:first"), events)
+        adapter.onViewDetachedFromWindow(holder)
+        adapter.onViewAttachedToWindow(holder)
+        assertEquals(
+            listOf(
+                "update:row-0:first",
+                "render:row-0:first",
+                "update:row-0:second",
+                "render:row-0:second",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `moved semantic holder inside final viewport refreshes synchronously`() {
+        val context = RuntimeEnvironment.getApplication()
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        val recyclerView = androidx.recyclerview.widget.RecyclerView(context).apply {
+            layoutManager = object : androidx.recyclerview.widget.LinearLayoutManager(context) {
+                override fun findFirstVisibleItemPosition(): Int = 0
+
+                override fun findLastVisibleItemPosition(): Int = 4
+            }
+            itemAnimator = null
+            this.adapter = adapter
+        }
+        val initial = List(8) { index ->
+            recordingItem(
+                label = "row-$index:first",
+                events = events,
+                key = index,
+                contentRevision = 1,
+            )
+        }
+        adapter.submitItems(initial)
+        val holder = adapter.onCreateViewHolder(recyclerView, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+        val rotated = (initial.takeLast(2) + initial.dropLast(2)).map { oldItem ->
+            if (oldItem.key == 0) {
+                recordingItem(
+                    label = "row-0:second",
+                    events = events,
+                    key = 0,
+                    contentRevision = 2,
+                )
+            } else {
+                oldItem
+            }
+        }
+
+        adapter.submitItems(rotated)
+
+        assertEquals(
+            listOf(
+                "update:row-0:first",
+                "render:row-0:first",
+                "update:row-0:second",
+                "render:row-0:second",
+            ),
+            events,
+        )
     }
 
     @Test

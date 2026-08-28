@@ -124,12 +124,31 @@ internal fun readDeviceDslTimingReport(
         ?: throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.TimingRejected)
 }
 
+internal fun readFutureLazyItemTimingReport(
+    device: StudioAndroidDevice,
+    parentSessionId: Long,
+    phases: Set<StudioDeviceDslTimingPhase> = StudioDeviceDslTimingPhase.entries.toSet(),
+): StudioDeviceDslTimingSnapshot {
+    require(parentSessionId > 0L)
+    require(phases.isNotEmpty())
+    val report = requestDeviceDslReport(
+        device = device,
+        operation = StudioDeviceDslOperation.Timing,
+        sessionId = parentSessionId,
+        timingPhases = phases,
+        futureLazyItemTiming = true,
+    )
+    return report.timing
+        ?: throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.TimingRejected)
+}
+
 private fun requestDeviceDslReport(
     device: StudioAndroidDevice,
     operation: StudioDeviceDslOperation,
     sessionId: Long? = null,
     nodeToken: String? = null,
     timingPhases: Set<StudioDeviceDslTimingPhase>? = null,
+    futureLazyItemTiming: Boolean = false,
     requestIdFactory: () -> String = ::newDeviceDslSourceRequestId,
     sleep: (Long) -> Unit = Thread::sleep,
     nanoTime: () -> Long = System::nanoTime,
@@ -168,6 +187,10 @@ private fun requestDeviceDslReport(
             append(phases.sortedBy(StudioDeviceDslTimingPhase::ordinal).joinToString(",") { phase ->
                 phase.wireValue
             })
+        }
+        if (futureLazyItemTiming) {
+            require(operation == StudioDeviceDslOperation.Timing && sessionId != null)
+            append(" --ez $DEVICE_DSL_TIMING_FUTURE_LAZY_ITEM_EXTRA true")
         }
     }
     device.shell(requestCommand)
@@ -283,4 +306,4 @@ private val WINDOW_FOREGROUND_MARKERS = listOf(
 private const val ADB_BRIDGE_TIMEOUT_SECONDS = 15L
 private const val SHELL_TIMEOUT_SECONDS = 10L
 private const val RESPONSE_POLL_INTERVAL_MILLIS = 50L
-private const val RESPONSE_POLL_TIMEOUT_NANOS = 5_000_000_000L
+private const val RESPONSE_POLL_TIMEOUT_NANOS = 15_000_000_000L

@@ -87,11 +87,17 @@ requires artifact presence, a debuggable process, and a valid request; a non-deb
 owns no report polling, recurring View traversal, frame observer, per-node timer, or report write.
 
 Diagnostics protocol v7 returns privacy-bounded session/frame/failure summaries, mounted-node
-snapshots/highlights, and a finite timing capture. Requests require Android `DUMP`, a one-use nonce,
-foreground package and live-process validation. Node traversal, depth, strings, timing records,
-response bytes, and highlight lifetime are bounded; stale, hidden, recycled, clipped, ended, or
-unsupported nodes fail closed. Timing covers ViewCompose composition, reconciliation and direct
-binding—not Android measure/layout/draw, GPU, RenderThread, decoding, network, database, or SDK work.
+snapshots/highlights, and finite timing capture. Besides capturing an already selected Session for
+at most eight frames/two seconds, **Capture next LazyItem** arms one exact parent Session for at most
+ten monotonic seconds and captures the first supported frame of the next `LazyItem` child. Matching
+uses only parent ID, child role, and a post-arm Session-ID floor. The report includes an opaque
+process-local physical-container token so repeated logical Sessions can be correlated with holder
+reuse without exposing an application key or native object. Requests require Android `DUMP`, a
+one-use nonce, foreground package and live-process validation. Node traversal, depth, strings,
+timing records, response bytes, and highlight lifetime are bounded; stale, hidden, recycled,
+clipped, ended, or unsupported nodes fail closed. Timing covers ViewCompose composition,
+reconciliation and direct binding—not Android measure/layout/draw, GPU, RenderThread, decoding,
+network, database, or SDK work.
 
 Animation inspection is read-only. It discovers committed transitions and captures one selected
 timeline for at most 500 ms with bounded samples/channels/bytes. It never writes private transition

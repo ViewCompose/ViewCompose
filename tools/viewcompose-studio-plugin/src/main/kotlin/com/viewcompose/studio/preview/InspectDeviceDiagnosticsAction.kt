@@ -127,6 +127,7 @@ internal object DeviceDiagnosticsAutomationRoles {
     const val HighlightNode = "viewcompose.deviceDiagnostics.highlightNode"
     const val ClearHighlight = "viewcompose.deviceDiagnostics.clearHighlight"
     const val CaptureTiming = "viewcompose.deviceDiagnostics.captureTiming"
+    const val CaptureNextLazyItem = "viewcompose.deviceDiagnostics.captureNextLazyItem"
     const val OpenTimingSource = "viewcompose.deviceDiagnostics.openTimingSource"
     const val Status = "viewcompose.deviceDiagnostics.status"
 }
@@ -263,6 +264,11 @@ internal class DeviceDiagnosticsInspectorDialog(
         DeviceDiagnosticsAutomationRoles.CaptureTiming,
         ::captureTiming,
     )
+    private val captureNextLazyItemButton = actionButton(
+        "deviceDsl.inspector.captureNextLazyItem",
+        DeviceDiagnosticsAutomationRoles.CaptureNextLazyItem,
+        ::captureNextLazyItemTiming,
+    )
     private val openTimingSourceButton = actionButton(
         "deviceDsl.inspector.openTimingSource",
         DeviceDiagnosticsAutomationRoles.OpenTimingSource,
@@ -351,7 +357,11 @@ internal class DeviceDiagnosticsInspectorDialog(
                     add(JBScrollPane(timingSummary), BorderLayout.NORTH)
                     add(JBScrollPane(timingRecords), BorderLayout.CENTER)
                     add(
-                        buttonRow(captureTimingButton, openTimingSourceButton),
+                        buttonRow(
+                            captureTimingButton,
+                            captureNextLazyItemButton,
+                            openTimingSourceButton,
+                        ),
                         BorderLayout.SOUTH,
                     )
                 },
@@ -444,6 +454,8 @@ internal class DeviceDiagnosticsInspectorDialog(
         clearButton.isEnabled = !requestInFlight
         captureTimingButton.isEnabled = !requestInFlight &&
             session != null && session.diagnostics?.ended != true
+        captureNextLazyItemButton.isEnabled = !requestInFlight &&
+            session?.role == StudioRenderSessionRole.Host && session.diagnostics?.ended != true
         openTimingSourceButton.isEnabled = !requestInFlight &&
             timingRecords.selectedValue?.source != null
     }
@@ -533,10 +545,24 @@ internal class DeviceDiagnosticsInspectorDialog(
     }
 
     private fun captureTiming() {
+        captureTiming(futureLazyItem = false)
+    }
+
+    private fun captureNextLazyItemTiming() {
+        captureTiming(futureLazyItem = true)
+    }
+
+    private fun captureTiming(futureLazyItem: Boolean) {
         val sessionId = selectedSession()?.sessionId ?: return
         val decision = Messages.showOkCancelDialog(
             project,
-            messages.text("deviceDsl.timing.workloadPrompt"),
+            messages.text(
+                if (futureLazyItem) {
+                    "deviceDsl.timing.futureLazyItemPrompt"
+                } else {
+                    "deviceDsl.timing.workloadPrompt"
+                },
+            ),
             messages.text("deviceDsl.timing.title"),
             messages.text("deviceDsl.timing.start"),
             messages.text("deviceDsl.cancel"),
@@ -546,7 +572,11 @@ internal class DeviceDiagnosticsInspectorDialog(
         runDeviceTask(
             messages.text("deviceDsl.progress.timing"),
             producer = {
-                val snapshot = readDeviceDslTimingReport(device, sessionId)
+                val snapshot = if (futureLazyItem) {
+                    readFutureLazyItemTimingReport(device, sessionId)
+                } else {
+                    readDeviceDslTimingReport(device, sessionId)
+                }
                 ResolvedDeviceDiagnosticsTimingSnapshot(
                     snapshot = snapshot,
                     records = snapshot.result
@@ -568,7 +598,7 @@ internal class DeviceDiagnosticsInspectorDialog(
                 showStatus("deviceDsl.inspector.status.selectionChanged")
                 return@runDeviceTask
             }
-            timingSummary.text = result.toTopCostText(messages, limit = 0)
+            timingSummary.text = snapshot.toTopCostText(messages, limit = 0)
             timingSummary.caretPosition = 0
             val records = resolved.records
             timingRecords.replaceItems(records)

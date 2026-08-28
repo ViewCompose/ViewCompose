@@ -147,7 +147,10 @@ created for the node.
   candidate, terminate key-owned state, and transfer only a reset physical presentation. The
   Boolean result from `activate` and `render` advances the semantic revision only after the
   installed content commits; rollback returns `false` and remains retryable. The compiled
-  `lazyListItemSessionUpdateSample` demonstrates this lifecycle.
+  `lazyListItemSessionUpdateSample` demonstrates this lifecycle. A strategy may opt into Q3
+  `canReuseAcrossKeys` only when its next `update` transaction replaces every key-owned state,
+  observation, effect, callback, and saveable owner before the incoming frame becomes visible;
+  the default remains `false`.
 - `LazyItemTable` is the Q3 ordered, indexed collection boundary used by lazy-list NodeSpecs. It
   exposes count, positional item lookup, key-to-position lookup, and immutable updates from the
   immediately preceding accepted table without prescribing AndroidX Paging or a renderer. Q2
@@ -256,7 +259,9 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   a successful commit. A different key always creates a different logical Session; compatible
   physical presentation may move only after old State and effects are disposed. Typed declarations
   may share one `LazyListItemSessionStrategy` across all item snapshots; strategies consume the
-  current item synchronously and cannot retain it.
+  current item synchronously and cannot retain it. Cross-key Session retention additionally
+  requires the installed strategy to accept `canReuseAcrossKeys`; physical kind/content-type
+  compatibility alone never authorizes logical state transfer.
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 10ca581b07a8fb43fe2582f8be083a65d4424b583b6c4ecbae07083822712058
+translation_source_hash: a75ad3978fae3391fb5bfa895260f12e416272828489315cf0bae2692f27240d
 translation_status: current
 schema_version: 2
 document_id: tooling.diagnostics
@@ -168,6 +168,43 @@ GPU、RenderThread、SurfaceFlinger、图片解码、网络、数据库和外部
 报告写入、轮询与持续观察都为零。耗时结果是诊断证据，不是 Frame-time Benchmark；插桩开销和有限
 样本量都会作为显式限制保留。
 
+### Lazy Session 的实机使用规则
+
+启动 `Capture timing` 会立即请求一个结构帧，让所选 Session 生成有界记录。除非待测交互本身触发
+了该帧，否则应把第一帧视为 Capture 初始化，不能把其中的阶段耗时标记成后续手势或更新。Capture
+只跟随所选逻辑 Session。Lazy Key 离开 Viewport 并结束 Session 后，新出现的 Key 会获得新的
+Session ID；即使 RecyclerView 复用了同一个物理 Holder 或 Mounted Presentation 也不例外。
+
+排查冷 Lazy List 工作时，选择精确的存活 Parent Session，再使用 **Capture next LazyItem**。同一
+进程最多拥有一个 Arm。它最多等待十秒单调时间，匹配 Parent 完全相同、Role 为 `LazyItem` 且
+Session ID 高于 Arm 时下限的 Child，然后采集一个完整帧。Registration 发生在匹配 Child 首帧之前，
+因此 Timing 会附着到已经进入 Preparation 的帧，不会另行强制结构 Render。结束原因明确区分
+Matched、Duration Limit、Parent Ended、Superseded 与 Capture Rejected。Arm 不接收或序列化应用
+Key、Node Content、Callback、Source String 或 Native Object。
+
+每个 Session 行还包含一个不透明的进程内 Physical-container Token，Arm 会报告匹配 Token。不同
+Logical Session ID 使用同一个 Token 能证明物理 Holder 复用，但 Token 不是 Selector 或稳定身份。
+归因前必须核对所选 Host 的业务源码和匹配节点类型；同一前台进程可能存在另一个合法 Host。
+`Session ended` 仍是身份归属证据，不是空白性能结果。Measure/Layout/Draw、RenderThread、GPU 与
+Buffer Queue 的归属仍必须使用 Perfetto 或其他平台 Profiler。
+
+`performance.list@5` 实机复检遵守了这项规则。重复 Capture 解析到作者编写的 LazyItem 源码，并在
+已选 Item 帧内把 Text 直接 Binding 排在首位；Host Capture 则显示真实纯滚动区间没有执行受支持
+阶段。Future-item Capture 随后观测到冷 Logical Session 的首个受支持帧。连续十二次匹配中，不同
+Logical Session ID 重复使用 Physical Token `9`、`8` 和 `13`，证明工作负载已经复用 Holder。
+匹配的平台 Trace 把冷 Direct Render 放在 `RV Scroll` 而不是 `RV Prefetch` 下，并保留了有限计时器
+之外的 Input、Traversal 与 RenderThread 工作。这次升级可执行但不完整：它消除了 Future Session
+和 Holder Creation 两项歧义，也改变了下一项源码决策，但无法对稳定路径的分配或重复调用成本排序。
+
+重复执行有界 Capture 仍无法跨过这一限制后，单方法 Debug Method Trace 与配对的 Release Perfetto
+Trace 给出了下一项区分。Method Trace 发现每个 Mutation 事务执行了 16 次 Cyclic-rotation 计算、收集
+未变化 Environment Snapshot 时执行了 945 次结构 Map Equality，并且只有一个 State 的 Item Observation
+仍重复经过通用 Dependency-replacement 机制。Perfetto 独立确认剩余 Row 工作位于 Animation/Traversal，
+而不是 Holder Creation。完成归因后，临时 Counter 与 Method-trace Switch 已硬切；优化 Release 不打包、
+也不启用它们。这次调查因此建立了长期升级规则：有界 Session 工具用于关联源码和所有权；当未决问题
+属于重复调用次数、分配、Measure/Layout/Draw 或平台调度时，切换到单方法 Trace 或 Perfetto。不要仅为
+重复这些 Profiler Domain 而扩大常驻可用的诊断契约。
+
 ## 8. Demo 检查器
 
 `Diagnostics -> 渲染器` 提供 Render Tree、Patch 时间线、重组原因、CompositionLocal 浏览器与
@@ -180,10 +217,11 @@ View 边界高亮、有限逐节点耗时与关联 Studio Inspector 已经实现
 ## 9. 剩余扩展契约
 
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
-冻结 Phase 1；只关心 Failure 的 Sink 不激活 Frame 明细。可选 `viewcompose-diagnostics`
-现已负责生产聚合，`viewcompose-preview` 已交付按请求工作的关联 Inspector、高亮与有限耗时。
-当前没有有效的诊断扩展计划。未来的持续观察器、新耗时域或更广设备契约必须重新建立可归因计划，
-并继续遵守 ADR-0009 的非激活路径与 Release 隔离规则。
+冻结 Phase 1 及其有界 Future-session 扩展；只关心 Failure 的 Sink 不激活 Frame 明细。可选
+`viewcompose-diagnostics` 负责生产聚合，`viewcompose-preview` 负责按请求工作的关联 Inspector、
+高亮、Selected-session Timing 与一次性 Future-LazyItem Timing。已归档的列表尾部记录负责该扩展的
+No-regression 与 Release 隔离验收。未来的持续观察器、新耗时域或更广设备契约必须重新建立可归因
+计划，并继续遵守 ADR-0009 的非激活路径与 Release 隔离规则。
 
 `./gradlew verifyDemoReleaseToolingApk` 会构建优化后的 Demo Release APK，并在任意打包条目中拒绝
 设备请求 Action、v7 报告路径、Receiver、Service 注册或具体 Inspection 类。`qaQuick` 除了检查

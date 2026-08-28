@@ -236,6 +236,8 @@ internal object DemoQualityVerifiers {
             "viewcompose/device-dsl-source-v7.json",
             "com/viewcompose/preview/device/AndroidDeviceDslInspectionTooling",
             "DeviceDslSourceRequestReceiver",
+            "timing_future_lazy_item",
+            "matchedPhysicalContainerToken",
             "META-INF/services/com.viewcompose.ui.foundation.RenderSessionInspectionTooling",
         )
         val violations = mutableListOf<String>()

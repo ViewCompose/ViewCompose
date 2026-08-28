@@ -38,15 +38,15 @@ internal object ObservedPropertyContext {
         if (attempt != null && scope != null) {
             return attempt.resolve(scope, source, localSnapshot)
         }
-        val (spec, observation) = RuntimeObservation.observeReads(onInvalidated = {}) {
+        val (prepared, observation) = RuntimeObservation.observeReads(onInvalidated = {}) {
             LocalContext.withSnapshot(localSnapshot) {
-                source.read()
+                source.prepare()
             }
         }
         observation.dispose()
         return ObservedPropertyResolution(
             id = null,
-            spec = spec,
+            spec = prepared.spec,
         )
     }
 }
@@ -89,18 +89,19 @@ internal class ObservedPropertyRegistry(
         check(!disposed) { "ObservedPropertyRegistry is disposed." }
         check(activeAttempt == null) { "A full observed-property attempt is active." }
         consumeScheduledRequest()
-        val dirty = bindingsById.values.filter { binding -> binding.signal.dirty.get() }
-        if (dirty.isEmpty()) return null
-        val candidates = mutableListOf<ObservedPropertyCandidate>()
+        if (bindingsById.values.none { binding -> binding.signal.dirty.get() }) return null
+        val candidates = ArrayList<ObservedPropertyCandidate>(bindingsById.size)
         val snapshot = Snapshot.takeSnapshot()
         return try {
             snapshot.enter {
-                dirty.forEach { binding ->
-                    candidates += binding.prepareCandidate(
-                        inputs = binding.inputs,
-                        localSnapshot = binding.localSnapshot,
-                        reader = binding.reader,
-                    )
+                bindingsById.values.forEach { binding ->
+                    if (binding.signal.dirty.get()) {
+                        candidates += binding.prepareCandidate(
+                            inputs = binding.inputs,
+                            localSnapshot = binding.localSnapshot,
+                            reader = binding.reader,
+                        )
+                    }
                 }
             }
             PreparedObservedPropertyTransaction(
@@ -156,7 +157,7 @@ internal class ObservedPropertyRegistry(
             signal = signal,
             inputs = source.inputs,
             localSnapshot = localSnapshot,
-            reader = source.read,
+            reader = source.prepare,
             previousObservation = committed?.observation,
         )
         attempt.replaceCandidate(candidate)
@@ -221,12 +222,13 @@ internal class ObservedPropertyRegistry(
         return refresh(tree)
     }
 
-    internal fun commit(attempt: ObservedPropertyFullAttempt) {
+    internal fun commit(attempt: ObservedPropertyFullAttempt): List<Throwable> {
         requireActive(attempt)
+        val commitFailures = mutableListOf<Throwable>()
         val retained = attempt.touchedIds
         val removed = bindingsById.keys.filterNot(retained::contains)
         attempt.candidatesById.values.forEach { candidate ->
-            commitCandidate(candidate)
+            commitCandidate(candidate)?.let(commitFailures::add)
             idsByScope[candidate.scope] = candidate.id
         }
         removed.forEach { id ->
@@ -238,6 +240,7 @@ internal class ObservedPropertyRegistry(
         }
         attempt.complete()
         activeAttempt = null
+        return commitFailures
     }
 
     internal fun abort(attempt: ObservedPropertyFullAttempt) {
@@ -252,14 +255,21 @@ internal class ObservedPropertyRegistry(
         activeAttempt = null
     }
 
-    internal fun commit(candidates: List<ObservedPropertyCandidate>) {
+    internal fun commit(candidates: List<ObservedPropertyCandidate>): List<Throwable> {
         requireOwnerThread("commitDirty")
-        candidates.forEach(::commitCandidate)
+        var failures: ArrayList<Throwable>? = null
+        candidates.forEach { candidate ->
+            commitCandidate(candidate)?.let { failure ->
+                val target = failures ?: ArrayList<Throwable>().also { failures = it }
+                target += failure
+            }
+        }
+        return failures ?: emptyList()
     }
 
     internal fun committedSpec(id: Long): NodeSpec? = bindingsById[id]?.spec
 
-    private fun commitCandidate(candidate: ObservedPropertyCandidate) {
+    private fun commitCandidate(candidate: ObservedPropertyCandidate): Throwable? {
         val previous = bindingsById[candidate.id]
         candidate.commitObservation()
         bindingsById[candidate.id] = CommittedObservedProperty(
@@ -276,6 +286,7 @@ internal class ObservedPropertyRegistry(
         previous?.observation?.takeUnless { observation ->
             observation === candidate.observation
         }?.dispose()
+        return candidate.commitEffect()
     }
 
     private fun prepareCandidate(
@@ -284,11 +295,11 @@ internal class ObservedPropertyRegistry(
         signal: ObservedPropertySignal,
         inputs: List<Any?>,
         localSnapshot: LocalSnapshot,
-        reader: () -> NodeSpec,
+        reader: () -> PreparedObservedNodeSpec<out NodeSpec>,
         previousObservation: Observation? = null,
     ): ObservedPropertyCandidate {
         val readVersion = signal.version.get()
-        val spec: NodeSpec
+        val prepared: PreparedObservedNodeSpec<out NodeSpec>
         val observation: Observation
         val replacement: PreparedObservationReplacement?
         if (previousObservation == null) {
@@ -299,7 +310,7 @@ internal class ObservedPropertyRegistry(
                     reader()
                 }
             }
-            spec = observed.first
+            prepared = observed.first
             observation = observed.second
             replacement = null
         } else {
@@ -308,7 +319,7 @@ internal class ObservedPropertyRegistry(
                     reader()
                 }
             }
-            spec = observed.first
+            prepared = observed.first
             observation = previousObservation
             replacement = observed.second
         }
@@ -320,7 +331,7 @@ internal class ObservedPropertyRegistry(
             inputs = inputs,
             localSnapshot = localSnapshot,
             reader = reader,
-            spec = spec,
+            prepared = prepared,
             observation = observation,
             replacement = replacement,
             readVersion = readVersion,
@@ -330,7 +341,7 @@ internal class ObservedPropertyRegistry(
     private fun CommittedObservedProperty.prepareCandidate(
         inputs: List<Any?>,
         localSnapshot: LocalSnapshot,
-        reader: () -> NodeSpec,
+        reader: () -> PreparedObservedNodeSpec<out NodeSpec>,
     ): ObservedPropertyCandidate = prepareCandidate(
         id = id,
         scope = scope,
@@ -382,9 +393,7 @@ internal class ObservedPropertyFullAttempt internal constructor(
 
     fun retainTree(tree: List<VNode>): List<VNode> = registry.retainTree(this, tree)
 
-    fun commit() {
-        registry.commit(this)
-    }
+    fun commit(): List<Throwable> = registry.commit(this)
 
     fun abort() {
         registry.abort(this)
@@ -422,10 +431,10 @@ internal class PreparedObservedPropertyTransaction internal constructor(
             )
         }
 
-    fun commit() {
+    fun commit(): List<Throwable> {
         check(!completed) { "Observed-property transaction is already completed." }
         completed = true
-        registry.commit(candidates)
+        return registry.commit(candidates)
     }
 
     fun abort() {
@@ -447,12 +456,15 @@ internal data class ObservedPropertyCandidate(
     val signal: ObservedPropertySignal,
     val inputs: List<Any?>,
     val localSnapshot: LocalSnapshot,
-    val reader: () -> NodeSpec,
-    val spec: NodeSpec,
+    val reader: () -> PreparedObservedNodeSpec<out NodeSpec>,
+    val prepared: PreparedObservedNodeSpec<out NodeSpec>,
     val observation: Observation,
     val replacement: PreparedObservationReplacement?,
     val readVersion: Long,
 ) {
+    val spec: NodeSpec
+        get() = prepared.spec
+
     fun previousSpec(registry: ObservedPropertyRegistry): NodeSpec? =
         registry.committedSpec(id)
 
@@ -467,6 +479,11 @@ internal data class ObservedPropertyCandidate(
             replacement.abort()
         }
     }
+
+    fun commitEffect(): Throwable? {
+        val effect = prepared.commitEffect ?: return null
+        return runCatching(effect).exceptionOrNull()
+    }
 }
 
 private data class CommittedObservedProperty(
@@ -475,7 +492,7 @@ private data class CommittedObservedProperty(
     val signal: ObservedPropertySignal,
     val inputs: List<Any?>,
     val localSnapshot: LocalSnapshot,
-    val reader: () -> NodeSpec,
+    val reader: () -> PreparedObservedNodeSpec<out NodeSpec>,
     val spec: NodeSpec,
     val observation: Observation,
 )

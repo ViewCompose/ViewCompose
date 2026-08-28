@@ -45,6 +45,28 @@ fun <T> observedValue(
 )
 
 /**
+ * Derives another directly patchable value from this observed declaration.
+ *
+ * The derived reader observes the same underlying State reads and applies [transform] inside the
+ * owning RenderSession's consistent read Snapshot. [transform] must be synchronous, replay-safe,
+ * and side-effect-free. Changing ordinary values captured by [transform] requires matching
+ * [inputs]; the transform identity itself also participates in declaration reuse.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.observedLazyItemsSnapshotSample
+ * @param R derived value type
+ * @param inputs semantic versions of changing non-State values captured by [transform]
+ * @param transform side-effect-free conversion of the latest source value
+ * @return an observed declaration suitable for a compatible widget overload
+ */
+fun <T, R> ObservedValue<T>.map(
+    inputs: List<Any?> = emptyList(),
+    transform: (T) -> R,
+): ObservedValue<R> = ObservedValue(
+    inputs = this.inputs + inputs + transform,
+    read = { transform(this.read()) },
+)
+
+/**
  * Supplies a complete node-property snapshot for direct transactional patching.
  *
  * A committed reader may return a different value of the same concrete NodeSpec type. It must not
@@ -59,7 +81,13 @@ fun <T> observedValue(
  */
 class ObservedNodeSpec<S : NodeSpec> internal constructor(
     internal val inputs: List<Any?>,
-    internal val read: () -> S,
+    internal val prepare: () -> PreparedObservedNodeSpec<S>,
+)
+
+/** Candidate value and post-native-commit publication owned by one observed-property attempt. */
+internal class PreparedObservedNodeSpec<out S : NodeSpec>(
+    val spec: S,
+    val commitEffect: (() -> Unit)? = null,
 )
 
 /**
@@ -81,5 +109,16 @@ fun <S : NodeSpec> observedNodeSpec(
     read: () -> S,
 ): ObservedNodeSpec<S> = ObservedNodeSpec(
     inputs = inputs.toList(),
-    read = read,
+    prepare = {
+        PreparedObservedNodeSpec(spec = read())
+    },
+)
+
+/** Creates an observed NodeSpec whose auxiliary state publishes only after native patch success. */
+internal fun <S : NodeSpec> preparedObservedNodeSpec(
+    inputs: List<Any?>,
+    prepare: () -> PreparedObservedNodeSpec<S>,
+): ObservedNodeSpec<S> = ObservedNodeSpec(
+    inputs = inputs.toList(),
+    prepare = prepare,
 )

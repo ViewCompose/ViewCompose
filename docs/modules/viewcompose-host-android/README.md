@@ -284,7 +284,10 @@ The installed `AndroidCoreRenderEngine` also translates UI Foundation's Q3 obser
 to exact Android Renderer targets. Property-only frames keep the mounted root list and target map
 stable, validate that every target still belongs to the committed frame, and return only commit
 effects, failures, and optional diagnostics. A foreign or stale target fails instead of triggering
-a whole-tree render.
+a whole-tree render. When a lazy presentation changes logical owner across a renderer-created host
+wrapper, the engine propagates that transaction marker only for the synchronous render and clears
+it in `finally`; the wrapper therefore cannot hide key-owned state replacement or retain transfer
+state after failure.
 
 ## Related documentation
 

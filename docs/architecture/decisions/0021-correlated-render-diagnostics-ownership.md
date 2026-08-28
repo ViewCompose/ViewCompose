@@ -208,6 +208,17 @@ empty-pair overhead, truncation, unsupported domains, and drops. Inactive timing
 per-node clock reads and allocates no record/history; runtime and renderer may perform only an
 approved nullable-port/request-state check.
 
+#### Bounded future-session extension (2026-08-27)
+
+An explicit development-tool request may arm one exact parent Session for a future `LazyItem`
+child. Matching uses only the parent Session ID, `LazyItem` role, and a Session-ID floor captured at
+arm time. The arm expires after ten monotonic seconds and the match records at most one completed
+frame. `viewcompose-ui-foundation` permits that matched Session to register immediately before its
+initial frame; starting timing during that registration attaches to the entering frame and cannot
+request a nested structural render. Preview owns the concrete arm, deadline, terminal outcomes, and
+an opaque process-local physical-container token used only to correlate logical Session replacement
+with holder reuse. No application key or native object becomes a selector or serialized identity.
+
 ### Absolute limits
 
 | Resource | Hard maximum and overflow |
@@ -218,7 +229,7 @@ approved nullable-port/request-state check.
 | Mounted-node request | 2,048 visited; 512 returned; depth 64; stop and report truncation |
 | Highlight | One/process for five seconds |
 | Failure fingerprints | 128 absolute, public default 64 |
-| Timing | One/process; 8 frames or 2 seconds; 64 nodes/frame; 512 records; depth 32 |
+| Timing | One/process; selected Session: 8 frames or 2 seconds; future `LazyItem`: 10-second arm then 1 frame; 64 nodes/frame; 512 records; depth 32 |
 | Nonce | 1--128 ASCII `[A-Za-z0-9._-]` |
 | Other strings | 256 UTF-16 units |
 | Serialized response | 256 KiB UTF-8 including envelope/truncation metadata |

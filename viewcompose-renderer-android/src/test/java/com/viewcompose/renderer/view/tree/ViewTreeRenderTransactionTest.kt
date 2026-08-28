@@ -17,6 +17,7 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.renderer.R
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedBoundsHostLayout
@@ -1216,6 +1217,48 @@ class ViewTreeRenderTransactionTest {
     }
 
     @Test
+    fun `logical owner transfer reuses a keyed root and patches changed descendants`() {
+        val container = FrameLayout(context)
+        val firstRoot = columnNode(
+            environmentTextNode(density = 1f, fontScale = 1f, text = "old"),
+        ).copy(key = "first-owner")
+        val first = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(firstRoot),
+        )
+        val rootView = first.mountedNodes.single().view
+        val textView = first.mountedNodes.single().children.single().view as TextView
+
+        container.setTag(R.id.viewcompose_lazy_logical_owner_transfer, true)
+        val transferred = try {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = first.mountedNodes,
+                nodes = listOf(
+                    columnNode(
+                        environmentTextNode(
+                            density = 1f,
+                            fontScale = 1f,
+                            text = "new",
+                        ),
+                    ).copy(key = "second-owner"),
+                ),
+                collectStatistics = true,
+            )
+        } finally {
+            container.setTag(R.id.viewcompose_lazy_logical_owner_transfer, null)
+        }
+
+        assertSame(rootView, transferred.mountedNodes.single().view)
+        assertSame(textView, transferred.mountedNodes.single().children.single().view)
+        assertEquals("new", textView.text.toString())
+        assertEquals(0, transferred.stats.inserts)
+        assertEquals(0, transferred.stats.removals)
+        assertEquals(1, transferred.stats.patchedNodes)
+    }
+
+    @Test
     fun `cross owner reuse cancels bounds motion and settles the adopted layout`() {
         val firstContainer = FrameLayout(context)
         val secondContainer = FrameLayout(context)
@@ -1401,6 +1444,88 @@ class ViewTreeRenderTransactionTest {
         assertSame(previous, mounted.vnode)
         assertEquals("old", mounted.view.tag)
         assertSame(mounted.view, container.getChildAt(0))
+    }
+
+    @Test
+    fun `small observed property batch rejects duplicate targets before mutation`() {
+        val container = FrameLayout(context)
+        val previous = environmentTextNode(
+            density = 1f,
+            fontScale = 1f,
+            text = "before",
+        ).copy(observedPropertyId = 1L)
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(previous),
+        )
+        val mounted = initial.mountedNodes.single()
+        val firstNext = previous.copy(
+            spec = (previous.spec as TextNodeProps).copy(
+                document = TextDocument.plain("first"),
+            ),
+        )
+        val secondNext = previous.copy(
+            spec = (previous.spec as TextNodeProps).copy(
+                document = TextDocument.plain("second"),
+            ),
+        )
+
+        val error = runCatching {
+            ViewTreeRenderer.patchObservedProperties(
+                patches = listOf(
+                    ViewTreeObservedPropertyPatch(1L, mounted, previous, firstNext),
+                    ViewTreeObservedPropertyPatch(2L, mounted, previous, secondNext),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("targeted only once"))
+        assertSame(previous, mounted.vnode)
+        assertEquals("before", (mounted.view as TextView).text.toString())
+    }
+
+    @Test
+    fun `large observed property batch rejects duplicate ids before mutation`() {
+        val container = FrameLayout(context)
+        val previousNodes = (1L..9L).map { id ->
+            environmentTextNode(
+                density = 1f,
+                fontScale = 1f,
+                text = "before-$id",
+            ).copy(observedPropertyId = id)
+        }
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = previousNodes,
+        )
+        val patches = previousNodes.mapIndexed { index, previous ->
+            val id = if (index == previousNodes.lastIndex) 1L else index + 1L
+            ViewTreeObservedPropertyPatch(
+                id = id,
+                mountedNode = initial.mountedNodes[index],
+                previous = previous,
+                next = previous.copy(
+                    spec = (previous.spec as TextNodeProps).copy(
+                        document = TextDocument.plain("after-${index + 1}"),
+                    ),
+                ),
+            )
+        }
+
+        val error = runCatching {
+            ViewTreeRenderer.patchObservedProperties(patches = patches)
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("ids must be unique"))
+        previousNodes.forEachIndexed { index, previous ->
+            val mounted = initial.mountedNodes[index]
+            assertSame(previous, mounted.vnode)
+            assertEquals("before-${index + 1}", (mounted.view as TextView).text.toString())
+        }
     }
 
     @Test

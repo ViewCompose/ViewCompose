@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/lazy-list-performance.md
-translation_source_hash: eccfcba6f37c86629b0306c709739f2e924014660938e6cfbc3b5bdc612a1c54
+translation_source_hash: e3ba33e77ba46db20d37f6fc325803b1ca74cfa3d81c94321b1c01b2eb5e5b1a
 translation_status: current
 ---
 
@@ -80,6 +80,12 @@ Tree 缓存按 `contentType` 保留已经 Reset 的物理树，并在淘汰时�
 如果稳定父级频繁重组，并且 Profile 中出现 Selector 扫描，可在应用的不可变数据边界引入已
 Remember 的 `LazyItemsSnapshot`。它不是普通 List 的通用替代：每次组合都创建新快照仍会执行扫描，
 而普通数据或 Capture 改变后继续保留旧快照则不正确。
+
+如果不可变 Submission 本身频繁变化，但外围屏幕结构保持不变，应通过 Observed `LazyColumn`
+Overload 提交该 Snapshot。它无需重组父层即可 Patch 已挂载列表，并把每个 Payload 暴露为
+`ObservedValue`；变化的文本或其他叶子 Property 应使用 `ObservedValue.map` 派生。Item 结构只能
+依赖稳定 Key 与稳定 Capture。该路径具有事务性，因此 Native Patch 失败后，先前的 Item Table 与
+Observation 依赖仍可重试。
 
 ## 验证结果
 

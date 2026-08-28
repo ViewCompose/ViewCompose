@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 713b33013fc1b6283112d13295551cc2ce4a1345a57d8fae1caf8448d83684e8
+translation_source_hash: 8ea0bc08f4f41bd79dcce4842339dabbe5f70dc800a2b0f4b90ab841f475b37e
 translation_status: current
 ---
 
@@ -274,7 +274,9 @@ Matrix。Phase 4 负责该基准与最终指导。
 - Lazy Adapter 会先消费 Table 中已校验的直接 Range Update，再通知 RecyclerView。未提供直接更新的
   有限 Table 进入兼容路径：Key 顺序相同时无需运行
   `DiffUtil`，而是批量发送相邻原生变更；相同大小的循环排列会选择移动次数较少的左移或右移
-  序列；其他结构变化仍使用 AndroidX Diff。逻辑 Item Session 仍同步消费变化的 Revision。
+  序列；最近两个精确不可变 Table Transition 会通过弱引用保留已校验的紧凑 Move Plan，因此交替
+  Submission 不会重复扫描全部 Key。其他结构变化仍使用 AndroidX Diff。逻辑 Item Session 仍同步
+  消费变化的 Revision。
   Item 动画关闭时，纯语义更新因此不会产生冗余 RecyclerView Bind；若直接 Session Commit
   返回 false 或抛出异常，只会为对应的已 Attach 位置补发一次 Payload 重试。抛出的失败会在其余
   已 Attach Holder 都完成尝试且 Sticky 元数据追上已发布快照后再向上传播。通知规划绝不改变
@@ -292,6 +294,10 @@ Matrix。Phase 4 负责该基准与最终指导。
   首次 Attach 会直接 Activate 有效 Prepared Frame；如果被观察 State 已变化，则改为渲染当前
   状态。Active 的 Detach Holder 会暂存新 Submission 并在 Reattach 时渲染。低层 Key 重复时
   使用保守 Reload 路径；公开 DSL 拒绝缺失或重复 Key，Renderer 绝不会通过 First Match 查询猜测。
+- Renderer 本地 Recycled Pool 可以保留一个兼容的 Session Presentation，并在滚动停止后的 Idle
+  Callback 中 Prepare 下一个非相邻行。新 Key 激活前会事务式替换旧逻辑 Owner；失败的 Transfer
+  会 Rollback，Pool 淘汰或容器释放仍会终止保留的 Session。该有界路径不会在滚动期间增加周期性
+  工作，也不会改变 RecyclerView Prefetch 所有权。
 - 发布新 Item Table 时，会立即终止 Key 已删除或 Kind/Content Type 已不兼容的每个 Detached
   Cache Holder。Holder 会在 Dispose 前移出 Registry 所有权，因此 RecyclerView 后续 Recycle
   不会二次 Dispose 同一个逻辑 Session。Page Drop 的所有权清理由此不再依赖旧 Item 提交更新时

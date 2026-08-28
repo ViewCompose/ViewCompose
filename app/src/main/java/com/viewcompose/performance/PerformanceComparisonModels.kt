@@ -149,7 +149,7 @@ private fun <T> List<T>.asImmutableFixtureList(): List<T> =
  * Revision 0 returns the shared base list; later revisions reorder rows and update a fixed subset
  * to measure key retention and patch updates.
  */
-private fun performanceAccentColor(index: Int): Int {
+internal fun performanceAccentColor(index: Int): Int {
     return when (index % 4) {
         0 -> 0xFF315EFB.toInt()
         1 -> 0xFF0B8F6A.toInt()

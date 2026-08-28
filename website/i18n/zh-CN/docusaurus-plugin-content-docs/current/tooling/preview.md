@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: 735cc9175c6d36d7df254b2edb80a11c10831e189eb58fe11a154bc516a41a47
+translation_source_hash: aab8d49ffb567df4182d481277b266e96e7d27955f53c9bdbf4699018092d467
 translation_status: current
 ---
 
@@ -121,12 +121,16 @@ fun composePreviewBridgeSample() {
 
 - **Inspect Device Diagnostics**：选择 Session、展示关联的 Committed Frame/Failure、导航有界源码
   候选、Snapshot/Highlight Mounted View，并记录最多八帧/两秒的有限 ViewCompose Timing Workload。
+  **Capture next LazyItem** 则对已选精确 Parent 进入十秒 Armed 状态，记录下一个 Logical
+  `LazyItem` 的首个受支持帧，并返回用于关联 Holder 复用的不透明 Physical-container Token。
 - **Inspect Device Animation Timeline**：发现 Committed Transition，对一个选中 Timeline 做最长
   500 ms 的只读 Capture；不能 Seek 或修改真机状态。
 
 两者都使用 Android `DUMP`、One-use Nonce、Foreground Package/Process 校验、Private Atomic
 Response File、有界 Payload 与 Fail-closed Stale/Disposed Path。没有合法请求时，不进行 Report
 Polling/Write、Recurring Tree Traversal、Frame Observer、Timing Allocation 或 Active Capture。
+Future-item Arm 只匹配 Parent Session ID、`LazyItem` Role 和请求后的 Session-ID 下限；它从不接收
+或返回应用 Key 与 Native Object。
 真机 Timing 不覆盖 Android Measure/Layout/Draw、GPU、RenderThread、SurfaceFlinger、Decode、
 Network、Database 与 External SDK Work。精确所有权和上限见
 [Preview Integration 模块](../modules/viewcompose-preview/README.md)。

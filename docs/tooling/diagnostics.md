@@ -189,6 +189,53 @@ per-node clock reads, timing-record allocation, report writes, polling, or recur
 The timing result is diagnostic evidence, not a frame-time benchmark: instrumentation overhead and
 the small finite sample remain visible limitations.
 
+### Lazy-session field-use rule
+
+Starting **Capture timing** requests one immediate structural frame so the selected Session can
+produce bounded records. Treat that first frame as capture setup unless the interaction itself
+caused it; do not label its phase durations as the later gesture or mutation. The capture follows
+the selected logical Session only. When a lazy key leaves the viewport and its Session ends, a
+newly visible key receives a new Session ID even if RecyclerView reuses the same physical holder or
+mounted presentation.
+
+For cold lazy-list work, select the exact live parent Session and use **Capture next LazyItem**. The
+process owns at most one arm. It waits at most ten monotonic seconds for a child with that exact
+parent, the `LazyItem` role, and a Session ID above the arm-time floor, then captures one completed
+frame. Registration happens before the matched child's initial frame, so timing attaches to the
+frame already entering preparation rather than forcing another structural render. Terminal reasons
+distinguish matched, duration limit, parent ended, superseded, and capture rejected. The arm never
+accepts or serializes an application key, node content, callback, source string, or native object.
+
+Each Session row also carries an opaque process-local physical-container token, and the arm reports
+the token of its match. Equal tokens across different logical Session IDs prove physical holder
+reuse without making the token a selector or stable identity. Verify the selected Host's authored
+source and the matched node types before attribution; a foreground process may contain another
+valid Host. A Session-ended result remains identity evidence, not an empty performance result.
+Measure/layout/draw, RenderThread, GPU, and buffer-queue ownership still requires Perfetto or
+another platform profiler.
+
+The `performance.list@5` field recheck applied this rule. Repeated captures resolved the authored
+LazyItem source and ranked Text/direct binding inside the selected item frame, while a Host capture
+showed no supported phase during the actual pure-scroll interval. Future-item capture then observed
+the cold logical Session's first supported frame. Twelve consecutive matches reused physical tokens
+`9`, `8`, and `13` across different logical Session IDs, proving that the workload already reuses
+holders. A matching platform trace placed cold direct render under `RV Scroll`, not `RV Prefetch`,
+and retained input/traversal and RenderThread work outside the finite timer. The upgrade was
+actionable but partial: it removed the future-Session and holder-creation ambiguities and changed the
+next source-level decision, but it could not rank stable-path allocation or repeated call-site cost.
+
+When repeated bounded captures reached that limit, a one-method Debug method trace and matched
+Release Perfetto traces supplied the next distinction. The method trace found 16 cyclic-rotation
+calculations per mutation transaction, 945 structural map-equality calls while collecting unchanged
+environment snapshots, and repeated general dependency-replacement machinery for one-state item
+observations. Perfetto independently kept the remaining row work inside animation/traversal rather
+than holder creation. Temporary counters and method-trace switches were hard-cut after attribution;
+they are not packaged or enabled in optimized Release. This investigation therefore establishes a
+durable escalation rule: use the bounded Session tool for source and ownership correlation, then
+switch to a one-method trace or Perfetto when the unresolved distinction is repeated call count,
+allocation, measure/layout/draw, or platform scheduling. Do not broaden the always-available
+diagnostic contract merely to duplicate those profiler domains.
+
 ## 8. Demo inspector
 
 `Diagnostics -> Renderer` provides the render tree, patch timeline, recomposition reasons,
@@ -202,12 +249,14 @@ plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnost
 
 ## 9. Remaining expansion contract
 
-[ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
+[ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1
+and its bounded future-session extension.
 A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
 production aggregation; `viewcompose-preview` owns the shipped request-driven correlated inspector,
-highlighting, and finite timing. No diagnostics expansion is currently active. A future continuous
-observer, new timing domain, or broader device contract requires a new attributed plan and must
-preserve ADR-0009's inactive and Release isolation rules.
+highlighting, selected-session timing, and one-shot future-LazyItem timing. The archived list-tail
+record owns the extension's no-regression and release-isolation acceptance. A future continuous observer,
+new timing domain, or broader device contract requires a new attributed plan and must preserve
+ADR-0009's inactive and Release isolation rules.
 
 `./gradlew verifyDemoReleaseToolingApk` assembles the optimized Demo Release APK and rejects the
 device request action, v7 report path, receiver, service registration, or concrete inspection class
