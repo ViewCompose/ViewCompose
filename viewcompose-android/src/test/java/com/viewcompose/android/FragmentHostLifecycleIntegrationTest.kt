@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.lifecycle.LocalSavedStateRegistryOwner
 import com.viewcompose.ui.foundation.DisposableEffect
@@ -44,6 +45,7 @@ class FragmentHostLifecycleIntegrationTest {
 
         val firstOwner = fragment.viewLifecycleOwner
         assertSame(firstOwner, fragment.capturedOwner)
+        assertSame(firstOwner, fragment.requireView().findViewTreeViewModelStoreOwner())
         assertSame(fragment, fragment.capturedSavedStateRegistryOwner)
         assertSame(fragment, fragment.capturedViewModelStoreOwner)
         assertEquals(1, fragment.compositionCount)
@@ -59,6 +61,7 @@ class FragmentHostLifecycleIntegrationTest {
         val secondOwner = fragment.viewLifecycleOwner
         assertNotSame(firstOwner, secondOwner)
         assertSame(secondOwner, fragment.capturedOwner)
+        assertSame(secondOwner, fragment.requireView().findViewTreeViewModelStoreOwner())
         assertSame(fragment, fragment.capturedSavedStateRegistryOwner)
         assertSame(fragment, fragment.capturedViewModelStoreOwner)
         assertSame(fragment.firstSaveableStateRegistry, fragment.capturedSaveableStateRegistry)

@@ -15,6 +15,9 @@ import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import com.viewcompose.android.test.R as TestR
 import com.viewcompose.oneui7.OneUi7Theme
 import com.viewcompose.oneui7.OneUi7ThemeDefaults
@@ -25,6 +28,9 @@ import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiThemeTokens
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.viewmodel.LocalViewModelStoreOwner
+import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
@@ -39,6 +45,31 @@ import java.util.Locale
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [24, 31, 35])
 class AndroidHostThemeIntegrationTest {
+    @Test
+    fun `aggregate activity root discovers ViewTree ViewModel owner and explicit local wins`() {
+        val activity = Robolectric.buildActivity(NeutralHostActivity::class.java)
+            .setup()
+            .get()
+        val explicitOwner = object : ViewModelStoreOwner {
+            override val viewModelStore = ViewModelStore()
+        }
+        var discoveredOwner: ViewModelStoreOwner? = null
+        var overriddenOwner: ViewModelStoreOwner? = null
+
+        val root = activity.setUiContent {
+            discoveredOwner = LocalViewModelStoreOwner.current
+            ProvideViewModelStoreOwner(explicitOwner) {
+                overriddenOwner = LocalViewModelStoreOwner.current
+                Text("owner precedence")
+            }
+        }
+
+        assertSame(activity, root.findViewTreeViewModelStoreOwner())
+        assertSame(activity, discoveredOwner)
+        assertSame(explicitOwner, overriddenOwner)
+        explicitOwner.viewModelStore.clear()
+    }
+
     @Test
     fun `neutral host preserves receiver context and framework defaults`() {
         val activity = Robolectric.buildActivity(NeutralHostActivity::class.java)
