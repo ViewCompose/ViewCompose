@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - navigation.host
+  - navigation.scene-projection
   - viewmodel.owner-boundaries
   - viewmodel.scoped-owners
   - viewmodel.store-resolution
@@ -101,8 +102,15 @@ identity to lease the existing ViewModels. A finishing parent remains the final 
 
 ## 4. Lifecycle projection
 
-The host projects committed navigation and pane state into Android lifecycles, capped by the outer
-host lifecycle:
+Navigation Core owns one immutable `NavScene`. Each destination projection carries presence,
+visibility, interaction, coarse transition phase, pane role, and content/overlay layer role. The
+planner derives lifecycle from one rule rather than independent ID sets:
+
+```text
+effective destination lifecycle = min(host cap, scene cap, entry cap)
+```
+
+The accepted targets are:
 
 | Role | Target state |
 | --- | --- |
@@ -114,8 +122,15 @@ host lifecycle:
 
 Downward transitions happen before upward transitions, so a single-pane host never briefly owns
 two resumed destinations. A validated multi-pane scene may resume multiple leaf destinations and
-their shared graph paths intentionally. Destroyed entry and graph identities cannot be
-reintroduced.
+their shared graph paths intentionally. Graph owners take the highest effective state among their
+descendants while Android still applies child-down and parent-up ordering. Destroyed entry and
+graph identities cannot be reintroduced.
+
+Phase 2 installs this semantic model and hard-cuts the Core planner API. The Android coordinator
+currently converts its existing pane ownership into settled `NavScene` entries, preserving host
+behavior while Core and Android move in separate reviewable slices. Transition-specific phases,
+popped-exit caps, overlay coverage, and terminal focus transfer are not yet consumed by the Android
+coordinator; those claims remain unverified until the transition-integration slice.
 
 ## 5. Restoration boundary
 

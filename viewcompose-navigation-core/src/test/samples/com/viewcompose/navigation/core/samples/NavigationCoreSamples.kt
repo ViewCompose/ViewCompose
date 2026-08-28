@@ -5,13 +5,21 @@ import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavDeepLink
 import com.viewcompose.navigation.core.NavDeepLinkArgumentType
 import com.viewcompose.navigation.core.NavDeepLinkResolution
+import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavEntryPresence
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlanner
+import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavPreparation
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavRootBackBehavior
+import com.viewcompose.navigation.core.NavScene
+import com.viewcompose.navigation.core.NavSceneEntry
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
+import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSpec
@@ -137,20 +145,41 @@ val controller = NavBackStackController.create(configuration, graph)
 }
 
 fun lifecyclePlanningSample() {
-    val list = NavEntryId("list")
-    val detail = NavEntryId("detail")
+    // DOCS_REGION_START(navigation-core-scene-projection)
+    val list = NavEntry(NavEntryId("list"), NavRoute("list"))
+    val detail = NavEntry(NavEntryId("detail"), NavRoute("detail"))
+    val scene = NavScene(
+        listOf(
+            NavSceneEntry(
+                entryId = list.id,
+                presence = NavEntryPresence.Retained,
+                visibility = NavSceneVisibility.Hidden,
+                interaction = NavSceneInteraction.NonInteractive,
+                transitionPhase = NavSceneTransitionPhase.Settled,
+                paneRole = null,
+            ),
+            NavSceneEntry(
+                entryId = detail.id,
+                presence = NavEntryPresence.Retained,
+                visibility = NavSceneVisibility.Visible,
+                interaction = NavSceneInteraction.Interactive,
+                transitionPhase = NavSceneTransitionPhase.Settled,
+                paneRole = NavPaneRole.Primary,
+            ),
+        ),
+    )
     val plan = NavLifecyclePlanner.plan(
         currentStates = mapOf(
-            list to NavEntryLifecycleState.Resumed,
-            detail to NavEntryLifecycleState.Created,
+            list.id to NavEntryLifecycleState.Resumed,
+            detail.id to NavEntryLifecycleState.Created,
         ),
-        retainedEntryIds = listOf(list, detail),
-        visibleEntryIds = setOf(list, detail),
-        interactiveEntryId = detail,
+        entries = listOf(list, detail),
+        scene = scene,
         hostState = NavHostLifecycleState.Resumed,
     )
 
-    check(plan.targetStates[list] == NavEntryLifecycleState.Started)
-    check(plan.targetStates[detail] == NavEntryLifecycleState.Resumed)
-    check(plan.transitions.first().entryId == list)
+    check(plan.targetStates[list.id] == NavEntryLifecycleState.Created)
+    check(plan.targetStates[detail.id] == NavEntryLifecycleState.Resumed)
+    check(plan.transitions.first().entryId == list.id)
+    // DOCS_REGION_END(navigation-core-scene-projection)
 }

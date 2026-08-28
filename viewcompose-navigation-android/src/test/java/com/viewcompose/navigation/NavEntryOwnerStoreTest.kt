@@ -1,10 +1,5 @@
 package com.viewcompose.navigation
 
-/*
- * 测试职责：覆盖 Android navigation runtime 中的 Nav Entry Owner Store 行为，防止导航契约在后续重构中回退。
- * Test responsibility: covers Nav Entry Owner Store behavior in Android navigation runtime and guards navigation contracts against regressions.
- */
-
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.SavedStateHandle
@@ -13,9 +8,17 @@ import androidx.lifecycle.ViewModelProvider
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavEntryPresence
 import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavHostLifecycleState
+import com.viewcompose.navigation.core.NavLifecyclePlan
+import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavScene
+import com.viewcompose.navigation.core.NavSceneEntry
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
+import com.viewcompose.navigation.core.NavSceneVisibility
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -474,6 +477,39 @@ class NavEntryOwnerStoreTest {
         return NavGraphEntry(
             id = NavEntryId(id),
             route = NavRoute(route),
+        )
+    }
+
+    private fun NavEntryOwnerStore.reconcile(
+        retainedEntries: List<NavEntry>,
+        visibleEntryIds: Set<NavEntryId>,
+        interactiveEntryIds: Set<NavEntryId>,
+        hostState: NavHostLifecycleState,
+    ): NavLifecyclePlan {
+        return reconcile(
+            retainedEntries = retainedEntries,
+            scene = NavScene(
+                retainedEntries.map { entry ->
+                    val isVisible = entry.id in visibleEntryIds
+                    NavSceneEntry(
+                        entryId = entry.id,
+                        presence = NavEntryPresence.Retained,
+                        visibility = if (isVisible) {
+                            NavSceneVisibility.Visible
+                        } else {
+                            NavSceneVisibility.Hidden
+                        },
+                        interaction = if (entry.id in interactiveEntryIds) {
+                            NavSceneInteraction.Interactive
+                        } else {
+                            NavSceneInteraction.NonInteractive
+                        },
+                        transitionPhase = NavSceneTransitionPhase.Settled,
+                        paneRole = if (isVisible) NavPaneRole.Primary else null,
+                    )
+                },
+            ),
+            hostState = hostState,
         )
     }
 

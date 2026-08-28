@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: eacfe4e3b222f5ab12673333d9573b6b34827afac13ba2664013fdf5d3683eee
+translation_source_hash: 52bdef82c4bb761d41bd5137779e47bfb40ccfd90d5e2f12b10571cd08f60a22
 translation_status: current
 ---
 
@@ -65,7 +65,15 @@ Lifecycle 终止和 Store 终止按顺序执行，但不是同一事件。永久
 
 ## 4. Lifecycle 投影
 
-Host 把已提交导航状态和 Pane 状态投影为 Android Lifecycle，并受最外层 Host Lifecycle 限制：
+Navigation Core 持有一份不可变 `NavScene`。每个 Destination Projection 都携带 Presence、
+Visibility、Interaction、粗粒度 Transition Phase、Pane Role 与 Content/Overlay Layer Role。
+Planner 通过一条规则推导 Lifecycle，而不再依赖彼此独立的 ID Set：
+
+```text
+effective destination lifecycle = min(host cap, scene cap, entry cap)
+```
+
+已接受的目标如下：
 
 | 角色 | 目标状态 |
 | --- | --- |
@@ -77,7 +85,14 @@ Host 把已提交导航状态和 Pane 状态投影为 Android Lifecycle，并受
 
 生命周期先向下再向上变更，因此单 Pane Host 不会短暂拥有两个 `RESUMED` Destination。通过
 校验的多 Pane Scene 可以有意让多个叶子 Destination 及其共享 Graph 路径进入 `RESUMED`。
+Graph Owner 取所有后代中的最高有效状态，Android 仍按 Child-down、Parent-up 顺序应用状态。
 已销毁的 Entry 和 Graph 身份不能重新引入。
+
+Phase 2 安装该语义模型，并硬切 Core Planner API。Android Coordinator 当前仍把已有 Pane
+Ownership 转换为 Settled `NavScene` Entry，以便 Core 与 Android 分成可独立审查的 Slice，同时
+保持宿主行为不变。Transition-specific Phase、Popped-exit Cap、Overlay Coverage 与终态 Focus
+Transfer 尚未由 Android Coordinator 消费；在 Transition Integration Slice 验收前，这些宿主层
+结论仍未验证。
 
 ## 5. 恢复边界
 

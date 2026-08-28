@@ -58,104 +58,123 @@ class NavLifecyclePlan(
 }
 
 /**
- * Computes navigation-owner lifecycle transitions from retention and pane visibility.
+ * Computes destination and graph-owner lifecycle transitions from one semantic [NavScene].
  *
- * Retained background owners target `Created`, visible non-interactive owners target `Started`, and
- * interactive owners target `Resumed`; [NavHostLifecycleState] caps all three. Owners absent from
- * the retained list target `Destroyed` and may not later be retained again.
+ * Every destination target is `min(host cap, scene cap, entry cap)`. Graph-owner targets are the
+ * highest effective target among their descendants, so a parent is never below an active child.
+ * Owners absent from `entries` target `Destroyed`, downward or terminal transitions precede upward
+ * transitions, and a destroyed identity cannot be resurrected.
+ *
+ * Planning is side-effect free and linear in destinations, graph-path depth, and current owners.
+ * The caller must not mutate `currentStates` during a call. This Alpha hard cut accepts only a
+ * semantic scene; visible and interactive ID-set overloads are intentionally absent.
  *
  * @sample com.viewcompose.navigation.core.samples.lifecyclePlanningSample
  */
 object NavLifecyclePlanner {
     /**
-     * Plans a scene with at most one interactive owner.
+     * Plans lifecycle targets and ordered transitions for one immutable scene snapshot.
      *
-     * @param currentStates previous host-applied owner states
-     * @param retainedEntryIds unique stable owner order retained by navigation state
-     * @param visibleEntryIds retained owners currently displayed by the pane scene
-     * @param interactiveEntryId optional visible owner receiving input
-     * @param hostState current host lifecycle cap
-     * @throws IllegalArgumentException when set relationships are invalid or a destroyed owner is retained
+     * The returned plan is an immutable snapshot. No owner is mutated by this function; a platform
+     * host applies [NavLifecyclePlan.transitions] in order after its surrounding transaction commits.
+     *
+     * @param currentStates previous host-applied states keyed by destination or graph-owner identity
+     * @param entries destination records currently owned by the candidate scene, including prepared
+     * or exiting records until they reach terminal removal
+     * @param scene semantic projection containing exactly one role for every destination in `entries`
+     * @param hostState outer host lifecycle cap applied to every destination and graph owner
+     * @return immutable final targets and downward-before-upward transition order
+     * @throws IllegalArgumentException when destination or graph identities conflict, the scene and
+     * entries differ, terminal entries have no current owner, or a destroyed identity would revive
      */
     fun plan(
         currentStates: Map<NavEntryId, NavEntryLifecycleState>,
-        retainedEntryIds: List<NavEntryId>,
-        visibleEntryIds: Set<NavEntryId>,
-        interactiveEntryId: NavEntryId?,
+        entries: List<NavEntry>,
+        scene: NavScene,
         hostState: NavHostLifecycleState,
     ): NavLifecyclePlan {
-        return plan(
-            currentStates = currentStates,
-            retainedEntryIds = retainedEntryIds,
-            visibleEntryIds = visibleEntryIds,
-            interactiveEntryIds = interactiveEntryId?.let(::setOf).orEmpty(),
-            hostState = hostState,
-        )
-    }
-
-    /**
-     * Plans a scene that may expose multiple interactive pane owners.
-     *
-     * @param currentStates previous host-applied owner states
-     * @param retainedEntryIds unique stable owner order retained by navigation state
-     * @param visibleEntryIds retained owners currently displayed by the pane scene
-     * @param interactiveEntryIds visible owners receiving input
-     * @param hostState current host lifecycle cap
-     * @throws IllegalArgumentException when set relationships are invalid or a destroyed owner is retained
-     */
-    fun plan(
-        currentStates: Map<NavEntryId, NavEntryLifecycleState>,
-        retainedEntryIds: List<NavEntryId>,
-        visibleEntryIds: Set<NavEntryId>,
-        interactiveEntryIds: Set<NavEntryId>,
-        hostState: NavHostLifecycleState,
-    ): NavLifecyclePlan {
-        require(retainedEntryIds.distinct().size == retainedEntryIds.size) {
-            "Retained navigation entry IDs must be unique."
+        val destinationIds = entries.map(NavEntry::id)
+        require(destinationIds.distinct().size == destinationIds.size) {
+            "Navigation lifecycle entries must have unique destination identities."
         }
-        val retainedSet = retainedEntryIds.toSet()
-        require(visibleEntryIds.all(retainedSet::contains)) {
-            "Visible navigation entries must also be retained."
+        require(scene.entryIds == destinationIds.toSet()) {
+            "A navigation scene must describe every owned destination exactly once."
         }
-        require(interactiveEntryIds.all(visibleEntryIds::contains)) {
-            "Interactive navigation entries must also be visible."
+        val terminalWithoutOwner = scene.entries.filter { sceneEntry ->
+            sceneEntry.presence == NavEntryPresence.Removed &&
+                sceneEntry.entryId !in currentStates
         }
-        val resurrected = retainedEntryIds.filter { entryId ->
-            currentStates[entryId] == NavEntryLifecycleState.Destroyed
-        }
-        require(resurrected.isEmpty()) {
-            "Destroyed navigation entries cannot be retained again: $resurrected"
+        require(terminalWithoutOwner.isEmpty()) {
+            "Removed navigation scene entries require a current owner: ${terminalWithoutOwner.map(NavSceneEntry::entryId)}"
         }
 
-        val orderedEntryIds = buildList {
-            addAll(retainedEntryIds)
-            currentStates.keys.forEach { entryId ->
-                if (entryId !in retainedSet) {
-                    add(entryId)
+        val orderedOwnerIds = linkedSetOf<NavEntryId>()
+        val graphEntriesById = linkedMapOf<NavEntryId, Pair<NavGraphEntry, Int>>()
+        entries.forEach { entry ->
+            entry.graphEntries.forEachIndexed { depth, graphEntry ->
+                val existing = graphEntriesById[graphEntry.id]
+                require(existing == null || existing == (graphEntry to depth)) {
+                    "Navigation graph entry ${graphEntry.id} changed identity or hierarchy depth."
+                }
+                graphEntriesById[graphEntry.id] = graphEntry to depth
+                orderedOwnerIds += graphEntry.id
+            }
+            require(entry.id !in graphEntriesById) {
+                "Navigation destination ${entry.id} cannot reuse a graph-owner identity."
+            }
+            orderedOwnerIds += entry.id
+        }
+        val graphOwnerIds = graphEntriesById.keys
+        require(destinationIds.none(graphOwnerIds::contains)) {
+            "Navigation destination and graph-owner identities must be disjoint."
+        }
+
+        val hostCap = hostState.toEntryLifecycleState()
+        val destinationTargets = linkedMapOf<NavEntryId, NavEntryLifecycleState>()
+        entries.forEach { entry ->
+            val sceneEntry = checkNotNull(scene[entry.id])
+            destinationTargets[entry.id] = minimumLifecycleState(
+                hostCap,
+                sceneEntry.sceneLifecycleCap,
+                sceneEntry.entryLifecycleCap,
+            )
+        }
+
+        val ownedTargets = linkedMapOf<NavEntryId, NavEntryLifecycleState>()
+        entries.forEach { entry ->
+            val target = checkNotNull(destinationTargets[entry.id])
+            entry.graphEntries.forEach { graphEntry ->
+                val currentTarget = ownedTargets[graphEntry.id]
+                ownedTargets[graphEntry.id] = if (currentTarget == null) {
+                    target
+                } else {
+                    maximumLifecycleState(currentTarget, target)
                 }
             }
-        }
-        val targetStates = linkedMapOf<NavEntryId, NavEntryLifecycleState>()
-        orderedEntryIds.forEach { entryId ->
-            targetStates[entryId] = if (entryId !in retainedSet) {
-                NavEntryLifecycleState.Destroyed
-            } else {
-                targetForRetainedEntry(
-                    isVisible = entryId in visibleEntryIds,
-                    isInteractive = entryId in interactiveEntryIds,
-                    hostState = hostState,
-                )
-            }
+            ownedTargets[entry.id] = target
         }
 
-        val transitions = orderedEntryIds.mapNotNull { entryId ->
-            val from = currentStates[entryId] ?: NavEntryLifecycleState.Initialized
-            val to = checkNotNull(targetStates[entryId])
+        currentStates.keys.forEach(orderedOwnerIds::add)
+        val targetStates = linkedMapOf<NavEntryId, NavEntryLifecycleState>()
+        orderedOwnerIds.forEach { ownerId ->
+            targetStates[ownerId] = ownedTargets[ownerId] ?: NavEntryLifecycleState.Destroyed
+        }
+        val resurrected = targetStates.filter { (ownerId, target) ->
+            currentStates[ownerId] == NavEntryLifecycleState.Destroyed &&
+                target != NavEntryLifecycleState.Destroyed
+        }.keys
+        require(resurrected.isEmpty()) {
+            "Destroyed navigation owners cannot be retained again: $resurrected"
+        }
+
+        val transitions = orderedOwnerIds.mapNotNull { ownerId ->
+            val from = currentStates[ownerId] ?: NavEntryLifecycleState.Initialized
+            val to = checkNotNull(targetStates[ownerId])
             if (from == to) {
                 null
             } else {
                 NavLifecycleTransition(
-                    entryId = entryId,
+                    entryId = ownerId,
                     from = from,
                     to = to,
                 )
@@ -172,31 +191,30 @@ object NavLifecyclePlanner {
         )
     }
 
-    private fun targetForRetainedEntry(
-        isVisible: Boolean,
-        isInteractive: Boolean,
-        hostState: NavHostLifecycleState,
-    ): NavEntryLifecycleState {
-        if (hostState == NavHostLifecycleState.Destroyed) {
-            return NavEntryLifecycleState.Destroyed
-        }
-        val desired = when {
-            isInteractive -> NavEntryLifecycleState.Resumed
-            isVisible -> NavEntryLifecycleState.Started
-            else -> NavEntryLifecycleState.Created
-        }
-        val hostCap = when (hostState) {
+    private fun NavHostLifecycleState.toEntryLifecycleState(): NavEntryLifecycleState {
+        return when (this) {
             NavHostLifecycleState.Initialized -> NavEntryLifecycleState.Initialized
             NavHostLifecycleState.Created -> NavEntryLifecycleState.Created
             NavHostLifecycleState.Started -> NavEntryLifecycleState.Started
             NavHostLifecycleState.Resumed -> NavEntryLifecycleState.Resumed
-            NavHostLifecycleState.Destroyed -> error("Handled above.")
+            NavHostLifecycleState.Destroyed -> NavEntryLifecycleState.Destroyed
         }
-        return if (desired.activeRank() <= hostCap.activeRank()) {
-            desired
-        } else {
-            hostCap
-        }
+    }
+
+    private fun minimumLifecycleState(
+        first: NavEntryLifecycleState,
+        second: NavEntryLifecycleState,
+        third: NavEntryLifecycleState,
+    ): NavEntryLifecycleState {
+        val firstPairMinimum = if (first.activeRank() <= second.activeRank()) first else second
+        return if (firstPairMinimum.activeRank() <= third.activeRank()) firstPairMinimum else third
+    }
+
+    private fun maximumLifecycleState(
+        first: NavEntryLifecycleState,
+        second: NavEntryLifecycleState,
+    ): NavEntryLifecycleState {
+        return if (first.activeRank() >= second.activeRank()) first else second
     }
 
     private fun NavEntryLifecycleState.activeRank(): Int {

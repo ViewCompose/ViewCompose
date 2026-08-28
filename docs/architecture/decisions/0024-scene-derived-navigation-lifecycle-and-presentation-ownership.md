@@ -12,6 +12,7 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
   - navigation.host
+  - navigation.scene-projection
   - viewmodel.scoped-owners
 artifact_ids:
   - viewcompose-lifecycle-androidx

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 3593ea08eefd8cd5f5306fa59c52d71bc50a1bd10d435c4ad9168c085448b404
+translation_source_hash: 534f8a7e88205065a5cd96b57e8251aea9daa941a51a33214d4a0cf1bf039497
 translation_status: current
 ---
 
@@ -138,13 +138,65 @@ pattern 是严格白名单。占位符必须完整占据一个路径段或查询
 
 ## 生命周期规划
 
-`NavLifecyclePlanner` 消费稳定 owner ID，而不是 Android `LifecycleOwner`。后台保留 owner 的
-目标为 `Created`，可见 owner 为 `Started`，可交互 owner 为 `Resumed`。宿主生命周期会限制
-所有目标状态的上限。
+`NavScene` 用一份经过校验、从底到顶的语义投影替代并行的 Visible 与 Interactive ID Set。
+每个 `NavSceneEntry` 记录 Presence、Visibility、Interaction、粗粒度 Transition Phase、Content
+Pane Role 与 Content/Overlay Layer，并在不依赖 Android 类型或逐帧 Progress 的前提下分别推导
+Scene 与 Entry Lifecycle Cap。
+
+`NavLifecyclePlanner` 接收 Destination Record 与该 Scene，并只应用一条规则：
+
+```text
+effective destination lifecycle = min(host cap, scene cap, entry cap)
+```
+
+Prepared 与 Hidden Entry 上限为 `Created`；Covered 与 Active-transition Entry 上限为 `Started`；
+只有 Retained、Visible、Interactive 且 Settled 的 Entry 才能到达 `Resumed`。仍在退出动画中的
+Popped Entry 上限为 `Created`，终态删除目标为 `Destroyed`。Active-transition Scene 会拒绝任何
+Interactive Entry，从构造阶段阻止过早进入 `Resumed`。
 
 从保留集合移除的 owner 会转为 `Destroyed`，且不能复活。降级和销毁迁移始终先于升级迁移，
-因此替换交互目的地时不会短暂出现两个 resumed owner。Android 模块负责把生成的
-`NavLifecyclePlan` 应用到具体 owner。
+因此替换交互目的地时不会短暂出现两个 Resumed Owner。Graph Owner 的目标取其后代中的最高
+有效状态，保证 Parent 不低于 Active Child。Android 模块负责把生成的不可变
+`NavLifecyclePlan` 应用到具体 Owner。
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-scene-projection" sample_id="module.navigation-core-scene-projection" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val list = NavEntry(NavEntryId("list"), NavRoute("list"))
+val detail = NavEntry(NavEntryId("detail"), NavRoute("detail"))
+val scene = NavScene(
+    listOf(
+        NavSceneEntry(
+            entryId = list.id,
+            presence = NavEntryPresence.Retained,
+            visibility = NavSceneVisibility.Hidden,
+            interaction = NavSceneInteraction.NonInteractive,
+            transitionPhase = NavSceneTransitionPhase.Settled,
+            paneRole = null,
+        ),
+        NavSceneEntry(
+            entryId = detail.id,
+            presence = NavEntryPresence.Retained,
+            visibility = NavSceneVisibility.Visible,
+            interaction = NavSceneInteraction.Interactive,
+            transitionPhase = NavSceneTransitionPhase.Settled,
+            paneRole = NavPaneRole.Primary,
+        ),
+    ),
+)
+val plan = NavLifecyclePlanner.plan(
+    currentStates = mapOf(
+        list.id to NavEntryLifecycleState.Resumed,
+        detail.id to NavEntryLifecycleState.Created,
+    ),
+    entries = listOf(list, detail),
+    scene = scene,
+    hostState = NavHostLifecycleState.Resumed,
+)
+
+check(plan.targetStates[list.id] == NavEntryLifecycleState.Created)
+check(plan.targetStates[detail.id] == NavEntryLifecycleState.Resumed)
+check(plan.transitions.first().entryId == list.id)
+```
 
 ## 自适应 pane
 
@@ -152,8 +204,8 @@ pattern 是严格白名单。占位符必须完整占据一个路径段或查询
 `BackStack` 把最新保留的目的地依次放入 primary、secondary 和 tertiary pane。
 
 自定义策略应始终通过 `calculateValidated` 执行。验证会限制 pane 数量、拒绝活跃 stack 之外的
-entry，并要求栈顶始终可见。`NavPaneScene` 默认把所有可见 pane 视为可交互；如界面只允许单一
-焦点，宿主可在生命周期规划前收窄交互集合。
+entry，并要求栈顶始终可见。`NavPaneScene` 默认把所有可见 Pane 视为可交互；Host 可在构造
+`NavScene` 时收窄 Focus Policy。
 
 ## 保存与恢复契约
 
@@ -175,6 +227,10 @@ entry，并要求栈顶始终可见。`NavPaneScene` 默认把所有可见 pane 
 [`viewcompose-navigation-core` API 树](https://docs.viewcompose.com/api/viewcompose-navigation-core/current/)。
 
 ## 兼容性说明
+
+Scene Projection API 是 Alpha 硬切。原先接收 `retainedEntryIds`、`visibleEntryIds` 与
+`interactiveEntryId(s)` 的两个 `NavLifecyclePlanner.plan` Overload，必须迁移到唯一的
+`entries` 加 `scene` Overload；不存在 Deprecated Bridge 或双 Planner。
 
 `0.1.0-alpha03` 确立了不可变快照、单一待处理的两阶段事务、独立保留栈、严格 URI 匹配、图层级
 验证、生命周期规划和三个逻辑 pane 角色。只能持久化已提交快照，不要持久化 controller、事务、
