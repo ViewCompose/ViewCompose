@@ -30,7 +30,9 @@ evidence:
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostSavedStateTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostTransitionCoordinatorTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/AdaptiveNavHostCoordinatorTest.kt
   - viewcompose-android/src/test/java/com/viewcompose/android/FragmentHostLifecycleIntegrationTest.kt
+  - app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt
 ---
 
 # Navigation runtime architecture
@@ -116,6 +118,7 @@ The accepted targets are:
 | --- | --- |
 | Interactive settled destination and its graph path | `RESUMED` |
 | Visible transition participant | `STARTED` |
+| Popped destination retaining an exit presentation | `CREATED` |
 | Retained hidden destination or graph | `CREATED` |
 | Prepared candidate before commit | No higher than `CREATED` |
 | Permanently removed destination or graph | `DESTROYED` |
@@ -126,11 +129,18 @@ their shared graph paths intentionally. Graph owners take the highest effective 
 descendants while Android still applies child-down and parent-up ordering. Destroyed entry and
 graph identities cannot be reintroduced.
 
-Phase 2 installs this semantic model and hard-cuts the Core planner API. The Android coordinator
-currently converts its existing pane ownership into settled `NavScene` entries, preserving host
-behavior while Core and Android move in separate reviewable slices. Transition-specific phases,
-popped-exit caps, overlay coverage, and terminal focus transfer are not yet consumed by the Android
-coordinator; those claims remain unverified until the transition-integration slice.
+The Android coordinator freezes exactly one semantic scene when an ordinary or predictive
+transition starts and reuses it for owner reconciliation and host-lifecycle changes. Every visible
+entry is non-interactive and no higher than `STARTED` until settlement. A popped outgoing entry is
+marked `Exiting` and capped at `CREATED` while its View remains available for motion; presentation
+disposal then precedes owner destruction. Predictive cancellation restores the gesture-start
+settled scene, while commit hands the same pages to the ordinary pop transition before promoting
+the incoming entry to `RESUMED` at terminal settlement. Adaptive panes use the same rule, so no
+pane resumes early during a scene change.
+
+Core can model content and overlay layers, but the current Android navigation host has no general
+overlay-navigation surface. Overlay lifecycle execution therefore remains unclaimed rather than
+being inferred from the model or the separate UI overlay transport.
 
 ## 5. Restoration boundary
 
@@ -153,7 +163,8 @@ System Back participates only while the active controller can consume it. Predic
 preview over committed entries without changing the core stack. Cancellation restores the settled
 scene; completion uses the normal pop transaction. Detach, disabled Back, or host destruction
 cancels an unfinished preview because the platform dispatcher may no longer deliver a terminal
-callback.
+callback. Preview participants remain `STARTED`; on commit the popped outgoing entry becomes
+`CREATED` until its exit presentation is disposed.
 
 `NavTransitionSpec` and shared-content capture are presentation policy. They operate on already
 owned destination roots after commit, own no page/session retention, and cannot receive input or
@@ -168,9 +179,11 @@ The invariant boundary is covered at three levels:
   validation, strict deep links, lifecycle plans, and pane-scene validation.
 - Navigation Android tests exercise candidate rollback, retained owner identity, lifecycle order,
   shared scoped-store recreation and terminal cleanup, SavedState compatibility, queued commands,
-  transition redirection, and predictive Back.
+  transition redirection, adaptive transition scenes, and predictive Back.
 - Android aggregate-host tests exercise Activity ViewTree owner discovery, nested explicit-owner
   precedence, and Fragment owner retention across View recreation.
+- The debug navigation device host captures the exact nearest `LocalLifecycleOwner` seen by DSL
+  content while instrumentation checks real View motion and owner state on a physical device.
 - The compiled [navigation tutorial](../tutorials/navigation.md) and the
   [production-host guide](../guides/navigation.md) provide the public first-success and manual
   acceptance paths.
@@ -179,8 +192,11 @@ Run `./gradlew :viewcompose-navigation-core:test :viewcompose-navigation-android
 for the deterministic architecture suite. Device behavior is accepted only when the guide's real
 Back, recreation, predictive-Back, and failure journey also passes.
 
-The clean Phase 3 comparison passed 151/151 Navigation Android tests and 21/21 aggregate-host
-executed cases. This is an **improved** ownership result over the 148-test navigation baseline:
-allocation is shared, missing boundaries fail directly, and recreation/cleanup are executable.
-The result is not device, memory, leak, or performance evidence; those dimensions remain
-**inconclusive** and stay assigned to the active navigation lifecycle-and-scene plan.
+The transition-lifecycle correction passed a fresh 151/151 Navigation Android suite. Its focused
+ordinary, predictive, redirect, host-cap, and adaptive matrix was 20/20. On a physical Pixel 4 XL
+running API 33, 2/2 selected instrumentation cases passed: one samples the Lifecycle owner captured
+inside destination DSL across push, preview, cancellation, commit, and settlement; the other
+rechecks predictive progress against real native Views. Compared with the previous suite that
+encoded premature incoming `RESUMED` and popped outgoing `STARTED`, the conclusion is
+**improved**. General navigation overlays, API-34 platform edge-gesture delivery, memory, leaks,
+and performance remain **inconclusive** and stay assigned to the active plan.

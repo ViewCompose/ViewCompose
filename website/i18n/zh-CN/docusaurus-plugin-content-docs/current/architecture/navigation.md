@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: 52bdef82c4bb761d41bd5137779e47bfb40ccfd90d5e2f12b10571cd08f60a22
+translation_source_hash: aa05206ce0f653b0f603d10199d0264250cb42fd0d5a3869e763428e798fdcce
 translation_status: current
 ---
 
@@ -79,6 +79,7 @@ effective destination lifecycle = min(host cap, scene cap, entry cap)
 | --- | --- |
 | 可交互的稳定 Destination 及其 Graph 路径 | `RESUMED` |
 | 可见的转场参与者 | `STARTED` |
+| 仍保留退出展示的已 Pop Destination | `CREATED` |
 | 隐藏的保留 Destination 或 Graph | `CREATED` |
 | 提交前已准备的候选 | 不高于 `CREATED` |
 | 永久移除的 Destination 或 Graph | `DESTROYED` |
@@ -88,11 +89,15 @@ effective destination lifecycle = min(host cap, scene cap, entry cap)
 Graph Owner 取所有后代中的最高有效状态，Android 仍按 Child-down、Parent-up 顺序应用状态。
 已销毁的 Entry 和 Graph 身份不能重新引入。
 
-Phase 2 安装该语义模型，并硬切 Core Planner API。Android Coordinator 当前仍把已有 Pane
-Ownership 转换为 Settled `NavScene` Entry，以便 Core 与 Android 分成可独立审查的 Slice，同时
-保持宿主行为不变。Transition-specific Phase、Popped-exit Cap、Overlay Coverage 与终态 Focus
-Transfer 尚未由 Android Coordinator 消费；在 Transition Integration Slice 验收前，这些宿主层
-结论仍未验证。
+Android Coordinator 会在普通转场或 Predictive 转场开始时冻结恰好一份语义 Scene，并在 Owner
+协调和 Host Lifecycle 变化时复用它。所有可见 Entry 在稳定前都不可交互，且不高于 `STARTED`。
+已 Pop 的离场 Entry 会标记为 `Exiting`，在 View 仍用于 Motion 时限制为 `CREATED`；随后先释放
+展示，再销毁 Owner。Predictive 取消会恢复手势开始时的 Settled Scene；提交则把相同页面交给
+普通 Pop 转场，直到终态稳定后才把进入 Entry 提升到 `RESUMED`。自适应 Pane 使用同一规则，
+因此 Scene 变化期间不会有 Pane 提前 Resume。
+
+Core 可以表达 Content 与 Overlay Layer，但当前 Android 导航 Host 尚无通用 Overlay 导航 Surface。
+因此 Overlay Lifecycle 执行仍不作支持声明，也不能从 Core Model 或独立 UI Overlay Transport 推断。
 
 ## 5. 恢复边界
 
@@ -112,6 +117,7 @@ Owner 状态创建新实例。
 只有活动 Controller 可以消费返回时，系统返回才会参与。Predictive Back 在已提交 Entry 上
 创建预览，但不改变 Core 栈。取消时恢复稳定 Scene，完成时执行普通 Pop 事务。Detach、禁用
 Back 或销毁 Host 都会取消未结束的预览，因为平台 Dispatcher 可能不再提供终态回调。
+Preview 参与者保持在 `STARTED`；提交后，被 Pop 的离场 Entry 会在退出展示释放前进入 `CREATED`。
 
 `NavTransitionSpec` 和 Shared Content 捕获只是展示策略。它们在提交后作用于已经拥有的
 Destination Root，不持有页面或 Session，也不能接收输入或无障碍焦点。捕获失败只降级对应
@@ -124,9 +130,11 @@ Destination Root，不持有页面或 Session，也不能接收输入或无障�
 - Navigation Core 测试覆盖两阶段事务、确定性保留栈、Graph 校验、严格 Deep Link、
   Lifecycle Plan 和 Pane Scene 校验。
 - Navigation Android 测试覆盖候选回滚、保留 Owner 身份、Lifecycle 顺序、共享 Scoped Store
-  重建与终态清理、SavedState 兼容、队列命令、转场重定向和 Predictive Back。
+  重建与终态清理、SavedState 兼容、队列命令、转场重定向、自适应转场 Scene 和 Predictive Back。
 - Android Aggregate Host 测试覆盖 Activity ViewTree Owner 发现、嵌套显式 Owner 优先级，以及
   Fragment View 重建期间的 Owner 保留。
+- Debug 导航设备 Host 会捕获 DSL 内容实际看到的最近 `LocalLifecycleOwner`，Instrumentation 则在
+  真机上检查真实 View Motion 与 Owner 状态。
 - 可编译的[导航教程](../tutorials/navigation.md)和[可上线 Host 指南](../guides/navigation.md)
   提供公开首个成功路径和人工验收路径。
 
@@ -134,7 +142,10 @@ Destination Root，不持有页面或 Session，也不能接收输入或无障�
 执行确定性架构测试。只有指南中的真实返回、重建、Predictive Back 和失败路径也通过后，才能
 接受设备行为。
 
-Phase 3 的 Clean Comparison 通过 151/151 项 Navigation Android 测试和 21/21 项 Aggregate Host
-执行 Case。相较 148 项导航基线，这是 **improved** 的 Ownership 结果：分配机制已统一，缺失边界
-会直接失败，重建与清理都有可执行证据。该结果不属于真机、内存、泄漏或性能证据，这些维度仍为
-**inconclusive**，继续由活跃的导航 Lifecycle/Scene Plan 负责。
+转场 Lifecycle 修正通过了新鲜执行的 151/151 项 Navigation Android 测试，其中普通转场、
+Predictive、重定向、Host Cap 与自适应矩阵的定向子集为 20/20。API 33 的 Pixel 4 XL 真机上，
+2/2 项定向 Instrumentation 通过：一项从 Destination DSL 内捕获 Lifecycle Owner，覆盖 Push、
+Preview、取消、提交和稳定；另一项再次用真实原生 View 验证 Predictive Progress。相较原先把
+进入页面过早设为 `RESUMED`、把已 Pop 离场页面保留为 `STARTED` 的测试，结论为 **improved**。
+通用导航 Overlay、API 34 平台边缘手势分发、内存、泄漏和性能仍为 **inconclusive**，继续由活跃
+计划负责。

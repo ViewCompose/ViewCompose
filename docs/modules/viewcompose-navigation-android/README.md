@@ -112,7 +112,8 @@ maintaining a second source of truth.
 
 Every destination entry receives an independent Android owner containing:
 
-- a Lifecycle capped by the host and pane visibility;
+- a Lifecycle capped by the host and semantic scene, including visibility, interaction, transition,
+  and retained-entry presence;
 - a ViewModelStore leased from the shared Lifecycle 2.11 scoped-owner provider and cleared only
   after the entry leaves all retained state;
 - a SavedStateRegistry and default SavedStateHandle arguments derived from `NavRoute`;
@@ -123,6 +124,17 @@ Destination content installs that object into `LocalLifecycleOwner`,
 Graph content installs the selected graph owner through the same four boundaries. A retained hidden
 destination keeps its owner identity and persisted data but receives a capped lifecycle, so a
 `LifecycleAndroidViewAdapter` drives its native View inactive without relying on physical removal.
+
+An ordinary or predictive transition freezes one semantic scene for all owner reconciliation.
+Visible participants remain no higher than `STARTED` until terminal settlement. A popped outgoing
+entry is capped at `CREATED` while its exit View is still presented, then its session is disposed
+before the owner reaches `DESTROYED`. Predictive cancellation restores the previous settled owner
+states; commit flows through the same capped pop transition. Settled adaptive panes may each be
+`RESUMED`, but all visible panes are capped at `STARTED` while their scene changes.
+
+Navigation Core defines overlay layer roles, but this Android host does not yet expose a general
+overlay-navigation scene. The separate overlay host transport must not be interpreted as lifecycle
+integration for navigation overlays.
 
 Pushing the same route twice creates two owners and does not share page state.
 
@@ -202,6 +214,8 @@ On predictive-Back platforms, gesture progress reveals the previous destination 
 the core stack. Cancellation springs both pages back to committed state. Gesture completion uses the
 same transaction and owner boundary as programmatic `popBackStack`. A programmatic command can
 redirect an active preview while preserving its current visual transform for a continuous handoff.
+Both preview pages are capped at `STARTED`; after commit the popped page is capped at `CREATED`
+until its exit presentation is removed, and only settlement resumes the incoming page.
 
 Detaching the View, disabling system Back, or destroying the host actively cancels an unfinished
 preview because the dispatcher may no longer send a terminal callback.
@@ -274,7 +288,7 @@ already retains each stack and owns selection history.
 The complete generated reference is available in the
 [`viewcompose-navigation-android` API tree](https://docs.viewcompose.com/api/viewcompose-navigation-android/current/).
 
-## Phase 3 acceptance
+## Shared scoped-owner acceptance
 
 The comparison baseline was the 148-test Navigation Android suite with navigation-owned
 ViewModelStore allocation and direct Activity/Fragment owner injection. The clean Phase 3 run
@@ -291,6 +305,22 @@ process-kill behavior, frame time, or OEM lifecycle ordering, so those dimension
 **inconclusive**. Phase 4 next removes the standalone SavedStateHandle holder path; the separate
 navigation lifecycle-and-scene plan retains device, memory, presentation-retention, and transition
 projection acceptance.
+
+## Transition lifecycle acceptance
+
+The previous 151-test Navigation Android baseline encoded premature `RESUMED` for an incoming page
+and retained a popped outgoing page at `STARTED`. A fresh run passed 151/151 tests after replacing
+those expectations with frozen semantic-scene assertions. The focused ordinary, predictive,
+redirect, host-cap, and adaptive transition subset passed 20/20.
+
+The app device harness then passed 2/2 selected cases on a physical Pixel 4 XL running API 33. The
+new case reads the nearest `LocalLifecycleOwner` captured inside destination DSL and verifies push,
+predictive preview, cancellation, commit, popped exit, destruction, and terminal resume. The
+existing companion case verifies predictive progress and cancellation against real native Views.
+This is an **improved** lifecycle result with no premature resume in the supported host scenes.
+General navigation overlays, API-34 platform edge-gesture delivery, memory, leak, and performance
+results remain **inconclusive**; the next plan phase owns presentation-retention policy and its
+device measurements.
 
 ## Compatibility notes
 

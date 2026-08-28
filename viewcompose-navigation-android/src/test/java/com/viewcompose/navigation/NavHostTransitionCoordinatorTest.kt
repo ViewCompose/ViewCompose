@@ -12,8 +12,11 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavEntryPresence
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.captureUiLocalSnapshot
 import java.util.ArrayDeque
@@ -102,7 +105,20 @@ class NavHostTransitionCoordinatorTest {
         assertEquals(View.VISIBLE, session(root).container.visibility)
         assertEquals(View.VISIBLE, session(details).container.visibility)
         assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertEquals(
+            NavSceneTransitionPhase.Exiting,
+            checkNotNull(result.transition.scene[root.id]).transitionPhase,
+        )
+        assertEquals(
+            NavSceneTransitionPhase.Entering,
+            checkNotNull(result.transition.scene[details.id]).transitionPhase,
+        )
+        assertTrue(
+            result.transition.scene.entries.all { entry ->
+                entry.interaction == NavSceneInteraction.NonInteractive
+            },
+        )
 
         transitionDriver.completeLatest()
 
@@ -129,14 +145,19 @@ class NavHostTransitionCoordinatorTest {
         assertEquals(root, result.transition.incomingEntry)
         assertEquals(View.VISIBLE, session(details).container.visibility)
         assertEquals(View.VISIBLE, session(root).container.visibility)
-        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+        assertEquals(
+            NavEntryPresence.Exiting,
+            checkNotNull(result.transition.scene[details.id]).presence,
+        )
 
         transitionDriver.completeLatest()
 
         assertNull(sessionStore.sessionOrNull(details.id))
         assertNull(ownerStore.ownerOrNull(details.id))
         assertEquals(View.VISIBLE, session(root).container.visibility)
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
     }
 
     @Test
@@ -186,7 +207,7 @@ class NavHostTransitionCoordinatorTest {
         assertEquals(View.VISIBLE, session(details).container.visibility)
         assertEquals(View.VISIBLE, session(confirmation).container.visibility)
         assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(confirmation))
 
         firstRun.complete()
 
@@ -220,7 +241,7 @@ class NavHostTransitionCoordinatorTest {
     }
 
     @Test
-    fun `reset retains old stack but exposes only outgoing and incoming pages`() {
+    fun `reset disposes hidden removals and retains only outgoing and incoming pages`() {
         val root = coordinator.snapshot.top
         coordinator.navigate(NavCommand.Push(NavRoute("details")))
         transitionDriver.completeLatest()
@@ -232,14 +253,14 @@ class NavHostTransitionCoordinatorTest {
         coordinator.navigate(NavCommand.Reset(NavRoute("login")))
         val login = coordinator.snapshot.top
 
-        assertEquals(View.GONE, session(root).container.visibility)
-        assertEquals(View.GONE, session(details).container.visibility)
+        assertNull(sessionStore.sessionOrNull(root.id))
+        assertNull(sessionStore.sessionOrNull(details.id))
+        assertNull(ownerStore.ownerOrNull(root.id))
+        assertNull(ownerStore.ownerOrNull(details.id))
         assertEquals(View.VISIBLE, session(confirmation).container.visibility)
         assertEquals(View.VISIBLE, session(login).container.visibility)
-        assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
-        assertEquals(NavEntryLifecycleState.Created, lifecycle(details))
-        assertEquals(NavEntryLifecycleState.Started, lifecycle(confirmation))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(login))
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(confirmation))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(login))
 
         transitionDriver.completeLatest()
 
@@ -248,6 +269,7 @@ class NavHostTransitionCoordinatorTest {
             assertNull(ownerStore.ownerOrNull(removed.id))
         }
         assertEquals(1, coordinator.hostView.childCount)
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(login))
     }
 
     @Test
@@ -269,7 +291,15 @@ class NavHostTransitionCoordinatorTest {
         assertEquals(View.VISIBLE, session(root).container.visibility)
         assertEquals(View.VISIBLE, session(details).container.visibility)
         assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertTrue(
+            preview.scene.entries
+                .filter { entry -> entry.entryId in preview.visibleEntryIds }
+                .all { entry ->
+                    entry.transitionPhase == NavSceneTransitionPhase.PredictivePreview &&
+                        entry.interaction == NavSceneInteraction.NonInteractive
+                },
+        )
 
         assertTrue(
             coordinator.updateBackPreview(
@@ -331,8 +361,12 @@ class NavHostTransitionCoordinatorTest {
         assertSame(result.transition, previewRun.committedTransition)
         assertEquals(View.VISIBLE, session(root).container.visibility)
         assertEquals(View.VISIBLE, session(details).container.visibility)
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
-        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(details))
+        assertEquals(
+            NavEntryPresence.Exiting,
+            checkNotNull(result.transition.scene[details.id]).presence,
+        )
 
         transitionDriver.completeLatest()
 
@@ -423,7 +457,7 @@ class NavHostTransitionCoordinatorTest {
 
         assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
         assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(confirmation))
 
         transitionDriver.completeLatest()
 
@@ -461,15 +495,15 @@ class NavHostTransitionCoordinatorTest {
             )
             assertSame(pop.transition, coordinator.activeTransition)
             assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
-            assertEquals(NavEntryLifecycleState.Started, lifecycle(pushed))
+            assertEquals(NavEntryLifecycleState.Created, lifecycle(pushed))
 
             coordinator.moveHostTo(NavHostLifecycleState.Created)
             assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
             assertEquals(NavEntryLifecycleState.Created, lifecycle(pushed))
 
             coordinator.moveHostTo(NavHostLifecycleState.Resumed)
-            assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
-            assertEquals(NavEntryLifecycleState.Started, lifecycle(pushed))
+            assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+            assertEquals(NavEntryLifecycleState.Created, lifecycle(pushed))
 
             stalePushRun.complete()
             assertSame(

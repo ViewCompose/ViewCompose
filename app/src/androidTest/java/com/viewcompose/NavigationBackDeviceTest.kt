@@ -172,6 +172,88 @@ class NavigationBackDeviceTest {
     }
 
     @Test
+    fun destinationLifecycleTracksCommittedAndPredictiveTransitionScenes() {
+        launchHost().use { scenario ->
+            scenario.onActivity { activity ->
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+
+                assertTrue(
+                    activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is NavResult.Committed,
+                )
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    Lifecycle.State.CREATED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+
+                activity.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(0f))
+                activity.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(0.5f))
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+
+                activity.onBackPressedDispatcher.dispatchOnBackCancelled()
+                assertEquals(
+                    Lifecycle.State.CREATED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+
+                activity.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(0f))
+                activity.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(0.65f))
+                activity.onBackPressedDispatcher.onBackPressed()
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.CREATED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.DESTROYED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(0, activity.failureCount)
+            }
+        }
+    }
+
+    @Test
     fun committedPushAndPopFollowPlatformLayeringWithoutDoubleExposure() {
         launchHost().use { scenario ->
             val pushSamples = sampleDestinationViewsDuring(scenario) {

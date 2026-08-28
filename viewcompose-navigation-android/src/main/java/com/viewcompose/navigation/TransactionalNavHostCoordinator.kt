@@ -326,6 +326,7 @@ internal class TransactionalNavHostCoordinator(
                 null
             } else {
                 // Preview builds only a visual afterSnapshot; the pure stack commits later.
+                val visibleEntryIds = unionSceneEntryIds(beforeScene, afterScene)
                 val preview = NavHostBackPreview(
                     id = NavHostBackPreviewId(++nextBackPreviewId),
                     command = command,
@@ -335,7 +336,15 @@ internal class TransactionalNavHostCoordinator(
                     beforeScene = beforeScene,
                     afterScene = afterScene,
                     retainedEntries = retainedEntries,
-                    visibleEntryIds = unionSceneEntryIds(beforeScene, afterScene),
+                    scene = lifecycleScene(
+                        retainedEntries = retainedEntries,
+                        visibleEntryIds = visibleEntryIds,
+                        interactiveEntryIds = emptySet(),
+                        paneLayouts = mergePaneLayouts(beforeScene, afterScene),
+                        transitionPhases = visibleEntryIds.associateWith {
+                            NavSceneTransitionPhase.PredictivePreview
+                        },
+                    ),
                     layerOrder = retainedEntries.map(NavEntry::id),
                 )
                 val active = ActiveNavHostBackPreview(preview)
@@ -894,18 +903,30 @@ internal class TransactionalNavHostCoordinator(
         val committedEntries = controller.retainedEntries()
         val committedIds = committedEntries
             .mapTo(mutableSetOf(), NavEntry::id)
+        val beforeScene = calculatePaneScene(transaction.before)
+        val afterScene = calculatePaneScene(committedSnapshot)
+        val visibleEntryIds = unionSceneEntryIds(beforeScene, afterScene)
+        val exitingEntryIds = transaction.mutation.removed
+            .mapTo(linkedSetOf(), NavEntry::id)
+            .intersect(visibleEntryIds)
         val retainedEntries = buildList {
             addAll(committedEntries)
             transaction.mutation.removed.forEach { removedEntry ->
-                if (removedEntry.id !in committedIds) {
+                if (removedEntry.id !in committedIds && removedEntry.id in exitingEntryIds) {
                     add(removedEntry)
                 }
             }
         }
         val outgoingEntry = transaction.before.top
         val incomingEntry = committedSnapshot.top
-        val beforeScene = calculatePaneScene(transaction.before)
-        val afterScene = calculatePaneScene(committedSnapshot)
+        val transitionPhases = linkedMapOf<NavEntryId, NavSceneTransitionPhase>().apply {
+            (beforeScene.visibleEntryIds - afterScene.visibleEntryIds).forEach { entryId ->
+                put(entryId, NavSceneTransitionPhase.Exiting)
+            }
+            (afterScene.visibleEntryIds - beforeScene.visibleEntryIds).forEach { entryId ->
+                put(entryId, NavSceneTransitionPhase.Entering)
+            }
+        }
         val transition = NavHostTransition(
             id = NavHostTransitionId(++nextTransitionId),
             command = transaction.command,
@@ -917,7 +938,14 @@ internal class TransactionalNavHostCoordinator(
             beforeScene = beforeScene,
             afterScene = afterScene,
             retainedEntries = retainedEntries,
-            visibleEntryIds = unionSceneEntryIds(beforeScene, afterScene),
+            scene = lifecycleScene(
+                retainedEntries = retainedEntries,
+                visibleEntryIds = visibleEntryIds,
+                interactiveEntryIds = emptySet(),
+                paneLayouts = mergePaneLayouts(beforeScene, afterScene),
+                exitingEntryIds = exitingEntryIds,
+                transitionPhases = transitionPhases,
+            ),
             layerOrder = retainedEntries.map(NavEntry::id),
         )
         val active = ActiveNavHostTransition(transition)
@@ -958,6 +986,14 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun applyTransitionState(transition: NavHostTransition) {
+        val retainedEntryIds = transition.retainedEntries.mapTo(mutableSetOf(), NavEntry::id)
+        // Removed hidden pages have no transition presentation, so dispose them before owner teardown.
+        removeSessions(
+            transition.mutation.removed
+                .map(NavEntry::id)
+                .filterNot(retainedEntryIds::contains)
+                .asReversed(),
+        )
         sessionStore.present(
             layerOrder = transition.layerOrder,
             visibleEntryIds = transition.visibleEntryIds,
@@ -976,18 +1012,9 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun reconcileOwners(transition: NavHostTransition) {
-        val paneLayouts = mergePaneLayouts(
-            before = transition.beforeScene,
-            after = transition.afterScene,
-        )
         ownerStore.reconcile(
             retainedEntries = transition.retainedEntries,
-            scene = lifecycleScene(
-                retainedEntries = transition.retainedEntries,
-                visibleEntryIds = transition.visibleEntryIds,
-                interactiveEntryIds = transition.afterScene.interactiveEntryIds,
-                paneLayouts = paneLayouts,
-            ),
+            scene = transition.scene,
             hostState = hostLifecycleState,
         )
     }
@@ -1005,39 +1032,40 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun reconcileOwners(preview: NavHostBackPreview) {
-        val paneLayouts = mergePaneLayouts(
-            before = preview.beforeScene,
-            after = preview.afterScene,
-        )
         ownerStore.reconcile(
             retainedEntries = preview.retainedEntries,
-            scene = lifecycleScene(
-                retainedEntries = preview.retainedEntries,
-                visibleEntryIds = preview.visibleEntryIds,
-                interactiveEntryIds = preview.beforeScene.interactiveEntryIds,
-                paneLayouts = paneLayouts,
-            ),
+            scene = preview.scene,
             hostState = hostLifecycleState,
         )
     }
 
     /**
-     * Projects the coordinator's current settled ownership policy into the semantic Core model.
-     * This boundary preserves existing transition behavior; transition-specific semantic scenes
-     * are supplied only when motion, focus, and lifecycle consume the same coordinator decision.
+     * Projects one coordinator decision into the semantic Core model consumed by lifecycle work.
      */
     private fun lifecycleScene(
         retainedEntries: List<NavEntry>,
         visibleEntryIds: Set<NavEntryId>,
         interactiveEntryIds: Set<NavEntryId>,
         paneLayouts: Map<NavEntryId, NavPaneLayout>,
+        exitingEntryIds: Set<NavEntryId> = emptySet(),
+        transitionPhases: Map<NavEntryId, NavSceneTransitionPhase> = emptyMap(),
     ): NavScene {
+        require(exitingEntryIds.all(visibleEntryIds::contains)) {
+            "Every exiting navigation entry must retain a visible presentation."
+        }
+        require(transitionPhases.keys.all(visibleEntryIds::contains)) {
+            "Only visible navigation entries may participate in a host transition."
+        }
         return NavScene(
             retainedEntries.map { entry ->
                 val isVisible = entry.id in visibleEntryIds
                 NavSceneEntry(
                     entryId = entry.id,
-                    presence = NavEntryPresence.Retained,
+                    presence = if (entry.id in exitingEntryIds) {
+                        NavEntryPresence.Exiting
+                    } else {
+                        NavEntryPresence.Retained
+                    },
                     visibility = if (isVisible) {
                         NavSceneVisibility.Visible
                     } else {
@@ -1048,7 +1076,8 @@ internal class TransactionalNavHostCoordinator(
                     } else {
                         NavSceneInteraction.NonInteractive
                     },
-                    transitionPhase = NavSceneTransitionPhase.Settled,
+                    transitionPhase = transitionPhases[entry.id]
+                        ?: NavSceneTransitionPhase.Settled,
                     paneRole = if (isVisible) {
                         checkNotNull(paneLayouts[entry.id]) {
                             "Visible navigation entry ${entry.id} has no pane layout."

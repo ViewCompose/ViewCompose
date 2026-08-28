@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 5a15badc6d154885135b564b6a4cf73b483d561c58036f67cb318d7bafc2c4f2
+translation_source_hash: bfef9962b5d9d44a6ea904021e69fd81a441f428c308f87769e3c019b832d2e2
 translation_status: current
 ---
 
@@ -88,7 +88,8 @@ Controller 提供即时不可变 `snapshot` 和 `stackState`，以及可观察 `
 
 每个目的地 entry 都拥有独立 Android owner，其中包括：
 
-- 受宿主和 pane 可见性限制的 Lifecycle；
+- 受宿主和语义 Scene 限制的 Lifecycle，其中包括 Visibility、Interaction、Transition 与保留
+  Entry Presence；
 - 从共享 Lifecycle 2.11 Scoped-owner Provider 租用、仅在 Entry 离开所有保留状态后清理的
   ViewModelStore；
 - 从 `NavRoute` 派生默认 SavedStateHandle 参数的 SavedStateRegistry；
@@ -98,6 +99,15 @@ Destination 内容会把该对象安装到 `LocalLifecycleOwner`、`LocalSavedSt
 `LocalViewModelStoreOwner` 与 ViewCompose Saveable-state Local。Graph 内容也通过相同四个边界
 安装选中的 Graph Owner。Retained Hidden Destination 保留 Owner Identity 与持久数据，但获得受限
 Lifecycle，因此 `LifecycleAndroidViewAdapter` 无需依赖物理移除就能让原生 View 进入非活跃状态。
+
+普通或 Predictive 转场会为所有 Owner 协调冻结一份语义 Scene。可见参与者在终态稳定前不高于
+`STARTED`。已 Pop 的离场 Entry 在退出 View 仍展示时限制为 `CREATED`，随后先释放 Session，
+再让 Owner 到达 `DESTROYED`。Predictive 取消会恢复此前稳定的 Owner 状态；提交则进入同一套受限
+Pop 转场。稳定的自适应 Pane 可以分别处于 `RESUMED`，但 Scene 变化期间所有可见 Pane 都限制为
+`STARTED`。
+
+Navigation Core 定义了 Overlay Layer Role，但本 Android Host 尚未公开通用 Overlay 导航 Scene。
+独立 Overlay Host Transport 不能被解释为导航 Overlay 的 Lifecycle 集成。
 
 同一个 route 连续 push 两次会创建两个 owner，不会共享页面状态。
 
@@ -162,6 +172,8 @@ Back dispatcher。活跃栈到根后遵循保留栈历史配置，否则继续�
 支持预测性返回的平台上，手势进度会展示上一目的地，但不提交 core 栈。取消时通过弹簧回到已提交
 状态；完成手势时使用与程序化 `popBackStack` 相同的事务和 owner 边界。程序化命令可以重定向
 活跃 preview，并保留当前视觉 transform，从而连续衔接。
+两个 Preview 页面都限制为 `STARTED`；提交后，已 Pop 页面在退出展示移除前限制为 `CREATED`，
+只有稳定后才会 Resume 进入页面。
 
 View detach、关闭系统返回或销毁宿主时会主动取消未完成 preview，因为 dispatcher 可能不再发送
 终止回调。
@@ -223,7 +235,7 @@ String、Android `Uri` 和 `ACTION_VIEW Intent` 入口都使用同一个严格�
 完整生成参考位于
 [`viewcompose-navigation-android` API 树](https://docs.viewcompose.com/api/viewcompose-navigation-android/current/)。
 
-## Phase 3 验收
+## 共享 Scoped Owner 验收
 
 对比基线是 148 项 Navigation Android 测试，其 ViewModelStore 由导航自行分配，Activity 与
 Fragment Owner 直接注入。Phase 3 的 Clean Run 通过 151/151 项 Navigation Android 测试和
@@ -237,6 +249,19 @@ Host 的源码测试方法由 10 增至 11 项，并区分 Activity ViewTree 发
 真机内存、进程终止、帧耗时或 OEM 生命周期顺序，因此这些维度仍为 **inconclusive**。Phase 4
 将继续删除独立 SavedStateHandle Holder；单独的导航 Lifecycle/Scene Plan 仍负责设备、内存、
 Presentation Retention 与 Transition Projection 验收。
+
+## 转场 Lifecycle 验收
+
+此前 151 项 Navigation Android 基线把进入页面过早设为 `RESUMED`，并把已 Pop 离场页面保留为
+`STARTED`。替换为冻结语义 Scene 断言后，新鲜执行仍为 151/151 全部通过；普通、Predictive、
+重定向、Host Cap 与自适应转场的定向子集为 20/20。
+
+随后，App 设备 Harness 在 API 33 的 Pixel 4 XL 真机上通过 2/2 项定向用例。新用例读取
+Destination DSL 内捕获的最近 `LocalLifecycleOwner`，验证 Push、Predictive Preview、取消、提交、
+已 Pop 离场、销毁与终态 Resume；配套旧用例使用真实原生 View 验证 Predictive Progress 与取消。
+这是 **improved** 的 Lifecycle 结果，当前支持的 Host Scene 已不存在提前 Resume。通用导航 Overlay、
+API 34 平台边缘手势分发、内存、泄漏与性能结果仍为 **inconclusive**；下一计划阶段负责
+Presentation Retention Policy 及其设备测量。
 
 ## 兼容性说明
 
