@@ -2,10 +2,12 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type {Options, ThemeConfig} from '@docusaurus/preset-classic';
 import {createLocalizedMarkdownLinkResolver} from './src/config/localizedMarkdownLinks';
+import rewriteRepositoryFileLinks from './src/remark/rewriteRepositoryFileLinks';
 import stripGovernanceFrontMatter from './src/remark/stripGovernanceFrontMatter';
 
 const siteDir = __dirname;
 const docsDir = `${siteDir}/../docs`;
+const repositoryDir = `${siteDir}/..`;
 const locales = ['en', 'zh-CN'];
 const resolveLocalizedMarkdownLink = createLocalizedMarkdownLinkResolver({
   siteDir,
@@ -119,6 +121,16 @@ const config: Config = {
           path: '../docs',
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
+          beforeDefaultRemarkPlugins: [
+            [
+              rewriteRepositoryFileLinks,
+              {
+                repositoryRoot: repositoryDir,
+                docsRoot: docsDir,
+                repositorySourceUrl: 'https://github.com/ViewCompose/ViewCompose/blob/main',
+              },
+            ],
+          ],
           remarkPlugins: [stripGovernanceFrontMatter],
           exclude: ['archive/**'],
           editUrl: ({docPath}) =>
