@@ -5,6 +5,8 @@ import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavPaneScene
+import com.viewcompose.navigation.core.NavScene
+import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackMutation
 
 /**
@@ -28,8 +30,8 @@ internal enum class NavHostTransitionOutcome {
 /**
  * Visual transition model for a committed navigation transaction.
  *
- * [beforeScene] and [afterScene] keep pane projections, [visibleEntryIds] bounds entries retained
- * in the host, and [layerOrder] determines draw order during animation.
+ * [beforeScene] and [afterScene] keep pane projections, [scene] freezes lifecycle and presentation
+ * semantics for the whole active transition, and [layerOrder] determines draw order during motion.
  */
 internal data class NavHostTransition(
     val id: NavHostTransitionId,
@@ -42,9 +44,13 @@ internal data class NavHostTransition(
     val beforeScene: NavPaneScene,
     val afterScene: NavPaneScene,
     val retainedEntries: List<NavEntry>,
-    val visibleEntryIds: Set<NavEntryId>,
+    val scene: NavScene,
     val layerOrder: List<NavEntryId>,
-)
+) {
+    val visibleEntryIds: Set<NavEntryId> = scene.entries
+        .filter { entry -> entry.visibility != NavSceneVisibility.Hidden }
+        .mapTo(linkedSetOf()) { entry -> entry.entryId }
+}
 
 /**
  * Result returned to the coordinator when a transition finishes.
@@ -100,9 +106,13 @@ internal data class NavHostBackPreview(
     val beforeScene: NavPaneScene,
     val afterScene: NavPaneScene,
     val retainedEntries: List<NavEntry>,
-    val visibleEntryIds: Set<NavEntryId>,
+    val scene: NavScene,
     val layerOrder: List<NavEntryId>,
-)
+) {
+    val visibleEntryIds: Set<NavEntryId> = scene.entries
+        .filter { entry -> entry.visibility != NavSceneVisibility.Hidden }
+        .mapTo(linkedSetOf()) { entry -> entry.entryId }
+}
 
 /**
  * Control handle for an in-flight transition.

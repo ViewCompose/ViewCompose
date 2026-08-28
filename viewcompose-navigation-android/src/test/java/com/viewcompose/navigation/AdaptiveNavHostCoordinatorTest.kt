@@ -16,6 +16,8 @@ import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavPaneStrategies
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiLocalSnapshot
@@ -86,7 +88,7 @@ class AdaptiveNavHostCoordinatorTest {
     }
 
     @Test
-    fun `pane scenes drive settled visibility and every pane is interactive`() {
+    fun `pane scenes cap active participants before every settled pane becomes interactive`() {
         val root = coordinator.snapshot.top
 
         val first = coordinator.navigate(
@@ -103,10 +105,17 @@ class AdaptiveNavHostCoordinatorTest {
             first.transition.afterScene.panes.map { pane -> pane.entryId },
         )
         assertEquals(setOf(root.id, details.id), first.transition.visibleEntryIds)
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertTrue(
+            first.transition.scene.entries.all { entry ->
+                entry.interaction == NavSceneInteraction.NonInteractive
+            },
+        )
 
         transitionDriver.completeLatest()
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
 
         val second = coordinator.navigate(
             NavCommand.Push(NavRoute("confirmation")),
@@ -126,8 +135,8 @@ class AdaptiveNavHostCoordinatorTest {
             second.transition.visibleEntryIds,
         )
         assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(confirmation))
 
         transitionDriver.completeLatest()
 
@@ -261,13 +270,22 @@ class AdaptiveNavHostCoordinatorTest {
             preview.visibleEntryIds,
         )
         assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
-        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(confirmation))
+        assertTrue(
+            preview.scene.entries
+                .filter { entry -> entry.entryId in preview.visibleEntryIds }
+                .all { entry ->
+                    entry.transitionPhase == NavSceneTransitionPhase.PredictivePreview
+                },
+        )
         assertEquals("dark", renderedThemes.getValue("home").last())
 
         assertTrue(coordinator.cancelBackPreview(preview.id))
         assertEquals(View.GONE, session(root).container.visibility)
         assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
 
         val committedPreview = checkNotNull(
             coordinator.beginBackPreview(backEvent(progress = 0.5f)),
@@ -275,6 +293,9 @@ class AdaptiveNavHostCoordinatorTest {
         val result = coordinator.commitBackPreview(committedPreview.id)
 
         assertTrue(result is NavHostNavigationResult.Committed)
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(confirmation))
         transitionDriver.completeLatest()
         assertEquals(listOf("home", "details"), coordinator.snapshot.entries.map { it.route.name })
         assertEquals(View.VISIBLE, session(root).container.visibility)

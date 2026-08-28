@@ -9,9 +9,12 @@ import android.view.WindowManager
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
+import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
@@ -49,6 +52,7 @@ import com.viewcompose.viewmodel.viewModel
 class NavigationBackTestActivity : AppCompatActivity() {
     private val systemBackEnabledState = mutableStateOf(true)
     private val failures = mutableListOf<NavFailure>()
+    private val destinationLifecycleOwners = linkedMapOf<String, LifecycleOwner>()
     private val processDeathRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     private val processDeathGraphRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     /**
@@ -160,6 +164,11 @@ class NavigationBackTestActivity : AppCompatActivity() {
                 overlayHostFactory = { OverlayHostDefaults.noOp },
                 onFailure = failures::add,
             ) { entry ->
+                destinationLifecycleOwners[entry.route.name] = checkNotNull(
+                    LocalLifecycleOwner.current,
+                ) {
+                    "Navigation destination ${entry.route.name} has no LifecycleOwner."
+                }
                 if (processDeathCertificationEnabled()) {
                     val saveableValue = rememberSaveable(
                         key = PROCESS_DEATH_SAVEABLE_KEY,
@@ -250,6 +259,14 @@ class NavigationBackTestActivity : AppCompatActivity() {
      */
     fun entryIds(): List<String> {
         return navController.snapshot.entries.map { entry -> entry.id.value }
+    }
+
+    /**
+     * 返回 DSL 内容实际捕获的最近 destination Lifecycle 状态。
+     * Returns the nearest destination Lifecycle state actually captured by DSL content.
+     */
+    fun destinationLifecycleState(routeName: String): Lifecycle.State? {
+        return destinationLifecycleOwners[routeName]?.lifecycle?.currentState
     }
 
     /**
