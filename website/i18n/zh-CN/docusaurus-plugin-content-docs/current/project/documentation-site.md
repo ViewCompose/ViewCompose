@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 08d6ea6a0f0f0b4ddacf0d2ff7384bb4b00353cfc047a7b2111ce950dae5cb78
+translation_source_hash: 2765856e66ae41726ad2817d73f15592cf1dc390e48bc59067552c88a9b559dd
 translation_status: current
 ---
 
@@ -32,7 +32,9 @@ translation_status: current
 6. Docusaurus type-check 并构建手写文档、站点界面、生成 API、本地化搜索索引和兼容重定向，
    同时输出 `en` 与 `zh-CN` 到 `website/build/`；坏链和坏锚点均为错误。Docusaurus 解析 `slug`
    等展示字段后，Remark Transform 会从浏览器页面 Chunk 中移除 Governance V2 所有权字段与翻译
-   审核指纹。源文件仍是验证器输入，生成的 Capability Reference 仍是公开关系模型。
+   审核指纹，并把已验证、指向 `docs/` 外仓库文件的链接改写为 GitHub 源码 URL。源 Markdown
+   继续使用仓库相对链接并保持权威，生产与测试源码不再复制进站点产物；生成的 Capability
+   Reference 仍是公开关系模型。
 7. 构建 wrapper 验证跨语言站点外壳行为，审核 Docusaurus 自有 HTML 无障碍，并限制构建时间、
    总产物、JavaScript、CSS 和各语言搜索索引。Dokka HTML 由 API 生成器独立保证完整性，不混入
    站点模板无障碍门禁。

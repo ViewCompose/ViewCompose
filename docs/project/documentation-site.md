@@ -52,9 +52,11 @@ The production artifact is assembled in seven explicit stages:
 6. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
    output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
    `website/build/`, with broken links and anchors treated as errors. After Docusaurus resolves
-   presentation fields such as `slug`, a remark transform removes Governance V2 ownership fields
-   and translation-review fingerprints from browser page chunks. Source files remain the verifier
-   input; the generated Capability Reference remains the public relationship model.
+   presentation fields such as `slug`, remark transforms remove Governance V2 ownership fields
+   and translation-review fingerprints from browser page chunks, and rewrite verified links to
+   repository files outside `docs/` as GitHub source URLs. Source Markdown remains repository-
+   relative and authoritative, while production and test sources are not duplicated in the site
+   artifact; the generated Capability Reference remains the public relationship model.
 7. the build wrapper verifies shared site-shell behavior across locales, audits Docusaurus-owned
    HTML accessibility, and enforces build-time, total output, JavaScript, CSS, and per-locale
    search-index budgets. Dokka-generated HTML remains under the API generator's independent
