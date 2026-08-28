@@ -4,6 +4,7 @@ import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.observation.RuntimeObservation
+import java.util.IdentityHashMap
 
 /**
  * Coordinates transactional, group-based incremental composition without compiler-generated flags.
@@ -41,7 +42,10 @@ class ComposerLite(
     private val effectFrameIdProvider: (() -> Long?)? = null,
 ) {
     private val keyStack = mutableListOf<Any?>()
+    private val reusableContentOwnerStack = mutableListOf<Any?>()
+    private val reusableContentRootReplacements = mutableListOf<ReusableContentRootReplacement>()
     private val warningKeys = HashSet<String>()
+    private val forcedReusableContentScopes = IdentityHashMap<RecomposeScope, Int>()
     private val pendingSideEffects = mutableListOf<PendingSideEffect>()
     private val pendingRememberActivations = LinkedHashSet<RecomposeScope.RememberLifecycle>()
     private var currentScope: RecomposeScope = slotTable.root
@@ -286,6 +290,9 @@ class ComposerLite(
         val parent = currentScope
         val index = parent.childCursor++
         val normalizedSignature = newGroupSignature(signature)
+        val replacesReusableContentRoot = reusableContentRootReplacements.lastOrNull()?.let {
+            replacement -> replacement.parent === parent && replacement.childIndex == index
+        } == true
         if (keyStack.isNotEmpty()) {
             require(parent.children.take(index).none { it.signature == normalizedSignature }) {
                 "Duplicate effective keyed group identity among siblings. " +
@@ -293,7 +300,9 @@ class ComposerLite(
             }
         }
         val existing = parent.children.getOrNull(index)
-        val movableIndex = if (existing != null && keyStack.isNotEmpty()) {
+        val movableIndex = if (
+            existing != null && keyStack.isNotEmpty() && !replacesReusableContentRoot
+        ) {
             (index + 1 until parent.children.size).firstOrNull { candidateIndex ->
                 groupSignatureMatches(
                     existing = parent.children[candidateIndex].signature,
@@ -332,6 +341,14 @@ class ComposerLite(
                 existing = existing.signature,
                 signature = signature,
             ) -> existing
+
+            replacesReusableContentRoot -> {
+                checkpointScope(existing)
+                existing.signature = normalizedSignature
+                existing.markDirty()
+                attempt.addReason(existing, RecompositionReason.StructureChanged)
+                existing
+            }
 
             movableIndex != null -> {
                 checkpointScope(parent)
@@ -407,10 +424,10 @@ class ComposerLite(
     /**
      * Returns a value retained in the next positional remember slot of the current scope.
      *
-     * [calculation] runs when no slot exists or when the combined [withKeys] and [keys] list changes
-     * by structural equality. Slot changes are transactional: abort restores the previously
-     * committed value. Values implementing [RememberObserver] receive lifecycle callbacks when the
-     * prepared composition commits or aborts.
+     * [calculation] runs when no slot exists or when the combined [withReusableContent], [withKeys],
+     * and [keys] list changes by structural equality. Slot changes are transactional: abort restores
+     * the previously committed value. Values implementing [RememberObserver] receive lifecycle
+     * callbacks when the prepared composition commits or aborts.
      *
      * @param T type of value retained by the slot
      * @param keys local keys appended after the active [withKeys] key stack
@@ -425,7 +442,7 @@ class ComposerLite(
     ): T {
         currentAttempt()
         val scope = currentScope
-        val scopedKeys = keyStack + keys
+        val scopedKeys = effectiveRememberKeys(keys)
         val index = scope.rememberCursor++
         val existing = scope.rememberSlots.getOrNull(index)
         if (existing != null && existing.keys == scopedKeys) {
@@ -509,7 +526,7 @@ class ComposerLite(
                 kind = "SideEffect",
                 scopePath = scope.saveablePath,
                 slot = slot,
-                keySummary = keyStack.toEffectKeySummary(),
+                keySummary = effectiveRememberKeys(emptyList()).toEffectKeySummary(),
             ),
             warningLogger = warningLogger,
             warningThresholdNanos = synchronousEffectWarningThresholdNanos,
@@ -521,10 +538,10 @@ class ComposerLite(
      * Returns a deterministic key for the next positional saveable slot in the current scope.
      *
      * The key combines the structural group path, local slot position, and a hash of active
-     * [withKeys] values. Call order is therefore part of the saveable-state contract. Custom key
-     * objects MUST keep equal values and stable, collision-free `hashCode` results across host
-     * recreation. A collision between simultaneously composed unequal keyed siblings fails before
-     * either can register the same saveable provider identity.
+     * [withReusableContent] owner and [withKeys] values. Call order is therefore part of the
+     * saveable-state contract. Custom key objects MUST keep equal values and stable, collision-free
+     * `hashCode` results across host recreation. A collision between simultaneously composed
+     * unequal keyed siblings fails before either can register the same saveable provider identity.
      *
      * @return an opaque key stable for the same structure, slot position, and explicit keys
      * @throws IllegalStateException when called outside the actively executing composition block
@@ -534,16 +551,17 @@ class ComposerLite(
         currentAttempt()
         validateSaveablePathIdentity()
         val slot = currentScope.saveableCursor++
-        val explicitKeyHash = stableHash(keyStack)
+        val explicitKeyHash = stableHash(effectiveRememberKeys(emptyList()))
         return "auto:${currentScope.saveablePath}:$slot:${explicitKeyHash.toUInt().toString(16)}"
     }
 
     /**
      * Returns a deterministic registry key for a caller-supplied saveable-state identity.
      *
-     * Explicit identities remain unique within the current restart-group and [withKeys] namespace,
-     * so equal names may safely appear in distinct keyed siblings. The root namespace retains the
-     * historical `user:<key>` form. Callers must still keep [explicitKey] unique inside one scope.
+     * Explicit identities remain unique within the current restart-group, [withReusableContent]
+     * owner, and [withKeys] namespace, so equal names may safely appear in distinct logical owners
+     * or keyed siblings. The root namespace retains the historical `user:<key>` form. Callers must
+     * still keep [explicitKey] unique inside one scope.
      *
      * @sample com.viewcompose.runtime.samples.scopedExplicitSaveableKeySample
      * @param explicitKey non-blank application identity validated by the higher-level saveable API
@@ -555,11 +573,76 @@ class ComposerLite(
         currentAttempt()
         validateSaveablePathIdentity()
         val scopePath = currentScope.saveablePath
-        if (scopePath == "root" && keyStack.isEmpty()) {
+        if (
+            scopePath == "root" &&
+            reusableContentOwnerStack.isEmpty() &&
+            keyStack.isEmpty()
+        ) {
             return "user:$explicitKey"
         }
-        val explicitKeyHash = stableHash(keyStack).toUInt().toString(16)
+        val explicitKeyHash = stableHash(effectiveRememberKeys(emptyList())).toUInt().toString(16)
         return "user:$scopePath:$explicitKeyHash:$explicitKey"
+    }
+
+    /**
+     * Executes reusable structure under the state ownership of [ownerKey].
+     *
+     * The owner participates in [remember], [nextSaveableKey], and [scopedExplicitSaveableKey]
+     * identity without changing [runGroup] structural signatures. When [replaceOwner] is `true`,
+     * descendant groups that retain remembered values, saveable identities, or observed state —
+     * together with the structural path needed to reach them — execute once even if otherwise clean.
+     * Pure structural subtrees remain skippable. This replaces remembered values, effects, saveable
+     * providers, and observations for a logical owner while still allowing equal group results to
+     * retain their object identity.
+     *
+     * The caller MUST make the group containing this call execute when the logical owner changes and
+     * pass `replaceOwner = true` for that transfer. A failed prepared composition restores the
+     * previous owner's committed slots and observations. This method does not create a group or
+     * schedule composition by itself.
+     *
+     * @sample com.viewcompose.runtime.samples.reusableContentOwnerSample
+     * @param T value returned by [block]
+     * @param ownerKey stable identity of the logical state owner
+     * @param replaceOwner whether clean descendant scopes must execute to replace prior ownership
+     * @param block synchronous reusable content evaluated in the owner namespace
+     * @return the value returned by [block]
+     * @throws IllegalStateException when called outside the actively executing composition block or
+     * from a thread other than the composer's owner
+     */
+    fun <T> withReusableContent(
+        ownerKey: Any?,
+        replaceOwner: Boolean,
+        block: () -> T,
+    ): T {
+        currentAttempt()
+        val replacementScopes = if (replaceOwner) {
+            collectReusableContentReplacementScopes(currentScope)
+        } else {
+            emptyList()
+        }
+        replacementScopes.forEach(::forceReusableContentScope)
+        val rootReplacement = if (replaceOwner) {
+            ReusableContentRootReplacement(
+                parent = currentScope,
+                childIndex = currentScope.childCursor,
+            ).also(reusableContentRootReplacements::add)
+        } else {
+            null
+        }
+        reusableContentOwnerStack += ownerKey
+        return try {
+            block()
+        } finally {
+            reusableContentOwnerStack.removeAt(reusableContentOwnerStack.lastIndex)
+            rootReplacement?.let { replacement ->
+                check(
+                    reusableContentRootReplacements.removeAt(
+                        reusableContentRootReplacements.lastIndex,
+                    ) === replacement,
+                )
+            }
+            replacementScopes.forEach(::releaseReusableContentScope)
+        }
     }
 
     /**
@@ -683,7 +766,12 @@ class ComposerLite(
         block: () -> T,
     ): T {
         val hasCached = scope.cachedResult !== RecomposeScope.Unset
-        if (!scope.dirty && scope.composed && hasCached) {
+        if (
+            scope !in forcedReusableContentScopes &&
+            !scope.dirty &&
+            scope.composed &&
+            hasCached
+        ) {
             if (currentAttempt().collectDiagnostics) {
                 currentAttempt().skippedScopes += scope
             }
@@ -1052,6 +1140,53 @@ class ComposerLite(
         }
     }
 
+    private fun effectiveRememberKeys(keys: List<Any?>): List<Any?> {
+        if (reusableContentOwnerStack.isEmpty()) {
+            return keyStack + keys
+        }
+        return buildList(reusableContentOwnerStack.size + keyStack.size + keys.size) {
+            addAll(reusableContentOwnerStack)
+            addAll(keyStack)
+            addAll(keys)
+        }
+    }
+
+    private fun collectReusableContentReplacementScopes(root: RecomposeScope): List<RecomposeScope> {
+        val replacementScopes = mutableListOf<RecomposeScope>()
+
+        fun collect(scope: RecomposeScope): Boolean {
+            var requiresReplacement =
+                scope.rememberSlots.isNotEmpty() ||
+                    scope.saveableCursor > 0 ||
+                    scope.observation?.hasDependencies() == true
+            scope.children.forEach { child ->
+                if (collect(child)) {
+                    requiresReplacement = true
+                }
+            }
+            if (requiresReplacement && scope !== root) {
+                replacementScopes += scope
+            }
+            return requiresReplacement
+        }
+
+        root.children.forEach(::collect)
+        return replacementScopes
+    }
+
+    private fun forceReusableContentScope(scope: RecomposeScope) {
+        forcedReusableContentScopes[scope] = forcedReusableContentScopes.getOrDefault(scope, 0) + 1
+    }
+
+    private fun releaseReusableContentScope(scope: RecomposeScope) {
+        val remaining = checkNotNull(forcedReusableContentScopes[scope]) - 1
+        if (remaining == 0) {
+            forcedReusableContentScopes.remove(scope)
+        } else {
+            forcedReusableContentScopes[scope] = remaining
+        }
+    }
+
     /** Rejects a hash collision before unequal logical keys can address one saveable namespace. */
     private fun validateSaveablePathIdentity() {
         var scope: RecomposeScope? = currentScope
@@ -1130,6 +1265,11 @@ class ComposerLite(
     private data class GroupSignature(
         val keyStack: List<Any?>,
         val signature: Any,
+    )
+
+    private data class ReusableContentRootReplacement(
+        val parent: RecomposeScope,
+        val childIndex: Int,
     )
 
     private class CompositionAttempt(

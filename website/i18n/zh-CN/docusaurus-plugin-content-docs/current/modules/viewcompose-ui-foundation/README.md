@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 0a6ca387c9d0122aad001c1651764b5e2514cd3c749d380b3f85f5fdf59cfd56
+translation_source_hash: f05fe6f1bf334a41927fd7767962bc8354d86558a65d64db0aadc442850fde7b
 translation_status: current
 ---
 
@@ -183,6 +183,11 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   Dirty Declaration，再提交一次精确 Target Renderer Transaction；Type、Key、Modifier、Child
   与 Environment 仍属于结构。ViewCompose 没有编译器生成的变更标记，因此每个变化的普通捕获值
   都必须显式进入 `inputs`。
+- Q3 Observed `LazyColumn` Overload 接受 `ObservedValue<LazyItemsSnapshot<T>>`。它无需重组父层
+  即可 Patch 精确挂载列表，只在 Native Commit 后发布已求值 Item Table，并向 Item Content 提供
+  稳定 Key 与 `ObservedValue<T>`。Payload Property 应通过 `ObservedValue.map` 派生；Item 结构只能
+  依赖 Key 与稳定 Capture。失败时，之前的依赖、Table、逻辑 Owner 与 Saveable State 都保持可重试。
+  编译样例 `observedLazyItemsSnapshotSample` 展示该路径。
 - Q3 `CoreObservedPropertyTarget`、`CoreObservedPropertyPatch`、`CoreObservedPropertyFrame` 与
   `CoreRenderEngine.patchObservedProperties` 组成 Renderer-neutral Host SPI。Engine 必须校验并
   回滚完整 Batch，或者拒绝该能力；不存在整树静默回退。

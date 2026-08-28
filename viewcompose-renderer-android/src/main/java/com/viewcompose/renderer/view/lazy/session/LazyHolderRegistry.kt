@@ -19,7 +19,18 @@ internal class LazyHolderRegistry<T : Any>(
         attachedHolders -= holder
     }
 
-    fun onRecycled(holder: T) {
+    fun onRecycled(
+        holder: T,
+        retainOwnership: Boolean = false,
+    ) {
+        attachedHolders -= holder
+        if (retainOwnership) return
+        if (boundHolders.remove(holder)) {
+            onDispose(holder)
+        }
+    }
+
+    fun dispose(holder: T) {
         attachedHolders -= holder
         if (boundHolders.remove(holder)) {
             onDispose(holder)

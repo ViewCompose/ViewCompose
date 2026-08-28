@@ -677,6 +677,64 @@ accepted prior matrix continues to own the cross-engine conclusion: Android View
 mutation P95 gaps remain open, no renderer correction is retained, and the next performance step
 must attribute the unsupported platform tail before testing another production change.
 
+##### 2.4.3.2 Production list-tail correction and closure {/* #2432-production-list-tail-correction-and-closure */}
+
+The subsequent attribution crossed the finite-timing boundary deliberately. A one-method Debug
+trace counted 16 cyclic-rotation calculations in one mutation transaction, 945 structural
+map-equality calls while unchanged environment snapshots were collected, and repeated general
+dependency-replacement work for one-state item observations. Matched Release Perfetto traces kept
+the remaining row cost in animation/traversal rather than holder creation. Together with the armed
+Session evidence, this identified two source-owned causes: mutation updates repeatedly rebuilt the
+same immutable transition and observation bookkeeping, while recycled holders installed a new
+logical owner through the full cold row path even when their physical presentation was compatible.
+
+The production correction therefore submits observed item values transactionally, applies
+per-item payload sessions, caches the two weak cyclic transitions needed by the alternating
+workload, specializes one-dependency observation replacement, and avoids repeated equal
+environment work. The holder path keeps logical state ownership explicit, reuses compatible
+physical content, retains one bounded local-pool Session, prepares the next compatible pooled
+holder only from a requested RecyclerView idle opportunity, and defers semantic refresh for a
+stable key already leaving the captured visible range. Rollback, remembered/saveable state,
+effects, AndroidView reset/release, focus/accessibility, and disposal remain covered by focused
+tests. Every attribution-only counter, probe, and method-trace switch was removed from the
+optimized Release path.
+
+The accepted target APK is R8/resource-shrunk, non-debuggable, `6,988,487` bytes, and has SHA-256
+`957e2bdbe75c77b244c2bd8f1539eaa15c9517b8924b8b3826e73e4e591efad2`. The benchmark APK SHA-256
+is `e38983e24f184972979fc881893d859444a5ea5427e3c9448c4bbbaf8eb502ba`. Every method used five
+iterations, the same rooted Xiaomi protocol and explicit external compilation reset described
+above, a start temperature at or below `36 °C`, suspended charging, and zero reported thermal
+throttle sleep. A `24%` low-battery attempt was rejected before measurement and rerun at `27%`;
+it contributed no data. RSS was unavailable on this API-28 metric path.
+
+Frame values are P50/P95/P99 milliseconds; heap is median peak KiB.
+
+| Action | ViewCompose | Compose | Android Views | Run-P50 CV | Conclusion |
+| --- | --- | --- | --- | --- | --- |
+| Scroll | `5.070/6.810/7.702`, heap `9767` | `5.329/7.238/8.232`, `9220` | `4.867/6.178/7.307`, `4521` | `0.026/0.014/0.005` | Versus Compose `-4.9%/-5.9%`; versus Views `+4.2%/+10.2%`. The `+0.632 ms` Views P95 delta crosses neither combined tail gate, so the former regression is closed. |
+| Mutation | `5.259/9.099/21.350`, heap `7391` | `5.261/16.219/34.794`, `9980` | `5.259/8.610/10.778`, `5625` | `0.050/0.102/0.024` | Versus Compose `-0.05%/-43.9%`; versus Views `-0.01%/+5.7%`. The Compose advantage remains and the `+0.489 ms` Views P95 delta is `no material change`. |
+
+Median frame counts were `398/400/397` for ViewCompose/Compose/Views scroll, with ranges
+`396..400/392..402/396..400`; mutation counts were `32/41/48`, with only ViewCompose varying
+(`32..36`). All run-P50 CV values pass the `0.15` stability ceiling.
+
+Against the accepted pre-change ViewCompose matrix, scroll P95 improves from `9.230` to
+`6.810 ms` (`-26.2%`) and mutation P95 from `12.092` to `9.099 ms` (`-24.8%`). Against the retained
+diagnostic-seam Release batch, the changes are `-17.9%` and `-21.0%`. The selected tail conclusion
+is therefore **improved**, and neither same-run control still classifies ViewCompose P95 as
+`regressed`.
+
+Two limits remain explicit. Mutation P99 is `21.350 ms`: `+98.1%` versus same-run Views, but only
+`+1.1%` versus the accepted pre-change ViewCompose `21.111 ms`, so the correction did not create
+that rare tail. Scroll heap is `+2,043 KiB` (`+26.5%`) versus the accepted pre-change `7724 KiB`
+and `+1,812 KiB` versus the retained diagnostic-seam batch. It misses the combined material heap
+gate by `5 KiB` on the absolute arm, but remains a near-threshold watch item; the same-run native
+heap gap also remains structural. Mutation heap improves `468 KiB` versus pre-change and is
+`+1,766 KiB` versus same-run Views, below the absolute heap arm. The next action is ordinary
+longitudinal monitoring of mutation P99 and scroll peak heap. Either metric crossing its combined
+gate requires a new attributed plan; repeated sampling is not an open action for this closed P95
+defect.
+
 Observed-property transactions materially reduce complete-tree work and beat the same-run Compose
 property control, but native property invalidation and traversal still own the lower tail. The
 accepted API-33 trace proves `VC.ObservedPropertyRead` and `VC.ObservedPropertyRender` are entered

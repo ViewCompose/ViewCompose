@@ -38,6 +38,11 @@ class Observation internal constructor(
         }
     }
 
+    /** Returns whether this observation currently owns at least one state subscription. */
+    internal fun hasDependencies(): Boolean = synchronized(stateLock) {
+        states.isNotEmpty()
+    }
+
     /**
      * Detaches this observation from every state read during collection.
      *
@@ -57,11 +62,16 @@ class Observation internal constructor(
         }
     }
 
-    internal fun beginReplacement(): Set<ObservableState> = synchronized(stateLock) {
+    internal fun beginReplacement() = synchronized(stateLock) {
         check(!disposed) { "Cannot replace dependencies on a disposed Observation." }
         check(!replacementActive) { "Observation already has a prepared dependency replacement." }
         replacementActive = true
-        states.toHashSet()
+    }
+
+    internal fun hasReplacementDependency(state: ObservableState): Boolean = synchronized(stateLock) {
+        check(!disposed) { "Cannot replace dependencies on a disposed Observation." }
+        check(replacementActive) { "Observation has no active dependency replacement." }
+        state in states
     }
 
     internal fun addReplacementDependency(state: ObservableState) {
@@ -74,11 +84,11 @@ class Observation internal constructor(
         }
     }
 
-    internal fun commitReplacement(next: Set<ObservableState>) {
+    internal fun commitReplacement(next: ReplacementReadObserver) {
         synchronized(stateLock) {
             check(!disposed) { "Cannot replace dependencies on a disposed Observation." }
             check(replacementActive) { "Observation has no active dependency replacement." }
-            next.forEach { state ->
+            next.forEachDependency { state ->
                 if (states.add(state)) {
                     state.addObserver(this)
                 }
@@ -86,7 +96,7 @@ class Observation internal constructor(
             val iterator = states.iterator()
             while (iterator.hasNext()) {
                 val state = iterator.next()
-                if (state !in next) {
+                if (!next.containsDependency(state)) {
                     iterator.remove()
                     state.removeObserver(this)
                 }
@@ -95,10 +105,10 @@ class Observation internal constructor(
         }
     }
 
-    internal fun abortReplacement(added: Set<ObservableState>) {
+    internal fun abortReplacement(added: ReplacementReadObserver) {
         synchronized(stateLock) {
             if (disposed || !replacementActive) return
-            added.forEach { state ->
+            added.forEachAddedDependency { state ->
                 if (states.remove(state)) {
                     state.removeObserver(this)
                 }
@@ -130,33 +140,96 @@ class PreparedObservationReplacement internal constructor(
     fun commit() {
         check(!completed) { "Observation replacement is already completed." }
         completed = true
-        previous.commitReplacement(collector.dependencies)
+        previous.commitReplacement(collector)
     }
 
     /** Abandons candidate-only subscriptions without changing committed dependencies. */
     fun abort() {
         if (completed) return
         completed = true
-        previous.abortReplacement(collector.addedDependencies)
+        previous.abortReplacement(collector)
     }
 }
 
 internal class ReplacementReadObserver(
     private val previous: Observation,
 ) {
-    private val previousDependencies = previous.beginReplacement()
-    val dependencies = LinkedHashSet<ObservableState>()
-    val addedDependencies = LinkedHashSet<ObservableState>()
+    private var firstDependency: ObservableState? = null
+    private var multipleDependencies: LinkedHashSet<ObservableState>? = null
+    private var firstAddedDependency: ObservableState? = null
+    private var multipleAddedDependencies: LinkedHashSet<ObservableState>? = null
+
+    init {
+        previous.beginReplacement()
+    }
 
     fun record(state: ObservableState) {
-        if (dependencies.add(state) && state !in previousDependencies) {
+        if (!addDependency(state)) return
+        if (!previous.hasReplacementDependency(state)) {
             previous.addReplacementDependency(state)
-            addedDependencies += state
+            addAddedDependency(state)
         }
     }
 
     fun abort() {
-        previous.abortReplacement(addedDependencies)
+        previous.abortReplacement(this)
+    }
+
+    fun containsDependency(state: ObservableState): Boolean {
+        val multiple = multipleDependencies
+        return if (multiple == null) firstDependency == state else state in multiple
+    }
+
+    inline fun forEachDependency(block: (ObservableState) -> Unit) {
+        val multiple = multipleDependencies
+        if (multiple == null) {
+            firstDependency?.let(block)
+        } else {
+            multiple.forEach(block)
+        }
+    }
+
+    inline fun forEachAddedDependency(block: (ObservableState) -> Unit) {
+        val multiple = multipleAddedDependencies
+        if (multiple == null) {
+            firstAddedDependency?.let(block)
+        } else {
+            multiple.forEach(block)
+        }
+    }
+
+    private fun addDependency(state: ObservableState): Boolean {
+        val first = firstDependency
+        if (first == null) {
+            firstDependency = state
+            return true
+        }
+        if (multipleDependencies == null) {
+            if (first == state) return false
+            multipleDependencies = LinkedHashSet<ObservableState>().also { dependencies ->
+                dependencies += first
+                dependencies += state
+            }
+            return true
+        }
+        return checkNotNull(multipleDependencies).add(state)
+    }
+
+    private fun addAddedDependency(state: ObservableState) {
+        val first = firstAddedDependency
+        if (first == null) {
+            firstAddedDependency = state
+            return
+        }
+        if (multipleAddedDependencies == null) {
+            if (first == state) return
+            multipleAddedDependencies = LinkedHashSet<ObservableState>().also { dependencies ->
+                dependencies += first
+                dependencies += state
+            }
+            return
+        }
+        checkNotNull(multipleAddedDependencies).add(state)
     }
 }
 

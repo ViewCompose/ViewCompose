@@ -1,8 +1,12 @@
 {
   "schemaVersion": 1,
-  "summary": "Add bounded pre-frame LazyItem timing diagnostics and physical-holder correlation while keeping concrete tooling debug-only.",
+  "summary": "Add bounded pre-frame LazyItem diagnostics and close list-tail gaps with transactional observed submissions, reusable logical sessions, bounded idle preparation, and cached immutable transitions.",
   "changes": [
+    { "artifact": "viewcompose-runtime", "impact": "feature" },
+    { "artifact": "viewcompose-ui-contract", "impact": "feature" },
     { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" },
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
     { "artifact": "viewcompose-preview", "impact": "feature" }
   ]
 }

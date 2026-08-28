@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: c4b182d07f3cf7a86cc80a1107dca427f58d01183be0f020ba3e6b5008d7068a
+translation_source_hash: 8672970a1254a8c3ee25d8c1e3ebfaa5bf01cc9b34818ae30415e914009e31d2
 translation_status: current
 ---
 
@@ -578,6 +578,55 @@ Prefetch、Mounted Cache 容量、跨 Owner 与 Text Binding 组合，以及非�
 实质帧耗时回退，但它不是新的三引擎性能候选。已接受的既有矩阵继续拥有跨引擎结论：Android
 Views 滚动与更新 P95 差距仍保持开放，不保留任何 Renderer 修正；下一项性能工作必须先归因
 不受支持的平台尾部，再测试新的生产改动。
+
+##### 2.4.3.2 生产列表尾部修正与闭环 {/* #2432-production-list-tail-correction-and-closure */}
+
+后续归因有意跨过有限 Timing 的边界。单方法 Debug Trace 在一个 Mutation 事务中记录到 16 次
+Cyclic-rotation 计算、收集未变化 Environment Snapshot 时的 945 次结构 Map Equality，以及只有
+一个 State 的 Item Observation 仍重复执行通用 Dependency-replacement 工作。配对的 Release
+Perfetto Trace 把剩余 Row 成本留在 Animation/Traversal，而不是 Holder Creation。结合 Armed
+Session 证据，最终确认两项框架源码根因：Mutation 更新重复重建同一个不可变 Transition 与
+Observation Bookkeeping；回收 Holder 即使物理 Presentation 兼容，也会通过完整冷 Row 路径安装
+新的逻辑 Owner。
+
+生产修正因此以事务方式提交 Observed Item Value、使用逐 Item Payload Session、缓存交替工作负载
+所需的两个弱引用 Cyclic Transition、专门处理单依赖 Observation Replacement，并避免重复比较
+相同 Environment。Holder 路径继续显式维护逻辑 State Owner，复用兼容物理 Content，只在本地
+Pool 中有界保留一个 Session，仅从 RecyclerView 请求的 Idle 时机准备下一个兼容 Holder，并对
+已经移出所捕获可见范围的稳定 Key 延后 Semantic Refresh。Focused Test 继续覆盖 Rollback、
+Remembered/Saveable State、Effect、AndroidView Reset/Release、Focus/Accessibility 和 Disposal。
+所有仅用于归因的 Counter、Probe 与 Method-trace Switch 都已从优化 Release 路径移除。
+
+已接受 Target APK 经过 R8/资源压缩、不可调试，大小为 `6,988,487` 字节，SHA-256 为
+`957e2bdbe75c77b244c2bd8f1539eaa15c9517b8924b8b3826e73e4e591efad2`；Benchmark APK SHA-256
+为 `e38983e24f184972979fc881893d859444a5ea5427e3c9448c4bbbaf8eb502ba`。每个方法运行五轮，使用
+上文相同的小米 Root 协议和外部显式 Compilation Reset；起始温度不高于 `36 °C`，暂停充电，
+报告的 Thermal-throttle Sleep 均为零。一次电量 `24%` 的尝试在计量前被拒绝，充至 `27%` 后
+重跑，因此该尝试没有贡献数据。API 28 的这条 Metric 路径不提供 RSS。
+
+下表帧数据为 P50/P95/P99 毫秒，Heap 为峰值中位数 KiB。
+
+| 动作 | ViewCompose | Compose | Android Views | Run-P50 CV | 结论 |
+| --- | --- | --- | --- | --- | --- |
+| 滚动 | `5.070/6.810/7.702`、Heap `9767` | `5.329/7.238/8.232`、`9220` | `4.867/6.178/7.307`、`4521` | `0.026/0.014/0.005` | 相对 Compose 为 `-4.9%/-5.9%`，相对 Views 为 `+4.2%/+10.2%`。相对 Views 的 P95 差值 `+0.632 ms` 没有跨过组合尾部门槛，因此原回退已关闭。 |
+| 更新 | `5.259/9.099/21.350`、Heap `7391` | `5.261/16.219/34.794`、`9980` | `5.259/8.610/10.778`、`5625` | `0.050/0.102/0.024` | 相对 Compose 为 `-0.05%/-43.9%`，相对 Views 为 `-0.01%/+5.7%`。Compose 优势得到保留，相对 Views 的 P95 差值 `+0.489 ms` 为 `no material change`。 |
+
+滚动时 ViewCompose/Compose/Views 的 Frame Count 中位数分别为 `398/400/397`，范围为
+`396..400/392..402/396..400`；Mutation 为 `32/41/48`，只有 ViewCompose 在 `32..36` 间变化。
+所有 Run-P50 CV 都通过 `0.15` 稳定性上限。
+
+相对已接受的修正前 ViewCompose 矩阵，滚动 P95 从 `9.230` 降到 `6.810 ms`（`-26.2%`），
+Mutation P95 从 `12.092` 降到 `9.099 ms`（`-24.8%`）；相对保留诊断 Seam 的 Release 批次，
+变化分别为 `-17.9%` 和 `-21.0%`。因此选定尾部目标的结论为 **improved**，同批两个对照都不再
+把 ViewCompose P95 分类为 `regressed`。
+
+仍明确保留两项限制。Mutation P99 为 `21.350 ms`，相对同批 Views 为 `+98.1%`，但相对已接受
+的修正前 ViewCompose `21.111 ms` 仅为 `+1.1%`，所以该稀有尾部不是本次修正引入。滚动 Heap
+相对已接受的修正前 `7724 KiB` 增加 `2,043 KiB`（`+26.5%`），相对保留诊断 Seam 批次增加
+`1,812 KiB`；其绝对项只比组合 Heap 门槛低 `5 KiB`，仍是接近阈值的监控项，同批原生 Heap
+差距也仍属于结构差异。Mutation Heap 相对修正前减少 `468 KiB`，相对同批 Views 增加
+`1,766 KiB`，低于绝对 Heap 门槛。下一步是常规纵向监控 Mutation P99 与滚动 Peak Heap；任一
+指标跨过组合门槛都必须新建可归因计划，重复采样不是这个已关闭 P95 缺陷的待办项。
 
 Observed Property 事务显著减少完整树工作，并优于同批 Compose 属性对照，但原生属性失效
 与 Traversal 仍拥有更低的尾延迟。已接受的 API 33 Trace 证明属性帧进入

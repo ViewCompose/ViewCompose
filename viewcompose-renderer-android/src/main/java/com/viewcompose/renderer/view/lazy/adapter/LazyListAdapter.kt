@@ -1,12 +1,15 @@
 package com.viewcompose.renderer.view.lazy.adapter
 
 import android.graphics.Rect
+import android.os.Looper
+import android.os.MessageQueue
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.DoNotInline
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.renderer.R
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyItemTable
 import com.viewcompose.ui.node.LazyItemTableStickyHeaders
@@ -29,6 +32,7 @@ import com.viewcompose.renderer.view.lazy.session.LazyItemSessionHost
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.ui.state.LazyListState
+import java.lang.ref.WeakReference
 
 /** Owns list diffing, physical holders, logical item sessions, and sticky-header presentations. */
 internal class LazyListAdapter(
@@ -38,6 +42,8 @@ internal class LazyListAdapter(
     private companion object {
         private const val ANCHOR_TAG = "UILazyAnchor"
         private const val MAX_DISTINCT_VIEW_TYPES = 1_024
+        private const val MAX_RETAINED_POOL_SESSIONS = 1
+        private const val IDLE_PREPARATION_DISTANCE = 2
     }
 
     private data class ScrollAnchor(
@@ -60,10 +66,72 @@ internal class LazyListAdapter(
         val reloadAll: Boolean,
     )
 
+    private class CachedCyclicTransition(
+        previous: LazyItemTable,
+        next: LazyItemTable,
+        val includesSemanticChanges: Boolean,
+        val plan: LazyListAdapterUpdatePlan.CyclicRotation,
+    ) {
+        private val previousReference = WeakReference(previous)
+        private val nextReference = WeakReference(next)
+
+        fun matches(
+            previous: LazyItemTable,
+            next: LazyItemTable,
+            includesSemanticChanges: Boolean,
+        ): Boolean {
+            return previousReference.get() === previous &&
+                nextReference.get() === next &&
+                this.includesSemanticChanges == includesSemanticChanges
+        }
+    }
+
     private var items: LazyItemTable = EmptyItemTable
     // The registry centralizes holder lifecycle across attach, detach, recycle, and final disposal.
     private val mountedTreeCache = MountedTreeReuseCache()
     private val holderRegistry = LazyHolderRegistry<LazyListViewHolder>(::recycleHolder)
+    private val retainedPoolHolders = LinkedHashSet<LazyListViewHolder>()
+    private var idlePreparationCandidate: LazyListViewHolder? = null
+    private var idlePreparationDirection = 0
+    private var idlePreparationRegistered = false
+    private val idlePreparationHandler = MessageQueue.IdleHandler {
+        preparePooledHolderWhileIdle()
+    }
+    private val localRecycledViewPool = object : RecyclerView.RecycledViewPool() {
+        override fun putRecycledView(scrap: RecyclerView.ViewHolder) {
+            if (scrap is LazyListViewHolder && captureIdlePreparationCandidate(scrap)) {
+                return
+            }
+            super.putRecycledView(scrap)
+        }
+
+        fun putPreparedView(holder: LazyListViewHolder) {
+            super.putRecycledView(holder)
+        }
+    }
+    private val idlePreparationScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrollStateChanged(
+            recyclerView: RecyclerView,
+            newState: Int,
+        ) {
+            if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                idlePreparationDirection = 0
+                cancelIdlePreparation(returnCandidateToPool = true)
+            }
+        }
+
+        override fun onScrolled(
+            recyclerView: RecyclerView,
+            dx: Int,
+            dy: Int,
+        ) {
+            val delta = if (orientation == LinearLayoutManager.HORIZONTAL) dx else dy
+            if (delta != 0) {
+                idlePreparationDirection = if (delta > 0) 1 else -1
+                scheduleIdlePreparation()
+            }
+        }
+    }
     private var attachedRecyclerView: RecyclerView? = null
     private val viewTypes = ViewTypeRegistry(MAX_DISTINCT_VIEW_TYPES)
     private val stableIdsByKey = HashMap<Any, Long>()
@@ -73,6 +141,8 @@ internal class LazyListAdapter(
     private var currentSubmissionRevision = 0L
     private var listState: LazyListState? = null
     private var stickyHeaderDisposer: (() -> Unit)? = null
+    private var latestCyclicTransition: CachedCyclicTransition? = null
+    private var previousCyclicTransition: CachedCyclicTransition? = null
 
     init {
         setHasStableIds(true)
@@ -122,7 +192,17 @@ internal class LazyListAdapter(
     }
 
     override fun onViewRecycled(holder: LazyListViewHolder) {
-        holderRegistry.onRecycled(holder)
+        if (
+            usesLocalRecycledViewPool() &&
+            retainedPoolHolders.isEmpty() &&
+            holder.retainForCrossKeyReuse()
+        ) {
+            holderRegistry.onRecycled(holder, retainOwnership = true)
+            retainedPoolHolders += holder
+        } else {
+            retainedPoolHolders.remove(holder)
+            holderRegistry.onRecycled(holder)
+        }
     }
 
     override fun onViewAttachedToWindow(holder: LazyListViewHolder) {
@@ -143,6 +223,9 @@ internal class LazyListAdapter(
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         attachedRecyclerView = recyclerView
+        recyclerView.setTag(R.id.viewcompose_local_recycled_view_pool, localRecycledViewPool)
+        recyclerView.setRecycledViewPool(localRecycledViewPool)
+        recyclerView.addOnScrollListener(idlePreparationScrollListener)
     }
 
     override fun onViewDetachedFromWindow(holder: LazyListViewHolder) {
@@ -151,6 +234,8 @@ internal class LazyListAdapter(
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        recyclerView.removeOnScrollListener(idlePreparationScrollListener)
+        cancelIdlePreparation(returnCandidateToPool = false)
         super.onDetachedFromRecyclerView(recyclerView)
         attachedRecyclerView = null
         disposeAll()
@@ -255,14 +340,28 @@ internal class LazyListAdapter(
             )
         }
         val genericPlan = if (declaredPlan == null) {
-            LazyListDiff.calculateAdapterUpdatePlan(
+            cachedCyclicTransition(
+                previous = previousItems,
+                next = items,
+                includeSemanticChanges = includeSemanticChanges,
+            ) ?: LazyListDiff.calculateAdapterUpdatePlan(
                 previous = previousItems.materialize(),
                 next = items.materialize(),
                 supportsKeyedDiff = true,
                 // With motion disabled, attached sessions commit semantic revisions synchronously
                 // and detached holders reconcile on attach; only physical compatibility needs RV.
                 includeSemanticChanges = includeSemanticChanges,
-            )
+            ).also { plan ->
+                if (plan is LazyListAdapterUpdatePlan.CyclicRotation) {
+                    previousCyclicTransition = latestCyclicTransition
+                    latestCyclicTransition = CachedCyclicTransition(
+                        previous = previousItems,
+                        next = items,
+                        includesSemanticChanges = includeSemanticChanges,
+                        plan = plan,
+                    )
+                }
+            }
         } else {
             null
         }
@@ -277,6 +376,8 @@ internal class LazyListAdapter(
         } else {
             null
         }
+        val synchronousRefreshRange = captureVisibleAdapterRange()
+        cancelIdlePreparation(returnCandidateToPool = true)
         this.items = items
         stableIdsByKey.keys.removeAll { key -> items.indexOfKey(key) < 0 }
         currentSubmissionRevision = revision
@@ -297,6 +398,7 @@ internal class LazyListAdapter(
             forceAll = reloadAll,
             retrySuppressedSemanticFailures = !includeSemanticChanges &&
                 !reloadAll,
+            synchronousRefreshRange = synchronousRefreshRange,
         )
         return true
     }
@@ -488,14 +590,16 @@ internal class LazyListAdapter(
         submissionRevision: Long,
         forceAll: Boolean,
         retrySuppressedSemanticFailures: Boolean,
+        synchronousRefreshRange: IntRange?,
     ) {
         var retryPositions: LinkedHashSet<Int>? = null
         var bindingFailure: Throwable? = null
         holderRegistry.forEachAttached { holder ->
             val boundKey = holder.boundItemKey
             var previousItem: LazyListItem? = null
+            var previousPosition = RecyclerView.NO_POSITION
             val position = if (boundKey != null) {
-                val previousPosition = previousItems.indexOfKey(boundKey)
+                previousPosition = previousItems.indexOfKey(boundKey)
                 val nextPosition = items.indexOfKey(boundKey)
                 if (previousPosition >= 0 && nextPosition >= 0) {
                     previousItem = previousItems[previousPosition]
@@ -523,6 +627,20 @@ internal class LazyListAdapter(
             }
             val hasSuppressedSemanticChange = retrySuppressedSemanticFailures &&
                 previousItem?.hasSuppressedSemanticOnlyChange(nextItem) == true
+            if (
+                hasSuppressedSemanticChange &&
+                boundKey != null &&
+                previousPosition != position &&
+                synchronousRefreshRange != null &&
+                position !in synchronousRefreshRange
+            ) {
+                // The holder is leaving the viewport because its stable key moved. A change
+                // payload dispatched in the same RecyclerView update batch is resolved through
+                // pre-layout coordinates and immediately rebinds that departing holder. Leaving
+                // its committed revision behind makes detach/reattach perform the semantic bind
+                // only if the key becomes relevant again.
+                return@forEachAttached
+            }
             val outcome = try {
                 holder.bind(
                     nextItem,
@@ -565,6 +683,14 @@ internal class LazyListAdapter(
             }
         }
         bindingFailure?.let { throw it }
+    }
+
+    private fun captureVisibleAdapterRange(): IntRange? {
+        val layoutManager = attachedRecyclerView?.layoutManager as? LinearLayoutManager ?: return null
+        val first = layoutManager.findFirstVisibleItemPosition()
+        val last = layoutManager.findLastVisibleItemPosition()
+        if (first == RecyclerView.NO_POSITION || last == RecyclerView.NO_POSITION) return null
+        return minOf(first, last)..maxOf(first, last)
     }
 
     private fun LazyListItem.hasSuppressedSemanticOnlyChange(next: LazyListItem): Boolean {
@@ -613,6 +739,8 @@ internal class LazyListAdapter(
             holderRegistry.disposeAll()
         } catch (disposeError: Throwable) {
             if (failure == null) failure = disposeError else failure.addSuppressed(disposeError)
+        } finally {
+            retainedPoolHolders.clear()
         }
         try {
             mountedTreeCache.clear()
@@ -627,6 +755,8 @@ internal class LazyListAdapter(
         }
         listState = null
         items = EmptyItemTable
+        latestCyclicTransition = null
+        previousCyclicTransition = null
         stableIdsByKey.clear()
         itemsVersion += 1
         failure?.let { throw it }
@@ -640,10 +770,25 @@ internal class LazyListAdapter(
         return toList()
     }
 
+    private fun cachedCyclicTransition(
+        previous: LazyItemTable,
+        next: LazyItemTable,
+        includeSemanticChanges: Boolean,
+    ): LazyListAdapterUpdatePlan.CyclicRotation? {
+        latestCyclicTransition?.takeIf { cached ->
+            cached.matches(previous, next, includeSemanticChanges)
+        }?.let { return it.plan }
+        previousCyclicTransition?.takeIf { cached ->
+            cached.matches(previous, next, includeSemanticChanges)
+        }?.let { return it.plan }
+        return null
+    }
+
     private fun bindHolder(
         holder: LazyListViewHolder,
         position: Int,
         payload: Any?,
+        forcePreparation: Boolean = false,
     ) {
         val item = items[position]
         if (
@@ -657,10 +802,13 @@ internal class LazyListAdapter(
             return
         }
         ensureContainerLayoutParams(holder)
+        retainedPoolHolders.remove(holder)
         holderRegistry.onBound(holder)
         val reuseKey = MountedTreeReuseCache.ReuseKey(item.kind, item.contentType)
         val active = holderRegistry.isAttached(holder)
-        val prepare = !active && preparationCosts.shouldPrepare(reuseKey)
+        val prepare = !active && (
+            forcePreparation || preparationCosts.shouldPrepare(reuseKey)
+        )
         preparePhysicalPresentation(holder, item)
         val startedAt = if (active || prepare) System.nanoTime() else 0L
         val outcome = holder.bind(
@@ -706,6 +854,9 @@ internal class LazyListAdapter(
         val nextKey = MountedTreeReuseCache.ReuseKey(item.kind, item.contentType)
         if (holder.hasBinding && holder.boundItemKey != item.key) {
             val previousKey = holder.reuseKey()
+            if (previousKey == nextKey && holder.canReuseFor(item)) {
+                return
+            }
             holder.detachForReuse()?.let { presentation ->
                 if (previousKey == nextKey) {
                     holder.adoptForNextSession(presentation)
@@ -732,6 +883,123 @@ internal class LazyListAdapter(
             }
         }
         holder.clearBinding()
+    }
+
+    private fun usesLocalRecycledViewPool(): Boolean {
+        val recyclerView = attachedRecyclerView ?: return false
+        val localPool = recyclerView.getTag(R.id.viewcompose_local_recycled_view_pool)
+        return localPool != null && recyclerView.recycledViewPool === localPool
+    }
+
+    private fun trimRetainedPoolHolders() {
+        while (retainedPoolHolders.size > MAX_RETAINED_POOL_SESSIONS) {
+            val oldest = retainedPoolHolders.first()
+            retainedPoolHolders.remove(oldest)
+            holderRegistry.dispose(oldest)
+        }
+    }
+
+    private fun captureIdlePreparationCandidate(holder: LazyListViewHolder): Boolean {
+        if (
+            idlePreparationCandidate != null ||
+            idlePreparationDirection == 0 ||
+            attachedRecyclerView == null ||
+            !holder.hasBinding
+        ) {
+            return false
+        }
+        idlePreparationCandidate = holder
+        scheduleIdlePreparation()
+        return true
+    }
+
+    private fun scheduleIdlePreparation() {
+        if (idlePreparationRegistered || idlePreparationDirection == 0) return
+        val recyclerView = attachedRecyclerView ?: return
+        if (!recyclerView.isAttachedToWindow ||
+            recyclerView.scrollState == RecyclerView.SCROLL_STATE_IDLE
+        ) {
+            return
+        }
+        idlePreparationRegistered = true
+        Looper.myQueue().addIdleHandler(idlePreparationHandler)
+    }
+
+    private fun cancelIdlePreparation(returnCandidateToPool: Boolean) {
+        if (idlePreparationRegistered) {
+            Looper.myQueue().removeIdleHandler(idlePreparationHandler)
+            idlePreparationRegistered = false
+        }
+        val holder = idlePreparationCandidate
+        idlePreparationCandidate = null
+        if (holder != null) {
+            if (returnCandidateToPool) {
+                localRecycledViewPool.putPreparedView(holder)
+            } else {
+                retainedPoolHolders.remove(holder)
+                holderRegistry.dispose(holder)
+            }
+        }
+    }
+
+    private fun preparePooledHolderWhileIdle(): Boolean {
+        idlePreparationRegistered = false
+        val holder = idlePreparationCandidate
+        idlePreparationCandidate = null
+        val recyclerView = attachedRecyclerView
+        if (
+            holder == null ||
+            recyclerView == null ||
+            !recyclerView.isAttachedToWindow ||
+            recyclerView.scrollState == RecyclerView.SCROLL_STATE_IDLE
+        ) {
+            holder?.let(localRecycledViewPool::putPreparedView)
+            return false
+        }
+        val position = nextIdlePreparationPosition(recyclerView)
+        if (position == RecyclerView.NO_POSITION) {
+            localRecycledViewPool.putPreparedView(holder)
+            return false
+        }
+        if (getItemViewType(position) != holder.itemViewType) {
+            localRecycledViewPool.putPreparedView(holder)
+            return false
+        }
+        try {
+            bindHolder(
+                holder = holder,
+                position = position,
+                payload = null,
+                forcePreparation = true,
+            )
+            retainedPoolHolders += holder
+            trimRetainedPoolHolders()
+            localRecycledViewPool.putPreparedView(holder)
+        } catch (error: Exception) {
+            retainedPoolHolders.remove(holder)
+            try {
+                holderRegistry.dispose(holder)
+            } catch (cleanupError: Throwable) {
+                error.addSuppressed(cleanupError)
+                throw error
+            }
+            // Preparation is speculative. Return the cleared physical holder so the ordinary bind
+            // path can retry and report an application failure only if this position is requested.
+            localRecycledViewPool.putPreparedView(holder)
+        }
+        return false
+    }
+
+    private fun nextIdlePreparationPosition(recyclerView: RecyclerView): Int {
+        val layoutManager = recyclerView.layoutManager as? LinearLayoutManager
+            ?: return RecyclerView.NO_POSITION
+        return resolveIdlePreparationPosition(
+            firstVisiblePosition = layoutManager.findFirstVisibleItemPosition(),
+            lastVisiblePosition = layoutManager.findLastVisibleItemPosition(),
+            direction = idlePreparationDirection,
+            itemCount = itemCount,
+            distance = IDLE_PREPARATION_DISTANCE,
+        )
     }
 
     private fun ensureContainerLayoutParams(holder: LazyListViewHolder) {
@@ -808,6 +1076,24 @@ internal class LazyListAdapter(
         }
         Log.d(ANCHOR_TAG, message())
     }
+}
+
+internal fun resolveIdlePreparationPosition(
+    firstVisiblePosition: Int,
+    lastVisiblePosition: Int,
+    direction: Int,
+    itemCount: Int,
+    distance: Int = 2,
+): Int {
+    if (direction == 0 || itemCount <= 0 || distance <= 0) return RecyclerView.NO_POSITION
+    val anchor = if (direction > 0) lastVisiblePosition else firstVisiblePosition
+    if (anchor == RecyclerView.NO_POSITION) return RecyclerView.NO_POSITION
+    // LinearLayoutManager's adjacent prefetch owns the immediate off-screen position. The
+    // recycled pool is queried for the following compatible holder, so prepare that position.
+    val normalizedDirection = if (direction > 0) 1 else -1
+    return (anchor + normalizedDirection * distance)
+        .takeIf { position -> position in 0 until itemCount }
+        ?: RecyclerView.NO_POSITION
 }
 
 /** Stable view-type registry without Pair keys, map nodes, or boxed IDs on RecyclerView lookups. */
@@ -965,6 +1251,14 @@ internal class LazyListViewHolder(
         container.removeAllViews()
     }
 
+    override fun beginLogicalOwnerTransfer() {
+        container.setTag(R.id.viewcompose_lazy_logical_owner_transfer, true)
+    }
+
+    override fun endLogicalOwnerTransfer() {
+        container.setTag(R.id.viewcompose_lazy_logical_owner_transfer, null)
+    }
+
     fun bind(
         item: LazyListItem,
         payload: Any? = null,
@@ -1019,6 +1313,10 @@ internal class LazyListViewHolder(
         controller.recycle()
         clearBinding()
     }
+
+    fun retainForCrossKeyReuse(): Boolean = controller.retainForCrossKeyReuse()
+
+    fun canReuseFor(item: LazyListItem): Boolean = controller.canReuseFor(item)
 
     fun detachForReuse() = controller.detachForReuse()
 

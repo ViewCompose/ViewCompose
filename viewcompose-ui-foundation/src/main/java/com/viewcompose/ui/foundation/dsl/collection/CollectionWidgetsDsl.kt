@@ -195,6 +195,112 @@ fun <T> UiTreeBuilder.LazyColumn(
 }
 
 /**
+ * Virtualizes an observed immutable item snapshot without recomposing the surrounding declaration.
+ *
+ * Snapshot State read by [items] invalidates only this list's complete property snapshot. The
+ * owning RenderSession evaluates the latest [LazyItemsSnapshot], patches the mounted lazy-list
+ * target in its coalesced observed-property transaction, and publishes canonical item and saveable
+ * state reuse only after the native patch succeeds. A failed patch retains the preceding observed
+ * dependencies, item table, and reuse cache so a later invalidation can retry safely.
+ *
+ * The reader follows [observedValue] input and replay rules. Create a replacement
+ * [LazyItemsSnapshot] whenever order, membership, selector results, or item data changes. The
+ * [itemContent] declaration receives the stable selected key plus an [ObservedValue] for payload
+ * properties. Build structure only from the key and stable captures, and derive changing payload
+ * properties with [ObservedValue.map]. [modifier] and every parameter other than [items] remain
+ * structural; change them through ordinary composition.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.observedLazyItemsSnapshotSample
+ * @param T item model type
+ * @receiver active tree builder receiving the lazy list
+ * @param items observed reader returning a shallow-copied immutable item submission
+ * @param key stable unique logical identity selector for each item
+ * @param contentType reusable presentation category, or `null` for shared untyped reuse
+ * @param contentRevision semantic selector; immutable value models default to themselves
+ * @param contentPadding uniform viewport content padding in dp
+ * @param spacing fixed gap in dp between adjacent items
+ * @param state optional caller-owned scroll position and command state
+ * @param reverseLayout whether logical item order starts at the trailing edge
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param prefetchPolicy ahead-of-viewport session preparation policy
+ * @param reusePolicy mounted-tree capacity and reuse policy
+ * @param motionPolicy item placement and change animation policy
+ * @param modifier structural ordered configuration applied to the lazy-list host
+ * @param itemContent delayed content factory receiving the stable key and directly patchable item;
+ * each structural invocation must emit exactly one root node
+ * @throws IllegalArgumentException when [key] selects duplicate values on a cache miss
+ * @throws Throwable when the observed reader or a selector fails
+ */
+fun <T> UiTreeBuilder.LazyColumn(
+    items: ObservedValue<LazyItemsSnapshot<T>>,
+    key: (T) -> Any,
+    contentType: (T) -> Any? = { null },
+    contentRevision: (T) -> Any? = { it },
+    contentPadding: UiDp = UiDp.Zero,
+    spacing: UiDp = UiDp.Zero,
+    state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
+    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
+    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
+    modifier: Modifier = Modifier,
+    itemContent: UiTreeBuilder.(itemKey: Any, item: ObservedValue<T>) -> Unit,
+) {
+    val collectorResources = rememberLazyItemCollectorResources(NodeType.LazyColumn)
+    // The observed property reader replays outside structural composition. Retain one content
+    // bridge per declaration so same-key payload updates can recognize and patch the active item
+    // session instead of mistaking every replay for a structural content replacement.
+    val observedItemContent = ObservedTypedWidgetLazyItemContent(itemContent)
+    emit(
+        type = NodeType.LazyColumn,
+        spec = preparedObservedNodeSpec(
+            inputs = items.inputs + listOf(
+                key,
+                contentType,
+                contentRevision,
+                contentPadding,
+                spacing,
+                state,
+                reverseLayout,
+                userScrollEnabled,
+                prefetchPolicy,
+                reusePolicy,
+                motionPolicy,
+                itemContent,
+            ),
+        ) {
+            val preparedItems = collectorResources.newCollector().apply {
+                addObservedSnapshotItems(
+                    snapshot = items.read(),
+                    key = key,
+                    contentType = contentType,
+                    contentRevision = contentRevision,
+                    kind = LazyListItemKind.Item,
+                    span = { GridItemSpan.Single },
+                    content = observedItemContent,
+                )
+            }.prepareBuild()
+            PreparedObservedNodeSpec(
+                spec = LazyColumnNodeProps(
+                    contentPadding = LazyContentPadding.all(contentPadding),
+                    spacing = spacing,
+                    items = preparedItems.table,
+                    state = state,
+                    reverseLayout = reverseLayout,
+                    userScrollEnabled = userScrollEnabled,
+                    prefetchPolicy = prefetchPolicy,
+                    reusePolicy = reusePolicy,
+                    motionPolicy = motionPolicy,
+                ),
+                commitEffect = preparedItems::commit,
+            )
+        },
+        modifier = modifier,
+    )
+}
+
+/**
  * Virtualizes scoped vertical items while preserving captured locals per active item session.
  *
  * Item declarations must provide stable keys and accurate revisions through [LazyListScope]. Sticky
@@ -698,6 +804,10 @@ fun UiTreeBuilder.LazyVerticalGrid(
 }
 
 private fun rememberLazyItemCollector(hostType: NodeType): LazyItemCollector {
+    return rememberLazyItemCollectorResources(hostType).newCollector()
+}
+
+private fun rememberLazyItemCollectorResources(hostType: NodeType): LazyItemCollectorResources {
     val saveableStateHolder = rememberSaveableStateHolder()
     val reuseCache = if (ComposerContext.currentComposer() == null) {
         LazyItemCanonicalReuseCache()
@@ -706,7 +816,17 @@ private fun rememberLazyItemCollector(hostType: NodeType): LazyItemCollector {
             LazyItemCanonicalReuseCache()
         }
     }
-    return LazyItemCollector(
+    return LazyItemCollectorResources(
+        saveableStateHolder = saveableStateHolder,
+        reuseCache = reuseCache,
+    )
+}
+
+private class LazyItemCollectorResources(
+    private val saveableStateHolder: SaveableStateHolder?,
+    private val reuseCache: LazyItemCanonicalReuseCache,
+) {
+    fun newCollector(): LazyItemCollector = LazyItemCollector(
         localSnapshot = LocalContext.snapshot(),
         saveableStateHolder = saveableStateHolder,
         reuseCache = reuseCache,
@@ -891,7 +1011,9 @@ private class PagerLazyItemSessionStrategy(
 private data object PagerWidgetLazyItemContent : WidgetLazyItemContent {
     override fun render(
         builder: UiTreeBuilder,
+        key: Any,
         payload: Any?,
+        observedPayload: ObservedValue<Any?>,
     ) {
         (payload as PagerLazyItemPayload).content.invoke(builder)
     }

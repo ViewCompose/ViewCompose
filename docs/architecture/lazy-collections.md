@@ -21,6 +21,7 @@ sample_ids:
 invariants:
   - Stable non-null keys own logical item, page, and saveable-state identity across reorder and native recycling.
   - Ordinary List declarations reevaluate structure and selectors on every parent composition pass; only an unchanged LazyItemsSnapshot identity and environment may bypass that scan.
+  - An observed LazyItemsSnapshot publishes its evaluated table and logical-owner changes only after the exact native list patch commits.
   - Content revision describes every changing ordinary non-State input, while observed State remains independently invalidating inside the active Session.
   - RecyclerView holders and mounted-tree caches never own logical key state or active effects.
   - Prefetch preparation is externally silent until first attachment activates the logical Session.
@@ -87,6 +88,13 @@ captures, or ordinary item-content captures change. A new environment is always 
 resources, locale, layout direction, density, and font scale remain correct. Selector failure or a
 duplicate key publishes no cached result; retry evaluates the whole candidate again.
 
+The observed `LazyColumn` overload moves that immutable submission read into the property
+transaction. One consistent Snapshot evaluates every dirty declaration, the renderer patches the
+exact mounted list, and only a successful native commit publishes the evaluated table, dependency
+replacement, and saveable-key membership. Item content receives a stable key and an
+`ObservedValue<T>` so leaf payload changes can patch existing nodes without rebuilding parent or
+row structure. An abort leaves the preceding table, observations, and logical owners installed.
+
 ## 4. Renderer mapping and reuse
 
 The Android adapter consumes Q3 `LazyItemTable`. Finite Foundation declarations publish an indexed
@@ -107,6 +115,13 @@ Cross-key mounted-tree reuse requires every interop `AndroidView` in that tree t
 The old Session and effects end before reset. The bounded cache carries only reset physical trees;
 logical key state never enters it or RecyclerView's pool. Eviction or container disposal calls
 `onRelease` exactly once.
+
+The renderer may retain one reset-compatible presentation in its local recycled pool. After scroll
+idle, it may prepare one non-adjacent candidate outside the gesture path. Cross-key Session reuse is
+legal only when the declaration strategy explicitly accepts it; Runtime then replaces remembered,
+observed, effect, callback, and saveable ownership transactionally while equal pure structural
+results retain identity. The adapter weakly caches only the two exact immutable cyclic transitions
+needed by an alternating submission, never the whole historical list sequence.
 
 ## 5. Layout, state, and pager contracts
 

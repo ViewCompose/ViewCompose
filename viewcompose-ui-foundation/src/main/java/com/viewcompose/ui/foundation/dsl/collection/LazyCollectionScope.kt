@@ -250,6 +250,7 @@ internal class LazyItemCollector(
     private val saveableStateHolder: SaveableStateHolder?,
     private val reuseCache: LazyItemCanonicalReuseCache,
 ) {
+    private val environmentEqualityCache = LazyItemEnvironmentEqualityCache(localSnapshot)
     private val baselineGeneration = reuseCache.generation
     private val baselineHasCommittedSubmission = reuseCache.hasCommittedSubmission
     private var sourceSnapshot: LazyItemsSnapshot<*>? = null
@@ -331,6 +332,42 @@ internal class LazyItemCollector(
         kind: LazyListItemKind,
         span: (T) -> GridItemSpan,
         itemContent: UiTreeBuilder.(T) -> Unit,
+    ) = addSnapshotItems(
+        snapshot = snapshot,
+        key = key,
+        contentType = contentType,
+        contentRevision = contentRevision,
+        kind = kind,
+        span = span,
+        content = TypedWidgetLazyItemContent(itemContent),
+    )
+
+    fun <T> addObservedSnapshotItems(
+        snapshot: LazyItemsSnapshot<T>,
+        key: (T) -> Any,
+        contentType: (T) -> Any?,
+        contentRevision: (T) -> Any?,
+        kind: LazyListItemKind,
+        span: (T) -> GridItemSpan,
+        content: ObservedTypedWidgetLazyItemContent<T>,
+    ) = addSnapshotItems(
+        snapshot = snapshot,
+        key = key,
+        contentType = contentType,
+        contentRevision = contentRevision,
+        kind = kind,
+        span = span,
+        content = content,
+    )
+
+    private fun <T> addSnapshotItems(
+        snapshot: LazyItemsSnapshot<T>,
+        key: (T) -> Any,
+        contentType: (T) -> Any?,
+        contentRevision: (T) -> Any?,
+        kind: LazyListItemKind,
+        span: (T) -> GridItemSpan,
+        content: WidgetLazyItemContent,
     ) {
         check(sourceSnapshot == null && mutableItems == null && mutableItemsByKey == null) {
             "A LazyItemsSnapshot must be the only declaration in its lazy collection."
@@ -348,7 +385,7 @@ internal class LazyItemCollector(
         val strategy = WidgetLazyItemSessionStrategy(
             localSnapshot = localSnapshot,
             saveableStateHolder = saveableStateHolder,
-            content = TypedWidgetLazyItemContent(itemContent),
+            content = content,
         )
         snapshot.items.forEach { item ->
             addCanonical(
@@ -374,24 +411,33 @@ internal class LazyItemCollector(
     ) {
         val canonicalSpan = span.canonical()
         val committedItem = reuseCache.committedItem(key)
-        val lazyItem = reuseCache.findReusable(
-            committedItem = committedItem,
+        val reusableItem = committedItem?.takeIf { item ->
+            item.matchesForReuse(
+                contentRevision = contentRevision,
+                contentType = contentType,
+                kind = kind,
+                span = canonicalSpan,
+                environmentEqualityCache = environmentEqualityCache,
+            )
+        } ?: reuseCache.previousVariant(key)?.takeIf { item ->
+            item.matchesForReuse(
+                contentRevision = contentRevision,
+                contentType = contentType,
+                kind = kind,
+                span = canonicalSpan,
+                environmentEqualityCache = environmentEqualityCache,
+            )
+        }
+        val lazyItem = reusableItem ?: LazyListItem(
             key = key,
             contentRevision = contentRevision,
             environmentRevision = localSnapshot,
             contentType = contentType,
             kind = kind,
             span = canonicalSpan,
-        ) ?: LazyListItem(
-                key = key,
-                contentRevision = contentRevision,
-                environmentRevision = localSnapshot,
-                contentType = contentType,
-                kind = kind,
-                span = canonicalSpan,
-                sessionStrategy = sessionStrategy,
-                sessionPayload = sessionPayload,
-            )
+            sessionStrategy = sessionStrategy,
+            sessionPayload = sessionPayload,
+        )
         val itemsByKey = mutableItemsByKey()
         require(itemsByKey.putIfAbsent(key, lazyItem) == null) {
             "Lazy collection keys must be unique. Duplicate key: $key"
@@ -441,6 +487,14 @@ internal class LazyItemCollector(
     }
 
     fun build(): LazyItemTable {
+        val prepared = prepareBuild()
+        if (ComposerContext.currentComposer() != null) {
+            SideEffect(prepared::commit)
+        }
+        return prepared.table
+    }
+
+    fun prepareBuild(): PreparedLazyItemTable {
         val evaluatedSnapshot = matchedEvaluatedSnapshot
         val committedItemsByKey = evaluatedSnapshot?.itemsByKey ?: mutableItemsByKey.orEmpty()
         val candidateItems = evaluatedSnapshot?.items ?: mutableItems.orEmpty()
@@ -456,15 +510,16 @@ internal class LazyItemCollector(
         } else {
             committedItems.asLazyItemTable()
         }
-        if (ComposerContext.currentComposer() != null) {
-            val keyMembershipChanged = evaluatedSnapshot?.keyMembershipChangedWhenRestored
-                ?: (!baselineHasCommittedSubmission ||
-                    containsNewKey || committedItemsByKey.size != reuseCache.committedSize)
-            val displacedCommittedItems = displacedCommittedItemsByKey.orEmpty()
-            val snapshotPreviousVariants = snapshotPreviousVariantsByKey
-            val restoredCommittedPreviousVariants = restoredCommittedPreviousVariantsByKey
-            val candidateSourceSnapshot = sourceSnapshot
-            SideEffect {
+        val keyMembershipChanged = evaluatedSnapshot?.keyMembershipChangedWhenRestored
+            ?: (!baselineHasCommittedSubmission ||
+                containsNewKey || committedItemsByKey.size != reuseCache.committedSize)
+        val displacedCommittedItems = displacedCommittedItemsByKey.orEmpty()
+        val snapshotPreviousVariants = snapshotPreviousVariantsByKey
+        val restoredCommittedPreviousVariants = restoredCommittedPreviousVariantsByKey
+        val candidateSourceSnapshot = sourceSnapshot
+        return PreparedLazyItemTable(
+            table = committedItemTable,
+            commitBlock = commit@{
                 if (
                     baselineGeneration == reuseCache.generation &&
                     reuseCache.isAlreadyCurrent(
@@ -473,7 +528,7 @@ internal class LazyItemCollector(
                         matchesCommittedSubmission = matchesCommittedSubmission,
                     )
                 ) {
-                    return@SideEffect
+                    return@commit
                 }
                 val keyMembershipChangedAtCommit = reuseCache.hasKeyMembershipChanged(
                     baselineGeneration = baselineGeneration,
@@ -497,8 +552,7 @@ internal class LazyItemCollector(
                     evaluatedSnapshot = evaluatedSnapshot,
                 )
             }
-        }
-        return committedItemTable
+        )
     }
 
     private fun mutableItemsByKey(): HashMap<Any, LazyListItem> {
@@ -511,6 +565,62 @@ internal class LazyItemCollector(
 
     private companion object {
         private const val HASH_SET_LOAD_FACTOR = 0.75f
+    }
+}
+
+private class LazyItemEnvironmentEqualityCache(
+    private val current: LocalSnapshot,
+) {
+    private var firstCandidate: Any? = null
+    private var firstResult = false
+    private var hasFirstCandidate = false
+    private var secondCandidate: Any? = null
+    private var secondResult = false
+    private var hasSecondCandidate = false
+
+    fun matches(candidate: Any?): Boolean {
+        if (candidate === current) return true
+        if (hasFirstCandidate && candidate === firstCandidate) return firstResult
+        if (hasSecondCandidate && candidate === secondCandidate) return secondResult
+        val result = candidate == current
+        if (!hasFirstCandidate) {
+            firstCandidate = candidate
+            firstResult = result
+            hasFirstCandidate = true
+        } else if (!hasSecondCandidate) {
+            secondCandidate = candidate
+            secondResult = result
+            hasSecondCandidate = true
+        }
+        return result
+    }
+}
+
+private fun LazyListItem.matchesForReuse(
+    contentRevision: Any?,
+    contentType: Any?,
+    kind: LazyListItemKind,
+    span: GridItemSpan,
+    environmentEqualityCache: LazyItemEnvironmentEqualityCache,
+): Boolean {
+    return this.contentRevision == contentRevision &&
+        this.contentType == contentType &&
+        this.kind == kind &&
+        this.span == span &&
+        environmentEqualityCache.matches(environmentRevision)
+}
+
+/** One lazy-item submission whose reuse state remains speculative until its native frame commits. */
+internal class PreparedLazyItemTable(
+    val table: LazyItemTable,
+    private val commitBlock: () -> Unit,
+) {
+    private var committed = false
+
+    fun commit() {
+        if (committed) return
+        commitBlock()
+        committed = true
     }
 }
 
@@ -567,36 +677,6 @@ internal class LazyItemCanonicalReuseCache {
     }
 
     fun previousVariant(key: Any): LazyListItem? = previousVariantsByKey[key]
-
-    fun findReusable(
-        committedItem: LazyListItem?,
-        key: Any,
-        contentRevision: Any?,
-        environmentRevision: Any?,
-        contentType: Any?,
-        kind: LazyListItemKind,
-        span: GridItemSpan,
-    ): LazyListItem? {
-        return committedItem
-            ?.takeIf { item -> item.matches(contentRevision, environmentRevision, contentType, kind, span) }
-            ?: previousVariantsByKey[key]?.takeIf { item ->
-                item.matches(contentRevision, environmentRevision, contentType, kind, span)
-            }
-    }
-
-    private fun LazyListItem.matches(
-        contentRevision: Any?,
-        environmentRevision: Any?,
-        contentType: Any?,
-        kind: LazyListItemKind,
-        span: GridItemSpan,
-    ): Boolean {
-        return this.contentRevision == contentRevision &&
-            this.environmentRevision == environmentRevision &&
-            this.contentType == contentType &&
-            this.kind == kind &&
-            this.span == span
-    }
 
     fun hasKeyMembershipChanged(
         baselineGeneration: Long,
@@ -799,6 +879,9 @@ internal class WidgetLazyItemSessionStrategy(
     private val saveableStateHolder: SaveableStateHolder?,
     private val content: WidgetLazyItemContent,
 ) : LazyListItemSessionStrategy {
+    override fun canReuseAcrossKeys(session: LazyListItemSession): Boolean =
+        session is WidgetLazyListItemSession
+
     override fun create(
         container: RenderContainerHandle,
         item: LazyListItem,
@@ -817,6 +900,7 @@ internal class WidgetLazyItemSessionStrategy(
         item: LazyListItem,
     ) {
         (session as WidgetLazyListItemSession).updateContent(
+            saveableStateKey = item.key,
             localSnapshot = localSnapshot,
             content = content,
             contentPayload = item.sessionPayload,
@@ -830,9 +914,27 @@ internal class TypedWidgetLazyItemContent<T>(
     @Suppress("UNCHECKED_CAST")
     override fun render(
         builder: UiTreeBuilder,
+        key: Any,
         payload: Any?,
+        observedPayload: ObservedValue<Any?>,
     ) {
         content.invoke(builder, payload as T)
+    }
+}
+
+internal class ObservedTypedWidgetLazyItemContent<T>(
+    private val content: UiTreeBuilder.(Any, ObservedValue<T>) -> Unit,
+) : WidgetLazyItemContent {
+    override val observesPayload: Boolean = true
+
+    @Suppress("UNCHECKED_CAST")
+    override fun render(
+        builder: UiTreeBuilder,
+        key: Any,
+        payload: Any?,
+        observedPayload: ObservedValue<Any?>,
+    ) {
+        content.invoke(builder, key, observedPayload as ObservedValue<T>)
     }
 }
 

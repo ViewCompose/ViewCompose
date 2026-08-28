@@ -213,6 +213,13 @@ by a later renderer or child render session.
   dirty declarations from one Snapshot and commits one exact-target renderer transaction; type,
   key, Modifier, children, and environment remain structural. Every changing ordinary capture must
   be represented in `inputs` because ViewCompose has no compiler-generated change flags.
+- The Q3 observed `LazyColumn` overload accepts an
+  `ObservedValue<LazyItemsSnapshot<T>>`. It patches the exact mounted list without recomposing its
+  parent, publishes the evaluated item table only after native commit, and gives item content a
+  stable key plus `ObservedValue<T>`. Use `ObservedValue.map` for payload properties; item structure
+  must depend only on the key and stable captures. Failure keeps the previous dependencies, table,
+  logical owners, and saveable state retryable. The compiled
+  `observedLazyItemsSnapshotSample` demonstrates this path.
 - Q3 `CoreObservedPropertyTarget`, `CoreObservedPropertyPatch`, `CoreObservedPropertyFrame`, and
   `CoreRenderEngine.patchObservedProperties` form the renderer-neutral host SPI. Engines either
   validate and roll back a complete batch or reject the capability; no whole-tree fallback exists.

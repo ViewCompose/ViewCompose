@@ -135,6 +135,7 @@ import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.foundation.rememberUpdatedState
 import com.viewcompose.ui.foundation.observedNodeSpec
 import com.viewcompose.ui.foundation.observedValue
+import com.viewcompose.ui.foundation.map
 import com.viewcompose.ui.foundation.toLazyItemsSnapshot
 import com.viewcompose.ui.foundation.lazyItemContentFactory
 import com.viewcompose.ui.environment.UiLayoutDirection
@@ -505,6 +506,24 @@ fun lazyItemsSnapshotSample() {
     check(items.size == 1)
     check(items.single().key == 7L)
     check(items.single().contentRevision == 3)
+}
+
+fun observedLazyItemsSnapshotSample() {
+    val rows = mutableStateOf(
+        listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+            .toLazyItemsSnapshot(),
+    )
+    val list = buildVNodeTree {
+        LazyColumn(
+            items = observedValue { rows.value },
+            key = RevisionSampleRow::id,
+            contentRevision = RevisionSampleRow::version,
+        ) { _, row ->
+            Text(row.map(transform = RevisionSampleRow::label))
+        }
+    }.single()
+
+    check((list.spec as LazyColumnNodeProps).items.single().key == 7L)
 }
 
 fun pagerAndTabIdentitySample() {

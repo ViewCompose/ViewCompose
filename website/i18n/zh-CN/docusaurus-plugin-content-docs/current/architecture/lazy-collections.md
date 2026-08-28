@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lazy-collections.md
-translation_source_hash: 921e6abcb4cd2291deee5acf70ee9c8d884e3ad4f73d0b142b8b4eadd53c5cf0
+translation_source_hash: 2e84db7844d32f1dc7add0096e72d21f992031fa7f801171661db0a4c392c7a0
 translation_status: current
 ---
 
@@ -47,6 +47,12 @@ Keyed Entry 仍可复用所有未受影响的已提交 Session，因此运行 Se
 替换该快照。新 Environment 总是 Miss，以保证 Theme、资源、Locale、布局方向、Density 和 Font
 Scale 正确。Selector 失败或 Key 重复不会发布缓存结果；重试会重新评估整个候选。
 
+Observed `LazyColumn` Overload 会把该不可变 Submission Read 移入 Property Transaction。一个一致
+Snapshot 会求值全部 Dirty Declaration，Renderer Patch 精确挂载列表，并且只有 Native Commit
+成功后才发布已求值 Table、Dependency Replacement 与 Saveable Key Membership。Item Content
+收到稳定 Key 与 `ObservedValue<T>`，因此叶子 Payload 变化可以 Patch 现有节点，不必重建父层或
+Row 结构。Abort 会继续保留先前 Table、Observation 与逻辑 Owner。
+
 ## 4. Renderer 映射与复用
 
 Android Adapter 消费 Q3 `LazyItemTable`。有限的 Foundation 声明发布 Indexed Table；紧凑型集成
@@ -63,6 +69,12 @@ Key 到 Position 的查询，并可提供 Sticky Header 元数据，且不会让
 跨 Key 的 Mounted Tree 复用要求 Tree 内每个 Interop `AndroidView` 都提供 `onReset`。旧 Session 与
 Effect 在 Reset 前结束。有界缓存只携带已 Reset 的物理 Tree；逻辑 Key State 不会进入缓存或
 RecyclerView Pool。缓存淘汰或容器释放会且只会调用一次 `onRelease`。
+
+Renderer 可以在本地 Recycled Pool 中保留一个 Reset 兼容 Presentation。滚动 Idle 后，它可以在
+Gesture 路径之外 Prepare 一个非相邻候选。只有 Declaration Strategy 显式接受时才允许跨 Key
+Session 复用；Runtime 随后会事务式替换 Remember、Observation、Effect、Callback 与 Saveable
+Ownership，同时让相等的纯结构结果保留 Identity。Adapter 仅通过弱引用缓存交替 Submission 所需的
+两个精确不可变循环 Transition，不保留完整历史列表序列。
 
 ## 5. 布局、状态与 Pager 契约
 

@@ -17,6 +17,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.ObservedValue
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.Text
@@ -24,6 +25,8 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.observedValue
+import com.viewcompose.ui.foundation.map
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 
 internal val PerformanceListMotionPolicy = CollectionMotionPolicy(
@@ -40,10 +43,12 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
     fixtures: PerformanceFixtures,
 ) {
     val revisionState = remember { mutableStateOf(0) }
-    val revision = revisionState.value
-    // A/B seam: switch only this accessor to listRows(revision) to benchmark the plain-List path
-    // against the same prebuilt immutable rows.
-    val rows = fixtures.listSnapshot(revision)
+    val revisionText = observedValue {
+        fixtures.copy.listRevision(revisionState.value)
+    }
+    val rows = observedValue {
+        fixtures.listSnapshot(revisionState.value)
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +57,7 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
     ) {
         ListPerformanceHeader(
             engineName = fixtures.copy.engineName(PerformanceEngine.ViewCompose, shadowsEnabled),
-            revision = revision,
+            revisionText = revisionText,
             onMutate = {
                 revisionState.value = revisionState.value + 1
             },
@@ -75,8 +80,9 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .scenarioTarget(scenario, DemoAutomationRole.Target),
-        ) { row ->
+        ) { itemKey, row ->
             PerformanceListRow(
+                rowId = itemKey as Int,
                 row = row,
                 shadowsEnabled = shadowsEnabled,
             )
@@ -86,7 +92,7 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
 
 private fun UiTreeBuilder.ListPerformanceHeader(
     engineName: String,
-    revision: Int,
+    revisionText: ObservedValue<String>,
     onMutate: () -> Unit,
     onReset: () -> Unit,
     scenario: DemoScenarioSpec,
@@ -106,7 +112,7 @@ private fun UiTreeBuilder.ListPerformanceHeader(
             modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         Text(
-            text = copy.listRevision(revision),
+            text = revisionText,
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
             modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
         )
@@ -167,9 +173,11 @@ private fun Modifier.scenarioTarget(
  * Row surface uses a stable key so list reordering measures node reuse.
  */
 private fun UiTreeBuilder.PerformanceListRow(
-    row: PerformanceListRow,
+    rowId: Int,
+    row: ObservedValue<PerformanceListRow>,
     shadowsEnabled: Boolean,
 ) {
+    val accentColor = performanceAccentColor(rowId)
     val baseModifier = Modifier
         .fillMaxWidth()
         .backgroundColor(PERFORMANCE_SURFACE_COLOR)
@@ -181,7 +189,7 @@ private fun UiTreeBuilder.PerformanceListRow(
         baseModifier
     }
     Surface(
-        key = row.id,
+        key = rowId,
         modifier = rowModifier,
     ) {
         Row(
@@ -190,11 +198,11 @@ private fun UiTreeBuilder.PerformanceListRow(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Surface(
-                contentColor = row.accentColor,
+                contentColor = accentColor,
                 modifier = Modifier
                     .width(6.dp)
                     .height(44.dp)
-                    .backgroundColor(row.accentColor)
+                    .backgroundColor(accentColor)
                     .cornerRadius(3.dp),
             ) {}
             Column(
@@ -202,12 +210,12 @@ private fun UiTreeBuilder.PerformanceListRow(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
-                    text = row.title,
+                    text = row.map(transform = PerformanceListRow::title),
                     color = PERFORMANCE_PRIMARY_TEXT_COLOR,
                     maxLines = 1,
                 )
                 Text(
-                    text = row.subtitle,
+                    text = row.map(transform = PerformanceListRow::subtitle),
                     style = TextDefaults.bodySmallStyle(),
                     color = PERFORMANCE_SECONDARY_TEXT_COLOR,
                     maxLines = 1,
@@ -224,7 +232,7 @@ private fun UiTreeBuilder.PerformanceListRow(
                     ),
             ) {
                 Text(
-                    text = row.badge,
+                    text = row.map(transform = PerformanceListRow::badge),
                     style = TextDefaults.labelMediumStyle(),
                     color = PERFORMANCE_PRIMARY_COLOR,
                     maxLines = 1,

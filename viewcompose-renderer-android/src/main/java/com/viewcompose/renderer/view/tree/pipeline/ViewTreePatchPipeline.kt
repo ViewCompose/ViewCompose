@@ -52,20 +52,37 @@ internal object ViewTreePatchPipeline {
         timingCollector: RenderTreeTimingCollector? = null,
         nodeDepths: Map<MountedNode, Int> = emptyMap(),
     ): RenderStats {
-        val ids = HashSet<Long>(patches.size)
-        val targets = IdentityHashMap<MountedNode, Unit>(patches.size)
-        val prepared = ArrayList<Pair<ViewTreeObservedPropertyPatch, NodeBindingPlan>>(patches.size)
-        patches.forEach { patch ->
+        val usesLinearDuplicateCheck = patches.size <= LINEAR_OBSERVED_PROPERTY_BATCH_LIMIT
+        val ids = if (usesLinearDuplicateCheck) null else HashSet<Long>(patches.size)
+        val targets = if (usesLinearDuplicateCheck) {
+            null
+        } else {
+            IdentityHashMap<MountedNode, Unit>(patches.size)
+        }
+        val bindingPlans = arrayOfNulls<NodeBindingPlan>(patches.size)
+        patches.forEachIndexed { patchIndex, patch ->
             timingCollector.measureRenderInterval(
                 node = patch.next,
                 depth = nodeDepths[patch.mountedNode] ?: 0,
                 phase = RenderTreeTimingPhase.Reconciliation,
             ) {
-                check(ids.add(patch.id)) {
-                    "Observed-property patch ids must be unique within one batch."
-                }
-                check(targets.put(patch.mountedNode, Unit) == null) {
-                    "A mounted node can be targeted only once in one observed-property batch."
+                if (usesLinearDuplicateCheck) {
+                    for (previousIndex in 0 until patchIndex) {
+                        val previous = patches[previousIndex]
+                        check(previous.id != patch.id) {
+                            "Observed-property patch ids must be unique within one batch."
+                        }
+                        check(previous.mountedNode !== patch.mountedNode) {
+                            "A mounted node can be targeted only once in one observed-property batch."
+                        }
+                    }
+                } else {
+                    check(checkNotNull(ids).add(patch.id)) {
+                        "Observed-property patch ids must be unique within one batch."
+                    }
+                    check(checkNotNull(targets).put(patch.mountedNode, Unit) == null) {
+                        "A mounted node can be targeted only once in one observed-property batch."
+                    }
                 }
                 check(!patch.mountedNode.disposed) {
                     "Observed property ${patch.id} targets a disposed mounted node."
@@ -108,15 +125,16 @@ internal object ViewTreePatchPipeline {
                             patch.next.requireSpec<AndroidViewNodeProps>().constructionIdentity,
                     ) {
                         "Observed property ${patch.id} cannot change AndroidView construction " +
-                            "identity; use a full tree render."
+                        "identity; use a full tree render."
                     }
                 }
-                prepared += patch to NodeBindingDiffer.plan(patch.previous, patch.next)
+                bindingPlans[patchIndex] = NodeBindingDiffer.plan(patch.previous, patch.next)
             }
         }
 
         var stats = emptyStats
-        prepared.forEach { (patch, bindingPlan) ->
+        patches.forEachIndexed { patchIndex, patch ->
+            val bindingPlan = checkNotNull(bindingPlans[patchIndex])
             val mountedNode = patch.mountedNode
             // Even a native no-op advances MountedNode.vnode below. Checkpoint every target so a
             // later failure restores the renderer snapshot together with visible View state.
@@ -1160,4 +1178,5 @@ internal object ViewTreePatchPipeline {
     private const val MAX_PATCH_RECORDS = 5_000
     private const val MAX_ANDROID_VIEW_ADAPTER_NAME_LENGTH = 160
     private const val MAX_ANDROID_VIEW_LIFECYCLE_MODE_LENGTH = 40
+    private const val LINEAR_OBSERVED_PROPERTY_BATCH_LIMIT = 8
 }

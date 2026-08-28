@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 2e193957769443583a044dbddbafb3f54f7edccc2e0d6bd73e10a28cdc619d66
+translation_source_hash: a75ad3978fae3391fb5bfa895260f12e416272828489315cf0bae2692f27240d
 translation_status: current
 schema_version: 2
 document_id: tooling.diagnostics
@@ -194,7 +194,16 @@ Buffer Queue 的归属仍必须使用 Perfetto 或其他平台 Profiler。
 Logical Session ID 重复使用 Physical Token `9`、`8` 和 `13`，证明工作负载已经复用 Holder。
 匹配的平台 Trace 把冷 Direct Render 放在 `RV Scroll` 而不是 `RV Prefetch` 下，并保留了有限计时器
 之外的 Input、Traversal 与 RenderThread 工作。这次升级可执行但不完整：它消除了 Future Session
-和 Holder Creation 两项歧义，也改变了下一项源码决策，但没有任何实测生产候选关闭 Release 尾部。
+和 Holder Creation 两项歧义，也改变了下一项源码决策，但无法对稳定路径的分配或重复调用成本排序。
+
+重复执行有界 Capture 仍无法跨过这一限制后，单方法 Debug Method Trace 与配对的 Release Perfetto
+Trace 给出了下一项区分。Method Trace 发现每个 Mutation 事务执行了 16 次 Cyclic-rotation 计算、收集
+未变化 Environment Snapshot 时执行了 945 次结构 Map Equality，并且只有一个 State 的 Item Observation
+仍重复经过通用 Dependency-replacement 机制。Perfetto 独立确认剩余 Row 工作位于 Animation/Traversal，
+而不是 Holder Creation。完成归因后，临时 Counter 与 Method-trace Switch 已硬切；优化 Release 不打包、
+也不启用它们。这次调查因此建立了长期升级规则：有界 Session 工具用于关联源码和所有权；当未决问题
+属于重复调用次数、分配、Measure/Layout/Draw 或平台调度时，切换到单方法 Trace 或 Perfetto。不要仅为
+重复这些 Profiler Domain 而扩大常驻可用的诊断契约。
 
 ## 8. Demo 检查器
 
@@ -210,7 +219,7 @@ View 边界高亮、有限逐节点耗时与关联 Studio Inspector 已经实现
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
 冻结 Phase 1 及其有界 Future-session 扩展；只关心 Failure 的 Sink 不激活 Frame 明细。可选
 `viewcompose-diagnostics` 负责生产聚合，`viewcompose-preview` 负责按请求工作的关联 Inspector、
-高亮、Selected-session Timing 与一次性 Future-LazyItem Timing。当前列表尾部计划负责该扩展的
+高亮、Selected-session Timing 与一次性 Future-LazyItem Timing。已归档的列表尾部记录负责该扩展的
 No-regression 与 Release 隔离验收。未来的持续观察器、新耗时域或更广设备契约必须重新建立可归因
 计划，并继续遵守 ADR-0009 的非激活路径与 Release 隔离规则。
 

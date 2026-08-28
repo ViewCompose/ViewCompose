@@ -13,11 +13,14 @@ capability_ids:
   - diagnostics.node-timing
   - preview.integration
 artifact_ids:
+  - viewcompose-runtime
+  - viewcompose-ui-contract
   - viewcompose-ui-foundation
   - viewcompose-renderer-android
+  - viewcompose-host-android
   - viewcompose-preview
 sample_ids: []
-status: active
+status: complete
 scope: Find and correct the source-owned cause of the accepted LazyColumn tail-latency gaps, extending request-driven diagnostics only when the next causal distinction cannot otherwise be measured.
 non_goals:
   - Replace Macrobenchmark or Perfetto with instrumented node timing.
@@ -30,8 +33,8 @@ ordered_work:
   - Interpret both performance and diagnostic-utility results in their active owners before archival.
 completion:
   - Close the accepted list-tail regression with a source-owned correction and stable same-run three-engine evidence; attribution or a diagnostic-utility result alone cannot complete the plan.
-last_verified: 2026-08-27
-next_action: Continue the platform-tail attribution and correction loop, upgrading bounded request-driven diagnostics whenever the next causal distinction is not observable; stop only after stable same-run evidence closes the Android Views P95 gaps.
+last_verified: 2026-08-28
+next_action: None. Monitor mutation P99 and scroll peak heap longitudinally; crossing a combined material gate requires a new attributed plan.
 maven_release_changesets:
   - release/changes/20260827-armed-lazy-item-diagnostics.json
 ---
@@ -40,23 +43,19 @@ maven_release_changesets:
 
 ## Status
 
-Active. This work runs in a dedicated worktree and branch based on `main` revision `290b1fc0`, so
-the concurrent documentation-governance work remains isolated. The plan-first baseline is commit
-`754e018d`; the evidence-triggered Phase 1A amendment is commit `9f245448`. Seven one-factor
-implementation/configuration probes have been measured and reverted; no performance implementation
-is retained because none met the acceptance threshold. The request-driven diagnostics correction
-passed focused behavior, optimized-Release isolation, exact-control performance acceptance, and the
-repository quality suites. The Xiaomi connected suites also passed independently; one aggregate
-`qaFull` invocation cannot stay green because MIUI intermittently rejects UTP install sessions, as
-recorded below.
+Complete. This work ran in a dedicated worktree and branch based on `main` revision `290b1fc0`, so
+the concurrent documentation-governance work remained isolated. The plan-first baseline is commit
+`754e018d`; the evidence-triggered Phase 1A amendment is commit `9f245448`. Seven early one-factor
+implementation/configuration probes were measured and reverted. The later method-trace and
+Perfetto attribution identified repeated immutable-transition/observation work plus cold logical
+owner installation over compatible recycled content. The retained production correction closes
+both accepted P95 gaps under the frozen same-run gates.
 
-Last verified: 2026-08-27.
+Last verified: 2026-08-28.
 
-Next action: continue attribution in the unsupported measure/layout/draw, input, and RenderThread
-domains before testing another production candidate. Repeat the evidence-to-correction loop, and
-upgrade the request-driven diagnostic seam first whenever the next causal distinction is not
-observable. The plan remains active until a production-owned correction closes the Android Views
-scroll and mutation P95 gaps; attribution or a diagnostic-utility conclusion is not an endpoint.
+Next action: none for this plan. Mutation P99 and scroll peak heap remain explicit longitudinal
+watch items; either crossing its combined material gate requires a new attributed plan rather than
+reopening or repeatedly sampling this investigation.
 
 ## Execution record: 2026-08-27
 
@@ -226,8 +225,55 @@ Conclusion: the inactive Foundation seam and downstream armed tooling cause `no 
 in the two ViewCompose paths and pass the no-regression gate. The comparison is release-safety
 evidence for a diagnostic change, not a performance-correction matrix; Compose and Android Views
 were not rerun because neither their code nor the frozen workload changed. Their accepted same-run
-matrix continues to own the residual cross-engine gap. This limitation keeps the plan active and
-does not satisfy Phase 4 performance success.
+matrix continues to own the residual cross-engine gap. This diagnostic-only comparison did not
+satisfy Phase 4 performance success until the correction below.
+
+### Production correction and fixed-clock closure
+
+Repeated bounded captures could not distinguish allocation and repeated call-site cost, so the
+investigation switched tools instead of broadening the shipped diagnostic contract. A one-method
+Debug trace recorded 16 cyclic-rotation calculations in one mutation transaction, 945 structural
+map-equality calls while unchanged environment snapshots were collected, and repeated general
+dependency-replacement work for one-state item observations. Matched Release Perfetto traces kept
+the remaining row cost in animation/traversal rather than holder creation. Together with the armed
+Session proof of physical holder reuse, this attributed the tail to repeated immutable-transition
+and observation bookkeeping plus cold logical-owner installation over compatible recycled content.
+
+The retained correction uses transactional observed item submissions and per-item payload
+Sessions, a two-entry weak cyclic-transition cache, one-dependency observation replacement,
+same-collector environment equality caching, ownership-safe reusable content, one bounded retained
+local-pool Session, idle preparation of the next compatible pooled holder, and deferred semantic
+refresh for a stable key already leaving the captured visible range. Temporary counters, snapshot
+probes, method-trace switches, and probe strings were hard-cut after attribution and are absent from
+optimized Release. Focused tests preserve rollback, remembered/saveable state, effects,
+AndroidView reset/release, focus/accessibility, disposal, and failure fallback.
+
+The accepted non-debuggable target APK is `6,988,487` bytes with SHA-256
+`957e2bdbe75c77b244c2bd8f1539eaa15c9517b8924b8b3826e73e4e591efad2`; the benchmark APK SHA-256
+is `e38983e24f184972979fc881893d859444a5ea5427e3c9448c4bbbaf8eb502ba`. Every method contains five
+iterations, starts at or below `36 °C`, uses the fixed Xiaomi clocks/interconnect votes and external
+rooted reset, suspends charging, and reports zero thermal-throttle sleep. One `24%` low-battery
+attempt was rejected before measurement and contributes no data.
+
+Frame values are P50/P95/P99 milliseconds; heap is median peak KiB.
+
+| Action | ViewCompose | Compose | Android Views | Run-P50 CV | Interpretation |
+| --- | --- | --- | --- | --- | --- |
+| Scroll | `5.070/6.810/7.702`, heap `9767` | `5.329/7.238/8.232`, `9220` | `4.867/6.178/7.307`, `4521` | `0.026/0.014/0.005` | P95 improves `26.2%` versus the accepted pre-change ViewCompose value and `17.9%` versus the retained diagnostics batch. It is `5.9%` faster than Compose and `10.2%` (`0.632 ms`) slower than Views, below the combined gate. |
+| Mutation | `5.259/9.099/21.350`, heap `7391` | `5.261/16.219/34.794`, `9980` | `5.259/8.610/10.778`, `5625` | `0.050/0.102/0.024` | P95 improves `24.8%` versus accepted pre-change and `21.0%` versus the retained diagnostics batch. It remains `43.9%` faster than Compose and is only `5.7%` (`0.489 ms`) slower than Views. |
+
+All stability values pass `0.15`. Scroll and mutation now satisfy Phase 4: both accepted P95 gaps
+improve materially, neither same-run control classifies ViewCompose as `regressed`, and the Compose
+mutation advantage remains. The selected tail conclusion is **improved**.
+
+Mutation P99 remains `21.350 ms`, `98.1%` above same-run Views but only `1.1%` above the accepted
+pre-change ViewCompose value, so it is an inherited watch item rather than a new regression. Scroll
+heap is `2,043 KiB` above the accepted pre-change median and `1,812 KiB` above the retained
+diagnostics batch; it misses the combined heap gate by `5 KiB` on the absolute arm and remains a
+near-threshold watch item. Mutation heap improves by `468 KiB` versus pre-change and is `1,766 KiB`
+above same-run Views, below the absolute heap arm. API 28 supplied no RSS. These limitations and the
+new-plan trigger are interpreted in the active Performance specification and reviewed Chinese
+mirror.
 
 ### Repository and device acceptance
 
@@ -237,23 +283,27 @@ and boundary checks pass. `verifyDevelopmentToolingIsolation` and the optimized 
 pass; the Release artifact excludes the concrete future-arm request and physical-container token
 markers. `qaQuick`, `qaPreview`, and `qaRelease` pass in one invocation with 2,414 tasks considered.
 
-`qaFull` was bound explicitly to Xiaomi serial `e5e70042`. Its first connected attempt exposed a
-MIUI confirmation dialog saying that ViewCompose was trying to start the test package; the dialog
-caused an empty `AnimationBoundsDeviceTest` failure and then blocked later installs. After explicitly
-allowing that device action, the failed method passed alone in `2.62 s`, and the complete main App
-suite passed with 153 executed tests, zero failures, and three credential/device-condition skips.
-MIUI then intermittently rejected the UTP install sessions for the Counter and Tutorials packages
-with `INSTALL_FAILED_USER_RESTRICTED` or `Connection refused`. Root preinstallation of the identical
-APKs allowed the unchanged Gradle connected tasks to pass independently: Counter `1/1` and
-Tutorials `2/2`. A final aggregate retry again failed before running tests because MIUI rejected all
-three UTP install sessions; it did not produce a test assertion failure.
+`qaFull` was bound explicitly to Xiaomi serial `e5e70042`. The aggregate invocation stopped before
+tests because MIUI rejected the UTP install with `INSTALL_FAILED_USER_RESTRICTED`. Root
+preinstallation of the byte-identical generated target and test APKs allowed execution without
+changing production code. The first App batch then started four tests before MIUI Security Center
+interposed a cross-package-start confirmation, paused the target Activity, and caused
+`nativeViewConfig_isAppliedAfterSpecAndModifierPatch` to be reported with an empty failure while the
+runner received only four of 150 expected results. Its captured log contained no assertion,
+exception, crash, or ANR; it showed Security Center taking the foreground immediately after the
+test started.
 
-The connected evidence is accepted as passing constituent suites with a scoped device-environment
-exception, not as a green aggregate `qaFull` invocation. Owner: this active performance plan. Before
-archival, rerun the aggregate on a device with persistent `Install via USB` permission or a managed
-CI device. The Xiaomi CPU/GPU/interconnect governors, charging input, vendor performance services,
-original Magisk entry point, and trace-tool modes were restored after benchmarking; no temporary
-APK, shell wrapper, or fixed-clock state remains.
+After explicitly allowing the device action, that exact method passed in isolation and the same
+installed App APK completed all `150/150` tests in `1,014.493 s` with zero failures; unsupported
+camera and credential-dependent map branches produced only their declared assumption skips.
+Counter completed `1/1`, and Tutorials completed `2/2`, also with zero failures. The connected
+evidence is accepted as passing all constituent suites with a scoped MIUI install-orchestration
+exception, not as a green aggregate `qaFull` invocation. Owner: repository full-release validation;
+deadline: the next managed-CI validation or release cut, whichever comes first. That environment
+must rerun the aggregate on a device with persistent `Install via USB` permission. The Xiaomi
+CPU/GPU/interconnect governors, charging input, vendor performance services, original Magisk entry
+point, and trace-tool modes were restored after benchmarking; no task-specific temporary APK,
+shell wrapper, or fixed-clock state remains.
 
 ## Maven release changesets
 
@@ -261,11 +311,15 @@ APK, shell wrapper, or fixed-clock state remains.
 
 ## Release intent rationale
 
-The retained implementation changes the published Q3 Foundation inspection policy and the optional
-Preview artifact, so the immutable Changeset classifies UI Foundation as breaking and Preview as a
-feature. Concrete request parsing, arm ownership, physical-container correlation, report writing,
-and Studio controls remain downstream in Preview/Studio. Foundation retains only an optional
-policy branch and performs no recurring observation or per-node timing without an explicit request.
+The retained implementation changes Runtime reusable-content and observation behavior, UI Contract
+item/property contracts, the published Q3 Foundation LazyColumn and inspection policy, Renderer and
+Host production internals, and the optional Preview artifact. The combined immutable Changeset
+therefore classifies Runtime and UI Contract as features, UI Foundation as breaking, Renderer and
+Host as fixes, and Preview as a feature. Concrete request parsing, arm ownership,
+physical-container correlation, report writing, and Studio controls remain downstream in
+Preview/Studio. Foundation retains only an optional policy branch and performs no recurring
+observation or per-node timing without an explicit request. Production fixes do not depend on the
+Preview diagnostic implementation.
 
 ## Objective
 

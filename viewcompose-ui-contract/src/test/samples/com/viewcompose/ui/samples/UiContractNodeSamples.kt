@@ -115,6 +115,7 @@ fun relativeLayoutModifierSample() {
 
 fun lazyListItemSessionUpdateSample() {
     val session = object : LazyListItemSession {
+        var installedKey: Any? = null
         var installedLabel = ""
         var prepared = false
         var activated = false
@@ -139,6 +140,11 @@ fun lazyListItemSessionUpdateSample() {
         override fun dispose() = Unit
     }
     val strategy = object : LazyListItemSessionStrategy {
+        override fun canReuseAcrossKeys(retained: LazyListItemSession): Boolean {
+            // A real opt-in must also reset every key-owned state/effect/saveable owner from update.
+            return retained === session
+        }
+
         override fun create(
             container: RenderContainerHandle,
             item: LazyListItem,
@@ -149,6 +155,11 @@ fun lazyListItemSessionUpdateSample() {
             item: LazyListItem,
         ) {
             check(retained === session)
+            if (session.installedKey != item.key) {
+                // A production opt-in also ends key-owned effects and saveable-state ownership.
+                session.installedLabel = ""
+                session.installedKey = item.key
+            }
             session.installedLabel = item.sessionPayload as String
         }
     }
@@ -183,6 +194,18 @@ fun lazyListItemSessionUpdateSample() {
     session.render()
     check(session.installedLabel == "Updated")
     check(session.renderCount == 1)
+
+    val replacementKey = LazyListItem(
+        key = "settings",
+        contentRevision = "row-v1",
+        sessionStrategy = strategy,
+        sessionPayload = "Settings",
+    )
+    check(strategy.canReuseAcrossKeys(session))
+    replacementKey.updateSession(session)
+    session.render()
+    check(session.installedKey == "settings")
+    check(session.installedLabel == "Settings")
 }
 
 /** Wraps an immutable finite submission with validated key and sticky-header lookup metadata. */

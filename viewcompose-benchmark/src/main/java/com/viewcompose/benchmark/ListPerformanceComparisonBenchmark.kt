@@ -65,21 +65,29 @@ class ListPerformanceComparisonBenchmark {
 
     private fun measureListScroll(
         engine: String,
-    ) = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = performanceComparisonMetrics(),
-        compilationMode = CompilationMode.None(),
-        iterations = FORMAL_INTERACTION_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startPerformanceScenarioAndWait(PERFORMANCE_LIST_SCENARIO, engine)
-        },
     ) {
-        repeat(4) {
-            swipePageUp()
-        }
-        repeat(4) {
-            swipePageDown()
+        var listBounds: android.graphics.Rect? = null
+        benchmarkRule.measureRepeated(
+            packageName = TARGET_PACKAGE,
+            metrics = performanceComparisonMetrics(),
+            compilationMode = CompilationMode.None(),
+            iterations = FORMAL_INTERACTION_ITERATIONS,
+            startupMode = StartupMode.WARM,
+            setupBlock = {
+                startPerformanceScenarioAndWait(PERFORMANCE_LIST_SCENARIO, engine)
+                listBounds = scenarioTargetBounds(
+                    PERFORMANCE_LIST_SCENARIO,
+                    DemoTargetRole.Target,
+                )
+            },
+        ) {
+            val bounds = checkNotNull(listBounds)
+            repeat(4) {
+                swipeWithinBounds(bounds, PageSwipeDirection.TowardBottom)
+            }
+            repeat(4) {
+                swipeWithinBounds(bounds, PageSwipeDirection.TowardTop)
+            }
         }
     }
 

@@ -180,6 +180,15 @@ class RenderSession(
         runtime.render()
     }
 
+    /** Renders only already-invalidated composition scopes or observed properties. */
+    internal fun renderPendingState() {
+        checkNotDeliveringDiagnostics()
+        check(!disposalRequested) {
+            "RenderSession is disposed and cannot render again."
+        }
+        runtime.render()
+    }
+
     private fun startTimingCapture(
         request: RenderNodeTimingCaptureRequest,
     ): RenderNodeTimingCaptureStart {
@@ -588,12 +597,19 @@ class RenderSession(
             )
             return
         } ?: return
-
         val changes = transaction.changes
         if (changes.isEmpty()) {
             committedFrameId = frameId
             try {
-                transaction.commit()
+                transaction.commit().forEach { error ->
+                    reportFailure(
+                        frameId = frameId,
+                        phase = RenderFailurePhase.ObservedPropertyCommit,
+                        recovery = RenderFailureRecovery.FrameCommitted,
+                        error = error,
+                        frameFailures = frameFailures,
+                    )
+                }
             } catch (error: Exception) {
                 reportFailure(
                     frameId = frameId,
@@ -653,7 +669,6 @@ class RenderSession(
             )
             return
         }
-
         val diagnosticLevel = activeDiagnostics?.collection?.frameLevel
             ?: RenderFrameDiagnosticLevel.None
         val frame = try {
@@ -693,7 +708,6 @@ class RenderSession(
             )
             return
         }
-
         corePatches.forEach { patch ->
             patch.target.advance(
                 previous = patch.previous,
@@ -702,7 +716,15 @@ class RenderSession(
         }
         committedFrameId = frameId
         try {
-            transaction.commit()
+            transaction.commit().forEach { error ->
+                reportFailure(
+                    frameId = frameId,
+                    phase = RenderFailurePhase.ObservedPropertyCommit,
+                    recovery = RenderFailureRecovery.FrameCommitted,
+                    error = error,
+                    frameFailures = frameFailures,
+                )
+            }
         } catch (error: Exception) {
             reportFailure(
                 frameId = frameId,
@@ -772,7 +794,15 @@ class RenderSession(
         }
         committedFrameId = frameId
         try {
-            prepared.observedPropertyAttempt.commit()
+            prepared.observedPropertyAttempt.commit().forEach { error ->
+                reportFailure(
+                    frameId = frameId,
+                    phase = RenderFailurePhase.ObservedPropertyCommit,
+                    recovery = RenderFailureRecovery.FrameCommitted,
+                    error = error,
+                    frameFailures = frameFailures,
+                )
+            }
         } catch (error: Exception) {
             reportFailure(
                 frameId = frameId,

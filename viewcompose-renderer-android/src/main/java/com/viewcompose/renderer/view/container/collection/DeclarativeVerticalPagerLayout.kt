@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.renderer.R
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
@@ -399,6 +400,14 @@ internal class VerticalPagerViewHolder(
 
     override fun clearContainer() {
         container.removeAllViews()
+    }
+
+    override fun beginLogicalOwnerTransfer() {
+        container.setTag(R.id.viewcompose_lazy_logical_owner_transfer, true)
+    }
+
+    override fun endLogicalOwnerTransfer() {
+        container.setTag(R.id.viewcompose_lazy_logical_owner_transfer, null)
     }
 
     fun bind(

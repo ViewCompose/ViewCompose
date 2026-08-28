@@ -1,6 +1,6 @@
 ---
 translation_source: project/plans/README.md
-translation_source_hash: fa5e63896969d2e06390ef7ffbcd12e6eb30df02fff653c1369b5bd1ea73a3e9
+translation_source_hash: ffb3ab5ab56ada85622b29cc37effb9f1d9ab694f09ac3cac1340406c117ed86
 translation_status: current
 ---
 
@@ -21,9 +21,6 @@ reference 核心，再大规模移动内容；随后用文档迁移 PR 观察选
 - [文档系统治理 V2 与能力重构](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/documentation-system-governance-v2.md) —
   以流程优先方式修复能力 owner、文档类型与版本通道契约、完整的可执行 sample 发现、
   no-new-debt 棘轮、生成型 DSL/Modifier reference、信息架构以及按优先级建设独立 Tutorial/Guide。
-- [Lazy 列表尾延迟性能与诊断实用性](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/lazy-list-tail-performance-diagnostics.md) —
-  使用已经完成的关联 Inspector 和有限时序采样重新分析已验收的 `performance.list@5` 滚动与变更
-  尾延迟，保留一项有度量依据的修复，并判断已发布的诊断域是否真正改善一次实际性能调查。
 - [Demo 发布后验证收尾](https://docs.viewcompose.com/project/plans/demo-post-release-verification-closeout/) —
   当前因硬件条件延迟：没有可用物理设备能够证明所需的 CPU、GPU 和显示管线稳定控制。其余阶段均已
   完成；只有在具备合格设备后，才恢复采集未改变的 collection-stress revision-3 scroll 基线。

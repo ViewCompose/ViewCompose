@@ -2637,7 +2637,7 @@
           "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
-          "overloadCount": 3,
+          "overloadCount": 4,
           "receiver": "UiTreeBuilder",
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn"
         },
@@ -6069,6 +6069,6 @@
     "entryCount": 531,
     "groupCount": 15,
     "ownedEntryCount": 451,
-    "sourceFingerprint": "74254b17a0efc203a983e54b0bcc9c6b032fc048b598e3b683786789ec7ef292"
+    "sourceFingerprint": "b05e757de48af6c4c36802889c635273aa0c6110959ff92d375e70e50b9ef6b1"
   }
 }

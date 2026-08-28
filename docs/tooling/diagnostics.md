@@ -222,7 +222,19 @@ the cold logical Session's first supported frame. Twelve consecutive matches reu
 holders. A matching platform trace placed cold direct render under `RV Scroll`, not `RV Prefetch`,
 and retained input/traversal and RenderThread work outside the finite timer. The upgrade was
 actionable but partial: it removed the future-Session and holder-creation ambiguities and changed the
-next source-level decision, but no measured production candidate closed the Release tail.
+next source-level decision, but it could not rank stable-path allocation or repeated call-site cost.
+
+When repeated bounded captures reached that limit, a one-method Debug method trace and matched
+Release Perfetto traces supplied the next distinction. The method trace found 16 cyclic-rotation
+calculations per mutation transaction, 945 structural map-equality calls while collecting unchanged
+environment snapshots, and repeated general dependency-replacement machinery for one-state item
+observations. Perfetto independently kept the remaining row work inside animation/traversal rather
+than holder creation. Temporary counters and method-trace switches were hard-cut after attribution;
+they are not packaged or enabled in optimized Release. This investigation therefore establishes a
+durable escalation rule: use the bounded Session tool for source and ownership correlation, then
+switch to a one-method trace or Perfetto when the unresolved distinction is repeated call count,
+allocation, measure/layout/draw, or platform scheduling. Do not broaden the always-available
+diagnostic contract merely to duplicate those profiler domains.
 
 ## 8. Demo inspector
 
@@ -241,8 +253,8 @@ plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnost
 and its bounded future-session extension.
 A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
 production aggregation; `viewcompose-preview` owns the shipped request-driven correlated inspector,
-highlighting, selected-session timing, and one-shot future-LazyItem timing. The active list-tail plan
-owns the extension's no-regression and release-isolation acceptance. A future continuous observer,
+highlighting, selected-session timing, and one-shot future-LazyItem timing. The archived list-tail
+record owns the extension's no-regression and release-isolation acceptance. A future continuous observer,
 new timing domain, or broader device contract requires a new attributed plan and must preserve
 ADR-0009's inactive and Release isolation rules.
 
