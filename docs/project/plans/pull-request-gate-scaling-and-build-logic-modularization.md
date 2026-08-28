@@ -922,6 +922,28 @@ of the second cut; it does not count as a real `affected` observation. The first
 pull request in each accepted no-shadow class remains the next evidence, while all broader module
 classes retain their shadow.
 
+The release-window preflight after pull request #220 exposed one inconsistent classification
+boundary in repository publishing build logic. Pull-request release-intent verification already
+accepted either `changes` or `ignored` as complete ownership, while `planViewComposeRelease`
+accepted only `changes` and therefore stopped at the first review-approved compiled-sample
+exception. A complete post-tag audit found 13 artifacts with publication-relevant paths classified
+only by immutable `ignored` entries. The hard cut now accepts both forms for ownership completeness
+but keeps `ignored` out of direct impact, dependency propagation, and first-release eligibility.
+Two focused planner regressions passed: an ignored-only published artifact scheduled no direct
+release, while an ignored-only unpublished artifact still failed its mandatory first-release
+declaration. The complete publishing-build test suite, release-intent gate, and documentation
+structure gate passed. Full `qaQuick` then passed all 2,342 actionable tasks in `17 min 34 s`
+(2,263 executed and 79 up-to-date); this is completeness evidence rather than a latency comparison.
+On the clean candidate revision `4225a24e`, release planning consumed all 13 classifications with
+zero false ownership blocker and produced the expected 33-artifact plan: 14 direct, 6
+first-release, and 13 dependency-propagated entries. False ownership blockers therefore changed
+from 13 to 0 (`-100%`), and no ignored entry became a direct release. Release-plan correctness is
+**improved**, while broader gate correctness is **no material change**. This validates planning
+only; metadata preparation, artifact verification, signing, and upload remain release-window
+actions. Release intent detected zero published artifacts, ignored artifacts, or shared publication
+paths for this repository-only tooling, test, and documentation correction, so it adds no Maven
+Changeset. The hosted no-shadow observation remains this plan's next action.
+
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
 it would not reduce source verification, Gradle startup, Android SDK preparation, or immutable API
