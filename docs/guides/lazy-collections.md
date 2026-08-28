@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - lazy.collections
+  - observed.value-mapping
 artifact_ids:
   - viewcompose-ui-foundation
   - viewcompose-ui-contract

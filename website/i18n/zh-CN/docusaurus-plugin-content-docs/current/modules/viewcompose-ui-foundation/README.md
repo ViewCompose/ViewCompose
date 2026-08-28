@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: e04e0d0ab482fb676056915da6e0dfae51a752202c872dfd331ff30cd6210990
+translation_source_hash: fd24e9b032159564b800725c39bd400d5866e32824f9167f6e9fa41159a549f4
 translation_status: current
 ---
 
@@ -205,6 +205,26 @@ UiEnvironment {
   稳定 Key 与 `ObservedValue<T>`。Payload Property 应通过 `ObservedValue.map` 派生；Item 结构只能
   依赖 Key 与稳定 Capture。失败时，之前的依赖、Table、逻辑 Owner 与 Saveable State 都保持可重试。
   编译样例 `observedLazyItemsSnapshotSample` 展示该路径。
+
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt" region="ui-foundation-module-observed-value-map" sample_id="module.ui-foundation-observed-map" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
+```kotlin
+val rows = mutableStateOf(
+    listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+        .toLazyItemsSnapshot(),
+)
+val list = buildVNodeTree {
+    LazyColumn(
+        items = observedValue { rows.value },
+        key = RevisionSampleRow::id,
+        contentRevision = RevisionSampleRow::version,
+    ) { _, row ->
+        Text(row.map(transform = RevisionSampleRow::label))
+    }
+}.single()
+
+check((list.spec as LazyColumnNodeProps).items.single().key == 7L)
+```
+
 - Q3 `CoreObservedPropertyTarget`、`CoreObservedPropertyPatch`、`CoreObservedPropertyFrame` 与
   `CoreRenderEngine.patchObservedProperties` 组成 Renderer-neutral Host SPI。Engine 必须校验并
   回滚完整 Batch，或者拒绝该能力；不存在整树静默回退。

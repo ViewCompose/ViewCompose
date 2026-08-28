@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: 45a8a2dfba2f101d33cc8bbcc31f074718362836ff23d34ec253c8fdfa2357ee
+translation_source_hash: 97fb77af37aff7bd83e9de5f9b85eb80477a2206b44fa66bca17303d7739b9ae
 translation_status: current
 ---
 

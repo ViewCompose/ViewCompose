@@ -7,7 +7,10 @@ owner:
   id: lazy.collections
 version_lane: released
 capability_ids:
+  - lazy.item-session-reuse
   - lazy.collections
+  - observed.value-mapping
+  - runtime.reusable-content
 artifact_ids:
   - viewcompose-ui-contract
   - viewcompose-ui-foundation

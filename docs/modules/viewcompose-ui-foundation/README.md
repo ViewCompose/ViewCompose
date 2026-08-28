@@ -14,6 +14,7 @@ capability_ids:
   - foundation.environment
   - image.foundation
   - lazy.collections
+  - observed.value-mapping
   - overlay.foundation
   - text.input
   - theme.foundation
@@ -23,6 +24,7 @@ sample_ids:
   - module.ui-foundation-dependency
   - module.ui-foundation-profile-summary
   - module.ui-foundation-environment
+  - module.ui-foundation-observed-map
 coordinate: com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01
 minimal_usage_sample_id: module.ui-foundation-dependency
 ---
@@ -266,6 +268,26 @@ UiEnvironment {
   must depend only on the key and stable captures. Failure keeps the previous dependencies, table,
   logical owners, and saveable state retryable. The compiled
   `observedLazyItemsSnapshotSample` demonstrates this path.
+
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt" region="ui-foundation-module-observed-value-map" sample_id="module.ui-foundation-observed-map" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
+```kotlin
+val rows = mutableStateOf(
+    listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+        .toLazyItemsSnapshot(),
+)
+val list = buildVNodeTree {
+    LazyColumn(
+        items = observedValue { rows.value },
+        key = RevisionSampleRow::id,
+        contentRevision = RevisionSampleRow::version,
+    ) { _, row ->
+        Text(row.map(transform = RevisionSampleRow::label))
+    }
+}.single()
+
+check((list.spec as LazyColumnNodeProps).items.single().key == 7L)
+```
+
 - Q3 `CoreObservedPropertyTarget`, `CoreObservedPropertyPatch`, `CoreObservedPropertyFrame`, and
   `CoreRenderEngine.patchObservedProperties` form the renderer-neutral host SPI. Engines either
   validate and roll back a complete batch or reject the capability; no whole-tree fallback exists.

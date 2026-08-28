@@ -131,6 +131,13 @@ benchmark detail before the final 6.25 MiB ceiling. Exact transition evidence is
 below. Reaching this ceiling again requires structural index segmentation rather than another
 content-only partition or threshold increase; API and command guidance remains searchable.
 
+Rendered code blocks remain complete on their owning pages and keep their compiled-source links,
+but local full-text search indexes the surrounding explanation instead of duplicating every code
+token. Exact public symbols remain discoverable through module API inventories and the generated
+Reference. This boundary reduces repeated bilingual index material without hiding a page, sample,
+command contract, or migration route; if a command or symbol exists only inside a fence, add its
+name to the owning prose rather than returning all code bodies to the index.
+
 Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`,
 `/migrate-from-compose`, and previously published active-plan routes after those plans move to the
 archive, including their locale-prefixed forms. Add a redirect only for an intentional historical
@@ -284,6 +291,20 @@ identity token.
 ## Last verified
 
 <div className="search-partition-detail">
+
+- **2026-08-28, code-block search partition acceptance:** the imported lazy-list tail closure and
+  its bilingual public contracts produced 49,626,056 non-API bytes with rendered code blocks in
+  local full-text search, exceeding the unchanged 46.9 MiB ceiling by 447,842 bytes. On the same
+  source corpus, excluding only rendered code-block bodies from the index reduced English search
+  from 5,739,133 to 5,455,358 bytes and Chinese search from 6,294,002 to 5,997,618 bytes. Complete
+  non-API output fell 580,119 bytes (`1.1690%`) to 49,045,937 bytes, leaving 132,277 bytes; all 456
+  bilingual pages, rendered samples, compiled-source links, accessibility checks, routes, and the
+  unchanged budget remain in scope. After recording this evidence, the final build produced
+  49,058,278 non-API bytes, left 119,936 bytes, and completed the Docusaurus wrapper in `30.6 s`;
+  its English and Chinese indexes were 5,457,126 and 5,999,575 bytes. The result is **improved**.
+  The measurement is one local production build and does not claim hosted build or query latency;
+  future code-only identifiers must also appear in searchable owning prose, while the existing size
+  gate detects a lost partition.
 
 - **2026-08-26, immutable API cache local acceptance:** the complete 100-entry deployable history
   occupied `427 MiB` across five source revisions; its non-deployable integrity state occupied

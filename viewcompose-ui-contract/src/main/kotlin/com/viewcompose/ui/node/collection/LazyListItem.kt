@@ -152,7 +152,7 @@ interface LazyListItemSessionStrategy {
      * only an identity/type check; expensive cleanup belongs to the subsequent render transaction.
      * Opt in only when retaining the session materially avoids allocation or lifecycle setup.
      *
-     * @sample com.viewcompose.ui.samples.lazyListItemSessionUpdateSample
+     * @sample com.viewcompose.ui.samples.crossKeyLazyItemSessionStrategySample
      * @param session retained session currently owned by another logical key
      * @return `true` when this strategy can safely install a different key into [session]
      */

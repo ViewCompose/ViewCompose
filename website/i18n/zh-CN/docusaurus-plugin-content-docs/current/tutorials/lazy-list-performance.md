@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/lazy-list-performance.md
-translation_source_hash: e3ba33e77ba46db20d37f6fc325803b1ca74cfa3d81c94321b1c01b2eb5e5b1a
+translation_source_hash: bec21b32474fb8215e7569787220b6aa273bd46ed4404fa5192bf1f477a32e37
 translation_status: current
 ---
 

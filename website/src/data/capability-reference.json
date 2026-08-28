@@ -584,6 +584,19 @@
       }
     },
     {
+      "capabilityId": "lazy.item-session-reuse",
+      "referenceId": "reference.lazy.item-session-reuse",
+      "relatedDocumentIds": [
+        "architecture.lazy-collections-runtime",
+        "module.viewcompose-ui-contract"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-contract-lazy-session-reuse",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "lifecycle.android-view",
       "referenceId": "reference.lifecycle.android-view",
       "relatedDocumentIds": [
@@ -802,6 +815,21 @@
       "sample": {
         "sampleClass": "compiled-region",
         "sampleId": "guide.nested-scroll-toolbar",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "observed.value-mapping",
+      "referenceId": "reference.observed.value-mapping",
+      "relatedDocumentIds": [
+        "tutorial.lazy-list-performance",
+        "guide.lazy-collections",
+        "architecture.lazy-collections-runtime",
+        "module.viewcompose-ui-foundation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-foundation-observed-map",
         "versionLane": "released"
       }
     },
@@ -1066,6 +1094,19 @@
       }
     },
     {
+      "capabilityId": "runtime.reusable-content",
+      "referenceId": "reference.runtime.reusable-content",
+      "relatedDocumentIds": [
+        "architecture.lazy-collections-runtime",
+        "module.viewcompose-runtime"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.runtime-reusable-content",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "runtime.state",
       "referenceId": "reference.runtime.state",
       "relatedDocumentIds": [
@@ -1127,6 +1168,18 @@
       "sample": {
         "sampleClass": "compiled-region",
         "sampleId": "guide.text-input-editing",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "text.platform-font-family",
+      "referenceId": "reference.text.platform-font-family",
+      "relatedDocumentIds": [
+        "module.viewcompose-ui-contract"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-contract-font-family",
         "versionLane": "released"
       }
     },

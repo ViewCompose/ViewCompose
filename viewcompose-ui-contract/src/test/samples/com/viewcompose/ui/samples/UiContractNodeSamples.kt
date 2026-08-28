@@ -50,6 +50,7 @@ import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.ui.node.spec.ConstraintRatioSide
+import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiSourceCallSite
@@ -207,6 +208,42 @@ fun lazyListItemSessionUpdateSample() {
     session.render()
     check(session.installedKey == "settings")
     check(session.installedLabel == "Settings")
+}
+
+fun crossKeyLazyItemSessionStrategySample(
+    createSession: (RenderContainerHandle) -> LazyListItemSession,
+    installItem: (LazyListItemSession, LazyListItem) -> Unit,
+): LazyListItemSessionStrategy {
+    // DOCS_REGION_START(ui-contract-module-cross-key-lazy-session)
+    return object : LazyListItemSessionStrategy {
+        override fun create(
+            container: RenderContainerHandle,
+            item: LazyListItem,
+        ): LazyListItemSession = createSession(container).also { installItem(it, item) }
+
+        override fun update(
+            session: LazyListItemSession,
+            item: LazyListItem,
+        ) {
+            // This transaction must replace every key-owned state, effect, callback, and owner.
+            installItem(session, item)
+        }
+
+        override fun canReuseAcrossKeys(session: LazyListItemSession): Boolean = true
+    }
+    // DOCS_REGION_END(ui-contract-module-cross-key-lazy-session)
+}
+
+fun platformFontFamilyIdentitySample() {
+    // DOCS_REGION_START(ui-contract-module-platform-font-family)
+    val platformFont = Any()
+    val first = uiFontFamily(platformFont)
+    val second = uiFontFamily(platformFont)
+    val different = uiFontFamily(Any())
+
+    check(first == second)
+    check(first != different)
+    // DOCS_REGION_END(ui-contract-module-platform-font-family)
 }
 
 /** Wraps an immutable finite submission with validated key and sticky-header lookup metadata. */

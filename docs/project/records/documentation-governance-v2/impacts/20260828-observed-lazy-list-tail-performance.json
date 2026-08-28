@@ -22,20 +22,40 @@
       "status": "updated",
       "targets": [
         "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn",
-        "com.viewcompose.ui.foundation.ObservedValue.map"
+        "com.viewcompose.ui.foundation.ObservedValue.map",
+        "com.viewcompose.ui.node.LazyListItemSessionStrategy.canReuseAcrossKeys",
+        "com.viewcompose.runtime.composition.ComposerLite.withReusableContent",
+        "com.viewcompose.ui.node.spec.GenericUiFontFamily",
+        "com.viewcompose.ui.node.spec.GenericUiFontFamily.equals",
+        "com.viewcompose.ui.node.spec.GenericUiFontFamily.hashCode"
       ]
     },
     "module": {
       "status": "updated",
-      "targets": ["module.viewcompose-ui-foundation"]
+      "targets": [
+        "module.viewcompose-ui-foundation",
+        "module.viewcompose-ui-contract",
+        "module.viewcompose-runtime"
+      ]
     },
     "sample": {
       "status": "updated",
-      "targets": ["tutorial.lazy-list-performance"]
+      "targets": [
+        "tutorial.lazy-list-performance",
+        "module.viewcompose-ui-foundation",
+        "module.viewcompose-ui-contract",
+        "module.viewcompose-runtime"
+      ]
     },
     "reference": {
       "status": "updated",
-      "targets": ["reference.lazy.collections"]
+      "targets": [
+        "reference.lazy.collections",
+        "reference.observed.value-mapping",
+        "reference.lazy.item-session-reuse",
+        "reference.runtime.reusable-content",
+        "reference.text.platform-font-family"
+      ]
     },
     "tutorial": {
       "status": "updated",

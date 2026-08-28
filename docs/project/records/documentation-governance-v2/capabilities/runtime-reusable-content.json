@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "capability_id": "runtime.reusable-content",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-runtime" },
+  "artifact": "viewcompose-runtime",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha03" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.runtime.composition.ComposerLite.withReusableContent",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt"
+    }
+  ],
+  "reference_owner": { "reference_id": "reference.runtime.reusable-content", "generated": true },
+  "sample_owner": { "sample_id": "module.runtime-reusable-content" },
+  "document_owners": {
+    "module": ["module.viewcompose-runtime"],
+    "architecture": ["architecture.lazy-collections-runtime"]
+  }
+}

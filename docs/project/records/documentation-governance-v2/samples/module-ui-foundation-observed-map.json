@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.ui-foundation-observed-map",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "observed.value-mapping",
+  "document_ids": ["module.viewcompose-ui-foundation"],
+  "version_lane": "released",
+  "source": "viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt",
+  "region": "ui-foundation-module-observed-value-map",
+  "build_target": ":viewcompose-ui-foundation:compileDebugUnitTestKotlin"
+}

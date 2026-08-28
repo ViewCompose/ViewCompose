@@ -7,11 +7,13 @@ owner:
   id: viewcompose-runtime
 version_lane: released
 capability_ids:
+  - runtime.reusable-content
   - runtime.state
 artifact_ids:
   - viewcompose-runtime
 sample_ids:
   - module.runtime-dependency
+  - module.runtime-reusable-content
   - module.runtime-state
   - module.runtime-snapshot
 coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha03
@@ -101,6 +103,40 @@ check(count.value == 1 && enabled.value)
   supplies a lazily allocated process-local identity and already retained bounded source hints.
 - [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
   is the platform-neutral timing contract consumed by animation integrations.
+
+The reusable-content owner transfer is explicit so a physical container can retain pure structure
+without inheriting another logical item's remembered state:
+
+{/* compiled-region source="viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt" region="runtime-module-reusable-content" sample_id="module.runtime-reusable-content" build_target=":viewcompose-runtime:compileTestKotlin" */}
+```kotlin
+val composer = ComposerLite()
+var owner = "account-A"
+var revision = 0L
+
+fun compose(replaceOwner: Boolean): Any {
+    composer.requestRootRecompose()
+    return composer.composeRoot {
+        composer.runGroup(
+            signature = "reusable-host",
+            inputs = revision,
+        ) {
+            composer.withReusableContent(owner, replaceOwner) {
+                composer.runGroup(signature = "content") {
+                    composer.remember(emptyList()) { Any() }
+                }
+            }
+        }
+    }
+}
+
+val firstOwnerState = compose(replaceOwner = false)
+owner = "account-B"
+revision += 1L
+val secondOwnerState = compose(replaceOwner = true)
+
+check(firstOwnerState !== secondOwnerState)
+composer.dispose()
+```
 
 The complete generated reference is available under the
 [`viewcompose-runtime` API tree](https://docs.viewcompose.com/api/viewcompose-runtime/current/).

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 95a6d131aea5275b3a18e8b30c6983689cb38febfda96aae2671648d53e73418
+translation_source_hash: 670d7bd2eba02d7fb4458ca5c59c1ff6f9b7529a8406992d904805fc19b97078
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-ui-contract
@@ -10,11 +10,15 @@ owner:
   id: viewcompose-ui-contract
 version_lane: released
 capability_ids:
+  - lazy.item-session-reuse
   - renderer.tree-transactions
+  - text.platform-font-family
 artifact_ids:
   - viewcompose-ui-contract
 sample_ids:
   - module.ui-contract-dependency
+  - module.ui-contract-font-family
+  - module.ui-contract-lazy-session-reuse
   - module.ui-contract-node
 coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04
 minimal_usage_sample_id: module.ui-contract-node
@@ -170,6 +174,43 @@ val gap = VNode(
   定义平台无关的图片来源、请求策略、平台目标和可释放加载句柄。
 - Unit、Shape、Graphics、按键输入、手势、Semantics 与 Tooling 包共同组成 ViewCompose 模块
   使用的平台无关词汇体系。
+
+跨 Key Session 复用必须显式选择。Strategy 的 `update` Transaction 必须在保留的 Session
+变为可见之前替换全部逻辑 Key 所有权：
+
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-cross-key-lazy-session" sample_id="module.ui-contract-lazy-session-reuse" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
+```kotlin
+return object : LazyListItemSessionStrategy {
+    override fun create(
+        container: RenderContainerHandle,
+        item: LazyListItem,
+    ): LazyListItemSession = createSession(container).also { installItem(it, item) }
+
+    override fun update(
+        session: LazyListItemSession,
+        item: LazyListItem,
+    ) {
+        // This transaction must replace every key-owned state, effect, callback, and owner.
+        installItem(session, item)
+    }
+
+    override fun canReuseAcrossKeys(session: LazyListItemSession): Boolean = true
+}
+```
+
+平台字体 Wrapper 按对象 Identity 比较，而不会依赖不透明平台对象的值相等语义。因此复用同一个
+平台对象可以稳定声明式 Snapshot，同时不会把不同 Renderer Resource 误判为相等：
+
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-platform-font-family" sample_id="module.ui-contract-font-family" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
+```kotlin
+val platformFont = Any()
+val first = uiFontFamily(platformFont)
+val second = uiFontFamily(platformFont)
+val different = uiFontFamily(Any())
+
+check(first == second)
+check(first != different)
+```
 
 完整生成参考位于
 [`viewcompose-ui-contract` API 树](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/)。

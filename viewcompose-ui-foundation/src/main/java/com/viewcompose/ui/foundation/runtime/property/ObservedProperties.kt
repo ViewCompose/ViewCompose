@@ -53,6 +53,7 @@ fun <T> observedValue(
  * [inputs]; the transform identity itself also participates in declaration reuse.
  *
  * @sample com.viewcompose.ui.foundation.samples.observedLazyItemsSnapshotSample
+ * @param T source value type
  * @param R derived value type
  * @param inputs semantic versions of changing non-State values captured by [transform]
  * @param transform side-effect-free conversion of the latest source value

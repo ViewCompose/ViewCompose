@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 7f61cf5e54de4619d7197a1ae2c82a477a4e14c73ac03e39863cc2bc04f94269
+translation_source_hash: 7047ac9620c4da2fa5c457bc3f995e4a4373fb24aba2888264e3b379d3ed0dad
 translation_status: current
 ---
 
@@ -97,6 +97,11 @@ React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-tr
 Lazy Collection 分支先对穷举计划与 Benchmark 明细分区，才形成最终 6.25 MiB 上限。精确转换
 证据收敛在下方。再次触顶时必须实施结构化索引分段，不能继续只做内容分区或提高阈值；API 与命令
 指南继续参与搜索。
+
+渲染后的代码块仍完整保留在 Owner 页面并保留可编译源码链接，但本地全文搜索只索引周边解释，不再
+重复每个代码 Token。精确公共 Symbol 仍可通过模块 API 清单和生成式 Reference 发现。该边界在不
+隐藏页面、样例、命令契约或迁移路由的前提下减少双语索引重复；若某条命令或 Symbol 只存在于代码
+围栏，应该把名称补入 Owner 正文，而不是让全部代码正文重新进入索引。
 
 兼容重定向保留 `/docs`、`/getting-started`、`/compose-migration`、
 `/migrate-from-compose`，以及有效计划归档前已经公开的路径，包括 locale 前缀形式。只为明确
@@ -213,6 +218,17 @@ identity token。
 ## 最近验证
 
 <div className="search-partition-detail">
+
+- **2026-08-28，代码块搜索分区验收：**导入的 Lazy-list Tail 收敛及其双语公共契约在把渲染代码块
+  纳入本地全文搜索时生成 49,626,056 个非 API 字节，超过不变的 46.9 MiB 上限 447,842 字节。
+  在同一源码语料上，仅从索引排除渲染代码块正文后，英文搜索索引从 5,739,133 降至 5,455,358
+  字节，中文搜索索引从 6,294,002 降至 5,997,618 字节；完整非 API 产物减少 580,119 字节
+  （`1.1690%`）至 49,045,937 字节，留下 132,277 字节余量。456 个双语页面、渲染样例、可编译
+  源码链接、无障碍检查、路由与不变预算均仍在范围内。记录本条证据后，最终构建生成 49,058,278
+  个非 API 字节，留下 119,936 字节，并在 `30.6 s` 内完成 Docusaurus Wrapper；英文与中文索引
+  分别为 5,457,126 和 5,999,575 字节。结论为 **improved**。该测量仅覆盖一次本地生产构建，不对
+  托管构建或查询延迟作结论；以后仅出现在代码内的标识符也必须进入可搜索 Owner 正文，现有体积
+  门禁则负责检测分区失效。
 
 - **2026-08-26，不可变 API 缓存本地验收：**完整 100 条可部署历史由五个源码 revision 组成，
   占用 `427 MiB`；非部署完整性状态占用 `6.7 MiB`。冷启动以串行方式在 `411.7 s` 内生成全部五组，

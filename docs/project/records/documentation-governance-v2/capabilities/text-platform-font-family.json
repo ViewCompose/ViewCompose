@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "capability_id": "text.platform-font-family",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.ui.node.spec.GenericUiFontFamily",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/content/TextNodeProps.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.node.spec.uiFontFamily",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/content/TextNodeProps.kt"
+    }
+  ],
+  "reference_owner": { "reference_id": "reference.text.platform-font-family", "generated": true },
+  "sample_owner": { "sample_id": "module.ui-contract-font-family" },
+  "document_owners": {
+    "module": ["module.viewcompose-ui-contract"]
+  }
+}

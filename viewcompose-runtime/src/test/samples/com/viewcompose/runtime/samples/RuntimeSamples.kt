@@ -196,6 +196,7 @@ fun rememberObserverRetrySample() {
 }
 
 fun reusableContentOwnerSample() {
+    // DOCS_REGION_START(runtime-module-reusable-content)
     val composer = ComposerLite()
     var owner = "account-A"
     var revision = 0L
@@ -223,6 +224,7 @@ fun reusableContentOwnerSample() {
 
     check(firstOwnerState !== secondOwnerState)
     composer.dispose()
+    // DOCS_REGION_END(runtime-module-reusable-content)
 }
 
 fun keyedGroupMovementSample() {

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.ui-contract-font-family",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "text.platform-font-family",
+  "document_ids": ["module.viewcompose-ui-contract"],
+  "version_lane": "released",
+  "source": "viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt",
+  "region": "ui-contract-module-platform-font-family",
+  "build_target": ":viewcompose-ui-contract:compileTestKotlin"
+}

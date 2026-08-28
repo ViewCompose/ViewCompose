@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lazy-collections.md
-translation_source_hash: 2e84db7844d32f1dc7add0096e72d21f992031fa7f801171661db0a4c392c7a0
+translation_source_hash: db3a91d6fe4ee54e971cbc6958b68c1debb59fb00cec5b515dd73c778c28feb6
 translation_status: current
 ---
 

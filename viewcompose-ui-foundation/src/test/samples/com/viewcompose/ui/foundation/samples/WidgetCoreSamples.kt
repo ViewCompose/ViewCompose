@@ -537,6 +537,7 @@ fun lazyItemsSnapshotSample() {
 }
 
 fun observedLazyItemsSnapshotSample() {
+    // DOCS_REGION_START(ui-foundation-module-observed-value-map)
     val rows = mutableStateOf(
         listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
             .toLazyItemsSnapshot(),
@@ -552,6 +553,7 @@ fun observedLazyItemsSnapshotSample() {
     }.single()
 
     check((list.spec as LazyColumnNodeProps).items.single().key == 7L)
+    // DOCS_REGION_END(ui-foundation-module-observed-value-map)
 }
 
 fun pagerAndTabIdentitySample() {
