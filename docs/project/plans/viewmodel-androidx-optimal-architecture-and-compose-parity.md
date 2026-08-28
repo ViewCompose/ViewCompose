@@ -580,6 +580,11 @@ or errors: 52 in `viewcompose-viewmodel-androidx`, 151 in `viewcompose-navigatio
 comparison is a coverage expansion rather than a runtime-performance measurement. This closes the
 previous host and aggregate rerun requirement while leaving performance explicitly inconclusive.
 
+The same revision's repository-wide `qaQuick qaPreview` acceptance completed all 2,270 actionable
+tasks: 171 executed and 2,099 were up to date. Both required gates therefore completed at 100%.
+Because the run intentionally reused the preceding clean focused outputs, it is integration-gate
+evidence and does not change the performance conclusion.
+
 Two Debug process-death journeys passed on one Xiaomi MI 6 running Android 9/API 28. Navigation
 changed PID from 19002 to 19078 and restored two stacks plus five seeded destination/graph state
 namespaces exactly. The ordinary Activity root changed PID from 19210 to 19286 and restored value

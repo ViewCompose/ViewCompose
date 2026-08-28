@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: 382b74f35efb3b233852957f48d30bca644622e6ddd823b9a3f98e86429ecb48
+translation_source_hash: 90e2bcf8c32f8144a0e6b924016167c7d30f2bc34fc1c4aafe6df5c105db95aa
 translation_status: current
 ---
 
@@ -287,6 +287,10 @@ SavedStateHandle 命名空间隔离、每个 Key 仅注册一次 Initializer 与
 受影响层的干净重跑还通过了 Navigation Android 151/151、Aggregate Android 21/21 与 Host
 Android 52/52。连同所属模块共 276/276，标准化通过率 100%，无 Skip、Failure 或 Error。这是更
 广的契约与集成覆盖证据，并非运行时性能变化证据。
+
+仓库级 `qaQuick qaPreview` 验收随后完成全部 2270 个可执行任务：171 个实际执行，2099 个为
+Up-to-date，两项门禁完成率均为 100%。该运行复用了上述干净聚焦输出，属于集成门禁证据，不是
+性能对比。
 
 随后，两条 Debug 旅程在 Android 9/API 28 的 Xiaomi MI 6 上通过。导航旅程的 PID 从 19002 变为
 19078，并保留两个 Stack 与五个独立播种的 Destination/Graph 命名空间，包括全部

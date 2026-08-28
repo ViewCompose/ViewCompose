@@ -339,6 +339,10 @@ and 52/52 Host Android tests. Together with the owning module, this is 276/276 w
 pass rate of 100% and zero skips, failures, or errors. This is broader contract and integration
 coverage, not evidence of a runtime-performance change.
 
+Repository-wide `qaQuick qaPreview` acceptance then completed all 2,270 actionable tasks: 171
+executed and 2,099 were up to date. Both gates completed at 100%. This reuses the clean focused
+outputs above and is integration-gate evidence rather than a performance comparison.
+
 Two Debug journeys then passed on one Xiaomi MI 6 running Android 9/API 28. The navigation journey
 changed PID from 19002 to 19078 and preserved two stacks plus five independently seeded destination
 or graph namespaces, including every `rememberSaveable` and `SavedStateHandle` value. The ordinary
