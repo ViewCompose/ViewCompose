@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 7ecf5ec87fffd3c0e6ac8ddd3d1603f4a9ce75b829fdd4341f32c5c943624998
+translation_source_hash: c2eaf6b69418782919e619aab5c2bd2780b6ae7472f45b7da98736f331b4ceea
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 | ViewCompose 目标模块 | runtime `0.1.0-alpha04`；UI Contract `0.1.0-alpha05`；Host `0.1.0-alpha05`；UI Foundation 与 Renderer `0.1.0-alpha02` | 本迁移指南的目标版本 |
 | Compose Runtime、UI 与 Foundation | `1.12.0` stable | 上游语义参考 |
 | 仓库 Compose 依赖 | `1.7.8` | 本仓库中的可执行对照基线 |
-| 仓库 Kotlin 工具链 | `2.0.21` | 对照代码的编译基线 |
+| 仓库 Kotlin 工具链 | `2.2.10` | 对照代码的编译基线 |
 
 上游基线由 AndroidX 官方的 [Compose Runtime](https://developer.android.com/jetpack/androidx/releases/compose-runtime)、
 [Compose UI](https://developer.android.com/jetpack/androidx/releases/compose-ui) 和

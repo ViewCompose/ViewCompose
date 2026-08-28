@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "summary": "Move the repository to the Android 37 and JDK 21-compatible build lane required by Lifecycle 2.11 while preserving Java 11 runtime-library bytecode.",
+  "changes": [
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
+    { "artifact": "viewcompose-preview-gradle-plugin", "impact": "fix" },
+    { "artifact": "viewcompose-preview-worker-host", "impact": "breaking" }
+  ],
+  "ignored": [
+    {
+      "artifact": "viewcompose-preview",
+      "reason": "The module build moves to compile SDK 37 and its test-only Paparazzi harness drops the obsolete API-35 Layoutlib fallback; public signatures, Java 11 bytecode target, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-preview-runner",
+      "reason": "The module build moves to compile SDK 37 and its test-only Paparazzi harness drops the obsolete API-35 Layoutlib fallback; public signatures, Java 11 bytecode target, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ],
+  "shared": [
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "Upgrade the shared compiler, Android plugin, and Paparazzi versions for the Lifecycle 2.11 prerequisite; direct published-artifact effects are classified above and other artifacts retain their API and bytecode contracts."
+    },
+    {
+      "path": "gradle.properties",
+      "reason": "Temporarily preserve the explicit Kotlin Android plugin and legacy DSL during the coordinated AGP 9.1 migration without changing a published artifact contract."
+    }
+  ]
+}

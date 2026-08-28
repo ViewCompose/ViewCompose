@@ -79,8 +79,8 @@ class ViewComposePreviewGradlePlugin : Plugin<Project> {
     }
 }
 
-@Suppress("DEPRECATION")
-private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndroidComponents(
+@Suppress("DEPRECATION", "DEPRECATION_ERROR")
+private fun <DslT : Any, BuilderT : VariantBuilder, VariantT : Variant> configureAndroidComponents(
     project: Project,
     androidComponents: AndroidComponentsExtension<DslT, BuilderT, VariantT>,
     aggregate: TaskProvider<Task>,

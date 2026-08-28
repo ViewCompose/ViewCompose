@@ -1,13 +1,13 @@
 ---
 translation_source: modules/viewcompose-preview-worker-host/README.md
-translation_source_hash: 0969b738aa4a95f335af0b43bb5f7de57b6877062f1c3697a36b582a88da57b2
+translation_source_hash: af9cb5053f9b935e34b1d81001b9c87ff16adbbbcae7fc57d7576d3814447c34
 translation_status: current
 ---
 
 # Preview Worker Host 模块
 
 `viewcompose-preview-worker-host` 是在 Gradle 和 Android Studio 之外拥有 Mutable Layoutlib State
-的独立 JDK 17+ Process Boundary。Gradle Plugin 在专用 Worker Configuration 解析它；Application
+的独立 JDK 21+ Process Boundary。Gradle Plugin 在专用 Worker Configuration 解析它；Application
 不能把它放入 Android Runtime Classpath。
 
 {/* compiled-region source="viewcompose-preview-worker-host/src/test/samples/com/viewcompose/preview/worker/samples/PreviewWorkerHostSamples.kt" region="preview-worker-execute" sample_id="module.preview-worker-execute" build_target=":viewcompose-preview-worker-host:compileTestKotlin" */}

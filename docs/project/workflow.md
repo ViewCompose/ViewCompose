@@ -118,6 +118,14 @@ including language placement and reviewed translation fingerprints. `qaPreview` 
 update committed baselines only after the generated images and differences have been reviewed;
 never record an unexplained mismatch merely to make the gate pass.
 
+Run repository Gradle gates on JDK 21. The current build baseline is Gradle 9.3.1, Android Gradle
+Plugin 9.1.1, and Kotlin 2.2.10. Published runtime libraries still target Java 11 bytecode. The
+repository temporarily retains the explicit Kotlin Android plugin and legacy Android DSL through
+`android.builtInKotlin=false` and `android.newDsl=false`; remove both only in one coordinated
+convention-plugin/publication migration because AGP 10 removes that opt-out. Preview compiles
+against SDK 37, while Robolectric-only Preview tests are deliberately pinned to its supported SDK
+35 runtime; that test pin does not lower the production compile SDK.
+
 Pull-request workflows first run the standalone `planPullRequestImpact` entry point from
 `tools/viewcompose-quality-build`; this configures only that included build, not the Android
 multi-project build. The classifier reads the exact base-to-head Git diff, the publishing artifact

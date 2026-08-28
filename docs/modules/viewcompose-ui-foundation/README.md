@@ -65,7 +65,7 @@ dependencies {
 - Android-only declarative values may remain because ViewCompose targets Android View, but native
   `ViewGroup` access, Context environment extraction, focus adaptation, logging, and tracing belong
   to Android Engine.
-- Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.13.2.
+- Build baseline for this release: Kotlin 2.2.10 and Android Gradle Plugin 9.1.1.
 
 ## Minimal component usage
 

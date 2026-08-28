@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 3c30fd7e1640164b7b92fe6a849b4a0066112b272dc2514f3a8b04b0858cc334
+translation_source_hash: 6af72b15404cb05225a58e4a9d3b2f8dfaccaa958672778dba990909564a6702
 translation_status: current
 ---
 
@@ -128,6 +128,13 @@ Architecture、Migration 与 redirect。每个检测到的结构化 capability �
 `qaQuick` 负责编译核心模块、运行单元测试，并执行包含语言放置与已审阅翻译指纹在内的统一文档
 门禁。`qaPreview` 运行 `:viewcompose-preview:verifyPaparazziDebug`，作为独立可见的视觉 CI 检查。
 只有审阅生成图片与差异后，视觉变更才能更新已提交基准；禁止仅为通过门禁而录制原因不明的差异。
+
+仓库 Gradle 门禁统一使用 JDK 21。当前构建基线为 Gradle 9.3.1、Android Gradle Plugin 9.1.1 与
+Kotlin 2.2.10；发布的 Runtime Library 仍使用 Java 11 字节码。仓库暂时通过
+`android.builtInKotlin=false` 与 `android.newDsl=false` 保留显式 Kotlin Android Plugin 和旧版
+Android DSL；AGP 10 会移除这条退出路径，因此只能在 Convention Plugin 与 Publication Tooling
+协同迁移时同时移除两项。Preview 使用 SDK 37 编译；仅 Robolectric 的 Preview Test 则有意固定在
+其支持的 SDK 35 Runtime，这个测试固定值不会降低生产 Compile SDK。
 
 PR 工作流会先从 `tools/viewcompose-quality-build` 独立运行 `planPullRequestImpact`；该入口只配置这个
 Included Build，不配置 Android 多项目构建。分类器读取精确 base-to-head Git diff、发布产物目录、

@@ -58,7 +58,7 @@ release notes:
 - [SavedState release notes](https://developer.android.com/jetpack/androidx/releases/savedstate)
 
 The local executable baseline is Compose 1.7.8, Activity 1.12.4, Lifecycle 2.8.7, and Kotlin
-2.0.21. Repository tests and compiled samples cited below verify ViewCompose behavior against that
+2.2.10. Repository tests and compiled samples cited below verify ViewCompose behavior against that
 dependency set. They do not constitute execution of upstream Compose 1.12.0, Activity 1.13.0, or
 Lifecycle 2.11.0. Re-verification must therefore repeat both the official semantic review and the
 local test run when either baseline changes.

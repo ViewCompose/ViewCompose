@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 08e269249ae69c651f8ddab1371e607bfe0d72b2b1a27ad9e776d62135ec0e98
+translation_source_hash: 6d8ef74fcdc6ae4c2fb9ce59ae8577f3ef9265f38bd4cd72d21ddc8eaa89ac7c
 translation_status: current
 ---
 
@@ -74,8 +74,9 @@ Android Studio。IDE 插件与 `id("com.viewcompose.preview")` 是两项独立�
 
 ## 前置条件与验证基线
 
-你需要一个使用 Kotlin 的 Android 应用、Android SDK，以及供 Android Gradle Plugin 使用的
-JDK 17。仓库示例使用 `compileSdk = 36`、`minSdk = 24` 和 JVM target 11。
+你需要一个使用 Kotlin 的 Android 应用、Android SDK 37，以及供仓库 Static Preview Pipeline 使用的
+JDK 21。仓库示例使用 `compileSdk = 37`、`minSdk = 24` 和 JVM target 11；JDK 21 要求属于
+Build/Preview Tooling，不会提高应用的字节码 Target。
 
 这组硬切依赖已于 2026-08-06 通过仓库生成的本地 Maven 仓库验证；以下新坐标发布到 Maven
 Central 后，它才成为公开安装路径：

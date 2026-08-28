@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 402b9852c4ce91b8dc7240d5b4b46f228bee68f329c70462706e9513fb3a77ec
+translation_source_hash: 5d8af889f8a8474132344a1b614b3ff8f8d3edabb906c79d3d48332a4839a9ae
 translation_status: current
 ---
 
@@ -28,6 +28,8 @@ translation_status: current
 
 - 技术基线：Kotlin + Android View System
 - SDK：`minSdk 24`、`compileSdk 36`
+- 仓库构建基线：Kotlin 2.2.10、Android Gradle Plugin 9.1.1、Gradle 9.3.1 与 JDK 21。已发布的
+  Android Runtime Artifact 继续使用 Java 11 字节码；Preview 的隔离 Worker 是 JDK 21 进程边界。
 - 运行时模块固定分为五层：Kernel、UI Foundation、Android Engine、Design System、Integrations。
   `viewcompose-android` 是位于这些层之上的 Consumer 聚合入口；Preview、Benchmark 与构建支持是正交工具链。
 

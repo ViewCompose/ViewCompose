@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":viewcompose-renderer-android"))
     api(libs.androidx.lifecycle.runtime.ktx)
     api(libs.androidx.savedstate)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.constraintlayout)

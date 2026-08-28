@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: bf30db91f18b13394f7e5d0d9e5749d2a6d39c484993f2478a4d97d022b8947c
+translation_source_hash: f567cbce7b295be73c7d0b6a2a57f320fc0efd4a218c3647c1c9183df0a52859
 translation_status: current
 ---
 
@@ -43,7 +43,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 | Navigation 3 | `1.1.5` |
 
 仓库内可执行对比基线仍为 Compose `1.7.8`、Activity `1.12.4`、Lifecycle `2.8.7` 和
-Kotlin `2.0.21`，声明位置是
+Kotlin `2.2.10`，声明位置是
 [`gradle/libs.versions.toml`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/libs.versions.toml)。
 较新的上游语义由 Android 官方文档和发布说明确定；ViewCompose 行为则由本地源码、测试和
 可编译样例确定。通过基于 `1.7.8` 的本地对比，不能证明与 `1.12.0` 语义等价。

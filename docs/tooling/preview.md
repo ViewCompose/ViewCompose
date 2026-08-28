@@ -69,6 +69,12 @@ dependencies {
 The artifacts are independently versioned. Keep them on debug/tooling configurations and verify
 the current [module catalog](../modules/README.md) before mixing versions.
 
+Run rendering on JDK 21 or newer. The current verified repository lane is Gradle 9.3.1, AGP 9.1.1,
+Kotlin 2.2.10, and compile SDK 37. Published Android libraries still target Java 11 bytecode. The
+Robolectric-only Preview unit tests use SDK 35 because Robolectric 4.14.1 does not model API 37;
+Paparazzi/Layoutlib remains the screenshot engine, so the SDK 35 test pin is not screenshot or
+production-runtime evidence.
+
 ## Declare and render an entry
 
 Annotate a public top-level/static function with exactly one `UiTreeBuilder` receiver/parameter and

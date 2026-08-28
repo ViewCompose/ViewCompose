@@ -54,7 +54,7 @@ The upstream semantic baseline is:
 | Navigation 3 | `1.1.5` |
 
 The repository's executable comparison baseline remains Compose `1.7.8`, Activity `1.12.4`,
-Lifecycle `2.8.7`, and Kotlin `2.0.21`, as declared in
+Lifecycle `2.8.7`, and Kotlin `2.2.10`, as declared in
 [`gradle/libs.versions.toml`](../../gradle/libs.versions.toml). Official Android documentation and
 release notes establish the newer upstream semantics; local source, tests, and compiled samples
 establish ViewCompose behavior. Passing a local comparison against `1.7.8` does not prove parity

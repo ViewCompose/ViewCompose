@@ -45,6 +45,9 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 
 - Technology: Kotlin on the Android View system.
 - SDK: `minSdk 24`, `compileSdk 36`.
+- Repository build: Kotlin 2.2.10, Android Gradle Plugin 9.1.1, Gradle 9.3.1, and JDK 21. Published
+  runtime Android artifacts continue to target Java 11 bytecode; Preview's isolated worker is the
+  JDK 21 process boundary.
 - Runtime modules are classified into five dependency layers: Kernel, UI Foundation, Android Engine,
   Design System, and Integrations. `viewcompose-android` is the consumer aggregate above those
   layers; preview, benchmark, and build support remain orthogonal tooling.

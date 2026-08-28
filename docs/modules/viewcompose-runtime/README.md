@@ -44,7 +44,7 @@ dependencies {
 - Direct ViewCompose dependencies: none.
 - Transitively supplied ViewCompose modules: none.
 - Kotlin Coroutines is exposed because the public `snapshotFlow` API returns `Flow`.
-- Build baseline for this release: Kotlin 2.0.21. Consumers do not need the Android Gradle Plugin
+- Build baseline for this release: Kotlin 2.2.10. Consumers do not need the Android Gradle Plugin
   unless another selected artifact requires it.
 
 ## Minimal state usage

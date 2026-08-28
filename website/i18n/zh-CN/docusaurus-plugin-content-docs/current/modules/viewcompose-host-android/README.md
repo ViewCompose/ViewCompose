@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 57803bf9a15ff4018144e0e009af9ca07bd4556a6868f03f0170040ae7228027
+translation_source_hash: d9b1b9d42cf6f1fab80b264859edc7649a0897cfa48bd525b8f48df0cca76353
 translation_status: current
 ---
 
@@ -27,7 +27,9 @@ dependencies {
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
 - API 依赖：Runtime、UI Contract、UI Foundation，以及公开签名使用的 AndroidX Lifecycle 与
   AndroidX SavedState。
-- 私有实现依赖：Android Renderer、Android coroutines、ConstraintLayout 与 DynamicAnimation。
+- 私有实现依赖：Android Renderer、AndroidX Core、Android coroutines、ConstraintLayout 与
+  DynamicAnimation。AndroidX Core 必须显式声明，因为 Kotlin 编译 MotionLayout 的公开父类型图时
+  需要其中的 Nested-scrolling Interface。
 - 本模块不依赖 Material Components。
 
 本模块独占 `com.viewcompose.host.android`。Activity 与 Fragment 组合根使用

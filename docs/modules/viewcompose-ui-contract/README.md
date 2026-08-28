@@ -50,7 +50,7 @@ dependencies {
   `viewcompose-text-core` and drawing models from `viewcompose-graphics-core`; both appear in public
   UI contract signatures.
 - `viewcompose-runtime` remains an implementation dependency.
-- Build baseline for this release: Kotlin 2.0.21.
+- Build baseline for this release: Kotlin 2.2.10.
 
 ## Minimal contract usage
 

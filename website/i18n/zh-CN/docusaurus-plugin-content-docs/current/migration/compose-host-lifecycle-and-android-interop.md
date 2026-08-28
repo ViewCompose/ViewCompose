@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: f2ff12da39b7e4b9667ea353513fff320c0c17e31b5ce7b8ef89a4011ab08eef
+translation_source_hash: b7102a33c75c6ed844ce49c808e469f9f081db83db9e7abce932a4fd98bf9e32
 translation_status: current
 ---
 
@@ -33,7 +33,7 @@ translation_status: current
 - [Lifecycle 2.11 发布说明](https://developer.android.com/jetpack/androidx/releases/lifecycle)
 - [SavedState 发布说明](https://developer.android.com/jetpack/androidx/releases/savedstate)
 
-本地可执行基线是 Compose 1.7.8、Activity 1.12.4、Lifecycle 2.8.7 和 Kotlin 2.0.21。
+本地可执行基线是 Compose 1.7.8、Activity 1.12.4、Lifecycle 2.8.7 和 Kotlin 2.2.10。
 下文引用的仓库测试和已编译样例依据这组依赖验证 ViewCompose 行为。它们不代表实际执行了
 上游 Compose 1.12.0、Activity 1.13.0 或 Lifecycle 2.11.0。因此，只要任一基线发生变化，
 重新核验就必须同时重复官方语义复核和本地测试运行。

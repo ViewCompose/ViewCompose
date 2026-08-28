@@ -1,14 +1,14 @@
 ---
 translation_source: modules/viewcompose-preview-gradle-plugin/README.md
-translation_source_hash: d54741a3b07961c230c5adabde0112cc76ee70c807afcd03967d8a45ad140fe2
+translation_source_hash: 251532df4501dd39f62ec351fd6ee51f68cd38b370a3a33084a25baac4acfb3b
 translation_status: current
 ---
 
 # Preview Gradle Plugin 模块
 
 `viewcompose-preview-gradle-plugin` 把可调试 Android Gradle Plugin Variant 接到 Static Preview
-Protocol。Plugin ID 为 `com.viewcompose.preview`；`0.1.0-alpha03` 面向 AGP 8.9 与用于渲染的
-JDK 17 及以上版本。
+Protocol。Plugin ID 为 `com.viewcompose.preview`；`0.1.0-alpha03` 面向 AGP 9.1。插件字节码仍兼容
+Java 11，而隔离的 Paparazzi Worker 需要 JDK 21 及以上版本才能渲染。
 
 {/* compiled-region source="viewcompose-preview-gradle-plugin/src/test/samples/com/viewcompose/preview/gradle/samples/PreviewGradlePluginSamples.kt" region="preview-gradle-apply" sample_id="module.preview-gradle-apply" build_target=":viewcompose-preview-gradle-plugin:compileTestKotlin" */}
 ```kotlin

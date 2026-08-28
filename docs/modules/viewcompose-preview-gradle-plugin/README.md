@@ -21,7 +21,8 @@ minimal_usage_sample_id: module.preview-gradle-apply
 
 `viewcompose-preview-gradle-plugin` connects debuggable Android Gradle Plugin variants to the static
 preview protocol. The plugin ID is `com.viewcompose.preview`; version `0.1.0-alpha03` targets the AGP
-8.9 line and JDK 17 or newer for rendering.
+9.1 line. The plugin bytecode remains Java 11 compatible, while its isolated Paparazzi worker
+requires JDK 21 or newer for rendering.
 
 {/* compiled-region source="viewcompose-preview-gradle-plugin/src/test/samples/com/viewcompose/preview/gradle/samples/PreviewGradlePluginSamples.kt" region="preview-gradle-apply" sample_id="module.preview-gradle-apply" build_target=":viewcompose-preview-gradle-plugin:compileTestKotlin" */}
 ```kotlin

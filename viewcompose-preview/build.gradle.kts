@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.viewcompose.preview"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24

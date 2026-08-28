@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 735987155f91893b9a40f6f5bb33528fa95ae69c3dac2a88bbfc207fdf3e71f1
+translation_source_hash: 92113cc8979f4424a83e057bb369c981f0f4a183020f8756b6679ba42f25f58c
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-runtime
@@ -46,7 +46,7 @@ dependencies {
 - 直接依赖的 ViewCompose 模块：无。
 - 传递提供的 ViewCompose 模块：无。
 - 公共 `snapshotFlow` API 返回 `Flow`，因此会暴露 Kotlin Coroutines。
-- 本版本构建基线：Kotlin 2.0.21。除非选择的其他产物有要求，否则使用者不需要 Android
+- 本版本构建基线：Kotlin 2.2.10。除非选择的其他产物有要求，否则使用者不需要 Android
   Gradle Plugin。
 
 ## 最小状态示例

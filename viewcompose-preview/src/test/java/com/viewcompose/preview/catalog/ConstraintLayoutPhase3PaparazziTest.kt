@@ -7,7 +7,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection as ComposeLayoutDirection
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
-import app.cash.paparazzi.detectEnvironment
 import com.android.resources.LayoutDirection
 import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
@@ -30,45 +29,14 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.RuleChain
-import org.junit.rules.TestRule
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
 class ConstraintLayoutPhase3PaparazziTest {
-    private val runtimeRootFallbackRule = TestRule { base: Statement, _: Description ->
-        object : Statement() {
-            override fun evaluate() {
-                val key = "paparazzi.layoutlib.runtime.root"
-                val original = System.getProperty(key)
-                val patched = original?.replace("android-36", "android-35")
-                if (patched != null && patched != original) {
-                    System.setProperty(key, patched)
-                }
-                try {
-                    base.evaluate()
-                } finally {
-                    if (original == null) {
-                        System.clearProperty(key)
-                    } else {
-                        System.setProperty(key, original)
-                    }
-                }
-            }
-        }
-    }
-
-    private val paparazziRule = Paparazzi(
-        environment = detectEnvironment().copy(compileSdkVersion = 35),
+    @get:Rule
+    val paparazziRule = Paparazzi(
         deviceConfig = MATRIX.first().deviceConfig(),
         theme = "android:Theme.Material.Light.NoActionBar",
         maxPercentDifference = 0.60,
     )
-
-    @get:Rule
-    val rules: RuleChain = RuleChain
-        .outerRule(runtimeRootFallbackRule)
-        .around(paparazziRule)
 
     @Test
     fun constraintLayoutConfigurationMatrix() {
