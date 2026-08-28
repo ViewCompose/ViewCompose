@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: 5675ed5d2cbf87062ddc067b647a33884aa1c0171b50b869bcd255376301adb4
+translation_source_hash: 250efb31ce0aaf3d571db922fdd369aad75c9c0e9a4861c7b91ff53d0e95f397
 translation_status: current
 ---
 

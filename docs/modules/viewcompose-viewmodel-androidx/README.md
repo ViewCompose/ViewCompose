@@ -220,12 +220,13 @@ These rules keep page state independent without requiring Activity or Fragment p
 
 ## Testing
 
-Phase 1 runs 20 focused resolution tests, compared with seven in the same test owner before this
-change. All 20 pass and cover store clear followed by lookup, null/empty/blank/ordinary keys, exact
-key transport, owner replacement, explicit/default Factory and extras, reified and `KClass`
-initializers, retry after creation failure, model-class replacement, and the composition boundary.
-Conclusion: **improved**. This closes lookup and creation defects but not scoped-owner or process-
-restoration behavior; Phase 2 and Phase 4 own those remaining cases.
+Phase 1 runs 21 focused resolution tests, compared with seven in the same test owner before this
+change: 14 additional contracts and a normalized threefold suite size (`+200%`). All 21 pass and
+cover store clear followed by lookup, null/empty/blank/ordinary keys, exact key transport, owner
+replacement, explicit/default Factory and extras, reified and `KClass` lookup and initializers,
+retry after creation failure, model-class replacement, and the composition boundary. Conclusion:
+**improved**. This closes lookup and creation defects but not scoped-owner or process-restoration
+behavior; Phase 2 and Phase 4 own those remaining cases.
 
 Use a real `ViewModelStore` in unit tests, render the same call repeatedly, and clear the store
 during teardown. Saved-state-aware Robolectric or instrumented owners remain required for process-

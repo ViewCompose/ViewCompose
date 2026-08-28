@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: 7b07281b909e87e88fc79b1c75b8ad302f54919dcf4adbb940b5ead1051a4eb9
+translation_source_hash: 962f9ac39ffb03d1c3900321df3b4446ab0718b568f0985b9a4e44eacd50b0d9
 translation_status: current
 ---
 
@@ -188,11 +188,12 @@ Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用�
 
 ## 测试
 
-Phase 1 的同一测试 Owner 从此前 7 项增加到 20 项 Focused Resolution Test，20 项全部通过。
-覆盖 Store Clear 后查询、Null/Empty/Blank/Ordinary Key、Key 精确保留、Owner Replacement、
-显式/默认 Factory 与 Extras、Reified 与 `KClass` Initializer、创建失败重试、Model Class
-Replacement 与 Composition Boundary。结论为 **improved**。这关闭 Lookup/Creation 缺陷，但未
-关闭 Scoped Owner 或 Process Restoration；后两者分别由 Phase 2 与 Phase 4 负责。
+Phase 1 的同一测试 Owner 从此前 7 项增加到 21 项 Focused Resolution Test，即新增 14 项契约，
+标准化后的 Suite 规模为此前 3 倍（`+200%`）；21 项全部通过。覆盖 Store Clear 后查询、
+Null/Empty/Blank/Ordinary Key、Key 精确保留、Owner Replacement、显式/默认 Factory 与 Extras、
+Reified 与 `KClass` Lookup 和 Initializer、创建失败重试、Model Class Replacement 与 Composition
+Boundary。结论为 **improved**。这关闭 Lookup/Creation 缺陷，但未关闭 Scoped Owner 或 Process
+Restoration；后两者分别由 Phase 2 与 Phase 4 负责。
 
 单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 Teardown 清理 Store。Process-death
 `SavedStateHandle` 测试仍应使用感知 Saved State 的 Robolectric 或真机 Owner。

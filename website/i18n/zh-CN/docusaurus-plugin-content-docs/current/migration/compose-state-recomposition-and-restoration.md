@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 88a02bf2a067e49e8be0cf1d41c5f40d468dabce57ea482f35238385a8b461af
+translation_source_hash: 25dd7c38f4f57b32d898f69cb0e92e68b802d148b6ebcd48f53c2f10a0264fdc
 translation_status: current
 ---
 

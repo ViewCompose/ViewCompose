@@ -4523,7 +4523,7 @@
           "capabilityId": "viewmodel.store-resolution",
           "kind": "integration",
           "namespace": "com.viewcompose.viewmodel",
-          "overloadCount": 2,
+          "overloadCount": 4,
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
@@ -6292,6 +6292,6 @@
     "entryCount": 531,
     "groupCount": 15,
     "ownedEntryCount": 531,
-    "sourceFingerprint": "b05e757de48af6c4c36802889c635273aa0c6110959ff92d375e70e50b9ef6b1"
+    "sourceFingerprint": "0555ff9f71cc1247bbd8b1b906ada2241e583039d39ae3fe3235eb1e24931122"
   }
 }

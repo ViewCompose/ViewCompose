@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: f567cbce7b295be73c7d0b6a2a57f320fc0efd4a218c3647c1c9183df0a52859
+translation_source_hash: efc7e14efa104681c0895571c8e766e3ae07a6cb6c6eff5592dee7cb78929945
 translation_status: current
 ---
 

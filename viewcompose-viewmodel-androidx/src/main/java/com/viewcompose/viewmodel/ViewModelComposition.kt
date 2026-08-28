@@ -23,12 +23,12 @@ import kotlin.reflect.KClass
  * Activity, Fragment, navigation destination, and navigation graph hosts provide an owner. Pass one
  * explicitly or use [ProvideViewModelStoreOwner] for a custom boundary.
  *
- * @sample com.viewcompose.viewmodel.samples.viewModelSample
- * @param VM ViewModel type to resolve
  * This lookup performs one bounded in-memory `ViewModelProvider` query whenever the composition
  * call executes. It does not retain a second composition-level instance cache, so clearing the
  * store is observable on the next lookup.
  *
+ * @sample com.viewcompose.viewmodel.samples.viewModelSample
+ * @param VM ViewModel type to resolve
  * @param key optional identity; `null` selects the class-derived default and every non-null string
  * is an explicit key
  * @param owner explicit owner, or `null` to use [LocalViewModelStoreOwner.current]
@@ -66,14 +66,14 @@ inline fun <reified VM : ViewModel> viewModel(
  * [ViewModelProvider.NewInstanceFactory]. Extras resolution similarly prefers [extras], otherwise it
  * copies the owner's defaults so this function never mutates a shared extras object.
  *
- * @sample com.viewcompose.viewmodel.samples.keyedViewModelSample
- * @param VM ViewModel type to resolve
- * @param modelClass runtime class used by [ViewModelProvider]
  * This function runs on the Android main thread inside an active ViewCompose composition. It makes
  * one bounded in-memory provider lookup per executed call and stores no ViewModel instance in a
  * composition slot. If an explicit key already contains a different model class, AndroidX replaces
  * that entry and clears the old model according to `ViewModelProvider` semantics.
  *
+ * @sample com.viewcompose.viewmodel.samples.keyedViewModelSample
+ * @param VM ViewModel type to resolve
+ * @param modelClass runtime class used by [ViewModelProvider]
  * @param key optional identity; `null` selects the class-derived default and every non-null string
  * is an explicit key
  * @param owner explicit owner, or `null` to use [LocalViewModelStoreOwner.current]
@@ -90,6 +90,20 @@ fun <VM : ViewModel> viewModel(
     owner: ViewModelStoreOwner? = null,
     factory: ViewModelProvider.Factory? = null,
     extras: CreationExtras? = null,
+): VM = resolveViewModel(
+    modelClass = modelClass,
+    key = key,
+    owner = owner,
+    factory = factory,
+    extras = extras,
+)
+
+private fun <VM : ViewModel> resolveViewModel(
+    modelClass: KClass<VM>,
+    key: String?,
+    owner: ViewModelStoreOwner?,
+    factory: ViewModelProvider.Factory?,
+    extras: CreationExtras?,
 ): VM {
     val resolvedOwner = owner ?: LocalViewModelStoreOwner.current
     requireNotNull(resolvedOwner) {
@@ -184,11 +198,12 @@ fun <VM : ViewModel> viewModel(
     val initializerFactory = ViewModelProvider.Factory.from(
         ViewModelInitializer(modelClass, initializer),
     )
-    return viewModel(
+    return resolveViewModel(
         modelClass = modelClass,
         key = key,
         owner = owner,
         factory = initializerFactory,
+        extras = null,
     )
 }
 

@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: b7102a33c75c6ed844ce49c808e469f9f081db83db9e7abce932a4fd98bf9e32
+translation_source_hash: d00f0b786cfe3cb0229c431d83dc72efd1e4992760c49c9a85611ea695390147
 translation_status: current
 ---
 

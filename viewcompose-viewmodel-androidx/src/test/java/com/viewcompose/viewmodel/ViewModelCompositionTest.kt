@@ -33,6 +33,26 @@ class ViewModelCompositionTest {
     }
 
     @Test
+    fun `KClass lookup delegates to the same store-only resolver`() {
+        val harness = WidgetCoreRuntimeHarness()
+        val owner = TestViewModelStoreOwner()
+        val reified: TestViewModel = harness.render {
+            viewModel(key = "shared", owner = owner)
+        }
+        val runtimeSelected = harness.render {
+            viewModel(
+                modelClass = TestViewModel::class,
+                key = "shared",
+                owner = owner,
+            )
+        }
+
+        assertSame(reified, runtimeSelected)
+        harness.dispose()
+        owner.viewModelStore.clear()
+    }
+
+    @Test
     fun `viewModel returns different instances for different keys`() {
         val harness = WidgetCoreRuntimeHarness()
         val owner = TestViewModelStoreOwner()
