@@ -38,26 +38,28 @@ completion:
   - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
   - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
 last_verified: 2026-08-29
-next_action: Land Phase 1 by upgrading Lifecycle to 2.11 and merging the store-only resolver, AndroidX-compatible key semantics, initializer overloads, and their Q3 evidence.
+next_action: Implement Phase 2's general retained scoped-owner provider, reference-token lifetime, terminal-removal semantics, and Q3 contract evidence.
 maven_release_changesets:
   - release/changes/20260829-lifecycle-toolchain-prerequisite.json
+  - release/changes/20260829-viewmodel-store-resolution.json
 ---
 
 # AndroidX ViewModel Optimal Architecture and Compose Capability Parity Plan
 
 ## Status
 
-Active. The audit baseline, Phase 0 contract freeze, and Phase 1 toolchain prerequisite are
-complete. ViewModel production changes have not started under this plan.
+Active. The audit baseline, Phase 0 contract freeze, and Phase 1 store-resolution hard cut are
+complete.
 
 Last verified: 2026-08-29.
 
-Next action: upgrade Lifecycle to 2.11 and land the store-only resolver, AndroidX-compatible key
-semantics, initializer overloads, and their Q3 evidence.
+Next action: implement Phase 2's general retained scoped-owner provider, reference-token lifetime,
+terminal-removal semantics, and Q3 contract evidence.
 
 ## Maven release changesets
 
 - `release/changes/20260829-lifecycle-toolchain-prerequisite.json`
+- `release/changes/20260829-viewmodel-store-resolution.json`
 
 ## Release intent rationale
 
@@ -150,6 +152,30 @@ the isolated Preview worker now requires JDK 21; the AGP built-in-Kotlin migrati
 behind the documented opt-out; and this acceptance makes no device, runtime-performance, or
 ViewModel semantic claim. Those dimensions remain **inconclusive**. Next action: upgrade Lifecycle
 to 2.11 and land the Phase 1 resolver and creation contracts on this verified lane.
+
+### Phase 1 store-resolution acceptance
+
+The comparison baseline was the seven-test `ViewModelCompositionTest` contract on Lifecycle 2.8.7.
+It exercised owner, key, and Factory selection but did not directly prove explicit/default
+`CreationExtras`, empty and whitespace key identity, owner replacement, store clearing, reified and
+`KClass` initializer parity, initializer reuse, or initializer failure propagation. The accepted
+Lifecycle 2.11 implementation routes every public overload through one resolver and leaves
+`ViewModelStore` as the only ViewModel instance cache.
+
+The 2026-08-29 focused run passed 21/21 `ViewModelCompositionTest` cases and 24/24 tests for the
+owning module, with zero skips, failures, or errors. Resolver-contract coverage increased from 7 to
+21 tests: 14 additional cases, a 3.0x total, or a normalized increase of 200%. The same revision's
+`qaQuick qaPreview` acceptance passed all 2,270 actionable tasks: 337 executed and 1,933 were up to
+date.
+
+Conclusion: **improved**. Lookup now observes store clearing on the next composition, only null uses
+the default identity, every non-null key remains explicit, explicit/default Factory and extras
+precedence is executable, owner replacement is observable, and both initializer forms share the
+same reuse and failure behavior. Limitations: this phase does not add arbitrary subtree owners,
+navigation migration, process-restoration evidence, holder removal, device evidence, or runtime
+performance measurements, so those dimensions remain **inconclusive**. Next action: implement the
+Phase 2 retained scoped-owner provider and its reference, removal, rollback, isolation, recreation,
+and delayed-session contracts.
 
 ## Design rules and hard-cut policy
 
@@ -352,7 +378,7 @@ with a failing contract or characterization test and lands with its complete mat
 | Phase | Deliverable | Completion gate | Status |
 | --- | --- | --- | --- |
 | 0 | capability/Q3 contract, hard-cut list, ADR, dependency and test matrix | decision and test names reviewed before production edits | Complete |
-| 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Toolchain prerequisite complete; resolver not started |
+| 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Complete |
 | 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Not started |
 | 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Not started |
 | 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Not started |
