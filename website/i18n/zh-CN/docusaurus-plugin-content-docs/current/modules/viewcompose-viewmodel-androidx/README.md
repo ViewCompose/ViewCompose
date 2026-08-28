@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: 962f9ac39ffb03d1c3900321df3b4446ab0718b568f0985b9a4e44eacd50b0d9
+translation_source_hash: 2c56148041a134af713a521fd45eb7c09a3a29761500559887c9cbf07d4640ba
 translation_status: current
 ---
 
@@ -53,6 +53,62 @@ fun UiTreeBuilder.provideViewModelStoreOwnerSample(
     return model
 }
 ```
+
+## 保留型子 Scope
+
+当 Pager 页面、Tab、Lazy Item、Overlay 或自定义容器需要短于 Activity/Fragment、但长于一次
+可见渲染的生命周期时，使用一个 `ViewModelScopeProvider`。Provider 把子 Store 分配和引用计数
+委托给 Lifecycle 2.11 `ViewModelStoreProvider`；ViewCompose 只补充预备组合的提交/回滚、稳定 Key
+命名空间、终止后禁止复活以及幂等 Lease 关闭。
+
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-scoped-owners" sample_id="module.viewmodel-scoped-owners" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+/** Retains one profile subtree below a stable parent and child identity. */
+fun UiTreeBuilder.retainedViewModelScopeSample(
+    parentOwner: ViewModelStoreOwner,
+    parentLifecycleOwner: LifecycleOwner,
+): ProfileViewModel {
+    val provider = rememberViewModelScopeProvider(
+        key = "profile-pane-provider",
+        parentOwner = parentOwner,
+        lifecycleOwner = parentLifecycleOwner,
+    )
+    val profileOwner = rememberViewModelStoreOwner(
+        key = "primary-profile-pane",
+        provider = provider,
+    )
+    lateinit var model: ProfileViewModel
+    ProvideViewModelStoreOwner(profileOwner) {
+        model = viewModel()
+    }
+    return model
+}
+
+/** Sends the terminal signal only when the logical profile pane is permanently removed. */
+fun removeRetainedProfileScope(provider: ViewModelScopeProvider) {
+    provider.clear("primary-profile-pane")
+}
+```
+
+三个使用角色共用一套实现核心，但适配 API 分层明确：
+
+1. `rememberViewModelScopeProvider` 把稳定 Provider Key 绑定到父 Store 和 Lifecycle。最后一个已
+   提交 Binding 正常移除时会清理全部子项；父 Lifecycle 已销毁时则为配置重建保留它们，父 Store
+   仍是宿主真正结束时的最终清理边界。
+2. `rememberViewModelStoreOwner` 以事务方式获取一个子 Lease。首次候选失败时会清理新 Scope；
+   已提交子项的候选被中止时会保留原 Store。组合忘记该调用只释放临时引用。
+3. 保留型容器引擎直接调用 `acquireOwner`，并关闭返回的 `ViewModelStoreOwnerLease`。逻辑对象永久
+   移除时调用一次 `clear(key)`，整个 Provider 永久销毁时调用 `clearAll()`。
+
+Provider 和子 Key 必须是由应用或容器持有的非空稳定值。同一父 Store 中相等的 Provider Key
+共享状态；相等的子 Key 只在同一个 Provider 内共享。位置、可变对象和递增计数器都不是合法的
+保留身份。存在活动 Lease 时调用 `clear` 会把子项标记为终态并延迟物理清理；旧 Lease 全部关闭前
+新获取会失败，之后同一 Key 会创建全新 Scope。`close`、`clear` 与 `clearAll` 都是幂等清理操作。
+
+默认子 Factory 和 `CreationExtras` 来自父 Owner，并在 Provider 创建时捕获。Scoped Model 需要
+`SavedStateHandle` 时，应向 `acquireOwner` 传入 `SavedStateRegistryOwner`，或让
+`rememberViewModelStoreOwner` 使用当前组合型 Owner。相等的活动 Scope 若使用不一致的 Saved State
+或 Lifecycle 边界会直接失败，不会退回 Activity 或进程级全局 Store。
 
 ## 解析 ViewModel
 
@@ -189,11 +245,13 @@ Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用�
 ## 测试
 
 Phase 1 的同一测试 Owner 从此前 7 项增加到 21 项 Focused Resolution Test，即新增 14 项契约，
-标准化后的 Suite 规模为此前 3 倍（`+200%`）；21 项全部通过。覆盖 Store Clear 后查询、
-Null/Empty/Blank/Ordinary Key、Key 精确保留、Owner Replacement、显式/默认 Factory 与 Extras、
-Reified 与 `KClass` Lookup 和 Initializer、创建失败重试、Model Class Replacement 与 Composition
-Boundary。结论为 **improved**。这关闭 Lookup/Creation 缺陷，但未关闭 Scoped Owner 或 Process
-Restoration；后两者分别由 Phase 2 与 Phase 4 负责。
+标准化后的 Suite 规模为此前 3 倍（`+200%`）。Phase 2 再增加 20 项 Scoped Owner 契约测试，使
+所属模块达到 44/44 全部通过，且没有 Skip、Failure 或 Error。新增用例覆盖 Provider 共享与隔离、
+多 Lease、幂等关闭、临时缺席、终态清理、禁止复活、父 Store 清理、Factory/Extras/默认参数、
+不一致 Saved State 边界、组合提交与中止、配置重建、延迟 Local 捕获、Pager/Lazy/Overlay 重排以及
+`INITIALIZED`/`DESTROYED` Lifecycle 边界诊断。
+结论为 **improved**。解析、创建与通用 Scoped Ownership 已有直接证据；导航集成、进程恢复和独立
+Handle 硬切仍由 Phase 3 至 Phase 5 完成。
 
 单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 Teardown 清理 Store。Process-death
 `SavedStateHandle` 测试仍应使用感知 Saved State 的 Robolectric 或真机 Owner。
@@ -213,5 +271,6 @@ Restoration；后两者分别由 Phase 2 与 Phase 4 负责。
 Lifecycle 2.11 基线硬切两项 Alpha 行为。只有 `null` 选择默认 Key；此前把 `""` 或空白字符串
 当作默认 Sentinel 的调用方必须改传 `null`，Blank Key 现在标识显式 Entry。Composition 不再
 Remember 已解析 ViewModel，因此 Store Clear 立即可见。Initializer Overload 可替代为 Constructor
-Dependency 编写的一次性单 Class Factory。应让 Owner，而不是 Composition Call Position，成为
-权威生命周期边界。
+Dependency 编写的一次性单 Class Factory。对于宿主以下的生命周期，应把自定义子 Store Map
+迁移到一个稳定 Key 的 `ViewModelScopeProvider`，并把逻辑移除与临时渲染缺席分开。Owner 与稳定
+Scope Key，而不是 Composition Call Position，仍是权威生命周期边界。

@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - viewmodel.owner-boundaries
+  - viewmodel.scoped-owners
   - viewmodel.store-resolution
   - viewmodel.saved-state
 artifact_ids:
@@ -17,6 +18,7 @@ sample_ids:
   - module.viewmodel-owner-boundary
   - module.viewmodel-resolution
   - module.viewmodel-saved-state
+  - module.viewmodel-scoped-owners
 coordinate: com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha02
 minimal_usage_sample_id: module.viewmodel-dependency
 ---
@@ -74,6 +76,68 @@ fun UiTreeBuilder.provideViewModelStoreOwnerSample(
     return model
 }
 ```
+
+## Retained child scopes
+
+Use one `ViewModelScopeProvider` when a Pager page, tab, lazy item, overlay, or custom container
+needs a lifetime below its Activity or Fragment but longer than one visible render. The provider
+delegates child-store allocation and reference counting to Lifecycle 2.11
+`ViewModelStoreProvider`; ViewCompose adds prepared-composition commit/rollback, stable-key
+namespacing, terminal no-resurrection, and idempotent lease closure.
+
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-scoped-owners" sample_id="module.viewmodel-scoped-owners" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+/** Retains one profile subtree below a stable parent and child identity. */
+fun UiTreeBuilder.retainedViewModelScopeSample(
+    parentOwner: ViewModelStoreOwner,
+    parentLifecycleOwner: LifecycleOwner,
+): ProfileViewModel {
+    val provider = rememberViewModelScopeProvider(
+        key = "profile-pane-provider",
+        parentOwner = parentOwner,
+        lifecycleOwner = parentLifecycleOwner,
+    )
+    val profileOwner = rememberViewModelStoreOwner(
+        key = "primary-profile-pane",
+        provider = provider,
+    )
+    lateinit var model: ProfileViewModel
+    ProvideViewModelStoreOwner(profileOwner) {
+        model = viewModel()
+    }
+    return model
+}
+
+/** Sends the terminal signal only when the logical profile pane is permanently removed. */
+fun removeRetainedProfileScope(provider: ViewModelScopeProvider) {
+    provider.clear("primary-profile-pane")
+}
+```
+
+The APIs separate three roles while sharing one implementation core:
+
+1. `rememberViewModelScopeProvider` binds a stable provider key to the parent store and lifecycle.
+   Normal removal of the final committed binding clears all children. Parent destruction preserves
+   them for configuration recreation, while the parent's own store remains the finishing fallback.
+2. `rememberViewModelStoreOwner` transactionally acquires one child lease. A failed first candidate
+   is cleared; aborting a candidate for an already committed child preserves the existing store.
+   Forgetting the call releases only temporary use.
+3. Retained container engines call `acquireOwner` and close the returned
+   `ViewModelStoreOwnerLease` directly. They call `clear(key)` exactly once for permanent logical
+   removal and `clearAll()` for permanent provider disposal.
+
+Provider and child keys must be non-null stable values owned by the application or container.
+Equal provider keys in one parent share state; equal child keys share only inside that provider.
+Position, mutable objects, and incrementing counters are invalid retained identities. Calling
+`clear` with active leases marks the child terminal and defers physical cleanup; new acquisition
+fails until all old leases close, after which the same key creates a fresh scope. `close`, `clear`,
+and `clearAll` are idempotent cleanup operations.
+
+The default child Factory and `CreationExtras` come from the parent and are captured when the
+provider is created. Pass a `SavedStateRegistryOwner` to `acquireOwner`, or let
+`rememberViewModelStoreOwner` use the current combined owner, when scoped models need
+`SavedStateHandle`. Equal live scopes reject inconsistent saved-state or lifecycle boundaries
+instead of falling back to an Activity or process-global store.
 
 ## Resolving a ViewModel
 
@@ -221,12 +285,16 @@ These rules keep page state independent without requiring Activity or Fragment p
 ## Testing
 
 Phase 1 runs 21 focused resolution tests, compared with seven in the same test owner before this
-change: 14 additional contracts and a normalized threefold suite size (`+200%`). All 21 pass and
-cover store clear followed by lookup, null/empty/blank/ordinary keys, exact key transport, owner
-replacement, explicit/default Factory and extras, reified and `KClass` lookup and initializers,
-retry after creation failure, model-class replacement, and the composition boundary. Conclusion:
-**improved**. This closes lookup and creation defects but not scoped-owner or process-restoration
-behavior; Phase 2 and Phase 4 own those remaining cases.
+change: 14 additional contracts and a normalized threefold suite size (`+200%`). Phase 2 adds 20
+scoped-owner contract tests, bringing the owning module to 44/44 passing tests with zero skips,
+failures, or errors. The new cases cover provider sharing and isolation, multiple leases,
+idempotent close, temporary absence, terminal clear, no resurrection, parent-store cleanup,
+Factory/extras/default arguments, inconsistent saved-state boundaries, composition commit and
+abort, configuration recreation, delayed-local capture, Pager/lazy/overlay reorder, and
+`INITIALIZED`/`DESTROYED` lifecycle diagnostics.
+Conclusion: **improved**. Lookup, creation, and general scoped ownership now have direct evidence;
+navigation integration, process restoration, and the standalone handle hard cut remain for Phases
+3 through 5.
 
 Use a real `ViewModelStore` in unit tests, render the same call repeatedly, and clear the store
 during teardown. Saved-state-aware Robolectric or instrumented owners remain required for process-
@@ -248,5 +316,7 @@ The Lifecycle 2.11 baseline hard-cuts two Alpha behaviors. Only `null` selects t
 caller that previously passed `""` or whitespace as a default sentinel must pass `null`; blank keys
 now identify explicit entries. The resolved ViewModel is no longer remembered by composition, so a
 store clear becomes visible immediately. Initializer overloads replace ad hoc one-class factories
-for constructor dependencies. Keep the owner—not composition call position—as the authoritative
-lifetime boundary.
+for constructor dependencies. For a lifetime below the host, migrate custom child-store maps to one
+stable-keyed `ViewModelScopeProvider`; keep logical removal separate from temporary render absence.
+The owner and stable scope key—not composition call position—remain the authoritative lifetime
+boundary.

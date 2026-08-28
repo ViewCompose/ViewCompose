@@ -29,4 +29,5 @@ dependencies {
     api(libs.androidx.lifecycle.viewmodel.savedstate)
     testImplementation(project(":viewcompose-runtime"))
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
 }

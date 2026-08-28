@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.viewmodel-store-owner-lease-lifecycle211",
+  "change": "added",
+  "breaking": false,
+  "artifact": "viewcompose-viewmodel-androidx",
+  "symbol_id": "com.viewcompose.viewmodel.ViewModelStoreOwnerLease",
+  "capability_id": "viewmodel.scoped-owners",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.viewmodel.ViewModelStoreOwnerLease"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-viewmodel-androidx"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.viewmodel-scoped-owners"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.viewmodel.scoped-owners"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The compiled scoped-owner sample demonstrates lease ownership and deterministic closure."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The module manual owns lease lifetime, idempotent closure, and terminal-removal rules."
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": ["architecture.retained-viewmodel-scope-ownership"]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-host-lifecycle-android-interop"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The additive lease type moves no public symbol or documentation route."
+    }
+  }
+}

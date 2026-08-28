@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.remember-viewmodel-scope-provider-lifecycle211",
+  "change": "added",
+  "breaking": false,
+  "artifact": "viewcompose-viewmodel-androidx",
+  "symbol_id": "com.viewcompose.viewmodel.rememberViewModelScopeProvider",
+  "capability_id": "viewmodel.scoped-owners",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.viewmodel.rememberViewModelScopeProvider"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-viewmodel-androidx"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.viewmodel-scoped-owners"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.viewmodel.scoped-owners"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The compiled module sample owns provider installation for composition users."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The module manual owns provider identity, commit, abandonment, and recreation behavior."
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": ["architecture.retained-viewmodel-scope-ownership"]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-host-lifecycle-android-interop"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The additive adapter moves no public symbol or documentation route."
+    }
+  }
+}

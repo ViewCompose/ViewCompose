@@ -30,6 +30,24 @@ internal class WidgetCoreRuntimeHarness {
         }
     }
 
+    fun <T> prepare(block: () -> T): ComposerLite.PreparedComposition<T> {
+        if (!composer.hasPendingInvalidations()) {
+            composer.requestRootRecompose()
+        }
+        val callback = object : kotlin.jvm.functions.Function0<ComposerLite.PreparedComposition<T>> {
+            override fun invoke(): ComposerLite.PreparedComposition<T> = composer.prepareRoot(
+                block = block,
+            )
+        }
+        @Suppress("UNCHECKED_CAST")
+        return withComposer.invoke(
+            composerContextInstance,
+            composer,
+            EmptyCoroutineContext,
+            callback,
+        ) as ComposerLite.PreparedComposition<T>
+    }
+
     fun dispose() {
         composer.dispose()
     }

@@ -1,10 +1,14 @@
 package com.viewcompose.viewmodel.samples
 
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.createSavedStateHandle
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
+import com.viewcompose.viewmodel.ViewModelScopeProvider
+import com.viewcompose.viewmodel.rememberViewModelScopeProvider
+import com.viewcompose.viewmodel.rememberViewModelStoreOwner
 import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -79,6 +83,34 @@ fun UiTreeBuilder.provideViewModelStoreOwnerSample(
     return model
 }
 // DOCS_REGION_END(viewmodel-owner-boundary)
+
+// DOCS_REGION_START(viewmodel-scoped-owners)
+/** Retains one profile subtree below a stable parent and child identity. */
+fun UiTreeBuilder.retainedViewModelScopeSample(
+    parentOwner: ViewModelStoreOwner,
+    parentLifecycleOwner: LifecycleOwner,
+): ProfileViewModel {
+    val provider = rememberViewModelScopeProvider(
+        key = "profile-pane-provider",
+        parentOwner = parentOwner,
+        lifecycleOwner = parentLifecycleOwner,
+    )
+    val profileOwner = rememberViewModelStoreOwner(
+        key = "primary-profile-pane",
+        provider = provider,
+    )
+    lateinit var model: ProfileViewModel
+    ProvideViewModelStoreOwner(profileOwner) {
+        model = viewModel()
+    }
+    return model
+}
+
+/** Sends the terminal signal only when the logical profile pane is permanently removed. */
+fun removeRetainedProfileScope(provider: ViewModelScopeProvider) {
+    provider.clear("primary-profile-pane")
+}
+// DOCS_REGION_END(viewmodel-scoped-owners)
 
 // DOCS_REGION_START(viewmodel-saved-state)
 /** Resolves an independent saved-state namespace under a stable key. */
