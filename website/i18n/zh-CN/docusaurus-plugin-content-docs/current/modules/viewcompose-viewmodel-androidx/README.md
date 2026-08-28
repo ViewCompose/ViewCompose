@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: 2c56148041a134af713a521fd45eb7c09a3a29761500559887c9cbf07d4640ba
+translation_source_hash: e2fb5bdaa66dce537fbcc24acb26195a70d35892b656262c342f0eae2a82c460
 translation_status: current
 ---
 
@@ -233,8 +233,10 @@ Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用�
 
 ## 导航 Ownership
 
-- 目的地级 ViewModel 会跨重组、转场、暂时不可见和保留 Tab 切换存活，在 Entry 永久离开所有
-  Stack 时清理。
+- Navigation Entry 与 Graph 从任意保留子树共用的 `ViewModelScopeProvider` 租用 Store；导航
+  只持有 Identity、Lifecycle 和终态信号，不再实现第二套 Store Allocator。
+- 目的地级 ViewModel 会跨重组、转场、暂时不可见、保留 Tab 切换以及同一父 Store 下的配置重建
+  存活，在 Entry 永久离开所有 Stack 时清理。
 - 图级 ViewModel 会跨该图实例内的目的地变化存活，在最后一个后代离开保留导航状态后清理。
 - 两次 push 同一路由会创建不同目的地 Owner。
 - 稍后再次进入同一图路由会创建新的图 Owner 与 Model Store。
@@ -250,8 +252,13 @@ Phase 1 的同一测试 Owner 从此前 7 项增加到 21 项 Focused Resolution
 多 Lease、幂等关闭、临时缺席、终态清理、禁止复活、父 Store 清理、Factory/Extras/默认参数、
 不一致 Saved State 边界、组合提交与中止、配置重建、延迟 Local 捕获、Pager/Lazy/Overlay 重排以及
 `INITIALIZED`/`DESTROYED` Lifecycle 边界诊断。
-结论为 **improved**。解析、创建与通用 Scoped Ownership 已有直接证据；导航集成、进程恢复和独立
-Handle 硬切仍由 Phase 3 至 Phase 5 完成。
+Phase 3 还通过 151/151 项 Navigation Android 测试和 21/21 项 Aggregate Host Case。导航 Suite
+从 148 项增至 151 项，三项聚焦契约分别覆盖缺失 Owner、配置重建时保留 Entry ViewModel，以及
+旧格式状态迁移。Aggregate Host 源码覆盖由 10 增至 11 个测试方法，并区分 Activity ViewTree
+发现与 Fragment 显式 Owner 优先级。
+
+结论为 **improved**。解析、创建、通用 Scoped Ownership、导航集成与 Host Owner Selection 均有
+直接证据。进程终止真机行为仍为 **inconclusive**；独立 Handle 硬切继续由 Phase 4 和 Phase 5 完成。
 
 单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 Teardown 清理 Store。Process-death
 `SavedStateHandle` 测试仍应使用感知 Saved State 的 Robolectric 或真机 Owner。

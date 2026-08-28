@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.savedstate.SavedStateRegistryOwner
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
@@ -35,6 +35,12 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
 
 /**
  * Creates a Fragment ViewCompose root and binds its render session to the view lifecycle.
+ *
+ * The Fragment receiver is the explicit ViewModel owner and takes precedence over the returned
+ * root's ViewTree owner, whose lifetime follows one Fragment View generation. This preserves
+ * Fragment-scoped ViewModels across View recreation. A nested [ProvideViewModelStoreOwner] remains
+ * the explicit override for a smaller subtree. Low-level [renderInto] deliberately performs
+ * neither discovery nor owner installation.
  *
  * The returned root should be returned from `onCreateView`. Rendering starts as soon as Android
  * publishes that root's `viewLifecycleOwner`, so [content] always receives the View lifecycle rather
@@ -114,9 +120,12 @@ fun Fragment.setUiContent(
  *
  * A repeated call disposes the previous session before replacing the Activity content View. The
  * host provides lifecycle, ViewModel, saved state, Android environment, frame clock, and overlay
- * services to [content]. This neutral entry point does not select a design system or wrap
- * [rootContext]; install design-system tokens inside [content], or use a named Android
- * design-system integration.
+ * services to [content]. The ViewModel owner is discovered from the installed root's
+ * [ViewTree][androidx.lifecycle.ViewTreeViewModelStoreOwner]; a nested
+ * [ProvideViewModelStoreOwner] remains the explicit override for a smaller subtree. Low-level
+ * [renderInto] deliberately performs neither discovery nor owner installation. This neutral entry
+ * point does not select a design system or wrap [rootContext]; install design-system tokens inside
+ * [content], or use a named Android design-system integration.
  *
  * @sample com.viewcompose.android.samples.activityHostSample
  * @param debug enables render logging and slow-operation warnings
@@ -169,7 +178,7 @@ fun ComponentActivity.setUiContent(
             root = root,
             lifecycleOwner = this@setUiContent,
             savedStateRegistryOwner = this@setUiContent,
-            viewModelStoreOwner = this@setUiContent,
+            viewModelStoreOwner = null,
             saveableStateRegistry = saveableStateRegistry,
             platform = platform,
             content = content,
@@ -217,14 +226,19 @@ private fun UiTreeBuilder.withHostEnvironment(
     root: ViewGroup,
     lifecycleOwner: LifecycleOwner,
     savedStateRegistryOwner: SavedStateRegistryOwner,
-    viewModelStoreOwner: ViewModelStoreOwner,
+    viewModelStoreOwner: androidx.lifecycle.ViewModelStoreOwner?,
     saveableStateRegistry: com.viewcompose.ui.foundation.SaveableStateRegistry,
     platform: ResolvedAndroidHostPlatform,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
+    val resolvedViewModelStoreOwner = viewModelStoreOwner
+        ?: checkNotNull(root.findViewTreeViewModelStoreOwner()) {
+            "ViewCompose host root has no ViewTreeViewModelStoreOwner. Install one before " +
+                "starting aggregate-owned content or provide an explicit owner."
+        }
     ProvideLifecycleOwner(lifecycleOwner) {
         ProvideSavedStateRegistryOwner(savedStateRegistryOwner) {
-            ProvideViewModelStoreOwner(viewModelStoreOwner) {
+            ProvideViewModelStoreOwner(resolvedViewModelStoreOwner) {
                 ProvideSaveableStateRegistry(saveableStateRegistry) {
                     ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
                         ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {

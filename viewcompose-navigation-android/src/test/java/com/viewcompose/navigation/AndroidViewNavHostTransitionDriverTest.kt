@@ -52,7 +52,7 @@ class AndroidViewNavHostTransitionDriverTest {
                 NavEntryId(entryIds.removeFirst())
             },
         )
-        val ownerStore = NavEntryOwnerStore(application)
+        val ownerStore = navigationTestOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,

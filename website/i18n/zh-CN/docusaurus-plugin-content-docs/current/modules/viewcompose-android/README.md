@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-android/README.md
-translation_source_hash: 1c28b087f38d859ef9bd2ec4f8c24b4221431288a3736753cdb5458514522470
+translation_source_hash: 5630162f65e88e2b976a8621f33723f4a7bb3f158dc80a065ffc370ffbb67390
 translation_status: current
 ---
 
@@ -55,6 +55,12 @@ fun activityHostSample(activity: ComponentActivity) {
 - 动画协程上下文与 Choreographer 帧时钟；
 - 中立 Android Overlay 传输，以及可替换的 Factory。
 
+Activity Host 会从已安装 Root 的 `ViewTreeViewModelStoreOwner` 解析
+`LocalViewModelStoreOwner`。Fragment Receiver 则保持为显式 ViewModel Owner，并压过 Root
+ViewTree 中生命周期更短的 `FragmentViewLifecycleOwner`，所以 Fragment Scope 模型能够跨 View
+重建存活。嵌套的 `ProvideViewModelStoreOwner` 仍会在对应子树中覆盖两种 Host。底层
+`viewcompose-host-android` 的 `renderInto` 不执行 Owner 发现或安装。
+
 它们不会解析 Material XML、动态色或设计 Token。没有显式 Provider 时，内容读取确定性的
 `UiThemeDefaults.light()` 框架基线。可选的 `rootContext` 默认使用 Activity 或 Fragment
 Context，并由根节点、原生子 View 与默认 Overlay 共同使用。
@@ -81,6 +87,11 @@ Navigation、Lazy、Pager 和 Overlay 子 Session 继承。Alpha 硬切移除了
 Callback 会刷新普通资源与环境值。应用 Locale/主题 Wrapper 修改没有产生 Callback 时，把同一个
 `AndroidResourceRefreshController` 传给 `setUiContent`，替换稳定 `rootContext` 的资源后调用
 `refresh()`。构造期敏感的 Context 或设计系统变化仍需再次调用 `setUiContent` 并重建 Root。
+
+Phase 3 Owner 边界 Run 通过全部 21 项 Aggregate Host 执行 Case。新增 Activity 契约验证 ViewTree
+发现与嵌套显式 Owner 优先级；Fragment 重建契约验证 ViewTree View Owner 会变化，而内容中的显式
+Fragment ViewModel Owner 保持稳定。结论为 **improved** 的 Owner Selection。该结果属于
+Robolectric 证据，不证明真机进程终止、内存或性能行为。
 
 ## 依赖规则
 

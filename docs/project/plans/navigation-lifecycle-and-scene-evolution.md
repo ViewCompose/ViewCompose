@@ -294,8 +294,8 @@ The plans coordinate as follows:
 1. Phase 0 freezes one shared owner boundary and forbids either plan from introducing a parallel
    retained-store mechanism.
 2. Navigation lifecycle and scene-core work may proceed without changing ViewModelStore allocation.
-3. Presentation disposal and recreation may use the existing owner until the shared scoped-owner
-   facility lands, but its final acceptance must run after navigation consumes that facility.
+3. The shared scoped-owner facility has landed and Navigation consumes it; presentation disposal
+   and recreation must preserve that entry lease while changing only presentation lifetime.
 4. A pull request touching the same owner/store files declares which plan owns the slice and updates
    both plans when it changes their next action or evidence.
 5. Neither plan can archive while current architecture or module documentation describes a

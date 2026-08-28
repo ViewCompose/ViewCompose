@@ -54,7 +54,7 @@ class AndroidSharedNavTransitionIntegrationTest {
             startDestination = NavRoute("home"),
             entryIdFactory = NavEntryIdFactory { NavEntryId(entryIds.removeFirst()) },
         )
-        val ownerStore = NavEntryOwnerStore(activity.get().application)
+        val ownerStore = navigationTestOwnerStore(activity.get().application)
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(activity.get()),
             ownerStore = ownerStore,

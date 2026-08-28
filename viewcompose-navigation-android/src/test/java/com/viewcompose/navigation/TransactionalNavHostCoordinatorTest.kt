@@ -68,7 +68,7 @@ class TransactionalNavHostCoordinatorTest {
                 NavEntryId(entryIds.removeFirst())
             },
         )
-        ownerStore = NavEntryOwnerStore(application)
+        ownerStore = navigationTestOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,
@@ -599,7 +599,7 @@ class TransactionalNavHostCoordinatorTest {
                 NavEntryId(ids.removeFirst())
             },
         )
-        ownerStore = NavEntryOwnerStore(application)
+        ownerStore = navigationTestOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,

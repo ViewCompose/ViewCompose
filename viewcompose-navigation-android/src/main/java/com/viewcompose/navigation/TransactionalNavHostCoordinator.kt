@@ -590,7 +590,7 @@ internal class TransactionalNavHostCoordinator(
     }
 
     @MainThread
-    fun destroy() {
+    fun destroy(retainViewModelScopes: Boolean = false) {
         requireMainThread()
         if (state == NavHostCoordinatorState.Destroyed) {
             return
@@ -618,7 +618,7 @@ internal class TransactionalNavHostCoordinator(
         }.exceptionOrNull()?.let(failures::add)
         try {
             runCatching {
-                sessionStore.destroy()
+                sessionStore.destroy(retainViewModelScopes)
             }.exceptionOrNull()?.let(failures::add)
         } finally {
             state = NavHostCoordinatorState.Destroyed

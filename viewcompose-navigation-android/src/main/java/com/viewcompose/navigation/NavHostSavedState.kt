@@ -14,11 +14,28 @@ import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.ui.foundation.Saver
 import com.viewcompose.ui.foundation.mapSaver
+import java.util.UUID
+
+/** Stable, saveable identity for one NavHost's retained ViewModel scope provider. */
+internal data class NavHostOwnerScopeId(
+    val value: String,
+) {
+    init {
+        require(value.isNotBlank()) {
+            "NavHost owner scope identity must not be blank."
+        }
+    }
+
+    companion object {
+        fun random(): NavHostOwnerScopeId = NavHostOwnerScopeId(UUID.randomUUID().toString())
+    }
+}
 
 /**
  * Minimal state carrier that lets NavHost survive host recreation.
  */
 internal data class NavHostRestorableState(
+    val ownerScopeId: NavHostOwnerScopeId = NavHostOwnerScopeId.random(),
     val stackState: NavStackSetSnapshot,
     val destinationState: Bundle?,
 )
@@ -57,6 +74,7 @@ internal fun navHostControllerSaver(
                             configuration = stackConfiguration,
                         ),
                         restoredDestinationState = restored.destinationState,
+                        ownerScopeId = restored.ownerScopeId,
                     )
                 }.getOrElse {
                     createNavHostController(stackConfiguration)
@@ -106,6 +124,7 @@ internal fun navHostControllerSaver(
                             graph = graph,
                         ),
                         restoredDestinationState = restored.destinationState,
+                        ownerScopeId = restored.ownerScopeId,
                     )
                 }.getOrElse {
                     createNavHostController(
@@ -126,6 +145,7 @@ internal fun encodeNavHostState(
 ): Map<String, Any?> {
     return linkedMapOf(
         KEY_FORMAT_VERSION to FORMAT_VERSION,
+        KEY_OWNER_SCOPE_ID to state.ownerScopeId.value,
         KEY_ACTIVE_STACK_ID to state.stackState.activeStackId.value,
         KEY_SELECTION_HISTORY to state.stackState.selectionHistory.map(NavStackId::value),
         KEY_STACKS to state.stackState.stacks.map { (stackId, snapshot) ->
@@ -155,8 +175,14 @@ internal fun decodeNavHostState(
 private fun decodeNavHostStateUnsafe(
     saved: Map<String, Any?>,
 ): NavHostRestorableState? {
-    if ((saved[KEY_FORMAT_VERSION] as? Number)?.toInt() != FORMAT_VERSION) {
-        return null
+    val formatVersion = (saved[KEY_FORMAT_VERSION] as? Number)?.toInt()
+        ?: return null
+    val ownerScopeId = when (formatVersion) {
+        LEGACY_FORMAT_VERSION -> NavHostOwnerScopeId.random()
+        FORMAT_VERSION -> NavHostOwnerScopeId(
+            saved[KEY_OWNER_SCOPE_ID] as? String ?: return null,
+        )
+        else -> return null
     }
     val activeStackId = NavStackId(
         saved[KEY_ACTIVE_STACK_ID] as? String ?: return null,
@@ -198,6 +224,7 @@ private fun decodeNavHostStateUnsafe(
         return null
     }
     return NavHostRestorableState(
+        ownerScopeId = ownerScopeId,
         stackState = NavStackSetSnapshot(
             activeStackId = activeStackId,
             stacks = stacks,
@@ -332,8 +359,10 @@ private fun decodeValue(encoded: List<*>): NavValue? {
     }
 }
 
-private const val FORMAT_VERSION = 4
+private const val LEGACY_FORMAT_VERSION = 4
+private const val FORMAT_VERSION = 5
 private const val KEY_FORMAT_VERSION = "formatVersion"
+private const val KEY_OWNER_SCOPE_ID = "ownerScopeId"
 private const val KEY_ACTIVE_STACK_ID = "activeStackId"
 private const val KEY_SELECTION_HISTORY = "selectionHistory"
 private const val KEY_STACKS = "stacks"

@@ -25,12 +25,14 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.ui.foundation.SaveableStateRegistry as ViewComposeSaveableStateRegistry
+import com.viewcompose.viewmodel.ViewModelStoreOwnerLease
 
 /**
  * Android owner bundle for one navigation entry.
  *
- * Each entry owns independent lifecycle, ViewModelStore, SavedStateRegistry, and ViewCompose
- * saveable registry so multiple instances of the same route do not share page state.
+ * Each entry owns an independent lifecycle, SavedStateRegistry, and ViewCompose saveable registry.
+ * Its ViewModelStore is leased from the host's shared scoped-owner provider so multiple instances
+ * of the same route remain isolated without a navigation-specific store allocator.
  */
 internal class NavEntryOwner(
     val entry: NavEntry,
@@ -44,15 +46,17 @@ internal class NavEntryOwner(
     HasDefaultViewModelProviderFactory {
     private val lifecycleRegistry = LifecycleRegistry(this)
     private val savedStateController = SavedStateRegistryController.create(this)
-    private val ownedViewModelStore = ViewModelStore()
     private val defaultArguments = entry.route.arguments.toBundle()
     private val inheritedCreationExtras = MutableCreationExtras(parentViewModelCreationExtras)
+    private var viewModelStoreOwnerLease: ViewModelStoreOwnerLease? = null
 
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
 
     override val viewModelStore: ViewModelStore
-        get() = ownedViewModelStore
+        get() = checkNotNull(viewModelStoreOwnerLease) {
+            "Navigation entry ${entry.id} has no bound ViewModel scope lease."
+        }.owner.viewModelStore
 
     override val savedStateRegistry: SavedStateRegistry
         get() = savedStateController.savedStateRegistry
@@ -90,6 +94,17 @@ internal class NavEntryOwner(
     }
 
     @MainThread
+    fun bindViewModelStoreOwnerLease(lease: ViewModelStoreOwnerLease) {
+        check(entryLifecycleState == NavEntryLifecycleState.Initialized) {
+            "Navigation entry ${entry.id} cannot bind a ViewModel scope after lifecycle start."
+        }
+        check(viewModelStoreOwnerLease == null) {
+            "Navigation entry ${entry.id} already has a ViewModel scope lease."
+        }
+        viewModelStoreOwnerLease = lease
+    }
+
+    @MainThread
     fun moveTo(state: NavEntryLifecycleState) {
         if (state == entryLifecycleState) {
             return
@@ -113,7 +128,8 @@ internal class NavEntryOwner(
                 }
                 lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
             } finally {
-                ownedViewModelStore.clear()
+                viewModelStoreOwnerLease?.close()
+                viewModelStoreOwnerLease = null
                 entryLifecycleState = NavEntryLifecycleState.Destroyed
             }
             return

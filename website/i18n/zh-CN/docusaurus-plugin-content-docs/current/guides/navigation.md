@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 53e34ca11856653865bf0885d6d830bf90dfcd8a9dec2fda9010e642c5b16aba
+translation_source_hash: 35ba553f80780162206ec94ce1042e52079236f6434bf987a7a235e0f54beafe
 translation_status: current
 ---
 
@@ -18,6 +18,10 @@ Pane 的完整签名与可选 API 仍由 [Navigation Android 模块手册](../mo
 不要把它缓存在进程单例中，也不要同时挂到两个 Host。remember 的 Controller 会通过最近的
 ViewCompose saveable-state registry 保存已提交栈、Entry 与 Graph 身份、Route 参数和
 Destination 自有 SavedState。
+
+请把 `NavHost` 挂在 `LocalLifecycleOwner` 和 `LocalViewModelStoreOwner` 两个边界之下。标准 Activity
+与 Fragment `setUiContent` Host 会自动完成；底层 `renderInto` 集成必须显式提供二者。`NavHost`
+不会创建私有兜底 Store。
 
 当 Route 需要类型化参数、嵌套所有权或深链时，请使用稳定的 `NavGraph`。如果当前 Graph 已不
 接受保存的 Route 层级，恢复会失败关闭。应把结果视为安全回到配置的起始目标页，不得拼接出
@@ -39,6 +43,10 @@ Predictive Back 在不发布候选栈的前提下预览上一目标页；取消�
 由框架持有的 Lifecycle、ViewModelStore、SavedStateRegistry namespace、saveable-state
 namespace 和子 RenderSession 中。除非明确选择复用的 Launch Mode，否则连续两次 Push 同一
 Route 仍会创建两个不同 Entry Owner。
+
+Destination 与 Graph ViewModelStore 来自同一个共享 Lifecycle 2.11 Scoped-owner Provider。只要
+父 Store 和 remember 的 Controller 状态仍保留，它们就能跨 Activity 配置重建存活；永久 Pop 或
+移除 Graph 会清理相应 Scope。进程重建会把状态恢复到新的 ViewModel 实例，而不是序列化活跃模型。
 
 只有当 Destination 内容闭包读取不可观察的父级值时才修改 `contentKey`。可观察的 ViewCompose
 状态会直接使所属 Destination Session 失效。Controller、Lifecycle Owner、父级
@@ -73,14 +81,14 @@ ViewModelStore Owner、Overlay Factory、调试身份或 Host `key` 的变化属
 
 1. 连续 Push 两个 Destination，并在每一页修改可保存状态。
 2. 分别点击界面返回按钮和系统返回；两者必须展示同一个上一个 Entry。
-3. 重建 Activity，确认当前 Route、Entry 身份和 saveable 值保持不变。
+3. 重建 Activity，确认当前 Route、Entry 身份、saveable 值和 Destination ViewModel 实例保持不变。
 4. 在 Android 13 或更高版本上，先取消再完成一次边缘返回手势。取消不得改变栈；完成必须只
    Pop 一次。
 5. 通过应用测试接缝注入 Destination 渲染失败。当 `stackCommitted` 为 false 时，前一页必须
    保持可见，且 `onFailure` 必须收到准确阶段。
 
 只有五项检查全部通过，任务才算完成。Detached 命令异常、普通 Activity 重建后 Entry 身份
-变化、重复 Pop、失败渲染后候选页可见，或把 `Queued` 当成完成，都属于配置失败。
+变化、重复 Pop、失败渲染后候选页可见、ViewModel 提前清理，或把 `Queued` 当成完成，都属于配置失败。
 
 ## 选择下一项聚焦任务
 

@@ -61,6 +61,32 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class NavHostPublicApiTest {
     @Test
+    fun `public host rejects composition without a ViewModelStore owner`() {
+        val application = RuntimeEnvironment.getApplication()
+        val root = FrameLayout(application)
+        val lifecycleOwner = TestLifecycleOwner().apply {
+            moveTo(Lifecycle.State.RESUMED)
+        }
+
+        val session = renderInto(root) {
+            ProvideLifecycleOwner(lifecycleOwner) {
+                NavHost(
+                    controller = deterministicController(),
+                    transitionSpec = NavTransitionSpec.None,
+                    overlayHostFactory = { OverlayHostDefaults.noOp },
+                ) { entry ->
+                    Text(entry.route.name)
+                }
+            }
+        }
+        val failure = checkNotNull(session.lastRenderFailure)
+
+        assertTrue(failure.cause.message.orEmpty().contains("LocalViewModelStoreOwner"))
+        assertEquals(0, root.childCount)
+        session.dispose()
+    }
+
+    @Test
     fun `public host enters nested graph through the existing transaction and lifecycle boundary`() {
         val graph = navGraph(
             route = "app",
@@ -731,13 +757,15 @@ class NavHostPublicApiTest {
 
         val session = renderInto(root) {
             ProvideLifecycleOwner(lifecycleOwner) {
-                NavHost(
-                    controller = controller,
-                    transitionSpec = NavTransitionSpec.None,
-                    overlayHostFactory = { OverlayHostDefaults.noOp },
-                ) { entry ->
-                    destinationOwner = LocalLifecycleOwner.current
-                    Text(entry.route.name)
+                ProvideViewModelStoreOwner(NavigationTestParentViewModelStoreOwner()) {
+                    NavHost(
+                        controller = controller,
+                        transitionSpec = NavTransitionSpec.None,
+                        overlayHostFactory = { OverlayHostDefaults.noOp },
+                    ) { entry ->
+                        destinationOwner = LocalLifecycleOwner.current
+                        Text(entry.route.name)
+                    }
                 }
             }
         }
@@ -842,16 +870,18 @@ class NavHostPublicApiTest {
         var failInitialDestination = true
         val session = renderInto(root) {
             ProvideLifecycleOwner(lifecycleOwner) {
-                NavHost(
-                    controller = controller,
-                    transitionSpec = NavTransitionSpec.None,
-                    overlayHostFactory = { OverlayHostDefaults.noOp },
-                    onFailure = failures::add,
-                ) { entry ->
-                    if (failInitialDestination) {
-                        error("initial destination failed")
+                ProvideViewModelStoreOwner(NavigationTestParentViewModelStoreOwner()) {
+                    NavHost(
+                        controller = controller,
+                        transitionSpec = NavTransitionSpec.None,
+                        overlayHostFactory = { OverlayHostDefaults.noOp },
+                        onFailure = failures::add,
+                    ) { entry ->
+                        if (failInitialDestination) {
+                            error("initial destination failed")
+                        }
+                        Text(entry.route.name)
                     }
-                    Text(entry.route.name)
                 }
             }
         }
@@ -985,7 +1015,8 @@ class NavHostPublicApiTest {
         controller: NavHostController = deterministicController(),
         onFailure: ((NavFailure) -> Unit)? = null,
         contentKey: () -> Any? = { Unit },
-        parentViewModelStoreOwner: ViewModelStoreOwner? = null,
+        parentViewModelStoreOwner: ViewModelStoreOwner =
+            NavigationTestParentViewModelStoreOwner(),
         content: com.viewcompose.ui.foundation.UiTreeBuilder.(
             com.viewcompose.navigation.core.NavEntry,
         ) -> Unit = { entry -> Text(entry.route.name) },
@@ -1007,11 +1038,7 @@ class NavHostPublicApiTest {
                         content = content,
                     )
                 }
-                if (parentViewModelStoreOwner == null) {
-                    hostContent()
-                } else {
-                    ProvideViewModelStoreOwner(parentViewModelStoreOwner, hostContent)
-                }
+                ProvideViewModelStoreOwner(parentViewModelStoreOwner, hostContent)
             }
         }
         val navHostView = root.requireNavHostView()
@@ -1054,27 +1081,29 @@ class NavHostPublicApiTest {
         var detailsState: RestorableCounter? = null
         val session = renderInto(root) {
             ProvideLifecycleOwner(lifecycleOwner) {
-                ProvideSaveableStateRegistry(registry) {
-                    val rememberedController = rememberNavHostController(
-                        startDestination = NavRoute("home"),
-                    )
-                    controller = rememberedController
-                    NavHost(
-                        controller = rememberedController,
-                        transitionSpec = NavTransitionSpec.None,
-                        overlayHostFactory = { OverlayHostDefaults.noOp },
-                    ) { entry ->
-                        val state = rememberSaveable(
-                            key = "counter",
-                            saver = RestorableCounterSaver,
-                        ) {
-                            RestorableCounter(0)
+                ProvideViewModelStoreOwner(NavigationTestParentViewModelStoreOwner()) {
+                    ProvideSaveableStateRegistry(registry) {
+                        val rememberedController = rememberNavHostController(
+                            startDestination = NavRoute("home"),
+                        )
+                        controller = rememberedController
+                        NavHost(
+                            controller = rememberedController,
+                            transitionSpec = NavTransitionSpec.None,
+                            overlayHostFactory = { OverlayHostDefaults.noOp },
+                        ) { entry ->
+                            val state = rememberSaveable(
+                                key = "counter",
+                                saver = RestorableCounterSaver,
+                            ) {
+                                RestorableCounter(0)
+                            }
+                            when (entry.route.name) {
+                                "home" -> homeState = state
+                                "details" -> detailsState = state
+                            }
+                            Text(entry.route.name)
                         }
-                        when (entry.route.name) {
-                            "home" -> homeState = state
-                            "details" -> detailsState = state
-                        }
-                        Text(entry.route.name)
                     }
                 }
             }
@@ -1099,29 +1128,31 @@ class NavHostPublicApiTest {
         var controller: NavHostController? = null
         val session = renderInto(root) {
             ProvideLifecycleOwner(lifecycleOwner) {
-                ProvideSaveableStateRegistry(registry) {
-                    val rememberedController = rememberNavHostController(
-                        NavStackConfiguration(
-                            initialStackId = MultiHomeStack,
-                            stacks = listOf(
-                                NavStackSpec(MultiHomeStack, NavRoute("home")),
-                                NavStackSpec(MultiSearchStack, NavRoute("search")),
+                ProvideViewModelStoreOwner(NavigationTestParentViewModelStoreOwner()) {
+                    ProvideSaveableStateRegistry(registry) {
+                        val rememberedController = rememberNavHostController(
+                            NavStackConfiguration(
+                                initialStackId = MultiHomeStack,
+                                stacks = listOf(
+                                    NavStackSpec(MultiHomeStack, NavRoute("home")),
+                                    NavStackSpec(MultiSearchStack, NavRoute("search")),
+                                ),
                             ),
-                        ),
-                    )
-                    controller = rememberedController
-                    NavHost(
-                        controller = rememberedController,
-                        transitionSpec = NavTransitionSpec.None,
-                        overlayHostFactory = { OverlayHostDefaults.noOp },
-                    ) { entry ->
-                        states[entry.route.name] = rememberSaveable(
-                            key = "counter",
-                            saver = RestorableCounterSaver,
-                        ) {
-                            RestorableCounter(0)
+                        )
+                        controller = rememberedController
+                        NavHost(
+                            controller = rememberedController,
+                            transitionSpec = NavTransitionSpec.None,
+                            overlayHostFactory = { OverlayHostDefaults.noOp },
+                        ) { entry ->
+                            states[entry.route.name] = rememberSaveable(
+                                key = "counter",
+                                saver = RestorableCounterSaver,
+                            ) {
+                                RestorableCounter(0)
+                            }
+                            Text(entry.route.name)
                         }
-                        Text(entry.route.name)
                     }
                 }
             }

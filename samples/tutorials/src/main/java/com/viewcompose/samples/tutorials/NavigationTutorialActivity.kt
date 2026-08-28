@@ -3,6 +3,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.ViewModel
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.rememberNavHostController
@@ -15,6 +16,7 @@ import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.viewmodel.viewModel
 
 private const val HOME = "home"
 private const val DETAILS = "details"
@@ -40,7 +42,8 @@ class NavigationTutorialActivity : ComponentActivity() {
                             )
                         }
                         DETAILS -> {
-                            Text("Details", style = TextDefaults.titleLargeStyle())
+                            val model = viewModel<DetailsViewModel>()
+                            Text(model.title, style = TextDefaults.titleLargeStyle())
                             Button("Back", onClick = controller::popBackStack)
                         }
                         else -> error("Unknown route ${entry.route.name}")
@@ -49,5 +52,9 @@ class NavigationTutorialActivity : ComponentActivity() {
             }
         }
     }
+}
+
+class DetailsViewModel : ViewModel() {
+    val title: String = "Details"
 }
 // DOCS_REGION_END(navigation)

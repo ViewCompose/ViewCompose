@@ -12,6 +12,7 @@ artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
   - viewcompose-material3-android
+  - viewcompose-viewmodel-androidx
 sample_ids:
   - tutorial.navigation
   - tutorial.navigation-dependencies
@@ -33,6 +34,7 @@ repositories { mavenCentral() }
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -42,12 +44,13 @@ dependencies {
 
 Create `NavigationTutorialActivity.kt`:
 
-{/* tutorial-sample sample_id="tutorial.navigation" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt" region="navigation" required_artifacts="viewcompose-navigation-android" */}
+{/* tutorial-sample sample_id="tutorial.navigation" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt" region="navigation" required_artifacts="viewcompose-navigation-android,viewcompose-viewmodel-androidx" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.ViewModel
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.rememberNavHostController
@@ -60,6 +63,7 @@ import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.viewmodel.viewModel
 
 private const val HOME = "home"
 private const val DETAILS = "details"
@@ -85,7 +89,8 @@ class NavigationTutorialActivity : ComponentActivity() {
                             )
                         }
                         DETAILS -> {
-                            Text("Details", style = TextDefaults.titleLargeStyle())
+                            val model = viewModel<DetailsViewModel>()
+                            Text(model.title, style = TextDefaults.titleLargeStyle())
                             Button("Back", onClick = controller::popBackStack)
                         }
                         else -> error("Unknown route ${entry.route.name}")
@@ -95,12 +100,21 @@ class NavigationTutorialActivity : ComponentActivity() {
         }
     }
 }
+
+class DetailsViewModel : ViewModel() {
+    val title: String = "Details"
+}
 ```
 {/* tutorial-sample-end */}
 
 The remembered controller owns the committed back stack. `NavHost` renders the current `NavRoute`
 and connects Android system Back to the same stack. Call `navigate` or `popBackStack` from UI events
 after the host is mounted.
+
+This sample runs inside Activity `setUiContent`, which supplies the lifecycle and
+`LocalViewModelStoreOwner` required by `NavHost`. If the same content is mounted with low-level
+`renderInto`, provide those owner locals explicitly. Each destination then receives its own
+Lifecycle, saved-state namespace, and ViewModelStore leased from the retained parent store.
 
 ## Verify the result
 

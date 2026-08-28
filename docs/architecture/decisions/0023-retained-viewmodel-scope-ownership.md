@@ -202,8 +202,9 @@ constructor/factory model and reserves an application-visible store key.
 - A provider and one lightweight lease are additional bounded objects around AndroidX state. The
   wrapper complexity is accepted because it protects prepared-composition rollback, terminal clear,
   delayed references, and no-resurrection behavior that a raw adapter cannot express.
-- Navigation must migrate in one hard cut after parity tests prove entry, graph, multi-stack,
-  restoration, transition, and cleanup behavior.
+- Navigation migrated in one hard cut after parity tests proved entry, graph, multi-stack,
+  restoration, transition, and cleanup behavior. It retains identity/lifecycle coordination but no
+  longer allocates an independent ViewModelStore.
 - Applications using blank keys or the standalone SavedStateHandle helper receive a compile-time or
   behavior break with explicit migration guidance; no deprecated compatibility window is provided.
 
@@ -216,8 +217,14 @@ constructor/factory model and reserves an application-visible store key.
    defaults, Pager/lazy/overlay reorder, and lifecycle-boundary diagnostics through 20 focused
    scoped-owner contracts. The owning module passes all 44 tests after combining this evidence with
    Phase 1 resolution coverage.
-3. Phase 3 runs the existing navigation matrix against the shared provider before deleting
-   `NavEntryOwnerStore`; host tests prove explicit-owner and ViewTree precedence.
+3. Phase 3 passed 151/151 Navigation Android tests and 21/21 aggregate-host cases. Navigation now
+   leases entry and graph stores from the shared provider, keeps them across configuration
+   recreation through a saved host-scope identity, and clears them at permanent removal. Activity
+   hosts discover the installed ViewTree owner; the explicit Fragment owner wins over its
+   shorter-lived View owner; nested explicit providers retain precedence. `renderInto` remains
+   owner-free. Conclusion: **improved** for ownership and retention relative to the 148-test
+   navigation baseline. Device process-kill, memory, and performance evidence remains
+   **inconclusive**.
 4. Phase 4 proves constructor/initializer `SavedStateHandle` restoration and the single-owner
    `rememberSaveable`/`StateFlow` disposition before deleting the holder APIs.
 5. Each phase lands Q3 KDoc, compiled samples, capability-impact records, module and migration

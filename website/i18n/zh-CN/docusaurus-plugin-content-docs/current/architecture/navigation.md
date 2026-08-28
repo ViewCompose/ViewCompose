@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: fd3fb569c2baecee1e9cf7da5145b9dd0d19299aa063ad706b5984c35bb029cf
+translation_source_hash: f9afa9e95c0bb68d201fc2a7efe1031fb9c42aac2c80b1a87e20e40c0ec1e7e7
 translation_status: current
 ---
 
@@ -35,19 +35,27 @@ Android Host 准备 Destination Owner 和子 RenderSession，在暂存原生容�
 
 ## 3. Destination 与 Graph 身份
 
-每个 Destination Entry 都持有稳定的子 RenderSession、Lifecycle、ViewModelStore、
-SavedStateRegistry namespace 和 ViewCompose saveable-state namespace。连续两次 Push 相同
-Route 会产生两个 Entry 身份。隐藏的保留 Entry 继续保持身份和状态，但帧驱动工作受 Lifecycle
-限制，页面重新可见前才恢复渲染。
+每个 Destination Entry 都持有稳定的子 RenderSession、Lifecycle、SavedStateRegistry
+Namespace、ViewCompose Saveable-state Namespace，以及一个 Keyed ViewModelStore Lease。
+Store 由共享 Lifecycle 2.11 `ViewModelScopeProvider` 分配，而不是导航专用 Map。连续两次 Push
+相同 Route 会产生两个 Entry 身份。隐藏的保留 Entry 继续保持身份和状态，但帧驱动工作受
+Lifecycle 限制，页面重新可见前才恢复渲染。
 
 每个嵌套 Graph 实例都有独立 `NavGraphOwner` 身份。同一 Graph 实例的后代共享 Lifecycle、
 SavedState 和 ViewModel，直到最后一个保留后代被移除。以后再次进入同名 Graph Route 会创建
 新 Owner。只有渲染 Destination 内容时才能访问从根到叶的 Graph 链，不能借此在活动 Host
 之外制造所有权。
 
-最近的父级 ViewModelStore Owner 提供默认 Factory 和 CreationExtras。子导航 Owner 只替换
-Store Owner、SavedState Owner 以及 Route 或 Graph 参数。父级 Owner 身份变化会重建原生
-Host，防止保留 Entry 混用两套 Provider 契约。
+最近的父级 ViewModelStore Owner 是必需边界，并提供默认 Factory 和 CreationExtras。子导航
+Owner 只替换 Store Owner、SavedState Owner 以及 Route 或 Graph 参数。Controller 保存的 Host
+Scope 身份会把全部 Child Store 命名到该父级之下。父级 Owner 身份变化会重建原生 Host，防止
+保留 Entry 混用两套 Provider 契约。
+
+Lifecycle 终止和 Store 终止按顺序执行，但不是同一事件。永久移除 Entry 或 Graph 时先请求终态
+清理，再发送 `ON_DESTROY`；活跃 Lease 会把物理 ViewModel Clear 延迟到 Owner 销毁并关闭 Lease
+之后。正常移除 Host 会清理整个 Provider。父 Lifecycle 已到 `DESTROYED` 后释放 Host，则只关闭
+展示 Owner 而不终止 Store，使配置重建后的 Host 能用同一父 Store 和已保存 Scope 身份重新租用
+既有 ViewModel；完成中的父级仍是最终清理边界。
 
 ## 4. Lifecycle 投影
 
@@ -68,13 +76,15 @@ Host 把已提交导航状态和 Pane 状态投影为 Android Lifecycle，并受
 ## 5. 恢复边界
 
 remember 的 Controller 会持久化已提交栈、Route 参数、Destination 与 Graph 身份、选择历史、
-Destination 与 Graph 的 SavedStateRegistry Bundle，以及 ViewCompose saveable 值。它不会
-序列化 View、RenderSession、LifecycleRegistry 实例、ViewModelStore 内容、待处理事务或运行中
-动画。
+私有 Host Scope 身份、Destination 与 Graph 的 SavedStateRegistry Bundle，以及 ViewCompose
+Saveable 值。它不会序列化 View、RenderSession、LifecycleRegistry 实例、ViewModelStore 内容、
+待处理事务或运行中动画。配置重建可以通过父 Store 保留活跃 ViewModel；进程重建则会根据恢复的
+Owner 状态创建新实例。
 
 恢复会校验格式限制、栈配置、Route 是否存在、叶子解析和 Graph 层级。不兼容或格式错误的
-状态会被丢弃，改用配置的初始状态。失败关闭可以防止应用升级后把旧 SavedState 或 ViewModel
-namespace 绑定到另一个 Destination。
+状态会被丢弃，改用配置的初始状态。紧邻的 Version 4 格式会通过分配新 Host Scope 身份完成迁移；
+未知的新格式仍会失败关闭。这些规则可以防止应用升级后把旧 SavedState 或 ViewModel Namespace
+绑定到另一个 Destination。
 
 ## 6. 返回与视觉 Motion
 
@@ -92,11 +102,18 @@ Destination Root，不持有页面或 Session，也不能接收输入或无障�
 
 - Navigation Core 测试覆盖两阶段事务、确定性保留栈、Graph 校验、严格 Deep Link、
   Lifecycle Plan 和 Pane Scene 校验。
-- Navigation Android 测试覆盖候选回滚、保留 Owner 身份、Lifecycle 顺序、SavedState 兼容、
-  队列命令、转场重定向和 Predictive Back。
+- Navigation Android 测试覆盖候选回滚、保留 Owner 身份、Lifecycle 顺序、共享 Scoped Store
+  重建与终态清理、SavedState 兼容、队列命令、转场重定向和 Predictive Back。
+- Android Aggregate Host 测试覆盖 Activity ViewTree Owner 发现、嵌套显式 Owner 优先级，以及
+  Fragment View 重建期间的 Owner 保留。
 - 可编译的[导航教程](../tutorials/navigation.md)和[可上线 Host 指南](../guides/navigation.md)
   提供公开首个成功路径和人工验收路径。
 
 运行 `./gradlew :viewcompose-navigation-core:test :viewcompose-navigation-android:testDebugUnitTest`
 执行确定性架构测试。只有指南中的真实返回、重建、Predictive Back 和失败路径也通过后，才能
 接受设备行为。
+
+Phase 3 的 Clean Comparison 通过 151/151 项 Navigation Android 测试和 21/21 项 Aggregate Host
+执行 Case。相较 148 项导航基线，这是 **improved** 的 Ownership 结果：分配机制已统一，缺失边界
+会直接失败，重建与清理都有可执行证据。该结果不属于真机、内存、泄漏或性能证据，这些维度仍为
+**inconclusive**，继续由活跃的导航 Lifecycle/Scene Plan 负责。

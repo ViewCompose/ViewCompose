@@ -391,6 +391,54 @@ class NavEntryOwnerStoreTest {
     }
 
     @Test
+    fun `host recreation retains entry ViewModels below the same parent owner`() {
+        val root = entry("root", "home")
+        val parentOwner = NavigationTestParentViewModelStoreOwner()
+        val providerKey = NavHostOwnerScopeId("retained-host")
+        val firstStore = navigationTestOwnerStore(
+            application = RuntimeEnvironment.getApplication(),
+            parentOwner = parentOwner,
+            providerKey = providerKey,
+        )
+        firstStore.reconcile(
+            retainedEntries = listOf(root),
+            visibleEntryIds = setOf(root.id),
+            interactiveEntryIds = setOf(root.id),
+            hostState = NavHostLifecycleState.Resumed,
+        )
+        val firstOwner = checkNotNull(firstStore.ownerOrNull(root.id))
+        val retainedViewModel = firstOwner.viewModel<TrackingViewModel>("root-vm")
+
+        firstStore.destroy(retainViewModelScopes = true)
+
+        assertEquals(Lifecycle.State.DESTROYED, firstOwner.lifecycle.currentState)
+        assertTrue(!retainedViewModel.cleared)
+
+        val recreatedStore = navigationTestOwnerStore(
+            application = RuntimeEnvironment.getApplication(),
+            parentOwner = parentOwner,
+            providerKey = providerKey,
+        )
+        recreatedStore.reconcile(
+            retainedEntries = listOf(root),
+            visibleEntryIds = setOf(root.id),
+            interactiveEntryIds = setOf(root.id),
+            hostState = NavHostLifecycleState.Resumed,
+        )
+
+        assertSame(
+            retainedViewModel,
+            checkNotNull(recreatedStore.ownerOrNull(root.id))
+                .viewModel<TrackingViewModel>("root-vm"),
+        )
+
+        recreatedStore.destroy()
+
+        assertTrue(retainedViewModel.cleared)
+        parentOwner.viewModelStore.clear()
+    }
+
+    @Test
     fun `entry ID cannot be rebound to a different route`() {
         val store = store()
         store.ownerFor(entry("same", "first"))
@@ -401,7 +449,7 @@ class NavEntryOwnerStoreTest {
     }
 
     private fun store(restoredState: android.os.Bundle? = null): NavEntryOwnerStore {
-        return NavEntryOwnerStore(
+        return navigationTestOwnerStore(
             application = RuntimeEnvironment.getApplication(),
             restoredState = restoredState,
         )

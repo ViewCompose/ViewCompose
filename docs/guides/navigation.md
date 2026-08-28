@@ -20,6 +20,7 @@ success_checks:
   - Failed destination preparation preserves the previously visible destination.
 failure_checks:
   - A controller is attached to more than one active NavHost or receives commands while detached.
+  - NavHost is mounted without a LocalViewModelStoreOwner boundary.
   - Route or graph changes silently reuse incompatible restored ownership state.
   - A queued command is treated as committed completion.
 ---
@@ -39,6 +40,10 @@ Create the controller with `rememberNavHostController` in the same UI owner that
 Do not cache it in a process singleton or attach it to two hosts. The remembered controller saves
 the committed stack, entry and graph identities, route arguments, and destination-owned saved
 state through the nearest ViewCompose saveable-state registry.
+
+Mount `NavHost` below both `LocalLifecycleOwner` and `LocalViewModelStoreOwner`. Standard Activity
+and Fragment `setUiContent` hosts do this automatically. A low-level `renderInto` integration must
+provide both explicitly; `NavHost` intentionally refuses to create a private fallback store.
 
 Use a stable `NavGraph` when routes need typed arguments, nested ownership, or deep links. Restore
 fails closed when the current graph no longer accepts the saved route hierarchy. Treat that as a
@@ -61,6 +66,11 @@ Render every accepted route in the `NavHost` content block and reject unknown ro
 The content block runs inside the destination's framework-owned lifecycle, ViewModelStore,
 SavedStateRegistry, saveable-state namespace, and child render session. A second push of the same
 route still creates a distinct entry owner unless the selected launch mode explicitly reuses it.
+
+Destination and graph ViewModelStores come from one shared Lifecycle 2.11 scoped-owner provider.
+They survive Activity configuration recreation when the parent store and remembered controller
+state survive, but a permanent pop or graph removal clears the corresponding scope. Process
+recreation restores state into new ViewModel instances rather than serializing live models.
 
 Change `contentKey` only when destination content closes over a non-observable parent value.
 Observable ViewCompose state invalidates the owning destination session directly. Changing the
@@ -96,7 +106,8 @@ Then verify one real host journey:
 
 1. Push two destinations and change saveable state in each one.
 2. Press the in-UI Back action and system Back; both must expose the same previous entry.
-3. Recreate the Activity and confirm the current route, entry identity, and saveable values remain.
+3. Recreate the Activity and confirm the current route, entry identity, saveable values, and
+   destination ViewModel instance remain.
 4. On Android 13 or newer, cancel and then complete an edge Back gesture. Cancellation must leave
    the stack unchanged; completion must pop exactly once.
 5. Inject a destination-render failure through the application's test seam. The previous page must
@@ -104,7 +115,7 @@ Then verify one real host journey:
 
 The task is complete only when all five checks pass. A detached-command exception, changed entry
 identity after ordinary Activity recreation, duplicate pop, visible candidate after failed render,
-or treating `Queued` as completion is a failed configuration.
+premature ViewModel clear, or treating `Queued` as completion is a failed configuration.
 
 ## Choose the next focused task
 
