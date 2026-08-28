@@ -19,7 +19,6 @@ import com.viewcompose.host.android.animation.MotionLayoutView
 import com.viewcompose.host.android.animation.androidAnimation
 import com.viewcompose.host.android.graphics.AndroidGraphicsInterop
 import com.viewcompose.host.android.graphics.androidGraphics
-import com.viewcompose.host.android.nativeView
 import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.host.android.resources.booleanResource
@@ -75,22 +74,28 @@ fun androidViewInteropSample(builder: UiTreeBuilder) {
 fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
     builder.AndroidView(
         adapter = NativeLabelAdapter,
-        state = "Typed native label",
+        state = NativeLabelState(
+            text = "Typed native label",
+            enabled = true,
+        ),
         key = "label",
         constructionKey = "default-text-appearance",
-        modifier = Modifier.nativeView(key = "enabled") { view ->
-            view.isEnabled = true
-        },
     )
 }
 
-private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+private data class NativeLabelState(
+    val text: String,
+    val enabled: Boolean,
+)
+
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, NativeLabelState> {
     override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
 
     override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
 
-    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
-        scope.view.text = state
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
+        scope.view.text = state.text
+        scope.view.isEnabled = state.enabled
     }
 
     override fun onReset(
@@ -98,6 +103,7 @@ private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
         reason: AndroidViewResetReason,
     ) {
         scope.view.text = null
+        scope.view.isEnabled = false
     }
 }
 // DOCS_REGION_END(host-android-view-adapter)

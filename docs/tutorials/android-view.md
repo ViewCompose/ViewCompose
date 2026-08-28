@@ -15,8 +15,8 @@ sample_ids:
   - tutorial.android-view-dependencies
   - tutorial.android-view
   - module.host-android-view-adapter
-expected_result: A native TextView whose displayed count changes while its factory-assigned View ID remains stable.
-verification_action: Run the sample, record the displayed View ID, press Increment, and verify that the count changes without changing the ID.
+expected_result: A native TextView whose ID survives state updates and changes only when the sample's factory-owned text sizing changes.
+verification_action: Record the View ID, press Increment to retain it, then toggle the factory-owned native text size and verify that a new ID replaces it.
 ---
 
 # Use AndroidView
@@ -67,6 +67,7 @@ class AndroidViewTutorialActivity : ComponentActivity() {
 
         setMaterial3UiContent {
             val count = remember { mutableStateOf(0) }
+            val largeText = remember { mutableStateOf(false) }
 
             Column(
                 spacing = 12.dp,
@@ -74,15 +75,23 @@ class AndroidViewTutorialActivity : ComponentActivity() {
             ) {
                 AndroidView(
                     factory = { context ->
-                        TextView(context).apply { id = View.generateViewId() }
+                        TextView(context).apply {
+                            id = View.generateViewId()
+                            textSize = if (largeText.value) 20f else 14f
+                        }
                     },
                     update = { view ->
                         (view as TextView).text =
                             "Native TextView #${view.id} count: ${count.value}"
                     },
                     modifier = Modifier.fillMaxWidth(),
+                    constructionKey = largeText.value,
                 )
                 Button("Increment", onClick = { count.value += 1 })
+                Button(
+                    if (largeText.value) "Use compact native text" else "Use large native text",
+                    onClick = { largeText.value = !largeText.value },
+                )
             }
         }
     }
@@ -90,10 +99,13 @@ class AndroidViewTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-`factory` creates the native View only when reconciliation needs a new node, so the generated View
-ID gives the mounted instance a visible identity. `update` applies the latest observable state to
-that retained View and must be safe to run again during rollback or rebind. Keep external one-shot
-work out of `update`. This callback form is the concise low-level escape hatch.
+`factory` creates the native View only when reconciliation needs a new construction identity, so
+the generated View ID makes replacement visible. `update` applies the latest count to the retained
+View and must be safe to run again during rollback or rebind. This sample intentionally treats the
+text-size choice as factory-owned construction configuration and therefore also passes it as
+`constructionKey`: changing the count retains the View, while changing that key creates and
+atomically replaces it. Keep external one-shot work out of `update`. This callback form is the
+concise low-level escape hatch.
 
 ## Extract a reusable typed adapter
 
@@ -105,22 +117,28 @@ type and complete state snapshot remain checked across every callback:
 fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
     builder.AndroidView(
         adapter = NativeLabelAdapter,
-        state = "Typed native label",
+        state = NativeLabelState(
+            text = "Typed native label",
+            enabled = true,
+        ),
         key = "label",
         constructionKey = "default-text-appearance",
-        modifier = Modifier.nativeView(key = "enabled") { view ->
-            view.isEnabled = true
-        },
     )
 }
 
-private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+private data class NativeLabelState(
+    val text: String,
+    val enabled: Boolean,
+)
+
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, NativeLabelState> {
     override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
 
     override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
 
-    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
-        scope.view.text = state
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
+        scope.view.text = state.text
+        scope.view.isEnabled = state.enabled
     }
 
     override fun onReset(
@@ -128,10 +146,13 @@ private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
         reason: AndroidViewResetReason,
     ) {
         scope.view.text = null
+        scope.view.isEnabled = false
     }
 }
 ```
 
+`NativeLabelState` keeps the adapter-owned text and enabled properties in one immutable snapshot,
+so `update` can replay the complete configuration without an untyped side channel.
 `key` identifies the logical item. The adapter implementation class plus `constructionKey`
 identifies constructor-sensitive View state. A changed state reuses the View and calls only
 `update`; a changed construction identity creates and binds a candidate, then replaces the old
@@ -140,9 +161,10 @@ into cross-key mounted-tree reuse with `AndroidViewReusePolicy.Resettable`.
 
 ## Verify the result
 
-Record the number after `Native TextView #`, press `Increment`, and confirm that the count changes
-while that View ID remains the same. This distinguishes an update of the mounted instance from a
-replacement. Compile with:
+Record the number after `Native TextView #`. Press `Increment` and confirm that the count changes
+while the ID remains the same. Then press the native text-size button and confirm that the text
+size and ID both change; the construction identity changed, so replacement is expected. Compile
+with:
 
 ```bash
 ./gradlew :samples:tutorials:assembleDebug

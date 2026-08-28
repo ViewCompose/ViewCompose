@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 18b371e315204783ae20c4356a29b7f087e863e11316efa9e948fb7d620323f0
+translation_source_hash: 57803bf9a15ff4018144e0e009af9ca07bd4556a6868f03f0170040ae7228027
 translation_status: current
 ---
 
@@ -143,22 +143,28 @@ Engine 会让 Composition Node Identity 贯穿 Reconciliation 与 Binding；仅 
 fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
     builder.AndroidView(
         adapter = NativeLabelAdapter,
-        state = "Typed native label",
+        state = NativeLabelState(
+            text = "Typed native label",
+            enabled = true,
+        ),
         key = "label",
         constructionKey = "default-text-appearance",
-        modifier = Modifier.nativeView(key = "enabled") { view ->
-            view.isEnabled = true
-        },
     )
 }
 
-private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+private data class NativeLabelState(
+    val text: String,
+    val enabled: Boolean,
+)
+
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, NativeLabelState> {
     override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
 
     override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
 
-    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
-        scope.view.text = state
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
+        scope.view.text = state.text
+        scope.view.isEnabled = state.enabled
     }
 
     override fun onReset(
@@ -166,10 +172,13 @@ private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
         reason: AndroidViewResetReason,
     ) {
         scope.view.text = null
+        scope.view.isEnabled = false
     }
 }
 ```
 
+- `NativeLabelState` 把 Adapter 所有的文本与启用属性放进同一个不可变快照，使 `update` 无需
+  未类型化的旁路即可重放完整配置。
 - `create`、`update`、Reset、Commit 与 Release 都在 Android 主线程同步执行。Create 接收
   Renderer 提供的带主题 `Context`；Create、Update、Reset 与 Commit Scope 还会暴露 VNode
   捕获的不可变 `UiEnvironmentValues`。

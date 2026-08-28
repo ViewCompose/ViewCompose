@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-28
-next_action: Record the first eligible hosted affected run for both accepted no-shadow classes, while retaining complete shadow comparison for production and unaccepted module changes.
+next_action: Record the first eligible hosted affected run for the module-documentation and compiled-sample no-shadow class, while retaining complete shadow comparison for production and unaccepted module changes.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -30,6 +30,7 @@ maven_release_changesets:
   - release/changes/20260825-quality-build-phase2-sample-docs.json
   - release/changes/20260825-quality-build-phase2-documentation.json
   - release/changes/20260825-quality-build-phase2-device-benchmark.json
+  - release/changes/20260828-host-android-adapter-state-sample.json
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
@@ -42,7 +43,8 @@ are in progress.
 Last verified: 2026-08-28.
 
 Next action: record the first eligible hosted `affected` run for the exact module-documentation/
-compiled-sample class and for the existing documentation/Tutorial-sample class. Production source,
+compiled-sample class. The documentation/Tutorial-sample class has one accepted no-shadow hosted
+observation. Production source,
 module build scripts, ordinary tests, code deletion/rename, Demo, integration, benchmark, shared-
 input, sensitive-tooling, and unknown-path classes retain the complete shadow or full fallback.
 Build-cache and
@@ -59,6 +61,7 @@ pre-extraction comparator rather than being rewritten for later intentional gate
 - `release/changes/20260825-quality-build-phase2-sample-docs.json`
 - `release/changes/20260825-quality-build-phase2-documentation.json`
 - `release/changes/20260825-quality-build-phase2-device-benchmark.json`
+- `release/changes/20260828-host-android-adapter-state-sample.json`
 
 ## Release intent rationale
 
@@ -79,9 +82,12 @@ changes only repository quality-build implementation, workflow orchestration, an
 documentation. It changes no published artifact, publication input, or compiled public sample;
 release-intent verification again detects zero release artifacts, ignored artifacts, or shared
 publication paths, so Phase 5 also adds no Maven Changeset.
-Phase 6 cache-ownership and observation work changes only repository workflows and active project
-documentation. It does not change a published artifact, publication input, or compiled public
-sample, so it likewise adds no Maven Changeset.
+Phase 6 cache-ownership and classifier work changes only repository workflows and active project
+documentation. Its first observation changes only Tutorial source and documentation and therefore
+adds no Maven Changeset. The module-documentation observation also improves one test-only compiled
+Host Android sample; `release/changes/20260828-host-android-adapter-state-sample.json` explicitly
+classifies that published artifact as ignored because production sources, signatures, runtime
+behavior, publication metadata, and generated artifact content are unchanged.
 
 ## Objective
 
@@ -975,6 +981,23 @@ non-API output had no rounded change, and wrapper time increased by `18.8 s` (`+
 **no material change** and timing is **inconclusive** because dependency, process, and filesystem
 state differ. This proves local completeness and headroom only; it does not count toward either
 hosted observation class.
+
+Pull request #225 supplied the first real documentation/Tutorial-sample no-shadow observation. The
+classifier selected `affected` with no full fallback, Preview work was skipped, the five-task
+candidate covered zero published artifacts and only `:samples:tutorials`, and the complete shadow
+was explicitly skipped. The affected Gradle step passed in `6 min 9 s`; its hosted work job passed
+in `7 min 6 s`, and the required `qaQuick` facade completed `8 min 12 s` after workflow creation.
+The parallel documentation work passed in `3 min 58 s`, reused `6/6` immutable API groups with zero
+generation or invalid group in `7.1 s`, and kept the production site inside every budget at
+469.0 MiB total, 46.7/46.9 MiB non-API, and `47.3 s` build time. Relative to the Phase 0 execution
+P50 of `22 min 43 s`, the affected Gradle step is `72.9%` lower; relative to the Phase 0 required
+end-to-end P50 of `24 min 8 s`, the `8 min 12 s` critical path is `66.0%` lower. Correctness is
+**no material change** because every selected child and stable facade passed with the intended
+shadow absence; this first-class latency observation is **improved** against the frozen Phase 0
+comparator. The limitation is one hosted runner/cache state and one Tutorial project, so it closes
+the first-observation requirement for this class but does not establish the ten-PR distributional
+acceptance target. The next observation remains the accepted module-documentation/compiled-sample
+class.
 
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
