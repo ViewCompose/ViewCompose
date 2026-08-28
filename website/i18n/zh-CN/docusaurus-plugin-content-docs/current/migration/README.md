@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 6c0701febb9f5739e0f89ad325e72d76b08b72e1919bfe089541f8807cd695f6
+translation_source_hash: bf30db91f18b13394f7e5d0d9e5749d2a6d39c484993f2478a4d97d022b8947c
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-27**
+最后验证日期：**2026-08-28**
 
 复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
@@ -99,7 +99,7 @@ Kotlin `2.0.21`，声明位置是
 | 互操作 | ViewCompose `AndroidView` 回调生命周期 | **Intentionally different（刻意不同）** | 分离可重放 update/reset、事务后 commit 和永久 release 清理。 | [Android View 互操作](compose-host-lifecycle-and-android-interop.md#android-view-interop-callback-mapping) |
 | 宿主 | Activity 和 Fragment 根 | **Partially supported（部分支持）** | 考虑内部所有的 session，以及 Fragment owner 与销毁时机不一致。 | [标准宿主](compose-host-lifecycle-and-android-interop.md#choosing-a-host-entry-point) |
 | 宿主 | 现有容器中的 `renderInto` | **Partially supported（部分支持）** | 安装所有必需 owner，并显式销毁返回的 session。 | [自定义宿主](compose-host-lifecycle-and-android-interop.md#rendering-into-an-existing-view-hierarchy) |
-| 所有权 | 通用 UI 作用域 ViewModel 和继承的 `CreationExtras` | **Partially supported（部分支持）** | 验证目的地/图的 factory 输入；当前没有任意子树 provider。 | [Owner](compose-host-lifecycle-and-android-interop.md#lifecycle-viewmodel-and-saved-state-owners) |
+| 所有权 | 通用 UI 作用域 ViewModel 和继承的 `CreationExtras` | **Partially supported（部分支持）** | 保留已验证的目的地/图 Factory 与 extra 继承；增加通用的任意子树 provider。 | [Owner](compose-host-lifecycle-and-android-interop.md#lifecycle-viewmodel-and-saved-state-owners) |
 | Session | 显式渲染、帧调度和终结性销毁 | **Intentionally different（刻意不同）** | 把 `RenderSession` 视为组合、原生树、overlay 和清理的所有者。 | [Session](compose-host-lifecycle-and-android-interop.md#session-frame-effect-and-disposal-semantics) |
 | 互操作 | 直接 ViewBinding 和树内 Fragment API | **Unsupported（不支持）** | 把 Fragment 所有权留在渲染树外，并显式管理 XML inflate。 | [不支持的互操作](compose-host-lifecycle-and-android-interop.md#unsupported-direct-interop) |
 | 导航 | controller、目的地和多栈所有权 | **Intentionally different（刻意不同）** | 迁移目标状态转换，不要迁移 Navigation 2 或 3 的 API 名称。 | [导航模型](compose-navigation.md#choosing-the-source-navigation-model) |
