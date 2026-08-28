@@ -10,6 +10,7 @@ version_lane: version-agnostic
 capability_ids:
   - viewmodel.owner-boundaries
   - viewmodel.saved-state
+  - viewmodel.scoped-owners
   - viewmodel.store-resolution
 artifact_ids:
   - viewcompose-android
@@ -38,9 +39,10 @@ completion:
   - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
   - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
 last_verified: 2026-08-29
-next_action: Implement Phase 2's general retained scoped-owner provider, reference-token lifetime, terminal-removal semantics, and Q3 contract evidence.
+next_action: Implement Phase 3's navigation migration onto the shared scoped-owner provider and host-owned ViewTree discovery with explicit-owner precedence.
 maven_release_changesets:
   - release/changes/20260829-lifecycle-toolchain-prerequisite.json
+  - release/changes/20260829-viewmodel-scoped-owners.json
   - release/changes/20260829-viewmodel-store-resolution.json
 ---
 
@@ -48,17 +50,18 @@ maven_release_changesets:
 
 ## Status
 
-Active. The audit baseline, Phase 0 contract freeze, and Phase 1 store-resolution hard cut are
-complete.
+Active. The audit baseline, Phase 0 contract freeze, Phase 1 store-resolution hard cut, and Phase 2
+general retained scoped-owner provider are complete.
 
 Last verified: 2026-08-29.
 
-Next action: implement Phase 2's general retained scoped-owner provider, reference-token lifetime,
-terminal-removal semantics, and Q3 contract evidence.
+Next action: implement Phase 3's navigation migration onto the shared scoped-owner provider and
+host-owned ViewTree discovery with explicit-owner precedence.
 
 ## Maven release changesets
 
 - `release/changes/20260829-lifecycle-toolchain-prerequisite.json`
+- `release/changes/20260829-viewmodel-scoped-owners.json`
 - `release/changes/20260829-viewmodel-store-resolution.json`
 
 ## Release intent rationale
@@ -69,6 +72,10 @@ sample. The toolchain prerequisite is tracked by
 affected host and Preview artifacts, including the isolated Preview worker's JDK 21 runtime break.
 Later implementation pull requests must add their own immutable Changeset and must not amend this
 record. The release planner, not this plan, derives reverse-dependency propagation.
+
+The Phase 2 provider API, composition adapters, and compiled sample are classified by
+`release/changes/20260829-viewmodel-scoped-owners.json` as one additive feature for
+`viewcompose-viewmodel-androidx`.
 
 ## Objective
 
@@ -176,6 +183,34 @@ navigation migration, process-restoration evidence, holder removal, device evide
 performance measurements, so those dimensions remain **inconclusive**. Next action: implement the
 Phase 2 retained scoped-owner provider and its reference, removal, rollback, isolation, recreation,
 and delayed-session contracts.
+
+### Phase 2 retained scoped-owner acceptance
+
+The comparison baseline was the 24-test owning module after Phase 1, with no general child-scope
+provider and navigation still carrying the only retained child-store implementation. The accepted
+implementation delegates child-store allocation and reference counting to Lifecycle 2.11
+`ViewModelStoreProvider`, adds one ViewCompose provider facade plus lease and composition adapters,
+and stores commit/terminal metadata in AndroidX-owned stores rather than a parallel store map.
+
+The final 2026-08-29 focused run passed 20/20 scoped-owner contracts and all 44/44 tests in
+`viewcompose-viewmodel-androidx`, with zero skips, failures, or errors. The owning-module total grew
+from 24 to 44 tests: 20 additional cases, a 1.833x total, or a normalized increase of 83.3%. The
+contracts cover provider and child isolation, facade recreation, Factory/extras/default-argument
+inheritance, multiple and idempotently closed leases, temporary absence, terminal clear, deferred
+clear, no resurrection, parent-store cleanup, commit/abort, delayed local capture,
+Pager/lazy/overlay reorder, and `INITIALIZED`/`DESTROYED` lifecycle boundaries. The same revision's
+`qaQuick qaPreview` acceptance passed all 2,270 actionable tasks: 215 executed and 2,055 were up to
+date.
+
+Conclusion: **improved**. Arbitrary retained UI subtrees now have one stable-key, reference-
+protected ownership primitive with explicit terminal-removal semantics, configuration retention,
+transactional composition rollback, and no global fallback store. The final boundary review also
+closed an early-lifecycle leak: normal removal at `INITIALIZED` now clears the provider, while only
+`DESTROYED` preserves it for parent-store recreation. Limitations: navigation has not yet migrated
+off `NavEntryOwnerStore`; process-death `SavedStateHandle` restoration, host ViewTree fallback,
+device evidence, runtime performance measurements, and the holder/helper hard cut remain
+**inconclusive**. Next action: migrate navigation destination and graph stores to the shared
+provider, prove its full retained-stack matrix, and add host-owned ViewTree precedence tests.
 
 ## Design rules and hard-cut policy
 
@@ -379,7 +414,7 @@ with a failing contract or characterization test and lands with its complete mat
 | --- | --- | --- | --- |
 | 0 | capability/Q3 contract, hard-cut list, ADR, dependency and test matrix | decision and test names reviewed before production edits | Complete |
 | 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Complete |
-| 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Not started |
+| 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Complete |
 | 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Not started |
 | 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Not started |
 | 5 | coverage closure and defect-pressure matrix | every matrix row maps to executable evidence and mutation/negative guards detect regressions | Not started |
