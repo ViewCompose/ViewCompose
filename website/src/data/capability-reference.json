@@ -329,7 +329,8 @@
         "architecture.development-tooling-isolation",
         "architecture.in-memory-development-tooling-installation",
         "module.viewcompose-ui-foundation",
-        "tooling.diagnostics"
+        "tooling.diagnostics",
+        "migration.render-session-pre-frame-inspection"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -583,6 +584,19 @@
       }
     },
     {
+      "capabilityId": "lazy.item-session-reuse",
+      "referenceId": "reference.lazy.item-session-reuse",
+      "relatedDocumentIds": [
+        "architecture.lazy-collections-runtime",
+        "module.viewcompose-ui-contract"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-contract-lazy-session-reuse",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "lifecycle.android-view",
       "referenceId": "reference.lifecycle.android-view",
       "relatedDocumentIds": [
@@ -801,6 +815,21 @@
       "sample": {
         "sampleClass": "compiled-region",
         "sampleId": "guide.nested-scroll-toolbar",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "observed.value-mapping",
+      "referenceId": "reference.observed.value-mapping",
+      "relatedDocumentIds": [
+        "tutorial.lazy-list-performance",
+        "guide.lazy-collections",
+        "architecture.lazy-collections-runtime",
+        "module.viewcompose-ui-foundation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-foundation-observed-map",
         "versionLane": "released"
       }
     },
@@ -1065,6 +1094,19 @@
       }
     },
     {
+      "capabilityId": "runtime.reusable-content",
+      "referenceId": "reference.runtime.reusable-content",
+      "relatedDocumentIds": [
+        "architecture.lazy-collections-runtime",
+        "module.viewcompose-runtime"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.runtime-reusable-content",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "runtime.state",
       "referenceId": "reference.runtime.state",
       "relatedDocumentIds": [
@@ -1126,6 +1168,18 @@
       "sample": {
         "sampleClass": "compiled-region",
         "sampleId": "guide.text-input-editing",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "text.platform-font-family",
+      "referenceId": "reference.text.platform-font-family",
+      "relatedDocumentIds": [
+        "module.viewcompose-ui-contract"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-contract-font-family",
         "versionLane": "released"
       }
     },
@@ -1434,6 +1488,10 @@
     "migration.lazy-collection-revision-reuse": {
       "documentType": "migration",
       "path": "/migration/lazy-collection-revision-and-reuse"
+    },
+    "migration.render-session-pre-frame-inspection": {
+      "documentType": "migration",
+      "path": "/migration/render-session-pre-frame-inspection"
     },
     "module.viewcompose-android": {
       "documentType": "module",
@@ -2761,7 +2819,7 @@
           "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
-          "overloadCount": 3,
+          "overloadCount": 4,
           "receiver": "UiTreeBuilder",
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn"
         },
@@ -6234,6 +6292,6 @@
     "entryCount": 531,
     "groupCount": 15,
     "ownedEntryCount": 531,
-    "sourceFingerprint": "80f5edb72153bf8b4f5d111fc8e85926e3be3abcc15679a3a7afb2fc126132f9"
+    "sourceFingerprint": "b05e757de48af6c4c36802889c635273aa0c6110959ff92d375e70e50b9ef6b1"
   }
 }

@@ -1,0 +1,81 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.observed-lazy-list-tail-performance",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-ui-foundation",
+  "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn",
+  "capability_id": "lazy.collections",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "state",
+    "lifecycle",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn",
+        "com.viewcompose.ui.foundation.ObservedValue.map",
+        "com.viewcompose.ui.node.LazyListItemSessionStrategy.canReuseAcrossKeys",
+        "com.viewcompose.runtime.composition.ComposerLite.withReusableContent",
+        "com.viewcompose.ui.node.spec.GenericUiFontFamily",
+        "com.viewcompose.ui.node.spec.GenericUiFontFamily.equals",
+        "com.viewcompose.ui.node.spec.GenericUiFontFamily.hashCode"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-ui-foundation",
+        "module.viewcompose-ui-contract",
+        "module.viewcompose-runtime"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "tutorial.lazy-list-performance",
+        "module.viewcompose-ui-foundation",
+        "module.viewcompose-ui-contract",
+        "module.viewcompose-runtime"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.lazy.collections",
+        "reference.observed.value-mapping",
+        "reference.lazy.item-session-reuse",
+        "reference.runtime.reusable-content",
+        "reference.text.platform-font-family"
+      ]
+    },
+    "tutorial": {
+      "status": "updated",
+      "targets": ["tutorial.lazy-list-performance"]
+    },
+    "guide": {
+      "status": "updated",
+      "targets": ["guide.lazy-collections"]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": ["architecture.lazy-collections-runtime"]
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "The overload is additive and leaves every existing lazy-list declaration and revision contract unchanged."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No public symbol, package, document route, or ownership location moves."
+    }
+  }
+}

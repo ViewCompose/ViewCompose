@@ -195,6 +195,38 @@ fun rememberObserverRetrySample() {
     composer.dispose()
 }
 
+fun reusableContentOwnerSample() {
+    // DOCS_REGION_START(runtime-module-reusable-content)
+    val composer = ComposerLite()
+    var owner = "account-A"
+    var revision = 0L
+
+    fun compose(replaceOwner: Boolean): Any {
+        composer.requestRootRecompose()
+        return composer.composeRoot {
+            composer.runGroup(
+                signature = "reusable-host",
+                inputs = revision,
+            ) {
+                composer.withReusableContent(owner, replaceOwner) {
+                    composer.runGroup(signature = "content") {
+                        composer.remember(emptyList()) { Any() }
+                    }
+                }
+            }
+        }
+    }
+
+    val firstOwnerState = compose(replaceOwner = false)
+    owner = "account-B"
+    revision += 1L
+    val secondOwnerState = compose(replaceOwner = true)
+
+    check(firstOwnerState !== secondOwnerState)
+    composer.dispose()
+    // DOCS_REGION_END(runtime-module-reusable-content)
+}
+
 fun keyedGroupMovementSample() {
     val composer = ComposerLite()
 

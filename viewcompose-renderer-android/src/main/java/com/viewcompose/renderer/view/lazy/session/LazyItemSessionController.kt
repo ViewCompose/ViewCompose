@@ -3,6 +3,7 @@ package com.viewcompose.renderer.view.lazy.session
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyListItemSessionStrategy
 import com.viewcompose.ui.node.ReusableItemPresentation
 
 /** Direct holder bridge that keeps hot session lifecycle calls out of generic Kotlin callbacks. */
@@ -10,6 +11,10 @@ internal interface LazyItemSessionHost {
     fun createSession(item: LazyListItem): LazyListItemSession
 
     fun clearContainer()
+
+    fun beginLogicalOwnerTransfer() = Unit
+
+    fun endLogicalOwnerTransfer() = Unit
 }
 
 /** Allocation-free result of routing one adapter submission through an item session. */
@@ -58,6 +63,7 @@ internal class LazyItemSessionController(
     private var nextImplicitRevision = 0L
     private var candidate: Candidate? = null
     private var session: LazyListItemSession? = null
+    private var currentSessionStrategy: LazyListItemSessionStrategy? = null
     private var preparedRevision = Long.MIN_VALUE
     private var active = false
     private var pendingPresentation: ReusableItemPresentation? = null
@@ -87,16 +93,13 @@ internal class LazyItemSessionController(
                     LazyItemBindOutcome.NotCommitted
                 }
             } else {
-                if (!active && session != null) {
-                    releaseSessionForReplacement()
-                }
                 applyActive(item = item)
             }
         } catch (error: Throwable) {
             abandonSessionAfterBindingFailure(error)
             throw error
         }
-        active = true
+        active = session != null
         preparedRevision = Long.MIN_VALUE
         if (!outcome.satisfiesSubmission) return outcome
         committedRevision = submissionRevision
@@ -195,6 +198,23 @@ internal class LazyItemSessionController(
         }
     }
 
+    fun retainForCrossKeyReuse(): Boolean {
+        val retainedSession = session ?: return false
+        val retainedStrategy = currentSessionStrategy ?: return false
+        if (!retainedStrategy.canReuseAcrossKeys(retainedSession)) return false
+        candidate = null
+        committedRevision = Long.MIN_VALUE
+        committedItem = null
+        preparedRevision = Long.MIN_VALUE
+        active = false
+        return true
+    }
+
+    fun canReuseFor(item: LazyListItem): Boolean {
+        val retainedSession = session ?: return false
+        return item.sessionStrategy.canReuseAcrossKeys(retainedSession)
+    }
+
     fun detachForReuse(): ReusableItemPresentation? {
         val stagedPresentation = pendingPresentation
         pendingPresentation = null
@@ -206,6 +226,7 @@ internal class LazyItemSessionController(
             failure = error
         } finally {
             session = null
+            currentSessionStrategy = null
             currentKey = null
             currentContentType = null
             currentItemKind = null
@@ -270,6 +291,30 @@ internal class LazyItemSessionController(
             (currentContentType != item.contentType || currentItemKind != item.kind)
         val revisionsChanged = !hasSameRevisions(item)
         return when {
+            currentSession != null &&
+                currentKey != item.key &&
+                !presentationTypeChanged &&
+                item.sessionStrategy.canReuseAcrossKeys(currentSession) -> {
+                host.beginLogicalOwnerTransfer()
+                val committed = try {
+                    item.updateSession(currentSession)
+                    currentSession.render()
+                } finally {
+                    host.endLogicalOwnerTransfer()
+                }
+                if (committed) {
+                    currentSessionStrategy = item.sessionStrategy
+                    currentKey = item.key
+                    currentContentRevision = item.contentRevision
+                    currentEnvironmentRevision = item.environmentRevision
+                    LazyItemBindOutcome.RenderedRevision
+                } else {
+                    // The previous owner cannot remain live after a failed cross-key transaction.
+                    terminateCurrentSession()
+                    LazyItemBindOutcome.NotCommitted
+                }
+            }
+
             currentSession == null || currentKey != item.key || presentationTypeChanged -> {
                 replaceSession(item)
                 if (checkNotNull(session).activate()) {
@@ -284,6 +329,7 @@ internal class LazyItemSessionController(
                 item.updateSession(currentSession)
                 val committed = currentSession.render()
                 if (committed) {
+                    currentSessionStrategy = item.sessionStrategy
                     currentContentRevision = item.contentRevision
                     currentEnvironmentRevision = item.environmentRevision
                 }
@@ -334,6 +380,7 @@ internal class LazyItemSessionController(
             throw error
         }
         session = newSession
+        currentSessionStrategy = item.sessionStrategy
         currentKey = item.key
         currentContentType = item.contentType
         currentItemKind = item.kind
@@ -361,6 +408,7 @@ internal class LazyItemSessionController(
     private fun terminateCurrentSession() {
         val ownedSession = session
         session = null
+        currentSessionStrategy = null
         currentKey = null
         currentContentType = null
         currentItemKind = null
@@ -386,6 +434,7 @@ internal class LazyItemSessionController(
     private fun releaseSessionForReplacement() {
         val ownedSession = session
         session = null
+        currentSessionStrategy = null
         currentKey = null
         currentContentType = null
         currentItemKind = null

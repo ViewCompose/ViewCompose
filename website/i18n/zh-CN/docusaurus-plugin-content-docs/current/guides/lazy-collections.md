@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: c5cf9164e6bfea7cc5dd1ff706226395ae50704313d1a14f3ae76f8ac61b8622
+translation_source_hash: 97fb77af37aff7bd83e9de5f9b85eb80477a2206b44fa66bca17303d7739b9ae
 translation_status: current
 ---
 
@@ -155,6 +155,9 @@ fun UiTreeBuilder.PagerWithTabs() {
 - 只有测量确认 Selector/Key 扫描是问题，并且应用确实拥有不可变快照边界时，才使用
   `remember(dataVersion) { source.toLazyItemsSnapshot() }`。结构、保留数据、Selector Capture 或
   普通 Content Capture 变化时必须替换快照。
+- 当 State 支持的不可变 Snapshot 频繁变化、外围屏幕仍保持结构稳定时，使用 Observed
+  `LazyColumn` Overload。Item Content 会收到稳定 Key 与 `ObservedValue<T>`；叶子 Property 使用
+  `map`，条件结构则留在普通 Composition 或显式 Revision Declaration 中。
 - 产品需要加载、失效、重试、刷新、Placeholder 或丢页策略时，使用
   [`viewcompose-paging-androidx`](../modules/viewcompose-paging-androidx/README.md)，不要在 UI 层重建
   这些策略。

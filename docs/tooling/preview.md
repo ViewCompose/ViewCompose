@@ -153,13 +153,17 @@ request-only tools:
 
 - **Inspect Device Diagnostics** selects a session, shows correlated committed frame/failure state,
   navigates bounded source candidates, snapshots/highlights mounted Views, and records a finite
-  eight-frame/two-second ViewCompose timing workload.
+  eight-frame/two-second ViewCompose timing workload. **Capture next LazyItem** instead arms the
+  selected exact parent for ten seconds and records one first supported frame from the next logical
+  `LazyItem`, including an opaque physical-container token for holder-reuse correlation.
 - **Inspect Device Animation Timeline** discovers committed transitions and records one selected,
   read-only capture for at most 500 ms. It cannot seek or mutate device state.
 
 Both use Android `DUMP`, a one-use nonce, foreground package/process checks, private atomic response
 files, bounded payloads, and fail-closed stale/disposed paths. No valid request means no report
 polling/write, recurring tree traversal, frame observer, timing allocation, or active capture.
+The future-item arm matches only parent Session ID, `LazyItem` role, and a post-request Session-ID
+floor; it never accepts or returns an application key or native object.
 Device timing excludes Android measure/layout/draw, GPU, RenderThread, SurfaceFlinger, decode,
 network, database, and external SDK work. See the
 [Preview Integration module](../modules/viewcompose-preview/README.md) for exact ownership and bounds.

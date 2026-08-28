@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - lazy.collections
+  - observed.value-mapping
 artifact_ids:
   - viewcompose-material3-android
   - viewcompose-ui-foundation
@@ -98,6 +99,13 @@ If a stable parent recomposes often and selector scans appear in the profile, in
 `LazyItemsSnapshot` at the application's immutable data boundary. It is not a general replacement
 for an ordinary list: creating a new snapshot on every composition still performs the scan, while
 retaining one after ordinary data or captures change is incorrect.
+
+When the immutable submission itself changes frequently but the surrounding screen structure does
+not, supply that snapshot through the observed `LazyColumn` overload. It patches the mounted list
+without recomposing the parent and exposes each payload as an `ObservedValue`; derive changing text
+or other leaf properties with `ObservedValue.map`. Keep item structure dependent only on the stable
+key and stable captures. This path is transactional, so a failed native patch retains the previous
+item table and observation dependencies for retry.
 
 ## Verify the result
 

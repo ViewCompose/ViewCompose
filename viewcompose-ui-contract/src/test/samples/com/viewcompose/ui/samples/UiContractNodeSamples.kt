@@ -50,6 +50,7 @@ import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.ui.node.spec.ConstraintRatioSide
+import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiSourceCallSite
@@ -116,6 +117,7 @@ fun relativeLayoutModifierSample() {
 
 fun lazyListItemSessionUpdateSample() {
     val session = object : LazyListItemSession {
+        var installedKey: Any? = null
         var installedLabel = ""
         var prepared = false
         var activated = false
@@ -140,6 +142,11 @@ fun lazyListItemSessionUpdateSample() {
         override fun dispose() = Unit
     }
     val strategy = object : LazyListItemSessionStrategy {
+        override fun canReuseAcrossKeys(retained: LazyListItemSession): Boolean {
+            // A real opt-in must also reset every key-owned state/effect/saveable owner from update.
+            return retained === session
+        }
+
         override fun create(
             container: RenderContainerHandle,
             item: LazyListItem,
@@ -150,6 +157,11 @@ fun lazyListItemSessionUpdateSample() {
             item: LazyListItem,
         ) {
             check(retained === session)
+            if (session.installedKey != item.key) {
+                // A production opt-in also ends key-owned effects and saveable-state ownership.
+                session.installedLabel = ""
+                session.installedKey = item.key
+            }
             session.installedLabel = item.sessionPayload as String
         }
     }
@@ -184,6 +196,54 @@ fun lazyListItemSessionUpdateSample() {
     session.render()
     check(session.installedLabel == "Updated")
     check(session.renderCount == 1)
+
+    val replacementKey = LazyListItem(
+        key = "settings",
+        contentRevision = "row-v1",
+        sessionStrategy = strategy,
+        sessionPayload = "Settings",
+    )
+    check(strategy.canReuseAcrossKeys(session))
+    replacementKey.updateSession(session)
+    session.render()
+    check(session.installedKey == "settings")
+    check(session.installedLabel == "Settings")
+}
+
+fun crossKeyLazyItemSessionStrategySample(
+    createSession: (RenderContainerHandle) -> LazyListItemSession,
+    installItem: (LazyListItemSession, LazyListItem) -> Unit,
+): LazyListItemSessionStrategy {
+    // DOCS_REGION_START(ui-contract-module-cross-key-lazy-session)
+    return object : LazyListItemSessionStrategy {
+        override fun create(
+            container: RenderContainerHandle,
+            item: LazyListItem,
+        ): LazyListItemSession = createSession(container).also { installItem(it, item) }
+
+        override fun update(
+            session: LazyListItemSession,
+            item: LazyListItem,
+        ) {
+            // This transaction must replace every key-owned state, effect, callback, and owner.
+            installItem(session, item)
+        }
+
+        override fun canReuseAcrossKeys(session: LazyListItemSession): Boolean = true
+    }
+    // DOCS_REGION_END(ui-contract-module-cross-key-lazy-session)
+}
+
+fun platformFontFamilyIdentitySample() {
+    // DOCS_REGION_START(ui-contract-module-platform-font-family)
+    val platformFont = Any()
+    val first = uiFontFamily(platformFont)
+    val second = uiFontFamily(platformFont)
+    val different = uiFontFamily(Any())
+
+    check(first == second)
+    check(first != different)
+    // DOCS_REGION_END(ui-contract-module-platform-font-family)
 }
 
 /** Wraps an immutable finite submission with validated key and sticky-header lookup metadata. */

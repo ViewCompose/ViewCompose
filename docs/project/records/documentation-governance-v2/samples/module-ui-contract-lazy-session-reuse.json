@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.ui-contract-lazy-session-reuse",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "lazy.item-session-reuse",
+  "document_ids": ["module.viewcompose-ui-contract"],
+  "version_lane": "released",
+  "source": "viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt",
+  "region": "ui-contract-module-cross-key-lazy-session",
+  "build_target": ":viewcompose-ui-contract:compileTestKotlin"
+}

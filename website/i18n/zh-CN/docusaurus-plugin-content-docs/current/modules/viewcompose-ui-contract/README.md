@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 2e3adfe3a9805b264ff3d7158138225d16f42e47eada64cd237fd47d934c6f7a
+translation_source_hash: 670d7bd2eba02d7fb4458ca5c59c1ff6f9b7529a8406992d904805fc19b97078
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-ui-contract
@@ -10,11 +10,15 @@ owner:
   id: viewcompose-ui-contract
 version_lane: released
 capability_ids:
+  - lazy.item-session-reuse
   - renderer.tree-transactions
+  - text.platform-font-family
 artifact_ids:
   - viewcompose-ui-contract
 sample_ids:
   - module.ui-contract-dependency
+  - module.ui-contract-font-family
+  - module.ui-contract-lazy-session-reuse
   - module.ui-contract-node
 coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04
 minimal_usage_sample_id: module.ui-contract-node
@@ -135,7 +139,9 @@ val gap = VNode(
   `prepare` → `activate` → `render` → `disposeForReuse`/`dispose` 协议允许 Renderer 构建对外静默
   的候选、结束 Key 所有状态，并只转移已 Reset 的物理呈现。编译样例
   `lazyListItemSessionUpdateSample` 展示此生命周期。`activate` 与 `render` 的 Boolean 结果只在
-  已安装内容 Commit 后推进语义 Revision；Rollback 返回 `false` 并保持可重试。
+  已安装内容 Commit 后推进语义 Revision；Rollback 返回 `false` 并保持可重试。Strategy 只有在
+  下一次 `update` Transaction 会在新 Frame 可见前替换全部 Key 所有的 State、Observation、
+  Effect、Callback 与 Saveable Owner 时，才能选择 Q3 `canReuseAcrossKeys`；默认值仍为 `false`。
 - `LazyItemTable` 是 Q3 的有序索引集合边界，由 Lazy List NodeSpec 使用。它提供数量、按位置读取
   Item、Key 到位置查询，以及相对上一个已接受 Table 的不可变更新，但不指定 AndroidX Paging 或
   Renderer。Q2 `LazyItemTableUpdate` 表示有界 Insert、Remove、Move、Change 或完整 Reload；声明
@@ -168,6 +174,43 @@ val gap = VNode(
   定义平台无关的图片来源、请求策略、平台目标和可释放加载句柄。
 - Unit、Shape、Graphics、按键输入、手势、Semantics 与 Tooling 包共同组成 ViewCompose 模块
   使用的平台无关词汇体系。
+
+跨 Key Session 复用必须显式选择。Strategy 的 `update` Transaction 必须在保留的 Session
+变为可见之前替换全部逻辑 Key 所有权：
+
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-cross-key-lazy-session" sample_id="module.ui-contract-lazy-session-reuse" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
+```kotlin
+return object : LazyListItemSessionStrategy {
+    override fun create(
+        container: RenderContainerHandle,
+        item: LazyListItem,
+    ): LazyListItemSession = createSession(container).also { installItem(it, item) }
+
+    override fun update(
+        session: LazyListItemSession,
+        item: LazyListItem,
+    ) {
+        // This transaction must replace every key-owned state, effect, callback, and owner.
+        installItem(session, item)
+    }
+
+    override fun canReuseAcrossKeys(session: LazyListItemSession): Boolean = true
+}
+```
+
+平台字体 Wrapper 按对象 Identity 比较，而不会依赖不透明平台对象的值相等语义。因此复用同一个
+平台对象可以稳定声明式 Snapshot，同时不会把不同 Renderer Resource 误判为相等：
+
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-platform-font-family" sample_id="module.ui-contract-font-family" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
+```kotlin
+val platformFont = Any()
+val first = uiFontFamily(platformFont)
+val second = uiFontFamily(platformFont)
+val different = uiFontFamily(Any())
+
+check(first == second)
+check(first != different)
+```
 
 完整生成参考位于
 [`viewcompose-ui-contract` API 树](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/)。
@@ -224,7 +267,9 @@ val gap = VNode(
   Payload。任一 Revision 改变时，用最新 Item Payload 调用保留的 Declaration Strategy，并持续
   Render 该逻辑 Session，直到内容报告成功 Commit。Key 不同则始终创建不同逻辑 Session；兼容物理
   呈现只能在旧 State 与 Effect Dispose 后转移。Typed Declaration 可以让全部 Item Snapshot 共享
-  一个 `LazyListItemSessionStrategy`；Strategy 只能同步消费当前 Item，不得保留它。
+  一个 `LazyListItemSessionStrategy`；Strategy 只能同步消费当前 Item，不得保留它。跨 Key 保留
+  Session 还要求已安装 Strategy 接受 `canReuseAcrossKeys`；仅满足 Kind/Content Type 的物理兼容性
+  绝不授权逻辑 State Transfer。
 - 状态与 Connector 命令按所属渲染器线程封闭。Android 集成使用主线程；除非具体契约另有
   说明，回调都会同步执行。
 - 不存在任何工具捕获 Scope 时，每次 VNode 发射只执行一次 Atomic 非活动检查，不读取工具

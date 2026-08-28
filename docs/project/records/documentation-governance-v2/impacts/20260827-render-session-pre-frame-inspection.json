@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.diagnostics-session-pre-frame-inspection",
+  "change": "changed",
+  "breaking": true,
+  "artifact": "viewcompose-ui-foundation",
+  "symbol_id": "com.viewcompose.ui.foundation.RenderSessionInspectionTooling",
+  "capability_id": "diagnostics.session-inspection",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.ui.foundation.RenderSessionInspectionTooling",
+        "com.viewcompose.ui.foundation.RenderSessionInspectionPolicy"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-ui-foundation"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["tooling.diagnostics-session-inspection"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.diagnostics.session-inspection"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The existing application tutorial does not install or exhaustively handle the platform inspection policy."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The running-device workflow is owned by the updated diagnostics tooling page rather than a product guide."
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": ["adr.correlated-render-diagnostics"]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.render-session-pre-frame-inspection"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No public symbol, package, document route, or ownership location moves."
+    }
+  }
+}

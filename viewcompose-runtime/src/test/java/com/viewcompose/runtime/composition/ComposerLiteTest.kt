@@ -244,6 +244,194 @@ class ComposerLiteTest {
     }
 
     @Test
+    fun `reusable content replaces state ownership without replacing structural result`() {
+        val composer = ComposerLite()
+        val states = mapOf(
+            "A" to mutableStateOf(0),
+            "B" to mutableStateOf(0),
+        )
+        val events = mutableListOf<String>()
+        var owner = "A"
+        var revision = 0L
+        var childRuns = 0
+
+        data class Result(val label: String)
+
+        fun observer(name: String) = object : RememberObserver {
+            override fun onRemembered() {
+                events += "start:$name"
+            }
+
+            override fun onForgotten() {
+                events += "dispose:$name"
+            }
+
+            override fun onAbandoned() {
+                events += "abandon:$name"
+            }
+        }
+
+        fun compose(replaceOwner: Boolean): Result {
+            composer.requestRootRecompose()
+            return composer.composeRoot {
+                composer.runGroup(
+                    signature = "reusable-host",
+                    inputs = revision,
+                ) {
+                    composer.withReusableContent(
+                        ownerKey = owner,
+                        replaceOwner = replaceOwner,
+                    ) {
+                        composer.runGroup(
+                            signature = "content-$owner",
+                            reuseResult = { previous: Result, next -> previous == next },
+                        ) {
+                            childRuns += 1
+                            states.getValue(owner).value
+                            composer.remember<RememberObserver>(emptyList()) { observer(owner) }
+                            Result("same structure")
+                        }
+                    }
+                }
+            }
+        }
+
+        val initial = compose(replaceOwner = false)
+        assertEquals(listOf("start:A"), events)
+
+        owner = "B"
+        revision += 1L
+        val transferred = compose(replaceOwner = true)
+
+        assertSame(initial, transferred)
+        assertEquals(2, childRuns)
+        assertEquals(listOf("start:A", "dispose:A", "start:B"), events)
+
+        states.getValue("A").value = 1
+        assertFalse(composer.hasPendingInvalidations())
+        states.getValue("B").value = 1
+        assertTrue(composer.hasPendingInvalidations())
+    }
+
+    @Test
+    fun `reusable owner transfer adopts a changed root while skipping pure descendants`() {
+        val composer = ComposerLite()
+        var owner = "A"
+        var revision = 0L
+        var rootRuns = 0
+        var childRuns = 0
+
+        fun compose(replaceOwner: Boolean) {
+            composer.requestRootRecompose()
+            composer.composeRoot {
+                composer.runGroup(signature = "host", inputs = revision) {
+                    composer.withReusableContent(owner, replaceOwner) {
+                        composer.runGroup(signature = "root-$owner") {
+                            rootRuns += 1
+                            composer.runGroup(signature = "pure-child") {
+                                childRuns += 1
+                                "stable"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        compose(replaceOwner = false)
+        owner = "B"
+        revision += 1L
+        compose(replaceOwner = true)
+
+        assertEquals(2, rootRuns)
+        assertEquals(1, childRuns)
+    }
+
+    @Test
+    fun `aborted reusable content transfer restores previous ownership`() {
+        val composer = ComposerLite()
+        val events = mutableListOf<String>()
+        var owner = "A"
+        var revision = 0L
+
+        fun observer(name: String) = object : RememberObserver {
+            override fun onRemembered() {
+                events += "start:$name"
+            }
+
+            override fun onForgotten() {
+                events += "dispose:$name"
+            }
+
+            override fun onAbandoned() {
+                events += "abandon:$name"
+            }
+        }
+
+        fun content(replaceOwner: Boolean): Any {
+            return composer.runGroup(
+                signature = "reusable-host",
+                inputs = revision,
+            ) {
+                composer.withReusableContent(owner, replaceOwner) {
+                    composer.runGroup(signature = "content-$owner") {
+                        composer.remember<RememberObserver>(emptyList()) { observer(owner) }
+                    }
+                }
+            }
+        }
+
+        composer.composeRoot { content(replaceOwner = false) }
+        owner = "B"
+        revision += 1L
+        composer.requestRootRecompose()
+        composer.prepareRoot { content(replaceOwner = true) }.abort()
+
+        assertEquals(listOf("start:A", "abandon:B"), events)
+
+        owner = "A"
+        revision += 1L
+        composer.requestRootRecompose()
+        composer.composeRoot { content(replaceOwner = false) }
+        assertEquals(listOf("start:A", "abandon:B"), events)
+    }
+
+    @Test
+    fun `reusable content owner scopes automatic and explicit saveable keys`() {
+        val composer = ComposerLite()
+        var owner = "A"
+        var revision = 0L
+
+        fun compose(replaceOwner: Boolean): Pair<String, String> {
+            composer.requestRootRecompose()
+            return composer.composeRoot {
+                composer.runGroup(
+                    signature = "reusable-host",
+                    inputs = revision,
+                ) {
+                    composer.withReusableContent(owner, replaceOwner) {
+                        composer.runGroup(signature = "content") {
+                            composer.nextSaveableKey() to
+                                composer.scopedExplicitSaveableKey("field")
+                        }
+                    }
+                }
+            }
+        }
+
+        val ownerA = compose(replaceOwner = false)
+        owner = "B"
+        revision += 1L
+        val ownerB = compose(replaceOwner = true)
+        owner = "A"
+        revision += 1L
+        val restoredOwnerA = compose(replaceOwner = true)
+
+        assertFalse(ownerA == ownerB)
+        assertEquals(ownerA, restoredOwnerA)
+    }
+
+    @Test
     fun `aborting prepared composition restores remember slots`() {
         val composer = ComposerLite()
         val original = composer.composeRoot {

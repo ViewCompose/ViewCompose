@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "capability_id": "lazy.item-session-reuse",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.ui.node.LazyListItemSessionStrategy.canReuseAcrossKeys",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/collection/LazyListItem.kt"
+    }
+  ],
+  "reference_owner": { "reference_id": "reference.lazy.item-session-reuse", "generated": true },
+  "sample_owner": { "sample_id": "module.ui-contract-lazy-session-reuse" },
+  "document_owners": {
+    "module": ["module.viewcompose-ui-contract"],
+    "architecture": ["architecture.lazy-collections-runtime"]
+  }
+}

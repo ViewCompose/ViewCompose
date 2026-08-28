@@ -89,6 +89,49 @@ class LazyItemsSnapshotContractTest {
     }
 
     @Test
+    fun `equal environment is compared once while a new snapshot reuses canonical items`() {
+        val rows = rows(version = 0)
+        val firstSnapshot = rows.toLazyItemsSnapshot()
+        val secondSnapshot = rows.toLazyItemsSnapshot()
+        val environmentLocal = LocalValue { CountingEnvironmentValue(0) }
+        val reuseCache = LazyItemCanonicalReuseCache()
+
+        fun collect(
+            snapshot: LazyItemsSnapshot<Row>,
+            environment: CountingEnvironmentValue,
+        ): List<LazyListItem> {
+            lateinit var result: List<LazyListItem>
+            LocalContext.provide(environmentLocal, environment) {
+                val collector = LazyItemCollector(
+                    localSnapshot = LocalContext.snapshot(),
+                    saveableStateHolder = null,
+                    reuseCache = reuseCache,
+                )
+                collector.addSnapshotItems(
+                    snapshot = snapshot,
+                    key = Row::id,
+                    contentType = { null },
+                    contentRevision = { it },
+                    kind = com.viewcompose.ui.node.LazyListItemKind.Item,
+                    span = { GridItemSpan.Single },
+                    itemContent = {},
+                )
+                val prepared = collector.prepareBuild()
+                prepared.commit()
+                result = prepared.table.toList()
+            }
+            return result
+        }
+
+        val first = collect(firstSnapshot, CountingEnvironmentValue(1))
+        CountingEnvironmentValue.equalityChecks = 0
+        val second = collect(secondSnapshot, CountingEnvironmentValue(1))
+
+        assertEquals(1, CountingEnvironmentValue.equalityChecks)
+        assertSame(first, second)
+    }
+
+    @Test
     fun `two committed snapshot identities retain independent exact hits`() {
         val composer = ComposerLite()
         val firstSnapshot = rows(version = 1).toLazyItemsSnapshot()
@@ -585,6 +628,22 @@ class LazyItemsSnapshotContractTest {
 
         override fun equals(other: Any?): Boolean {
             return other is GuardedKey && value == other.value
+        }
+    }
+
+    private class CountingEnvironmentValue(
+        private val value: Int,
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            equalityChecks += 1
+            return other is CountingEnvironmentValue && value == other.value
+        }
+
+        override fun hashCode(): Int = value
+
+        companion object {
+            var equalityChecks: Int = 0
         }
     }
 

@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - lazy.collections
+  - observed.value-mapping
 artifact_ids:
   - viewcompose-ui-foundation
   - viewcompose-ui-contract
@@ -185,6 +186,10 @@ page because the pager owns discrete page movement rather than form scrolling.
 - Use `remember(dataVersion) { source.toLazyItemsSnapshot() }` only when measurement shows the
   selector/key scan matters and the application has a real immutable snapshot boundary. Replace it
   for structural, retained-data, selector-capture, or ordinary content-capture changes.
+- Use the observed `LazyColumn` overload when a State-backed immutable snapshot changes frequently
+  while the surrounding screen remains structurally stable. Its item content receives the stable
+  key and an `ObservedValue<T>`; use `map` for leaf properties, and keep conditional structure in
+  ordinary composition or an explicit revisioned declaration.
 - Use [`viewcompose-paging-androidx`](../modules/viewcompose-paging-androidx/README.md) when loading,
   invalidation, retry, refresh, placeholders, or page dropping are product requirements. Do not
   rebuild those policies in the UI layer.

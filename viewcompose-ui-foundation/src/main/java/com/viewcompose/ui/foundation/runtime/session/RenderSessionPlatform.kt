@@ -86,8 +86,11 @@ interface RenderSessionPlatformDiagnostics {
  * independently chooses whether the session is tracked and whether its first successful frame also
  * captures bounded source-candidate chains. This separation lets request-driven tools inspect
  * high-churn child sessions such as lazy items without paying source capture on their composition
- * path. [register] runs at most once after the first successful native frame for every tracked
- * session, including sessions whose source-candidate list is empty.
+ * path. [register] runs at most once after the first successful native frame for ordinary tracked
+ * sessions, including sessions whose source-candidate list is empty. Tooling may instead return
+ * [RenderSessionInspectionPolicy.TrackSessionBeforeFirstFrame] for one explicitly armed request;
+ * that policy registers immediately before the initial frame so its [RenderSessionTimingInspection]
+ * can capture the cold attempt without manufacturing another render.
  *
  * [register] also receives request-only mounted-node, diagnostic-summary, and timing inspectors.
  * They own the session and native targets weakly, read no history, and perform no traversal or
@@ -116,12 +119,15 @@ interface RenderSessionInspectionTooling {
     ): RenderSessionInspectionPolicy
 
     /**
-     * Registers one successfully rendered session and its optional bounded [sourceCandidates].
+     * Registers one tracked session and its optional bounded [sourceCandidates].
      *
-     * The session calls this method at most once after its first successful native frame. A
-     * [RenderSessionInspectionPolicy.TrackSession] session supplies an empty source list. Returning
-     * `null` declines the session permanently; an exception is isolated as diagnostics and is not
-     * retried on later frames.
+     * The session normally calls this method at most once after its first successful native frame.
+     * [RenderSessionInspectionPolicy.TrackSessionBeforeFirstFrame] calls it immediately before the
+     * initial frame and supplies an empty source list. During that call only, starting a timing
+     * capture attaches it to the frame already entering preparation and does not request a nested
+     * structural render. A [RenderSessionInspectionPolicy.TrackSession] session also supplies an
+     * empty source list. Returning `null` declines the session permanently; an exception is isolated
+     * as diagnostics and is not retried on later frames.
      *
      * @param container opaque renderer container owned by the committed session
      * @param context stable session identity, parent, and role shared with runtime diagnostics
@@ -155,6 +161,15 @@ enum class RenderSessionInspectionPolicy {
 
     /** Tracks lifecycle and mounted-node inspection while capturing no source candidates. */
     TrackSession,
+
+    /**
+     * Registers before the initial frame so one explicitly armed timing request can capture it.
+     *
+     * This request-only policy captures no source candidates and must not be used as a general
+     * eager-registration mode. The registration can observe an empty mounted-node snapshot and
+     * remains responsible for disposal even when the initial frame rolls back.
+     */
+    TrackSessionBeforeFirstFrame,
 
     /** Tracks the session and captures bounded source candidates during its first successful frame. */
     TrackSessionAndCaptureSources,

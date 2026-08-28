@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 09733ba7f87070596fb040cbad765c8096eea19b5b9161ddb531b093fe1f3f19
+translation_source_hash: 6d0403ca59b8afadca3384bc49e732cd3eccb946f5026f7d6be4edc781f80a4d
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-runtime
@@ -10,11 +10,13 @@ owner:
   id: viewcompose-runtime
 version_lane: released
 capability_ids:
+  - runtime.reusable-content
   - runtime.state
 artifact_ids:
   - viewcompose-runtime
 sample_ids:
   - module.runtime-dependency
+  - module.runtime-reusable-content
   - module.runtime-state
   - module.runtime-snapshot
 coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha03
@@ -89,6 +91,9 @@ check(count.value == 1 && enabled.value)
   结构不相等的计算结果。
 - [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
   在不依赖编译器生成变更标记的前提下，提供事务式位置组合、remember 值、effect 与诊断。
+- Q3 `ComposerLite.withReusableContent` 可以改变可复用结构的逻辑 State Owner，同时保留相等的
+  纯结构结果。显式 Owner Transfer 只重新执行持有 Remember 值、Saveable Path、Effect 或
+  Observation 的后代 Group；Prepare 失败会恢复先前已提交的 Owner。
 - `CompositionTimingCollector`、`CompositionTimingScope` 与
   `ComposerLite.prepareRootWithTiming` 组成 Q3、仅请求期有效的组合计时边界。只有实际执行的 Scope
   会被提交给 Collector；跳过的 Scope 不调用接口，也不读取时钟。Collector 负责单一 Monotonic
@@ -96,6 +101,40 @@ check(count.value == 1 && enabled.value)
   Source Hint。
 - [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
   是动画集成所消费的平台无关计时契约。
+
+可复用内容的 Owner Transfer 是显式操作，因此物理容器可以保留纯结构，而不会继承另一个逻辑
+Item 的 Remembered State：
+
+{/* compiled-region source="viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt" region="runtime-module-reusable-content" sample_id="module.runtime-reusable-content" build_target=":viewcompose-runtime:compileTestKotlin" */}
+```kotlin
+val composer = ComposerLite()
+var owner = "account-A"
+var revision = 0L
+
+fun compose(replaceOwner: Boolean): Any {
+    composer.requestRootRecompose()
+    return composer.composeRoot {
+        composer.runGroup(
+            signature = "reusable-host",
+            inputs = revision,
+        ) {
+            composer.withReusableContent(owner, replaceOwner) {
+                composer.runGroup(signature = "content") {
+                    composer.remember(emptyList()) { Any() }
+                }
+            }
+        }
+    }
+}
+
+val firstOwnerState = compose(replaceOwner = false)
+owner = "account-B"
+revision += 1L
+val secondOwnerState = compose(replaceOwner = true)
+
+check(firstOwnerState !== secondOwnerState)
+composer.dispose()
+```
 
 完整生成参考位于
 [`viewcompose-runtime` API 树](https://docs.viewcompose.com/api/viewcompose-runtime/current/)。
@@ -118,6 +157,9 @@ check(count.value == 1 && enabled.value)
   副作用，并且运行次数可能多于发出值的次数。
 - `ComposerLite` 与派生状态实例按线程封闭设计。宿主负责串行化组合、prepared
   commit/abort、effect 投递和释放。
+- Reusable Content Owner 只能在正在执行的 Group 中变化，并且该次 Transfer 必须设置
+  `replaceOwner`。Owner 会参与 Remember 与 Saveable Identity，因此必须在一个逻辑生命周期内
+  保持稳定，不能与物理容器 Identity 混淆。
 - Composition Timing Collector 只在一次同步 `prepareRootWithTiming` 调用期间有效。它不得保留
   Scope、调用应用代码、阻塞、执行 I/O 或重入 Composer；Collector 失败与组合隔离。普通
   `prepareRoot` 路径不分配 Timing Identity、不执行逐 Scope 时钟读取，也不保留 Timing History。

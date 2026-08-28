@@ -108,7 +108,10 @@ enum class LazyListItemKind {
  * the current key and opaque [LazyListItem.sessionPayload] synchronously and must not retain the
  * item snapshot itself. [create] installs the initial payload; [update] installs a later payload
  * before the renderer calls [LazyListItemSession.render]. Both operations are UI-thread confined
- * by the enclosing item-session lifecycle.
+ * by the enclosing item-session lifecycle. Cross-key reuse is disabled unless
+ * [canReuseAcrossKeys] explicitly accepts the retained session.
+ *
+ * @sample com.viewcompose.ui.samples.lazyListItemSessionUpdateSample
  */
 interface LazyListItemSessionStrategy {
     /**
@@ -133,6 +136,27 @@ interface LazyListItemSessionStrategy {
         session: LazyListItemSession,
         item: LazyListItem,
     )
+
+    /**
+     * Reports whether [update] can transfer [session] to another logical item key.
+     *
+     * The default is `false`, which makes the renderer dispose the old logical session before it
+     * creates the replacement. Returning `true` promises that the next [update] followed by
+     * [LazyListItemSession.render] transactionally replaces all key-owned remembered state,
+     * observations, effects, callbacks, and saveable-state ownership. Outgoing effects must finish
+     * before incoming effects activate, and a failed render must not expose callbacks or state from
+     * the previous key. Physical compatibility remains controlled separately by
+     * [LazyListItem.contentType] and [LazyListItem.kind].
+     *
+     * Renderers call this synchronously on the owning UI thread. Implementations should perform
+     * only an identity/type check; expensive cleanup belongs to the subsequent render transaction.
+     * Opt in only when retaining the session materially avoids allocation or lifecycle setup.
+     *
+     * @sample com.viewcompose.ui.samples.crossKeyLazyItemSessionStrategySample
+     * @param session retained session currently owned by another logical key
+     * @return `true` when this strategy can safely install a different key into [session]
+     */
+    fun canReuseAcrossKeys(session: LazyListItemSession): Boolean = false
 }
 
 /**

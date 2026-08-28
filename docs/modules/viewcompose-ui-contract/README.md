@@ -7,11 +7,15 @@ owner:
   id: viewcompose-ui-contract
 version_lane: released
 capability_ids:
+  - lazy.item-session-reuse
   - renderer.tree-transactions
+  - text.platform-font-family
 artifact_ids:
   - viewcompose-ui-contract
 sample_ids:
   - module.ui-contract-dependency
+  - module.ui-contract-font-family
+  - module.ui-contract-lazy-session-reuse
   - module.ui-contract-node
 coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04
 minimal_usage_sample_id: module.ui-contract-node
@@ -147,7 +151,10 @@ created for the node.
   candidate, terminate key-owned state, and transfer only a reset physical presentation. The
   Boolean result from `activate` and `render` advances the semantic revision only after the
   installed content commits; rollback returns `false` and remains retryable. The compiled
-  `lazyListItemSessionUpdateSample` demonstrates this lifecycle.
+  `lazyListItemSessionUpdateSample` demonstrates this lifecycle. A strategy may opt into Q3
+  `canReuseAcrossKeys` only when its next `update` transaction replaces every key-owned state,
+  observation, effect, callback, and saveable owner before the incoming frame becomes visible;
+  the default remains `false`.
 - `LazyItemTable` is the Q3 ordered, indexed collection boundary used by lazy-list NodeSpecs. It
   exposes count, positional item lookup, key-to-position lookup, and immutable updates from the
   immediately preceding accepted table without prescribing AndroidX Paging or a renderer. Q2
@@ -187,6 +194,44 @@ created for the node.
   define portable image sources, request policy, platform targets, and disposable load handles.
 - The unit, shape, graphics, key-input, gesture, semantics, and tooling packages complete the
   platform-neutral vocabulary used across ViewCompose modules.
+
+Cross-key session reuse is deliberately opt-in. The strategy's `update` transaction must replace
+all logical-key ownership before the retained session becomes visible:
+
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-cross-key-lazy-session" sample_id="module.ui-contract-lazy-session-reuse" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
+```kotlin
+return object : LazyListItemSessionStrategy {
+    override fun create(
+        container: RenderContainerHandle,
+        item: LazyListItem,
+    ): LazyListItemSession = createSession(container).also { installItem(it, item) }
+
+    override fun update(
+        session: LazyListItemSession,
+        item: LazyListItem,
+    ) {
+        // This transaction must replace every key-owned state, effect, callback, and owner.
+        installItem(session, item)
+    }
+
+    override fun canReuseAcrossKeys(session: LazyListItemSession): Boolean = true
+}
+```
+
+Platform font wrappers use object identity, not an opaque platform object's value equality. Reusing
+the same platform object therefore stabilizes declarative snapshots without conflating different
+renderer resources:
+
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-platform-font-family" sample_id="module.ui-contract-font-family" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
+```kotlin
+val platformFont = Any()
+val first = uiFontFamily(platformFont)
+val second = uiFontFamily(platformFont)
+val different = uiFontFamily(Any())
+
+check(first == second)
+check(first != different)
+```
 
 The complete generated reference is available under the
 [`viewcompose-ui-contract` API tree](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/).
@@ -256,7 +301,9 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   a successful commit. A different key always creates a different logical Session; compatible
   physical presentation may move only after old State and effects are disposed. Typed declarations
   may share one `LazyListItemSessionStrategy` across all item snapshots; strategies consume the
-  current item synchronously and cannot retain it.
+  current item synchronously and cannot retain it. Cross-key Session retention additionally
+  requires the installed strategy to accept `canReuseAcrossKeys`; physical kind/content-type
+  compatibility alone never authorizes logical state transfer.
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.

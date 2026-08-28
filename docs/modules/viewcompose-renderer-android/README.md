@@ -345,7 +345,9 @@ Because the current line is alpha, the documentation site intentionally does not
 - The lazy adapter consumes a table's validated direct range updates before notifying RecyclerView.
   A finite table that returns no direct update uses the compatibility path: equal key order
   batches adjacent native changes without running `DiffUtil`; a same-size cyclic permutation emits
-  the smaller left/right sequence of moves; other structural changes retain AndroidX diffing.
+  the smaller left/right sequence of moves; the two most recent exact immutable table transitions
+  retain that validated compact move plan through weak references, so an alternating submission
+  does not rescan all keys. Other structural changes retain AndroidX diffing.
   Logical item Sessions still consume changed revisions synchronously. When item animations are
   disabled, a semantic-only update therefore avoids a redundant RecyclerView bind; if that direct
   Session commit returns false or throws, exactly that attached position receives one payload
@@ -370,6 +372,11 @@ Because the current line is alpha, the documentation site intentionally does not
   detached holder stages a newer submission and renders it on reattach. Missing or duplicate keys
   use the conservative reload path; the renderer never resolves an ambiguous holder through
   first-match key lookup.
+- A renderer-local recycled pool may retain one compatible Session presentation and prepare the
+  next non-adjacent row from an idle callback after scrolling settles. The outgoing logical owner
+  is transactionally replaced before the new key activates; failed transfer rolls back, and pool
+  eviction or container disposal still terminates the retained Session. This bounded path adds no
+  recurring work while scrolling and does not change RecyclerView prefetch ownership.
 - Publishing a new item table immediately terminates every detached cached holder whose key was
   removed or whose kind/content type became physically incompatible. The holder leaves registry
   ownership before disposal, so a later RecyclerView recycle cannot dispose the same logical

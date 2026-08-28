@@ -135,6 +135,10 @@ class DeviceDslSourceProtocolTest {
         val result = checkNotNull(timing.result)
         assertEquals(StudioDeviceDslOperation.Timing, report.operation)
         assertEquals(StudioDeviceDslTimingStartStatus.Started, timing.startStatus)
+        assertEquals(7L, timing.arm?.parentSessionId)
+        assertEquals(8L, timing.arm?.matchedSessionId)
+        assertEquals(3L, timing.arm?.matchedPhysicalContainerToken)
+        assertEquals(StudioDeviceDslTimingArmEndReason.Matched, timing.arm?.endReason)
         assertEquals(2, result.completedFrames)
         assertEquals(16L, result.attemptedClockReads)
         assertEquals(12L, result.retainedClockReads)
@@ -147,12 +151,13 @@ class DeviceDslSourceProtocolTest {
 
     @Test
     fun `timing summary exposes terminal scope and instrumentation overhead`() {
-        val result = checkNotNull(parseDeviceDslSourceReport(timingReportJson()).timing?.result)
+        val timing = checkNotNull(parseDeviceDslSourceReport(timingReportJson()).timing)
 
-        val summary = result.toTopCostText(
+        val summary = timing.toTopCostText(
             PreviewUiMessages.forLanguage(PreviewUiLanguage.English),
         )
 
+        assertTrue(summary.contains("Armed parent 7 · matched LazyItem 8 · physical container 3 · matched"))
         assertTrue(summary.contains("2 completed frames · 1 retained records"))
         assertTrue(summary.contains("Empty clock-pair overhead: 3 ns"))
         assertTrue(summary.contains("End reason: duration_limit"))
@@ -276,6 +281,7 @@ class DeviceDslSourceProtocolTest {
               "sessionId": $id,
               "parentSessionId": ${if (id == 1) "null" else "1"},
               "role": "${if (id == 1) "Host" else "NavigationDestination"}",
+              "physicalContainerToken": $id,
               "renderingActive": true,
               "attachedToWindow": $attached,
               "shown": $shown,
@@ -330,10 +336,18 @@ class DeviceDslSourceProtocolTest {
           "sessions": [],
           "timing": {
             "startStatus": "started",
+            "arm": {
+              "parentSessionId": 7,
+              "matchedSessionId": 8,
+              "matchedPhysicalContainerToken": 3,
+              "startedAtNanos": 50,
+              "endedAtNanos": 90,
+              "endReason": "matched"
+            },
             "result": {
-              "sessionId": 7,
-              "parentSessionId": null,
-              "role": "Host",
+              "sessionId": 8,
+              "parentSessionId": 7,
+              "role": "LazyItem",
               "clock": "monotonic_nanoseconds",
               "completedFrames": 2,
               "startedAtNanos": 100,

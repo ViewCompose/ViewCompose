@@ -1,6 +1,7 @@
 package com.viewcompose.studio.preview
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -283,6 +284,41 @@ class DeviceDslAdbBridgeTest {
         assertTrue(commands.any {
             it.contains("--es timing_phases composition,binding")
         })
+    }
+
+    @Test
+    fun `future lazy timing arms the exact parent without exposing an item key`() {
+        var broadcastRequestId: String? = null
+        val commands = mutableListOf<String>()
+        val device = fakeDevice { command ->
+            commands += command
+            when {
+                command.startsWith("dumpsys activity") ->
+                    "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
+                command == "pidof com.example.app" -> "4242"
+                command.startsWith("am broadcast") -> {
+                    broadcastRequestId = Regex("--es request_id ([a-f0-9]{32})")
+                        .find(command)?.groupValues?.get(1)
+                    "Broadcast completed: result=0"
+                }
+                command.startsWith("run-as com.example.app") -> timingReportJson(
+                    checkNotNull(broadcastRequestId),
+                )
+                else -> error("Unexpected command: $command")
+            }
+        }
+
+        val result = readFutureLazyItemTimingReport(
+            device = device,
+            parentSessionId = 9L,
+        )
+
+        assertTrue(checkNotNull(result.result).complete)
+        assertTrue(commands.any { it.contains("--el session_id 9") })
+        assertTrue(commands.any {
+            it.contains("--ez timing_future_lazy_item true")
+        })
+        assertFalse(commands.any { it.contains("item_key") })
     }
 
     private fun validReportJson(requestId: String): String {

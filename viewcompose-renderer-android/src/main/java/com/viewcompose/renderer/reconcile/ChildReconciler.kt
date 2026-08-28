@@ -43,7 +43,7 @@ object ChildReconciler {
         reuseByTypeAtSamePosition = false,
     )
 
-    internal fun <T> reconcileForCrossOwnerReuse(
+    internal fun <T> reconcileByTypeAtSamePosition(
         previous: List<ReconcileNode<T>>,
         nodes: List<VNode>,
     ): ReconcileResult<T> = reconcile(

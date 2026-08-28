@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -40,6 +41,7 @@ import com.viewcompose.ui.node.nativeContainer
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import java.io.File
 import java.lang.ref.WeakReference
+import java.util.WeakHashMap
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -51,6 +53,7 @@ internal const val DEVICE_DSL_SOURCE_REQUEST_OPERATION_EXTRA = "operation"
 internal const val DEVICE_DSL_SOURCE_REQUEST_SESSION_ID_EXTRA = "session_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA = "node_token"
 internal const val DEVICE_DSL_TIMING_PHASES_EXTRA = "timing_phases"
+internal const val DEVICE_DSL_TIMING_FUTURE_LAZY_ITEM_EXTRA = "timing_future_lazy_item"
 internal const val DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH =
     "viewcompose/device-dsl-source-v7.json"
 internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 7
@@ -66,10 +69,12 @@ internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionToolin
         if (!AndroidDeviceToolingDebugGate.markAndGet(viewGroup.context)) {
             return RenderSessionInspectionPolicy.Ignore
         }
-        return if (context.role in SOURCE_CAPTURE_ROLES) {
-            RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
-        } else {
-            RenderSessionInspectionPolicy.TrackSession
+        return when {
+            context.role in SOURCE_CAPTURE_ROLES ->
+                RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
+            AndroidDeviceDslSourceRuntime.registry.shouldRegisterBeforeFirstFrame(context) ->
+                RenderSessionInspectionPolicy.TrackSessionBeforeFirstFrame
+            else -> RenderSessionInspectionPolicy.TrackSession
         }
     }
 
@@ -161,17 +166,20 @@ internal data class DeviceDslToolingRequest(
     val sessionId: Long? = null,
     val nodeToken: String? = null,
     val timingPhases: Set<RenderNodeTimingPhase> = RenderNodeTimingPhase.entries.toSet(),
+    val futureLazyItemTiming: Boolean = false,
 ) {
     val valid: Boolean
         get() = when (operation) {
             DeviceDslToolingOperation.Source,
             DeviceDslToolingOperation.Clear,
-            -> sessionId == null && nodeToken == null
-            DeviceDslToolingOperation.Nodes,
-            DeviceDslToolingOperation.Timing,
-            -> sessionId != null && sessionId > 0L && nodeToken == null
+            -> sessionId == null && nodeToken == null && !futureLazyItemTiming
+            DeviceDslToolingOperation.Nodes ->
+                sessionId != null && sessionId > 0L && nodeToken == null && !futureLazyItemTiming
+            DeviceDslToolingOperation.Timing ->
+                sessionId != null && sessionId > 0L && nodeToken == null
             DeviceDslToolingOperation.Select -> {
-                sessionId != null && sessionId > 0L && nodeToken?.let(::isValidNodeToken) == true
+                sessionId != null && sessionId > 0L &&
+                    nodeToken?.let(::isValidNodeToken) == true && !futureLazyItemTiming
             }
             DeviceDslToolingOperation.Rejected -> false
         }
@@ -206,6 +214,10 @@ internal data class DeviceDslToolingRequest(
                 sessionId = sessionId,
                 nodeToken = nodeToken,
                 timingPhases = timingPhases,
+                futureLazyItemTiming = intent.getBooleanExtra(
+                    DEVICE_DSL_TIMING_FUTURE_LAZY_ITEM_EXTRA,
+                    false,
+                ),
             )
         }
     }
@@ -219,9 +231,24 @@ private object AndroidDeviceDslSourceRuntime {
 internal class AndroidDeviceDslSourceRegistry(
     private val processId: () -> Int = Process::myPid,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
+    private val monotonicTimeNanos: () -> Long = SystemClock::elapsedRealtimeNanos,
 ) {
     private val sessions = linkedMapOf<Long, DeviceDslSourceSession>()
+    private val physicalContainerTokens = WeakHashMap<ViewGroup, Long>()
+    private var nextPhysicalContainerToken: Long = 0L
     private var activeTiming: ActiveDeviceDslTiming? = null
+    private var armedTiming: ArmedDeviceDslTiming? = null
+
+    fun shouldRegisterBeforeFirstFrame(context: RenderDiagnosticContext): Boolean {
+        return synchronized(this) {
+            expirePendingArm()
+            armedTiming?.matches(
+                sessionId = context.sessionId.value,
+                parentSessionId = context.parentSessionId?.value,
+                role = context.role,
+            ) == true
+        }
+    }
 
     fun register(
         container: ViewGroup,
@@ -234,8 +261,14 @@ internal class AndroidDeviceDslSourceRegistry(
         timingInspection: RenderSessionTimingInspection = endedTimingInspection,
     ): RenderSessionInspectionRegistration? {
         val boundedCandidates = sourceCandidates.boundedSourceCandidates()
-        synchronized(this) {
+        val matchingArm = synchronized(this) {
             pruneReleasedSessions()
+            val physicalContainerToken = physicalContainerTokens[container] ?: run {
+                nextPhysicalContainerToken += 1L
+                nextPhysicalContainerToken.also { token ->
+                    physicalContainerTokens[container] = token
+                }
+            }
             while (sessions.size >= MAX_TRACKED_SESSIONS) {
                 val removedId = sessions.values.minWithOrNull(
                     compareBy<DeviceDslSourceSession> { session -> session.retentionPriority() }
@@ -249,12 +282,44 @@ internal class AndroidDeviceDslSourceRegistry(
                 id = sessionId,
                 parentId = parentSessionId,
                 role = role,
+                physicalContainerToken = physicalContainerToken,
                 container = WeakReference(container),
                 sourceCandidates = boundedCandidates,
                 nodeInspection = nodeInspection,
                 diagnosticInspection = diagnosticInspection,
                 timingInspection = timingInspection,
             )
+            armedTiming?.takeIf { arm ->
+                arm.matches(sessionId, parentSessionId, role)
+            }
+        }
+        matchingArm?.let { arm ->
+            val start = timingInspection.startCapture(arm.captureRequest)
+            synchronized(this) {
+                if (armedTiming === arm && arm.endReason == null) {
+                    val capture = start.capture
+                    if (
+                        capture != null &&
+                        start.status in setOf(
+                            RenderNodeTimingStartStatus.Started,
+                            RenderNodeTimingStartStatus.AlreadyActive,
+                        )
+                    ) {
+                        arm.matchedSessionId = sessionId
+                        arm.matchedPhysicalContainerToken =
+                            sessions[sessionId]?.physicalContainerToken
+                        arm.capture = capture
+                        arm.finish(DeviceDslTimingArmEndReason.Matched, monotonicTimeNanos())
+                        activeTiming = ActiveDeviceDslTiming(sessionId, capture)
+                    } else {
+                        arm.finish(
+                            DeviceDslTimingArmEndReason.CaptureRejected,
+                            monotonicTimeNanos(),
+                        )
+                        armedTiming = null
+                    }
+                }
+            }
         }
         return RegistryInspectionRegistration(this, sessionId)
     }
@@ -360,6 +425,12 @@ internal class AndroidDeviceDslSourceRegistry(
         synchronized(this) {
             sessions.remove(sessionId)
             if (activeTiming?.sessionId == sessionId) activeTiming = null
+            armedTiming?.takeIf { arm ->
+                arm.parentSessionId == sessionId && arm.matchedSessionId == null
+            }?.let { arm ->
+                arm.finish(DeviceDslTimingArmEndReason.ParentEnded, monotonicTimeNanos())
+                armedTiming = null
+            }
             AndroidDeviceHighlightOverlay.clear(sessionId)
         }
     }
@@ -387,6 +458,18 @@ internal class AndroidDeviceDslSourceRegistry(
                 }
             }
         }
+        if (request.futureLazyItemTiming) {
+            return armFutureLazyItemTiming(request)
+        }
+        synchronized(this) {
+            expirePendingArm()
+            if (armedTiming != null) {
+                return DeviceDslTimingStart(
+                    status = RenderNodeTimingStartStatus.AlreadyActive,
+                    capture = null,
+                )
+            }
+        }
         val session = synchronized(this) { sessions[sessionId] }
             ?: return DeviceDslTimingStart(RenderNodeTimingStartStatus.EndedSession, null)
         val start = session.timingInspection.startCapture(
@@ -404,6 +487,24 @@ internal class AndroidDeviceDslSourceRegistry(
     fun finishTiming(capture: RenderNodeTimingCapture) {
         synchronized(this) {
             if (activeTiming?.capture === capture) activeTiming = null
+            if (armedTiming?.capture === capture) armedTiming = null
+        }
+    }
+
+    fun armedTimingSnapshot(arm: ArmedDeviceDslTiming): DeviceDslTimingArmSnapshot {
+        return synchronized(this) {
+            if (armedTiming === arm) expirePendingArm()
+            arm.snapshot()
+        }
+    }
+
+    fun pollArmedTiming(arm: ArmedDeviceDslTiming): DeviceDslArmedTimingPoll {
+        return synchronized(this) {
+            if (armedTiming === arm) expirePendingArm()
+            DeviceDslArmedTimingPoll(
+                snapshot = arm.snapshot(),
+                capture = arm.capture,
+            )
         }
     }
 
@@ -412,6 +513,7 @@ internal class AndroidDeviceDslSourceRegistry(
         request: DeviceDslToolingRequest,
         status: RenderNodeTimingStartStatus,
         result: RenderNodeTimingCaptureResult?,
+        arm: DeviceDslTimingArmSnapshot? = null,
     ): DeviceDslSourceReport = DeviceDslSourceReport(
         requestId = request.requestId,
         operation = DeviceDslToolingOperation.Timing,
@@ -419,8 +521,55 @@ internal class AndroidDeviceDslSourceRegistry(
         processId = processId(),
         generatedAtEpochMillis = currentTimeMillis(),
         sessions = emptyList(),
-        timing = DeviceDslTimingSnapshot(status, result),
+        timing = DeviceDslTimingSnapshot(status, result, arm),
     )
+
+    private fun armFutureLazyItemTiming(
+        request: DeviceDslToolingRequest,
+    ): DeviceDslTimingStart = synchronized(this) {
+        expirePendingArm()
+        pruneReleasedSessions()
+        val parentSessionId = checkNotNull(request.sessionId)
+        if (sessions[parentSessionId] == null) {
+            return@synchronized DeviceDslTimingStart(
+                status = RenderNodeTimingStartStatus.EndedSession,
+                capture = null,
+            )
+        }
+        armedTiming?.let { previous ->
+            previous.finish(DeviceDslTimingArmEndReason.Superseded, monotonicTimeNanos())
+        }
+        val startedAtNanos = monotonicTimeNanos()
+        val arm = ArmedDeviceDslTiming(
+            requestId = request.requestId,
+            parentSessionId = parentSessionId,
+            sessionFloor = sessions.keys.maxOrNull() ?: parentSessionId,
+            startedAtNanos = startedAtNanos,
+            deadlineNanos = saturatingAdd(startedAtNanos, ARMED_TIMING_DURATION_NANOS),
+            captureRequest = RenderNodeTimingCaptureRequest(
+                phases = request.timingPhases,
+                maxFrames = 1,
+            ),
+        )
+        armedTiming = arm
+        DeviceDslTimingStart(
+            status = RenderNodeTimingStartStatus.Started,
+            capture = null,
+            arm = arm,
+        )
+    }
+
+    private fun expirePendingArm() {
+        val arm = armedTiming ?: return
+        if (
+            arm.matchedSessionId == null &&
+            arm.endReason == null &&
+            monotonicTimeNanos() >= arm.deadlineNanos
+        ) {
+            arm.finish(DeviceDslTimingArmEndReason.DurationLimit, arm.deadlineNanos)
+            armedTiming = null
+        }
+    }
 
     internal fun sessionCountForTest(): Int = synchronized(this) { sessions.size }
 }
@@ -430,8 +579,73 @@ private data class ActiveDeviceDslTiming(
     val capture: RenderNodeTimingCapture,
 )
 
+internal enum class DeviceDslTimingArmEndReason {
+    Matched,
+    DurationLimit,
+    ParentEnded,
+    Superseded,
+    CaptureRejected,
+}
+
+internal data class DeviceDslTimingArmSnapshot(
+    val parentSessionId: Long,
+    val matchedSessionId: Long?,
+    val matchedPhysicalContainerToken: Long?,
+    val startedAtNanos: Long,
+    val endedAtNanos: Long?,
+    val endReason: DeviceDslTimingArmEndReason?,
+)
+
+internal class ArmedDeviceDslTiming(
+    val requestId: String,
+    val parentSessionId: Long,
+    private val sessionFloor: Long,
+    val startedAtNanos: Long,
+    val deadlineNanos: Long,
+    val captureRequest: RenderNodeTimingCaptureRequest,
+) {
+    var matchedSessionId: Long? = null
+    var matchedPhysicalContainerToken: Long? = null
+    var capture: RenderNodeTimingCapture? = null
+    var endReason: DeviceDslTimingArmEndReason? = null
+        private set
+    private var endedAtNanos: Long? = null
+
+    fun matches(
+        sessionId: Long,
+        parentSessionId: Long?,
+        role: RenderSessionRole,
+    ): Boolean {
+        return endReason == null &&
+            sessionId > sessionFloor &&
+            parentSessionId == this.parentSessionId &&
+            role == RenderSessionRole.LazyItem
+    }
+
+    fun finish(reason: DeviceDslTimingArmEndReason, atNanos: Long) {
+        if (endReason != null) return
+        endReason = reason
+        endedAtNanos = atNanos
+    }
+
+    fun snapshot(): DeviceDslTimingArmSnapshot = DeviceDslTimingArmSnapshot(
+        parentSessionId = parentSessionId,
+        matchedSessionId = matchedSessionId,
+        matchedPhysicalContainerToken = matchedPhysicalContainerToken,
+        startedAtNanos = startedAtNanos,
+        endedAtNanos = endedAtNanos,
+        endReason = endReason,
+    )
+}
+
 internal data class DeviceDslTimingStart(
     val status: RenderNodeTimingStartStatus,
+    val capture: RenderNodeTimingCapture?,
+    val arm: ArmedDeviceDslTiming? = null,
+)
+
+internal data class DeviceDslArmedTimingPoll(
+    val snapshot: DeviceDslTimingArmSnapshot,
     val capture: RenderNodeTimingCapture?,
 )
 
@@ -487,6 +701,17 @@ internal class DeviceDslSourceRequestHandler(
     ) {
         val start = registry.startTiming(request)
         val target = File(appContext.cacheDir, DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH)
+        start.arm?.let { arm ->
+            pollArmedTiming(
+                target = target,
+                packageName = packageName,
+                request = request,
+                start = start,
+                arm = arm,
+                onFinished = onFinished,
+            )
+            return
+        }
         val capture = start.capture
         if (capture == null) {
             writeReport(
@@ -504,6 +729,57 @@ internal class DeviceDslSourceRequestHandler(
                 writeReport(
                     target = target,
                     report = registry.timingReport(packageName, request, start.status, snapshot),
+                    onFinished = onFinished,
+                )
+            } else {
+                postDelayed(TIMING_POLL_INTERVAL_MILLIS, poll)
+            }
+        }
+        poll.run()
+    }
+
+    private fun pollArmedTiming(
+        target: File,
+        packageName: String,
+        request: DeviceDslToolingRequest,
+        start: DeviceDslTimingStart,
+        arm: ArmedDeviceDslTiming,
+        onFinished: () -> Unit,
+    ) {
+        lateinit var poll: Runnable
+        poll = Runnable {
+            val armed = registry.pollArmedTiming(arm)
+            val capture = armed.capture
+            if (capture == null) {
+                if (armed.snapshot.endReason == null) {
+                    postDelayed(TIMING_POLL_INTERVAL_MILLIS, poll)
+                } else {
+                    writeReport(
+                        target = target,
+                        report = registry.timingReport(
+                            packageName = packageName,
+                            request = request,
+                            status = start.status,
+                            result = null,
+                            arm = armed.snapshot,
+                        ),
+                        onFinished = onFinished,
+                    )
+                }
+                return@Runnable
+            }
+            val captureSnapshot = capture.snapshot()
+            if (captureSnapshot.complete) {
+                registry.finishTiming(capture)
+                writeReport(
+                    target = target,
+                    report = registry.timingReport(
+                        packageName = packageName,
+                        request = request,
+                        status = start.status,
+                        result = captureSnapshot,
+                        arm = armed.snapshot,
+                    ),
                     onFinished = onFinished,
                 )
             } else {
@@ -560,6 +836,7 @@ private class DeviceDslSourceSession(
     val id: Long,
     val parentId: Long?,
     val role: RenderSessionRole,
+    val physicalContainerToken: Long,
     val container: WeakReference<ViewGroup>,
     val sourceCandidates: List<List<UiSourceCallSite>>,
     val nodeInspection: RenderSessionNodeInspection,
@@ -596,6 +873,7 @@ private class DeviceDslSourceSession(
             sessionId = id,
             parentSessionId = parentId,
             role = role,
+            physicalContainerToken = physicalContainerToken,
             renderingActive = renderingActive,
             attachedToWindow = view.isAttachedToWindow,
             shown = view.isVisibleToUser(),
@@ -733,6 +1011,7 @@ private class DeviceDslSourceSession(
             sessionId = id,
             parentSessionId = parentId,
             role = role,
+            physicalContainerToken = physicalContainerToken,
             renderingActive = false,
             attachedToWindow = false,
             shown = false,
@@ -760,6 +1039,7 @@ internal data class DeviceDslSourceSessionSnapshot(
     val sessionId: Long,
     val parentSessionId: Long?,
     val role: RenderSessionRole,
+    val physicalContainerToken: Long,
     val renderingActive: Boolean,
     val attachedToWindow: Boolean,
     val shown: Boolean,
@@ -823,6 +1103,7 @@ internal data class DeviceDslSourceReport(
 internal data class DeviceDslTimingSnapshot(
     val startStatus: RenderNodeTimingStartStatus,
     val result: RenderNodeTimingCaptureResult?,
+    val arm: DeviceDslTimingArmSnapshot? = null,
 )
 
 internal fun deviceDslSourceReportJson(
@@ -893,6 +1174,8 @@ private fun DeviceDslSourceSessionSnapshot.toBoundedJson(): String = buildString
     append(parentSessionId ?: "null")
     append(",\"role\":")
     appendJsonString(role.name)
+    append(",\"physicalContainerToken\":")
+    append(physicalContainerToken)
     append(",\"renderingActive\":")
     append(renderingActive)
     append(",\"attachedToWindow\":")
@@ -1028,6 +1311,23 @@ private fun DeviceDslTimingSnapshot.toBoundedJson(maxBytes: Int): String = build
     append('{')
     append("\"startStatus\":")
     appendJsonString(startStatus.name.toSnakeCase())
+    arm?.let { armSnapshot ->
+        append(",\"arm\":{\"parentSessionId\":")
+        append(armSnapshot.parentSessionId)
+        append(",\"matchedSessionId\":")
+        append(armSnapshot.matchedSessionId ?: "null")
+        append(",\"matchedPhysicalContainerToken\":")
+        append(armSnapshot.matchedPhysicalContainerToken ?: "null")
+        append(",\"startedAtNanos\":")
+        append(armSnapshot.startedAtNanos)
+        append(",\"endedAtNanos\":")
+        append(armSnapshot.endedAtNanos ?: "null")
+        append(",\"endReason\":")
+        armSnapshot.endReason?.let { reason ->
+            appendJsonString(reason.name.toSnakeCase())
+        } ?: append("null")
+        append('}')
+    }
     val capture = result
     if (capture == null) {
         append(",\"result\":null}")
@@ -1598,6 +1898,10 @@ internal object AndroidDeviceToolingDebugGate {
     }
 }
 
+private fun saturatingAdd(first: Long, second: Long): Long {
+    return if (Long.MAX_VALUE - first < second) Long.MAX_VALUE else first + second
+}
+
 private const val TAG = "ViewCompose"
 private const val MAX_SOURCE_CANDIDATES = 32
 private const val MAX_SOURCE_CALL_SITES_PER_CANDIDATE = 24
@@ -1616,3 +1920,4 @@ private const val RESPONSE_FIRST_CANDIDATES = 16
 private const val RESPONSE_RECENT_CANDIDATES = 16
 private const val HIGHLIGHT_DURATION_MILLIS = 5_000L
 private const val TIMING_POLL_INTERVAL_MILLIS = 32L
+private const val ARMED_TIMING_DURATION_NANOS = 10_000_000_000L

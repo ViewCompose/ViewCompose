@@ -3,6 +3,7 @@ package com.viewcompose.ui.foundation.samples
 import com.viewcompose.ui.foundation.RenderSessionInspectionPolicy
 import com.viewcompose.ui.foundation.RenderSessionInspectionRegistration
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
 import com.viewcompose.ui.foundation.RenderSessionTimingInspection
@@ -48,14 +49,21 @@ fun renderDiagnosticsEventSample(): RenderDiagnostics {
 fun renderSessionInspectionToolingSample(): RenderSessionInspectionTooling {
     var renderingActive = true
     var disposed = false
+    var captureNextLazyItem = true
+    var armedSessionId: Long? = null
     val tooling = object : RenderSessionInspectionTooling {
         override fun inspectionPolicy(
             container: RenderContainerHandle,
             context: RenderDiagnosticContext,
-        ): RenderSessionInspectionPolicy = if (context.frameId == null) {
-            RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
-        } else {
-            RenderSessionInspectionPolicy.Ignore
+        ): RenderSessionInspectionPolicy = when {
+            captureNextLazyItem && context.role == RenderSessionRole.LazyItem -> {
+                captureNextLazyItem = false
+                armedSessionId = context.sessionId.value
+                RenderSessionInspectionPolicy.TrackSessionBeforeFirstFrame
+            }
+            context.role == RenderSessionRole.Host ->
+                RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
+            else -> RenderSessionInspectionPolicy.TrackSession
         }
 
         override fun register(
@@ -68,6 +76,14 @@ fun renderSessionInspectionToolingSample(): RenderSessionInspectionTooling {
         ): RenderSessionInspectionRegistration {
             check(context.eventSequence == 0L)
             check(sourceCandidates.flatten().all { source -> source.lineNumber > 0 })
+            if (context.sessionId.value == armedSessionId) {
+                check(sourceCandidates.isEmpty())
+                val start = timingInspection.startCapture(
+                    RenderNodeTimingCaptureRequest(maxFrames = 1),
+                )
+                check(start.status == RenderNodeTimingStartStatus.Started)
+                armedSessionId = null
+            }
             // Only an explicit tooling request may traverse the mounted tree.
             check(nodeInspection.snapshot().nodes.size <= 512)
             val diagnosticSnapshot = diagnosticInspection.snapshot()

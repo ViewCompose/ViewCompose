@@ -7,11 +7,13 @@ owner:
   id: viewcompose-runtime
 version_lane: released
 capability_ids:
+  - runtime.reusable-content
   - runtime.state
 artifact_ids:
   - viewcompose-runtime
 sample_ids:
   - module.runtime-dependency
+  - module.runtime-reusable-content
   - module.runtime-state
   - module.runtime-snapshot
 coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha03
@@ -90,6 +92,10 @@ check(count.value == 1 && enabled.value)
 - [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
   provides transactional positional composition, remembered values, effects, and diagnostics without
   compiler-generated change flags.
+- Q3 `ComposerLite.withReusableContent` changes the logical state owner of reusable structure
+  without replacing equal pure structural results. An explicit owner transfer reruns only the
+  descendant groups that own remembered values, saveable paths, effects, or observations; failed
+  preparation restores the previously committed owner.
 - `CompositionTimingCollector`, `CompositionTimingScope`, and
   `ComposerLite.prepareRootWithTiming` form the Q3 request-scoped composition timing boundary.
   Only executed scopes are offered; skipped scopes perform no callback or clock read. The collector
@@ -97,6 +103,40 @@ check(count.value == 1 && enabled.value)
   supplies a lazily allocated process-local identity and already retained bounded source hints.
 - [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
   is the platform-neutral timing contract consumed by animation integrations.
+
+The reusable-content owner transfer is explicit so a physical container can retain pure structure
+without inheriting another logical item's remembered state:
+
+{/* compiled-region source="viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt" region="runtime-module-reusable-content" sample_id="module.runtime-reusable-content" build_target=":viewcompose-runtime:compileTestKotlin" */}
+```kotlin
+val composer = ComposerLite()
+var owner = "account-A"
+var revision = 0L
+
+fun compose(replaceOwner: Boolean): Any {
+    composer.requestRootRecompose()
+    return composer.composeRoot {
+        composer.runGroup(
+            signature = "reusable-host",
+            inputs = revision,
+        ) {
+            composer.withReusableContent(owner, replaceOwner) {
+                composer.runGroup(signature = "content") {
+                    composer.remember(emptyList()) { Any() }
+                }
+            }
+        }
+    }
+}
+
+val firstOwnerState = compose(replaceOwner = false)
+owner = "account-B"
+revision += 1L
+val secondOwnerState = compose(replaceOwner = true)
+
+check(firstOwnerState !== secondOwnerState)
+composer.dispose()
+```
 
 The complete generated reference is available under the
 [`viewcompose-runtime` API tree](https://docs.viewcompose.com/api/viewcompose-runtime/current/).
@@ -123,6 +163,9 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   failure release it; the calculation is side-effect-free and may run more often than it emits.
 - `ComposerLite` and derived-state instances are intended for thread-confined use. Hosts serialize
   composition, prepared commit/abort, effect delivery, and disposal.
+- A reusable-content owner must change only in an executing group and must set `replaceOwner` for
+  that transfer. The owner participates in remember and saveable identities, so it must be stable
+  for one logical lifetime and must not be confused with a physical container identity.
 - A composition timing collector is valid only for its synchronous `prepareRootWithTiming` call.
   It cannot retain scopes, invoke application code, block, perform I/O, or re-enter the composer.
   Collector failures are isolated from composition. The ordinary `prepareRoot` path allocates no

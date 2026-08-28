@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: b148e9b6d14b0796558d5b946dc782a4529d01b09d373c10d55f5bfc86b1ee55
+translation_source_hash: fd24e9b032159564b800725c39bd400d5866e32824f9167f6e9fa41159a549f4
 translation_status: current
 ---
 
@@ -200,13 +200,40 @@ UiEnvironment {
   Dirty Declaration，再提交一次精确 Target Renderer Transaction；Type、Key、Modifier、Child
   与 Environment 仍属于结构。ViewCompose 没有编译器生成的变更标记，因此每个变化的普通捕获值
   都必须显式进入 `inputs`。
+- Q3 Observed `LazyColumn` Overload 接受 `ObservedValue<LazyItemsSnapshot<T>>`。它无需重组父层
+  即可 Patch 精确挂载列表，只在 Native Commit 后发布已求值 Item Table，并向 Item Content 提供
+  稳定 Key 与 `ObservedValue<T>`。Payload Property 应通过 `ObservedValue.map` 派生；Item 结构只能
+  依赖 Key 与稳定 Capture。失败时，之前的依赖、Table、逻辑 Owner 与 Saveable State 都保持可重试。
+  编译样例 `observedLazyItemsSnapshotSample` 展示该路径。
+
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt" region="ui-foundation-module-observed-value-map" sample_id="module.ui-foundation-observed-map" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
+```kotlin
+val rows = mutableStateOf(
+    listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+        .toLazyItemsSnapshot(),
+)
+val list = buildVNodeTree {
+    LazyColumn(
+        items = observedValue { rows.value },
+        key = RevisionSampleRow::id,
+        contentRevision = RevisionSampleRow::version,
+    ) { _, row ->
+        Text(row.map(transform = RevisionSampleRow::label))
+    }
+}.single()
+
+check((list.spec as LazyColumnNodeProps).items.single().key == 7L)
+```
+
 - Q3 `CoreObservedPropertyTarget`、`CoreObservedPropertyPatch`、`CoreObservedPropertyFrame` 与
   `CoreRenderEngine.patchObservedProperties` 组成 Renderer-neutral Host SPI。Engine 必须校验并
   回滚完整 Batch，或者拒绝该能力；不存在整树静默回退。
 - `RenderSessionInspectionTooling`、`RenderSessionInspectionPolicy` 与
   `RenderSessionInspectionRegistration` 组成 Q3 可选平台契约。Policy 将 Lifecycle/Node Tracking
   与有界的首次 Frame Source Capture 分离，使高频 Lazy Item Session 不执行 Source Stack 工作也能
-  按请求检查。编译样例 `renderSessionInspectionToolingSample` 展示其 Adapter 生命周期。
+  按请求检查。一个显式 Armed 请求可以选择 `TrackSessionBeforeFirstFrame`；Registration 会在首帧前
+  收到空 Source 列表，并把单帧 Timing Capture 附着到正在进入的首帧，而不请求嵌套 Render。编译
+  样例 `renderSessionInspectionToolingSample` 同时展示两条路径。
 - `RenderSessionDiagnosticInspection` 是为同一个 Logical Session 注册的 Q3、仅按请求工作的安全摘要
   Handle。其 Q2 Snapshot 会公开 Activity、结束状态、最近已提交帧、最近已完成尝试与有界类型化失败
   摘要，但不会保留或返回原始异常、Message、Cause、Stack、应用 Key、Node Content 或 Native Object。
@@ -406,15 +433,19 @@ State；保留 Placeholder Identity 则会错误地让未加载位置取得逻�
 
 `RenderSessionPlatformDiagnostics.inspectionTooling`、`RenderSessionInspectionTooling`、
 `RenderSessionInspectionPolicy` 与 `RenderSessionInspectionRegistration` 是 Q3 工具 API。Alpha
-版本线硬切掉旧的 Source-only Port：每个 Logical Session 只能被忽略、无 Source Capture 跟踪，或
-携带有界首次成功 Frame Source Capture 跟踪。成功 Native Frame 后最多尝试注册一次，即使候选列表
-为空；注册接收 Runtime Event 使用的同一个 `RenderDiagnosticContext`。现有平台诊断使用默认空
+版本线硬切掉旧的 Source-only Port：每个 Logical Session 只能被忽略、无 Source Capture 跟踪，
+在首帧前跟踪，或携带有界首次成功 Frame Source Capture 跟踪。普通 Registration 在成功 Native
+Frame 后最多尝试一次，即使候选列表为空。Pre-frame Policy 只供一次显式 Armed 请求使用：它在首帧
+前立即注册、接收空候选列表，并把有限 Timing 附着到正在进入的帧，而不触发嵌套结构 Render。
+Registration 接收 Runtime Event 使用的同一个 `RenderDiagnosticContext`。现有平台诊断使用默认空
 Adapter，行为不变。主动启用的自定义平台必须让注册状态受所属 Render Session 约束，在平台渲染
 线程同步消费候选调用链列表。注册还会收到 Q3 `RenderSessionNodeInspection`。其 Q2
 `RenderNodeToken`、节点类型、Entry 与 Snapshot 都是进程内请求数据，不是应用 Identity。
 `snapshot()` 最多访问 2,048 个当前 Mounted Node，保留 512 个、深度不超过 64；输出只包含隐私安全的
 Type/Source Metadata 与弱 Platform Target，并明确报告 Unsupported、Ended、Dropped 和 Truncated。
-新快照、节点替换、跨 Owner 复用、Session 结束或进程重建都会让旧 Token 失效。
+新快照、节点替换、跨 Owner 复用、Session 结束或进程重建都会让旧 Token 失效。穷举 Policy 的
+调用方必须按[迁移 Pre-frame Render Session Inspection](../../migration/render-session-pre-frame-inspection.md)
+处理新增枚举项。
 
 Registration 现在还会收到 Q3 `RenderSessionDiagnosticInspection` 与
 `RenderSessionTimingInspection`。这是对注册签名的有意 Alpha 硬切：自定义 Tooling 实现必须接收

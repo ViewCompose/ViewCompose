@@ -15,5 +15,6 @@ class WidgetCoreSamplesTest {
         saveableStateRegistrySample()
         scopedRememberSaveableSample()
         imageLoadingSample()
+        observedLazyItemsSnapshotSample()
     }
 }

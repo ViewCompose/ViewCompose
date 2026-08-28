@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
+import com.viewcompose.renderer.R
 import com.viewcompose.renderer.view.container.ReusableLayoutAnimationHost
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.renderer.reconcile.ChildReconciler
@@ -157,6 +158,8 @@ object ViewTreeRenderer {
             ),
         )
         val crossOwnerReuse = previous.any(MountedNode::requiresCrossOwnerRebind)
+        val logicalOwnerTransfer =
+            container.getTag(R.id.viewcompose_lazy_logical_owner_transfer) == true
         val transaction = ViewTreePatchPipeline.beginTransaction()
         val result = try {
             renderIntoTransaction(
@@ -169,6 +172,7 @@ object ViewTreeRenderer {
                 collectWarnings = collectDiagnostics && onReconcile != null,
                 parentNodeKey = null,
                 crossOwnerReuse = crossOwnerReuse,
+                reuseRootByTypeAtSamePosition = logicalOwnerTransfer,
                 timingCollector = timingCollector,
                 timingParentNode = null,
                 timingParentDepth = 0,
@@ -323,6 +327,7 @@ object ViewTreeRenderer {
         collectWarnings: Boolean,
         parentNodeKey: Any?,
         crossOwnerReuse: Boolean,
+        reuseRootByTypeAtSamePosition: Boolean,
         timingCollector: RenderTreeTimingCollector?,
         timingParentNode: VNode?,
         timingParentDepth: Int,
@@ -339,7 +344,12 @@ object ViewTreeRenderer {
             phase = RenderTreeTimingPhase.Reconciliation,
         ) {
             if (crossOwnerReuse) {
-                ChildReconciler.reconcileForCrossOwnerReuse(
+                ChildReconciler.reconcileByTypeAtSamePosition(
+                    previous = previousReconcileNodes,
+                    nodes = nodes,
+                )
+            } else if (reuseRootByTypeAtSamePosition) {
+                ChildReconciler.reconcileByTypeAtSamePosition(
                     previous = previousReconcileNodes,
                     nodes = nodes,
                 )
@@ -372,6 +382,7 @@ object ViewTreeRenderer {
                     collectWarnings = false,
                     parentNodeKey = childParentKey,
                     crossOwnerReuse = childPrevious.any(MountedNode::requiresCrossOwnerRebind),
+                    reuseRootByTypeAtSamePosition = false,
                     timingCollector = timingCollector,
                     timingParentNode = parentNode,
                     timingParentDepth = timingParentDepth + 1,

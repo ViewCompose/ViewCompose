@@ -153,7 +153,7 @@ const config: Config = {
           /^architecture\/decisions\/0021-correlated-render-diagnostics-ownership$/,
           /^archive\/(?:constraintlayout-native-engine-hardening|constraintlayout-parity-performance-expansion|diagnostics-correlation-inspection-observability|paging3-integration)$/,
         ],
-        ignoreCssSelectors: ['.benchmark-evidence', '.search-partition-detail'],
+        ignoreCssSelectors: ['.benchmark-evidence', '.search-partition-detail', '.theme-code-block'],
       },
     ],
   ],

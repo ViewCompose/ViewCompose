@@ -75,6 +75,7 @@ class RenderSession(
     private var disposed: Boolean = false
     private var inspectionRegistration: RenderSessionInspectionRegistration? = null
     private var inspectionRegistrationAttempted: Boolean = false
+    private var acceptingPreFrameTimingCapture: Boolean = false
     private val overlayRequestStore = OverlayRequestStore()
     private var requestRender: (() -> Unit)? = null
     private val observedProperties = ObservedPropertyRegistry {
@@ -179,6 +180,15 @@ class RenderSession(
         runtime.render()
     }
 
+    /** Renders only already-invalidated composition scopes or observed properties. */
+    internal fun renderPendingState() {
+        checkNotDeliveringDiagnostics()
+        check(!disposalRequested) {
+            "RenderSession is disposed and cannot render again."
+        }
+        runtime.render()
+    }
+
     private fun startTimingCapture(
         request: RenderNodeTimingCaptureRequest,
     ): RenderNodeTimingCaptureStart {
@@ -206,8 +216,10 @@ class RenderSession(
             },
         )
         activeTimingCapture = capture
-        structuralRenderRequested = true
-        runtime.render()
+        if (!acceptingPreFrameTimingCapture) {
+            structuralRenderRequested = true
+            runtime.render()
+        }
         return RenderNodeTimingCaptureStart(
             status = RenderNodeTimingStartStatus.Started,
             capture = capture,
@@ -401,6 +413,19 @@ class RenderSession(
     /** Prepares composition and the native tree without crossing the commit boundary. */
     private fun prepareFrame(): PreparedRenderFrame? {
         if (disposalRequested || disposed) return null
+        val initialInspectionPolicy = if (!inspectionRegistrationAttempted) {
+            inspectionPolicy()
+        } else {
+            null
+        }
+        if (initialInspectionPolicy == RenderSessionInspectionPolicy.TrackSessionBeforeFirstFrame) {
+            acceptingPreFrameTimingCapture = true
+            try {
+                registerInspectionSession(emptyList())
+            } finally {
+                acceptingPreFrameTimingCapture = false
+            }
+        }
         val frameId = nextFrameId.incrementAndGet()
         val timingCapture = activeTimingCapture?.takeIf { capture ->
             capture.beginFrame(frameId)
@@ -436,8 +461,7 @@ class RenderSession(
                                                 diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
                                         ) {
                                             if (
-                                                !inspectionRegistrationAttempted &&
-                                                inspectionPolicy() ==
+                                                initialInspectionPolicy ==
                                                 RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
                                             ) {
                                                 UiNodeTooling.withSourceCandidateCapture(
@@ -573,12 +597,19 @@ class RenderSession(
             )
             return
         } ?: return
-
         val changes = transaction.changes
         if (changes.isEmpty()) {
             committedFrameId = frameId
             try {
-                transaction.commit()
+                transaction.commit().forEach { error ->
+                    reportFailure(
+                        frameId = frameId,
+                        phase = RenderFailurePhase.ObservedPropertyCommit,
+                        recovery = RenderFailureRecovery.FrameCommitted,
+                        error = error,
+                        frameFailures = frameFailures,
+                    )
+                }
             } catch (error: Exception) {
                 reportFailure(
                     frameId = frameId,
@@ -638,7 +669,6 @@ class RenderSession(
             )
             return
         }
-
         val diagnosticLevel = activeDiagnostics?.collection?.frameLevel
             ?: RenderFrameDiagnosticLevel.None
         val frame = try {
@@ -678,7 +708,6 @@ class RenderSession(
             )
             return
         }
-
         corePatches.forEach { patch ->
             patch.target.advance(
                 previous = patch.previous,
@@ -687,7 +716,15 @@ class RenderSession(
         }
         committedFrameId = frameId
         try {
-            transaction.commit()
+            transaction.commit().forEach { error ->
+                reportFailure(
+                    frameId = frameId,
+                    phase = RenderFailurePhase.ObservedPropertyCommit,
+                    recovery = RenderFailureRecovery.FrameCommitted,
+                    error = error,
+                    frameFailures = frameFailures,
+                )
+            }
         } catch (error: Exception) {
             reportFailure(
                 frameId = frameId,
@@ -757,7 +794,15 @@ class RenderSession(
         }
         committedFrameId = frameId
         try {
-            prepared.observedPropertyAttempt.commit()
+            prepared.observedPropertyAttempt.commit().forEach { error ->
+                reportFailure(
+                    frameId = frameId,
+                    phase = RenderFailurePhase.ObservedPropertyCommit,
+                    recovery = RenderFailureRecovery.FrameCommitted,
+                    error = error,
+                    frameFailures = frameFailures,
+                )
+            }
         } catch (error: Exception) {
             reportFailure(
                 frameId = frameId,
@@ -769,22 +814,10 @@ class RenderSession(
         }
         if (
             !inspectionRegistrationAttempted &&
-            inspectionPolicy() != RenderSessionInspectionPolicy.Ignore
+            resolvedInspectionPolicy != null &&
+            resolvedInspectionPolicy != RenderSessionInspectionPolicy.Ignore
         ) {
-            inspectionRegistrationAttempted = true
-            runInspectionToolingOperation("register inspection session") {
-                inspectionRegistration = inspectionTooling?.register(
-                    container = container,
-                    context = sourceContext,
-                    sourceCandidates = prepared.sourceCandidates,
-                    nodeInspection = checkNotNull(nodeInspection),
-                    diagnosticInspection = checkNotNull(diagnosticInspection),
-                    timingInspection = timingInspection,
-                )
-                if (!renderingActive) {
-                    inspectionRegistration?.setRenderingActive(false)
-                }
-            }
+            registerInspectionSession(prepared.sourceCandidates)
         }
         try {
             composition.commit()
@@ -994,6 +1027,25 @@ class RenderSession(
                 "Render-session tooling could not $operation.",
                 error,
             )
+        }
+    }
+
+    private fun registerInspectionSession(
+        sourceCandidates: List<List<com.viewcompose.ui.tooling.UiSourceCallSite>>,
+    ) {
+        inspectionRegistrationAttempted = true
+        runInspectionToolingOperation("register inspection session") {
+            inspectionRegistration = inspectionTooling?.register(
+                container = container,
+                context = sourceContext,
+                sourceCandidates = sourceCandidates,
+                nodeInspection = checkNotNull(nodeInspection),
+                diagnosticInspection = checkNotNull(diagnosticInspection),
+                timingInspection = timingInspection,
+            )
+            if (!renderingActive) {
+                inspectionRegistration?.setRenderingActive(false)
+            }
         }
     }
 

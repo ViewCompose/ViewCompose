@@ -288,16 +288,25 @@ internal object ContainerNodePatchApplier {
                 )
             }
         }
-        val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
-            view.adapter = it
-        }
-        adapter.configureMountedTreeCache(next.reusePolicy.mountedTreeCacheSize)
-        submission.publish {
-            adapter.bindState(
-                recyclerView = view,
-                state = next.state,
-                mainAxisItemSpacing = environment.roundToPx(next.spacing),
-            )
+        val mountedTreeCacheChanged =
+            previous.reusePolicy.mountedTreeCacheSize != next.reusePolicy.mountedTreeCacheSize
+        val stateConnectionChanged = previous.state !== next.state || previous.spacing != next.spacing
+        if (mountedTreeCacheChanged || stateConnectionChanged) {
+            val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
+                view.adapter = it
+            }
+            if (mountedTreeCacheChanged) {
+                adapter.configureMountedTreeCache(next.reusePolicy.mountedTreeCacheSize)
+            }
+            if (stateConnectionChanged) {
+                submission.publish {
+                    adapter.bindState(
+                        recyclerView = view,
+                        state = next.state,
+                        mainAxisItemSpacing = environment.roundToPx(next.spacing),
+                    )
+                }
+            }
         }
     }
 

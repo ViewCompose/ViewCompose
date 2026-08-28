@@ -295,6 +295,7 @@ class RecomposeScope internal constructor(
     }
 
     internal data class Checkpoint(
+        val signature: Any,
         val children: List<RecomposeScope>,
         val rememberSlots: List<RememberSlot>,
         val observation: Observation?,
@@ -313,6 +314,7 @@ class RecomposeScope internal constructor(
 
     /** Captures mutable scope state so a prepared composition can roll back transactionally. */
     internal fun checkpoint(): Checkpoint = Checkpoint(
+        signature = signature,
         children = children.toList(),
         rememberSlots = rememberSlots.toList(),
         observation = observation,
@@ -331,6 +333,7 @@ class RecomposeScope internal constructor(
 
     /** Restores mutable scope state from a prepared-composition checkpoint. */
     internal fun restore(checkpoint: Checkpoint) {
+        signature = checkpoint.signature
         children.clear()
         children += checkpoint.children
         rememberSlots.clear()

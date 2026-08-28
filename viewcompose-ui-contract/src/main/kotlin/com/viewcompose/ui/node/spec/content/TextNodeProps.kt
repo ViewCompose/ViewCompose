@@ -51,10 +51,34 @@ interface PlatformUiFontFamily : UiFontFamily {
     val font: Any
 }
 
-/** Default immutable wrapper for an opaque platform [font]. */
+/**
+ * Default immutable wrapper for an opaque platform [font].
+ *
+ * Two wrappers compare equal only when they reference the same platform font object. This keeps
+ * repeated declarative snapshots stable without assuming that an opaque platform type provides a
+ * renderer-compatible value-equality contract.
+ *
+ * @property font opaque platform font object compared by identity
+ */
 class GenericUiFontFamily(
     override val font: Any,
-) : PlatformUiFontFamily
+) : PlatformUiFontFamily {
+    /**
+     * Reports whether [other] wraps the identical platform font object.
+     *
+     * @param other candidate wrapper
+     * @return `true` only for this instance or another wrapper around the same object
+     */
+    override fun equals(other: Any?): Boolean =
+        this === other || other is GenericUiFontFamily && font === other.font
+
+    /**
+     * Returns the identity hash of the wrapped platform font object.
+     *
+     * @return an identity-based hash consistent with [equals]
+     */
+    override fun hashCode(): Int = System.identityHashCode(font)
+}
 
 /**
  * Wraps a platform font object as a [UiFontFamily].
