@@ -2,6 +2,7 @@ package com.viewcompose.overlay.oneui7.android.presenter
 
 import android.app.Activity
 import android.app.Dialog
+import android.graphics.Color
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -28,9 +29,11 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
 class AndroidOneUi7ModalBottomSheetPresenterTest {
     @Test
+    // Android 15 enforces a transparent navigation bar for target-35+ apps, so exact-color
+    // behavior must be exercised on the latest platform generation that still honors the API.
+    @Config(sdk = [34])
     fun `same key update reapplies chrome and clears obsolete dim policy`() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val root = FrameLayout(activity)
@@ -67,6 +70,37 @@ class AndroidOneUi7ModalBottomSheetPresenterTest {
 
         handle.dismiss()
         assertFalse(dialog.isShowing)
+    }
+
+    @Test
+    @Config(sdk = [35])
+    fun `edge to edge keeps the navigation bar transparent while applying contrast policy`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val root = FrameLayout(activity)
+        activity.setContentView(root)
+        renderInto(root) {}.dispose()
+        val presenter = AndroidOneUi7ModalBottomSheetPresenter(root, style)
+        val initial = request(
+            containerColor = 0xFF345678.toInt(),
+            scrimOpacity = 0.54f,
+            navigationBarColor = ModalBottomSheetNavigationBarColor.Exact(0xFF456789.toInt()),
+        )
+
+        val handle = presenter.show(entryId, initial.first, initial.second)
+        val dialog = handle.privateField<Dialog>("dialog")
+        assertEquals(Color.TRANSPARENT, dialog.window!!.navigationBarColor)
+        assertFalse(dialog.window!!.isNavigationBarContrastEnforced)
+
+        val updated = request(
+            containerColor = 0xFFB0C0D0.toInt(),
+            scrimOpacity = 0f,
+            navigationBarColor = ModalBottomSheetNavigationBarColor.PlatformDefault,
+        )
+        handle.update(updated.first, updated.second)
+
+        assertEquals(Color.TRANSPARENT, dialog.window!!.navigationBarColor)
+        assertTrue(dialog.window!!.isNavigationBarContrastEnforced)
+        handle.dismiss()
     }
 
     private fun request(
