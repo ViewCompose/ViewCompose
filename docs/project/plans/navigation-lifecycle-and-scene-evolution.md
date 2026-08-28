@@ -24,7 +24,7 @@ non_goals:
   - Add Activity-, Fragment-, and navigation-specific copies of the same Lifecycle DSL APIs.
   - Preserve defective Alpha transition, retention, or compatibility behavior through aliases, flags, or dual paths.
   - Copy every Navigation 2, Navigation 3, Compose, or Flutter API name without a ViewCompose use case.
-  - Reopen the general retained ViewModel scoped-owner design owned by the active AndroidX ViewModel plan.
+  - Reopen the retained ViewModel scoped-owner design frozen by ADR-0023 and its completed implementation plan.
 baseline: The 2026-08-29 audit found strong transactional navigation and destination ownership with 201 passing JVM or Robolectric tests, but entering destinations reach RESUMED before transition settlement, popped exiting entries remain STARTED, hidden destinations retain complete RenderSessions and native View trees without a bounded policy, general scene and overlay semantics are absent, and no navigation device or line/branch coverage gate exists.
 ordered_work:
   - Freeze Lifecycle DSL, scene, entry, presentation, focus, transition, and ownership terminology and capability dispositions before production changes.
@@ -42,7 +42,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Complete Phase 0 by accepting the lifecycle and presentation state tables, resolving the stable capability identity and Q3 contracts for destination context and retention policy, coordinating the owner boundary with the active ViewModel plan, and recording any required ADR before production changes begin.
+next_action: Execute Phase 1 by proving the existing host-neutral Lifecycle DSL across Activity, Fragment, destination, graph, preview, and custom-container boundaries before deciding whether any public declaration must change.
 maven_release_changesets: []
 ---
 
@@ -50,15 +50,14 @@ maven_release_changesets: []
 
 ## Status
 
-Active. The architecture and test audit is complete. Phase 0 contract freeze is next; no production
+Active. The architecture and test audit plus Phase 0 contract freeze are complete; no production
 source or public API has changed under this plan.
 
 Last verified: 2026-08-29.
 
-Next action: accept the target lifecycle and presentation matrices, resolve stable capability
-identities and Q3 contracts for any new public destination-context or retention-policy API,
-coordinate retained owner responsibilities with the active AndroidX ViewModel plan, and decide
-whether the scene/reducer boundary requires an ADR before implementation.
+Next action: execute the Phase 1 host matrix for the existing Lifecycle DSL, close any
+declaration-to-commit, replacement, failure, rapid-event, or disposal gaps, and add no public API
+unless that evidence proves the current surface cannot express an accepted use case.
 
 ## Maven release changesets
 
@@ -282,24 +281,25 @@ The individual `ProvideLifecycleOwner`, saved-state, ViewModelStore, and saveabl
 the shared composition mechanisms. An internal owner-environment helper may remove repeated nesting,
 but a new aggregate public owner API is not justified solely to reduce implementation lines.
 
-## Coordination with the active ViewModel plan
+## Coordination with retained ViewModel architecture
 
-The active AndroidX ViewModel optimal-architecture plan owns the general retained scoped-owner
-facility, ViewModelStore allocation policy, and migration away from duplicate navigation-owned
-store retention. This plan owns navigation entry lifecycle, scene projection, destination context,
-RenderSession lifetime, and transition semantics.
+The completed AndroidX ViewModel evolution and
+[ADR-0023](../../architecture/decisions/0023-retained-viewmodel-scope-ownership.md) own the general
+retained scoped-owner facility and ViewModelStore allocation policy. Navigation already consumes
+that facility and allocates no parallel child store. This plan owns navigation entry lifecycle,
+scene projection, destination context, RenderSession lifetime, and transition semantics.
 
-The plans coordinate as follows:
+The frozen boundary is:
 
-1. Phase 0 freezes one shared owner boundary and forbids either plan from introducing a parallel
-   retained-store mechanism.
+1. Navigation must not introduce a parallel retained-store mechanism or reopen the completed
+   provider design under a presentation-policy name.
 2. Navigation lifecycle and scene-core work may proceed without changing ViewModelStore allocation.
 3. The shared scoped-owner facility has landed and Navigation consumes it; presentation disposal
    and recreation must preserve that entry lease while changing only presentation lifetime.
-4. A pull request touching the same owner/store files declares which plan owns the slice and updates
-   both plans when it changes their next action or evidence.
-5. Neither plan can archive while current architecture or module documentation describes a
-   superseded split-owner model.
+4. A pull request touching shared owner/store files must attribute any provider-contract change to
+   a new ViewModel capability impact rather than silently expanding this navigation plan.
+5. Permanent entry removal disposes presentation before closing the lease and requesting terminal
+   clear; temporary presentation absence closes neither logical ownership nor retained state.
 
 ## Hard-cut policy
 
@@ -389,8 +389,8 @@ same slice that establishes its replacement:
 
 | Phase | Scope | Completion gate | Status |
 | --- | --- | --- | --- |
-| 0 | Contract, capability, ownership, and ADR freeze | State matrices, hard cuts, Q3/API impacts, ViewModel-plan boundary, and ADR disposition accepted | Next |
-| 1 | Generic Lifecycle DSL stabilization | One consumption surface passes host, race, replacement, failure, effect, and Flow contracts | Pending |
+| 0 | Contract, capability, ownership, and ADR freeze | State matrices, hard cuts, Q3/API impacts, ViewModel-plan boundary, and ADR disposition accepted | Complete |
+| 1 | Generic Lifecycle DSL stabilization | One consumption surface passes host, race, replacement, failure, effect, and Flow contracts | Next |
 | 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Pending |
 | 3 | Android transition lifecycle correction | Ordinary and predictive transitions, overlays, panes, and host caps match the matrix | Pending |
 | 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Pending |
@@ -413,6 +413,39 @@ same slice that establishes its replacement:
    source files to one implementation slice at a time.
 6. Replace this plan's `- None.` release declaration when the first published production slice
    begins.
+
+#### Phase 0 acceptance
+
+The lifecycle, presentation, module-ownership, hard-cut, and test invariants in this plan are
+accepted without revision. [ADR-0024](../../architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md)
+records the cross-module decision: effective entry lifecycle is `min(host cap, scene cap, entry
+cap)`; coarse presentation is separate from Lifecycle; logical entry ownership is independent of
+an optional native presentation; and one reducer-produced plan owns navigation decisions.
+
+Three future capability identities are frozen: `navigation.scene-projection` in Navigation Core,
+plus `navigation.presentation-retention` and `navigation.destination-context` in Navigation
+Android. All three are Q3. The ADR assigns their applicable behavior, input/output, state,
+lifecycle, concurrency, failure, Android, performance, and compatibility fields. Capability and
+impact records will land with the first compiled declarations because Governance V2 records current
+inventory and forbids pre-created impacts.
+
+The existing `lifecycle.owner-boundaries`, `lifecycle.effects`, and
+`lifecycle.flow-collection` identities remain the only generic Lifecycle DSL capabilities. Phase 1
+adds no host-specific façade and adds no API unless its executable host/race matrix proves a real
+expressiveness gap. The completed ViewModel plan and ADR-0023 remain authoritative for retained
+stores; presentation disposal must preserve the already-shared navigation entry lease.
+
+The Phase 0 repository gate ran `qaQuick` against main revision `69d7e533` and completed all 2,268
+actionable tasks: 171 executed and 2,097 were up to date. The integration result is **no material
+change**: no production declaration or compiled sample changed, and the gate validates document,
+dependency, publication, API, and existing test consistency rather than a new runtime behavior.
+Its mixed cache state is not performance evidence.
+
+Conclusion: **improved** architectural certainty. Phase 0 changes no production declaration,
+publishing input, or compiled sample and therefore owns no Maven Changeset. Its evidence is design
+and governance acceptance rather than runtime validation, so transition correctness, lifecycle
+races, retention defaults, device memory, leaks, and performance remain **inconclusive**. Next
+action: execute Phase 1's fresh host-neutral Lifecycle DSL matrix.
 
 ### Phase 1: stabilize Lifecycle DSL consumption
 
