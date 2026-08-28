@@ -618,6 +618,20 @@ hosted full-cache build remains the acceptance gate for version routing and tota
   build and route verification; further content growth must recover non-API headroom rather than
   raising the limit.
 
+- **2026-08-29, repository-source link externalization:** the ViewModel scoped-owner candidate
+  exposed that otherwise valid bilingual contracts and compiled evidence increased non-API output
+  from the main comparator's 49,177,136 bytes to 49,309,510 bytes, 131,296 bytes above the
+  unchanged 46.9 MiB limit. A before-default remark transform now keeps source Markdown links
+  repository-relative for verification but emits links to GitHub instead of copying linked
+  production and test files into `assets/files`. On the same main corpus, the first corrected
+  candidate produced 47,961,611 non-API bytes, 1,215,525 bytes (`2.47%`) below the comparator and
+  left 1,216,603 bytes of headroom. All 77 documentation-script tests, TypeScript, structure and
+  translation gates, 133 API versions, 133 module manuals, 524-page accessibility audit, site
+  shell, and unchanged size budgets passed; the complete site wrapper took `51.2 s`. The result is
+  **improved**: source evidence remains reachable while one redundant deployed representation is
+  removed without changing routes, APIs, or the budget. This single warm local build does not
+  establish hosted latency; the next action is CI exact-cache and hosted-route verification.
+
 Git history preserves earlier Paging and site checkpoints. They do not authorize deleting current
 contracts, raising the limit without evidence, or re-expanding completed copies.
 
