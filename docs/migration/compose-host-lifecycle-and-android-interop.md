@@ -57,11 +57,11 @@ release notes:
 - [Lifecycle 2.11 release notes](https://developer.android.com/jetpack/androidx/releases/lifecycle)
 - [SavedState release notes](https://developer.android.com/jetpack/androidx/releases/savedstate)
 
-The local executable baseline is Compose 1.7.8, Activity 1.12.4, Lifecycle 2.8.7, and Kotlin
+The local executable baseline is Compose 1.7.8, Activity 1.12.4, Lifecycle 2.11.0, and Kotlin
 2.2.10. Repository tests and compiled samples cited below verify ViewCompose behavior against that
-dependency set. They do not constitute execution of upstream Compose 1.12.0, Activity 1.13.0, or
-Lifecycle 2.11.0. Re-verification must therefore repeat both the official semantic review and the
-local test run when either baseline changes.
+dependency set. They do not constitute execution of upstream Compose 1.12.0 or Activity 1.13.0;
+the Lifecycle family now matches the reviewed 2.11.0 baseline. Re-verification must repeat both the
+official semantic review and the local test run when either baseline changes.
 
 The ViewCompose contracts in scope are owned by the
 [Android aggregate](../modules/viewcompose-android/README.md),
@@ -212,6 +212,13 @@ UI scope permanently leaves, and inherit the parent's factory and `CreationExtra
 navigation tests prove that those owners inherit the nearest host's default Factory and starting
 `CreationExtras`, replace their child owner/default-argument entries, and preserve unrelated extras.
 It still does not expose an equivalent general provider for arbitrary UI subtrees.
+
+ViewModel lookup now matches AndroidX key and creation semantics. Only `null` selects the
+class-derived default key; empty and whitespace-only strings are explicit keys. Migration code that
+used a blank string as a default sentinel must pass `null`. Reified and runtime-`KClass`
+initializer overloads receive the owner's `CreationExtras`, allowing constructor dependencies and
+`createSavedStateHandle()` without a one-class Factory. The owner's `ViewModelStore` is the only
+instance cache, so clearing it is visible on the next executed composition call.
 
 ViewCompose `SaveableStateRegistry`, AndroidX `SavedStateRegistryOwner`, and `SavedStateHandle`
 serve different layers. A migration should identify which layer owns every value and verify

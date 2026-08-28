@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.viewmodel-store-resolution-lifecycle211",
+  "change": "changed",
+  "breaking": true,
+  "artifact": "viewcompose-viewmodel-androidx",
+  "symbol_id": "com.viewcompose.viewmodel.viewModel",
+  "capability_id": "viewmodel.store-resolution",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.viewmodel.viewModel"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-viewmodel-androidx"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.viewmodel-resolution"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.viewmodel.store-resolution"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The module's compiled Q3 sample owns ViewModel creation; no application tutorial currently teaches this integration API."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "Owner, key, Factory, extras, and initializer selection are owned by the focused module manual and Android interop migration page."
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": ["architecture.retained-viewmodel-scope-ownership"]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-host-lifecycle-android-interop"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No public symbol, package, document route, or ownership location moves."
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "summary": "Align Android integrations to Lifecycle 2.11 and hard-cut ViewModel lookup onto store-only AndroidX key, Factory, CreationExtras, clear, and initializer semantics.",
+  "changes": [
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
+    { "artifact": "viewcompose-lifecycle-androidx", "impact": "fix" },
+    { "artifact": "viewcompose-navigation-android", "impact": "fix" },
+    { "artifact": "viewcompose-preview-runner", "impact": "fix" },
+    { "artifact": "viewcompose-viewmodel-androidx", "impact": "breaking" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "The shared Lifecycle version moves every directly affected Android integration to 2.11.0; each published artifact whose dependency input changes is classified above."
+    }
+  ]
+}

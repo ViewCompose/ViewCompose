@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: 7b07281b909e87e88fc79b1c75b8ad302f54919dcf4adbb940b5ead1051a4eb9
+translation_source_hash: 962f9ac39ffb03d1c3900321df3b4446ab0718b568f0985b9a4e44eacd50b0d9
 translation_status: current
 ---
 
@@ -22,8 +22,8 @@ dependencies {
 - 稳定性：**Alpha**。Owner、key、factory 与 Saved State 契约已经过审查和测试，命名在 Alpha
   版本间仍可能演进。
 - 平台：Android 库，最低 SDK 跟随仓库 Android 策略。
-- UI Foundation 与 AndroidX ViewModel/SavedState 支持会被传递暴露，因为它们的 Builder、Owner、
-  Factory、Creation Extra、ViewModel 与 `SavedStateHandle` 类型出现在公开 API 中。
+- UI Foundation 与 AndroidX Lifecycle 2.11 ViewModel/SavedState 支持会被传递暴露，因为它们的
+  Builder、Owner、Factory、Creation Extra、ViewModel 与 `SavedStateHandle` 类型出现在公开 API 中。
 - 它不创建或清理宿主 Owner；Ownership 仍属于 Activity、Fragment、导航或自定义容器。
 
 ## Owner 传播
@@ -60,6 +60,11 @@ fun UiTreeBuilder.provideViewModelStoreOwnerSample(
 ```kotlin
 class ProfileViewModel : ViewModel()
 
+class SavedProfileViewModel(
+    val handle: SavedStateHandle,
+    val profileId: String,
+) : ViewModel()
+
 /** Resolves one instance from the owner installed by the current Android host. */
 fun UiTreeBuilder.viewModelSample(): ProfileViewModel {
     return viewModel()
@@ -81,6 +86,33 @@ fun UiTreeBuilder.keyedViewModelSample(
     )
     return primary to comparison
 }
+
+/** Creates a ViewModel with constructor dependencies and the owner's restored state handle. */
+fun UiTreeBuilder.initializerViewModelSample(
+    owner: ViewModelStoreOwner,
+): SavedProfileViewModel {
+    return viewModel(owner = owner) {
+        SavedProfileViewModel(
+            handle = createSavedStateHandle(),
+            profileId = "primary-profile",
+        )
+    }
+}
+
+/** Uses the initializer contract when the model class is selected at runtime. */
+fun UiTreeBuilder.kClassInitializerViewModelSample(
+    owner: ViewModelStoreOwner,
+): SavedProfileViewModel {
+    return viewModel(
+        modelClass = SavedProfileViewModel::class,
+        owner = owner,
+    ) {
+        SavedProfileViewModel(
+            handle = createSavedStateHandle(),
+            profileId = "runtime-selected-profile",
+        )
+    }
+}
 ```
 
 解析遵循 AndroidX `ViewModelProvider`：
@@ -90,17 +122,24 @@ fun UiTreeBuilder.keyedViewModelSample(
 3. 优先使用显式 CreationExtras，否则复制 Owner 默认 Extras，再否则使用空 Extras；
 4. 按显式 key 或 AndroidX 类名派生的默认 key 查询 Owner Store。
 
-调用必须在组合期间的 Android 主线程执行。Owner 的 `ViewModelStore` 是权威缓存：重组和重复
-调用会返回同一实例，直到 Store 被清理。
+Initializer Overload 同时支持 Reified Type 与运行时 `KClass`。其
+`CreationExtras.() -> VM` Callback 接收 Owner 默认 Extras，因此 Constructor Dependency 与
+`createSavedStateHandle()` 保持为一次创建操作。已有 Entry 会忽略后续 Initializer Callback；
+失败 Callback 不发布 Entry，可以稍后重试。
+
+调用必须在组合期间的 Android 主线程执行。Owner 的 `ViewModelStore` 是唯一 ViewModel 实例缓存。
+每次实际执行都会做一次有界 Provider 查询，因此 Store 清理会在下一次 Composition 被观察到，
+不会返回陈旧的 Remembered Model。
 
 ## Key 与查询 Identity
 
-null 或空白 key 会选择从 ViewModel 类派生的默认 Identity。在同一个 Owner 中保留多个同类型
-实例时，应提供稳定、非空白 key，如上方已编译的 `keyedViewModelSample` 所示。
+null key 会选择从 ViewModel 类派生的默认 Identity。每个非 null 字符串都是显式 AndroidX Key，
+包括空字符串和仅空白字符串，并逐字节保留。在同一个 Owner 中保留多个同类型实例时，应提供稳定的
+应用 Key，如上方已编译的 `keyedViewModelSample` 所示。
 
-Owner、key、factory、extras 和 model class 构成组合的 Provider 查询 Identity。任一项改变时，
-ViewCompose 会重新查询 Provider，但这不会强制重建实例：如果新查询仍指向已有 Owner/key 条目，
-AndroidX 会返回 Store 中的实例，并忽略仅用于首次创建的新 Factory 或 Extras。
+每次实际执行都会重新查询 Provider。Owner 或 Key 变化可以指向不同 Entry；如果目标 Entry 已存在，
+Factory、Extras 或 Initializer 变化不会强制重建。一个显式 Key 下请求不同 Model Class 时遵循
+AndroidX Replacement 语义，并清理旧 Model。
 
 不要使用变化对象或调用顺序计数器作为 key。导航已为不同目的地和图实例提供独立 Owner；只有
 多个模型有意共享同一个 Store 时才添加应用 key。
@@ -111,8 +150,9 @@ AndroidX 会返回 Store 中的实例，并忽略仅用于首次创建的新 Fac
 会复制到 `MutableCreationExtras`，不会暴露或修改可能被共享的 Owner 对象。
 
 Factory 和 Extras 影响首次创建，不影响 Store 中已有条目。模型需要 `SavedStateHandle` 时，
-应使用实现 AndroidX Saved State Factory/Extras 契约的 Owner，或提供兼容覆盖。构造或 Factory
-失败会向调用方传播；可恢复创建失败应在宿主边界显式建模，不要返回不完整模型。
+应使用实现 AndroidX Saved State Factory/Extras 契约的 Owner，或使用 Initializer Overload 与
+`createSavedStateHandle()`。Constructor、Initializer 与 Factory 失败会向调用方传播且不发布
+不完整 Model；可恢复创建失败应在 Host 边界显式建模。
 
 ## SavedStateHandle 便捷入口
 
@@ -148,10 +188,15 @@ Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用�
 
 ## 测试
 
-单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 teardown 清理 Store。应验证稳定
-复用、不同 key、显式 Owner 替换、Factory 优先级、Extras、Owner 缺失失败，以及 Ownership
-边界的 `onCleared`。进程死亡 `SavedStateHandle` 测试应使用感知 Saved State 的 Robolectric
-或真机 Owner。
+Phase 1 的同一测试 Owner 从此前 7 项增加到 21 项 Focused Resolution Test，即新增 14 项契约，
+标准化后的 Suite 规模为此前 3 倍（`+200%`）；21 项全部通过。覆盖 Store Clear 后查询、
+Null/Empty/Blank/Ordinary Key、Key 精确保留、Owner Replacement、显式/默认 Factory 与 Extras、
+Reified 与 `KClass` Lookup 和 Initializer、创建失败重试、Model Class Replacement 与 Composition
+Boundary。结论为 **improved**。这关闭 Lookup/Creation 缺陷，但未关闭 Scoped Owner 或 Process
+Restoration；后两者分别由 Phase 2 与 Phase 4 负责。
+
+单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 Teardown 清理 Store。Process-death
+`SavedStateHandle` 测试仍应使用感知 Saved State 的 Robolectric 或真机 Owner。
 
 ## 相关文档
 
@@ -165,6 +210,8 @@ Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用�
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了 nullable Owner 查询、嵌套 Owner 提供、AndroidX Store Identity、显式与
-默认 Factory/Extras 优先级、Keyed 实例和 SavedStateHandle Holder。应让 Owner，而不是组合
-调用位置，成为权威生命周期边界。
+Lifecycle 2.11 基线硬切两项 Alpha 行为。只有 `null` 选择默认 Key；此前把 `""` 或空白字符串
+当作默认 Sentinel 的调用方必须改传 `null`，Blank Key 现在标识显式 Entry。Composition 不再
+Remember 已解析 ViewModel，因此 Store Clear 立即可见。Initializer Overload 可替代为 Constructor
+Dependency 编写的一次性单 Class Factory。应让 Owner，而不是 Composition Call Position，成为
+权威生命周期边界。
