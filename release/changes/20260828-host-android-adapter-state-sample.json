@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Make the Host Android typed-adapter sample carry its complete replay-safe View configuration in one immutable state snapshot.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-host-android",
+      "reason": "Only a test-only compiled documentation sample and its handwritten documentation change; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

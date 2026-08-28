@@ -23,6 +23,7 @@ class AndroidViewTutorialActivity : ComponentActivity() {
 
         setMaterial3UiContent {
             val count = remember { mutableStateOf(0) }
+            val largeText = remember { mutableStateOf(false) }
 
             Column(
                 spacing = 12.dp,
@@ -30,15 +31,23 @@ class AndroidViewTutorialActivity : ComponentActivity() {
             ) {
                 AndroidView(
                     factory = { context ->
-                        TextView(context).apply { id = View.generateViewId() }
+                        TextView(context).apply {
+                            id = View.generateViewId()
+                            textSize = if (largeText.value) 20f else 14f
+                        }
                     },
                     update = { view ->
                         (view as TextView).text =
                             "Native TextView #${view.id} count: ${count.value}"
                     },
                     modifier = Modifier.fillMaxWidth(),
+                    constructionKey = largeText.value,
                 )
                 Button("Increment", onClick = { count.value += 1 })
+                Button(
+                    if (largeText.value) "Use compact native text" else "Use large native text",
+                    onClick = { largeText.value = !largeText.value },
+                )
             }
         }
     }
