@@ -1,5 +1,8 @@
 package com.viewcompose
 
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.createSavedStateHandle
 import com.viewcompose.demo.automation.demoAutomationTarget
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoScenarioId
@@ -47,7 +50,7 @@ import com.viewcompose.ui.foundation.produceState
 import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
-import com.viewcompose.viewmodel.savedStateHandle
+import com.viewcompose.viewmodel.viewModel
 
 @ViewComposePreview(name = "State · Core", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateCore() {
@@ -103,9 +106,10 @@ private fun UiTreeBuilder.RuntimeStateFixture(scenario: DemoScenarioSpec?) {
     ) {
         value = clickCountState.value
     }
-    val vmStateHandle = savedStateHandle(key = "state_page_vm_counter")
-    val vmCounterState = vmStateHandle
-        .getStateFlow("counter", 0)
+    val runtimeStateViewModel = viewModel<RuntimeStateViewModel> {
+        RuntimeStateViewModel(createSavedStateHandle())
+    }
+    val vmCounterState = runtimeStateViewModel.counter
         .collectAsStateWithLifecycle()
 
     LazyColumn(
@@ -150,7 +154,7 @@ private fun UiTreeBuilder.RuntimeStateFixture(scenario: DemoScenarioSpec?) {
                     onClick = {
                         benchmarkStepState.value = 0
                         clickCountState.value = 0
-                        vmStateHandle["counter"] = 0
+                        runtimeStateViewModel.reset()
                     },
                 )
             }
@@ -218,7 +222,7 @@ private fun UiTreeBuilder.RuntimeStateFixture(scenario: DemoScenarioSpec?) {
                 Button(
                     text = stringResource(R.string.demo_state_viewmodel_increment),
                     onClick = {
-                        vmStateHandle["counter"] = vmCounterState.value + 1
+                        runtimeStateViewModel.increment()
                     },
                     modifier = Modifier.testTag(DemoStateTestTags.STATE_VM_INCREMENT),
                 )
@@ -226,6 +230,24 @@ private fun UiTreeBuilder.RuntimeStateFixture(scenario: DemoScenarioSpec?) {
 
             else -> error("Unsupported runtime state section: $section")
         }
+    }
+}
+
+private class RuntimeStateViewModel(
+    handle: SavedStateHandle,
+) : ViewModel() {
+    val counter = handle.getMutableStateFlow(COUNTER_KEY, 0)
+
+    fun increment() {
+        counter.value += 1
+    }
+
+    fun reset() {
+        counter.value = 0
+    }
+
+    private companion object {
+        const val COUNTER_KEY = "counter"
     }
 }
 

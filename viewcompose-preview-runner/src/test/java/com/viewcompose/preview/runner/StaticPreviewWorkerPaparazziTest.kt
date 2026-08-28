@@ -13,6 +13,8 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import com.android.resources.Density
 import com.android.resources.LayoutDirection
@@ -53,7 +55,7 @@ import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.viewmodel.LocalViewModelStoreOwner
-import com.viewcompose.viewmodel.savedStateHandle
+import com.viewcompose.viewmodel.viewModel
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -153,8 +155,8 @@ class StaticPreviewWorkerPaparazziTest {
                 savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
                 viewModelStoreOwner = LocalViewModelStoreOwner.current
                 hasSaveableRegistry = LocalSaveableStateRegistry.current != null
-                val handle = savedStateHandle(key = "preview-host-test")
-                Text("count=${handle.get<Int>("count") ?: 0}")
+                val model = viewModel<PreviewSavedStateViewModel>(key = "preview-host-test")
+                Text("count=${model.handle.get<Int>("count") ?: 0}")
             }
         }
         val request = request(
@@ -659,6 +661,10 @@ class StaticPreviewWorkerPaparazziTest {
         )
     }
 }
+
+private class PreviewSavedStateViewModel(
+    val handle: SavedStateHandle,
+) : ViewModel()
 
 fun UiTreeBuilder.resolvedStaticPreviewEntryPoint() {
     Text("Resolved static preview")

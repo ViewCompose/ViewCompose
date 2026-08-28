@@ -9,7 +9,6 @@ import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.viewmodel.ViewModelScopeProvider
 import com.viewcompose.viewmodel.rememberViewModelScopeProvider
 import com.viewcompose.viewmodel.rememberViewModelStoreOwner
-import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
@@ -113,8 +112,16 @@ fun removeRetainedProfileScope(provider: ViewModelScopeProvider) {
 // DOCS_REGION_END(viewmodel-scoped-owners)
 
 // DOCS_REGION_START(viewmodel-saved-state)
-/** Resolves an independent saved-state namespace under a stable key. */
-fun UiTreeBuilder.savedStateHandleSample(): SavedStateHandle {
-    return savedStateHandle(key = "profile-filters")
+class ProfileFiltersViewModel(
+    handle: SavedStateHandle,
+) : ViewModel() {
+    val selectedFilter = handle.getMutableStateFlow("selected-filter", "all")
+}
+
+/** Gives one ViewModel sole write ownership of restored business state. */
+fun UiTreeBuilder.savedStateViewModelSample(): ProfileFiltersViewModel {
+    return viewModel(key = "profile-filters") {
+        ProfileFiltersViewModel(createSavedStateHandle())
+    }
 }
 // DOCS_REGION_END(viewmodel-saved-state)

@@ -46,7 +46,6 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.shared.SharedContentKey
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
-import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -65,11 +64,8 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     val saveableCounter = rememberSaveable(key = "system-navigation-entry-counter") {
         mutableStateOf(0)
     }
-    val savedStateHandle = savedStateHandle(key = "system-navigation-entry-handle")
-    val handleCounter = savedStateHandle
-        .getStateFlow("counter", 0)
-        .collectAsStateWithLifecycle()
     val entryViewModel = viewModel<SystemNavigationEntryViewModel>()
+    val handleCounter = entryViewModel.handleCounter.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState = if (lifecycleOwner == null) {
         stringResource(R.string.demo_system_nav_lifecycle_none)
@@ -279,7 +275,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     text = stringResource(R.string.demo_system_nav_increment_handle),
                     variant = ButtonVariant.Outlined,
                     onClick = {
-                        savedStateHandle["counter"] = handleCounter.value + 1
+                        entryViewModel.incrementHandleCounter()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -491,10 +487,8 @@ private fun UiTreeBuilder.GraphOwnerStateBlock() {
         return
     }
     ProvideNavGraphOwner(graphEntry.route.name) {
-        val graphHandle = savedStateHandle(key = "system-navigation-graph-handle")
-        val graphCounter = graphHandle
-            .getStateFlow("counter", 0)
-            .collectAsStateWithLifecycle()
+        val graphViewModel = viewModel<SystemNavigationGraphViewModel>()
+        val graphCounter = graphViewModel.counter.collectAsStateWithLifecycle()
         Column(
             spacing = 6.dp,
             modifier = Modifier
@@ -515,7 +509,7 @@ private fun UiTreeBuilder.GraphOwnerStateBlock() {
             Button(
                 text = stringResource(R.string.demo_system_nav_increment_graph),
                 variant = ButtonVariant.Text,
-                onClick = { graphHandle["counter"] = graphCounter.value + 1 },
+                onClick = graphViewModel::increment,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_GRAPH_INCREMENT),
@@ -903,15 +897,35 @@ internal class SystemNavigationEntryViewModel(
 ) : ViewModel() {
     val instanceId: Int = nextInstanceId.incrementAndGet()
     val counter = mutableStateOf(savedStateHandle[COUNTER_KEY] ?: 0)
+    val handleCounter = savedStateHandle.getMutableStateFlow(HANDLE_COUNTER_KEY, 0)
 
     fun increment() {
         counter.value += 1
         savedStateHandle[COUNTER_KEY] = counter.value
     }
 
+    fun incrementHandleCounter() {
+        handleCounter.value += 1
+    }
+
     private companion object {
         const val COUNTER_KEY = "view-model-counter"
+        const val HANDLE_COUNTER_KEY = "handle-counter"
         val nextInstanceId = AtomicInteger(0)
+    }
+}
+
+internal class SystemNavigationGraphViewModel(
+    handle: SavedStateHandle,
+) : ViewModel() {
+    val counter = handle.getMutableStateFlow(COUNTER_KEY, 0)
+
+    fun increment() {
+        counter.value += 1
+    }
+
+    private companion object {
+        const val COUNTER_KEY = "counter"
     }
 }
 

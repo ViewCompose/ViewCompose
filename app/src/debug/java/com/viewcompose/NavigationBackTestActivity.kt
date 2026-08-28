@@ -10,6 +10,8 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.createSavedStateHandle
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
@@ -34,7 +36,7 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.rememberSaveable
-import com.viewcompose.viewmodel.savedStateHandle
+import com.viewcompose.viewmodel.viewModel
 
 /**
  * 孵化中的系统导航栈在真机上的 debug-only 宿主。
@@ -164,12 +166,14 @@ class NavigationBackTestActivity : AppCompatActivity() {
                     ) {
                         mutableStateOf(PROCESS_DEATH_UNSEEDED_VALUE)
                     }
-                    val handle = savedStateHandle(
+                    val model = viewModel<ProcessDeathStateViewModel>(
                         key = PROCESS_DEATH_HANDLE_OWNER_KEY,
-                    )
+                    ) {
+                        ProcessDeathStateViewModel(createSavedStateHandle())
+                    }
                     processDeathRecords[entry.id] = ProcessDeathRecord(
                         saveableValue = saveableValue,
-                        savedStateHandle = handle,
+                        savedStateHandle = model.handle,
                     )
                     val accountOwner = LocalNavGraphOwnerScope.current
                         ?.get(PROCESS_DEATH_ACCOUNT_GRAPH_ROUTE)
@@ -188,12 +192,14 @@ class NavigationBackTestActivity : AppCompatActivity() {
                             ) {
                                 mutableStateOf(PROCESS_DEATH_UNSEEDED_VALUE)
                             }
-                            val graphHandle = savedStateHandle(
+                            val graphModel = viewModel<ProcessDeathStateViewModel>(
                                 key = PROCESS_DEATH_GRAPH_HANDLE_OWNER_KEY,
-                            )
+                            ) {
+                                ProcessDeathStateViewModel(createSavedStateHandle())
+                            }
                             processDeathGraphRecords[accountOwner.entry.id] = ProcessDeathRecord(
                                 saveableValue = graphSaveableValue,
-                                savedStateHandle = graphHandle,
+                                savedStateHandle = graphModel.handle,
                             )
                             Text(
                                 text = processDeathStatus(),
@@ -445,6 +451,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
         val saveableValue: MutableState<Int>,
         val savedStateHandle: SavedStateHandle,
     )
+
+    private class ProcessDeathStateViewModel(
+        val handle: SavedStateHandle,
+    ) : ViewModel()
 
     companion object {
         const val HOME_ROUTE = "home"
