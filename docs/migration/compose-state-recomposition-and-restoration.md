@@ -73,7 +73,7 @@ The repository's executable comparison fixtures intentionally remain on an older
 | Compose Runtime, UI, and Foundation | `1.7.8` |
 | Activity | `1.12.4` |
 | Lifecycle | `2.8.7` |
-| Kotlin and Compose compiler plugin | `2.0.21` |
+| Kotlin and Compose compiler plugin | `2.2.10` |
 
 These versions are recorded in `gradle/libs.versions.toml`. Consequently, this page uses two
 different evidence classes:

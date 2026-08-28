@@ -89,7 +89,7 @@ dependencies {
 - Generic collection semantics map to AndroidX accessibility collection metadata. Parent nodes own
   row/column counts and selection cardinality; child nodes own logical positions and spans while
   existing `selected` and `heading` semantics remain the single source of item state.
-- Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.13.2.
+- Build baseline for this release: Kotlin 2.2.10 and Android Gradle Plugin 9.1.1.
 
 ## Rendering model
 

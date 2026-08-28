@@ -317,7 +317,9 @@ private fun File.writeTextAtomically(value: String) {
 
 private fun File.resolveSibling(name: String): File = File(checkNotNull(parentFile), name)
 
-private val ANDROID_PLATFORM_PATTERN = Regex("""[/\\]platforms[/\\]android-(\d+)[/\\]""")
+private val ANDROID_PLATFORM_PATTERN = Regex(
+    """[/\\]platforms[/\\]android-(\d+)(?:\.\d+)?[/\\]""",
+)
 private val LAYOUTLIB_COMPATIBILITY_GROUPS = setOf(
     "assets-library",
     "assets-local",

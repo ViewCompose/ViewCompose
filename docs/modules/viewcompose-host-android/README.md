@@ -51,8 +51,9 @@ dependencies {
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
 - API dependencies: runtime, UI contract, UI foundation, AndroidX Lifecycle, and AndroidX
   SavedState where their types appear in public signatures.
-- Private implementation dependencies: Android renderer, coroutines Android, ConstraintLayout,
-  and DynamicAnimation.
+- Private implementation dependencies: Android renderer, AndroidX Core, coroutines Android,
+  ConstraintLayout, and DynamicAnimation. AndroidX Core is explicit because MotionLayout's public
+  supertype graph requires its nested-scrolling interfaces at Kotlin compile time.
 - Material Components is not a dependency of this module.
 
 The module exclusively owns `com.viewcompose.host.android`. Activity and Fragment composition

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: d4870c0b38ef499d3e4e650c6a194b51e640b3553eef8b69706317f272d00b7f
+translation_source_hash: 0c7d17cb33a8850c71d2567e5dab744534e25a788f563ae983c8711d7b202e68
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-ui-contract
@@ -50,7 +50,7 @@ dependencies {
 - 传递暴露的契约族：来自 `viewcompose-text-core` 的平台无关文本/编辑模型，以及来自
   `viewcompose-graphics-core` 的绘图模型；二者都出现在公开 UI Contract 签名中。
 - `viewcompose-runtime` 保持为实现依赖。
-- 本版本构建基线：Kotlin 2.0.21。
+- 本版本构建基线：Kotlin 2.2.10。
 
 ## 最小契约示例
 

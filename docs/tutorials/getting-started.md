@@ -96,8 +96,9 @@ Expected result: every press increments the visible count without replacing the 
 
 ## Prerequisites and verified baseline
 
-You need an Android application using Kotlin, an Android SDK, and JDK 17 for the Android Gradle
-Plugin. The sample uses `compileSdk = 36`, `minSdk = 24`, and JVM target 11.
+You need an Android application using Kotlin, Android SDK 37, and JDK 21 for the repository's static
+preview pipeline. The sample uses `compileSdk = 37`, `minSdk = 24`, and JVM target 11; the JDK 21
+requirement belongs to build/preview tooling and does not raise the application's bytecode target.
 
 This hard-cut dependency set was verified on 2026-08-06 through the repository-generated local
 Maven repository. It becomes a public installation path after the listed new coordinates are

@@ -107,6 +107,8 @@ preview-owned content.
 ## Verification and compatibility
 
 - Stability: **Alpha**; Preview Core owns wire compatibility.
+- Platform: Android library with `minSdk 24`, `compileSdk 37`, and Java 11 bytecode; its Paparazzi
+  verification runs on JDK 21.
 - Run `:viewcompose-preview:testDebugUnitTest` and `:viewcompose-preview:verifyPaparazziDebug`.
 - Catalog IDs are immutable snapshot identities; record a new Golden only after reviewing the
   visual difference.

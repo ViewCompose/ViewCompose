@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.viewcompose.samples.counter"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.viewcompose.samples.counter"

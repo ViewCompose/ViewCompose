@@ -45,7 +45,7 @@ verified against the official [Compose Animation release notes](https://develope
 and [shared-element guide](https://developer.android.com/develop/ui/compose/animation/shared-elements).
 
 The repository's executable Compose dependencies remain on `1.7.8`. Compose `1.12.0` also requires
-compile SDK 37 and AGP 9.2, while this repository currently uses compile SDK 36 and AGP 8.13.2.
+compile SDK 37 and AGP 9.2, while the runtime modules currently use compile SDK 36 on AGP 9.1.1.
 Consequently:
 
 1. official Android documentation establishes the `1.12.0` semantic comparison;

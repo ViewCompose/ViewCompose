@@ -48,7 +48,7 @@ lifecycle owners.
 The upstream semantic comparison baseline is AndroidX Compose Animation `1.12.0`, the stable
 release dated 2026-08-12. The repository's executable Compose fixture remains on `1.7.8` because
 Compose `1.12.0` requires compile SDK 37 and AGP 9.2 while this repository currently uses compile
-SDK 36 and AGP 8.13.2. Official release notes and API references are semantic evidence; local
+SDK 36 and AGP 9.1.1. Official release notes and API references are semantic evidence; local
 Compose execution is explicitly older evidence and cannot prove `1.12.0` behavior.
 
 ## Decision

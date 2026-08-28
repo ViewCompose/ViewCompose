@@ -37,7 +37,7 @@ does not imply equivalent measurement, lifecycle, invalidation, or Android integ
 | ViewCompose target modules | runtime `0.1.0-alpha04`; UI Contract `0.1.0-alpha05`; Host `0.1.0-alpha05`; UI Foundation and Renderer `0.1.0-alpha02` | Target of this migration guide |
 | Compose Runtime, UI, and Foundation | `1.12.0` stable | Upstream semantic reference |
 | Repository Compose dependencies | `1.7.8` | Executable comparison baseline in this repository |
-| Repository Kotlin toolchain | `2.0.21` | Compilation baseline for comparison code |
+| Repository Kotlin toolchain | `2.2.10` | Compilation baseline for comparison code |
 
 The upstream baseline is confirmed by the official AndroidX release notes for
 [Compose Runtime](https://developer.android.com/jetpack/androidx/releases/compose-runtime),

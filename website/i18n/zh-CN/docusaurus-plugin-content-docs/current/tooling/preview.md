@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: 5f5001bebe5846bbae5452da4d2cc0eb94c6df6538baa5e909dd27f9383fad9a
+translation_source_hash: 0b70737041178ce0b03316ab9b8f5e2d1ccdfb2fc9603e09b339c742d14d8f55
 translation_status: current
 ---
 
@@ -37,6 +37,11 @@ dependencies {
 
 各 Artifact 独立版本化。它们只应进入 Debug/Tooling Configuration；混用版本前检查当前
 [模块目录](../modules/README.md)。
+
+渲染使用 JDK 21 及以上版本。当前仓库验证通道为 Gradle 9.3.1、AGP 9.1.1、Kotlin 2.2.10 与
+compile SDK 37；发布的 Android Library 仍使用 Java 11 字节码。仅 Robolectric 的 Preview Unit
+Test 使用 SDK 35，因为 Robolectric 4.14.1 尚不能建模 API 37；截图引擎仍为
+Paparazzi/Layoutlib，因此 SDK 35 固定值不构成截图或生产 Runtime 证据。
 
 ## 声明并渲染入口
 

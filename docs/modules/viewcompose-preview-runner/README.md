@@ -64,6 +64,8 @@ budget. PNG capture is lossless. Immutable diagnostics include structure, native
 patches, composition and source locations without retaining runtime objects.
 
 - Stability: **Alpha** tooling infrastructure; protocol compatibility belongs to Preview Core.
+- Platform: Android library with `minSdk 24`, `compileSdk 37`, and Java 11 bytecode; its Paparazzi
+  verification runs on JDK 21.
 - Close every mounted frame, including assertion-only tests.
 - Test fixed/auto height, nested scrollers, capture limits, RTL, locales, font scale, API matching,
   application themes, and each failure phase with `:viewcompose-preview-runner:testDebugUnitTest`.

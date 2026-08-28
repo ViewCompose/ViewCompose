@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: 78a27a9d7ac89e584ecfd7895cc1460922c82cef63e84dc249530d0b8758139f
+translation_source_hash: 6fde73b1fb2b320645a50207f93f21b7c5f44a6388f0fe8829bda38ac78e2513
 translation_status: current
 ---
 
@@ -31,7 +31,7 @@ Navigation、Preview 与 Studio 工具的维护者**
 及[共享元素指南](https://developer.android.com/develop/ui/compose/animation/shared-elements)。
 
 仓库中的可执行 Compose 依赖仍为 `1.7.8`。Compose `1.12.0` 还要求 compile SDK 37 和
-AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
+AGP 9.2，而 Runtime Module 当前使用 compile SDK 36 与 AGP 9.1.1。因此：
 
 1. Android 官方文档确定 `1.12.0` 的语义对比；
 2. 仓库源码、单测、可编译 Sample、Demo、Preview 与设备测试确定当前 ViewCompose 行为；

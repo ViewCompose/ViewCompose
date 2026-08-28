@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 7fb73024b9cc85e32a05ee6c697ac1ee1d7b8af9372f8ba62a78be88f0b8b058
+translation_source_hash: 88a02bf2a067e49e8be0cf1d41c5f40d468dabce57ea482f35238385a8b461af
 translation_status: current
 ---
 
@@ -54,7 +54,7 @@ Runtime 等价。
 | Compose Runtime、UI 和 Foundation | `1.7.8` |
 | Activity | `1.12.4` |
 | Lifecycle | `2.8.7` |
-| Kotlin 与 Compose compiler plugin | `2.0.21` |
+| Kotlin 与 Compose compiler plugin | `2.2.10` |
 
 这些版本记录在固定版本的
 [`gradle/libs.versions.toml`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/libs.versions.toml)

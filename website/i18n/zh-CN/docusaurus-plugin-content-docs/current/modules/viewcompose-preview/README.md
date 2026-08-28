@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 24a6dc9c77d525dec1509b601ce461ed55b9513eabf47e683dd7b2f35b681d9c
+translation_source_hash: 7fba762b4ef6b75b7c0acbe57ea2a9586101e376d9cbddddf7d711e089edb4bc
 translation_status: current
 ---
 
@@ -89,6 +89,8 @@ Content 中公开的 `SeekableTransitionState.seekTo`。
 ## 验证与兼容性
 
 - 稳定性为 **Alpha**；Wire Compatibility 归 Preview Core 所有。
+- 平台为 `minSdk 24`、`compileSdk 37` 与 Java 11 字节码的 Android Library；Paparazzi 验证使用
+  JDK 21。
 - 运行 `:viewcompose-preview:testDebugUnitTest` 与 `:viewcompose-preview:verifyPaparazziDebug`。
 - Catalog ID 是不可变 Snapshot Identity；只在审核 Visual Diff 后记录新 Golden。
 - Device Tooling 必须证明 Release Classpath 排除、Idle Zero-work、合法请求单 Response、Stale Nonce

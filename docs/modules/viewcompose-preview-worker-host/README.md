@@ -18,7 +18,7 @@ minimal_usage_sample_id: module.preview-worker-execute
 
 # Preview Worker Host
 
-`viewcompose-preview-worker-host` is the standalone JDK 17+ process boundary that owns mutable
+`viewcompose-preview-worker-host` is the standalone JDK 21+ process boundary that owns mutable
 Layoutlib state outside Gradle and Android Studio. The Gradle plugin resolves it on the dedicated
 worker configuration; applications must not place it on an Android runtime classpath.
 

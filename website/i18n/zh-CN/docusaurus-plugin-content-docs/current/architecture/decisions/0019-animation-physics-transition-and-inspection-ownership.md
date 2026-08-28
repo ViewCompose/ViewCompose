@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md
-translation_source_hash: 177c9792d082a3a87862adb4c8e1389b1943386d1eefbc522bd14b9736ef3563
+translation_source_hash: b8ef1302ea56461774de649fb2022a4295f8a76f1f5c0dbdeb8cdba5152e22f6
 translation_status: current
 ---
 
@@ -28,7 +28,7 @@ Preview 与 Studio 工具；分别实现会产生互相竞争的 Frame Loop、�
 
 上游语义对比基线是 2026-08-12 发布的稳定版 AndroidX Compose Animation `1.12.0`。
 仓库可执行 Compose Fixture 保持 `1.7.8`，因为 Compose `1.12.0` 要求 compile SDK 37 与
-AGP 9.2，而本仓库当前是 compile SDK 36 与 AGP 8.13.2。官方发布说明和 API Reference 是
+AGP 9.2，而本仓库 Runtime Module 当前是 compile SDK 36 与 AGP 9.1.1。官方发布说明和 API Reference 是
 语义证据；本地 Compose 执行证据明确较旧，不能证明 `1.12.0` 行为。
 
 ## 决策

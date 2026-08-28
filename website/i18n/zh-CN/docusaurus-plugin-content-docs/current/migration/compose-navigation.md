@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: 51b0a17bd8a41d6ab3094888c1d24ddd7eb6446c8c95dae4245afbed733cade0
+translation_source_hash: 5675ed5d2cbf87062ddc067b647a33884aa1c0171b50b869bcd255376301adb4
 translation_status: current
 ---
 
@@ -43,7 +43,7 @@ Navigation 3 的所有权模型不同，因此迁移时必须先确定实际来�
 - [NavigationEvent 发布说明](https://developer.android.com/jetpack/androidx/releases/navigationevent)
 
 仓库的 Android 可执行基线是 Compose 1.7.8、Navigation 2.9.8、Activity 1.12.4、Lifecycle
-2.8.7 和 Kotlin 2.0.21。下方成对样例会在两侧各编译一个 Navigation 2 controller、host、
+2.8.7 和 Kotlin 2.2.10。下方成对样例会在两侧各编译一个 Navigation 2 controller、host、
 route 和导航动作。所引用的 ViewCompose JVM、集成和设备测试确立了更广的本地行为。这些证据
 不包含针对 Navigation3 1.1.5 的可执行对比，成对样例也不能证明完整 Navigation 2.9.8
 能力面等价。因此，只要这些版本发生变化，Navigation 2 与 Navigation 3 陈述仍必须根据官方

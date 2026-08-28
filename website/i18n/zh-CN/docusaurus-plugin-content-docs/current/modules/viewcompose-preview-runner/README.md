@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-runner/README.md
-translation_source_hash: c04280d24375571827a1c5b242a65c42f41a2dcd95ce507a13baa8b2cd1a0127
+translation_source_hash: ac3d9d01f138734e74479180fd8d47387e09eb4700894f99de7d7f5c1a09e72f
 translation_status: current
 ---
 
@@ -51,6 +51,8 @@ Descendant，并受最大 dp 高度和 1600 万 Pixel Capture Budget 限制。PN
 包含 Structure、Native Bounds、Clipping、Patch、Composition 与源码位置，不持有 Runtime Object。
 
 - 稳定性为 **Alpha** Tooling Infrastructure；Protocol Compatibility 归 Preview Core 所有。
+- 平台为 `minSdk 24`、`compileSdk 37` 与 Java 11 字节码的 Android Library；Paparazzi 验证使用
+  JDK 21。
 - 每个 Mounted Frame 都必须关闭，包括只读取 Snapshot 的测试。
 - 用 `:viewcompose-preview-runner:testDebugUnitTest` 验证 Fixed/Auto Height、Nested Scroller、
   Capture Limit、RTL、Locale、Font Scale、API 匹配、Application Theme 与各失败阶段。

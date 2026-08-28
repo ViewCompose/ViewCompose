@@ -56,7 +56,7 @@ The upstream side is a semantic review of official stable documentation and rele
 - [NavigationEvent release notes](https://developer.android.com/jetpack/androidx/releases/navigationevent)
 
 The repository's executable Android baseline is Compose 1.7.8, Navigation 2.9.8, Activity 1.12.4,
-Lifecycle 2.8.7, and Kotlin 2.0.21. The paired sample below compiles one Navigation 2 controller,
+Lifecycle 2.8.7, and Kotlin 2.2.10. The paired sample below compiles one Navigation 2 controller,
 host, route, and navigation action on each side. The cited ViewCompose JVM, integration, and device
 tests establish broader local behavior. None of this is an executable comparison against
 Navigation3 1.1.5, and the paired sample does not prove parity with the complete Navigation 2.9.8

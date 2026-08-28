@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: dfea9db85627a4b2284153bb0fd3c5d0c6e556f6573381a355eb66c8642de105
+translation_source_hash: effcc943f35769588188742b7f6a4c2fe228002cc26a45b849d73675e42fb392
 translation_status: current
 ---
 
@@ -55,7 +55,7 @@ dependencies {
   而不是替换 Drawable，因此正在执行的释放动画仍然可见；这也覆盖基于 BasicSurface 的纯文案导航。
 - 通用集合语义会映射为 AndroidX 无障碍集合元数据。父节点负责行列数量和选择基数，子节点负责
   逻辑位置和跨度；已有的 `selected` 与 `heading` 语义仍是 item 状态的唯一事实来源。
-- 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
+- 当前版本构建基线：Kotlin 2.2.10、Android Gradle Plugin 9.1.1。
 
 ## 渲染模型
 

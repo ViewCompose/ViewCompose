@@ -11,6 +11,25 @@ plugins {
     alias(libs.plugins.paparazzi) apply false
 }
 
+val sharedRobolectricResources = rootProject.layout.projectDirectory.dir("gradle/robolectric")
+
+subprojects {
+    plugins.withId("com.android.application") {
+        extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
+            sourceSets.getByName("test").resources.directories.add(
+                sharedRobolectricResources.asFile.absolutePath,
+            )
+        }
+    }
+    plugins.withId("com.android.library") {
+        extensions.configure<com.android.build.api.dsl.LibraryExtension> {
+            sourceSets.getByName("test").resources.directories.add(
+                sharedRobolectricResources.asFile.absolutePath,
+            )
+        }
+    }
+}
+
 extensions.configure<com.viewcompose.quality.ViewComposeQualityExtension> {
     repositoryDirectory.set(project.layout.projectDirectory)
     moduleCatalogFile.set(

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 1e2cbfd175424542dc4fa1be750e05cf410ace715435c3f1f4a0cbc491a87e52
+translation_source_hash: e7183285db426d78925024fe2bc9d1c9e76b0b4419aafbbf3cc32f7e63d470a8
 translation_status: current
 ---
 
@@ -37,7 +37,7 @@ dependencies {
   `com.viewcompose.ui.foundation`，不保留已退役的 `com.viewcompose.widget.core`。
 - ViewCompose 以 Android View 为目标，因此可以保留 Android-only 声明值；但原生 `ViewGroup`
   访问、Context 环境提取、焦点适配、日志和 Trace 属于 Android Engine。
-- 本版本构建基线：Kotlin 2.0.21 与 Android Gradle Plugin 8.13.2。
+- 本版本构建基线：Kotlin 2.2.10 与 Android Gradle Plugin 9.1.1。
 
 ## 最小组件示例
 

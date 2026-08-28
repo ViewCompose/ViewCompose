@@ -7,6 +7,7 @@ package com.viewcompose.renderer.view.tree
 
 import android.view.View
 import android.widget.Button
+import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.viewcompose.ui.modifier.SemanticsCollectionInfo
@@ -95,6 +96,8 @@ class ModifierSemanticsApplierTest {
         ViewCompat.setStateDescription(view, "Native state")
         ViewCompat.setAccessibilityHeading(view, false)
         view.accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_ASSERTIVE
+        val nativeDelegate = AccessibilityDelegateCompat()
+        ViewCompat.setAccessibilityDelegate(view, nativeDelegate)
         val originalDelegate = ViewCompat.getAccessibilityDelegate(view)
 
         ModifierSemanticsApplier.apply(
