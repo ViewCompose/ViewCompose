@@ -1,64 +1,14 @@
----
-draft: true
-schema_version: 2
-document_id: plan.viewmodel-androidx-optimal-architecture
-doc_type: plan
-owner:
-  kind: module
-  id: viewcompose-viewmodel-androidx
-version_lane: version-agnostic
-capability_ids:
-  - viewmodel.owner-boundaries
-  - viewmodel.saved-state
-  - viewmodel.scoped-owners
-  - viewmodel.store-resolution
-artifact_ids:
-  - viewcompose-android
-  - viewcompose-host-android
-  - viewcompose-navigation-android
-  - viewcompose-viewmodel-androidx
-sample_ids: []
-status: active
-scope: Hard-cut the AndroidX ViewModel integration toward one authoritative ownership model, close material Android Compose capability gaps, and replace shallow test evidence with lifecycle and restoration contracts.
-non_goals:
-  - Preserve source or binary compatibility with defective Alpha APIs or implementation details.
-  - Add Kotlin Multiplatform, Hilt-specific, Navigation 2, or Navigation 3 compatibility layers.
-  - Copy Compose symbol names when a ViewCompose-native ownership contract is clearer.
-baseline: The 2026-08-28 audit found sound module boundaries and passing mainline tests, but no arbitrary-subtree ViewModel scope, a redundant composition cache, non-Compose blank-key semantics, a leaked SavedStateHandle holder, and material lifecycle and restoration test gaps.
-ordered_work:
-  - Freeze capability identities, Q levels, target invariants, API removals, and the cross-module architecture decision.
-  - Upgrade the AndroidX baseline and hard-cut ViewModel lookup and creation semantics.
-  - Add a general retained and reference-counted scoped-owner facility for arbitrary UI subtrees.
-  - Move navigation store retention onto the general facility and add host-owned ViewTree discovery where appropriate.
-  - Replace the standalone SavedStateHandle holder design with constructor and CreationExtras ownership, then close saveable-state interoperability deliberately.
-  - Complete unit, lifecycle, restoration, navigation, host, API, documentation, and deletion-guard coverage.
-  - Remove obsolete paths, update durable documentation, run full acceptance, and archive the plan before release.
-completion:
-  - Every accepted target invariant and Compose capability disposition has executable evidence and no unresolved partial state.
-  - The ViewModelStore is the only ViewModel instance cache, and arbitrary subtree scopes survive recreation and clear exactly at permanent removal.
-  - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
-  - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
-last_verified: 2026-08-29
-next_action: Implement Phase 6 structural cleanup, full acceptance, and plan archival.
-maven_release_changesets:
-  - release/changes/20260829-lifecycle-toolchain-prerequisite.json
-  - release/changes/20260829-navigation-shared-viewmodel-scopes.json
-  - release/changes/20260829-viewmodel-saved-state-hard-cut.json
-  - release/changes/20260829-viewmodel-scoped-owners.json
-  - release/changes/20260829-viewmodel-store-resolution.json
----
-
 # AndroidX ViewModel Optimal Architecture and Compose Capability Parity Plan
 
 ## Status
 
-Active. The audit baseline, Phase 0 contract freeze, Phase 1 store-resolution hard cut, Phase 2
-general retained scoped-owner provider, Phase 3 navigation/host convergence, and Phase 4
-SavedStateHandle ownership hard cut, and Phase 5 coverage closure are complete.
+Complete and archived. The audit baseline and Phases 0 through 6 are implemented and
+accepted. Durable ownership, lifecycle, restoration, migration, release, and evidence contracts now
+live in active architecture, module, migration, and roadmap documents.
 
 Last verified: 2026-08-29.
 
-Next action: implement Phase 6 structural cleanup, full acceptance, and plan archival.
+Next action: none for this plan. Further ViewModel expansion requires a new attributed plan.
 
 ## Maven release changesets
 
@@ -427,7 +377,7 @@ with a failing contract or characterization test and lands with its complete mat
 | 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Complete |
 | 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Complete |
 | 5 | coverage closure and defect-pressure matrix | every matrix row maps to executable evidence and mutation/negative guards detect regressions | Complete |
-| 6 | deletion, documentation, release evidence, and archive | no obsolete path remains; full gates pass; durable conclusions move to active docs | Not started |
+| 6 | deletion, documentation, release evidence, and archive | no obsolete path remains; full gates pass; durable conclusions move to active docs | Complete |
 
 ### Phase 0: freeze contracts before implementation
 
@@ -622,6 +572,37 @@ durable closeout, and archival decision.
 4. Move all durable conclusions and accepted evidence into active owners, mark the plan complete,
    move it to `docs/archive/`, update both indexes, and only then allow the related Maven Central
    upload.
+
+#### Phase 6 acceptance
+
+CodeGraph call-path inspection plus `ast-grep` and `rg` structural searches found no surviving
+production or sample use of `savedStateHandle()`, `SavedStateHandleHolderViewModel`, blank-key
+fallback, a composition-cached ViewModel instance, or a Navigation-owned `ViewModelStore`.
+`StaticPreviewHostOwner` is the only non-test direct `ViewModelStore()` allocation and is the
+Preview root host, not a retained child-store policy. The single `remember { Unit }` in
+`viewModel()` preserves the DSL's active-composition call boundary but stores no model; all model
+identity remains in AndroidX `ViewModelStore`.
+
+The alpha01 `viewmodel.saved-state` capability record is deliberately retained as a historical
+tombstone: two immutable deletion-impact records require that stable identity. Removing it was
+rejected by the zero-exception governance gate, while the source-derived current Reference exposes
+neither deleted symbol. It therefore does not create a source, binary, runtime, or documentation
+compatibility path.
+
+Phase 6 changed no production source, publication input, or compiled sample. Release-intent
+verification against the Phase 4 implementation base reported zero additional release artifacts,
+zero ignored artifacts, and zero shared-path classifications. The exact implementation beneath
+this documentation had already passed the clean 276/276 affected-layer matrix and both Android 9
+process-death journeys. Final `qaQuick qaPreview` acceptance completed all 2,270 actionable tasks:
+174 executed and 2,096 were up to date; documentation structure and translation verification also
+passed with zero Governance V2 issues.
+
+Conclusion: **improved**. The rejected architecture paths are absent, every accepted parity row is
+mapped to executable evidence or an explicit non-goal, and durable contracts now own the result.
+The Android 9 Debug device evidence does not establish Release-mode, multi-window, broader API/OEM,
+memory, or runtime-performance behavior; those dimensions remain **inconclusive** and are carried
+as evidence-gated roadmap work rather than keeping this implementation plan active. Next action:
+none; new capability work requires a new attributed plan.
 
 ## Verification commands
 

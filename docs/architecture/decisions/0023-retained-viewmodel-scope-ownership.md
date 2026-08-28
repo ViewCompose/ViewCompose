@@ -23,7 +23,7 @@ invariants:
   - Every child scope has caller-owned stable identity, reference-protected temporary retention, and an explicit terminal-removal signal.
   - Navigation, ordinary composition subtrees, and custom retained containers use one provider core while keeping their distinct lifecycle adapters.
 evidence:
-  - docs/project/plans/viewmodel-androidx-optimal-architecture-and-compose-parity.md
+  - docs/archive/viewmodel-androidx-optimal-architecture-and-compose-parity.md
   - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeProviderTest.kt
   - viewcompose-viewmodel-androidx/src/test/java/com/viewcompose/viewmodel/ViewModelScopeCompositionTest.kt
   - AndroidX Lifecycle 2.11 ViewModelStoreProvider reference and source contracts

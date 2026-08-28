@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0023-retained-viewmodel-scope-ownership.md
-translation_source_hash: 319abd84641e3f779b1c6c6047fccf3036c42ff0fa958922d65a6667e9008a2d
+translation_source_hash: f28dbc6937a7777c95db19eb34ef1a1d6d8d4708359117fbe1209ee26b466b9a
 translation_status: current
 ---
 
