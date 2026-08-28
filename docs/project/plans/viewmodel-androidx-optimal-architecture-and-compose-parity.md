@@ -38,34 +38,35 @@ completion:
   - Deprecated holder, standalone-handle, duplicate navigation-store, blank-key-default, and compatibility paths are absent.
   - All affected capability, API, sample, module, architecture, migration, release-intent, and documentation gates pass.
 last_verified: 2026-08-29
-next_action: Begin Phase 1 by upgrading Lifecycle to 2.11 and landing the store-only resolver, AndroidX-compatible key semantics, initializer overloads, Q3 evidence, and the first immutable release Changeset.
-maven_release_changesets: []
+next_action: Land Phase 1 by upgrading Lifecycle to 2.11 and merging the store-only resolver, AndroidX-compatible key semantics, initializer overloads, and their Q3 evidence.
+maven_release_changesets:
+  - release/changes/20260829-lifecycle-toolchain-prerequisite.json
 ---
 
 # AndroidX ViewModel Optimal Architecture and Compose Capability Parity Plan
 
 ## Status
 
-Active. The audit baseline and Phase 0 contract freeze are complete. No production change has
-started under this plan.
+Active. The audit baseline, Phase 0 contract freeze, and Phase 1 toolchain prerequisite are
+complete. ViewModel production changes have not started under this plan.
 
 Last verified: 2026-08-29.
 
 Next action: upgrade Lifecycle to 2.11 and land the store-only resolver, AndroidX-compatible key
-semantics, initializer overloads, Q3 evidence, and the first immutable release Changeset.
+semantics, initializer overloads, and their Q3 evidence.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260829-lifecycle-toolchain-prerequisite.json`
 
 ## Release intent rationale
 
-This initial change creates a repository-only execution plan, updates its index, and corrects
-already-proven migration evidence. It does not change production source, publication inputs, or a
-compiled API sample. The first implementation pull request must add exactly one immutable
-`release/changes/<unique>.json` file, classify every directly affected published artifact, and list
-that file in both the front matter and this section. The release planner, not this plan, derives
-reverse-dependency propagation.
+The initial plan-only change did not alter production source, publication inputs, or a compiled API
+sample. The toolchain prerequisite is tracked by
+`release/changes/20260829-lifecycle-toolchain-prerequisite.json`; it classifies the directly
+affected host and Preview artifacts, including the isolated Preview worker's JDK 21 runtime break.
+Later implementation pull requests must add their own immutable Changeset and must not amend this
+record. The release planner, not this plan, derives reverse-dependency propagation.
 
 ## Objective
 
@@ -123,6 +124,32 @@ Activity, Fragment, and navigation main paths are credible, but the count does n
 arbitrary-scope, store-clear, process-restoration, or holder-design findings because those cases are
 absent or only indirectly exercised. The next evidence must target those missing contracts rather
 than add more happy-path repetitions.
+
+### Phase 1 toolchain prerequisite acceptance
+
+The comparison baseline was the JDK 17, Gradle 8.13, AGP 8.13.2, Kotlin 2.0.21, compile-SDK-36
+lane. It could execute the prior repository but could not represent the intended API 37 and
+Lifecycle 2.11 implementation lane. The accepted prerequisite uses JDK 21, Gradle 9.3.1, AGP
+9.1.1, Kotlin 2.2.10, compile SDK 37 at the application and Preview boundaries, and Paparazzi
+2.0.0-alpha05 while retaining Java 11 bytecode for published runtime libraries.
+
+The final 2026-08-29 `qaQuick qaPreview` run passed all 2,270 actionable tasks: 181 executed and
+2,089 were up to date. The focused result set passed 672/672 tests with zero failures or errors:
+52 host, 536 renderer, 3 Material 3 overlay, 4 One UI overlay, 23 Preview Gradle plugin, 32 Preview,
+12 Preview runner, and 10 Preview worker-host tests. The normalized gate completion and focused
+test pass rates were both 100%. No equivalent API-37 run existed before the migration, so a
+before/after duration or failure-rate delta would be misleading.
+
+Conclusion: **improved** build and test compatibility. The migration exposed and closed four
+previously hidden assumptions: Robolectric selecting an unsupported target SDK, Android 15's
+enforced transparent navigation bar, AndroidX's deliberate empty accessibility delegate on compat
+delegate removal, and versioned `android-37.0` platform paths. Limitations: Robolectric remains on
+SDK 35 by default and therefore does not prove API 37 runtime behavior; exact legacy navigation-bar
+color tests deliberately run on API 34 while API 35 tests prove the enforced edge-to-edge policy;
+the isolated Preview worker now requires JDK 21; the AGP built-in-Kotlin migration remains deferred
+behind the documented opt-out; and this acceptance makes no device, runtime-performance, or
+ViewModel semantic claim. Those dimensions remain **inconclusive**. Next action: upgrade Lifecycle
+to 2.11 and land the Phase 1 resolver and creation contracts on this verified lane.
 
 ## Design rules and hard-cut policy
 
@@ -325,7 +352,7 @@ with a failing contract or characterization test and lands with its complete mat
 | Phase | Deliverable | Completion gate | Status |
 | --- | --- | --- | --- |
 | 0 | capability/Q3 contract, hard-cut list, ADR, dependency and test matrix | decision and test names reviewed before production edits | Complete |
-| 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Not started |
+| 1 | Lifecycle 2.11 baseline and store-only ViewModel resolver | lookup, key, Factory, extras, clear, and initializer tests pass | Toolchain prerequisite complete; resolver not started |
 | 2 | general retained scoped-owner provider | recreation, reference, removal, isolation, rollback, and delayed-session tests pass | Not started |
 | 3 | navigation and host integration hard cut | navigation consumes shared stores; ViewTree precedence and all host/navigation regressions pass | Not started |
 | 4 | SavedStateHandle redesign and saveable interoperability disposition | holder/helper removed; constructor/restoration and chosen interop path pass | Not started |
