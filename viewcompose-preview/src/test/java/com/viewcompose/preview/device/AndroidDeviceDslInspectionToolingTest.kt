@@ -87,8 +87,9 @@ class AndroidDeviceDslInspectionToolingTest {
     @Test
     fun `lazy item registration remains discoverable without source candidates`() {
         val registry = AndroidDeviceDslSourceRegistry()
+        val container = FrameLayout(applicationContext())
         val registration = registry.register(
-            container = FrameLayout(applicationContext()),
+            container = container,
             sessionId = 7,
             parentSessionId = 1,
             role = RenderSessionRole.LazyItem,
@@ -296,8 +297,9 @@ class AndroidDeviceDslInspectionToolingTest {
         val registry = AndroidDeviceDslSourceRegistry(
             monotonicTimeNanos = { nowNanos },
         )
+        val parentContainer = FrameLayout(applicationContext())
         registry.register(
-            container = FrameLayout(applicationContext()),
+            container = parentContainer,
             sessionId = 1L,
             parentSessionId = null,
             role = RenderSessionRole.Host,
@@ -445,9 +447,12 @@ class AndroidDeviceDslInspectionToolingTest {
         val registry = AndroidDeviceDslSourceRegistry(
             monotonicTimeNanos = { nowNanos },
         )
+        val retainedParentContainers = mutableListOf<FrameLayout>()
         fun registerParent() {
+            val container = FrameLayout(applicationContext())
+            retainedParentContainers += container
             registry.register(
-                container = FrameLayout(applicationContext()),
+                container = container,
                 sessionId = 1L,
                 parentSessionId = null,
                 role = RenderSessionRole.Host,
