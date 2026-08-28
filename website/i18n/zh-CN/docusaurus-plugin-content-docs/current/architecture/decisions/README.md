@@ -13,10 +13,10 @@ invariants:
   - 已接受决策保留原始理由；需要改变时以新的编号 ADR 明确取代，不通过重写隐藏历史取舍。
   - 改变当前行为的决策必须在同一变更中更新有效 Architecture 与 Module owner。
 evidence:
-  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0022-in-memory-development-tooling-installation.md
+  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0023-retained-viewmodel-scope-ownership.md
   - ./gradlew verifyDocumentationStructure
 translation_source: architecture/decisions/README.md
-translation_source_hash: 84f5ad413162203738e11f032f72a56085e2fe2ef0bc5462665f01a6a09f3b90
+translation_source_hash: 40afe889382c91cc1543e2dd9268d37bc6be64dd908174e8f65cb1d098f015a5
 translation_status: current
 ---
 
@@ -49,6 +49,7 @@ translation_status: current
 - [ADR-0020：分离动画值域与速度域](./0020-separate-animation-value-and-velocity-domains.md)
 - [ADR-0021：关联式渲染诊断所有权](./0021-correlated-render-diagnostics-ownership.md)
 - [ADR-0022：开发工具内存安装](./0022-in-memory-development-tooling-installation.md)
+- [ADR-0023：保留式 ViewModel 作用域所有权](./0023-retained-viewmodel-scope-ownership.md)
 
 ## 规则
 

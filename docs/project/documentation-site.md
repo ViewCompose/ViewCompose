@@ -300,7 +300,27 @@ identity token.
 
 ## Last verified
 
-<div className="search-partition-detail">
+The current production contract serves 133 immutable API versions, 133 immutable module manuals,
+and 133 Chinese fallback routes. The coordinated-release closeout audited 522 site pages at
+468.9 MiB total and 46.7/46.9 MiB non-API output; the next two exact-cache-hit pull requests reused
+all `6/6` API groups and completed their site wrappers in `47.3 s` and `43.0 s`. These observations
+are **no material change** for cache correctness and site latency, with expanded immutable coverage
+classified as **mixed** because it narrows size headroom. The comparison uses heterogeneous hosted
+runners and rounded size totals, so it is not a steady-state benchmark. Detailed phase evidence is
+retained in the [pull-request gate plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/pull-request-gate-scaling-and-build-logic-modularization.md)
+and the [Governance V2 archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/documentation-system-governance-v2.md); future additions
+must keep the unchanged budgets and recover headroom structurally when needed.
+
+The 2026-08-29 retained-owner ADR candidate first failed the hosted non-API ceiling. On the same
+local 133-version corpus, replacing superseded public measurement detail with interpreted summaries
+reduced non-API output from `49,208,553` to `49,086,492` bytes: `-122,061` bytes (`-0.248%`), leaving
+`91,722` bytes below the unchanged limit. The final representation is **improved** and preserves
+current conclusions, absolute comparison values, limitations, next actions, and links to immutable
+detail; 524 site pages, both localized shells, and accessibility passed. The local immutable API
+cache lacked six complete groups, so this comparison validates non-API representation only; the
+hosted full-cache build remains the acceptance gate for version routing and total output.
+
+{/* Historical measurement ledger retained in source; the compact summary above is the public representation.
 
 - **2026-08-28, coordinated-release static-history acceptance:** adding the frozen 127-entry
   release history initially produced `50.0 MiB` of non-API output, `8.5 MiB` of JavaScript, a
@@ -599,4 +619,4 @@ identity token.
 Git history preserves earlier Paging and site checkpoints. They do not authorize deleting current
 contracts, raising the limit without evidence, or re-expanding completed copies.
 
-</div>
+*/}

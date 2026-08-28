@@ -596,11 +596,21 @@ thermal-throttle sleep. All modified device state was restored after each batch.
 
 #### 2.4.1 Renderer, collection, and memory conclusions
 
-##### 2.4.1 Complex-layout update tail-latency investigation {/* #241-complex-layout-update-tail-latency-investigation */}
+The superseded Debug investigations established that list mutation was faster than Compose but had
+a materially worse Android Views P95, while the strong snapshot reduced transaction tails at a
+small allocation cost. A later exact-control diagnostic seam changed scroll/mutation P95 by
+`-0.4%/+0.6%`, both **no material change**; the production correction and current comparison below
+are therefore authoritative. Those earlier runs used a different build mode and cannot be combined
+with Release results. Exact historical matrices remain in the
+[lazy-list tail archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/lazy-list-tail-performance-diagnostics.md).
 
-##### 2.4.2 Root-controlled revision-4 acceptance and remaining tails {/* #242-root-controlled-revision-4-acceptance-and-remaining-tails */}
+{/* Superseded pre-production measurement detail retained in source.
 
-##### 2.4.3 Lazy collection and RecyclerView tail-latency hard cut {/* #243-lazy-collection-and-recyclerview-tail-latency-hard-cut */}
+##### 2.4.1 Complex-layout update tail-latency investigation
+
+##### 2.4.2 Root-controlled revision-4 acceptance and remaining tails
+
+##### 2.4.3 Lazy collection and RecyclerView tail-latency hard cut
 
 Frame values below are P50/P95 milliseconds; heap is median peak KiB.
 
@@ -619,7 +629,7 @@ engines may emit different frame counts, so cross-engine conclusions use accepte
 distributions rather than manufactured transactions. The next collection targets are ViewCompose
 scroll P95/heap, the Android Views mutation-tail gap, cold construction, and monotonic feeds.
 
-##### 2.4.3.1 Diagnostics-guided list-tail recheck {/* #2431-diagnostics-guided-list-tail-recheck */}
+##### 2.4.3.1 Diagnostics-guided list-tail recheck
 
 The 2026-08-27 recheck used the unchanged `performance.list@5` workload and exact target/benchmark
 APK SHA-256 values `5c0ea909553bdb7d7fd7d242c8144b44039bff3f8ef3b371aed292ab57cc7755` and
@@ -697,6 +707,8 @@ no material frame-time regression, but it is not a new three-engine performance 
 accepted prior matrix continues to own the cross-engine conclusion: Android Views scroll and
 mutation P95 gaps remain open, no renderer correction is retained, and the next performance step
 must attribute the unsupported platform tail before testing another production change.
+
+*/}
 
 ##### 2.4.3.2 Production list-tail correction and closure {/* #2432-production-list-tail-correction-and-closure */}
 
