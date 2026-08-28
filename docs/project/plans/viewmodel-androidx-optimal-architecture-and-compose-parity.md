@@ -505,6 +505,12 @@ tests and 12/12 Preview runner tests, and compiled the migrated Demo. Source ins
 holder implementation, helper declaration, or reserved key outside the intentional migration,
 plan, and immutable governance records.
 
+The repository-wide acceptance command, `./gradlew qaQuick qaPreview
+-PviewComposeReleaseBaseRevision=8c79f2b4`, then completed successfully with 2270 actionable tasks:
+237 executed and 2033 up-to-date. This is positive integration-gate evidence for the hard cut; it
+does not replace the clean focused absolute results above or establish a performance change because
+most aggregate tasks reused verified outputs.
+
 Conclusion: **improved**. Restored business state now has one ViewModel-owned writable path and one
 AndroidX restoration path, while UI-only state remains independently owned by `rememberSaveable`.
 The evidence is JVM/Robolectric plus compilation and does not prove a real device process kill,

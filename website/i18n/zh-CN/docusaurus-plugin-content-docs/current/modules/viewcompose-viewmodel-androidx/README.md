@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: fd32a9b284878d493fae2ed145687eaef4d86e20fb59d74f995d47d910628803
+translation_source_hash: 0128bd92a53cd92dd79f9c34cf4c8ea975e5b3cb56af78b112f3ef5d73b2cb56
 translation_status: current
 ---
 
@@ -272,6 +272,12 @@ Phase 4 用两项 `SavedStateViewModelIntegrationTest` 契约替换已删除的 
 新 Owner/新 Store 恢复。所属模块 45/45 项测试全部通过，无 Skip、Failure 或 Error；Navigation
 仍为 151/151，Preview Runner 仍为 12/12，迁移后的 Demo 也可编译。相较 Phase 3，模块 Suite 净增
 一项测试，因为两项恢复契约替换了一项仅针对 Helper 的 Guard。
+
+Phase 4 聚合验收命令 `./gradlew qaQuick qaPreview
+-PviewComposeReleaseBaseRevision=8c79f2b4` 同样成功完成：共 2270 个可执行任务，其中 237 个实际
+执行、2033 个为 Up-to-date。这证明硬切仍兼容仓库级 Quick 与 Preview Gate。由于聚合运行的大部分
+任务复用了已验证输出，上述干净 Focused Run 仍是绝对测试结果证据；聚合运行用于证明集成门禁，
+不构成一次新的性能对比。
 
 结论为 **improved**。解析、创建、通用 Scoped Ownership、导航集成与 Host Owner Selection 均有
 直接证据，恢复型业务状态也改由一个 ViewModel 持有，不再依赖框架 Holder。本次 JVM 聚焦运行不

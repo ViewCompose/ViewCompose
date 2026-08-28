@@ -320,6 +320,13 @@ module now passes 45/45 tests with zero skips, failures, or errors; Navigation r
 Preview runner remains 12/12, and the migrated Demo compiles. Relative to Phase 3, the module suite
 has one net additional test because two restoration contracts replace one helper-only guard.
 
+The aggregate Phase 4 acceptance command, `./gradlew qaQuick qaPreview
+-PviewComposeReleaseBaseRevision=8c79f2b4`, also completed successfully: 2270 actionable tasks,
+with 237 executed and 2033 up-to-date. This confirms that the hard cut remains compatible with the
+repository-wide quick and preview gates. Because most aggregate tasks reused verified outputs, the
+clean focused runs above remain the absolute test-result evidence; the aggregate run is integration-
+gate evidence rather than a fresh performance comparison.
+
 Conclusion: **improved**. Lookup, creation, general scoped ownership, navigation integration, and
 host owner selection now have direct evidence, and restored business state has one ViewModel owner
 instead of a framework holder. The focused JVM run does not prove a real device process kill,
