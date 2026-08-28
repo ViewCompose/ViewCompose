@@ -15,7 +15,7 @@ sample_ids:
   - module.material3-dependency
   - module.material3-theme
   - module.material3-components
-coordinate: com.viewcompose:viewcompose-material3:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-material3:0.1.0-alpha02
 minimal_usage_sample_id: module.material3-theme
 ---
 
@@ -37,7 +37,7 @@ dependency.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-module-dependency" sample_id="module.material3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha02")
 }
 ```
 

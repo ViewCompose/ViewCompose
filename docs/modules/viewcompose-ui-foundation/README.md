@@ -25,7 +25,7 @@ sample_ids:
   - module.ui-foundation-profile-summary
   - module.ui-foundation-environment
   - module.ui-foundation-observed-map
-coordinate: com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02
 minimal_usage_sample_id: module.ui-foundation-dependency
 ---
 
@@ -51,7 +51,7 @@ modules.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-foundation-module-dependency" sample_id="module.ui-foundation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02")
 }
 ```
 

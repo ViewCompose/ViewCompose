@@ -5,7 +5,7 @@ Every capability has one self-contained Activity file; tutorial files do not sha
 models or build a progressive showcase application.
 
 The base application depends only on
-`com.viewcompose:viewcompose-android:0.1.0-alpha01`. Runtime, UI contract, UI Foundation, engine,
+`com.viewcompose:viewcompose-android:0.1.0-alpha02`. Runtime, UI contract, UI Foundation, engine,
 Material 3 theme, Lifecycle, and ViewModel APIs are available transitively. The module adds only
 the optional feature artifacts used across the tutorials. `qaQuick` publishes the current checkout
 to `build/maven-repository` before compiling these Maven-coordinate consumers, so new artifact

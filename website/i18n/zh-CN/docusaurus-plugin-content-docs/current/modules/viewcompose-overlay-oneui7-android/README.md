@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-oneui7-android/README.md
-translation_source_hash: c450c4972f24c091ce4df38e511de67d3fadea730dccd1b62d5d3db492898572
+translation_source_hash: 5ee47cb43964735ba9dcfdd10671f9315a4b8da4f4f6603988c833a97133c848
 translation_status: current
 ---
 
@@ -17,8 +17,8 @@ ViewCompose 自有的 One UI Snackbar、底部对话框 Presenter 组合起来�
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-oneui7-dependency" sample_id="module.overlay-oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha02")
 }
 ```
 

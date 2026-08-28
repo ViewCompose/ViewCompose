@@ -12,7 +12,7 @@ artifact_ids:
   - viewcompose-overlay-oneui7-android
 sample_ids:
   - module.overlay-oneui7-dependency
-coordinate: com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha02
 minimal_usage_sample_id: module.overlay-oneui7-dependency
 ---
 
@@ -29,8 +29,8 @@ ViewCompose-owned One UI Snackbar and bottom-dialog presenters. It does not add 
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-oneui7-dependency" sample_id="module.overlay-oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha02")
 }
 ```
 

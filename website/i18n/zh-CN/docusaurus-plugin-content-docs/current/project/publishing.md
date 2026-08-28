@@ -19,7 +19,7 @@ validation:
   - cd tools/viewcompose-studio-plugin && ./gradlew prepareMarketplaceRelease
 lifecycle: 产物身份、发布规划、依赖暴露、签名、远端发布、来源或 Marketplace 操作发生变化时同步更新。
 translation_source: project/publishing.md
-translation_source_hash: 3165956e3896405d4fb058cdce49c856da75b388705741b42930687c7c319543
+translation_source_hash: b3a8f944a55f4e6ab1d12ea7bcc6460177563bdfaa0dbcdd0e0c756f3e6db914
 translation_status: current
 ---
 
@@ -285,10 +285,10 @@ Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt" region="project-publishing-feature-entries" sample_id="project.publishing-feature-entries" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha05")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha05")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha05")
 }
 ```
 
@@ -298,8 +298,8 @@ core 制品也可由 Kotlin/JVM 模块独立使用：
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha05")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha05")
     implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```

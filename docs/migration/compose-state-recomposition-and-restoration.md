@@ -18,7 +18,7 @@ artifact_ids:
   - viewcompose-viewmodel-androidx
 sample_ids: []
 source_state: Jetpack Compose Runtime, UI, and Foundation 1.12.0 state, composition, effect, and saveable-state semantics.
-target_state: ViewCompose Runtime 0.1.0-alpha03 and current UI Foundation and Android ownership contracts.
+target_state: ViewCompose Runtime 0.1.0-alpha04 and current UI Foundation and Android ownership contracts.
 ---
 
 # Migrate Compose state, recomposition, and restoration
@@ -39,12 +39,12 @@ The supported comparison target is the following independently versioned ViewCom
 
 | Artifact | Version | Role in this page |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha03` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
-| `viewcompose-ui-foundation` | `0.1.0-alpha01` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
-| `viewcompose-android` | `0.1.0-alpha01` | Activity/Fragment entry points and default Android owner installation |
-| `viewcompose-host-android` | `0.1.0-alpha04` | Low-level custom-container hosting and Android SavedState bridge |
-| `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | Composition- and lifecycle-scoped state collection |
-| `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | AndroidX ViewModel and `SavedStateHandle` ownership |
+| `viewcompose-runtime` | `0.1.0-alpha04` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
+| `viewcompose-ui-foundation` | `0.1.0-alpha02` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
+| `viewcompose-android` | `0.1.0-alpha02` | Activity/Fragment entry points and default Android owner installation |
+| `viewcompose-host-android` | `0.1.0-alpha05` | Low-level custom-container hosting and Android SavedState bridge |
+| `viewcompose-lifecycle-androidx` | `0.1.0-alpha02` | Composition- and lifecycle-scoped state collection |
+| `viewcompose-viewmodel-androidx` | `0.1.0-alpha02` | AndroidX ViewModel and `SavedStateHandle` ownership |
 
 The upstream stable semantic baseline is:
 

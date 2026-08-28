@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: db9405ba19e6d78c7dd75c607f5ebfdfd991beb3c0bace1900a8cba0c9f6a73f
+translation_source_hash: 6c0701febb9f5739e0f89ad325e72d76b08b72e1919bfe089541f8807cd695f6
 translation_status: current
 ---
 
@@ -22,11 +22,11 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 
 | 模块族 | 产物 | 已验证版本 |
 | --- | --- | --- |
-| 状态与组合 | `viewcompose-runtime`、`viewcompose-ui-foundation` | runtime `0.1.0-alpha03`；UI Foundation `0.1.0-alpha01` |
-| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer-android`、`viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha04`；renderer/ConstraintLayout `0.1.0-alpha01` |
-| Android 所有权 | `viewcompose-android`、`viewcompose-material3-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha01`；host `0.1.0-alpha04` |
-| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation-android` | core `0.1.0-alpha03`；Android `0.1.0-alpha01` |
-| 动画 | `viewcompose-animation-core`、`viewcompose-animation` | 均为 `0.1.0-alpha04` |
+| 状态与组合 | `viewcompose-runtime`、`viewcompose-ui-foundation` | runtime `0.1.0-alpha04`；UI Foundation `0.1.0-alpha02` |
+| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer-android`、`viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha05`；renderer/ConstraintLayout `0.1.0-alpha02` |
+| Android 所有权 | `viewcompose-android`、`viewcompose-material3-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha02`；host `0.1.0-alpha05` |
+| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation-android` | core `0.1.0-alpha03`；Android `0.1.0-alpha02` |
+| 动画 | `viewcompose-animation-core`、`viewcompose-animation` | 均为 `0.1.0-alpha05` |
 
 不可变的发布源码 revision 记录在
 [`gradle/viewcompose-publishing.properties`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/viewcompose-publishing.properties)。

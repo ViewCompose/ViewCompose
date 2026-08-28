@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: dcfdd5659c87b43198eece5e364cd545e8c18ad8cece3f2cb2b40843e6838b9a
+translation_source_hash: f3d8b096624ecd143fa83adf5632789e60b50cf81a49ee9d7af96ddb8ff6a72f
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="navigation-android-module-dependency" sample_id="module.navigation-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02")
 }
 ```
 

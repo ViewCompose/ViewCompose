@@ -26,8 +26,8 @@ sample_ids:
   - module.preview-compose-bridge
 supported_versions:
   - Gradle plugin and Preview Core/Worker Host 0.1.0-alpha03
-  - Preview Runner and optional Preview Integration 0.1.0-alpha04
-  - ViewCompose Preview Android Studio plugin 1.1.0 on build family 261.*
+  - Preview Runner and optional Preview Integration 0.1.0-alpha05
+  - ViewCompose Preview Android Studio plugin 1.2.0 on build family 261.*
 verification_commands:
   - ./gradlew :samples:counter:verifyCounterPreview
   - ./gradlew :viewcompose-preview:verifyPaparazziDebug
@@ -61,7 +61,7 @@ dependencies {
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05",
     )
 }
 ```
@@ -97,7 +97,7 @@ phase timings, and source-aware diagnostics while application/Layoutlib code sta
 
 ## Match application themes
 
-Add `com.viewcompose:viewcompose-preview:0.1.0-alpha04` to `debugImplementation` when the default
+Add `com.viewcompose:viewcompose-preview:0.1.0-alpha05` to `debugImplementation` when the default
 Android theme bridge is insufficient. One provider returns a configuration-qualified Context and
 matching ViewCompose tokens.
 

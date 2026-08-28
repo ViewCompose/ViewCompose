@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 8ea0bc08f4f41bd79dcce4842339dabbe5f70dc800a2b0f4b90ab841f475b37e
+translation_source_hash: dfea9db85627a4b2284153bb0fd3c5d0c6e556f6573381a355eb66c8642de105
 translation_status: current
 ---
 
@@ -22,7 +22,7 @@ shape 与绘图命令，并提供渲染工作量、树结构、布局过程和�
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="renderer-android-module-dependency" sample_id="module.renderer-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02")
 }
 ```
 

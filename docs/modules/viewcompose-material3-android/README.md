@@ -14,7 +14,7 @@ artifact_ids:
 sample_ids:
   - module.material3-android-dependency
   - module.material3-android-host
-coordinate: com.viewcompose:viewcompose-material3-android:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-material3-android:0.1.0-alpha02
 minimal_usage_sample_id: module.material3-android-host
 ---
 
@@ -33,7 +33,7 @@ APIs through intentional `api` dependencies.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-android-module-dependency" sample_id="module.material3-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 }
 ```
 

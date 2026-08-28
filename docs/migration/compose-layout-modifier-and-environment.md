@@ -21,7 +21,7 @@ artifact_ids:
   - viewcompose-host-android
 sample_ids: []
 source_state: Jetpack Compose Runtime, UI, and Foundation 1.12.0 layout, Modifier, local, inset, and Android View interop semantics.
-target_state: ViewCompose Runtime 0.1.0-alpha03, UI Contract 0.1.0-alpha04, and current UI Foundation, Renderer, and Host Android contracts.
+target_state: ViewCompose Runtime 0.1.0-alpha04, UI Contract 0.1.0-alpha05, and current UI Foundation, Renderer, and Host Android contracts.
 ---
 
 # Migrate Compose Layout, Modifier, and Environment Code
@@ -34,7 +34,7 @@ does not imply equivalent measurement, lifecycle, invalidation, or Android integ
 
 | Baseline | Version | Purpose |
 | --- | --- | --- |
-| ViewCompose target modules | runtime `0.1.0-alpha03`; UI Contract and Host `0.1.0-alpha04`; UI Foundation and Renderer `0.1.0-alpha01` | Target of this migration guide |
+| ViewCompose target modules | runtime `0.1.0-alpha04`; UI Contract `0.1.0-alpha05`; Host `0.1.0-alpha05`; UI Foundation and Renderer `0.1.0-alpha02` | Target of this migration guide |
 | Compose Runtime, UI, and Foundation | `1.12.0` stable | Upstream semantic reference |
 | Repository Compose dependencies | `1.7.8` | Executable comparison baseline in this repository |
 | Repository Kotlin toolchain | `2.0.21` | Compilation baseline for comparison code |

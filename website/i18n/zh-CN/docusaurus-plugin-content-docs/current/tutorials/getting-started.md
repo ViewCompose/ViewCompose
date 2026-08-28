@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 6fb39077861dc7a8beb87a97aa433e560474d7754f210f1afa184ff11d820cc2
+translation_source_hash: 08e269249ae69c651f8ddab1371e607bfe0d72b2b1a27ad9e776d62135ec0e98
 translation_status: current
 ---
 
@@ -25,7 +25,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 }
 ```
 
@@ -50,7 +50,7 @@ dependencies {
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05",
     )
 }
 ```
@@ -58,7 +58,7 @@ dependencies {
 这些预览配置只会建立原生渲染链路，不会安装 Android Studio 界面。打开预览前，请进入
 `Settings | Plugins | Marketplace`，搜索并安装 `ViewCompose Preview`；如果 IDE 提示，请重启
 Android Studio。IDE 插件与 `id("com.viewcompose.preview")` 是两项独立安装；当前 Marketplace
-版本线为 `1.1.0`，支持 Android Studio `261.*` Build Family。
+版本线为 `1.2.0`，支持 Android Studio `261.*` Build Family。
 
 ## 将要构建的内容
 
@@ -82,19 +82,19 @@ Central 后，它才成为公开安装路径：
 
 | 产物 | 版本 | 引入方式 |
 | --- | --- | --- |
-| `viewcompose-material3-android` | `0.1.0-alpha01` | 应用显式依赖 |
-| `viewcompose-android` | `0.1.0-alpha01` | 传递引入的中立应用聚合模块 |
-| `viewcompose-host-android` | `0.1.0-alpha03` | 传递引入的底层 Engine 依赖 |
-| `viewcompose-runtime` | `0.1.0-alpha02` | 传递引入的基础依赖 |
-| `viewcompose-ui-contract` | `0.1.0-alpha03` | 传递引入的基础依赖 |
-| `viewcompose-ui-foundation` | `0.1.0-alpha01` | 传递引入的 UI Foundation 依赖 |
-| `viewcompose-material3` | `0.1.0-alpha01` | 传递引入的 Design System 依赖 |
-| `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | 传递引入的 AndroidX 集成 |
-| `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | 传递引入的 AndroidX 集成 |
+| `viewcompose-material3-android` | `0.1.0-alpha02` | 应用显式依赖 |
+| `viewcompose-android` | `0.1.0-alpha02` | 传递引入的中立应用聚合模块 |
+| `viewcompose-host-android` | `0.1.0-alpha05` | 传递引入的底层 Engine 依赖 |
+| `viewcompose-runtime` | `0.1.0-alpha04` | 传递引入的基础依赖 |
+| `viewcompose-ui-contract` | `0.1.0-alpha05` | 传递引入的基础依赖 |
+| `viewcompose-ui-foundation` | `0.1.0-alpha02` | 传递引入的 UI Foundation 依赖 |
+| `viewcompose-material3` | `0.1.0-alpha02` | 传递引入的 Design System 依赖 |
+| `viewcompose-lifecycle-androidx` | `0.1.0-alpha02` | 传递引入的 AndroidX 集成 |
+| `viewcompose-viewmodel-androidx` | `0.1.0-alpha02` | 传递引入的 AndroidX 集成 |
 | `viewcompose-preview-gradle-plugin` | `0.1.0-alpha03` | 可选的显式插件 |
 | `viewcompose-preview-core` | `0.1.0-alpha03` | 可选的 debug 依赖 |
 | `viewcompose-preview-worker-host` | `0.1.0-alpha03` | 可选的 Preview 配置 |
-| `viewcompose-preview-runner` | `0.1.0-alpha04` | 可选的 Preview 配置 |
+| `viewcompose-preview-runner` | `0.1.0-alpha05` | 可选的 Preview 配置 |
 
 ViewCompose 产物独立演进。混用比本教程更新的版本前，请检查
 [已发布模块目录](../modules/README.md)，再混用此验证集合之外的版本。

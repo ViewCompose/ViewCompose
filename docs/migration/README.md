@@ -33,11 +33,11 @@ The target is the following independently versioned ViewCompose set:
 
 | Module family | Artifacts | Verified version |
 | --- | --- | --- |
-| State and composition | `viewcompose-runtime`, `viewcompose-ui-foundation` | runtime `0.1.0-alpha03`; UI Foundation `0.1.0-alpha01` |
-| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer-android`, `viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha04`; renderer/ConstraintLayout `0.1.0-alpha01` |
-| Android ownership | `viewcompose-android`, `viewcompose-material3-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregates/integrations `0.1.0-alpha01`; host `0.1.0-alpha04` |
-| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation-android` | core `0.1.0-alpha03`; Android `0.1.0-alpha01` |
-| Animation | `viewcompose-animation-core`, `viewcompose-animation` | both `0.1.0-alpha04` |
+| State and composition | `viewcompose-runtime`, `viewcompose-ui-foundation` | runtime `0.1.0-alpha04`; UI Foundation `0.1.0-alpha02` |
+| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer-android`, `viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha05`; renderer/ConstraintLayout `0.1.0-alpha02` |
+| Android ownership | `viewcompose-android`, `viewcompose-material3-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregates/integrations `0.1.0-alpha02`; host `0.1.0-alpha05` |
+| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation-android` | core `0.1.0-alpha03`; Android `0.1.0-alpha02` |
+| Animation | `viewcompose-animation-core`, `viewcompose-animation` | both `0.1.0-alpha05` |
 
 The immutable release revisions are recorded in
 [`gradle/viewcompose-publishing.properties`](../../gradle/viewcompose-publishing.properties).

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: aab8d49ffb567df4182d481277b266e96e7d27955f53c9bdbf4699018092d467
+translation_source_hash: 5f5001bebe5846bbae5452da4d2cc0eb94c6df6538baa5e909dd27f9383fad9a
 translation_status: current
 ---
 
@@ -30,7 +30,7 @@ dependencies {
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05",
     )
 }
 ```
@@ -66,7 +66,7 @@ Diagnostic，而 Application/Layoutlib Code 始终在 Studio 进程之外执行�
 
 ## 匹配 Application Theme
 
-默认 Android Theme Bridge 不足时，把 `com.viewcompose:viewcompose-preview:0.1.0-alpha04` 加到
+默认 Android Theme Bridge 不足时，把 `com.viewcompose:viewcompose-preview:0.1.0-alpha05` 加到
 `debugImplementation`。一个 Provider 返回带 Configuration Qualifier 的 Context 与匹配的
 ViewCompose Token。
 

@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/lazy-lists.md
-translation_source_hash: daa3cc74a12a0e1b864fdd8a0ccf303dee843f80243b68aefcf20346d379e6db
+translation_source_hash: 58a5354c82d06531a8b804838c358c20f03f3739abb69507bac7f4c3541c220f
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

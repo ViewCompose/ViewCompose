@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: 085f8c496c3b46f34921a9d00c0039e5d33921fcb81845f30dee3098cf8a2979
+translation_source_hash: b5bb0be38c84059a2b64b64ea3374e454e96e50d16a48c8ec1d10276115a99fb
 translation_status: current
 schema_version: 2
 document_id: tutorial.render-diagnostics
@@ -40,7 +40,7 @@ verification_action: 运行样例并点击 Sample render stats，确认摘要只
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -160,7 +160,7 @@ fun boundedFailureAggregationSample(
 
 ## 从 Android Studio 检查同一个应用
 
-添加 `debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")`，运行可调试应用，
+添加 `debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha05")`，运行可调试应用，
 再在 Android Studio 中选择 `Inspect Device Diagnostics`。只需选择一次 Host Session；摘要会把最近
 已提交帧与后续回滚尝试分开，并且只显示安全的 Failure Phase、Recovery、异常类型和可选 Android
 View Operation。

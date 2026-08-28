@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 7341deba8283a2e7bdc6124275f826a93e32756608488a3a87c62735817e9ba5
+translation_source_hash: d6f8e7555cbd503daa2d662cf9483a9ea5b95600eac902491b92f89d2de18653
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ UI Node 发射与 Android View Renderer。它提供状态驱动值动画、命�
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-module-dependency" sample_id="module.animation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha05")
 }
 ```
 

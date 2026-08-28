@@ -2,7 +2,7 @@
 title: 使用状态与事件
 sidebar_position: 3
 translation_source: tutorials/state-and-events.md
-translation_source_hash: 69e7175655192d9f6eda795d966f549c1999eec64b2f7b8f25a515361674d29a
+translation_source_hash: febd978f807e3832d7db18c584b1c951e4c90db04b415cf49ad3a406fd67d2bd
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

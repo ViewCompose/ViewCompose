@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: 7d91b0b8d3667110998d82dd233d43544a379a6c1dc0f24caaa07208aec02bbb
+translation_source_hash: 11feee43e9d8edb0842a2438929240decd160a8bdb407ec33ad2ca5b10f90fb6
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="constraintlayout-dependency" sample_id="module.constraintlayout-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha02")
 }
 ```
 

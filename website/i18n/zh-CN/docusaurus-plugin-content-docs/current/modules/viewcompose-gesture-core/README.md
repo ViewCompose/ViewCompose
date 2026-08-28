@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture-core/README.md
-translation_source_hash: 6f23038c71596d3eb47f6c304b19f6f008e310775b52be2c9fb594d047b59bac
+translation_source_hash: 5648faae8f7f3dbb7e7f565423f59b084bfa548dc66f313c7c76ee665e13814c
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gesture-core-module-dependency" sample_id="module.gesture-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha05")
 }
 ```
 

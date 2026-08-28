@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-coil/README.md
-translation_source_hash: da05e86ce4736fa04da61b6b3736f9ed8a3314073d6a715cdf21860246b97a25
+translation_source_hash: fd4869631cb4f4041c65e1d9fcc70671b41f8189d19b8715fd65a91ce50b2748
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="image-coil-dependency" sample_id="module.image-coil-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha05")
 }
 ```
 

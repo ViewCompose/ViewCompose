@@ -16,7 +16,7 @@ artifact_ids:
 sample_ids:
   - module.android-dependency
   - module.android-entry
-coordinate: com.viewcompose:viewcompose-android:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-android:0.1.0-alpha02
 minimal_usage_sample_id: module.android-dependency
 ---
 
@@ -37,7 +37,7 @@ curation and a stable application-facing host boundary; Material applications us
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="android-module-dependency" sample_id="module.android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha02")
 }
 ```
 

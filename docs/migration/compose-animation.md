@@ -14,7 +14,7 @@ artifact_ids:
 sample_ids:
   - migration.compose-animation-legacy-spring
 source_state: Compose Animation 1.12.0 semantics and the removed ViewCompose nominal-duration spring signature.
-target_state: ViewCompose Animation 0.1.0-alpha04 physical, state, content, and layout-motion contracts.
+target_state: ViewCompose Animation 0.1.0-alpha05 physical, state, content, and layout-motion contracts.
 ---
 
 # Migrate Compose animation
@@ -34,8 +34,8 @@ The current ViewCompose target is:
 
 | Artifact | Version | Current role |
 | --- | --- | --- |
-| `viewcompose-animation-core` | `0.1.0-alpha04` | Platform-neutral duration/physical sampling, typed velocity, mutation, motion policy, and explicit transition coordination |
-| `viewcompose-animation` | `0.1.0-alpha04` | Composition-owned physical/state animation, generic and seekable transitions, visibility, Crossfade, and content-size animation |
+| `viewcompose-animation-core` | `0.1.0-alpha05` | Platform-neutral duration/physical sampling, typed velocity, mutation, motion policy, and explicit transition coordination |
+| `viewcompose-animation` | `0.1.0-alpha05` | Composition-owned physical/state animation, generic and seekable transitions, visibility, Crossfade, and content-size animation |
 
 The upstream stable semantic baseline is Compose Animation `1.12.0`, released on 2026-08-12. It was
 verified against the official [Compose Animation release notes](https://developer.android.com/jetpack/androidx/releases/compose-animation),

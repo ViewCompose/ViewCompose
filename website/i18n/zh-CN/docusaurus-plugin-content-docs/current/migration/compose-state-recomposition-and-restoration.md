@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 4772dffd8642ec6a1bd28b259cd53047ea9a07d9d458d2ed3deffe485a3207b2
+translation_source_hash: 7fb73024b9cc85e32a05ee6c697ac1ee1d7b8af9372f8ba62a78be88f0b8b058
 translation_status: current
 ---
 
@@ -21,12 +21,12 @@ API 名称相似，并不表示编译器、失效、Identity 或恢复行为完�
 
 | 产物 | 版本 | 在本页中的职责 |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha03` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
-| `viewcompose-ui-foundation` | `0.1.0-alpha01` | `remember`、`key`、Effect、`Saver` 及 `rememberSaveable` |
-| `viewcompose-android` | `0.1.0-alpha01` | Activity/Fragment 入口与默认 Android Owner 安装 |
-| `viewcompose-host-android` | `0.1.0-alpha04` | 底层自定义容器宿主与 Android SavedState 桥接 |
-| `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | 组合 Scope 与生命周期 Scope 的状态收集 |
-| `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | AndroidX ViewModel 与 `SavedStateHandle` Ownership |
+| `viewcompose-runtime` | `0.1.0-alpha04` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
+| `viewcompose-ui-foundation` | `0.1.0-alpha02` | `remember`、`key`、Effect、`Saver` 及 `rememberSaveable` |
+| `viewcompose-android` | `0.1.0-alpha02` | Activity/Fragment 入口与默认 Android Owner 安装 |
+| `viewcompose-host-android` | `0.1.0-alpha05` | 底层自定义容器宿主与 Android SavedState 桥接 |
+| `viewcompose-lifecycle-androidx` | `0.1.0-alpha02` | 组合 Scope 与生命周期 Scope 的状态收集 |
+| `viewcompose-viewmodel-androidx` | `0.1.0-alpha02` | AndroidX ViewModel 与 `SavedStateHandle` Ownership |
 
 上游稳定语义基线为：
 

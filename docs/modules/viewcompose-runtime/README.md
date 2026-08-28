@@ -16,7 +16,7 @@ sample_ids:
   - module.runtime-reusable-content
   - module.runtime-state
   - module.runtime-snapshot
-coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha03
+coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha04
 minimal_usage_sample_id: module.runtime-state
 ---
 
@@ -35,7 +35,7 @@ their hosts.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="runtime-module-dependency" sample_id="module.runtime-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha04")
 }
 ```
 

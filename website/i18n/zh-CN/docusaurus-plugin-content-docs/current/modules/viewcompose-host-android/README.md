@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: b48ae09c6dc7cfdc77895b3702cfad99b9b7141f631a734fbf7008b37d54d30e
+translation_source_hash: 18b371e315204783ae20c4356a29b7f087e863e11316efa9e948fb7d620323f0
 translation_status: current
 ---
 
@@ -19,7 +19,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="host-android-module-dependency" sample_id="module.host-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha05")
 }
 ```
 

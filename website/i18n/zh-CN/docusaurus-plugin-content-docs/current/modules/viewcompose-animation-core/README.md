@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: 5689f89a45e7fc65867ff04046ecb3d0d29b73cf9aebb0d4107c63f03169ec3b
+translation_source_hash: 976a067d3c251eaade4bf42ebac307cacde94f68b064ea939a7f57d3814f6bee
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ Spec、Easing、值/速度转换、显式时间确定性采样、协程驱动 Fr
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-core-module-dependency" sample_id="module.animation-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha05")
 }
 ```
 

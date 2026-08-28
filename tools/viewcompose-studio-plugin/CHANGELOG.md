@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.2.0 — 2026-08-28
+
 ### Added
 
 - Add one **Inspect Device Diagnostics** panel for the correlated Session parent tree, latest

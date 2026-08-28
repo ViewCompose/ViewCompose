@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/text-input.md
-translation_source_hash: 3bf9beb784dc30a120f6e66c0854c2c260cce921eb492c4e564503a85e313e19
+translation_source_hash: 169d5f472e89ecfcb42a26887d39c2c5a1758cb8775a2cf19ad7d79a6c95c190
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

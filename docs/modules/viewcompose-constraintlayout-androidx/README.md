@@ -17,7 +17,7 @@ sample_ids:
   - module.constraintlayout-dimensions
   - module.constraintlayout-set
   - module.constraintlayout-helpers
-coordinate: com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha02
 minimal_usage_sample_id: module.constraintlayout-dependency
 ---
 
@@ -32,7 +32,7 @@ constraints, immutable constraint sets, and AndroidX-backed virtual helpers. Its
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="constraintlayout-dependency" sample_id="module.constraintlayout-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha02")
 }
 ```
 

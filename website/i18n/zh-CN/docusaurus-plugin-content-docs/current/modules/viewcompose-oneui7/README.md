@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 83abfd9c43ba66c83afc80081c37fbadfe172d053ac946c631042bbe93ef5ee3
+translation_source_hash: 2e17da4b9d5bbdb1b5d543b5aa183519dbc4aa84c96caa6728425e62109449ff
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ NavigationBar 组件集；视觉方向参考 Samsung 公开的 One UI 7 设计�
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="oneui7-module-dependency" sample_id="module.oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha02")
 }
 ```
 

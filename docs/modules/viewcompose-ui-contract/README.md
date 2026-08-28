@@ -17,7 +17,7 @@ sample_ids:
   - module.ui-contract-font-family
   - module.ui-contract-lazy-session-reuse
   - module.ui-contract-node
-coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha05
 minimal_usage_sample_id: module.ui-contract-node
 ---
 
@@ -40,7 +40,7 @@ runtime, widget, renderer, and host modules.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-contract-module-dependency" sample_id="module.ui-contract-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha05")
 }
 ```
 

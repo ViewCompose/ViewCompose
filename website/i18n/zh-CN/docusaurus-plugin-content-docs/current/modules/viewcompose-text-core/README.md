@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-text-core/README.md
-translation_source_hash: 37dfcce4421bb0ffa37679a250899d18cb4df55aaec6fd668a9ae8b4b07c1b7f
+translation_source_hash: efc77b1583b7d8f510861671220d8b45698ed378e3e0afb2f1370bd87b27dcdf
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-text-core
@@ -19,7 +19,7 @@ sample_ids:
   - module.text-core-state
   - module.text-core-transformation
   - module.text-core-save
-coordinate: com.viewcompose:viewcompose-text-core:0.1.0-alpha03
+coordinate: com.viewcompose:viewcompose-text-core:0.1.0-alpha04
 minimal_usage_sample_id: module.text-core-state
 ---
 
@@ -37,7 +37,7 @@ span adapter 位于 renderer/host 模块，并负责与这些契约相互转换�
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="text-core-module-dependency" sample_id="module.text-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha04")
 }
 ```
 

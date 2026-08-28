@@ -16,7 +16,7 @@ artifact_ids:
   - viewcompose-viewmodel-androidx
 sample_ids: []
 source_state: Jetpack Navigation 2.9.8 and Navigation3 1.1.5 with Compose 1.12.0 and current stable AndroidX owner semantics.
-target_state: ViewCompose Navigation Core 0.1.0-alpha03 and Navigation Android 0.1.0-alpha01 transactional host contracts.
+target_state: ViewCompose Navigation Core 0.1.0-alpha03 and Navigation Android 0.1.0-alpha02 transactional host contracts.
 ---
 
 # Migrating Compose Navigation to ViewCompose
@@ -29,7 +29,7 @@ actual source before mapping APIs or lifecycle behavior.
   Activity 1.13.0, Lifecycle 2.11.0, and SavedState 1.5.0.
 - **Target state:** `viewcompose-navigation-core` 0.1.0-alpha03 and
   `viewcompose-navigation-android`, `viewcompose-lifecycle-androidx`, and
-  `viewcompose-viewmodel-androidx` 0.1.0-alpha01.
+  `viewcompose-viewmodel-androidx` 0.1.0-alpha02.
 - **Last verified:** 2026-08-27.
 - **Re-verification owner:** maintainers of `viewcompose-navigation-core`,
   `viewcompose-navigation-android`, `viewcompose-lifecycle-androidx`, and `viewcompose-viewmodel-androidx`.

@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: bb8424337bf9d90768dbba9b9e894f37734ca569a349f14d18f98d0001601786
+translation_source_hash: 51b0a17bd8a41d6ab3094888c1d24ddd7eb6446c8c95dae4245afbed733cade0
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ Navigation 3 的所有权模型不同，因此迁移时必须先确定实际来�
   Activity 1.13.0、Lifecycle 2.11.0 和 SavedState 1.5.0。
 - **目标状态：** `viewcompose-navigation-core` 0.1.0-alpha03，以及
   `viewcompose-navigation-android`、`viewcompose-lifecycle-androidx` 和
-  `viewcompose-viewmodel-androidx` 0.1.0-alpha01。
+  `viewcompose-viewmodel-androidx` 0.1.0-alpha02。
 - **最后核验：** 2026-08-27。
 - **重新核验负责人：** `viewcompose-navigation-core`、`viewcompose-navigation-android`、
   `viewcompose-lifecycle-androidx` 和 `viewcompose-viewmodel-androidx` 的维护者。

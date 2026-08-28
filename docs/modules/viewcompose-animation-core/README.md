@@ -15,7 +15,7 @@ sample_ids:
   - module.animation-core-specifications
   - module.animation-core-sampling
   - module.animation-core-converter
-coordinate: com.viewcompose:viewcompose-animation-core:0.1.0-alpha04
+coordinate: com.viewcompose:viewcompose-animation-core:0.1.0-alpha05
 minimal_usage_sample_id: module.animation-core-dependency
 ---
 
@@ -32,7 +32,7 @@ composition dependency.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-core-module-dependency" sample_id="module.animation-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha05")
 }
 ```
 

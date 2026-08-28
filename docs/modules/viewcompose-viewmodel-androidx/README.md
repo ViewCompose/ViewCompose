@@ -17,7 +17,7 @@ sample_ids:
   - module.viewmodel-owner-boundary
   - module.viewmodel-resolution
   - module.viewmodel-saved-state
-coordinate: com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha02
 minimal_usage_sample_id: module.viewmodel-dependency
 ---
 
@@ -33,7 +33,7 @@ ownership rather than always expanding to the Activity.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="viewmodel-androidx-module-dependency" sample_id="module.viewmodel-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha02")
 }
 ```
 

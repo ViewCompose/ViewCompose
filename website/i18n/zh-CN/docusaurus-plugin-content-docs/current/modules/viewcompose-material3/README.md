@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: db23355489feea87707479df66b4c5f3051ade90df2295de6d7a45067cbd9093
+translation_source_hash: 9cbddd3ac7df9d6940d64171277ec0230c0201117a370ccc39c7d123198f5df6
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ Renderer 节点；本模块不参与 View 协调，也不会把通用节点映�
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-module-dependency" sample_id="module.material3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha02")
 }
 ```
 

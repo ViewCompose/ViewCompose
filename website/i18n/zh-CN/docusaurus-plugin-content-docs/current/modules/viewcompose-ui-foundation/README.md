@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: fd24e9b032159564b800725c39bd400d5866e32824f9167f6e9fa41159a549f4
+translation_source_hash: 1e2cbfd175424542dc4fa1be750e05cf410ace715435c3f1f4a0cbc491a87e52
 translation_status: current
 ---
 
@@ -24,7 +24,7 @@ Popup，不执行图片解码，也不提供可选的动画、手势、图形、
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-foundation-module-dependency" sample_id="module.ui-foundation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02")
 }
 ```
 

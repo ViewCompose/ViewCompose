@@ -25,7 +25,7 @@ sample_ids:
   - migration.compose-host
   - migration.viewcompose-host
 source_state: Jetpack Compose UI and Runtime 1.12.0 host, lifecycle, state-owner, and Android View interop semantics.
-target_state: ViewCompose Android 0.1.0-alpha01 and Host Android 0.1.0-alpha04 ownership and interop contracts.
+target_state: ViewCompose Android 0.1.0-alpha02 and Host Android 0.1.0-alpha05 ownership and interop contracts.
 ---
 
 # Migrating Compose Hosts, Lifecycle, and Android Interop to ViewCompose
@@ -37,8 +37,8 @@ have identical semantics.
 - **Source state:** Jetpack Compose UI and Runtime 1.12.0, Activity 1.13.0, Lifecycle 2.11.0,
   and SavedState 1.5.0.
 - **Target state:** `viewcompose-android`, `viewcompose-lifecycle-androidx`,
-  `viewcompose-viewmodel-androidx`, and `viewcompose-renderer-android` 0.1.0-alpha01, plus the
-  low-level `viewcompose-host-android` 0.1.0-alpha04 engine.
+  `viewcompose-viewmodel-androidx`, and `viewcompose-renderer-android` 0.1.0-alpha02, plus the
+  low-level `viewcompose-host-android` 0.1.0-alpha05 engine.
 - **Last verified:** 2026-08-27.
 - **Re-verification owner:** maintainers of `viewcompose-android`, `viewcompose-host-android`,
   `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx`, and
@@ -208,7 +208,7 @@ Owner migration is a semantic task, not a type-name substitution:
 Lifecycle 2.11 adds general scoped ViewModels for arbitrary Compose UI regions. A
 `ViewModelStoreProvider` can keep child stores across configuration changes, clear them when their
 UI scope permanently leaves, and inherit the parent's factory and `CreationExtras`. ViewCompose
-0.1.0-alpha04 has comparable permanent-removal behavior for navigation entry and graph owners, but
+0.1.0-alpha05 has comparable permanent-removal behavior for navigation entry and graph owners, but
 does not expose an equivalent general provider for arbitrary UI subtrees. Its navigation owner
 factory behavior must also not be described as full parent-factory or `CreationExtras` propagation
 without additional implementation and tests.
@@ -252,7 +252,7 @@ public.
 
 ## Unsupported direct interop
 
-ViewCompose 0.1.0-alpha04 has no direct equivalent of Compose `AndroidViewBinding` or
+ViewCompose 0.1.0-alpha05 has no direct equivalent of Compose `AndroidViewBinding` or
 `AndroidFragment`. A factory can inflate an XML layout, but ViewBinding lifecycle management and
 Fragment ownership remain application responsibilities. Do not place a Fragment directly inside a
 ViewCompose render tree or infer support from the ability to host its root View.

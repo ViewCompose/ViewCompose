@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-lifecycle-androidx/README.md
-translation_source_hash: 4bb707a0e4c3691914e517d3a350f8689258bfae664002afc8f690c4e1798968
+translation_source_hash: 18410926e0e93c32beb7aeca11256500b09b83d45efa85fe30977dc1b844a15d
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lifecycle-androidx-module-dependency" sample_id="module.lifecycle-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha02")
 }
 ```
 

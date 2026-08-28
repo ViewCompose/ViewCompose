@@ -15,7 +15,7 @@ sample_ids:
   - module.oneui7-dependency
   - module.oneui7-theme
   - module.oneui7-components
-coordinate: com.viewcompose:viewcompose-oneui7:0.1.0-alpha01
+coordinate: com.viewcompose:viewcompose-oneui7:0.1.0-alpha02
 minimal_usage_sample_id: module.oneui7-theme
 ---
 
@@ -35,7 +35,7 @@ internal design tokens. It is not a complete One UI component library.
 {/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="oneui7-module-dependency" sample_id="module.oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha02")
 }
 ```
 
