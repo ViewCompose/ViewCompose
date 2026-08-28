@@ -149,6 +149,16 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route. The shared social
 card likewise uses one absolute root URL, and the supported build removes its locale copy.
 
+Immutable module-manual snapshots are read-only static HTML. The supported build preserves their
+original localized routes, complete server-rendered content, styles, links, and inline color-mode
+bootstrap, but removes their external Docusaurus hydration scripts and one generated route chunk
+per locale. Current manuals remain fully hydrated. Locale-aware links from the API and capability
+catalogs force document navigation into these static snapshots, and the versioned-documentation
+gate rejects a snapshot that lacks the static marker or retains an external script. The same
+post-build boundary removes only generated leading indentation from Dokka HTML while preserving
+`pre`, `script`, `style`, and `textarea` bodies byte for byte. Immutable source manifests and cache
+integrity remain upstream of this deploy-only representation compaction.
+
 The budget model separates expected release-history growth from regressions. Current ceilings are
 46.9 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
 overhead, 8 MiB total and 768 KiB largest-file JavaScript, 128 KiB CSS, 6.25 MiB per locale search
@@ -291,6 +301,24 @@ identity token.
 ## Last verified
 
 <div className="search-partition-detail">
+
+- **2026-08-28, coordinated-release static-history acceptance:** adding the frozen 127-entry
+  release history initially produced `50.0 MiB` of non-API output, `8.5 MiB` of JavaScript, a
+  `25.4 MiB` `viewcompose-ui-foundation/0.1.0-alpha02` API tree, and a `24.2 MiB`
+  `viewcompose-ui-contract/0.1.0-alpha05` tree, so the unchanged site budgets correctly rejected
+  the build. The hard cut retained all 127 API versions and 254 localized historical-manual
+  routes as complete static HTML while removing exactly 254 redundant hydration chunks. Safe
+  Dokka indentation compaction processed 26,892 HTML files and reduced them from 322,180,811 to
+  275,273,983 bytes, a 46,906,828-byte (`14.56%`) reduction. The final bilingual production build
+  passed at 491,291,403 total bytes, 48,523,762 non-API bytes (`46.3 MiB`), 6,936,903 JavaScript
+  bytes (`6.6 MiB`), 23,270,465 bytes for UI Foundation (`22.2 MiB`), and 21,856,201 bytes for UI
+  Contract (`20.8 MiB`). It audited 510 site pages, preserved 127 immutable API/manual pairs and
+  127 Chinese fallback routes, and completed the Docusaurus wrapper in `36.3 s`. The result is
+  **improved**: compared with the rejected output, non-API size fell approximately `7.4%`, total
+  JavaScript `22.4%`, UI Foundation `12.6%`, and UI Contract `14.0%`, without increasing any
+  threshold or deleting release history. This is one local production build; hosted-runner and
+  deployed-route evidence remain the next acceptance action, while current interactive manuals
+  are outside the static-history boundary.
 
 - **2026-08-28, code-block search partition acceptance:** the imported lazy-list tail closure and
   its bilingual public contracts produced 49,626,056 non-API bytes with rendered code blocks in

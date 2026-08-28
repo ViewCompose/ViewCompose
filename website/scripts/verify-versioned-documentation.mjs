@@ -3,6 +3,7 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {buildDir, websiteRoot} from './site-quality-lib.mjs';
 import {isStableRelease, loadDocumentationReleases} from './documentation-releases.mjs';
+import {staticManualMarker} from './freeze-versioned-module-manuals.mjs';
 
 const repositoryRoot = resolve(websiteRoot, '..');
 
@@ -62,6 +63,19 @@ export async function verifyVersionedDocumentation() {
       routePage('zh-CN', 'modules', entry.artifact, entry.version),
       failures,
     );
+    const versionedManuals = [
+      routePage('modules', entry.artifact, entry.version),
+      routePage('zh-CN', 'modules', entry.artifact, entry.version),
+    ];
+    for (const manualPath of versionedManuals) {
+      const manual = await readFile(manualPath, 'utf8').catch(() => '');
+      if (!manual.includes(staticManualMarker)) {
+        failures.push(`${manualPath.replace(`${buildDir}/`, '')} -> is not a static release snapshot`);
+      }
+      if (/<script\b[^>]*\bsrc=/iu.test(manual)) {
+        failures.push(`${manualPath.replace(`${buildDir}/`, '')} -> retains a hydration script`);
+      }
+    }
     const manualRoute = `/modules/${entry.artifact}/${entry.version}/`;
     if (!hasHref(apiLanding, manualRoute)) {
       failures.push(`api.html -> missing manual link ${manualRoute}`);

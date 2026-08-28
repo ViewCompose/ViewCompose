@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 7047ac9620c4da2fa5c457bc3f995e4a4373fb24aba2888264e3b379d3ed0dad
+translation_source_hash: eb474010ed7e1d9d2b7e9ac5636f30e65de512e6c057fd4d5bef8eed19aba53f
 translation_status: current
 ---
 
@@ -112,6 +112,13 @@ Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-C
 静态副本。中文页面直接链接权威 API 树，因此这些副本只增加存储，并不提供本地化内容或受支持
 路由。共享社交卡片同样使用唯一根路径绝对 URL，受支持构建会删除其 Locale 副本。
 
+不可变模块手册快照是只读静态 HTML。受支持的构建会保留原有本地化路由、完整服务端渲染内容、
+样式、链接和内联色彩模式初始化，但删除其外部 Docusaurus Hydration Script，以及每个 Locale
+对应的一个生成式路由 Chunk；当前手册仍保持完整 Hydration。API 与能力目录中的 Locale-aware
+链接会通过整页导航进入这些静态快照；版本化文档门禁会拒绝缺少静态 Marker 或仍保留外部 Script
+的快照。同一构建后边界只删除 Dokka HTML 的生成式行首缩进，同时逐字节保留 `pre`、`script`、
+`style` 和 `textarea` 正文。不可变源码 Manifest 与缓存完整性仍位于该仅部署表示压缩的上游。
+
 预算模型把合法发布历史增长与真正回归分开。当前上限为：非 API 产物 46.9 MiB、
 API 树平均 4.5 MiB/单树 24 MiB、API 路由开销 1 MiB、JavaScript 总计 8 MiB/单文件
 768 KiB、CSS 128 KiB、单 Locale 搜索索引 6.25 MiB，以及 Docusaurus 构建 120 秒。
@@ -218,6 +225,21 @@ identity token。
 ## 最近验证
 
 <div className="search-partition-detail">
+
+- **2026-08-28，协同发布静态历史验收：**冻结后的 127 条发布历史首次生成了 `50.0 MiB` 非 API
+  产物、`8.5 MiB` JavaScript、`25.4 MiB` 的
+  `viewcompose-ui-foundation/0.1.0-alpha02` API 树，以及 `24.2 MiB` 的
+  `viewcompose-ui-contract/0.1.0-alpha05` API 树，因此不变的站点预算正确拒绝了该构建。硬切把
+  全部 127 个 API 版本和 254 个本地化历史手册路由保留为完整静态 HTML，同时精确删除 254 个
+  重复 Hydration Chunk。安全 Dokka 缩进压缩处理了 26,892 个 HTML 文件，把它们从
+  322,180,811 字节降至 275,273,983 字节，减少 46,906,828 字节（`14.56%`）。最终双语生产
+  构建以 491,291,403 总字节、48,523,762 非 API 字节（`46.3 MiB`）、6,936,903 JavaScript
+  字节（`6.6 MiB`）、23,270,465 字节 UI Foundation（`22.2 MiB`）和 21,856,201 字节 UI
+  Contract（`20.8 MiB`）通过；它审计 510 个站点页面，保留 127 对不可变 API/手册和 127 个中文
+  回退路由，并在 `36.3 s` 完成 Docusaurus Wrapper。结论为 **improved**：相对被拒绝的产物，
+  非 API 大约降低 `7.4%`、JavaScript 总量降低 `22.4%`、UI Foundation 降低 `12.6%`、UI
+  Contract 降低 `14.0%`，没有提高任何阈值，也没有删除发布历史。该证据只覆盖一次本地生产
+  构建；托管 Runner 与已部署路由是下一验收动作，当前交互式手册不属于静态历史边界。
 
 - **2026-08-28，代码块搜索分区验收：**导入的 Lazy-list Tail 收敛及其双语公共契约在把渲染代码块
   纳入本地全文搜索时生成 49,626,056 个非 API 字节，超过不变的 46.9 MiB 上限 447,842 字节。
