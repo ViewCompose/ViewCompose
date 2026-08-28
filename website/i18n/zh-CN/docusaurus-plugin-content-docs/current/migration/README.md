@@ -42,7 +42,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 | Navigation 2 | `2.9.8` |
 | Navigation 3 | `1.1.5` |
 
-仓库内可执行对比基线仍为 Compose `1.7.8`、Activity `1.12.4`、Lifecycle `2.8.7` 和
+仓库内可执行对比基线仍为 Compose `1.7.8`、Activity `1.12.4`、Lifecycle `2.11.0` 和
 Kotlin `2.2.10`，声明位置是
 [`gradle/libs.versions.toml`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/libs.versions.toml)。
 较新的上游语义由 Android 官方文档和发布说明确定；ViewCompose 行为则由本地源码、测试和

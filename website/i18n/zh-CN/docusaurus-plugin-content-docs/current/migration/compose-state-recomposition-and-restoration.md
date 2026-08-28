@@ -53,7 +53,7 @@ Runtime 等价。
 | --- | --- |
 | Compose Runtime、UI 和 Foundation | `1.7.8` |
 | Activity | `1.12.4` |
-| Lifecycle | `2.8.7` |
+| Lifecycle | `2.11.0` |
 | Kotlin 与 Compose compiler plugin | `2.2.10` |
 
 这些版本记录在固定版本的

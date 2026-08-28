@@ -3,6 +3,7 @@ package com.viewcompose.viewmodel.samples
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.createSavedStateHandle
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
@@ -10,6 +11,11 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 
 // DOCS_REGION_START(viewmodel-resolution)
 class ProfileViewModel : ViewModel()
+
+class SavedProfileViewModel(
+    val handle: SavedStateHandle,
+    val profileId: String,
+) : ViewModel()
 
 /** Resolves one instance from the owner installed by the current Android host. */
 fun UiTreeBuilder.viewModelSample(): ProfileViewModel {
@@ -31,6 +37,33 @@ fun UiTreeBuilder.keyedViewModelSample(
         owner = owner,
     )
     return primary to comparison
+}
+
+/** Creates a ViewModel with constructor dependencies and the owner's restored state handle. */
+fun UiTreeBuilder.initializerViewModelSample(
+    owner: ViewModelStoreOwner,
+): SavedProfileViewModel {
+    return viewModel(owner = owner) {
+        SavedProfileViewModel(
+            handle = createSavedStateHandle(),
+            profileId = "primary-profile",
+        )
+    }
+}
+
+/** Uses the initializer contract when the model class is selected at runtime. */
+fun UiTreeBuilder.kClassInitializerViewModelSample(
+    owner: ViewModelStoreOwner,
+): SavedProfileViewModel {
+    return viewModel(
+        modelClass = SavedProfileViewModel::class,
+        owner = owner,
+    ) {
+        SavedProfileViewModel(
+            handle = createSavedStateHandle(),
+            profileId = "runtime-selected-profile",
+        )
+    }
 }
 // DOCS_REGION_END(viewmodel-resolution)
 

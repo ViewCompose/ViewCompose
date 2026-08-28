@@ -33,10 +33,10 @@ translation_status: current
 - [Lifecycle 2.11 发布说明](https://developer.android.com/jetpack/androidx/releases/lifecycle)
 - [SavedState 发布说明](https://developer.android.com/jetpack/androidx/releases/savedstate)
 
-本地可执行基线是 Compose 1.7.8、Activity 1.12.4、Lifecycle 2.8.7 和 Kotlin 2.2.10。
+本地可执行基线是 Compose 1.7.8、Activity 1.12.4、Lifecycle 2.11.0 和 Kotlin 2.2.10。
 下文引用的仓库测试和已编译样例依据这组依赖验证 ViewCompose 行为。它们不代表实际执行了
-上游 Compose 1.12.0、Activity 1.13.0 或 Lifecycle 2.11.0。因此，只要任一基线发生变化，
-重新核验就必须同时重复官方语义复核和本地测试运行。
+上游 Compose 1.12.0 或 Activity 1.13.0，但 Lifecycle Family 已与审阅过的 2.11.0 基线一致。
+因此，只要任一基线发生变化，重新核验就必须同时重复官方语义复核和本地测试运行。
 
 本文涉及的 ViewCompose 契约分别由
 [Android 聚合层](../modules/viewcompose-android/README.md)、
@@ -177,6 +177,13 @@ Lifecycle 2.11 为任意 Compose UI 区域增加了通用 scoped ViewModel。`Vi
 `CreationExtras`。ViewCompose 0.1.0-alpha05 对导航 entry 和 graph owner 的永久删除提供了
 可比行为。导航测试已证明这些 owner 会继承最近宿主的默认 Factory 与初始 `CreationExtras`，
 替换自身的子级 owner/默认参数条目，并保留无关 extra；但任意 UI 子树仍没有等价的通用 provider。
+
+ViewModel Lookup 现在与 AndroidX Key 和 Creation 语义一致。只有 `null` 选择按 Class 派生的
+默认 Key；空字符串和仅空白字符串都是显式 Key。此前用 Blank String 作为默认 Sentinel 的迁移
+代码必须改传 `null`。Reified 与运行时 `KClass` Initializer Overload 会接收 Owner 的
+`CreationExtras`，因此 Constructor Dependency 与 `createSavedStateHandle()` 不再需要一次性的
+单 Class Factory。Owner 的 `ViewModelStore` 是唯一实例缓存，清理后会在下一次实际执行的
+Composition 调用中被观察到。
 
 ViewCompose `SaveableStateRegistry`、AndroidX `SavedStateRegistryOwner` 和
 `SavedStateHandle` 服务于不同层次。迁移时应明确每个值由哪一层拥有，并把进程重建与内存中
