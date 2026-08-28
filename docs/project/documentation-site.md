@@ -431,6 +431,23 @@ identity token.
   shadow only from this exact path class; module production, build scripts, ordinary tests, code
   deletion/rename, and sensitive tooling retain it. Website-stack migration remains unjustified.
 
+- **2026-08-28, post-cut cache invalidation controls:** #219 and #220 restored exact `5/5` API
+  groups, generated zero, rejected zero, and completed their documentation children in
+  `5 min 23 s` and `6 min 2 s`. Relative to #219, #220 was `39 s` (`+12.1%`) slower, a **no material
+  change** result across different content. #221 changed the maintained publishing generator,
+  correctly reused `0/5`, regenerated all five groups in `1070.8 s`, and completed in
+  `23 min 23 s` (`+334.4%`). #222 expanded the registry to six groups, reused `5/6`, generated one
+  in `275.0 s`, and completed in `10 min 12 s` (`+89.5%`). #223 moved six first-release artifacts
+  into immutable history, reused `5/6`, regenerated the expanded group in `258.5 s`, and completed
+  in `7 min 55 s` (`+47.1%`). No run reported an invalid group, and every production site stayed
+  within its unchanged budgets; the #223 `main` workflow then built, deployed, and verified live
+  module routes. Correct cache discrimination and deployment are **no material change**; latency is
+  **mixed** because intentional full and partial invalidation cost more than exact reuse. These are
+  heterogeneous release/tooling inputs with different 100-, 127-, and 133-version outputs, so the
+  normalized child times do not estimate steady-state performance. The next action remains an
+  exact-hit observation on the first naturally eligible post-cut `affected` pull request, while
+  tooling or history drift must continue regenerating only the groups its fingerprint invalidates.
+
 - **2026-08-26, Governance V2 Text Input local acceptance:** the first four-page task split built
   successfully but produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB
   limit. Consolidating adjacent editing/IME and rich/Receive Content tasks into two Guides retained

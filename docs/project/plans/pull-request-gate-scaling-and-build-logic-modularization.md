@@ -944,6 +944,38 @@ actions. Release intent detected zero published artifacts, ignored artifacts, or
 paths for this repository-only tooling, test, and documentation correction, so it adds no Maven
 Changeset. The hosted no-shadow observation remains this plan's next action.
 
+The first post-cut operational window, pull requests #219 through #223, contained no eligible
+`affected` change and therefore cannot close either no-shadow observation. Pull request #219 changed
+only this plan and correctly selected `skip`; its required `qaQuick` facade completed `70 s` after
+workflow creation and its documentation facade completed in `6 min 29 s`, `24 s` (`-5.8%`) below
+the comparable #216 skip observation. Pull requests #220 through #223 correctly selected
+`complete`: #220 contained shared quality logic, the Docusaurus configuration, and previously
+unknown Studio-plugin tooling; #221 changed publishing build logic; and #222/#223 changed release
+or documentation-history metadata. Their complete Gradle `qaQuick` steps were `13 min 2 s`,
+`16 min 53 s`, `16 min 11 s`, and `15 min 2 s`. Nearest-rank P50/P95 are therefore
+`15 min 2 s`/`16 min 53 s`, `33.8%`/`31.6%` below the Phase 0 execution comparator. Required
+end-to-end critical paths were `15 min 15 s`, `24 min 33 s`, `18 min 3 s`, and `16 min 55 s`,
+giving P50/P95 `16 min 55 s`/`24 min 33 s`, `29.9%`/`45.2%` below Phase 0. Every selected gate and
+facade passed. The complete/skip safety conclusion is **no material change** and this small
+heterogeneous control-path timing sample is **improved** relative to Phase 0, but actual post-cut
+`affected` timing remains **inconclusive** because the window contains zero target-class runs.
+The documentation cache correctly distinguished two exact hits, one complete tooling-fingerprint
+invalidation, and two one-group release-history expansions; the durable interpretation is recorded
+in the documentation-site operations guide. The limitation is one same-day five-PR window with
+release-specific inputs, not a representative change-class distribution. The next action remains
+the first naturally eligible hosted `affected` run in each accepted no-shadow class; do not create
+sample churn solely to manufacture that evidence.
+
+Local acceptance of this evidence-only update reused `6/6` immutable API groups with zero
+generation or invalid group in `4.6 s`. The bilingual production build verified 133 API versions,
+133 module manuals, 133 Chinese fallback routes, and 522 site pages; it produced 469.0 MiB total
+and 46.7/46.9 MiB non-API output and completed in `57.2 s` under the unchanged `120 s` ceiling.
+Relative to the coordinated-release closeout sample, rounded total output increased by 0.1 MiB,
+non-API output had no rounded change, and wrapper time increased by `18.8 s` (`+49.0%`). Size is
+**no material change** and timing is **inconclusive** because dependency, process, and filesystem
+state differ. This proves local completeness and headroom only; it does not count toward either
+hosted observation class.
+
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
 it would not reduce source verification, Gradle startup, Android SDK preparation, or immutable API
