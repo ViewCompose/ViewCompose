@@ -25,6 +25,10 @@ if ! command -v ruby >/dev/null 2>&1; then
     echo "ruby is required to read Android CLI layout output." >&2
     exit 1
 fi
+if ! command -v perl >/dev/null 2>&1; then
+    echo "perl is required to bound Android CLI layout polling." >&2
+    exit 1
+fi
 
 device_serial="${ANDROID_SERIAL:-}"
 if [[ -z "$device_serial" ]]; then
@@ -46,10 +50,45 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+run_with_timeout() {
+    local timeout_seconds="$1"
+    shift
+    perl -MPOSIX=setpgid -e '
+        use strict;
+        use warnings;
+        my $seconds = shift @ARGV;
+        my $pid = fork();
+        die "fork failed: $!" unless defined $pid;
+        if ($pid == 0) {
+            setpgid(0, 0);
+            exec @ARGV;
+            exit 127;
+        }
+        $SIG{ALRM} = sub {
+            kill "TERM", -$pid;
+            select undef, undef, undef, 0.2;
+            kill "KILL", -$pid;
+            waitpid($pid, 0);
+            exit 124;
+        };
+        alarm $seconds;
+        waitpid($pid, 0);
+        alarm 0;
+        exit($? == -1 ? 127 : $? >> 8);
+    ' "$timeout_seconds" "$@"
+}
+
 read_status() {
-    android layout --device "$device_serial" 2>/dev/null |
+    # UIAutomator can occasionally stall on older vendor builds; bound each poll so the outer
+    # certification deadline remains real and the next poll can recover.
+    run_with_timeout 8 android layout --device "$device_serial" 2>/dev/null |
         ruby -rjson -e '
-            nodes = JSON.parse(STDIN.read)
+            payload = STDIN.read
+            begin
+              nodes = JSON.parse(payload)
+            rescue JSON::ParserError
+              exit
+            end
             node = nodes.find do |candidate|
               candidate["text"]&.start_with?(ARGV.fetch(0))
             end

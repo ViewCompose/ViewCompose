@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: 0128bd92a53cd92dd79f9c34cf4c8ea975e5b3cb56af78b112f3ef5d73b2cb56
+translation_source_hash: 90e2bcf8c32f8144a0e6b924016167c7d30f2bc34fc1c4aafe6df5c105db95aa
 translation_status: current
 ---
 
@@ -279,9 +279,28 @@ Phase 4 聚合验收命令 `./gradlew qaQuick qaPreview
 任务复用了已验证输出，上述干净 Focused Run 仍是绝对测试结果证据；聚合运行用于证明集成门禁，
 不构成一次新的性能对比。
 
-结论为 **improved**。解析、创建、通用 Scoped Ownership、导航集成与 Host Owner Selection 均有
-直接证据，恢复型业务状态也改由一个 ViewModel 持有，不再依赖框架 Holder。本次 JVM 聚焦运行不
-证明真机进程终止、内存保留或性能；这些维度在 Phase 5 前仍为 **inconclusive**。
+Phase 5 新增七项缺陷压力契约：显式 Owner 优先于无关 Local、子作用域失败后恢复外层 Local、
+SavedStateHandle 命名空间隔离、每个 Key 仅注册一次 Initializer 与 Provider、连续恢复不重放旧值、
+已删除 API 的 Runtime 与源码 Guard，以及唯一 Store Allocator 的结构 Guard。模块从 45 项增至
+52 项，绝对增加 7 项，标准化增幅为 15.6%；52/52 全部通过，无 Skip、Failure 或 Error。
+
+受影响层的干净重跑还通过了 Navigation Android 151/151、Aggregate Android 21/21 与 Host
+Android 52/52。连同所属模块共 276/276，标准化通过率 100%，无 Skip、Failure 或 Error。这是更
+广的契约与集成覆盖证据，并非运行时性能变化证据。
+
+仓库级 `qaQuick qaPreview` 验收随后完成全部 2270 个可执行任务：171 个实际执行，2099 个为
+Up-to-date，两项门禁完成率均为 100%。该运行复用了上述干净聚焦输出，属于集成门禁证据，不是
+性能对比。
+
+随后，两条 Debug 旅程在 Android 9/API 28 的 Xiaomi MI 6 上通过。导航旅程的 PID 从 19002 变为
+19078，并保留两个 Stack 与五个独立播种的 Destination/Graph 命名空间，包括全部
+`rememberSaveable` 与 `SavedStateHandle` 值。普通 Activity Root 旅程的 PID 从 19210 变为
+19286，并精确恢复数值 41。归一化 PID 后，两条旅程的前后状态记录差异均为零。
+
+结论为 **improved**。解析、创建、通用 Scoped Ownership、导航集成、Host Owner Selection、删除
+回归防护与真实进程重建现均有直接证据，恢复型业务状态也只由一个 ViewModel 持有。真机结果仅
+覆盖一种 Android 9 机型和 Debug 构建；Release 模式、更广 Android/设备矩阵、内存保留与运行时
+性能在 Phase 6 前仍为 **inconclusive**。
 
 单元测试中使用真实 `ViewModelStore`，重复渲染同一调用，并在 Teardown 清理 Store。Process-death
 `SavedStateHandle` 测试仍应使用感知 Saved State 的 Robolectric 或真机 Owner。

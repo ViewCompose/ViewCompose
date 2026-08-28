@@ -327,10 +327,33 @@ repository-wide quick and preview gates. Because most aggregate tasks reused ver
 clean focused runs above remain the absolute test-result evidence; the aggregate run is integration-
 gate evidence rather than a fresh performance comparison.
 
-Conclusion: **improved**. Lookup, creation, general scoped ownership, navigation integration, and
-host owner selection now have direct evidence, and restored business state has one ViewModel owner
-instead of a framework holder. The focused JVM run does not prove a real device process kill,
-memory retention, or performance; those dimensions remain **inconclusive** for Phase 5.
+Phase 5 adds seven defect-pressure contracts: explicit-owner precedence over an unrelated local,
+nested-local restoration after failure, isolated SavedStateHandle namespaces, single initializer
+and provider registration per key, successive restoration without replay, removed-API runtime and
+source guards, and a one-store-allocator structural guard. The module grows from 45 to 52 tests,
+an absolute increase of seven and a normalized increase of 15.6%; all 52/52 pass with zero skips,
+failures, or errors.
+
+The clean affected-layer rerun also passed 151/151 Navigation Android, 21/21 aggregate Android,
+and 52/52 Host Android tests. Together with the owning module, this is 276/276 with a normalized
+pass rate of 100% and zero skips, failures, or errors. This is broader contract and integration
+coverage, not evidence of a runtime-performance change.
+
+Repository-wide `qaQuick qaPreview` acceptance then completed all 2,270 actionable tasks: 171
+executed and 2,099 were up to date. Both gates completed at 100%. This reuses the clean focused
+outputs above and is integration-gate evidence rather than a performance comparison.
+
+Two Debug journeys then passed on one Xiaomi MI 6 running Android 9/API 28. The navigation journey
+changed PID from 19002 to 19078 and preserved two stacks plus five independently seeded destination
+or graph namespaces, including every `rememberSaveable` and `SavedStateHandle` value. The ordinary
+Activity-root journey changed PID from 19210 to 19286 and restored the exact value 41. After PID
+normalization, both before/after status records had zero differences.
+
+Conclusion: **improved**. Lookup, creation, general scoped ownership, navigation integration, host
+owner selection, regression deletion, and real process recreation now have direct evidence, while
+restored business state has one ViewModel owner instead of a framework holder. The device result is
+one Android 9 model and one Debug build; release-mode behavior, a broader Android/device matrix,
+memory retention, and runtime performance remain **inconclusive** for Phase 6.
 
 Use a real `ViewModelStore` in unit tests, render the same call repeatedly, and clear the store
 during teardown. Saved-state-aware Robolectric or instrumented owners remain required for process-

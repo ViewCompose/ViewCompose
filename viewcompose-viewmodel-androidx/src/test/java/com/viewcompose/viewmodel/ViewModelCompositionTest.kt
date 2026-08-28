@@ -93,6 +93,29 @@ class ViewModelCompositionTest {
     }
 
     @Test
+    fun `explicit owner wins over an unrelated local owner`() {
+        val localOwner = TestViewModelStoreOwner()
+        val explicitOwner = TestViewModelStoreOwner()
+        val harness = WidgetCoreRuntimeHarness()
+
+        lateinit var explicitModel: TestViewModel
+        harness.renderTree {
+            ProvideViewModelStoreOwner(localOwner) {
+                explicitModel = viewModel(owner = explicitOwner)
+            }
+        }
+
+        val explicitStoreModel = ViewModelProvider(explicitOwner)[TestViewModel::class.java]
+        val localStoreModel = ViewModelProvider(localOwner)[TestViewModel::class.java]
+        assertSame(explicitStoreModel, explicitModel)
+        assertNotSame(localStoreModel, explicitModel)
+
+        harness.dispose()
+        localOwner.viewModelStore.clear()
+        explicitOwner.viewModelStore.clear()
+    }
+
+    @Test
     fun `viewModel throws when owner is missing`() {
         val error = runCatching {
             viewModel<TestViewModel>()
