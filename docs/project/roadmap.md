@@ -50,6 +50,8 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 5. System-bar insets use component-side `Modifier.systemBarsInsetsPadding(...)`.
 6. Lifecycle and ViewModel collaboration is split into `:viewcompose-lifecycle-androidx` and
    `:viewcompose-viewmodel-androidx` under `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`.
+   Logical navigation pages and graphs now own capped lifecycle, saved-state, and retained
+   ViewModel scopes rather than borrowing the Activity lifetime.
 7. Recomposition uses SlotTable Lite node-group invalidation without a legacy full-rebuild switch.
 8. Runtime ownership follows Kernel, UI Foundation, Android Engine, Design System, and Integrations;
    `viewcompose-android` and `viewcompose-material3-android` are reviewed application aggregates,
@@ -182,7 +184,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | Text Editing | TextDocument, TextFieldState, EditingBuffer, InputTransformation, and Android editor bridge support rich text, selection/composition/undo/save, attachments, and Receive Content | Chinese/Japanese IMEs, TalkBack, hardware keyboard, drag/drop, and third-party content providers |
 | Runtime Effects / Transactions | Composition transaction, structured coroutines, renderer recovery, failure reports, onCommit boundary, and optional bounded failure aggregation | Maintain the shipped privacy and inactive-path contracts; application exporters retain scheduling, consent, persistence, and upload ownership |
 | Runtime Recomposition Performance | VNode subtree cache, mutation journals, invalidation merging, explicit boundaries, and O(1) identity skip | Maintain leaf-update scale benchmarks and bound whole-tree fixed cost |
-| Lifecycle / ViewModel | Split modules, serial lifecycle collection, transactional SavedState claim, destroyed-host and corrupt-entry handling | Multi-window and background process-recovery matrix |
+| Lifecycle / ViewModel | Split modules, serial lifecycle collection, transactional SavedState claim, retained subtree/destination/graph ViewModel scopes, ViewTree host discovery, single-owner `SavedStateHandle`, terminal clear, and Android 9 Activity-root plus multi-stack process-recovery evidence | Expand the release-build, multi-window, API-level, and background process-recovery matrix; keep memory and runtime-performance claims evidence-gated |
 | Collections | LazyColumn/Row/Grid plus Pager, complete list state, sticky headers, content types/spans, prefetch, the neutral compact `LazyItemTable` boundary, and an optional AndroidX Paging `PagingLazyColumn` with explicit placeholders, page-drop handling, load-state projections, lifecycle/mediator fixtures, controlled-state Demo, million-position device proof, and a stable first Release baseline | The [archived Paging 3 integration plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/paging3-integration.md) completed Phases 0--7. Paging remains outside the core contract; row/grid support, real I/O, or broader longitudinal performance requires a newly attributed plan |
 | Overlay | Precise Popup anchoring/following/RTL/flip/clamp and unified feedback queues | Multi-window, IME, and freeform-window device matrix |
 | Theming | Semantic tokens, dynamic-color policy, complete shape bridge, configuration lifecycle, and authoritative Theme diagnostics | Multi-window, vendor-theme, and dynamic-color matrix |

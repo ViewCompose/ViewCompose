@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lifecycle-and-saved-state.md
-translation_source_hash: bb0e258c115b67ffc822152050161913dc9d7d5b94d61dd3032a3b1b862e3041
+translation_source_hash: ce74ebcd7185a4749bb3bd72990c57ed25b73fb5385496e40be69e7b1bbad5e4
 translation_status: current
 ---
 
@@ -19,6 +19,8 @@ translation_status: current
 4. 生命周期快速切换时，同一个 Flow 最多只有一个活跃 collector。
 5. 已销毁宿主不能创建新的渲染会话或 SavedState 绑定。
 6. Renderer 拥有的 View 在事务提交前不能观察或发布外部 Owner。
+7. 逻辑页面不能仅因其 ViewGroup 仍 Attached 或被 Retain，就借用 Activity 的完整活跃生命周期。
+8. UI-only Saveable State 与恢复型业务状态不能同时拥有两个可写 Owner。
 
 ## 2. 宿主生命周期
 
@@ -109,7 +111,31 @@ Holder 本身通过父 Registry 的常规事务保存。失败父帧不能发布
 的 Provider 与恢复值 Claim。硬切原因与兼容边界参见
 [ADR-0010](./decisions/0010-hierarchical-saveable-state-ownership.md)。
 
-## 7. Android Bundle 边界
+## 7. ViewModel 与逻辑页面所有权
+
+Activity 与 Fragment 仍是 Root Owner 来源，但它们不定义每个逻辑页面的生命周期。Retained
+Navigation Entry 或 Graph 的页面 Owner 由四项协同契约组成：受限的 `LifecycleOwner`、
+`SavedStateRegistryOwner`、`ViewModelStoreOwner`，以及默认 Factory/`CreationExtras` 支持。
+页面生命周期同时受宿主生命周期与导航可见性约束；仅有 View Attached 永远不会把隐藏内容提升到
+`RESUMED`。
+
+配置重建会保留 Navigation Host Scope Identity，并从 `ViewModelScopeProvider` 租用相同 Child
+Store。永久 Pop 或 Graph Removal 会发送显式终止信号并只清理 Store 一次，继而交付 AndroidX
+`ViewModel.onCleared()`。临时离开组合、Transition 重叠、Pager/Lazy 重排，以及配置变化时已销毁的
+Activity，只释放 Composition Lease，不会误报逻辑删除。
+
+普通 Retained Subtree 使用同一个 Provider Core。组合只 Remember Provider Binding 与持有引用的
+Lease，从不缓存 ViewModel 实例。`viewModel()` 始终委托 AndroidX `ViewModelProvider` 在选定的
+`ViewModelStore` 上解析。显式 Owner 优先于最近的 `LocalViewModelStoreOwner`；Activity 与
+Fragment Host API 自动安装最近的 ViewTree Owner，而底层 `renderInto` 有意不安装 Owner。
+
+恢复型业务状态属于业务 ViewModel。它通过 Owner 默认 Factory，或在 Initializer Overload 内调用
+`createSavedStateHandle()`，获得唯一 `SavedStateHandle`，并向外暴露只读领域状态或操作。UI-only
+展示状态继续由 `rememberSaveable` 持有。已删除的独立 Handle Helper 与 Holder 不存在 Runtime、
+Source 或兼容路径；其 Released Capability Record 仅作为不可变删除 Impact Record 所需的历史身份
+保留。
+
+## 8. Android Bundle 边界
 
 Android host 保存：
 
@@ -129,7 +155,7 @@ Payload Schema 和正数 Format Version；框架拥有注册顺序、Restored Va
 Bundle Copy、替换与清理。Format 不匹配或损坏的嵌套 SDK Payload 会被当作无 State，不会使其他
 Provider 失效。后续 Commit 只替换 Saver，保证 Host 保存时总是读取最近已提交的 View。
 
-## 8. 验证
+## 9. 验证
 
 核心回归覆盖：
 
@@ -143,3 +169,6 @@ Provider 失效。后续 Commit 只替换 Saver，保证 Host 保存时总是读
 8. 未知 Bundle 版本和单 Entry 损坏隔离
 9. Android View Commit 后 Lifecycle Catch-up、串行 Owner 替换与 Callback Failure
 10. Retained Destination Lifecycle 限制、SDK Bundle 重建、Format 隔离与 Provider 清理
+11. Retained ViewModel Scope 引用计数、Rollback、Recreation、Terminal Clear 与 No-resurrection
+12. Destination/Graph Owner 隔离、默认 Factory/CreationExtras 传播、`onCleared()`、连续进程式恢复，
+    以及真实多 Stack 进程重建
