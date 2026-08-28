@@ -593,6 +593,16 @@ also exposed an unbounded single `android layout` call; both runners now cap eve
 group at eight seconds and retry within their existing outer deadline, and the repeated journey
 passed through that recovery path.
 
+Phase 3 CI also exposed one Preview inspection-fixture race: the registry deliberately retains
+native containers weakly, while three tests registered temporary `FrameLayout` instances without a
+matching strong test-owned lifetime. Under CI memory pressure the parent could therefore be
+collected before the assertion and make a live-session contract appear ended. Phase 5 now retains
+those fixtures for the asserted lifetime without changing production retention. A fresh rerun of
+`AndroidDeviceDslInspectionToolingTest` passed 18/18 with zero skips, failures, or errors.
+Conclusion: **improved** test determinism. This is local Robolectric evidence on one host and does
+not quantify CI flake probability or change runtime behavior; the repository CI remains the next
+integration check.
+
 Conclusion: **improved**. Every capability row and applicable Q3 field now has an explicit evidence
 or non-goal disposition, regression guards exercise the prohibited designs, and real process
 recreation validates both ordinary and multi-stack ownership. One Android 9 device and Debug APK do
