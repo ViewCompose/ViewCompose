@@ -12,6 +12,7 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
   - navigation.host
+  - navigation.scene-projection
   - viewmodel.scoped-owners
 artifact_ids:
   - viewcompose-lifecycle-androidx
@@ -31,7 +32,7 @@ evidence:
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
 translation_source: architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md
-translation_source_hash: 88124ac48aacad71352f12f38fe77bd562f7d16c688e33b5ba2229e9ad6cc6f2
+translation_source_hash: f621dacba0f433dfd1226e90b966cd374ef937b47f2877d15ed7d4b00d04fba2
 translation_status: current
 ---
 

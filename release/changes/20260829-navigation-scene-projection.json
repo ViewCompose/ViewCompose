@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Replace visible and interactive lifecycle-planner inputs with a validated semantic navigation scene and derive destination and graph-owner targets from host, scene, and entry caps.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-core", "impact": "breaking" }
+  ],
+  "ignored": [
+    {
+      "artifact": "viewcompose-navigation-android",
+      "reason": "Production source only adapts the internal owner coordinator to the new Core scene input while preserving the existing settled and transition lifecycle behavior; the Android behavior change is classified in the transition-integration slice."
+    }
+  ],
+  "shared": []
+}

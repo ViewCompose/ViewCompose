@@ -12,11 +12,13 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
   - navigation.host
+  - navigation.scene-projection
 artifact_ids:
   - viewcompose-lifecycle-androidx
   - viewcompose-navigation-android
   - viewcompose-navigation-core
-sample_ids: []
+sample_ids:
+  - module.navigation-core-scene-projection
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
 non_goals:
@@ -42,33 +44,35 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 2 by replacing visible/interactive-only lifecycle decisions with a pure scene/entry-cap projection and exhaustive model tests.
-maven_release_changesets: []
+next_action: Execute Phase 3 by making ordinary and predictive Android transitions publish semantic scenes and obey their lifecycle caps.
+maven_release_changesets:
+  - release/changes/20260829-navigation-scene-projection.json
 ---
 
 # Navigation Lifecycle and Scene Evolution Plan
 
 ## Status
 
-Active. The architecture and test audit, Phase 0 contract freeze, and Phase 1 Lifecycle DSL
-stabilization are complete. No production source or public API has changed under this plan yet.
+Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
+stabilization, and Phase 2 Core scene projection are complete.
 
 Last verified: 2026-08-29.
 
-Next action: execute Phase 2 by introducing the platform-neutral scene and entry-cap projection in
-Navigation Core, then hard-cut the visible/interactive-only lifecycle planner in the same slice.
+Next action: execute Phase 3 by making the Android host's ordinary and predictive transitions
+publish semantic scenes and obey their lifecycle caps.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260829-navigation-scene-projection.json`
 
 ## Release intent rationale
 
-This initial change creates a repository-only execution plan and updates the active-plan index. It
-does not change production source, publication inputs, or compiled API samples. The first
-implementation pull request that affects a published artifact must add one immutable
-`release/changes/<unique>.json`, classify every directly affected artifact, and list that file in
-the front matter and this section. Release planning derives reverse-dependency propagation.
+Phase 2 hard-cuts the published Navigation Core planner from visible/interactive ID sets to the
+semantic `NavScene` input and adds the scene model plus its compiled sample. Its immutable Changeset
+classifies Navigation Core as breaking. Navigation Android is explicitly ignored in that Changeset
+because its internal adapter preserves the existing settled ownership policy; Phase 3 owns the
+separate Android transition-behavior change. Release planning derives reverse-dependency
+propagation.
 
 ## Objective
 
@@ -390,8 +394,8 @@ same slice that establishes its replacement:
 | --- | --- | --- | --- |
 | 0 | Contract, capability, ownership, and ADR freeze | State matrices, hard cuts, Q3/API impacts, ViewModel-plan boundary, and ADR disposition accepted | Complete |
 | 1 | Generic Lifecycle DSL stabilization | One consumption surface passes host, race, replacement, failure, effect, and Flow contracts | Complete |
-| 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Next |
-| 3 | Android transition lifecycle correction | Ordinary and predictive transitions, overlays, panes, and host caps match the matrix | Pending |
+| 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Complete |
+| 3 | Android transition lifecycle correction | Ordinary and predictive transitions, overlays, panes, and host caps match the matrix | Next |
 | 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Pending |
 | 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Pending |
 | 6 | Reducer and executor convergence | One typed plan owns stack, scene, lifecycle, presentation, focus, and effects; obsolete paths are absent | Pending |
@@ -499,6 +503,54 @@ scene/entry lifecycle projection and model tests.
 3. Preserve multi-pane multiple-resumed semantics only for settled simultaneously interactive
    entries.
 4. Add exhaustive tables, graph-owner aggregation, invalid-scene rejection, and property tests.
+
+#### Phase 2 acceptance
+
+Navigation Core now owns one immutable `NavScene` and one validated `NavSceneEntry` per destination.
+Entry presence, visibility, interaction, transition phase, content/overlay layer role, and pane role
+are explicit rather than reconstructed from unrelated ID sets. Construction rejects duplicate
+identities, contradictory roles, content above an overlay, or an interactive destination in an
+active-transition scene. `NavLifecyclePlanner.plan(...)` hard-cuts its Alpha visible/interactive
+set overloads and derives every destination target as `min(host cap, scene cap, entry cap)`. Graph
+owners take the maximum effective descendant target, terminal owners cannot resurrect, and
+downward or destroy transitions remain ordered before upward transitions.
+
+The capability remains Q3. `NavScene`, `NavSceneEntry`, and `NavLifecyclePlanner.plan(...)` carry
+Q3 KDoc and the compiled `module.navigation-core-scene-projection` sample; the five closed role
+vocabularies are Q1 declarations documented by their owning types and the same sample. Applicable
+behavior, input/output, state, lifecycle, concurrency, failure, performance, and compatibility
+contracts are current in the source, Core module manual, navigation architecture, ADR-0024,
+Compose migration comparison, generated Reference input, and required Simplified Chinese mirrors.
+The Governance V2 structural detector reported zero application-facing DSL/component/host entry
+changes because this pure Core model is outside that detector's catalog surface; its strict
+one-impact-to-one-detected-change rule therefore admits no immutable impact record for these
+symbols. The capability, sample, release, KDoc, and handwritten owner records provide the required
+manual disposition without claiming `No documentation impact`.
+
+Fresh JVM execution passed 60 of 60 Navigation Core tests, compared with the 53-test Phase 0
+baseline: seven additional tests, a 13.2% increase. The additions cover the complete host-cap
+property matrix, scene and entry caps, invalid semantic combinations, immutable collections,
+active-transition caps, popped-exit `CREATED`, graph aggregation, identity conflicts, and
+downward-before-upward ordering. A fresh Navigation Android regression passed 151 of 151 tests,
+unchanged from the Phase 1 baseline, and `compileDebugKotlin` passed. The selected Core API audit
+also generated strict Dokka output without warnings after correcting parameter-link markup.
+
+The full `qaQuick` gate passed all 2,268 actionable tasks: 203 executed and 2,065 were up to date.
+Documentation Governance V2 reported zero issues against base `af4f145c`, translation verification
+reported 126 current and zero stale required Chinese pages, and release-intent verification found
+one breaking Navigation Core artifact plus one explicitly ignored Navigation Android adapter.
+The `qaPreview` gate also passed all 1,209 actionable tasks: 140 executed and 1,069 were up to date,
+including Paparazzi verification and both Preview host suites. Its result is **no material change**
+because this phase introduces no preview or visual behavior. Both mixed cache states are integration
+evidence, not performance evidence.
+
+Conclusion: **improved** Core lifecycle expressiveness, invalid-state prevention, and model-test
+coverage, with **no material change** in Android runtime behavior. The Android adapter deliberately
+maps its existing ownership policy to settled scenes so this slice does not silently change
+transition timing. Consequently a device run would exercise an unchanged runtime path and is
+deferred to Phase 3. Ordinary and predictive transition scenes, overlay coverage, focus transfer,
+physical-device behavior, memory, leaks, and performance remain **inconclusive**. Next action:
+execute Phase 3's Android transition lifecycle correction against this single semantic model.
 
 ### Phase 3: correct Android host transitions
 

@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - navigation.host
+  - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-core
 sample_ids:
@@ -16,6 +17,7 @@ sample_ids:
   - module.navigation-core-transaction
   - module.navigation-core-stacks
   - module.navigation-core-deep-link
+  - module.navigation-core-scene-projection
 coordinate: com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03
 minimal_usage_sample_id: module.navigation-core-dependency
 ---
@@ -165,14 +167,67 @@ matches are rejected instead of depending on declaration order. A host converts 
 
 ## Lifecycle planning
 
-`NavLifecyclePlanner` consumes stable owner IDs, not Android `LifecycleOwner` objects. Retained
-background owners target `Created`, visible owners target `Started`, and interactive owners target
-`Resumed`. The host lifecycle caps every target.
+`NavScene` replaces parallel visible and interactive ID sets with one validated, bottom-to-top
+semantic projection. Each `NavSceneEntry` records presence, visibility, interaction, coarse
+transition phase, content-pane role, and content/overlay layer. It derives independent scene and
+entry lifecycle caps without Android types or frame-rate progress.
+
+`NavLifecyclePlanner` accepts destination records plus that scene and applies one rule:
+
+```text
+effective destination lifecycle = min(host cap, scene cap, entry cap)
+```
+
+Prepared and hidden entries cap at `Created`; covered and active-transition entries cap at
+`Started`; only retained, visible, interactive, settled entries may reach `Resumed`. A popped entry
+that is still exiting caps at `Created`, and terminal removal targets `Destroyed`. An active
+transition scene rejects every interactive entry, preventing premature `Resumed` state by
+construction.
 
 Owners removed from retention transition to `Destroyed` and cannot be resurrected. Downward and
 destroy transitions are ordered before upward transitions so replacing the interactive destination
-does not temporarily leave two owners resumed. The Android module applies the resulting
-`NavLifecyclePlan` to concrete owners.
+does not temporarily leave two owners resumed. Graph-owner targets are the highest effective state
+among their descendants, so parents never fall below active children. The Android module applies
+the resulting immutable `NavLifecyclePlan` to concrete owners.
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-scene-projection" sample_id="module.navigation-core-scene-projection" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val list = NavEntry(NavEntryId("list"), NavRoute("list"))
+val detail = NavEntry(NavEntryId("detail"), NavRoute("detail"))
+val scene = NavScene(
+    listOf(
+        NavSceneEntry(
+            entryId = list.id,
+            presence = NavEntryPresence.Retained,
+            visibility = NavSceneVisibility.Hidden,
+            interaction = NavSceneInteraction.NonInteractive,
+            transitionPhase = NavSceneTransitionPhase.Settled,
+            paneRole = null,
+        ),
+        NavSceneEntry(
+            entryId = detail.id,
+            presence = NavEntryPresence.Retained,
+            visibility = NavSceneVisibility.Visible,
+            interaction = NavSceneInteraction.Interactive,
+            transitionPhase = NavSceneTransitionPhase.Settled,
+            paneRole = NavPaneRole.Primary,
+        ),
+    ),
+)
+val plan = NavLifecyclePlanner.plan(
+    currentStates = mapOf(
+        list.id to NavEntryLifecycleState.Resumed,
+        detail.id to NavEntryLifecycleState.Created,
+    ),
+    entries = listOf(list, detail),
+    scene = scene,
+    hostState = NavHostLifecycleState.Resumed,
+)
+
+check(plan.targetStates[list.id] == NavEntryLifecycleState.Created)
+check(plan.targetStates[detail.id] == NavEntryLifecycleState.Resumed)
+check(plan.transitions.first().entryId == list.id)
+```
 
 ## Adaptive panes
 
@@ -183,7 +238,7 @@ secondary, and tertiary panes.
 Always execute custom strategies through `calculateValidated`. Validation enforces the pane limit,
 rejects entries outside the active stack, and requires the active top to remain visible. A
 `NavPaneScene` treats all visible panes as interactive by default; hosts may derive a narrower focus
-set before lifecycle planning.
+policy when constructing `NavScene`.
 
 ## Save and restore contract
 
@@ -207,6 +262,10 @@ The complete generated reference is available in the
 [`viewcompose-navigation-core` API tree](https://docs.viewcompose.com/api/viewcompose-navigation-core/current/).
 
 ## Compatibility notes
+
+The scene-projection API is an Alpha hard cut. Replace both `NavLifecyclePlanner.plan` overloads
+that accepted `retainedEntryIds`, `visibleEntryIds`, and `interactiveEntryId(s)` with the single
+`entries` plus `scene` overload. No deprecated bridge or dual planner exists.
 
 The `0.1.0-alpha03` line establishes immutable snapshots, single-pending two-phase transactions,
 independent retained stacks, strict URI matching, graph-hierarchy validation, lifecycle planning,
