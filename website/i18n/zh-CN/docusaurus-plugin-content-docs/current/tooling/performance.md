@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 4ddfd22346ec21ed10fc79d572052af34f1f2439c9841ce79c4147c17910921a
+translation_source_hash: 7e62937cf130e7bfc4811e1dbf1cd7f2670c4e1db19c91d390b8e344c6f8c1a2
 translation_status: current
 ---
 
@@ -489,11 +489,19 @@ AndroidX 未报告热节流等待。每批结束后均恢复所有设备状态�
 
 #### 2.4.1 Renderer、集合与内存结论
 
-##### 2.4.1 复杂布局更新尾延迟排查 {/* #241-complex-layout-update-tail-latency-investigation */}
+已被替代的 Debug 排查证明：列表更新快于 Compose，但相对 Android Views 的 P95 明显更差；
+强 Snapshot 以少量分配成本降低了事务尾部。后续精确对照的诊断 Seam 使滚动/更新 P95 分别
+变化 `-0.4%/+0.6%`，均为**无实质变化**，因此以下生产修正及当前对比才是权威结论。早期运行
+使用不同构建模式，不能与 Release 结果合并。精确历史矩阵保留在
+[Lazy-list Tail 归档](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/lazy-list-tail-performance-diagnostics.md)中。
 
-##### 2.4.2 Root 固定频率的 Revision 4 验收与剩余尾延迟 {/* #242-root-controlled-revision-4-acceptance-and-remaining-tails */}
+{/* 被生产态结论替代的测量明细保留在源码中。
 
-##### 2.4.3 Lazy 集合与 RecyclerView 尾延迟硬切 {/* #243-lazy-collection-and-recyclerview-tail-latency-hard-cut */}
+##### 2.4.1 复杂布局更新尾延迟排查
+
+##### 2.4.2 Root 固定频率的 Revision 4 验收与剩余尾延迟
+
+##### 2.4.3 Lazy 集合与 RecyclerView 尾延迟硬切
 
 下表帧数据为 P50/P95 毫秒，Heap 为峰值中位数 KiB。
 
@@ -511,7 +519,7 @@ AndroidX 未报告热节流等待。每批结束后均恢复所有设备状态�
 接受的逐帧分布，不虚构跨引擎事务。下一步集合目标是 ViewCompose 滚动 P95/Heap、相对
 Android Views 的更新尾部差距、冷构造和单调数据流。
 
-##### 2.4.3.1 诊断能力指导的列表尾部复检 {/* #2431-diagnostics-guided-list-tail-recheck */}
+##### 2.4.3.1 诊断能力指导的列表尾部复检
 
 2026-08-27 的复检保持 `performance.list@5` 工作负载不变，Target 与 Benchmark APK 的精确
 SHA-256 分别为 `5c0ea909553bdb7d7fd7d242c8144b44039bff3f8ef3b371aed292ab57cc7755` 和
@@ -578,6 +586,8 @@ Prefetch、Mounted Cache 容量、跨 Owner 与 Text Binding 组合，以及非�
 实质帧耗时回退，但它不是新的三引擎性能候选。已接受的既有矩阵继续拥有跨引擎结论：Android
 Views 滚动与更新 P95 差距仍保持开放，不保留任何 Renderer 修正；下一项性能工作必须先归因
 不受支持的平台尾部，再测试新的生产改动。
+
+*/}
 
 ##### 2.4.3.2 生产列表尾部修正与闭环 {/* #2432-production-list-tail-correction-and-closure */}
 

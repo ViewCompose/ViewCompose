@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 8c55ca4c057c8418b22ddb4f6537cebaaf220b19ea95a7e3a2c2453de1aff68b
+translation_source_hash: 08d6ea6a0f0f0b4ddacf0d2ff7384bb4b00353cfc047a7b2111ce950dae5cb78
 translation_status: current
 ---
 
@@ -224,7 +224,23 @@ identity token。
 
 ## 最近验证
 
-<div className="search-partition-detail">
+当前生产契约提供 133 个不可变 API 版本、133 份不可变模块手册和 133 条中文回退路由。协同发布
+收尾审计了 522 个站点页面，总输出为 468.9 MiB，非 API 输出为 46.7/46.9 MiB；后续两个精确
+缓存命中 PR 均复用全部 `6/6` 个 API 组，站点包装构建分别耗时 `47.3 s` 和 `43.0 s`。缓存正确性
+和站点延迟结论为**无实质变化**；不可变覆盖扩展因缩小体积余量而判定为**混合**。该比较使用
+不同的托管 Runner 和取整后的体积数据，不构成稳态基准。阶段明细保留在
+[PR 门禁计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/pull-request-gate-scaling-and-build-logic-modularization.md)
+与 [Governance V2 归档](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/documentation-system-governance-v2.md)中；后续新增
+仍须保持预算不变，并在需要时通过结构性精简恢复余量。
+
+2026-08-29 的 Retained-owner ADR 候选首次触发托管站点的非 API 上限。在同一个本地 133 版本
+语料上，将已被替代的公开测量明细收敛为带解释的摘要后，非 API 输出从 `49,208,553` 字节降至
+`49,086,492` 字节，减少 `122,061` 字节（`-0.248%`），并在不变上限下留下 `91,722` 字节余量。
+最终表示结论为**改善**，同时保留当前结论、绝对对比值、限制、下一步及不可变明细链接；524 个
+站点页面、双语 Shell 和无障碍检查均通过。本地不可变 API 缓存缺少六个完整分组，因此该对比
+只验证非 API 表示；版本路由与总输出仍以托管环境的完整缓存构建作为验收门禁。
+
+{/* 历史测量台账保留在源码中；上方精简摘要是公开表示。
 
 - **2026-08-28，协同发布静态历史验收：**冻结后的 127 条发布历史首次生成了 `50.0 MiB` 非 API
   产物、`8.5 MiB` JavaScript、`25.4 MiB` 的
@@ -457,4 +473,4 @@ identity token。
 
 Git 历史保存早期 Paging 和站点检查点；它们不授权删除当前契约、无证据提额或重新扩张副本。
 
-</div>
+*/}
