@@ -2,7 +2,7 @@ package com.viewcompose.viewmodel
 
 /*
  * Test responsibility: proves constructor/default-Factory and initializer-owned SavedStateHandle
- * restoration before the standalone handle-holder API is removed.
+ * restoration and guards the single-owner contract after the standalone handle-holder hard cut.
  */
 
 import android.os.Bundle
@@ -27,6 +27,8 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -84,6 +86,116 @@ class SavedStateViewModelIntegrationTest {
         assertEquals(17, restored.counter.value)
         restoredHarness.dispose()
         restoredOwner.destroy()
+    }
+
+    @Test
+    fun `keyed business ViewModels restore isolated SavedStateHandle namespaces`() {
+        val firstOwner = TestSavedStateOwner()
+        val firstHarness = WidgetCoreRuntimeHarness()
+        lateinit var first: SavedBusinessStateViewModel
+        lateinit var second: SavedBusinessStateViewModel
+        firstHarness.renderTree {
+            first = viewModel(key = "first", owner = firstOwner) {
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+            second = viewModel(key = "second", owner = firstOwner) {
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+        }
+        first.counter.value = 11
+        second.counter.value = 22
+
+        val saved = firstOwner.save()
+        firstHarness.dispose()
+        firstOwner.destroy()
+
+        val restoredOwner = TestSavedStateOwner(restoredState = saved)
+        val restoredHarness = WidgetCoreRuntimeHarness()
+        lateinit var restoredFirst: SavedBusinessStateViewModel
+        lateinit var restoredSecond: SavedBusinessStateViewModel
+        restoredHarness.renderTree {
+            restoredFirst = viewModel(key = "first", owner = restoredOwner) {
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+            restoredSecond = viewModel(key = "second", owner = restoredOwner) {
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+        }
+
+        assertNotSame(restoredFirst, restoredSecond)
+        assertEquals(11, restoredFirst.counter.value)
+        assertEquals(22, restoredSecond.counter.value)
+        restoredHarness.dispose()
+        restoredOwner.destroy()
+    }
+
+    @Test
+    fun `repeated lookup registers one handle provider and initializer per ViewModel key`() {
+        val owner = TestSavedStateOwner()
+        val harness = WidgetCoreRuntimeHarness()
+        var initializerRuns = 0
+        lateinit var first: SavedBusinessStateViewModel
+        lateinit var second: SavedBusinessStateViewModel
+
+        harness.renderTree {
+            first = viewModel(key = "business", owner = owner) {
+                initializerRuns += 1
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+            second = viewModel(key = "business", owner = owner) {
+                initializerRuns += 1
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+        }
+
+        assertSame(first, second)
+        assertEquals(1, initializerRuns)
+        first.counter.value = 31
+        owner.save()
+        assertEquals(31, first.counter.value)
+        assertEquals(1, initializerRuns)
+        harness.dispose()
+        owner.destroy()
+    }
+
+    @Test
+    fun `successive process style recreations persist the latest value without replay`() {
+        val firstOwner = TestSavedStateOwner()
+        val firstHarness = WidgetCoreRuntimeHarness()
+        val first: SavedBusinessStateViewModel = firstHarness.render {
+            viewModel(owner = firstOwner) {
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+        }
+        first.counter.value = 17
+        val firstSaved = firstOwner.save()
+        firstHarness.dispose()
+        firstOwner.destroy()
+
+        val secondOwner = TestSavedStateOwner(restoredState = firstSaved)
+        val secondHarness = WidgetCoreRuntimeHarness()
+        val second: SavedBusinessStateViewModel = secondHarness.render {
+            viewModel(owner = secondOwner) {
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+        }
+        assertEquals(17, second.counter.value)
+        second.counter.value = 29
+        val secondSaved = secondOwner.save()
+        secondHarness.dispose()
+        secondOwner.destroy()
+
+        val thirdOwner = TestSavedStateOwner(restoredState = secondSaved)
+        val thirdHarness = WidgetCoreRuntimeHarness()
+        val third: SavedBusinessStateViewModel = thirdHarness.render {
+            viewModel(owner = thirdOwner) {
+                SavedBusinessStateViewModel(createSavedStateHandle())
+            }
+        }
+
+        assertEquals(29, third.counter.value)
+        thirdHarness.dispose()
+        thirdOwner.destroy()
     }
 
     class SavedBusinessStateViewModel(
