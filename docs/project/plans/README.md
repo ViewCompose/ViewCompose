@@ -33,6 +33,14 @@ site, search index, or sitemap.
   hardware-deferred because no currently available physical device can prove the required stable
   CPU, GPU, and display-pipeline control. All other phases are complete; resume only to recapture
   the unchanged collection-stress revision-3 scroll baseline when a qualifying device is available.
+- [AndroidX ViewModel optimal architecture and Compose capability parity](./viewmodel-androidx-optimal-architecture-and-compose-parity.md) —
+  hard-cut redundant or defective Alpha contracts, introduce one general retained scoped-owner
+  facility, close material Android Compose capability gaps, and replace shallow ViewModel evidence
+  with lifecycle, cleanup, restoration, host, and navigation contract coverage.
+- [Navigation lifecycle and scene evolution](./navigation-lifecycle-and-scene-evolution.md) —
+  unify Lifecycle DSL consumption across hosts, correct destination lifecycle projection, separate
+  retained entry ownership from native presentation lifetime, and converge scenes, overlays,
+  focus, transitions, and bounded retention on one transactional navigation plan.
 
 Completed documentation-governance, architecture, animation-capability, design-system,
 theme-propagation, native-widget, component-appearance, tutorial, language-consistency,

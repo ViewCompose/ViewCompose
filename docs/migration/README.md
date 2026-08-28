@@ -22,7 +22,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-27**
+Last verified: **2026-08-28**
 
 Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
 aggregate, and navigation module families**
@@ -112,7 +112,7 @@ evidence. Status terms have one meaning across all pages:
 | Interop | ViewCompose `AndroidView` callback lifecycle | **Intentionally different** | Separate replay-safe update/reset, post-transaction commit, and permanent-release cleanup. | [Android View interop](compose-host-lifecycle-and-android-interop.md#android-view-interop-callback-mapping) |
 | Hosting | Activity and Fragment roots | **Partially supported** | Account for internally owned sessions and the Fragment owner/disposal mismatch. | [Standard hosts](compose-host-lifecycle-and-android-interop.md#choosing-a-host-entry-point) |
 | Hosting | Existing-container `renderInto` | **Partially supported** | Install every required owner and dispose the returned session explicitly. | [Custom host](compose-host-lifecycle-and-android-interop.md#rendering-into-an-existing-view-hierarchy) |
-| Ownership | General UI-scoped ViewModels and inherited `CreationExtras` | **Partially supported** | Verify destination/graph factory inputs; no arbitrary-subtree provider is available. | [Owners](compose-host-lifecycle-and-android-interop.md#lifecycle-viewmodel-and-saved-state-owners) |
+| Ownership | General UI-scoped ViewModels and inherited `CreationExtras` | **Partially supported** | Preserve the proven destination/graph Factory/extras inheritance; add a general arbitrary-subtree provider. | [Owners](compose-host-lifecycle-and-android-interop.md#lifecycle-viewmodel-and-saved-state-owners) |
 | Session | Explicit rendering, frame scheduling, and terminal disposal | **Intentionally different** | Treat `RenderSession` as the owner of composition, native tree, overlays, and cleanup. | [Sessions](compose-host-lifecycle-and-android-interop.md#session-frame-effect-and-disposal-semantics) |
 | Interop | Direct ViewBinding and Fragment-in-tree APIs | **Unsupported** | Keep Fragment ownership outside the render tree and manage inflated XML explicitly. | [Unsupported interop](compose-host-lifecycle-and-android-interop.md#unsupported-direct-interop) |
 | Navigation | Controller, destination, and multiple-stack ownership | **Intentionally different** | Translate desired state transitions rather than Navigation 2 or 3 API names. | [Navigation model](compose-navigation.md#choosing-the-source-navigation-model) |
