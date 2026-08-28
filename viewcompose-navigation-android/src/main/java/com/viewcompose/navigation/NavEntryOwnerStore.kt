@@ -13,6 +13,7 @@ import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlan
 import com.viewcompose.navigation.core.NavLifecyclePlanner
+import com.viewcompose.navigation.core.NavScene
 import com.viewcompose.viewmodel.ViewModelScopeProvider
 
 /**
@@ -108,52 +109,26 @@ internal class NavEntryOwnerStore(
     @MainThread
     fun reconcile(
         retainedEntries: List<NavEntry>,
-        visibleEntryIds: Set<NavEntryId>,
-        interactiveEntryIds: Set<NavEntryId>,
+        scene: NavScene,
         hostState: NavHostLifecycleState,
     ): NavLifecyclePlan {
         check(!destroyed) {
             "A destroyed navigation entry owner store cannot be reconciled."
         }
-        // Retained IDs include destinations and parent graphs so shared graph state outlives children.
-        val retainedOwnerIds = linkedSetOf<NavEntryId>()
+        // Create destination and graph owners before the pure planner snapshots their current state.
         retainedEntries.forEach { entry ->
             entry.graphEntries.forEachIndexed { depth, graphEntry ->
                 graphOwnerFor(
                     entry = graphEntry,
                     depth = depth,
                 )
-                retainedOwnerIds += graphEntry.id
             }
             ownerFor(entry)
-            retainedOwnerIds += entry.id
-        }
-        val entriesById = retainedEntries.associateBy(NavEntry::id)
-        val visibleOwnerIds = linkedSetOf<NavEntryId>()
-        visibleEntryIds.forEach { entryId ->
-            val entry = checkNotNull(entriesById[entryId]) {
-                "Visible navigation entry $entryId is not retained."
-            }
-            entry.graphEntries.forEach { graphEntry ->
-                visibleOwnerIds += graphEntry.id
-            }
-            visibleOwnerIds += entry.id
-        }
-        val interactiveOwnerIds = linkedSetOf<NavEntryId>()
-        interactiveEntryIds.forEach { entryId ->
-            val entry = checkNotNull(entriesById[entryId]) {
-                "Interactive navigation entry $entryId is not retained."
-            }
-            entry.graphEntries.forEach { graphEntry ->
-                interactiveOwnerIds += graphEntry.id
-            }
-            interactiveOwnerIds += entry.id
         }
         val plan = NavLifecyclePlanner.plan(
             currentStates = owners.mapValues { (_, owner) -> owner.entryLifecycleState },
-            retainedEntryIds = retainedOwnerIds.toList(),
-            visibleEntryIds = visibleOwnerIds,
-            interactiveEntryIds = interactiveOwnerIds,
+            entries = retainedEntries,
+            scene = scene,
             hostState = hostState,
         )
         val orderedTransitions = plan.transitions

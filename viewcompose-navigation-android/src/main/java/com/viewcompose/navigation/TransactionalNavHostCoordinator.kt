@@ -8,11 +8,17 @@ import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
+import com.viewcompose.navigation.core.NavEntryPresence
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavPaneScene
 import com.viewcompose.navigation.core.NavPaneStrategies
 import com.viewcompose.navigation.core.NavPaneStrategy
 import com.viewcompose.navigation.core.NavPreparation
+import com.viewcompose.navigation.core.NavScene
+import com.viewcompose.navigation.core.NavSceneEntry
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
+import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavTransaction
 import com.viewcompose.navigation.core.NavTransactionStatus
@@ -864,10 +870,15 @@ internal class TransactionalNavHostCoordinator(
         scene: NavPaneScene,
         retainedEntries: List<NavEntry>,
     ) {
+        val paneLayouts = scene.toPaneLayouts()
         ownerStore.reconcile(
             retainedEntries = retainedEntries,
-            visibleEntryIds = scene.visibleEntryIds,
-            interactiveEntryIds = scene.interactiveEntryIds,
+            scene = lifecycleScene(
+                retainedEntries = retainedEntries,
+                visibleEntryIds = scene.visibleEntryIds,
+                interactiveEntryIds = scene.interactiveEntryIds,
+                paneLayouts = paneLayouts,
+            ),
             hostState = hostLifecycleState,
         )
     }
@@ -965,10 +976,18 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun reconcileOwners(transition: NavHostTransition) {
+        val paneLayouts = mergePaneLayouts(
+            before = transition.beforeScene,
+            after = transition.afterScene,
+        )
         ownerStore.reconcile(
             retainedEntries = transition.retainedEntries,
-            visibleEntryIds = transition.visibleEntryIds,
-            interactiveEntryIds = transition.afterScene.interactiveEntryIds,
+            scene = lifecycleScene(
+                retainedEntries = transition.retainedEntries,
+                visibleEntryIds = transition.visibleEntryIds,
+                interactiveEntryIds = transition.afterScene.interactiveEntryIds,
+                paneLayouts = paneLayouts,
+            ),
             hostState = hostLifecycleState,
         )
     }
@@ -986,11 +1005,59 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun reconcileOwners(preview: NavHostBackPreview) {
+        val paneLayouts = mergePaneLayouts(
+            before = preview.beforeScene,
+            after = preview.afterScene,
+        )
         ownerStore.reconcile(
             retainedEntries = preview.retainedEntries,
-            visibleEntryIds = preview.visibleEntryIds,
-            interactiveEntryIds = preview.beforeScene.interactiveEntryIds,
+            scene = lifecycleScene(
+                retainedEntries = preview.retainedEntries,
+                visibleEntryIds = preview.visibleEntryIds,
+                interactiveEntryIds = preview.beforeScene.interactiveEntryIds,
+                paneLayouts = paneLayouts,
+            ),
             hostState = hostLifecycleState,
+        )
+    }
+
+    /**
+     * Projects the coordinator's current settled ownership policy into the semantic Core model.
+     * This boundary preserves existing transition behavior; transition-specific semantic scenes
+     * are supplied only when motion, focus, and lifecycle consume the same coordinator decision.
+     */
+    private fun lifecycleScene(
+        retainedEntries: List<NavEntry>,
+        visibleEntryIds: Set<NavEntryId>,
+        interactiveEntryIds: Set<NavEntryId>,
+        paneLayouts: Map<NavEntryId, NavPaneLayout>,
+    ): NavScene {
+        return NavScene(
+            retainedEntries.map { entry ->
+                val isVisible = entry.id in visibleEntryIds
+                NavSceneEntry(
+                    entryId = entry.id,
+                    presence = NavEntryPresence.Retained,
+                    visibility = if (isVisible) {
+                        NavSceneVisibility.Visible
+                    } else {
+                        NavSceneVisibility.Hidden
+                    },
+                    interaction = if (entry.id in interactiveEntryIds) {
+                        NavSceneInteraction.Interactive
+                    } else {
+                        NavSceneInteraction.NonInteractive
+                    },
+                    transitionPhase = NavSceneTransitionPhase.Settled,
+                    paneRole = if (isVisible) {
+                        checkNotNull(paneLayouts[entry.id]) {
+                            "Visible navigation entry ${entry.id} has no pane layout."
+                        }.role
+                    } else {
+                        null
+                    },
+                )
+            },
         )
     }
 
