@@ -27,12 +27,13 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * [LocalNavGraphOwnerScope] exposes every active parent-graph owner, while [ProvideNavGraphOwner]
  * lets a subtree use one graph's shared state directly.
  *
- * At native-host creation, destination and graph owners capture the nearest
- * [LocalViewModelStoreOwner]. When that owner implements [HasDefaultViewModelProviderFactory], its
- * default Factory and starting [CreationExtras] are inherited while each navigation owner replaces
- * the ViewModelStore owner, saved-state owner, and default route arguments with its own values.
- * Changing the parent owner identity recreates this host so retained navigation owners never mix
- * provider contracts from different parents.
+ * At native-host creation, destination and graph owners require and capture the nearest
+ * [LocalViewModelStoreOwner]. Their stores are retained below that parent by the shared scoped-owner
+ * provider. When the parent implements [HasDefaultViewModelProviderFactory], its default Factory and
+ * starting [CreationExtras] are inherited while each navigation owner replaces the ViewModelStore
+ * owner, saved-state owner, and default route arguments with its own values. Changing the parent
+ * owner identity recreates this host so retained navigation owners never mix provider contracts
+ * from different parents.
  *
  * When [systemBackEnabled] is true, the host participates in the nearest AndroidX back dispatcher
  * only while its stack can pop. Predictive-back progress previews the previous destination without
@@ -63,7 +64,7 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * @param onFailure optional failure handler; unhandled failures throw [NavHostException]
  * @param key application identity component that can force a new native host
  * @param content destination renderer receiving each prepared or refreshed [NavEntry]
- * @throws IllegalStateException when no lifecycle owner is provided
+ * @throws IllegalStateException when no lifecycle or ViewModelStore owner is provided
  */
 fun UiTreeBuilder.NavHost(
     controller: NavHostController,
@@ -83,7 +84,10 @@ fun UiTreeBuilder.NavHost(
         "NavHost requires LocalLifecycleOwner. Mount it under Activity/Fragment setUiContent " +
             "or ProvideLifecycleOwner."
     }
-    val parentViewModelStoreOwner = LocalViewModelStoreOwner.current
+    val parentViewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) {
+        "NavHost requires LocalViewModelStoreOwner. Mount it under Activity/Fragment setUiContent " +
+            "or ProvideViewModelStoreOwner."
+    }
     val config = NavHostRuntimeConfig(
         localSnapshot = captureUiLocalSnapshot(),
         lifecycleOwner = lifecycleOwner,
@@ -147,7 +151,7 @@ private fun View.requireNavHostRuntime(): NavHostRuntime {
 private class NavHostNodeKey(
     private val controller: NavHostController,
     private val lifecycleOwner: androidx.lifecycle.LifecycleOwner,
-    private val parentViewModelStoreOwner: ViewModelStoreOwner?,
+    private val parentViewModelStoreOwner: ViewModelStoreOwner,
     private val userKey: Any?,
     private val debug: Boolean,
     private val debugTag: String,

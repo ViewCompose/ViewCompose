@@ -178,6 +178,7 @@ sealed interface NavDeepLinkResult {
 class NavHostController internal constructor(
     internal val backStackController: NavBackStackController,
     restoredDestinationState: Bundle? = null,
+    internal val ownerScopeId: NavHostOwnerScopeId = NavHostOwnerScopeId.random(),
 ) {
     private var binding: NavHostBinding? = null
     private var retainedDestinationState: Bundle? = restoredDestinationState?.let(::Bundle)
@@ -358,9 +359,13 @@ class NavHostController internal constructor(
         requireMainThread()
         val state = binding?.saveState()
             ?: NavHostRestorableState(
+                ownerScopeId = ownerScopeId,
                 stackState = backStackController.stackStateSnapshot(),
                 destinationState = retainedDestinationState?.let(::Bundle),
             )
+        check(state.ownerScopeId == ownerScopeId) {
+            "NavHost runtime and controller owner scope identities diverged while saving state."
+        }
         check(state.stackState == backStackController.stackStateSnapshot()) {
             "NavHost runtime and controller navigation stacks diverged while saving state."
         }
@@ -379,6 +384,9 @@ class NavHostController internal constructor(
     @MainThread
     internal fun retainState(state: NavHostRestorableState) {
         requireMainThread()
+        check(state.ownerScopeId == ownerScopeId) {
+            "NavHost cannot retain destination state for a different owner scope."
+        }
         check(state.stackState == backStackController.stackStateSnapshot()) {
             "NavHost cannot retain destination state for different navigation stacks."
         }

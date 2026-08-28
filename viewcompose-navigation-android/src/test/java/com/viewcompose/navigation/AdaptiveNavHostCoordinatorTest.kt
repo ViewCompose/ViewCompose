@@ -58,7 +58,7 @@ class AdaptiveNavHostCoordinatorTest {
                 NavEntryId(entryIds.removeFirst())
             },
         )
-        ownerStore = NavEntryOwnerStore(application)
+        ownerStore = navigationTestOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,

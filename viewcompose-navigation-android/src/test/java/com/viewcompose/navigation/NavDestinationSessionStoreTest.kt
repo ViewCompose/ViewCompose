@@ -50,7 +50,7 @@ class NavDestinationSessionStoreTest {
     @Before
     fun setUp() {
         val application = RuntimeEnvironment.getApplication()
-        ownerStore = NavEntryOwnerStore(application)
+        ownerStore = navigationTestOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,

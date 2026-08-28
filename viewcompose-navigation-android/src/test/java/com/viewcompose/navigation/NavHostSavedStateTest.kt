@@ -87,11 +87,13 @@ class NavHostSavedStateTest {
             putString("query", "restored")
             putInt("selection", 3)
         }
+        val ownerScopeId = NavHostOwnerScopeId("stable-host-owner")
 
         val decoded = checkNotNull(
             decodeNavHostState(
                 encodeNavHostState(
                     NavHostRestorableState(
+                        ownerScopeId = ownerScopeId,
                         stackState = stackState,
                         destinationState = destinationState,
                     ),
@@ -99,6 +101,7 @@ class NavHostSavedStateTest {
             ),
         )
 
+        assertEquals(ownerScopeId, decoded.ownerScopeId)
         assertEquals(stackState, decoded.stackState)
         assertEquals(
             listOf("app", "account"),
@@ -121,7 +124,8 @@ class NavHostSavedStateTest {
         assertNull(
             decodeNavHostState(
                 mapOf(
-                    "formatVersion" to 4,
+                    "formatVersion" to 5,
+                    "ownerScopeId" to "owner-scope",
                     "activeStackId" to "home",
                     "selectionHistory" to emptyList<String>(),
                     "stacks" to listOf(
@@ -139,7 +143,8 @@ class NavHostSavedStateTest {
         assertNull(
             decodeNavHostState(
                 mapOf(
-                    "formatVersion" to 4,
+                    "formatVersion" to 5,
+                    "ownerScopeId" to "owner-scope",
                     "activeStackId" to "home",
                     "selectionHistory" to emptyList<String>(),
                     "stacks" to listOf(
@@ -159,6 +164,26 @@ class NavHostSavedStateTest {
     }
 
     @Test
+    fun `decoder preserves version four state with a fresh retained owner identity`() {
+        val controller = createNavHostController(
+            startDestination = NavRoute("home"),
+            entryIdFactory = NavEntryIdFactory { NavEntryId("root") },
+        )
+        val legacy = encodeNavHostState(controller.stateForSave())
+            .toMutableMap()
+            .apply {
+                this["formatVersion"] = 4
+                remove("ownerScopeId")
+            }
+
+        val decoded = checkNotNull(decodeNavHostState(legacy))
+
+        assertEquals(controller.stackState, decoded.stackState)
+        assertEquals(null, decoded.destinationState)
+        assertEquals(true, decoded.ownerScopeId.value.isNotBlank())
+    }
+
+    @Test
     fun `controller saver falls back to start destination when restored state is corrupt`() {
         val startDestination = NavRoute(
             name = "safe-start",
@@ -169,7 +194,8 @@ class NavHostSavedStateTest {
 
         val restored = navHostControllerSaver(startDestination).restore(
             mapOf(
-                "formatVersion" to 4,
+                "formatVersion" to 5,
+                "ownerScopeId" to "owner-scope",
                 "activeStackId" to "default",
                 "selectionHistory" to emptyList<String>(),
                 "stacks" to listOf("not-a-stack"),
@@ -208,6 +234,7 @@ class NavHostSavedStateTest {
 
         val restored = navHostControllerSaver(configuration).restore(encoded)
 
+        assertEquals(controller.ownerScopeId, restored.ownerScopeId)
         assertEquals(SearchStack, restored.activeStackId)
         assertEquals(listOf(HomeStack), restored.stackState.selectionHistory)
         assertEquals("home-root", restored.stackSnapshot(HomeStack).top.id.value)

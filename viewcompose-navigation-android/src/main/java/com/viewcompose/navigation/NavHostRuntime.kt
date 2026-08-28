@@ -13,6 +13,7 @@ import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.UiLocalSnapshot
+import com.viewcompose.viewmodel.ViewModelScopeProvider
 
 /**
  * Full configuration snapshot passed from one NavHost composition commit into the runtime.
@@ -20,7 +21,7 @@ import com.viewcompose.ui.foundation.UiLocalSnapshot
 internal data class NavHostRuntimeConfig(
     val localSnapshot: UiLocalSnapshot,
     val lifecycleOwner: LifecycleOwner,
-    val parentViewModelStoreOwner: ViewModelStoreOwner? = null,
+    val parentViewModelStoreOwner: ViewModelStoreOwner,
     val transitionSpec: NavTransitionSpec,
     val panePolicy: NavPanePolicy,
     val systemBackEnabled: Boolean,
@@ -194,6 +195,7 @@ internal class NavHostRuntime private constructor(
             "A destroyed NavHost cannot save state."
         }
         return NavHostRestorableState(
+            ownerScopeId = controller.ownerScopeId,
             stackState = controller.backStackController.stackStateSnapshot(),
             destinationState = ownerStore.performSave(
                 retainedEntryIds = controller.backStackController.retainedEntries()
@@ -211,13 +213,16 @@ internal class NavHostRuntime private constructor(
         backAdapter.destroy()
         // Save owner state before destroying sessions; even destroy failures should return retained state.
         val retainedState = runCatching(::saveState)
+        val retainViewModelScopes = boundLifecycleOwner
+            ?.lifecycle
+            ?.currentState == Lifecycle.State.DESTROYED
         destroyed = true
         boundLifecycleOwner?.let { owner ->
             owner.lifecycle.removeObserver(lifecycleObserver)
         }
         boundLifecycleOwner = null
         try {
-            coordinator.destroy()
+            coordinator.destroy(retainViewModelScopes)
         } finally {
             try {
                 retainedState.getOrNull()?.let(controller::retainState)
@@ -358,6 +363,10 @@ internal class NavHostRuntime private constructor(
             )
             val ownerStore = NavEntryOwnerStore(
                 application = context.applicationContext as? Application,
+                viewModelScopeProvider = ViewModelScopeProvider(
+                    parentOwner = initialConfig.parentViewModelStoreOwner,
+                    providerKey = controller.ownerScopeId,
+                ),
                 restoredState = controller.destinationStateForHost(),
                 parentViewModelProviderFactory = viewModelDefaults.factory,
                 parentViewModelCreationExtras = viewModelDefaults.creationExtras,

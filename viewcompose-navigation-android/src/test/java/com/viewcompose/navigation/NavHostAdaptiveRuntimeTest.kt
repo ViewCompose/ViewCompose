@@ -46,6 +46,7 @@ class NavHostAdaptiveRuntimeTest {
         val config = NavHostRuntimeConfig(
             localSnapshot = captureUiLocalSnapshot(),
             lifecycleOwner = owner,
+            parentViewModelStoreOwner = NavigationTestParentViewModelStoreOwner(),
             transitionSpec = NavTransitionSpec.None,
             panePolicy = NavPanePolicy(
                 minPaneWidthDp = 100f,
@@ -202,6 +203,7 @@ class NavHostAdaptiveRuntimeTest {
         val config = NavHostRuntimeConfig(
             localSnapshot = captureUiLocalSnapshot(),
             lifecycleOwner = ResumedLifecycleOwner(),
+            parentViewModelStoreOwner = NavigationTestParentViewModelStoreOwner(),
             transitionSpec = NavTransitionSpec.None,
             panePolicy = NavPanePolicy(
                 minPaneWidthDp = 100f,

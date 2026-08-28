@@ -13,12 +13,14 @@ import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlan
 import com.viewcompose.navigation.core.NavLifecyclePlanner
+import com.viewcompose.viewmodel.ViewModelScopeProvider
 
 /**
  * Stores and reconciles lifecycle state for destination owners and graph owners.
  */
 internal class NavEntryOwnerStore(
     private val application: Application?,
+    private val viewModelScopeProvider: ViewModelScopeProvider,
     restoredState: Bundle? = null,
     private val parentViewModelProviderFactory: ViewModelProvider.Factory? = null,
     parentViewModelCreationExtras: CreationExtras = CreationExtras.Empty,
@@ -47,12 +49,9 @@ internal class NavEntryOwnerStore(
             }
             return existing
         }
-        return NavEntryOwner(
+        return createOwner(
             entry = entry,
-            application = application,
             restoredState = restoredOwnerStates.remove(entry.id),
-            parentViewModelProviderFactory = parentViewModelProviderFactory,
-            parentViewModelCreationExtras = inheritedCreationExtras,
         ).also { owner ->
             owners[entry.id] = owner
             ownerDepths[entry.id] = entry.graphEntries.size
@@ -83,15 +82,12 @@ internal class NavEntryOwnerStore(
             "Navigation graph entry ID ${entry.id} is already owned by a destination."
         }
         // Graph owners reuse NavEntryOwner as their Android delegate while exposing NavGraphEntry identity.
-        val delegate = NavEntryOwner(
+        val delegate = createOwner(
             entry = NavEntry(
                 id = entry.id,
                 route = entry.route,
             ),
-            application = application,
             restoredState = restoredOwnerStates.remove(entry.id),
-            parentViewModelProviderFactory = parentViewModelProviderFactory,
-            parentViewModelCreationExtras = inheritedCreationExtras,
         )
         return NavGraphOwner(
             entry = entry,
@@ -171,6 +167,9 @@ internal class NavEntryOwnerStore(
                 }
             }
         orderedTransitions.forEach { transition ->
+            if (transition.to == NavEntryLifecycleState.Destroyed) {
+                viewModelScopeProvider.clear(transition.entryId)
+            }
             checkNotNull(owners[transition.entryId]) {
                 "Lifecycle plan referenced unknown navigation entry ${transition.entryId}."
             }.moveTo(transition.to)
@@ -185,6 +184,7 @@ internal class NavEntryOwnerStore(
             restoredOwnerStates.remove(entryId)
         }
         if (hostState == NavHostLifecycleState.Destroyed) {
+            viewModelScopeProvider.clearAll()
             destroyed = true
             restoredOwnerStates.clear()
         }
@@ -197,6 +197,7 @@ internal class NavEntryOwnerStore(
     @MainThread
     fun remove(entryId: NavEntryId) {
         restoredOwnerStates.remove(entryId)
+        viewModelScopeProvider.clear(entryId)
         owners.remove(entryId)?.moveTo(NavEntryLifecycleState.Destroyed)
         graphOwners.remove(entryId)
         ownerDepths.remove(entryId)
@@ -227,9 +228,12 @@ internal class NavEntryOwnerStore(
     }
 
     @MainThread
-    fun destroy() {
+    fun destroy(retainViewModelScopes: Boolean = false) {
         if (destroyed) {
             return
+        }
+        if (!retainViewModelScopes) {
+            viewModelScopeProvider.clearAll()
         }
         owners.values.toList().asReversed().forEach { owner ->
             owner.moveTo(NavEntryLifecycleState.Destroyed)
@@ -239,6 +243,30 @@ internal class NavEntryOwnerStore(
         ownerDepths.clear()
         restoredOwnerStates.clear()
         destroyed = true
+    }
+
+    private fun createOwner(
+        entry: NavEntry,
+        restoredState: Bundle?,
+    ): NavEntryOwner {
+        val owner = NavEntryOwner(
+            entry = entry,
+            application = application,
+            restoredState = restoredState,
+            parentViewModelProviderFactory = parentViewModelProviderFactory,
+            parentViewModelCreationExtras = inheritedCreationExtras,
+        )
+        val lease = try {
+            viewModelScopeProvider.acquireOwner(
+                key = entry.id,
+                savedStateRegistryOwner = owner,
+            )
+        } catch (failure: Throwable) {
+            owner.moveTo(NavEntryLifecycleState.Destroyed)
+            throw failure
+        }
+        owner.bindViewModelStoreOwnerLease(lease)
+        return owner
     }
 }
 

@@ -133,7 +133,7 @@ class NavEntryOwnerTest {
             restoredState = null,
             parentViewModelProviderFactory = factory,
             parentViewModelCreationExtras = parentExtras,
-        )
+        ).bindNavigationTestViewModelScope()
         owner.moveTo(NavEntryLifecycleState.Created)
 
         val viewModel = owner.viewModel<InheritedExtrasViewModel>("inherited")
@@ -169,7 +169,7 @@ class NavEntryOwnerTest {
             restoredState = null,
             parentViewModelProviderFactory = factory,
             parentViewModelCreationExtras = parentExtras,
-        )
+        ).bindNavigationTestViewModelScope()
         first.moveTo(NavEntryLifecycleState.Created)
         first.viewModel<InheritedSavedStateViewModel>("editor-vm").handle["cursor"] = 19
         val saved = first.performSave()
@@ -181,7 +181,7 @@ class NavEntryOwnerTest {
             restoredState = saved,
             parentViewModelProviderFactory = factory,
             parentViewModelCreationExtras = parentExtras,
-        )
+        ).bindNavigationTestViewModelScope()
         restored.moveTo(NavEntryLifecycleState.Created)
         val restoredViewModel = restored.viewModel<InheritedSavedStateViewModel>("editor-vm")
 
@@ -210,12 +210,14 @@ class NavEntryOwnerTest {
 
     @Test
     fun `destroy clears ViewModelStore exactly once`() {
-        val owner = owner(entry("root", "home"))
+        val entry = entry("root", "home")
+        val store = navigationTestOwnerStore(RuntimeEnvironment.getApplication())
+        val owner = store.ownerFor(entry)
         owner.moveTo(NavEntryLifecycleState.Created)
         val viewModel = owner.viewModel<ClearedViewModel>("cleared-vm")
 
-        owner.moveTo(NavEntryLifecycleState.Destroyed)
-        owner.moveTo(NavEntryLifecycleState.Destroyed)
+        store.remove(entry.id)
+        store.remove(entry.id)
 
         assertTrue(viewModel.cleared)
         assertEquals(1, viewModel.clearCount)
@@ -302,7 +304,7 @@ class NavEntryOwnerTest {
             entry = entry,
             application = RuntimeEnvironment.getApplication(),
             restoredState = restoredState,
-        )
+        ).bindNavigationTestViewModelScope()
     }
 
     private fun entry(

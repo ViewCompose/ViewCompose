@@ -22,6 +22,7 @@ import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import java.util.ArrayDeque
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -147,13 +148,15 @@ class AndroidNavHostBackAdapterTest {
         )
         val session = renderInto(root) {
             ProvideLifecycleOwner(owner) {
-                NavHost(
-                    controller = controller,
-                    transitionSpec = NavTransitionSpec.None,
-                    systemBackEnabled = systemBackEnabled,
-                    overlayHostFactory = { OverlayHostDefaults.noOp },
-                ) { entry ->
-                    Text(entry.route.name)
+                ProvideViewModelStoreOwner(NavigationTestParentViewModelStoreOwner()) {
+                    NavHost(
+                        controller = controller,
+                        transitionSpec = NavTransitionSpec.None,
+                        systemBackEnabled = systemBackEnabled,
+                        overlayHostFactory = { OverlayHostDefaults.noOp },
+                    ) { entry ->
+                        Text(entry.route.name)
+                    }
                 }
             }
         }

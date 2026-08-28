@@ -287,7 +287,7 @@ internal class NavDestinationSessionStore(
     }
 
     @MainThread
-    fun destroy() {
+    fun destroy(retainViewModelScopes: Boolean = false) {
         if (destroyed) {
             return
         }
@@ -307,7 +307,7 @@ internal class NavDestinationSessionStore(
         }
         sessions.clear()
         try {
-            ownerStore.destroy()
+            ownerStore.destroy(retainViewModelScopes)
         } catch (throwable: Throwable) {
             failures += throwable
         } finally {
