@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: be3d16eabfc2d33a53b8932bcfbf5f0243bd7325df5f32c5d9cd238c9bab69b4
+translation_source_hash: 28e215c8e9db3841a6df3245d3c2d84e6df760d7af0d390c9e152d7515b1f299
 translation_status: current
 ---
 
@@ -210,6 +210,19 @@ P95 为 `20 min 41 s`，比 Phase 0 低 `16.2%`，完整路径没有回退。范
 **improved**，正确性为 **no material change**。PR #196 因修改模块构建脚本继续使用
 `affected-with-shadow`；生产源码、普通测试、代码删除/重命名、敏感工具和未知路径也不进入本次硬切。
 上线后首个符合条件的托管运行仍须记录实际硬切时延。
+
+第一组硬切后控制窗口（#219--#223）没有出现符合条件的无 Shadow `affected` 运行。#219 只修改
+激活计划并正确选择 `skip`；从工作流创建到 `qaQuick` 门面完成用时 `70 s`，文档门面以
+`6 min 29 s` 完成，比可比较的 #216 `skip` 观察减少 `24 s`（`-5.8%`），成功结论一致，时延为
+**no material change**。#220--#223 分别因共享质量/站点工具、发布构建逻辑，以及发布或文档历史
+元数据而正确选择 `complete`。四次完整 Gradle `qaQuick` 分别为 `13 min 2 s`、`16 min 53 s`、
+`16 min 11 s` 和 `15 min 2 s`；近邻秩 P50/P95 为 `15 min 2 s`/`16 min 53 s`，比 Phase 0
+执行对照低 `33.8%`/`31.6%`。必需端到端关键路径分别为 `15 min 15 s`、`24 min 33 s`、
+`18 min 3 s` 和 `16 min 55 s`，P50/P95 为 `16 min 55 s`/`24 min 33 s`，比 Phase 0 低
+`29.9%`/`45.2%`。所有门禁和必需门面均通过。安全性保持 **no material change**，这组小型、
+异构的完整路径样本相较 Phase 0 为 **improved**；由于目标类别运行数为零，实际无 Shadow 时延仍
+为 **inconclusive**。这五个同日且偏重发布的变更只是控制证据，不能代表变更类别分布。继续等待
+自然出现的文档/Tutorial-sample 或模块文档/编译样例 PR；不得仅为制造观察数据而修改样例。
 
 所有调用 Gradle 的工作流都由 `gradle/actions/setup-gradle` 单独负责 Gradle User Home 缓存。
 `actions/setup-java` 只安装所需 JDK，不再另行缓存 Gradle。每个 `setup-gradle` 都显式设置

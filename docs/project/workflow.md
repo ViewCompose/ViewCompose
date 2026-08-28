@@ -227,6 +227,23 @@ remains `affected-with-shadow` because it changed a module build script, and pro
 ordinary tests, code deletion/rename, sensitive tooling, and unrecognized paths remain outside this
 hard cut. The first eligible hosted run after rollout must still record actual post-cut timing.
 
+The first post-cut control window (#219--#223) produced no eligible no-shadow `affected` run. #219
+changed only the active plan and correctly selected `skip`; the `qaQuick` facade completed `70 s`
+after workflow creation and the documentation facade completed in `6 min 29 s`, `24 s` (`-5.8%`)
+below the comparable #216 skip observation, a **no material change** latency result with matching
+success. #220--#223 correctly selected `complete` for shared quality/site tooling, publishing build
+logic, and release or documentation-history metadata. Their complete Gradle `qaQuick` steps were
+`13 min 2 s`, `16 min 53 s`, `16 min 11 s`, and `15 min 2 s`; nearest-rank P50/P95 are
+`15 min 2 s`/`16 min 53 s`, `33.8%`/`31.6%` below the Phase 0 execution comparator. Required
+end-to-end critical paths were `15 min 15 s`, `24 min 33 s`, `18 min 3 s`, and `16 min 55 s`, so
+P50/P95 are `16 min 55 s`/`24 min 33 s`, `29.9%`/`45.2%` below Phase 0. Every gate and required
+facade passed. Safety remains **no material change** and the small heterogeneous complete-path
+sample is **improved** relative to Phase 0; actual no-shadow latency remains **inconclusive** because
+the window contains no target-class run. These five same-day, release-heavy changes are control
+evidence rather than a representative distribution. Wait for a naturally eligible documentation/
+Tutorial-sample or module-documentation/compiled-sample pull request; do not alter samples only to
+produce an observation.
+
 `gradle/actions/setup-gradle` is the sole owner of Gradle User Home caching in every workflow that
 invokes Gradle. `actions/setup-java` installs the required JDK but does not separately cache
 Gradle. Every `setup-gradle` use explicitly sets `cache-read-only` for any ref other than the
