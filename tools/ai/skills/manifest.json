@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "workflowSetId": "viewcompose-consumer-skills-v1",
+  "versionLane": "current-source",
+  "sharedInvariants": [
+    "select-exact-framework-identity",
+    "retrieve-before-writing",
+    "never-fabricate-api",
+    "never-upgrade-evidence-implicitly",
+    "stop-on-repeated-diagnostic-without-new-evidence",
+    "preserve-user-mutation-authority"
+  ],
+  "skills": [
+    {
+      "id": "viewcompose-api-reference",
+      "path": "skills/viewcompose-api-reference/SKILL.md",
+      "requiredTools": [
+        "get_api_reference",
+        "get_component_reference",
+        "search_component",
+        "get_sample"
+      ],
+      "conditionalTools": [],
+      "minimumEvidence": "knowledge",
+      "maximumEvidence": "knowledge",
+      "mutationPolicy": "read-only"
+    },
+    {
+      "id": "viewcompose-create-screen",
+      "path": "skills/viewcompose-create-screen/SKILL.md",
+      "requiredTools": [
+        "search_component",
+        "get_component_reference",
+        "get_sample",
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "analyze_project",
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "minimumEvidence": "compiled",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "user-requested-project-writes"
+    },
+    {
+      "id": "viewcompose-review",
+      "path": "skills/viewcompose-review/SKILL.md",
+      "requiredTools": [
+        "get_api_reference",
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "get_component_reference",
+        "get_sample",
+        "analyze_project"
+      ],
+      "minimumEvidence": "static",
+      "maximumEvidence": "compiled",
+      "mutationPolicy": "read-only-unless-fix-requested"
+    },
+    {
+      "id": "viewcompose-debug-layout",
+      "path": "skills/viewcompose-debug-layout/SKILL.md",
+      "requiredTools": [
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "conditionalTools": [
+        "get_component_reference",
+        "get_sample",
+        "validate_code"
+      ],
+      "minimumEvidence": "rendered",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "read-only-unless-fix-requested"
+    },
+    {
+      "id": "viewcompose-validate",
+      "path": "skills/viewcompose-validate/SKILL.md",
+      "requiredTools": [
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "minimumEvidence": "compiled",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "read-only"
+    }
+  ]
+}

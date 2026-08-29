@@ -15,6 +15,7 @@
     "verify:phase2-static": "node scripts/verify-phase2-static.mjs",
     "verify:phase3-retrieval": "node scripts/verify-phase3-retrieval.mjs",
     "verify:phase3-layout": "node scripts/verify-phase3-layout.mjs",
+    "verify:phase3-workflows": "node scripts/verify-phase3-workflows.mjs",
     "verify:phase3-mcp": "node scripts/verify-phase3-mcp.mjs"
   }
 }

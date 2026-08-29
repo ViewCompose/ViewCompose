@@ -182,6 +182,36 @@ stdio boundary accepts at most 4 MiB per message and four concurrent calls, writ
 stdout, uses content-free stderr diagnostics, and opens no socket. The current server is still an
 internal repository tool rather than an installed or semantically versioned distribution.
 
+## Consumer Agent workflows
+
+Five client-neutral consumer skills live below `skills/`:
+
+- `viewcompose-api-reference` retrieves exact APIs and compiled samples without writing files.
+- `viewcompose-create-screen` retrieves before implementation and requires compile-backed delivery.
+- `viewcompose-review` keeps review read-only unless the caller also asks for a fix.
+- `viewcompose-debug-layout` uses only allowlisted Preview and structured layout evidence.
+- `viewcompose-validate` requires hermetic compilation and renders only covered allowlisted targets.
+
+Each folder is independently installable and contains only `SKILL.md`; the repository does not add
+provider-specific metadata or root aliases. `skills/manifest.json` freezes required and conditional
+tools, evidence bounds, mutation policy, exact version selection, and the repeated-diagnostic stop
+condition. These skills orchestrate the existing deterministic tools; they do not contain a second
+API reference, execute a project-selected build, add conversion claims, or grant project writes
+beyond the user's request.
+
+Run the workflow contract gate with:
+
+```bash
+npm --prefix tools/ai run verify:phase3-workflows
+./gradlew verifyAiConsumerWorkflows
+```
+
+The gate checks the frozen five-workflow denominator, known tool names, evidence ordering, stable
+skill paths and frontmatter, safety boundaries, path containment, provider neutrality, and a 16 KiB
+entrypoint limit. This source tree is not yet an installed distribution; installation, checksums,
+SBOM/license review, uninstallation, and client compatibility evidence belong to the packaging
+slice.
+
 ## Version lanes
 
 - `current-source` identifies one exact repository revision and is never a synonym for latest.

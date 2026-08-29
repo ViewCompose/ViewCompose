@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Publish client-neutral consumer Agent skills over the accepted eight-tool CLI/MCP core, then add installable packaging and compatibility evidence.
+next_action: Package the accepted eight-tool server and five consumer skills with checksums, SBOM/license review, installation/uninstallation, offline, and client compatibility evidence.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -49,13 +49,13 @@ Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 can
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
 static validation, pinned compilation, Preview evidence, read-only project findings, and internal
 CLI foundations are complete. Phase 3 deterministic Knowledge Bundle retrieval, its CLI surface,
-dual-era stdio MCP, and deterministic Preview layout diagnosis are complete; packaging and consumer
-Agent workflows remain active.
+dual-era stdio MCP, deterministic Preview layout diagnosis, and five client-neutral consumer Agent
+workflows are complete; installable packaging remains active.
 
 Last verified: 2026-08-29.
 
-Next action: publish client-neutral consumer Agent skills over the accepted eight-tool CLI/MCP
-core, then add installable packaging and compatibility evidence.
+Next action: package the accepted eight-tool server and five consumer skills with checksums,
+SBOM/license review, installation/uninstallation, offline, and client compatibility evidence.
 
 ## Maven release changesets
 
@@ -714,9 +714,40 @@ remains isolated downstream tooling.
 
 Limitations: only one allowlisted Counter Preview target and one labeled layout-diagnosis fixture
 are accepted today. The tool reports renderer-owned layout facts, not arbitrary snippet rendering,
-pixel comparison, accessibility conformance, overlap detection, or automatic repair. The next
-action is to publish client-neutral consumer workflows over the accepted eight-tool core, then add
-installable packaging and compatibility evidence.
+pixel comparison, accessibility conformance, overlap detection, or automatic repair. At this
+slice, the next action was to publish the client-neutral consumer workflows implemented below.
+
+### Implementation evidence — client-neutral consumer workflow slice
+
+The fourth Phase 3 slice publishes five independently installable `SKILL.md` entrypoints for exact
+API reference, screen creation, review, layout debugging, and delivery validation. They orchestrate
+the accepted eight-tool core instead of copying framework APIs into prompt text. A machine-readable
+manifest freezes each workflow's required and conditional tools, minimum and maximum evidence,
+mutation policy, exact version selection, and repeated-diagnostic stop condition against the
+pre-implementation corpus.
+
+The entrypoints keep retrieval separate from proof: screen creation requires hermetic compilation;
+review remains read-only unless a fix is also requested; layout debugging can use only an
+allowlisted Preview that covers the affected code; and validation cannot turn a static pass into a
+compiled or rendered claim. No provider-specific metadata or root alias was added, and no skill
+grants project writes beyond the user's request. The deterministic gate rejects unknown tools,
+evidence upgrades above rendered, manifest or folder drift, symbolic-link/path escape, oversized
+entrypoints, missing safety boundaries, local absolute paths, and provider-specific instructions.
+
+On 2026-08-29, the skill-creator structural validator accepted all five entrypoints. Node 25.6.0
+passed 73/73 AI-tooling tests in 1.30 seconds, and the frozen workflow gate matched 5/5 contracts
+for an exact-match ratio of 1.00 against the required 1.00 threshold. The compiled quality-build
+suite passed all tests in 8 seconds. The root `qaQuick` lifecycle executed the new gate and
+completed 2,275 tasks (2,185 executed and 90 up-to-date) in 6 minutes 49 seconds. Compared with ad
+hoc prompting, the repository now provides bounded, evidence-aware consumer procedures that
+preserve review versus mutation authority; the conclusion is **improved** workflow reproducibility
+with **no material runtime change** because the skills and verifier remain downstream tooling.
+
+Limitations: deterministic structure checks prove contract presence, not that every model/client
+will follow the workflow correctly. No provider adapter, installed distribution, checksum, SBOM,
+license inventory, uninstall path, offline installation test, or client compatibility matrix is
+claimed yet. The next action is the packaging and compatibility slice for the eight-tool server and
+five consumer skills.
 
 ### Acceptance gate
 

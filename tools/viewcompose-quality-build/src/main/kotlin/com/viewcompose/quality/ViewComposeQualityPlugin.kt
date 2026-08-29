@@ -589,6 +589,27 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiConsumerWorkflows") {
+            group = "verification"
+            description =
+                "Verifies client-neutral ViewCompose consumer skills and evidence workflows."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-workflows")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "evaluation/fixtures/workflows/**/*.json",
+                        "evaluation/metrics.json",
+                        "skills/**/*.json",
+                        "skills/**/SKILL.md",
+                        "scripts/consumer-workflows.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/verify-phase3-workflows.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =
