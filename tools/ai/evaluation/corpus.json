@@ -188,6 +188,20 @@
       "metricIds": ["layout.diagnosis-exactness"]
     },
     {
+      "id": "workflow.consumer-skill-contracts",
+      "phase": 3,
+      "category": "protocol",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/workflows/consumer-skills.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": ["workflow.contract-completeness"]
+    },
+    {
       "id": "xml.supported-login-layout",
       "phase": 4,
       "category": "xml-migration",

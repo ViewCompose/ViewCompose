@@ -587,6 +587,12 @@ snapshot containing non-expected partial clipping and intentional text ellipsis.
 interpret renderer-produced facts, but it may not infer geometry from source or silently add
 model-derived findings to that denominator.
 
+Before publishing consumer skills, the corpus also freezes five distinct workflows for exact API
+reference, screen creation, review, layout debugging, and delivery validation. Their required and
+conditional tools, minimum and maximum evidence, mutation authority, shared stop condition, and
+exact `current-source` selection form the denominator for `workflow.contract-completeness`, whose
+required exact-match ratio is 1.00.
+
 ### Additional deliverables
 
 1. A local stdio MCP server with per-request version metadata, capability discovery, explicit

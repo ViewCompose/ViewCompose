@@ -120,6 +120,15 @@
       "environment": "accepted Preview protocol v1 layout diagnostics with fixed code mapping"
     },
     {
+      "id": "workflow.contract-completeness",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "checked-in client-neutral skill manifest against the frozen workflow set"
+    },
+    {
       "id": "xml.supported-compile",
       "phase": 4,
       "measure": "success_ratio",
