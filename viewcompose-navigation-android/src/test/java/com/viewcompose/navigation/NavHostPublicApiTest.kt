@@ -7,6 +7,7 @@ package com.viewcompose.navigation
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Looper
 import android.os.Parcelable
 import android.widget.FrameLayout
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
@@ -31,6 +32,7 @@ import com.viewcompose.navigation.core.NavDeepLink
 import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
 import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackConfiguration
@@ -60,9 +62,36 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class NavHostPublicApiTest {
+    @Test
+    fun `result pop resumes previous destination and consumes its FIFO inbox once`() {
+        val resultKey = NavResultKey.text("selection")
+        val received = mutableListOf<String>()
+        var homeContext: NavDestinationContext? = null
+        val controller = deterministicController()
+        val fixture = renderPublicHost(controller = controller) { entry ->
+            if (entry.route.name == "home") {
+                homeContext = checkNotNull(LocalNavDestinationContext.current)
+                NavResultEffect(resultKey, received::add)
+            }
+            Text(entry.route.name)
+        }
+
+        controller.navigate(NavRoute("details"))
+        val result = controller.popBackStack(resultKey, "primary")
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue(result is NavResult.Committed)
+        assertEquals(listOf("primary"), received)
+        assertEquals(0, checkNotNull(homeContext).results.pendingCount)
+        fixture.session.render()
+        assertEquals(listOf("primary"), received)
+        fixture.session.dispose()
+    }
+
     @Test
     fun `destination context survives hidden presentation disposal and recreation`() {
         val contexts = mutableMapOf<String, NavDestinationContext>()

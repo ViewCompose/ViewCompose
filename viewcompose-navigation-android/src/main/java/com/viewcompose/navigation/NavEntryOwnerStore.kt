@@ -14,6 +14,7 @@ import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlan
 import com.viewcompose.navigation.core.NavLifecyclePlanner
+import com.viewcompose.navigation.core.NavResultDelivery
 import com.viewcompose.navigation.core.NavScene
 import com.viewcompose.viewmodel.ViewModelScopeProvider
 
@@ -106,6 +107,16 @@ internal class NavEntryOwnerStore(
 
     @MainThread
     fun graphOwnerOrNull(entryId: NavEntryId): NavGraphOwner? = graphOwners[entryId]
+
+    @MainThread
+    fun deliverResult(delivery: NavResultDelivery) {
+        check(!destroyed) {
+            "A destroyed navigation entry owner store cannot deliver results."
+        }
+        checkNotNull(owners[delivery.targetEntryId]) {
+            "Navigation result targets unknown entry ${delivery.targetEntryId}."
+        }.destinationContext.results.deliver(delivery)
+    }
 
     @MainThread
     fun currentLifecycleStates(): Map<NavEntryId, NavEntryLifecycleState> {

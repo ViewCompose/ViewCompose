@@ -165,6 +165,7 @@ internal class AndroidNavExecutionPlanExecutor(
             accessibilityEntryIds = plan.accessibilityEntryIds,
         )
         ownerStore.execute(plan)
+        plan.resultDelivery?.let(ownerStore::deliverResult)
         if (plan.pauseRenderingEntryIds.isNotEmpty()) {
             sessionStore.setRenderingActive(
                 entryIds = plan.pauseRenderingEntryIds,
