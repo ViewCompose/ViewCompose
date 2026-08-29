@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
   "impact_id": "impact.navigation-result-context",
-  "change": "modified",
+  "change": "changed",
   "breaking": false,
   "artifact": "viewcompose-navigation-android",
-  "symbol_id": "com.viewcompose.navigation.NavDestinationContext.results",
-  "capability_id": "navigation.results",
+  "symbol_id": "com.viewcompose.navigation.NavDestinationContext",
+  "capability_id": "navigation.destination-context",
   "q_level": "Q3",
   "contract_fields": [
     "behavior",
@@ -18,10 +18,10 @@
     "compatibility"
   ],
   "documentation": {
-    "kdoc": { "status": "updated", "targets": ["com.viewcompose.navigation.NavDestinationContext.results"] },
+    "kdoc": { "status": "updated", "targets": ["com.viewcompose.navigation.NavDestinationContext"] },
     "module": { "status": "updated", "targets": ["module.viewcompose-navigation-android"] },
     "sample": { "status": "updated", "targets": ["module.navigation-android-results"] },
-    "reference": { "status": "updated", "targets": ["reference.navigation.results"] },
+    "reference": { "status": "updated", "targets": ["reference.navigation.destination-context"] },
     "tutorial": {
       "status": "not-applicable",
       "rationale": "The introductory navigation tutorial does not inspect destination-local return state."

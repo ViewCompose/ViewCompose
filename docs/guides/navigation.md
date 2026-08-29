@@ -11,17 +11,21 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
+  - navigation.results
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-android-results
   - module.navigation-core-execution-plan
   - tutorial.navigation
 task: Configure one production NavHost with restoration, system Back, and explicit failure handling.
 success_checks:
   - Destination state survives host recreation and valid process-state restoration.
   - Programmatic and system Back operations observe the same committed stack.
+  - A result pop reaches the surviving destination once and only after it resumes.
   - Failed destination preparation preserves the previously visible destination.
   - Hidden presentation resources follow one explicit bounded retention policy without clearing entry state.
   - Destination content observes the nearest stable entry context without treating transition progress as lifecycle.
@@ -74,6 +78,14 @@ Call `popBackStack` for an in-UI Back action. System Back and predictive Back th
 transaction boundary. Predictive Back previews the previous destination without publishing the
 candidate stack; cancellation restores the committed scene, while completion commits through the
 same path as a programmatic pop.
+
+For a page-owned selection or edit result, declare one stable `NavResultKey`, call
+`popBackStack(key, value)` from the top page, and observe it with `NavResultEffect` in the previous
+page. Delivery is part of the successful pop transaction, persists in the target entry's saved
+state, follows FIFO order, and waits for the target destination Lifecycle to reach `RESUMED`.
+The effect consumes before invoking the callback for at-most-once behavior. Use
+`LocalNavDestinationContext.current.results.peek/consume` instead when application-level retry is
+required. Do not use results as a global event bus or for arbitrary cross-stack addressing.
 
 ## Keep route rendering exhaustive
 

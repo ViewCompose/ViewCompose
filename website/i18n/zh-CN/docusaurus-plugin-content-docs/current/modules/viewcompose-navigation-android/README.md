@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 646621ef1173f055e23012e7badc4743fb681c13a3085b465fcf34f3d5c6cd36
+translation_source_hash: 54592a96ed605ab1314d7c83d79740b2556dafab1d5e36d53c464808c34942c8
 translation_status: current
 ---
 
@@ -118,6 +118,39 @@ Local。同一个 Retained Entry 的 Holder 可跨隐藏 Presentation 的释放�
 Role 或 Transition Role 等粗粒度 UI 决策才使用 Destination Presentation。普通与 Predictive
 动画进度被刻意排除，因此反复的逐帧 Progress 不会使普通 Destination 内容失效。嵌套 Host 会提供
 各自最近的 Context；框架不存在全局 Current Page 查询。
+
+## 向上一页返回结果
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-results" sample_id="module.navigation-android-results" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+val SelectedItemResult = NavResultKey.text("catalog.selection")
+
+fun UiTreeBuilder.navigationResultSample(
+    controller: NavHostController,
+    onSelected: (String) -> Unit,
+) {
+    NavHost(controller = controller) { entry ->
+        when (entry.route.name) {
+            "home" -> {
+                NavResultEffect(SelectedItemResult, onSelected)
+                Text("Home")
+            }
+            "details" -> Text("Details")
+        }
+    }
+}
+
+fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult {
+    return controller.popBackStack(SelectedItemResult, itemId)
+}
+```
+
+带结果 Pop 会先提交栈，再把 Payload 放入仍存活 Entry 的队列。每个保留 Entry 持有一份由
+Saved State 支撑的 FIFO Inbox，并通过 `NavDestinationContext.results` 提供显式 `peek`/`consume`
+控制。`NavResultEffect` 使用 DSL 中同一个最近 Destination `LocalLifecycleOwner`；只有 Owner 到达
+`RESUMED` 且一次成功渲染进入 Side-effect 阶段后，才消费一个匹配值。消费语义是 At-most-once；
+若业务 Callback 失败后必须重试，应直接使用 Inbox API。Result Key 是局部 Entry 契约，不存在
+进程全局总线、跨栈寻址或 Predictive Back 带结果 Pop。
 
 ## 展示保留策略
 

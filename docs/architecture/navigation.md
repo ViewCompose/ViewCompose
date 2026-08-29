@@ -11,6 +11,8 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
+  - navigation.results
   - navigation.scene-projection
   - viewmodel.owner-boundaries
   - viewmodel.scoped-owners
@@ -20,6 +22,7 @@ artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-core-results
   - module.navigation-core-execution-plan
   - tutorial.navigation
 invariants:
@@ -27,6 +30,7 @@ invariants:
   - Each retained destination and graph instance keeps stable lifecycle, saved-state, and ViewModel ownership independently of optional presentation retention.
   - Navigation entry and graph stores are allocated only by the shared Lifecycle 2.11 scoped-owner provider.
   - Visual transitions and predictive Back never become a second source of navigation state.
+  - A returned page value is published only by its successful pop transaction to the surviving entry.
   - Restored state is accepted only when it remains compatible with the current graph and stack configuration.
 evidence:
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt
@@ -74,6 +78,13 @@ After the stack commits, visual motion may be completed, cancelled, or redirecte
 undo application state. Every terminal visual path settles on the committed target. A failure in a
 post-commit effect is reported with `stackCommitted = true`; the host never pretends that the old
 stack is still authoritative.
+
+A page result is stack mutation data, not an independent event. Core attaches one typed payload to
+`PopWithResult`; the execution plan addresses only the surviving `after.top` identity. Android
+publishes it after commit into that entry's saved FIFO inbox. The destination DSL consumes through
+its nearest standard Lifecycle only at `RESUMED`, so retained or transitioning pages cannot act on
+the value early. Transaction IDs suppress executor replay. There is deliberately no global bus,
+arbitrary entry address, callback in Core, or separate page-lifecycle machine.
 
 ## 3. Unified execution plan
 

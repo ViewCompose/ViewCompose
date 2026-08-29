@@ -19,6 +19,7 @@ import com.viewcompose.navigation.core.NavPaneScene
 import com.viewcompose.navigation.core.NavPreparation
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavRootBackBehavior
+import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavScene
 import com.viewcompose.navigation.core.NavSceneEntry
 import com.viewcompose.navigation.core.NavSceneInteraction
@@ -156,6 +157,22 @@ when (val preparation = controller.prepare(NavCommand.Push(NavRoute("details")))
     }
 }
     // DOCS_REGION_END(navigation-core-transaction)
+}
+
+fun navigationResultTransactionSample() {
+    val controller = NavBackStackController.create(NavRoute("home"))
+    val push = controller.prepare(NavCommand.Push(NavRoute("details"))) as NavPreparation.Ready
+    push.transaction.commit()
+
+    // DOCS_REGION_START(navigation-core-results)
+val selectedItem = NavResultKey.text("catalog.selection")
+val preparation = controller.prepare(
+    NavCommand.PopWithResult(selectedItem.encode("item-42")),
+)
+val transaction = (preparation as NavPreparation.Ready).transaction
+check(transaction.after.top.route.name == "home")
+transaction.commit()
+    // DOCS_REGION_END(navigation-core-results)
 }
 
 fun retainedStacksSample() {

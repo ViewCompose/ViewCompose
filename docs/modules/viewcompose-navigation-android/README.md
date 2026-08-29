@@ -11,6 +11,8 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
+  - navigation.results
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-android
@@ -21,6 +23,7 @@ sample_ids:
   - module.navigation-android-host
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
+  - module.navigation-android-results
 coordinate: com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02
 minimal_usage_sample_id: module.navigation-android-dependency
 ---
@@ -149,6 +152,41 @@ activation. Use destination presentation only for coarse UI decisions such as vi
 covered, pane role, or transition role. Predictive and ordinary animation progress is deliberately
 absent, so repeated frame progress cannot invalidate ordinary destination content. Nested hosts
 provide their own nearest context; there is no global current-page lookup.
+
+## Return a result to the previous page
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-results" sample_id="module.navigation-android-results" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+val SelectedItemResult = NavResultKey.text("catalog.selection")
+
+fun UiTreeBuilder.navigationResultSample(
+    controller: NavHostController,
+    onSelected: (String) -> Unit,
+) {
+    NavHost(controller = controller) { entry ->
+        when (entry.route.name) {
+            "home" -> {
+                NavResultEffect(SelectedItemResult, onSelected)
+                Text("Home")
+            }
+            "details" -> Text("Details")
+        }
+    }
+}
+
+fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult {
+    return controller.popBackStack(SelectedItemResult, itemId)
+}
+```
+
+The result pop commits the stack before enqueueing the payload on the surviving entry. Each
+retained entry owns one saved-state-backed FIFO inbox, exposed as
+`NavDestinationContext.results` for explicit `peek`/`consume` control. `NavResultEffect` uses the
+same nearest destination `LocalLifecycleOwner` as the rest of the DSL; it consumes one matching
+value only after that owner is `RESUMED` and a successful render reaches its side-effect phase.
+Consumption is at-most-once, so use the inbox API when a failed application callback must be
+retried. Result keys are local entry contracts: there is no process-global bus, cross-stack
+addressing, or predictive-Back result pop.
 
 ## Presentation retention
 

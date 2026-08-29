@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: 18ca5c395f8a5da63b739b97919752cc1a2827dabd0db4dd82567a26dde04826
+translation_source_hash: 26d778ff69491b405bdc15bf47b1daece6741038056a5478073a514fdd0fc996
 translation_status: current
 ---
 
@@ -33,6 +33,12 @@ Android Host 准备 Destination Owner 和子 RenderSession，在暂存原生容�
 栈提交后，视觉 Motion 可以完成、取消或重定向，但不能撤销应用状态。所有视觉终态都会收敛
 到已提交目标。提交后 Effect 失败会以 `stackCommitted = true` 上报；Host 不会假装旧栈仍是
 权威状态。
+
+页面结果属于栈 Mutation 数据，而不是独立事件。Core 在 `PopWithResult` 上附带一个类型化
+Payload，Execution Plan 只寻址仍存活的 `after.top` Identity。Android 在提交后把它写入该 Entry
+由 Saved State 支撑的 FIFO Inbox。Destination DSL 只通过最近的标准 Lifecycle 在 `RESUMED`
+时消费，因此被保留或仍在转场的页面不会提前处理结果。Transaction ID 会抑制 Executor 重放。
+设计上不存在全局总线、任意 Entry 寻址、Core Callback 或第二套页面 Lifecycle 状态机。
 
 ## 3. 统一 Execution Plan
 

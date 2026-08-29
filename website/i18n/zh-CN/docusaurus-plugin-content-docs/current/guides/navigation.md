@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: bdf8d8c3fdd02b7d6c70bc8fa9076ae667a4cfc10107cc4366fe1e7fdcdb2074
+translation_source_hash: 6f8b9ed23c459a0d6bd9ccc114e45653839de9f796ffdd533954036605b3b026
 translation_status: current
 ---
 
@@ -41,6 +41,13 @@ Destination 自有 SavedState。
 界面内返回按钮调用 `popBackStack`。系统返回和 Predictive Back 就会使用同一事务边界。
 Predictive Back 在不发布候选栈的前提下预览上一目标页；取消时恢复已提交 Scene，完成时则走
 与程序化 Pop 相同的路径提交。
+
+页面选择或编辑结果应声明一个稳定 `NavResultKey`，在栈顶页面调用 `popBackStack(key, value)`，
+并在上一页通过 `NavResultEffect` 观察。交付属于成功 Pop 事务，保存在目标 Entry 的 Saved State
+中，按 FIFO 排序，并等待目标 Destination Lifecycle 到达 `RESUMED`。Effect 会先消费再调用
+Callback，以提供 At-most-once 语义；业务需要失败重试时，改用
+`LocalNavDestinationContext.current.results.peek/consume`。不要把结果当成全局事件总线或任意
+跨栈寻址机制。
 
 ## 穷举处理 Route 渲染
 

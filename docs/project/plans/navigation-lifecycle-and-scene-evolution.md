@@ -15,6 +15,7 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
   - navigation.results
   - navigation.scene-projection
 artifact_ids:
@@ -879,7 +880,8 @@ Acceptance evidence:
 #### Capability slice 7.2: entry-targeted navigation results
 
 The audit distinguishes command outcome `NavResult` from business data returned by a popped page;
-the latter is currently absent. The accepted Q3 contract adds `navigation.results`: Core represents
+the latter is currently absent. The accepted Q3 contract adds Core-owned `navigation.results` and
+Android-owned `navigation.result-consumption`: Core represents
 a typed key, closed `NavValue` payload, `PopWithResult`, and one delivery instruction targeting the
 surviving `after.top` entry. Delivery exists only on the committed transition plan, so render or
 stack failure cannot publish a result and predictive Back remains an ordinary result-free Pop.

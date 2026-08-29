@@ -5,7 +5,7 @@
   "breaking": false,
   "artifact": "viewcompose-navigation-android",
   "symbol_id": "com.viewcompose.navigation.NavResultEffect",
-  "capability_id": "navigation.results",
+  "capability_id": "navigation.result-consumption",
   "q_level": "Q3",
   "contract_fields": [
     "inputs",
@@ -23,7 +23,7 @@
     "kdoc": { "status": "updated", "targets": ["com.viewcompose.navigation.NavResultEffect"] },
     "module": { "status": "updated", "targets": ["module.viewcompose-navigation-android"] },
     "sample": { "status": "updated", "targets": ["module.navigation-android-results"] },
-    "reference": { "status": "updated", "targets": ["reference.navigation.results"] },
+    "reference": { "status": "updated", "targets": ["reference.navigation.result-consumption"] },
     "tutorial": {
       "status": "not-applicable",
       "rationale": "Lifecycle-safe result consumption is an integration task beyond the introductory route transition."

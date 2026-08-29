@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "capability_id": "navigation.results",
-  "kind": "state",
+  "kind": "integration",
   "owner": { "kind": "module", "id": "viewcompose-navigation-core" },
   "artifact": "viewcompose-navigation-core",
   "version_state": { "lane": "released", "version": "0.1.0-alpha03" },

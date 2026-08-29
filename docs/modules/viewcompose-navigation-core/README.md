@@ -9,6 +9,7 @@ version_lane: released
 capability_ids:
   - navigation.deep-links
   - navigation.host
+  - navigation.results
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-core
@@ -16,6 +17,7 @@ sample_ids:
   - module.navigation-core-dependency
   - module.navigation-core-graph
   - module.navigation-core-transaction
+  - module.navigation-core-results
   - module.navigation-core-stacks
   - module.navigation-core-deep-link
   - module.navigation-core-scene-projection
@@ -108,6 +110,25 @@ No-change outcomes are explicit:
 - a root entry cannot be popped;
 - `SingleTop`, replace, or reset already targets the effective destination;
 - a selected stack is already active with the requested policy.
+
+## Atomic return results
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-results" sample_id="module.navigation-core-results" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val selectedItem = NavResultKey.text("catalog.selection")
+val preparation = controller.prepare(
+    NavCommand.PopWithResult(selectedItem.encode("item-42")),
+)
+val transaction = (preparation as NavPreparation.Ready).transaction
+check(transaction.after.top.route.name == "home")
+transaction.commit()
+```
+
+`PopWithResult` removes the active top and carries one closed `NavValue` payload in the same
+transaction. The reducer targets the surviving `after.top` entry and emits no delivery for a root
+no-change, rollback, settled reconciliation, or predictive preview. `NavResultKey` couples a stable
+name and type identity with explicit encoding; Core never owns callbacks, Lifecycle, or a global
+result bus.
 
 ## Independent retained stacks
 

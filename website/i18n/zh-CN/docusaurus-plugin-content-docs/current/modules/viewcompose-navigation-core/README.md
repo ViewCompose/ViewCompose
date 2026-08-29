@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 3f84332a52a21d892a7d21a409dc5d84f8e19ad9a7a1623710647621f224f432
+translation_source_hash: 531e61630698a7427f255bef78aa361fb0dc2df9610ab6362546008fba10f397
 translation_status: current
 ---
 
@@ -81,6 +81,24 @@ when (val preparation = controller.prepare(NavCommand.Push(NavRoute("details")))
 - 根 entry 不能继续 pop；
 - `SingleTop`、replace 或 reset 已经指向当前有效目的地；
 - 目标 stack 已按请求策略处于选中状态。
+
+## 原子返回结果
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-results" sample_id="module.navigation-core-results" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val selectedItem = NavResultKey.text("catalog.selection")
+val preparation = controller.prepare(
+    NavCommand.PopWithResult(selectedItem.encode("item-42")),
+)
+val transaction = (preparation as NavPreparation.Ready).transaction
+check(transaction.after.top.route.name == "home")
+transaction.commit()
+```
+
+`PopWithResult` 在同一事务中移除活动栈顶并携带一个封闭 `NavValue` Payload。Reducer 把结果定向
+到仍存活的 `after.top` Entry；根节点无变化、回滚、稳定态协调和 Predictive Preview 都不会产生
+交付。`NavResultKey` 以稳定名称、类型身份和显式编码绑定契约；Core 不持有 Callback、Lifecycle
+或全局结果总线。
 
 ## 独立保留栈
 
