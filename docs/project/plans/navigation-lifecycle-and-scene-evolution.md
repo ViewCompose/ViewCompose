@@ -879,10 +879,27 @@ inspects declarations. A direct retry reproduced the same configuration error fo
 to correct the shared Android Dokka convention once for every affected Android artifact, then rerun
 the strict Android audit instead of weakening this module's source layout or audit policy here.
 
-These are deterministic JVM/Robolectric results; no new device claim is needed for the
-platform-neutral matching algorithm, but OEM Intent delivery, line/branch coverage, memory, leaks,
-and performance remain **inconclusive** and stay in Phase 7. Next action: disposition typed-route
-serialization and navigation results before running the broader evidence matrix.
+The first repository-wide `qaQuick` run stopped at the demo application's Release compilation: its
+internal result model still required a non-null URI pattern and therefore exposed the exact stale
+URI-only assumption that the Alpha hard cut intended to remove. The demo now renders one matcher
+summary assembled from URI, action, and MIME constraints, and a focused Release compilation passed.
+The subsequent complete `qaQuick` run passed all 2,268 actionable tasks, with 192 executed and 2,076
+up to date. `qaPreview` passed all 1,209 actionable tasks, with 140 executed and 1,069 up to date,
+including both Paparazzi-backed Preview hosts. This is **improved** repository integration and **no
+material change** in Preview output; the mixed cache state is execution context, not performance
+evidence. Documentation governance, language/translation structure, release intent, and development
+tooling isolation also passed in the same acceptance sequence.
+
+The focused structured-deep-link device test passed 1/1 on a physical Pixel 4 XL running API 33. It
+delivered an explicit `ACTION_SEND` plus `image/png` Intent through a real Activity, selected the
+declared retained stack, and settled on the expected destination. The first installation attempt
+stopped in a stale incremental `packageDebug` state; a focused full package rebuild succeeded and
+the unchanged test command then passed, so this is build-cache context rather than a product
+failure. Together with the deterministic JVM/Robolectric suites, the result is **improved** Android
+adapter confidence. Evidence is limited to one device and explicit Activity delivery; implicit
+resolver/OEM delivery, line/branch coverage, memory, leaks, and performance remain **inconclusive**
+and stay in Phase 7. Next action: disposition typed-route serialization and navigation results
+before running the broader evidence matrix.
 
 ### Phase 8: document, release, and archive
 
