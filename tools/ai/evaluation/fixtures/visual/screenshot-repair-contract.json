@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-bounded-screenshot-repair-v1",
+  "requiresContracts": [
+    "viewcompose-screenshot-layout-comparison-v1",
+    "viewcompose-screenshot-pixel-comparison-v1",
+    "screenshot-repair-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "contract-only",
+    "publicRepairMode": false,
+    "implementation": false,
+    "successEvidence": "compared",
+    "incompleteEvidence": "rendered"
+  },
+  "candidateBoundary": {
+    "mutation": "typed Design IR patches over the accepted resolved result only",
+    "callerSuppliedKotlin": false,
+    "arbitrarySourceEdits": false,
+    "providerCalls": false,
+    "networkAccess": false,
+    "executeInspectedProjectBuildLogic": false,
+    "followSymbolicLinks": false
+  },
+  "policy": {
+    "maxIterations": 5,
+    "gateOrder": ["safety", "compilation", "semantics", "structure", "exact-pixels"],
+    "firstFailedGateOwnsReason": true,
+    "passedGateRegression": "reject candidate and stop",
+    "duplicateCandidateOrChange": "reject as oscillation and stop",
+    "acceptedCandidate": "must strictly improve the first previously failing gate",
+    "pixelComparison": "zero-tolerance exact RGBA with separate metrics",
+    "aggregateScore": false,
+    "automaticThresholdRelaxation": false,
+    "automaticReferenceMutation": false
+  },
+  "evidence": {
+    "initialAndFinalCandidate": true,
+    "everyAttempt": true,
+    "reasonCodedChanges": true,
+    "beforeAfterGateEvidence": true,
+    "candidateAndChangeFingerprints": true,
+    "acceptedAndRejectedCounts": true,
+    "safeIncompleteResult": true
+  },
+  "claims": {
+    "checked": [
+      "maximum five attempted repair iterations",
+      "unique candidate and change fingerprints",
+      "no regression of a previously passed deterministic gate",
+      "strict improvement at the first failing gate before candidate acceptance",
+      "pixel evidence cannot override safety, compilation, semantic, or structural failure"
+    ],
+    "notClaimed": [
+      "automatic repair implementation",
+      "arbitrary Kotlin or project source repair",
+      "perceptual similarity or an aggregate visual score",
+      "accessibility completeness beyond the accepted semantic comparator",
+      "interaction, animation, state transition, or design intent correctness",
+      "convergence for every screenshot"
+    ]
+  },
+  "limits": {
+    "maxIterations": 5,
+    "maxFindings": 100,
+    "maxDesignIrPatchOperations": 64,
+    "maxCandidateBytes": 262144,
+    "maxEvaluationChecks": 10000,
+    "maxPixels": 4194304,
+    "timeoutMs": 600000
+  },
+  "diagnosticCodes": [
+    "VC-AI-REPAIR-INPUT-INVALID",
+    "VC-AI-REPAIR-NO-ELIGIBLE-CHANGE",
+    "VC-AI-REPAIR-REGRESSION",
+    "VC-AI-REPAIR-OSCILLATION",
+    "VC-AI-REPAIR-ITERATION-LIMIT",
+    "VC-AI-REPAIR-SAFETY-FAILURE",
+    "VC-AI-REPAIR-CANCELLED"
+  ],
+  "lineage": {
+    "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "generatedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
+    "semanticAndStructuralComparisonFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31",
+    "exactPixelComparisonFingerprint": "5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b"
+  },
+  "supportedFixtures": [
+    {
+      "result": "screenshot-repair/initial-exact.result.json",
+      "expectedStatus": "converged",
+      "expectedTermination": "initial-pass",
+      "expectedIterations": 0,
+      "expectedRepairFingerprint": "b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d"
+    }
+  ],
+  "failClosedFixtures": [
+    {
+      "mutation": "screenshot-pixel/render-one-channel.mutation.json",
+      "expectedStatus": "incomplete",
+      "expectedTermination": "no-eligible-change",
+      "diagnosticCodes": ["VC-AI-REPAIR-NO-ELIGIBLE-CHANGE"]
+    },
+    {
+      "mutation": "screenshot-repair/semantic-regression.mutation.json",
+      "expectedStatus": "blocked",
+      "expectedTermination": "regression",
+      "diagnosticCodes": ["VC-AI-REPAIR-REGRESSION"]
+    },
+    {
+      "mutation": "screenshot-repair/candidate-oscillation.mutation.json",
+      "expectedStatus": "blocked",
+      "expectedTermination": "oscillation",
+      "diagnosticCodes": ["VC-AI-REPAIR-OSCILLATION"]
+    },
+    {
+      "mutation": "screenshot-repair/iteration-limit.mutation.json",
+      "expectedStatus": "incomplete",
+      "expectedTermination": "max-iterations",
+      "diagnosticCodes": ["VC-AI-REPAIR-ITERATION-LIMIT"]
+    },
+    {
+      "mutation": "screenshot-repair/safety-failure.mutation.json",
+      "expectedStatus": "blocked",
+      "expectedTermination": "safety-failure",
+      "diagnosticCodes": ["VC-AI-REPAIR-SAFETY-FAILURE"]
+    }
+  ]
+}

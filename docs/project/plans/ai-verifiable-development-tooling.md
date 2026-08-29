@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze a bounded deterministic repair contract over separate compile, semantic, structure, exact-pixel, and safety gates without introducing a perceptual aggregate score.
+next_action: Implement the frozen provider-offline bounded repair orchestrator over typed Design IR candidates before exposing any public repair mode.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -113,7 +113,9 @@ whose dimensions, density, font scale, locale, layout direction, color space, al
 orientation, system bars, and accepted semantic evidence exactly match the render. The original
 16×24 inference wireframe is therefore not assigned a pixel score.
 
-Next action: freeze a bounded repair loop without claiming perceptual or cross-device equivalence.
+The bounded deterministic repair contract is also frozen, but automatic repair is not yet a public
+tool mode. Next action: implement its provider-offline orchestrator without claiming perceptual or
+cross-device equivalence.
 
 ## Maven release changesets
 
@@ -2191,6 +2193,48 @@ with **no material Android runtime behavior change**. Perceptual similarity, cro
 cross-renderer equivalence, font equivalence, design intent, aesthetic quality, interaction,
 motion, and repair remain unclaimed. The next action is to freeze a bounded repair contract whose
 iterations cannot bypass compilation, semantic, structural, exact-pixel, or safety failures.
+
+### Contract evidence — bounded screenshot repair
+
+The provider-offline screenshot repair contract is now frozen before implementation. It permits at
+most five reason-coded attempts over typed Design IR patches derived from the accepted resolved
+result; it does not accept caller-supplied Kotlin, arbitrary project source edits, provider calls,
+network access, symbolic-link traversal, inspected-project build logic, automatic threshold
+relaxation, or reference mutation. No public `repair` mode is exposed at this stage.
+
+Every candidate is evaluated in fixed `safety` → `compilation` → `semantics` → `structure` →
+`exact-pixels` order. The first failing gate owns the repair reason and prevents later gates from
+running. Candidate acceptance requires strict improvement at that gate, while every previously
+passed deterministic gate must remain passed. Repeated candidate or change fingerprints terminate
+as oscillation; a regression terminates rather than silently rolling forward. Pixel evidence is
+kept as separate exact counts and cannot override any earlier failure or become an aggregate score.
+
+The result schema retains initial, attempted, and final candidate fingerprints; gate evidence;
+reason-coded change fingerprints; accepted/rejected dispositions; termination reason; and a safe
+`incomplete`, `blocked`, or `cancelled` result when convergence is not established. The frozen
+zero-iteration golden converges because all five gates already pass and has repair fingerprint
+`b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d`. Five fail-closed
+denominators cover a pixel mismatch with no eligible typed change, semantic regression, candidate
+oscillation, exhaustion at five iterations, and an initial safety failure.
+
+Phase 0 now verifies 15 schemas, 64 metrics, 71 cases, 68 fixture-backed cases, and six screenshot
+repair fixtures. The focused contract gate reproduces 1/1 zero-iteration convergence and 5/5
+fail-closed stops, while Node 25.6.0 passes 195/195 AI-tooling tests. The dependency-free offline
+package now contains 63 files and 1,798,448 declared
+bytes; its 321,255-byte archive has SHA-256
+`46930ae893be74549e98073715b5249b6d783a4b809e22ee349b4c611e07fcba`. Relative to the exact-pixel
+implementation package, the schema-only distribution addition is one file, 8,943 declared bytes
+(+0.50%), and 1,130 archive bytes (+0.35%), with no runtime dependency or provider boundary. The
+combined repair, Phase 0, reproducible distribution, documentation, development-tooling-isolation,
+and release-intent gate passes 24 actionable tasks, with 12 executed and 12 up-to-date.
+
+No published ViewCompose artifact, public/protected API, Android runtime, or application process
+changes, so this contract slice needs no Maven changeset or module-manual update. This is
+**improved** repair measurability, failure honesty, and resource/safety bounding with **no material
+Android runtime behavior change**. Automatic repair, arbitrary source mutation, accessibility
+completeness, perceptual similarity, interaction, animation, design intent, and universal
+convergence remain unclaimed. The next action is to implement the frozen deterministic orchestrator
+and reproduce all contract outcomes before considering a public tool mode.
 
 ### Implementation evidence — bounded XML to Design IR
 

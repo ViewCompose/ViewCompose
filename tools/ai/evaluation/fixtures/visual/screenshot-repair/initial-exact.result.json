@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "status": "converged",
+  "policy": {
+    "version": 1,
+    "maxIterations": 5,
+    "gateOrder": ["safety", "compilation", "semantics", "structure", "exact-pixels"],
+    "candidateMutation": "typed-design-ir-patches-only",
+    "noOscillation": true,
+    "noRegression": true,
+    "strictImprovement": true,
+    "aggregateScore": false,
+    "networkAccess": false,
+    "providerCalls": false,
+    "executeInspectedProjectBuildLogic": false
+  },
+  "initial": {
+    "candidateFingerprint": "98599de109dcc98ff978326bf9a906dc9b131549f2dce665cc04639adce61c78",
+    "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "gates": [
+      {
+        "name": "safety",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a"
+      },
+      {
+        "name": "compilation",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9"
+      },
+      {
+        "name": "semantics",
+        "status": "passed",
+        "passedChecks": 14,
+        "totalChecks": 14,
+        "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
+      },
+      {
+        "name": "structure",
+        "status": "passed",
+        "passedChecks": 13,
+        "totalChecks": 13,
+        "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
+      },
+      {
+        "name": "exact-pixels",
+        "status": "passed",
+        "comparedPixels": 2523781,
+        "mismatchedPixels": 0,
+        "maxChannelDelta": 0,
+        "evidenceFingerprint": "5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b"
+      }
+    ],
+    "evaluationFingerprint": "59073a5dc2784b271e33c190906c07bc867f219e99cf7ac2fd1cbe88fd43c38b"
+  },
+  "iterations": [],
+  "final": {
+    "candidateFingerprint": "98599de109dcc98ff978326bf9a906dc9b131549f2dce665cc04639adce61c78",
+    "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "gates": [
+      {
+        "name": "safety",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a"
+      },
+      {
+        "name": "compilation",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9"
+      },
+      {
+        "name": "semantics",
+        "status": "passed",
+        "passedChecks": 14,
+        "totalChecks": 14,
+        "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
+      },
+      {
+        "name": "structure",
+        "status": "passed",
+        "passedChecks": 13,
+        "totalChecks": 13,
+        "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
+      },
+      {
+        "name": "exact-pixels",
+        "status": "passed",
+        "comparedPixels": 2523781,
+        "mismatchedPixels": 0,
+        "maxChannelDelta": 0,
+        "evidenceFingerprint": "5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b"
+      }
+    ],
+    "evaluationFingerprint": "59073a5dc2784b271e33c190906c07bc867f219e99cf7ac2fd1cbe88fd43c38b"
+  },
+  "termination": {
+    "reason": "initial-pass",
+    "iterationCount": 0,
+    "acceptedCandidates": 0,
+    "rejectedCandidates": 0
+  },
+  "findings": [],
+  "repairFingerprint": "b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d"
+}

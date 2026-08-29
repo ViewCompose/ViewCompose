@@ -534,6 +534,42 @@
       "environment": "same density, viewport, font, locale, and system-bar crop; tolerance max(2 px, 1 percent)"
     },
     {
+      "id": "visual.repair-gate-order",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "safety, compilation, semantics, structure, and exact-pixel gates short-circuit in frozen order"
+    },
+    {
+      "id": "visual.repair-no-regression",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "a candidate that regresses any previously passed deterministic gate is rejected and terminates repair"
+    },
+    {
+      "id": "visual.repair-no-oscillation",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "candidate and change fingerprints are unique across one bounded repair run"
+    },
+    {
+      "id": "visual.repair-evidence-completeness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "initial, attempted, accepted or rejected, and final candidates retain reason-coded gate evidence and fingerprints"
+    },
+    {
       "id": "visual.repair-bound",
       "phase": 5,
       "measure": "iterations",

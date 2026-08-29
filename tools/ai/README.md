@@ -327,6 +327,15 @@ checked-in 16×24 inference wireframe is intentionally ineligible because it doe
 1079×2339 render viewport or density and contains a redaction. No aggregate or perceptual
 similarity score is produced.
 
+Bounded screenshot repair is contract-frozen but is not yet a public tool mode. The contract allows
+at most five reason-coded attempts over typed Design IR patches and evaluates candidates in fixed
+`safety` → `compilation` → `semantics` → `structure` → `exact-pixels` order. A candidate cannot be
+accepted if it regresses a previously passed gate, repeats a candidate or change fingerprint, or
+fails to strictly improve the first failing gate. Pixel evidence cannot override an earlier failure,
+thresholds and references cannot be relaxed automatically, and exhaustion returns a structured
+incomplete result instead of claiming convergence. Arbitrary Kotlin/project edits, provider calls,
+network access, perceptual scoring, and accessibility completeness are outside this contract.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash

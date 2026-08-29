@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "operation": "fail-safety-gate",
+  "reasonCode": "safety",
+  "diagnosticSource": "typed Design IR patch exceeds the frozen operation allowlist",
+  "laterGatesRun": false
+}

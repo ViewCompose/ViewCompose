@@ -975,6 +975,26 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotRepair") {
+            group = "verification"
+            description =
+                "Verifies bounded screenshot repair ordering, convergence, and fail-closed contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-repair.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/**",
+                        "evaluation/fixtures/visual/screenshot-pixel/render-one-channel.mutation.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/verify-phase5-screenshot-repair.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

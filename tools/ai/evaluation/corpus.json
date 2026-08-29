@@ -581,6 +581,99 @@
       "metricIds": ["visual.semantic-preservation", "visual.geometry-pass", "visual.repair-bound"]
     },
     {
+      "id": "visual.screenshot-repair-initial-exact",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-repair/initial-exact.result.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compared"
+      },
+      "metricIds": [
+        "visual.repair-bound",
+        "visual.repair-gate-order",
+        "visual.repair-evidence-completeness"
+      ]
+    },
+    {
+      "id": "visual.screenshot-repair-no-eligible-change",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-pixel/render-one-channel.mutation.json"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-REPAIR-NO-ELIGIBLE-CHANGE"]
+      },
+      "metricIds": ["visual.repair-gate-order"]
+    },
+    {
+      "id": "visual.screenshot-repair-regression",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-repair/semantic-regression.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-REPAIR-REGRESSION"]
+      },
+      "metricIds": ["visual.repair-no-regression"]
+    },
+    {
+      "id": "visual.screenshot-repair-oscillation",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-repair/candidate-oscillation.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-REPAIR-OSCILLATION"]
+      },
+      "metricIds": ["visual.repair-no-oscillation"]
+    },
+    {
+      "id": "visual.screenshot-repair-iteration-limit",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-repair/iteration-limit.mutation.json"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-REPAIR-ITERATION-LIMIT"]
+      },
+      "metricIds": ["visual.repair-bound", "visual.repair-evidence-completeness"]
+    },
+    {
+      "id": "visual.screenshot-repair-safety-stop",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-repair/safety-failure.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-REPAIR-SAFETY-FAILURE"]
+      },
+      "metricIds": ["visual.repair-gate-order"]
+    },
+    {
       "id": "visual.screenshot-privacy-grid",
       "phase": 5,
       "category": "visual-generation",

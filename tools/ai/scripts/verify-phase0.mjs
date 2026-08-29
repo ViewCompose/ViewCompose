@@ -13,6 +13,7 @@ import {verifyPhase5ScreenshotComparison} from './verify-phase5-screenshot-compa
 import {
   verifyPhase5ScreenshotPixelComparison,
 } from './verify-phase5-screenshot-pixel-comparison.mjs';
+import {verifyPhase5ScreenshotRepair} from './verify-phase5-screenshot-repair.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -286,6 +287,7 @@ async function verifySchemas(versions) {
     screenshotInferenceResolution: 'screenshot-inference-resolution.schema.json',
     screenshotKotlinGeneration: 'screenshot-kotlin-generation.schema.json',
     screenshotPixelComparison: 'screenshot-pixel-comparison.schema.json',
+    screenshotRepair: 'screenshot-repair.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -2201,6 +2203,7 @@ export async function verifyPhase0() {
   const screenshotPixelComparison = await verifyPhase5ScreenshotPixelComparison({
     compareGolden: false,
   });
+  const screenshotRepair = await verifyPhase5ScreenshotRepair();
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -2241,6 +2244,8 @@ export async function verifyPhase0() {
     screenshotPixelComparisonFixtures:
       screenshotPixelComparison.supportedGoldens +
         screenshotPixelComparison.failClosedDenominators,
+    screenshotRepairFixtures:
+      screenshotRepair.supportedGoldens + screenshotRepair.failClosedDenominators,
   };
 }
 
@@ -2263,7 +2268,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.screenshotKotlinGenerationFixtures} frozen screenshot-generation fixtures and ` +
           `${summary.screenshotGeneratedPreviewFixtures} frozen screenshot-Preview fixtures and ` +
           `${summary.screenshotLayoutComparisonFixtures} frozen screenshot-comparison fixtures and ` +
-          `${summary.screenshotPixelComparisonFixtures} frozen screenshot-pixel fixtures.`,
+          `${summary.screenshotPixelComparisonFixtures} frozen screenshot-pixel fixtures and ` +
+          `${summary.screenshotRepairFixtures} frozen screenshot-repair fixtures.`,
       );
     })
     .catch((error) => {

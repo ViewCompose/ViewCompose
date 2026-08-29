@@ -30,6 +30,7 @@
     "verify:phase5-screenshot-generation": "node scripts/verify-phase5-screenshot-generation.mjs",
     "verify:phase5-screenshot-render": "node scripts/verify-phase5-screenshot-render.mjs",
     "verify:phase5-screenshot-comparison": "node scripts/verify-phase5-screenshot-comparison.mjs",
-    "verify:phase5-screenshot-pixel-comparison": "node scripts/verify-phase5-screenshot-pixel-comparison.mjs"
+    "verify:phase5-screenshot-pixel-comparison": "node scripts/verify-phase5-screenshot-pixel-comparison.mjs",
+    "verify:phase5-screenshot-repair": "node scripts/verify-phase5-screenshot-repair.mjs"
   }
 }
