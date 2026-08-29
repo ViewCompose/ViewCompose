@@ -17,6 +17,7 @@ const schemaPath = fileURLToPath(new URL('../contracts/screenshot-repair.schema.
 const GATE_ORDER = Object.freeze([
   'safety',
   'compilation',
+  'render',
   'semantics',
   'structure',
   'exact-pixels',
@@ -85,7 +86,7 @@ function assertEvaluation(evaluation, label) {
 function assertResult(result, schema, fixture) {
   const violations = validateSchemaValue(result, schema);
   if (violations.length > 0) {
-    throw new Error(`Screenshot repair golden violates schema v1: ${violations.join('; ')}`);
+    throw new Error(`Screenshot repair golden violates schema v2: ${violations.join('; ')}`);
   }
   assertEvaluation(result.initial, 'initial candidate');
   assertEvaluation(result.final, 'final candidate');
@@ -122,11 +123,11 @@ function assertResult(result, schema, fixture) {
 function assertContract(contract, schema) {
   if (
     contract.schemaVersion !== 1 ||
-    contract.contractId !== 'viewcompose-bounded-screenshot-repair-v1' ||
+    contract.contractId !== 'viewcompose-bounded-screenshot-repair-v2' ||
     !same(contract.requiresContracts, [
       'viewcompose-screenshot-layout-comparison-v1',
       'viewcompose-screenshot-pixel-comparison-v1',
-      'screenshot-repair-v1',
+      'screenshot-repair-v2',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
     contract.activation?.status !== 'implemented-internal' ||
@@ -183,8 +184,8 @@ function assertContract(contract, schema) {
     throw new Error('Screenshot repair diagnostic namespace changed');
   }
   if (
-    schema.$id !== 'https://schemas.viewcompose.com/ai/screenshot-repair-v1.schema.json' ||
-    schema.properties?.schemaVersion?.const !== 1 ||
+    schema.$id !== 'https://schemas.viewcompose.com/ai/screenshot-repair-v2.schema.json' ||
+    schema.properties?.schemaVersion?.const !== 2 ||
     schema.$defs?.policy?.properties?.maxIterations?.const !== 5 ||
     !same(schema.$defs?.policy?.properties?.gateOrder?.const, GATE_ORDER) ||
     schema.$defs?.policy?.properties?.aggregateScore?.const !== false
@@ -196,7 +197,7 @@ function assertContract(contract, schema) {
       'no regression of a previously passed deterministic gate',
     ) ||
     !contract.claims?.checked?.includes(
-      'pixel evidence cannot override safety, compilation, semantic, or structural failure',
+      'pixel evidence cannot override safety, compilation, render, semantic, or structural failure',
     ) ||
     !contract.claims?.notClaimed?.includes('public automatic repair mode') ||
     !contract.claims?.notClaimed?.includes('perceptual similarity or an aggregate visual score')
@@ -224,6 +225,7 @@ function evaluation(seed, mismatchedPixels, overrides = {}) {
   const gates = [
     baseGate('safety', 'passed', 1, 1, `${seed}-safety`),
     baseGate('compilation', 'passed', 1, 1, `${seed}-compilation`),
+    baseGate('render', 'passed', 1, 1, `${seed}-render`),
     baseGate('semantics', 'passed', 14, 14, `${seed}-semantics`),
     baseGate('structure', 'passed', 13, 13, `${seed}-structure`),
     pixelGate(mismatchedPixels, `${seed}-pixels`),
@@ -299,6 +301,7 @@ async function reproduceMutation(mutation) {
         gates: [
           baseGate('safety', 'failed', 0, 1, 'safety-failed'),
           notRun('compilation'),
+          notRun('render'),
           notRun('semantics'),
           notRun('structure'),
           {

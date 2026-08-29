@@ -329,7 +329,8 @@ similarity score is produced.
 
 Bounded screenshot repair has a provider-offline internal orchestrator but is not yet a public tool
 mode. It allows at most five reason-coded attempts over typed Design IR patches and evaluates
-candidates in fixed `safety` → `compilation` → `semantics` → `structure` → `exact-pixels` order. A
+candidates in fixed `safety` → `compilation` → `render` → `semantics` → `structure` →
+`exact-pixels` order. A
 candidate cannot be accepted if it regresses a previously passed gate, repeats a candidate or change
 fingerprint, or fails to strictly improve the first failing gate. Pixel evidence cannot override an
 earlier failure, thresholds and references cannot be relaxed automatically, and exhaustion returns

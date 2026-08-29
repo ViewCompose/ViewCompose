@@ -8,6 +8,7 @@ const designIrSchemaPath = new URL('../contracts/design-ir.schema.json', import.
 const GATE_ORDER = Object.freeze([
   'safety',
   'compilation',
+  'render',
   'semantics',
   'structure',
   'exact-pixels',
@@ -20,7 +21,7 @@ const MAX_EVALUATION_CHECKS = 10_000;
 const SHA256 = /^[a-f0-9]{64}$/u;
 const STABLE_ID = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/u;
 const POLICY = Object.freeze({
-  version: 1,
+  version: 2,
   maxIterations: MAX_ITERATIONS,
   gateOrder: GATE_ORDER,
   candidateMutation: 'typed-design-ir-patches-only',
@@ -82,7 +83,7 @@ function validateGateSequence(evaluation) {
   if (
     !same(evaluation.gates.map((gate) => gate.name), GATE_ORDER) ||
     Buffer.byteLength(JSON.stringify(evaluation), 'utf8') > MAX_CANDIDATE_BYTES ||
-    evaluation.gates.slice(0, 4).reduce((sum, gate) => sum + gate.totalChecks, 0) >
+    evaluation.gates.slice(0, 5).reduce((sum, gate) => sum + gate.totalChecks, 0) >
       MAX_EVALUATION_CHECKS ||
     fingerprintWithout(evaluation, 'evaluationFingerprint') !== evaluation.evaluationFingerprint
   ) {
@@ -220,7 +221,7 @@ function finding(code, message, nextAction, severity = 'error') {
 
 function sealResult({status, initial, iterations, final, reason, findings}) {
   const result = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     status,
     policy: structuredClone(POLICY),
     initial,
@@ -287,7 +288,7 @@ export async function orchestrateScreenshotRepair({
           totalChecks: 1,
           evidenceFingerprint: '0'.repeat(64),
         },
-        ...['compilation', 'semantics', 'structure'].map((name) => ({
+        ...['compilation', 'render', 'semantics', 'structure'].map((name) => ({
           name,
           status: 'not-run',
           passedChecks: 0,

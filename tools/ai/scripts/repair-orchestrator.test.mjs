@@ -39,12 +39,15 @@ function evaluation(seed, mismatchedPixels, overrides = {}) {
   const gates = [
     baseGate('safety', 'passed', 1, 1, `${seed}-safety`),
     baseGate('compilation', 'passed', 1, 1, `${seed}-compilation`),
+    baseGate('render', 'passed', 1, 1, `${seed}-render`),
     baseGate('semantics', 'passed', 14, 14, `${seed}-semantics`),
     baseGate('structure', 'passed', 13, 13, `${seed}-structure`),
     pixelGate(mismatchedPixels, `${seed}-pixels`),
   ];
   for (const [name, gate] of Object.entries(overrides)) {
-    gates[['safety', 'compilation', 'semantics', 'structure', 'exact-pixels'].indexOf(name)] = gate;
+    gates[
+      ['safety', 'compilation', 'render', 'semantics', 'structure', 'exact-pixels'].indexOf(name)
+    ] = gate;
   }
   return sealRepairEvaluation({
     candidateFingerprint: hash(`${seed}-candidate`),
@@ -159,7 +162,7 @@ test('accepts only strict pixel improvements and stops at five iterations', asyn
   assert.equal(result.status, 'incomplete');
   assert.equal(result.termination.reason, 'max-iterations');
   assert.equal(result.termination.acceptedCandidates, 5);
-  assert.equal(result.final.gates[4].mismatchedPixels, 1);
+  assert.equal(result.final.gates[5].mismatchedPixels, 1);
   assertValid(result);
 });
 
@@ -203,6 +206,7 @@ test('short-circuits an initial safety failure before repair callbacks', async (
     gates: [
       safetyFailed,
       notRun('compilation'),
+      notRun('render'),
       notRun('semantics'),
       notRun('structure'),
       {

@@ -2203,18 +2203,19 @@ result; it does not accept caller-supplied Kotlin, arbitrary project source edit
 network access, symbolic-link traversal, inspected-project build logic, automatic threshold
 relaxation, or reference mutation. No public `repair` mode is exposed at this stage.
 
-Every candidate is evaluated in fixed `safety` → `compilation` → `semantics` → `structure` →
-`exact-pixels` order. The first failing gate owns the repair reason and prevents later gates from
-running. Candidate acceptance requires strict improvement at that gate, while every previously
-passed deterministic gate must remain passed. Repeated candidate or change fingerprints terminate
-as oscillation; a regression terminates rather than silently rolling forward. Pixel evidence is
-kept as separate exact counts and cannot override any earlier failure or become an aggregate score.
+Every candidate is evaluated in fixed `safety` → `compilation` → `render` → `semantics` →
+`structure` → `exact-pixels` order. The first failing gate owns the repair reason and prevents
+later gates from running. Candidate acceptance requires strict improvement at that gate, while
+every previously passed deterministic gate must remain passed. Repeated candidate or change
+fingerprints terminate as oscillation; a regression terminates rather than silently rolling
+forward. Pixel evidence is kept as separate exact counts and cannot override any earlier failure or
+become an aggregate score.
 
 The result schema retains initial, attempted, and final candidate fingerprints; gate evidence;
 reason-coded change fingerprints; accepted/rejected dispositions; termination reason; and a safe
 `incomplete`, `blocked`, or `cancelled` result when convergence is not established. The frozen
-zero-iteration golden converges because all five gates already pass and has repair fingerprint
-`b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d`. Five fail-closed
+zero-iteration golden converges because all six gates already pass and has repair fingerprint
+`54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb`. Five fail-closed
 denominators cover a pixel mismatch with no eligible typed change, semantic regression, candidate
 oscillation, exhaustion at five iterations, and an initial safety failure.
 
@@ -2257,7 +2258,7 @@ is retained only as rejected evidence and returns `incomplete`; the prior accept
 the final result.
 
 The implementation reproduces the exact zero-iteration golden fingerprint
-`b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d` and all five frozen
+`54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb` and all five frozen
 fail-closed outcomes. Additional tests cover one-iteration exact convergence, a valid but
 non-improving candidate, executable and duplicate patch rejection, cancellation, and a schema-valid
 blocked result for invalid initial evidence. Proposal and evaluation are deliberately still
@@ -2336,6 +2337,32 @@ mutation integrity, lineage, determinism, and failure localization with **no mat
 behavior change**. Compilation, rendering, semantic/structural/pixel evaluation of the repaired
 candidate, finding-to-patch policy, and public activation remain unclaimed. The next action is to
 bind patched Design IR candidates to the existing source-bound evidence lanes.
+
+### Contract correction — independent screenshot render gate
+
+Before connecting the evaluator, the repair result contract advances from v1 to v2 to correct one
+evidence-classification gap: generated Kotlin may compile while its source-bound Android Preview
+still fails to render. Render is therefore an independent gate between `compilation` and
+`semantics`; a render failure owns its own reason and short-circuits semantic, structural, and
+pixel acceptance. The candidate patch format remains v1 because its typed mutation surface did not
+change.
+
+The corrected zero-iteration golden now records all six gates and has repair fingerprint
+`54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb`. The focused verifier
+reproduces 1/1 convergence, 1/1 typed patch, and 5/5 fail-closed outcomes; Phase 0 remains at 15
+schemas, 64 metrics, 72 cases, 69 fixture-backed cases, and seven repair fixtures; and Node 25.6.0
+passes 213/213 tests. The full offline distribution gate passes 2/2 byte-reproducible builds,
+install/uninstall, license/SBOM inventory, both installed MCP protocol lanes, and every installed
+compile/render/comparison flow. Documentation, development-tooling isolation, and release-intent
+verification also pass in the same 23-task acceptance run.
+
+The dependency-free package remains at 65 files and increases by 716 declared bytes to 1,825,442
+bytes. Its 326,775-byte archive has SHA-256
+`fd3d2ca0b1b1c47bc3faf8e3ffd3a51e91d4b2e36c25c961d01957889a899dc7`, 28 archive bytes above
+the typed-patch baseline. No public ViewCompose API, published Android artifact, runtime path,
+provider boundary, or release changeset is involved. This is **improved** failure localization and
+claim accuracy with **no material Android runtime behavior change**. The next action remains the
+deterministic candidate evaluator over the now-complete ordered gate set.
 
 ### Implementation evidence — bounded XML to Design IR
 

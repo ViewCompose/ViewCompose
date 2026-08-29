@@ -540,7 +540,7 @@
       "direction": "at_least",
       "threshold": 1,
       "unit": "ratio",
-      "environment": "safety, compilation, semantics, structure, and exact-pixel gates short-circuit in frozen order"
+      "environment": "safety, compilation, render, semantics, structure, and exact-pixel gates short-circuit in frozen order"
     },
     {
       "id": "visual.repair-no-regression",

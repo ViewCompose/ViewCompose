@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "contractId": "viewcompose-bounded-screenshot-repair-v1",
+  "contractId": "viewcompose-bounded-screenshot-repair-v2",
   "requiresContracts": [
     "viewcompose-screenshot-layout-comparison-v1",
     "viewcompose-screenshot-pixel-comparison-v1",
-    "screenshot-repair-v1"
+    "screenshot-repair-v2"
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
@@ -26,7 +26,14 @@
   },
   "policy": {
     "maxIterations": 5,
-    "gateOrder": ["safety", "compilation", "semantics", "structure", "exact-pixels"],
+    "gateOrder": [
+      "safety",
+      "compilation",
+      "render",
+      "semantics",
+      "structure",
+      "exact-pixels"
+    ],
     "firstFailedGateOwnsReason": true,
     "passedGateRegression": "reject candidate and stop",
     "duplicateCandidateOrChange": "reject as oscillation and stop",
@@ -52,7 +59,7 @@
       "unique candidate and change fingerprints",
       "no regression of a previously passed deterministic gate",
       "strict improvement at the first failing gate before candidate acceptance",
-      "pixel evidence cannot override safety, compilation, semantic, or structural failure"
+      "pixel evidence cannot override safety, compilation, render, semantic, or structural failure"
     ],
     "notClaimed": [
       "public automatic repair mode",
@@ -93,7 +100,7 @@
       "expectedStatus": "converged",
       "expectedTermination": "initial-pass",
       "expectedIterations": 0,
-      "expectedRepairFingerprint": "b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d"
+      "expectedRepairFingerprint": "54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb"
     }
   ],
   "patchFixtures": [
