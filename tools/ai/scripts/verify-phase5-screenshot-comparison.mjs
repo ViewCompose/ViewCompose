@@ -3,6 +3,10 @@ import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {validateSchemaValue} from './schema-validator.mjs';
+import {generateScreenshotViewCompose} from './screenshot-generation-adapter.mjs';
+import {SCREENSHOT_GENERATION_REQUEST_SCHEMA} from './screenshot-generation-contract.mjs';
+import {compareGeneratedLayout} from './layout-comparator.mjs';
+import {canonicalJson} from './screenshot-contract.mjs';
 
 const fixtureRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = `${fixtureRoot}screenshot-layout-comparison-contract.json`;
@@ -41,9 +45,9 @@ function assertContract(contract) {
       'layout-comparison-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-frozen' ||
-    contract.activation?.publicCompareMode !== false ||
-    contract.activation?.implementation !== false ||
+    contract.activation?.status !== 'implemented' ||
+    contract.activation?.publicCompareMode !== true ||
+    contract.activation?.implementation !== true ||
     contract.activation?.successEvidence !== 'compared' ||
     contract.activation?.failureEvidence !== 'rendered'
   ) {
@@ -109,23 +113,99 @@ function assertContract(contract) {
   }
 }
 
-export async function verifyPhase5ScreenshotComparison() {
+function applyMutation(designIr, mutation) {
+  const mutated = structuredClone(designIr);
+  const nodes = flatten(mutated.roots);
+  if (mutation.operation === 'replace-node-property') {
+    const node = nodes.find((candidate) => candidate.id === mutation.nodeId);
+    const property = node?.properties.find((candidate) => candidate.name === mutation.property);
+    if (!property) throw new Error(`${mutation.nodeId}: comparison mutation target is missing`);
+    property.value = mutation.value;
+  } else if (mutation.operation === 'swap-root-children') {
+    const root = mutated.roots.find((candidate) => candidate.id === mutation.rootId);
+    const left = root?.children.findIndex((candidate) => candidate.id === mutation.leftNodeId) ?? -1;
+    const right = root?.children.findIndex((candidate) => candidate.id === mutation.rightNodeId) ?? -1;
+    if (left < 0 || right < 0) throw new Error(`${mutation.rootId}: sibling mutation target is missing`);
+    [root.children[left], root.children[right]] = [root.children[right], root.children[left]];
+  } else {
+    throw new Error(`${mutation.operation}: unknown screenshot comparison mutation`);
+  }
+  return mutated;
+}
+
+function assertCompared(result, contract, requiredCache) {
+  const fixture = contract.supportedFixtures[0];
+  const comparison = result.data?.comparison;
+  if (
+    result.status !== 'success' ||
+    result.evidence?.level !== 'compared' ||
+    (requiredCache && result.evidence?.cache !== requiredCache) ||
+    result.evidence?.outputFingerprint !== fixture.expectedComparisonFingerprint ||
+    result.data?.generationReport?.requestFingerprint !==
+      contract.lineage.compareGenerationRequestFingerprint ||
+    result.data?.generationReport?.reportFingerprint !==
+      contract.lineage.compareGenerationReportFingerprint ||
+    result.data?.preview?.generatedPreview?.requestFingerprint !==
+      contract.lineage.previewRequestFingerprint ||
+    result.data?.preview?.renderTree?.sha256 !==
+      contract.lineage.acceptedRenderTreeFingerprint ||
+    comparison?.comparisonFingerprint !== fixture.expectedComparisonFingerprint ||
+    comparison?.designIr?.irFingerprint !== contract.lineage.comparedDesignIrFingerprint ||
+    comparison?.render?.outputFingerprint !== contract.lineage.acceptedOutputFingerprint ||
+    comparison?.render?.renderTreeFingerprint !== contract.lineage.acceptedRenderTreeFingerprint ||
+    JSON.stringify(comparison?.summary) !== JSON.stringify(fixture.expectedSummary) ||
+    result.diagnostics?.length !== 0
+  ) {
+    throw new Error('Screenshot comparison result or accepted lineage changed');
+  }
+  const actualNodes = comparison.nodes.map((node) => ({
+    designNodeId: node.designNodeId,
+    identityKey: node.identityKey,
+    semanticRenderKind: node.actualKind,
+    wrapperDepth: node.wrapperDepth,
+    bounds: [node.bounds.left, node.bounds.top, node.bounds.right, node.bounds.bottom],
+    checkIds: node.checks.map((check) => check.id),
+  }));
+  const expectedNodes = fixture.expectedNodes.map((node) => ({
+    designNodeId: node.designNodeId,
+    identityKey: node.identityKey,
+    semanticRenderKind: node.semanticRenderKind,
+    wrapperDepth: node.wrapperDepth,
+    bounds: node.bounds,
+    checkIds: node.checkIds,
+  }));
+  if (JSON.stringify(actualNodes) !== JSON.stringify(expectedNodes)) {
+    throw new Error('Screenshot comparison node denominator changed');
+  }
+  return result.data.preview;
+}
+
+export async function verifyPhase5ScreenshotComparison({
+  compareGolden = true,
+  generate = generateScreenshotViewCompose,
+  compare = compareGeneratedLayout,
+} = {}) {
   const [contract, designSchema, previewSchema] = await Promise.all([
     readJson(contractPath),
     readJson(designSchemaPath),
     readJson(previewSchemaPath),
   ]);
   assertContract(contract);
-  const [resolution, previewRequest] = await Promise.all([
+  const [resolution, previewRequest, generationRequest] = await Promise.all([
     readJson(`${fixtureRoot}${contract.lineage.resolutionResult}`),
     readJson(`${fixtureRoot}${contract.lineage.previewRequest}`),
+    readJson(`${fixtureRoot}${contract.lineage.compareGenerationRequest}`),
   ]);
   const designViolations = validateSchemaValue(resolution.designIr, designSchema);
   const previewViolations = validateSchemaValue(previewRequest, previewSchema);
-  if (designViolations.length > 0 || previewViolations.length > 0) {
+  const generationViolations = validateSchemaValue(
+    generationRequest,
+    SCREENSHOT_GENERATION_REQUEST_SCHEMA,
+  );
+  if (designViolations.length > 0 || previewViolations.length > 0 || generationViolations.length > 0) {
     throw new Error(
       `Screenshot comparison lineage violates schema: ${
-        [...designViolations, ...previewViolations][0]
+        [...designViolations, ...previewViolations, ...generationViolations][0]
       }`,
     );
   }
@@ -134,6 +214,9 @@ export async function verifyPhase5ScreenshotComparison() {
     resolution.designIrFingerprint !== contract.lineage.resolvedDesignIrFingerprint ||
     sha256(JSON.stringify(resolution.designIr)) !== contract.lineage.comparedDesignIrFingerprint ||
     sha256(JSON.stringify(previewRequest)) !== contract.lineage.previewRequestFingerprint ||
+    sha256(canonicalJson(generationRequest)) !==
+      contract.lineage.compareGenerationRequestFingerprint ||
+    generationRequest.mode !== 'compare' ||
     previewRequest.generatedSource?.sourceKind !== 'screenshot'
   ) {
     throw new Error('Screenshot comparison source, Design IR, or Preview lineage changed');
@@ -146,7 +229,7 @@ export async function verifyPhase5ScreenshotComparison() {
   assertUnique(expectedNodes.map((node) => node.identityKey), 'Compared screenshot node keys');
   expectedNodes.forEach((node) => assertUnique(node.checkIds, `${node.designNodeId} check IDs`));
   if (
-    fixture.status !== 'contract-frozen' ||
+    fixture.status !== 'implemented' ||
     JSON.stringify(designNodes.map((node) => node.id)) !==
       JSON.stringify(expectedNodes.map((node) => node.designNodeId)) ||
     fixture.expectedSummary.designNodes !== designNodes.length ||
@@ -163,6 +246,7 @@ export async function verifyPhase5ScreenshotComparison() {
   }
 
   let blocked = 0;
+  const mutations = [];
   for (const unsupported of contract.unsupportedFixtures) {
     const mutation = await readJson(`${fixtureRoot}${unsupported.mutation}`);
     const expected = unsupported.diagnosticCodes[0];
@@ -173,12 +257,54 @@ export async function verifyPhase5ScreenshotComparison() {
     ) {
       throw new Error(`${unsupported.mutation}: comparison fail-closed reason changed`);
     }
+    mutations.push({mutation, expected});
     blocked += 1;
+  }
+  let compared = 0;
+  let cacheHits = 0;
+  if (compareGolden) {
+    const input = {
+      resolutionResult: resolution,
+      generationRequest,
+      previewBindings: previewRequest.bindings,
+    };
+    const first = await generate(input, {
+      requestId: 'screenshot-wireframe-compare',
+      limits: {maxSourceBytes: 2_000_000, timeoutMs: 120_000, maxOutputBytes: 2_000_000},
+    });
+    const preview = assertCompared(first, contract);
+    compared += 1;
+    const previewEvidence = {
+      level: 'rendered',
+      outputFingerprint: contract.lineage.acceptedOutputFingerprint,
+    };
+    for (const {mutation, expected} of mutations) {
+      const rejected = await compare({
+        designIr: applyMutation(resolution.designIr, mutation),
+        previewBindings: previewRequest.bindings,
+        preview,
+        previewEvidence,
+      });
+      if (
+        rejected.status !== 'failed' ||
+        rejected.evidenceLevel !== 'rendered' ||
+        !rejected.diagnostics.some((item) => item.code === expected)
+      ) {
+        throw new Error(`${mutation.operation}: comparison mutation did not fail closed`);
+      }
+    }
+    const second = await generate(input, {
+      requestId: 'screenshot-wireframe-compare-cache',
+      limits: {maxSourceBytes: 2_000_000, timeoutMs: 120_000, maxOutputBytes: 2_000_000},
+    });
+    assertCompared(second, contract, 'hit');
+    cacheHits += 1;
   }
   return {
     supportedGoldens: 1,
     failClosedDenominators: blocked,
-    compared: 0,
+    compared,
+    cacheHits,
     comparisonFingerprint: fixture.expectedComparisonFingerprint,
   };
 }
@@ -187,8 +313,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   verifyPhase5ScreenshotComparison()
     .then((result) => {
       process.stdout.write(
-        `Verified Phase 5 screenshot comparison contract: ${result.supportedGoldens}/1 exact ` +
-          `denominator and ${result.failClosedDenominators}/2 fail-closed mutations, expected ` +
+        `Verified Phase 5 screenshot comparison: ${result.compared}/1 exact comparison, ` +
+          `${result.cacheHits}/1 stable cache hit, and ` +
+          `${result.failClosedDenominators}/2 fail-closed mutations, accepted ` +
           `${result.comparisonFingerprint}.\n`,
       );
     })

@@ -1,15 +1,17 @@
 import {compileKotlin} from './compiler-adapter.mjs';
 import {renderGeneratedPreview} from './generated-preview-adapter.mjs';
 import {generateScreenshotKotlin} from './screenshot-design-ir-to-kotlin.mjs';
+import {compareGeneratedLayout} from './layout-comparator.mjs';
 import {diagnostic, toolResult} from './tool-core.mjs';
 
-function generatedData(generated, compilation, preview) {
+function generatedData(generated, compilation, preview, comparison) {
   return Object.fromEntries(Object.entries({
     kotlin: generated?.kotlin,
     generationReport: generated?.report,
     kotlinFingerprint: generated?.outputFingerprint,
     compilation,
     preview,
+    comparison,
   }).filter(([, value]) => value !== undefined));
 }
 
@@ -19,6 +21,7 @@ export async function generateScreenshotViewCompose(arguments_, {
   signal,
   compile = compileKotlin,
   render = renderGeneratedPreview,
+  compare = compareGeneratedLayout,
 } = {}) {
   const started = performance.now();
   if (signal?.aborted) {
@@ -60,7 +63,7 @@ export async function generateScreenshotViewCompose(arguments_, {
       outputFingerprint: generated.outputFingerprint,
     });
   }
-  if (arguments_.generationRequest.mode === 'render') {
+  if (['render', 'compare'].includes(arguments_.generationRequest.mode)) {
     const preview = await render({
       generatedKotlin: generated.kotlin,
       generationReport: generated.report,
@@ -72,19 +75,43 @@ export async function generateScreenshotViewCompose(arguments_, {
       },
       signal,
     });
+    if (preview.status !== 'success' || arguments_.generationRequest.mode === 'render') {
+      return toolResult({
+        requestId,
+        tool: 'generate_screenshot_viewcompose',
+        status: preview.status,
+        level: preview.evidence.level,
+        diagnostics: preview.diagnostics,
+        data: generatedData(generated, undefined, preview.data),
+        elapsedMs: performance.now() - started,
+        cache: preview.evidence.cache,
+        compilerLane: preview.evidence.compilerLane,
+        renderLane: preview.evidence.renderLane,
+        outputFingerprint: preview.evidence.outputFingerprint,
+        truncated: preview.truncated,
+      });
+    }
+    const compared = await compare({
+      designIr: arguments_.resolutionResult.designIr,
+      previewBindings: arguments_.previewBindings,
+      preview: preview.data,
+      previewEvidence: preview.evidence,
+    });
     return toolResult({
       requestId,
       tool: 'generate_screenshot_viewcompose',
-      status: preview.status,
-      level: preview.evidence.level,
-      diagnostics: preview.diagnostics,
-      data: generatedData(generated, undefined, preview.data),
+      status: compared.status,
+      level: compared.evidenceLevel,
+      diagnostics: [...preview.diagnostics, ...compared.diagnostics],
+      data: generatedData(generated, undefined, preview.data, compared.comparison),
       elapsedMs: performance.now() - started,
       cache: preview.evidence.cache,
       compilerLane: preview.evidence.compilerLane,
       renderLane: preview.evidence.renderLane,
-      outputFingerprint: preview.evidence.outputFingerprint,
-      truncated: preview.truncated,
+      outputFingerprint: compared.status === 'success'
+        ? compared.comparison.comparisonFingerprint
+        : preview.evidence.outputFingerprint,
+      truncated: preview.truncated || compared.status === 'limited',
     });
   }
   const compilation = await compile({

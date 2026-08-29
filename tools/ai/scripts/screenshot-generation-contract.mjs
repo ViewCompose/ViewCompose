@@ -73,7 +73,7 @@ export const SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA = Object.freeze({
       required: ['resolutionResult', 'generationRequest', 'previewBindings'],
       properties: {
         ...commonArgumentProperties,
-        generationRequest: generationRequestForModes(['render']),
+        generationRequest: generationRequestForModes(['render', 'compare']),
         previewBindings: {
           type: 'array',
           maxItems: 64,

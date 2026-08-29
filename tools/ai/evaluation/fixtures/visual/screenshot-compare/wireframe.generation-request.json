@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "request",
+  "input": {
+    "resolutionResultFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
+    "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603"
+  },
+  "mode": "compare",
+  "policy": {
+    "requireResolvedStatus": true,
+    "requireCodeGenerationAllowed": true,
+    "expressions": "forbidden",
+    "resourceGuessing": "forbidden",
+    "callbackSource": "forbidden",
+    "accessibilityTraversal": "structural-order-with-report"
+  }
+}

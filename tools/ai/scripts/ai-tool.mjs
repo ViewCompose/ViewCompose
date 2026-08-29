@@ -335,6 +335,7 @@ export async function dispatchToolRequest(request, {
           signal: controller.signal,
           compile,
           render: renderGenerated,
+          compare: compareGenerated,
         });
         break;
       default:

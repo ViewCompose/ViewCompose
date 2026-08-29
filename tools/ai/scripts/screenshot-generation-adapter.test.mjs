@@ -129,6 +129,81 @@ test('source-binds generated screenshot Kotlin before returning rendered evidenc
   assert.match(invocation.generatedKotlin, /onKeyboardAction = onEmailSubmit/u);
 });
 
+test('upgrades an exact screenshot render to compared evidence', async () => {
+  const input = await arguments_('compare');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  let compared;
+  const result = await generateScreenshotViewCompose(input, {
+    requestId: 'screenshot-compare',
+    render: async () => ({
+      status: 'success',
+      evidence: {
+        level: 'rendered',
+        cache: 'hit',
+        compilerLane: 'preview-compiler',
+        renderLane: 'preview-renderer',
+        outputFingerprint: 'd'.repeat(64),
+      },
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'e'.repeat(64)}},
+      truncated: false,
+    }),
+    compare: async (value) => {
+      compared = value;
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {comparisonFingerprint: 'f'.repeat(64)},
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compared');
+  assert.equal(result.evidence.outputFingerprint, 'f'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(compared.designIr.documentId, 'screenshot-wireframe');
+  assert.deepEqual(compared.previewBindings, input.previewBindings);
+  assert.equal(compared.previewEvidence.outputFingerprint, 'd'.repeat(64));
+});
+
+test('retains rendered identity when screenshot comparison fails', async () => {
+  const input = await arguments_('compare');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  const result = await generateScreenshotViewCompose(input, {
+    render: async () => ({
+      status: 'success',
+      evidence: {
+        level: 'rendered',
+        cache: 'miss',
+        compilerLane: 'preview-compiler',
+        renderLane: 'preview-renderer',
+        outputFingerprint: 'd'.repeat(64),
+      },
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'e'.repeat(64)}},
+      truncated: false,
+    }),
+    compare: async () => ({
+      status: 'failed',
+      evidenceLevel: 'rendered',
+      diagnostics: [{
+        code: 'VC-AI-COMPARE-SEMANTIC-MISMATCH',
+        severity: 'error',
+        message: 'mismatch',
+      }],
+      comparison: {comparisonFingerprint: 'f'.repeat(64)},
+    }),
+  });
+
+  assert.equal(result.status, 'failed');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.outputFingerprint, 'd'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(result.diagnostics[0].code, 'VC-AI-COMPARE-SEMANTIC-MISMATCH');
+});
+
 test('honors cancellation before screenshot generation', async () => {
   const controller = new AbortController();
   controller.abort();

@@ -294,7 +294,9 @@ an API. The exact wireframe Kotlin golden compiles in the pinned JDK 21/Kotlin U
 `generate` mode returns deterministic static source and its complete mapping report; `compile` mode
 passes only that source and the fixed artifact/capability selection to the hermetic compiler.
 `render` mode requires the exact explicit Preview bindings and enters the fixed source-bound
-Layoutlib harness. Visual parity remains an explicit non-claim until comparison is accepted.
+Layoutlib harness. `compare` mode performs that same render and then reopens only its verified
+render tree, maps the exact resolved Design IR, and upgrades evidence to `compared` only when every
+supported check passes.
 
 The screenshot generated-Preview implementation identifies `sourceKind: "screenshot"`, uses the dedicated
 `GeneratedScreenshotPreview` target and `AI/Screenshot` group, and requires the exact state/event
@@ -304,10 +306,12 @@ initial text; `() -> Unit` and `(Boolean) -> Unit` receive fixed no-op callbacks
 source or project code. Missing, reordered, source-mismatched, type-mismatched, or source-bearing
 callbacks fail before the fixed Preview harness can run. Successful rendering returns exact
 generated-source, wrapper, PNG, render-tree, and aggregate output fingerprints at `rendered`
-evidence. Screenshot layout comparison v1 now freezes the next evidence boundary without exposing
-an unimplemented mode: the accepted resolved Design IR and render tree must match all 27 supported
+evidence. Screenshot layout comparison v1 exposes that next evidence boundary: the accepted
+resolved Design IR and render tree must match all 27 supported
 identity, structure, semantic, and containment/order checks before evidence may become `compared`.
-The contract deliberately excludes the text-field placeholder, source screenshot regions, exact
+Changed text or structure returns category-specific diagnostics and keeps the accepted render
+fingerprint rather than producing an aggregate score. The comparator deliberately excludes the
+text-field placeholder, source screenshot regions, exact
 source geometry, pixels, style, typography, accessibility traversal, state mutation, and event
 behavior because the current evidence cannot compare them.
 

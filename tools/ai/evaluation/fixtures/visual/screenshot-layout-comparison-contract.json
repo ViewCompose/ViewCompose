@@ -8,9 +8,9 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-frozen",
-    "publicCompareMode": false,
-    "implementation": false,
+    "status": "implemented",
+    "publicCompareMode": true,
+    "implementation": true,
     "successEvidence": "compared",
     "failureEvidence": "rendered"
   },
@@ -113,6 +113,9 @@
     "resolutionResultFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
     "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
     "comparedDesignIrFingerprint": "7dfbe60e5cf41444ca132f9f43e714971f99eac991a410ca8ce641ac3b4b6a1d",
+    "compareGenerationRequest": "screenshot-compare/wireframe.generation-request.json",
+    "compareGenerationRequestFingerprint": "c27e01b9980e5667ee526c22541d0eb4ccc59affd2004473453b36ec19c3bd9b",
+    "compareGenerationReportFingerprint": "2e1014bdfee846643799f3e75e7c7d68f6e62cd957aec3d81f264185fda86c35",
     "previewRequest": "screenshot-render/wireframe.preview-request.json",
     "previewRequestFingerprint": "3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c",
     "acceptedOutputFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
@@ -120,7 +123,7 @@
   },
   "supportedFixtures": [
     {
-      "status": "contract-frozen",
+      "status": "implemented",
       "source": "screenshot wireframe",
       "expectedComparisonFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31",
       "viewport": {"widthPx": 1079, "heightPx": 2339},

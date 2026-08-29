@@ -85,6 +85,29 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
   }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
   assert.deepEqual(missingPreviewBindings, ['$: expected exactly one oneOf match, found 0']);
 
+  const comparedScreenshot = validateSchemaValue({
+    resolutionResult: {},
+    generationRequest: {
+      schemaVersion: 1,
+      kind: 'request',
+      input: {
+        resolutionResultFingerprint: 'a'.repeat(64),
+        resolvedDesignIrFingerprint: 'b'.repeat(64),
+      },
+      mode: 'compare',
+      policy: {
+        requireResolvedStatus: true,
+        requireCodeGenerationAllowed: true,
+        expressions: 'forbidden',
+        resourceGuessing: 'forbidden',
+        callbackSource: 'forbidden',
+        accessibilityTraversal: 'structural-order-with-report',
+      },
+    },
+    previewBindings: [],
+  }, TOOL_DEFINITIONS.generate_screenshot_viewcompose.inputSchema);
+  assert.deepEqual(comparedScreenshot, []);
+
   const projectRenderedXml = validateSchemaValue({
     projectRoot: '/workspace/sample',
     layoutPath: 'app/src/main/res/layout/login.xml',

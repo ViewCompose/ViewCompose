@@ -2020,6 +2020,57 @@ This is **improved** comparison precision and claim honesty with **no material r
 change**. The next action is to implement a source-bound `compare` mode, reproduce the exact
 comparison through CLI, MCP, and the installed package, and keep pixel metrics separate.
 
+### Implementation evidence — screenshot semantic and structural geometry comparison
+
+`generate_screenshot_viewcompose` now exposes `compare` beside `generate`, `compile`, and `render`.
+It regenerates the screenshot-derived Kotlin and report from the exact resolved result, enters the
+same source-free generated Preview profile with the same explicit state/callback bindings, and
+invokes comparison only after rendering succeeds. The dispatcher supplies no independent Design
+IR, render tree, or comparison policy: comparison receives the Design IR already accepted by
+generation plus the Preview data and evidence returned in that request. Render failure returns no
+comparison; comparison failure preserves the aggregate render fingerprint and `rendered` evidence;
+only 27/27 passing checks publish the comparison fingerprint and `compared` evidence.
+
+The compare-specific generation request and report fingerprints are
+`c27e01b9980e5667ee526c22541d0eb4ccc59affd2004473453b36ec19c3bd9b` and
+`2e1014bdfee846643799f3e75e7c7d68f6e62cd957aec3d81f264185fda86c35`. The accepted result maps
+4/4 Design IR nodes, passes 27/27 required checks with zero failures or not-applicable checks, and
+reproduces comparison fingerprint
+`ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31`. A second complete call
+revalidates the exact PNG and render-tree artifacts through a stable cache hit. The semantic-text
+and sibling-order mutations each return their frozen diagnostic and remain at `rendered` evidence.
+
+Node 25.6.0 passes 185/185 AI-tooling tests, including adapter evidence upgrade/downgrade, public
+argument schema, shared dispatcher, and direct CLI/MCP semantic parity. Phase 0 remains at 13
+schemas, 57 metrics, 60 cases, 57 fixture-backed cases, and three screenshot-comparison fixtures.
+The dedicated Gradle gate reproduces 1/1 exact comparison, 1/1 cache hit, and 2/2 fail-closed
+mutations. The distribution contract classifies `generate_screenshot_viewcompose:compare` as
+source-bound, so installation may not silently fall back to the package's own source tree.
+
+The offline package remains at 60 files with no runtime dependency. It now contains 1,763,721
+declared bytes and a 315,363-byte archive, SHA-256
+`cb5057892826b402cf4cadbf65495cf86573fa0dce5f1ae0d0f65000681b64cc`. Relative to the frozen
+comparison contract, declared bytes increase by 1,565 (+0.09%) and archive bytes by 477 (+0.15%).
+The installed CLI reproduces the exact comparison, and the installed modern MCP path completes the
+same source-bound compare request; both protocol eras retain the same thirteen-tool catalog. The
+distribution gate passes 2/2 reproducible builds, offline install/uninstall, license inventory, all
+prior compile/render/compare denominators, and the new installed screenshot comparison in 1 minute
+7 seconds (15 actionable tasks, one executed and 14 up-to-date).
+
+The first installed MCP comparison correctly failed with `VC-AI-PREVIEW-START-FAILED` because the
+new source-bound call had not passed an explicit source root into the installed server process. The
+distribution verifier now supplies `VIEWCOMPOSE_SOURCE_ROOT` for that call instead of allowing an
+implicit package-directory fallback; the repeated installed MCP comparison then passed. The final
+combined screenshot render, comparison, distribution, documentation, development-tooling
+isolation, and release-intent gate passes 24 actionable tasks, with ten executed and 14 up-to-date.
+
+The evidence boundary is unchanged from the frozen contract: placeholder text, source screenshot
+regions, exact source geometry, pixels, style, color, typography, draw order, accessibility
+traversal, state/event behavior, focus, interaction, and responsive configurations remain
+unclaimed. This is **improved** closed-loop semantic and structural validation with **no material
+Android runtime behavior change**. The next action is to define a separate pixel/perceptual metric
+and bounded repair contract without weakening these exact checks.
+
 ### Implementation evidence — bounded XML to Design IR
 
 The first Phase 4 implementation uses a dependency-free scanner and tree builder rather than

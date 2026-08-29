@@ -747,6 +747,8 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                     include(
                         "contracts/design-ir.schema.json",
                         "contracts/generated-preview-request.schema.json",
+                        "contracts/layout-comparison.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
                         "contracts/tool-envelope.schema.json",
                         "evaluation/fixtures/xml/generated-preview/**",
                         "evaluation/fixtures/xml/generated-preview-contract.json",
@@ -929,6 +931,10 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                         "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
                         "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
                         "scripts/schema-validator.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/layout-comparator.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
                         "scripts/verify-phase5-screenshot-comparison.mjs",
                     )
                 },

@@ -57,6 +57,12 @@ const screenshotRenderPreviewRequestPath = fileURLToPath(
 const screenshotGeneratedPreviewContractPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot-generated-preview-contract.json', import.meta.url),
 );
+const screenshotComparisonContractPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-layout-comparison-contract.json', import.meta.url),
+);
+const screenshotCompareGenerationRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-compare/wireframe.generation-request.json', import.meta.url),
+);
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
@@ -147,8 +153,8 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
     framework: knowledge.framework,
     limits: {
       timeoutMs: tool === 'validate_code' ||
-        ['compile', 'render'].includes(arguments_.mode) ||
-        ['compile', 'render'].includes(arguments_.generationRequest?.mode)
+        ['compile', 'render', 'compare'].includes(arguments_.mode) ||
+        ['compile', 'render', 'compare'].includes(arguments_.generationRequest?.mode)
         ? 120_000
         : 10_000,
       maxInputBytes: 4 * 1024 * 1024,
@@ -161,11 +167,11 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
   return JSON.parse(result.stdout);
 }
 
-function runMcp(executable, messages, {timeoutMs = 180_000} = {}) {
+function runMcp(executable, messages, {timeoutMs = 180_000, env = {}} = {}) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(executable, [], {
       cwd: repositoryRoot,
-      env: process.env,
+      env: {...process.env, ...env},
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     const expectedResponses = messages.filter((message) => message.id !== undefined).length;
@@ -287,6 +293,7 @@ async function verifyCliFlow(
   generatedPreviewContract,
   layoutComparisonContract,
   screenshotGeneratedPreviewContract,
+  screenshotComparisonContract,
 ) {
   const [screenshotRequest, screenshotExpected] = await Promise.all([
     readJson(screenshotRequestPath),
@@ -437,6 +444,34 @@ async function verifyCliFlow(
         renderTreeFingerprint: renderedScreenshot.data?.preview?.renderTree?.sha256,
       }),
     );
+  }
+  const compareGenerationRequest = await readJson(screenshotCompareGenerationRequestPath);
+  const comparedScreenshot = await runCli(
+    cli,
+    knowledge,
+    'generate_screenshot_viewcompose',
+    {
+      resolutionResult: resolvedInference.data,
+      generationRequest: compareGenerationRequest,
+      previewBindings: screenshotPreviewRequest.bindings,
+    },
+    'distribution-screenshot-compare',
+    {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot},
+  );
+  const expectedScreenshotComparison = screenshotComparisonContract.supportedFixtures[0];
+  if (
+    comparedScreenshot.status !== 'success' ||
+    comparedScreenshot.evidence.level !== 'compared' ||
+    comparedScreenshot.evidence.outputFingerprint !==
+      expectedScreenshotComparison.expectedComparisonFingerprint ||
+    comparedScreenshot.data?.comparison?.comparisonFingerprint !==
+      expectedScreenshotComparison.expectedComparisonFingerprint ||
+    JSON.stringify(comparedScreenshot.data?.comparison?.summary) !==
+      JSON.stringify(expectedScreenshotComparison.expectedSummary) ||
+    comparedScreenshot.data?.preview?.renderTree?.sha256 !==
+      screenshotComparisonContract.lineage.acceptedRenderTreeFingerprint
+  ) {
+    throw new Error('Installed CLI did not compare the screenshot-generated layout exactly.');
   }
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
@@ -647,6 +682,7 @@ async function verifyCliFlow(
     screenshotGeneration: compiledScreenshot.evidence.outputFingerprint,
     screenshotKotlin: generatedScreenshot.evidence.outputFingerprint,
     screenshotPreview: renderedScreenshot.evidence.outputFingerprint,
+    screenshotComparison: comparedScreenshot.evidence.outputFingerprint,
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlPreview: renderedXml.evidence.outputFingerprint,
@@ -668,6 +704,8 @@ async function verifyMcpMatrix(mcp, contract) {
     inferenceResult,
     resolutionRequest,
     generationRequest,
+    compareGenerationRequest,
+    screenshotPreviewRequest,
   ] = await Promise.all([
     readFile(xmlFixturePath, 'utf8'),
     readFile(xmlV2FixturePath, 'utf8'),
@@ -678,6 +716,8 @@ async function verifyMcpMatrix(mcp, contract) {
     readJson(inferenceResultPath),
     readJson(resolutionRequestPath),
     readJson(screenshotGenerationRequestPath),
+    readJson(screenshotCompareGenerationRequestPath),
+    readJson(screenshotRenderPreviewRequestPath),
   ]);
   const {interpretation, intent, policy, authorization} = inferenceRequest;
   const modern = await runMcp(mcp, [{
@@ -796,13 +836,30 @@ async function verifyMcpMatrix(mcp, contract) {
   const modernScreenshotGeneration = modern.find(
     (response) => response.id === 'modern-screenshot-generation',
   );
+  modern.push(...await runMcp(mcp, [{
+    jsonrpc: '2.0',
+    id: 'modern-screenshot-comparison',
+    method: 'tools/call',
+    params: {
+      name: 'generate_screenshot_viewcompose',
+      arguments: {
+        resolutionResult: modernScreenshotResolution?.result?.structuredContent?.data,
+        generationRequest: compareGenerationRequest,
+        previewBindings: screenshotPreviewRequest.bindings,
+      },
+      _meta: modernMeta(modernVersion),
+    },
+  }], {env: {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot}}));
+  const modernScreenshotComparison = modern.find(
+    (response) => response.id === 'modern-screenshot-comparison',
+  );
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
   const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
   const modernXmlLayoutDependencies = modern.find(
     (response) => response.id === 'modern-xml-layout-dependencies',
   );
   if (
-    modern.length !== 9 ||
+    modern.length !== 10 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
     modernScreenshot?.result?.structuredContent?.evidence?.outputFingerprint !==
@@ -815,6 +872,8 @@ async function verifyMcpMatrix(mcp, contract) {
       '61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a' ||
     modernScreenshotGeneration?.result?.structuredContent?.evidence?.outputFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
+    modernScreenshotComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
+      'ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
@@ -871,12 +930,14 @@ async function main() {
     generatedPreviewContract,
     layoutComparisonContract,
     screenshotGeneratedPreviewContract,
+    screenshotComparisonContract,
   ] = await Promise.all([
     readJson(contractPath),
     readJson(knowledgePath),
     readJson(generatedPreviewContractPath),
     readJson(layoutComparisonContractPath),
     readJson(screenshotGeneratedPreviewContractPath),
+    readJson(screenshotComparisonContractPath),
   ]);
   const temporaryRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-distribution-'));
   const comparisonRoot = resolve(temporaryRoot, 'comparison');
@@ -934,6 +995,7 @@ async function main() {
       generatedPreviewContract,
       layoutComparisonContract,
       screenshotGeneratedPreviewContract,
+      screenshotComparisonContract,
     );
     await verifyMcpMatrix(mcp, contract);
 
@@ -968,6 +1030,7 @@ async function main() {
       `generated screenshot Kotlin ${compileFingerprints.screenshotKotlin}, ` +
       `compiled screenshot Kotlin ${compileFingerprints.screenshotGeneration}, ` +
       `rendered screenshot Preview ${compileFingerprints.screenshotPreview}, ` +
+      `compared screenshot layout ${compileFingerprints.screenshotComparison}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +

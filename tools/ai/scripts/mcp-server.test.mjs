@@ -282,6 +282,65 @@ test('returns the same screenshot rendered evidence through CLI and MCP', async 
   assert.equal(response.result.isError, false);
 });
 
+test('returns the same screenshot comparison through CLI and MCP', async () => {
+  const [resolutionResult, generationRequest, previewRequest] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(renderGenerationRequestPath, 'utf8').then(JSON.parse),
+    readFile(screenshotPreviewRequestPath, 'utf8').then(JSON.parse),
+  ]);
+  generationRequest.mode = 'compare';
+  const arguments_ = {
+    resolutionResult,
+    generationRequest,
+    previewBindings: previewRequest.bindings,
+  };
+  const renderGenerated = async (value) => toolResult({
+    requestId: value.requestId,
+    tool: 'render_preview',
+    status: 'success',
+    level: 'rendered',
+    diagnostics: [],
+    data: {generatedPreview: {requestFingerprint: 'a'.repeat(64)}},
+    compilerLane: 'preview-compiler',
+    renderLane: 'preview-renderer',
+    outputFingerprint: 'b'.repeat(64),
+  });
+  const compareGenerated = async () => ({
+    status: 'success',
+    evidenceLevel: 'compared',
+    diagnostics: [],
+    comparison: {comparisonFingerprint: 'c'.repeat(64)},
+  });
+  const id = 'screenshot-comparison-parity';
+  const direct = await dispatchToolRequest(await createToolRequest({
+    tool: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+    requestId: mcpToolRequestId(id),
+  }), {renderGenerated, compareGenerated});
+  const session = new ViewComposeMcpSession({
+    dispatch: (toolRequest, {signal}) => dispatchToolRequest(toolRequest, {
+      signal,
+      renderGenerated,
+      compareGenerated,
+    }),
+  });
+  const response = await session.receive(request(id, 'tools/call', {
+    name: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+  }));
+
+  assert.deepEqual(
+    semanticToolResult(response.result.structuredContent),
+    semanticToolResult(direct),
+  );
+  assert.equal(response.result.structuredContent.evidence.level, 'compared');
+  assert.equal(
+    response.result.structuredContent.data.comparison.comparisonFingerprint,
+    'c'.repeat(64),
+  );
+  assert.equal(response.result.isError, false);
+});
+
 test('keeps invalid tool arguments actionable and unknown tools at protocol level', async () => {
   const session = new ViewComposeMcpSession();
   const invalid = await session.receive(request(1, 'tools/call', {

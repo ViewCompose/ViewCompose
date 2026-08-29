@@ -913,7 +913,7 @@
       },
       "expected": {
         "outcome": "pass",
-        "evidenceLevel": "static"
+        "evidenceLevel": "compared"
       },
       "metricIds": [
         "visual.screenshot-comparison-semantic-exactness",

@@ -400,6 +400,48 @@ test('dispatches screenshot render mode only with explicit source-free Preview b
   assert.equal(missing.diagnostics[0].code, 'VC-AI-SCREENSHOT-GENERATION-INPUT-INVALID');
 });
 
+test('dispatches screenshot comparison with exact resolved and rendered lineage', async () => {
+  const [resolutionResult, generationRequest, previewRequest] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(renderGenerationRequestPath, 'utf8').then(JSON.parse),
+    readFile(screenshotPreviewRequestPath, 'utf8').then(JSON.parse),
+  ]);
+  generationRequest.mode = 'compare';
+  let compared;
+  const result = await dispatchToolRequest(await request(
+    'generate_screenshot_viewcompose',
+    {resolutionResult, generationRequest, previewBindings: previewRequest.bindings},
+  ), {
+    renderGenerated: async (value) => toolResult({
+      requestId: value.requestId,
+      tool: 'render_preview',
+      status: 'success',
+      level: 'rendered',
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'a'.repeat(64)}},
+      compilerLane: 'preview-compiler',
+      renderLane: 'preview-renderer',
+      outputFingerprint: 'b'.repeat(64),
+    }),
+    compareGenerated: async (value) => {
+      compared = value;
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {comparisonFingerprint: 'c'.repeat(64)},
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compared');
+  assert.equal(result.evidence.outputFingerprint, 'c'.repeat(64));
+  assert.equal(compared.designIr.documentId, 'screenshot-wireframe');
+  assert.deepEqual(compared.previewBindings, previewRequest.bindings);
+  assert.equal(compared.previewEvidence.outputFingerprint, 'b'.repeat(64));
+});
+
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {
   let invocations = 0;
   const drift = await dispatchToolRequest(await request('validate_code', {
