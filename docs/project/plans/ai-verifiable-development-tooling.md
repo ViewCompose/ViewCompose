@@ -2215,7 +2215,7 @@ The result schema retains initial, attempted, and final candidate fingerprints; 
 reason-coded change fingerprints; accepted/rejected dispositions; termination reason; and a safe
 `incomplete`, `blocked`, or `cancelled` result when convergence is not established. The frozen
 zero-iteration golden converges because all six gates already pass and has repair fingerprint
-`54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb`. Five fail-closed
+`a6f92b031f387d30eea9d52ed84b91182149751dfb72e8603d5a4de1ba99d9ee`. Five fail-closed
 denominators cover a pixel mismatch with no eligible typed change, semantic regression, candidate
 oscillation, exhaustion at five iterations, and an initial safety failure.
 
@@ -2258,7 +2258,7 @@ is retained only as rejected evidence and returns `incomplete`; the prior accept
 the final result.
 
 The implementation reproduces the exact zero-iteration golden fingerprint
-`54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb` and all five frozen
+`a6f92b031f387d30eea9d52ed84b91182149751dfb72e8603d5a4de1ba99d9ee` and all five frozen
 fail-closed outcomes. Additional tests cover one-iteration exact convergence, a valid but
 non-improving candidate, executable and duplicate patch rejection, cancellation, and a schema-valid
 blocked result for invalid initial evidence. Proposal and evaluation are deliberately still
@@ -2363,6 +2363,56 @@ the typed-patch baseline. No public ViewCompose API, published Android artifact,
 provider boundary, or release changeset is involved. This is **improved** failure localization and
 claim accuracy with **no material Android runtime behavior change**. The next action remains the
 deterministic candidate evaluator over the now-complete ordered gate set.
+
+### Implementation evidence — source-bound screenshot repair candidate evaluation
+
+The packaged candidate evaluator now connects the typed patch applier to the existing hermetic
+Kotlin compiler, generated-Preview adapter, semantic/structural comparator, and zero-tolerance RGBA
+comparator. It rebuilds the ephemeral resolution and generation lineage from the patched Design IR
+instead of accepting caller-selected fingerprints. Compilation and Preview rendering are separate
+gates: successful generation or compilation cannot upgrade a render failure. The accepted render is
+then categorized into 12 semantic and 15 identity/structure/geometry checks; pixels run only after
+both categories pass. A small binding factory adapts this evaluator directly to the orchestrator's
+existing `evaluatePatch` boundary while candidate proposal remains injected and non-public.
+
+The real source-bound denominator evaluates two candidates under the same 411 dp, density 2.625,
+`en-US`, LTR, light configuration and the same immutable 1079×2339 reference. The unchanged
+candidate passes all six gates, compiles to fingerprint
+`7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67`, renders to
+`ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076`, and retains the exact
+2,523,781-pixel pass. The typed `Welcome` → `Hello` candidate also passes safety, compilation,
+rendering, all 12 semantic checks, and all 15 structural checks, but correctly fails exact pixels:
+5,102 of 2,523,781 pixels differ (0.2022%) with maximum channel delta 217. Its candidate evaluation
+fingerprint is `8f0a65ef59dfe39b42aa25342994ae22cdbb5cede1cffcfaa0d6cadfa95586d9`.
+
+The first exploratory patched run reused pre-existing Preview build output and reported 3,345
+changed pixels. After deleting only the ignored, reproducible Preview harness build directory, a
+cold rebuild reported 5,102; a second explicit cold rebuild and the Gradle task then reproduced
+5,102 and every render/comparison fingerprint exactly. The cache-context result is therefore
+**inconclusive** and is not accepted as a golden; the two matching cold rebuilds are the accepted
+evidence. Limitation and next action: if clean rebuild evidence drifts again, preserve both render
+artifacts and expand the content address to the missing build or environment input before accepting
+another value.
+
+Phase 0 now verifies 15 schemas, 64 metrics, 73 cases, 70 fixture-backed cases, and nine screenshot
+repair denominators. Node 25.6.0 passes 226/226 tests, including one evaluator-bound orchestration
+iteration, unavailable pixel evidence, cancellation inside injected boundaries, and all compile,
+render, comparison, integrity, and distribution unit paths. The dedicated Gradle gates pass 2/2
+source-bound candidates; the offline distribution gate passes 2/2 byte-reproducible package builds,
+install/uninstall, SPDX/license inventory, both installed MCP protocol eras, and every prior
+installed compile/render/comparison flow.
+
+The dependency-free offline package now contains 66 files and 1,841,152 declared bytes. Its
+330,190-byte archive has SHA-256
+`12887e65602e31d4097281d8aa26776687fe2c6b02ff19d8a122dbd4cc1b7857`. Relative to the render-gate
+correction baseline, the evaluator adds one file, 15,710 declared bytes (+0.86%), and 3,415 archive
+bytes (+1.05%), with no runtime dependency or provider boundary. No published ViewCompose artifact,
+public/protected API, Android runtime, or application process changes, so no Maven changeset or
+module-manual update is required. This is **improved** repair evidence fidelity, failure
+localization, cache honesty, and orchestration readiness with **no material Android runtime behavior
+change**. Automatic finding-to-patch policy, arbitrary source repair, and public repair activation
+remain unclaimed; the next action is a bounded deterministic proposer over the accepted structured
+findings.
 
 ### Implementation evidence — bounded XML to Design IR
 

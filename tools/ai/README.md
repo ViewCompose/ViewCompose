@@ -344,8 +344,11 @@ duplicate operation targets, oversized candidates, invalid or repeated fingerpri
 evidence that runs a later gate after an earlier failure. The internal patch applier binds each patch
 to an exact resolved screenshot Design IR fingerprint, requires existing nodes/fields/modifier
 arguments or an exact child permutation, rejects no-op operations, and revalidates the complete
-candidate before publishing its canonical fingerprint. Candidate proposal and deterministic gate
-evaluation remain injected internal boundaries; no MCP/CLI caller can activate them yet.
+candidate before publishing its canonical fingerprint. The internal candidate evaluator rebinds the
+patched IR to a content-addressed generation request, runs the hermetic compiler and source-bound
+Preview as separate gates, categorizes semantic versus structural checks from the accepted render,
+and enters exact pixels only after both categories pass. Candidate proposal remains an injected
+internal boundary; no MCP/CLI caller can activate repair yet.
 
 Run the local MCP server and its protocol/parity gate with:
 
@@ -359,6 +362,8 @@ npm --prefix tools/ai run verify:phase5-screenshot-generation
 npm --prefix tools/ai run verify:phase5-screenshot-render
 npm --prefix tools/ai run verify:phase5-screenshot-comparison
 npm --prefix tools/ai run verify:phase5-screenshot-pixel-comparison
+npm --prefix tools/ai run verify:phase5-screenshot-repair
+npm --prefix tools/ai run verify:phase5-screenshot-repair-candidate
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
@@ -367,6 +372,8 @@ npm --prefix tools/ai run verify:phase5-screenshot-pixel-comparison
 ./gradlew verifyAiScreenshotRender
 ./gradlew verifyAiScreenshotComparison
 ./gradlew verifyAiScreenshotPixelComparison
+./gradlew verifyAiScreenshotRepair
+./gradlew verifyAiScreenshotRepairCandidate
 ```
 
 The preferred protocol follows the

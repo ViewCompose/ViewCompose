@@ -62,8 +62,9 @@ function assertEvaluation(evaluation, label) {
         (gate.status === 'passed' && (
           gate.comparedPixels < 1 || gate.mismatchedPixels !== 0 || gate.maxChannelDelta !== 0
         )) ||
-        (gate.status === 'failed' && (
-          gate.comparedPixels < 1 || gate.mismatchedPixels < 1 || gate.maxChannelDelta < 1
+        (gate.status === 'failed' && !(
+          (gate.comparedPixels === 0 && gate.mismatchedPixels === 0 && gate.maxChannelDelta === 0) ||
+          (gate.comparedPixels >= 1 && gate.mismatchedPixels >= 1 && gate.maxChannelDelta >= 1)
         )) ||
         (gate.status === 'not-run' && (
           gate.comparedPixels !== 0 || gate.mismatchedPixels !== 0 || gate.maxChannelDelta !== 0
@@ -133,7 +134,8 @@ function assertContract(contract, schema) {
     contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
     contract.activation?.implementation !== true ||
-    contract.activation?.typedPatchApplier !== true
+    contract.activation?.typedPatchApplier !== true ||
+    contract.activation?.candidateEvaluator !== true
   ) {
     throw new Error('Screenshot repair activation boundary changed');
   }
@@ -195,6 +197,9 @@ function assertContract(contract, schema) {
   if (
     !contract.claims?.checked?.includes(
       'no regression of a previously passed deterministic gate',
+    ) ||
+    !contract.claims?.checked?.includes(
+      'source-bound compile and render evidence for each evaluated candidate',
     ) ||
     !contract.claims?.checked?.includes(
       'pixel evidence cannot override safety, compilation, render, semantic, or structural failure',
@@ -378,6 +383,50 @@ export async function verifyPhase5ScreenshotRepair() {
   if (!same(reproducedGolden, golden)) {
     throw new Error('Screenshot repair zero-iteration implementation does not reproduce its golden');
   }
+  const evaluatorFixtures = contract.candidateEvaluatorFixtures;
+  if (
+    typeof evaluatorFixtures?.resolutionResult !== 'string' ||
+    typeof evaluatorFixtures?.generationRequest !== 'string' ||
+    typeof evaluatorFixtures?.previewRequest !== 'string' ||
+    typeof evaluatorFixtures?.pixelReferenceRequest !== 'string' ||
+    typeof evaluatorFixtures?.pixelReferenceResult !== 'string' ||
+    evaluatorFixtures?.cases?.length !== 2
+  ) {
+    throw new Error('Screenshot repair candidate evaluator fixtures changed');
+  }
+  for (const fixture of evaluatorFixtures.cases) {
+    if (
+      !/^[a-z0-9-]+$/u.test(fixture.id ?? '') ||
+      !/^[a-f0-9]{64}$/u.test(fixture.expectedCandidateFingerprint ?? '') ||
+      !/^[a-f0-9]{64}$/u.test(fixture.expectedDesignIrFingerprint ?? '') ||
+      !/^[a-f0-9]{64}$/u.test(fixture.expectedEvaluationFingerprint ?? '') ||
+      fixture.expectedGateStatuses?.length !== 6 ||
+      fixture.expectedGateStatuses.some((status) => !['passed', 'failed'].includes(status)) ||
+      fixture.expectedGateEvidence?.length !== 6 ||
+      fixture.expectedGateEvidence.some((value) => !/^[a-f0-9]{64}$/u.test(value)) ||
+      fixture.expectedChecks?.length !== 5 ||
+      fixture.expectedChecks.some((value) => !Number.isInteger(value) || value < 1) ||
+      !Number.isInteger(fixture.expectedPixels?.comparedPixels) ||
+      !Number.isInteger(fixture.expectedPixels?.mismatchedPixels) ||
+      !Number.isInteger(fixture.expectedPixels?.maxChannelDelta)
+    ) {
+      throw new Error(`${fixture.id ?? 'unknown'}: screenshot candidate evidence changed`);
+    }
+  }
+  const initialEvaluatorFixture = evaluatorFixtures.cases[0];
+  if (
+    initialEvaluatorFixture.id !== 'initial-exact' ||
+    initialEvaluatorFixture.expectedCandidateFingerprint !== golden.initial.candidateFingerprint ||
+    initialEvaluatorFixture.expectedDesignIrFingerprint !== golden.initial.designIrFingerprint ||
+    initialEvaluatorFixture.expectedEvaluationFingerprint !== golden.initial.evaluationFingerprint ||
+    !same(initialEvaluatorFixture.expectedGateStatuses, golden.initial.gates.map((gate) => gate.status)) ||
+    !same(
+      initialEvaluatorFixture.expectedGateEvidence,
+      golden.initial.gates.map((gate) => gate.evidenceFingerprint),
+    )
+  ) {
+    throw new Error('Initial screenshot candidate evaluator evidence differs from repair golden');
+  }
   for (const fixture of contract.patchFixtures) {
     const [resolution, patch] = await Promise.all([
       readJson(resolve(visualRoot, fixture.resolutionResult)),
@@ -421,6 +470,7 @@ export async function verifyPhase5ScreenshotRepair() {
   return {
     supportedGoldens: contract.supportedFixtures.length,
     patchGoldens: contract.patchFixtures.length,
+    candidateEvaluatorGoldens: evaluatorFixtures.cases.length,
     failClosedDenominators: contract.failClosedFixtures.length,
     repairFingerprint: golden.repairFingerprint,
   };
@@ -433,6 +483,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         `Verified bounded screenshot repair implementation: ${summary.supportedGoldens}/` +
           `${summary.supportedGoldens} zero-iteration convergence, ` +
           `${summary.patchGoldens}/${summary.patchGoldens} typed patch golden, and ` +
+          `${summary.candidateEvaluatorGoldens}/${summary.candidateEvaluatorGoldens} ` +
+          `source-bound candidate evaluations, and ` +
           `${summary.failClosedDenominators}/${summary.failClosedDenominators} ` +
           `fail-closed denominators; repair fingerprint ${summary.repairFingerprint}.`,
       );

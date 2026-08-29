@@ -7,7 +7,8 @@ test('freezes bounded screenshot repair convergence and fail-closed stops', asyn
   assert.deepEqual(summary, {
     supportedGoldens: 1,
     patchGoldens: 1,
+    candidateEvaluatorGoldens: 2,
     failClosedDenominators: 5,
-    repairFingerprint: '54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb',
+    repairFingerprint: 'a6f92b031f387d30eea9d52ed84b91182149751dfb72e8603d5a4de1ba99d9ee',
   });
 });

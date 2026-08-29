@@ -613,6 +613,24 @@
       "metricIds": ["visual.repair-evidence-completeness"]
     },
     {
+      "id": "visual.screenshot-repair-candidate-evaluation",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-repair/title-text.patch.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-PIXEL-MISMATCH"]
+      },
+      "metricIds": [
+        "visual.repair-gate-order",
+        "visual.repair-evidence-completeness"
+      ]
+    },
+    {
       "id": "visual.screenshot-repair-no-eligible-change",
       "phase": 5,
       "category": "visual-generation",

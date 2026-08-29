@@ -12,6 +12,7 @@
     "publicRepairMode": false,
     "implementation": true,
     "typedPatchApplier": true,
+    "candidateEvaluator": true,
     "successEvidence": "compared",
     "incompleteEvidence": "rendered"
   },
@@ -59,6 +60,7 @@
       "unique candidate and change fingerprints",
       "no regression of a previously passed deterministic gate",
       "strict improvement at the first failing gate before candidate acceptance",
+      "source-bound compile and render evidence for each evaluated candidate",
       "pixel evidence cannot override safety, compilation, render, semantic, or structural failure"
     ],
     "notClaimed": [
@@ -100,7 +102,7 @@
       "expectedStatus": "converged",
       "expectedTermination": "initial-pass",
       "expectedIterations": 0,
-      "expectedRepairFingerprint": "54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb"
+      "expectedRepairFingerprint": "a6f92b031f387d30eea9d52ed84b91182149751dfb72e8603d5a4de1ba99d9ee"
     }
   ],
   "patchFixtures": [
@@ -112,6 +114,58 @@
       "expectedChangedPaths": ["wireframe-title.properties.text"]
     }
   ],
+  "candidateEvaluatorFixtures": {
+    "resolutionResult": "screenshot-resolution/wireframe.result.json",
+    "generationRequest": "screenshot-generation/wireframe.request.json",
+    "previewRequest": "screenshot-render/wireframe.preview-request.json",
+    "pixelReferenceRequest": "screenshot-pixel/pixel-reference.request.json",
+    "pixelReferenceResult": "screenshot-pixel/pixel-reference.result.json",
+    "cases": [
+      {
+        "id": "initial-exact",
+        "expectedCandidateFingerprint": "1f8f98ebbcbe0bcf51366b5d96ba033e7bab46a0220a8c165c9cc19e2ab6d135",
+        "expectedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+        "expectedEvaluationFingerprint": "aae65dcd1f23d3fec65dc3955c3bbec7e5f80b2c1cf85f4a2d997ca0e2845e06",
+        "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "passed"],
+        "expectedGateEvidence": [
+          "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
+          "7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67",
+          "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
+          "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31",
+          "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31",
+          "5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b"
+        ],
+        "expectedChecks": [1, 1, 1, 12, 15],
+        "expectedPixels": {
+          "comparedPixels": 2523781,
+          "mismatchedPixels": 0,
+          "maxChannelDelta": 0
+        }
+      },
+      {
+        "id": "title-text-pixel-mismatch",
+        "patch": "screenshot-repair/title-text.patch.json",
+        "expectedCandidateFingerprint": "a49828e84181500d5c9bd3955943a2bd24de0b4f9b7870afffbd72529813367c",
+        "expectedDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+        "expectedEvaluationFingerprint": "8f0a65ef59dfe39b42aa25342994ae22cdbb5cede1cffcfaa0d6cadfa95586d9",
+        "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "failed"],
+        "expectedGateEvidence": [
+          "ea77e571ae5977da628cdb40f12d83f664c2ed43b9375c42743ecd574098c219",
+          "873adf9b2512743396344bf9fbcf13b7dde73851c4cca41d1337e35c4100764a",
+          "ccc203334e1592e6d8cf87a77fcfd1362a68e7fed7afd7b2f16dbbe89012de77",
+          "35731da025fe9ba40a3b178b81b38638068719e64f2ec67060011c367b52a0bc",
+          "35731da025fe9ba40a3b178b81b38638068719e64f2ec67060011c367b52a0bc",
+          "9b23d77f5fba1e86ddfff471db9d151e7ae7ee93cb70d6cc4d59b9638254753c"
+        ],
+        "expectedChecks": [1, 1, 1, 12, 15],
+        "expectedPixels": {
+          "comparedPixels": 2523781,
+          "mismatchedPixels": 5102,
+          "maxChannelDelta": 217
+        }
+      }
+    ]
+  },
   "failClosedFixtures": [
     {
       "mutation": "screenshot-pixel/render-one-channel.mutation.json",

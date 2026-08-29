@@ -15,7 +15,7 @@
     "executeInspectedProjectBuildLogic": false
   },
   "initial": {
-    "candidateFingerprint": "98599de109dcc98ff978326bf9a906dc9b131549f2dce665cc04639adce61c78",
+    "candidateFingerprint": "1f8f98ebbcbe0bcf51366b5d96ba033e7bab46a0220a8c165c9cc19e2ab6d135",
     "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
     "gates": [
       {
@@ -30,7 +30,7 @@
         "status": "passed",
         "passedChecks": 1,
         "totalChecks": 1,
-        "evidenceFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9"
+        "evidenceFingerprint": "7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67"
       },
       {
         "name": "render",
@@ -42,15 +42,15 @@
       {
         "name": "semantics",
         "status": "passed",
-        "passedChecks": 14,
-        "totalChecks": 14,
+        "passedChecks": 12,
+        "totalChecks": 12,
         "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
       },
       {
         "name": "structure",
         "status": "passed",
-        "passedChecks": 13,
-        "totalChecks": 13,
+        "passedChecks": 15,
+        "totalChecks": 15,
         "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
       },
       {
@@ -62,11 +62,11 @@
         "evidenceFingerprint": "5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b"
       }
     ],
-    "evaluationFingerprint": "f8174041e35c311e5b6a57de05798d5978deec423cc552b749edd2731045693d"
+    "evaluationFingerprint": "aae65dcd1f23d3fec65dc3955c3bbec7e5f80b2c1cf85f4a2d997ca0e2845e06"
   },
   "iterations": [],
   "final": {
-    "candidateFingerprint": "98599de109dcc98ff978326bf9a906dc9b131549f2dce665cc04639adce61c78",
+    "candidateFingerprint": "1f8f98ebbcbe0bcf51366b5d96ba033e7bab46a0220a8c165c9cc19e2ab6d135",
     "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
     "gates": [
       {
@@ -81,7 +81,7 @@
         "status": "passed",
         "passedChecks": 1,
         "totalChecks": 1,
-        "evidenceFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9"
+        "evidenceFingerprint": "7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67"
       },
       {
         "name": "render",
@@ -93,15 +93,15 @@
       {
         "name": "semantics",
         "status": "passed",
-        "passedChecks": 14,
-        "totalChecks": 14,
+        "passedChecks": 12,
+        "totalChecks": 12,
         "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
       },
       {
         "name": "structure",
         "status": "passed",
-        "passedChecks": 13,
-        "totalChecks": 13,
+        "passedChecks": 15,
+        "totalChecks": 15,
         "evidenceFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31"
       },
       {
@@ -113,7 +113,7 @@
         "evidenceFingerprint": "5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b"
       }
     ],
-    "evaluationFingerprint": "f8174041e35c311e5b6a57de05798d5978deec423cc552b749edd2731045693d"
+    "evaluationFingerprint": "aae65dcd1f23d3fec65dc3955c3bbec7e5f80b2c1cf85f4a2d997ca0e2845e06"
   },
   "termination": {
     "reason": "initial-pass",
@@ -122,5 +122,5 @@
     "rejectedCandidates": 0
   },
   "findings": [],
-  "repairFingerprint": "54e68f7a8129bcf1da26053917a6ad769f71e32729ac416ea792f3d5fec610cb"
+  "repairFingerprint": "a6f92b031f387d30eea9d52ed84b91182149751dfb72e8603d5a4de1ba99d9ee"
 }

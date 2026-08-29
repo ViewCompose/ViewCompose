@@ -97,8 +97,9 @@ function validateGateSequence(evaluation) {
         (gate.status === 'passed' && (
           gate.comparedPixels < 1 || gate.mismatchedPixels !== 0 || gate.maxChannelDelta !== 0
         )) ||
-        (gate.status === 'failed' && (
-          gate.comparedPixels < 1 || gate.mismatchedPixels < 1 || gate.maxChannelDelta < 1
+        (gate.status === 'failed' && !(
+          (gate.comparedPixels === 0 && gate.mismatchedPixels === 0 && gate.maxChannelDelta === 0) ||
+          (gate.comparedPixels >= 1 && gate.mismatchedPixels >= 1 && gate.maxChannelDelta >= 1)
         )) ||
         (gate.status === 'not-run' && (
           gate.comparedPixels !== 0 || gate.mismatchedPixels !== 0 || gate.maxChannelDelta !== 0
@@ -358,6 +359,7 @@ export async function orchestrateScreenshotRepair({
         candidate: structuredClone(current),
       }, {signal});
     } catch {
+      if (signal?.aborted) return cancelled(initialCopy, iterations, current);
       return inputInvalid(initialCopy, iterations, current, 'The typed repair proposer failed.');
     }
     if (signal?.aborted) return cancelled(initialCopy, iterations, current);
@@ -412,6 +414,7 @@ export async function orchestrateScreenshotRepair({
         patch: structuredClone(patch),
       }, {signal});
     } catch {
+      if (signal?.aborted) return cancelled(initialCopy, iterations, current);
       return inputInvalid(initialCopy, iterations, current, 'The deterministic candidate evaluator failed.');
     }
     if (signal?.aborted) return cancelled(initialCopy, iterations, current);
@@ -426,6 +429,23 @@ export async function orchestrateScreenshotRepair({
       candidate: structuredClone(candidate),
       disposition: 'accepted',
     };
+    const regressed = regression(current, candidate);
+    if (regressed) {
+      record.disposition = 'rejected-regression';
+      iterations.push(record);
+      return sealResult({
+        status: 'blocked',
+        initial: initialCopy,
+        iterations,
+        final: current,
+        reason: 'regression',
+        findings: [finding(
+          'VC-AI-REPAIR-REGRESSION',
+          `The proposed candidate regressed the previously passed ${regressed.name} gate.`,
+          'Keep the previous candidate and stop automatic repair for human review.',
+        )],
+      });
+    }
     if (
       candidateFingerprints.has(candidate.candidateFingerprint) ||
       designIrFingerprints.has(candidate.designIrFingerprint)
@@ -447,23 +467,6 @@ export async function orchestrateScreenshotRepair({
     }
     candidateFingerprints.add(candidate.candidateFingerprint);
     designIrFingerprints.add(candidate.designIrFingerprint);
-    const regressed = regression(current, candidate);
-    if (regressed) {
-      record.disposition = 'rejected-regression';
-      iterations.push(record);
-      return sealResult({
-        status: 'blocked',
-        initial: initialCopy,
-        iterations,
-        final: current,
-        reason: 'regression',
-        findings: [finding(
-          'VC-AI-REPAIR-REGRESSION',
-          `The proposed candidate regressed the previously passed ${regressed.name} gate.`,
-          'Keep the previous candidate and stop automatic repair for human review.',
-        )],
-      });
-    }
     if (!strictlyImproves(failed, gateAt(candidate, failed.name))) {
       record.disposition = 'rejected-no-improvement';
       iterations.push(record);

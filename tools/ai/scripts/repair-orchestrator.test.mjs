@@ -197,6 +197,32 @@ test('rejects a non-improving candidate and retains the previous one', async () 
   assertValid(result);
 });
 
+test('retains unavailable exact-pixel evidence as a failed non-improving gate', async () => {
+  const unavailable = {
+    name: 'exact-pixels',
+    status: 'failed',
+    comparedPixels: 0,
+    mismatchedPixels: 0,
+    maxChannelDelta: 0,
+    evidenceFingerprint: hash('pixel-evidence-unavailable'),
+  };
+  const initial = evaluation('pixel-evidence-unavailable-initial', 1, {
+    'exact-pixels': unavailable,
+  });
+  const candidate = evaluation('pixel-evidence-unavailable-candidate', 1, {
+    'exact-pixels': unavailable,
+  });
+  const result = await orchestrateScreenshotRepair({
+    initial,
+    proposePatch: async () => patch('pixel-evidence-unavailable'),
+    evaluatePatch: async () => candidate,
+  });
+  assert.equal(result.status, 'incomplete');
+  assert.equal(result.termination.reason, 'no-eligible-change');
+  assert.equal(result.final.candidateFingerprint, initial.candidateFingerprint);
+  assertValid(result);
+});
+
 test('short-circuits an initial safety failure before repair callbacks', async () => {
   const safetyFailed = baseGate('safety', 'failed', 0, 1, 'unsafe');
   const notRun = (name) => baseGate(name, 'not-run', 0, 0, `${name}-not-run`);
@@ -278,6 +304,22 @@ test('honors cancellation before invoking either repair callback', async () => {
     evaluatePatch: async () => { callbacks += 1; },
   }, {signal: controller.signal});
   assert.equal(callbacks, 0);
+  assert.equal(result.status, 'cancelled');
+  assert.equal(result.termination.reason, 'cancelled');
+  assertValid(result);
+});
+
+test('maps cancellation thrown inside an injected boundary to a cancelled result', async () => {
+  const controller = new AbortController();
+  const initial = evaluation('cancel-inside-boundary', 1);
+  const result = await orchestrateScreenshotRepair({
+    initial,
+    proposePatch: async () => {
+      controller.abort();
+      throw new Error('cancelled');
+    },
+    evaluatePatch: async () => { throw new Error('must not evaluate'); },
+  }, {signal: controller.signal});
   assert.equal(result.status, 'cancelled');
   assert.equal(result.termination.reason, 'cancelled');
   assertValid(result);
