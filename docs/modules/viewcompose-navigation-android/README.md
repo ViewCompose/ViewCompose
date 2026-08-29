@@ -7,6 +7,7 @@ owner:
   id: viewcompose-navigation-android
 version_lane: released
 capability_ids:
+  - navigation.deep-links
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
@@ -16,6 +17,7 @@ artifact_ids:
 sample_ids:
   - module.navigation-android-dependency
   - module.navigation-android-destination-context
+  - module.navigation-android-deep-link
   - module.navigation-android-host
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
@@ -389,10 +391,35 @@ direction maps primary-to-tertiary roles to the correct physical order for LTR a
 
 ## Deep links and retained stacks
 
-The string, Android `Uri`, and `ACTION_VIEW Intent` entry points all use the same strict graph
-resolver. A match is converted to one atomic command that updates the declared target stack and
-selects it. `NavDeepLinkResult.Navigated` still contains a `NavResult`, so rendering or commit failure
-is not confused with URI matching success.
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-deep-link" sample_id="module.navigation-android-deep-link" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun navigateSharedImageRequest(controller: NavHostController): NavDeepLinkResult {
+    return controller.navigateDeepLink(
+        NavDeepLinkRequest(
+            action = Intent.ACTION_SEND,
+            mimeType = "image/png",
+        ),
+    )
+}
+
+fun navigateSharedImageIntent(
+    controller: NavHostController,
+    intent: Intent,
+): NavDeepLinkResult {
+    return controller.navigateDeepLink(intent)
+}
+```
+
+The platform-neutral `NavDeepLinkRequest`, string URI, Android `Uri`, and Android `Intent` entry
+points all use the same strict Core resolver. The Intent adapter maps only `data`, `action`, and
+`type`; extras and categories never enter route arguments or matching policy. URI-only declarations
+continue to accept `ACTION_VIEW` Intents, while action-only, MIME-only, and combined declarations
+support shares and other explicit integrations without Android types in Navigation Core.
+
+A match is converted to one atomic command that updates the declared target stack and selects it.
+`NavDeepLinkResult.Navigated` still contains a `NavResult`, so rendering or commit failure is not
+confused with request matching success. An Intent without data, action, or MIME type returns
+`NoMatch`; malformed supplied fields return the Core resolver's structured rejection.
 
 For multiple tabs, declare one `NavStackConfiguration` and remember it with the shared graph. Do not
 create one controller per tab or mirror active-stack state in application fields; the controller

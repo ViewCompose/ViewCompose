@@ -787,6 +787,22 @@
       }
     },
     {
+      "capabilityId": "navigation.deep-links",
+      "referenceId": "reference.navigation.deep-links",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "module.viewcompose-navigation-core",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-core-deep-link",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "navigation.destination-context",
       "referenceId": "reference.navigation.destination-context",
       "relatedDocumentIds": [

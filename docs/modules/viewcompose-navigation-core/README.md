@@ -7,6 +7,7 @@ owner:
   id: viewcompose-navigation-core
 version_lane: released
 capability_ids:
+  - navigation.deep-links
   - navigation.host
   - navigation.scene-projection
 artifact_ids:
@@ -138,17 +139,41 @@ between tabs.
 
 {/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-deep-link" sample_id="module.navigation-core-deep-link" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
-val profileLink = NavDeepLink(
-    uriPattern = "https://viewcompose.com/users/{userId}",
-    argumentTypes = mapOf("userId" to NavDeepLinkArgumentType.Long),
-    targetStackId = NavStackId("account"),
+val graph = navGraph(
+    route = "root",
+    startDestination = NavRoute("home"),
+) {
+    destination("home")
+    destination(
+        route = "shared-image",
+        deepLinks = listOf(
+            NavDeepLink(
+                action = "android.intent.action.SEND",
+                mimeType = "image/*",
+            ),
+        ),
+    )
+}
+val result = graph.resolveDeepLink(
+    NavDeepLinkRequest(
+        action = "android.intent.action.SEND",
+        mimeType = "image/png",
+    ),
 )
+check((result as NavDeepLinkResolution.Matched).match.route.name == "shared-image")
 ```
 
-Patterns are strict allowlists. Placeholders occupy a complete path segment or query value. URI
-fragments, user info, malformed percent encoding, invalid UTF-8, duplicate query names, undeclared
-types, and partial placeholders are rejected. Typed floating-point values must be finite and
-booleans accept only lowercase `true` or `false`.
+Declarations are strict URI, action, MIME, or combined allowlists. Every declared dimension is
+required; extra request dimensions are inert. MIME values compare case-insensitively and support
+exact `type/subtype`, `type/*`, `*/subtype`, and `*/*` constraints. Actions compare exactly.
+Combined declarations rank before a matching single-dimension declaration. URI specificity then
+ranks static path segments above placeholders and declared query values. Equally specific winners
+are rejected instead of depending on declaration order.
+
+URI placeholders occupy a complete path segment or query value. URI fragments, user info,
+malformed percent encoding, invalid UTF-8, duplicate query names, undeclared types, and partial
+placeholders are rejected. Typed floating-point values must be finite and booleans accept only
+lowercase `true` or `false`.
 
 Extra input query parameters are tolerated but inert. An undeclared value never enters
 `NavRoute.arguments`, changes specificity, resolves ambiguity, selects a retained stack, or chooses
@@ -158,13 +183,18 @@ passing it to the resolver.
 Resolution returns one of four outcomes:
 
 - `Matched` contains the winning declaration and decoded `NavRoute`;
-- `NoMatch` means a valid URI did not enter any registered pattern domain;
+- `NoMatch` means a valid request did not satisfy any complete declaration;
 - `Rejected` reports malformed input, typed-argument failure, or an ambiguous best match;
 - `Unsupported` means the controller was created without a graph.
 
-Static path segments rank above placeholders, followed by query specificity. Equally specific best
-matches are rejected instead of depending on declaration order. A host converts a match to
-`OpenDeepLink`, which mutates the target stack and selects it in one transaction.
+A host converts a match to `OpenDeepLink`, which mutates the target stack and selects it in one
+transaction. String URI resolution is a convenience overload over `NavDeepLinkRequest`; it is not
+a second matching implementation.
+
+This Alpha slice intentionally replaces `NavDeepLinkRejection.matchingPatterns` with
+`NavDeepLinkRejection.candidates`. Consumers must inspect the immutable declarations when rendering
+diagnostics because an action-only or MIME-only candidate has no URI pattern. No deprecated bridge
+or parallel string projection is retained.
 
 ## Lifecycle planning
 

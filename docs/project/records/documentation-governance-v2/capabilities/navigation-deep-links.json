@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.deep-links",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-core" },
+  "artifact": "viewcompose-navigation-core",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha03" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLinkArgumentType",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLinkLaunchMode",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLink",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLinkMatch",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLinkRejection",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLinkRejectionReason",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLinkRequest",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavDeepLinkResolution",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavGraph.resolveDeepLink",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavGraph.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavBackStackController.resolveDeepLink",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.navigation.deep-links",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.navigation-core-deep-link"
+  },
+  "document_owners": {
+    "guide": ["guide.navigation-production-host"],
+    "architecture": ["architecture.navigation-runtime"],
+    "module": [
+      "module.viewcompose-navigation-core",
+      "module.viewcompose-navigation-android"
+    ],
+    "migration": ["migration.compose-navigation"]
+  }
+}

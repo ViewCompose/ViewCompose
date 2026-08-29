@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 710336690883a10a5c1c13c5e3dc43fa0191ca19db53df526f5069b01dea324f
+translation_source_hash: 35142af5c88d1f3bb4c7486de65a68b107a10169e34ec2c4d3d2cde8e700351a
 translation_status: current
 ---
 
@@ -111,16 +111,38 @@ Saved State 和 ViewModel owner 在 Tab 之间泄漏。
 
 {/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-deep-link" sample_id="module.navigation-core-deep-link" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
-val profileLink = NavDeepLink(
-    uriPattern = "https://viewcompose.com/users/{userId}",
-    argumentTypes = mapOf("userId" to NavDeepLinkArgumentType.Long),
-    targetStackId = NavStackId("account"),
+val graph = navGraph(
+    route = "root",
+    startDestination = NavRoute("home"),
+) {
+    destination("home")
+    destination(
+        route = "shared-image",
+        deepLinks = listOf(
+            NavDeepLink(
+                action = "android.intent.action.SEND",
+                mimeType = "image/*",
+            ),
+        ),
+    )
+}
+val result = graph.resolveDeepLink(
+    NavDeepLinkRequest(
+        action = "android.intent.action.SEND",
+        mimeType = "image/png",
+    ),
 )
+check((result as NavDeepLinkResolution.Matched).match.route.name == "shared-image")
 ```
 
-pattern 是严格白名单。占位符必须完整占据一个路径段或查询值。URI fragment、userinfo、非法
-百分号编码、无效 UTF-8、重复查询名、未声明类型和局部占位符都会被拒绝。浮点类型必须有限，
-布尔值只接受小写 `true` 或 `false`。
+声明是 URI、action、MIME 或三者组合的严格白名单。每个已声明维度都必须匹配，请求中的额外
+维度不参与策略。MIME 值不区分大小写，并支持精确 `type/subtype`、`type/*`、`*/subtype` 与
+`*/*` 约束；action 精确比较。组合声明优先于命中的单维声明，然后才比较 URI 与 MIME 具体度。
+多个同分最佳匹配会被拒绝，而不是依赖声明顺序。
+
+URI 占位符必须完整占据一个路径段或查询值。URI fragment、userinfo、非法百分号编码、无效
+UTF-8、重复查询名、未声明类型和局部占位符都会被拒绝。浮点类型必须有限，布尔值只接受小写
+`true` 或 `false`。
 
 输入中额外的 query 参数会被容忍，但完全不参与导航。未声明值不会进入
 `NavRoute.arguments`、改变匹配具体度、消除歧义、选择保留栈或决定 launch mode。若应用要求
@@ -129,12 +151,16 @@ pattern 是严格白名单。占位符必须完整占据一个路径段或查询
 解析返回四种结果之一：
 
 - `Matched` 包含胜出的声明和解码后的 `NavRoute`；
-- `NoMatch` 表示合法 URI 未进入任何已注册 pattern 的匹配域；
+- `NoMatch` 表示合法请求未完整满足任何已注册声明；
 - `Rejected` 报告非法输入、类型参数失败或最佳匹配歧义；
 - `Unsupported` 表示 controller 创建时没有绑定导航图。
 
-静态路径段的优先级高于占位符，其次比较 query 精确度。多个同分最佳匹配会被拒绝，而不是依赖
-声明顺序。宿主把匹配结果转换为 `OpenDeepLink`，在同一个事务中变更并选中目标 stack。
+宿主把匹配结果转换为 `OpenDeepLink`，在同一个事务中变更并选中目标 stack。String URI 解析
+只是 `NavDeepLinkRequest` 的便捷重载，并非第二套匹配实现。
+
+本次 Alpha 切片刻意以 `NavDeepLinkRejection.candidates` 替代
+`NavDeepLinkRejection.matchingPatterns`。渲染诊断信息时必须读取不可变声明，因为仅包含 action
+或 MIME 的候选项没有 URI pattern。这里不保留 Deprecated Bridge 或并行 String Projection。
 
 ## 生命周期规划
 

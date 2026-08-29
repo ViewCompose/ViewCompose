@@ -11,6 +11,7 @@ capability_ids:
   - lifecycle.effects
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
+  - navigation.deep-links
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
@@ -21,9 +22,11 @@ artifact_ids:
   - viewcompose-navigation-core
 sample_ids:
   - module.navigation-android-destination-context
+  - module.navigation-android-deep-link
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
   - module.navigation-core-execution-plan
+  - module.navigation-core-deep-link
   - module.navigation-core-scene-projection
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
@@ -50,12 +53,13 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 7 capability-gap closure, coverage, leak, memory, performance, and broader device evidence.
+next_action: Continue Phase 7 with typed-route and navigation-result dispositions, then coverage, leak, memory, performance, and broader device evidence.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
   - release/changes/20260829-navigation-presentation-retention.json
   - release/changes/20260829-navigation-scene-projection.json
+  - release/changes/20260829-navigation-structured-deep-links.json
   - release/changes/20260829-navigation-transition-lifecycle.json
 ---
 
@@ -66,12 +70,13 @@ maven_release_changesets:
 Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
-complete. Phase 6 reducer/executor convergence and acceptance are complete; Phase 7 is next.
+complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
+structured deep-link slice is complete.
 
 Last verified: 2026-08-29.
 
-Next action: execute Phase 7 capability-gap closure, coverage, leak, memory, performance, and
-broader device evidence.
+Next action: continue Phase 7 with typed-route and navigation-result dispositions, then coverage,
+leak, memory, performance, and broader device evidence.
 
 ## Maven release changesets
 
@@ -79,6 +84,7 @@ broader device evidence.
 - `release/changes/20260829-navigation-execution-reducer.json`
 - `release/changes/20260829-navigation-presentation-retention.json`
 - `release/changes/20260829-navigation-scene-projection.json`
+- `release/changes/20260829-navigation-structured-deep-links.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
 
 ## Release intent rationale
@@ -827,6 +833,56 @@ remains the retry boundary for that network-dependent publication check.
    guidance.
 3. Run fresh unit, device, restoration, coverage, leak, memory, and performance matrices.
 4. Hard-cut all obsolete production, test, sample, diagnostic, and documentation paths.
+
+#### Capability slice 7.1: structured deep-link requests
+
+The re-audit accepted action and MIME matching as a material gap. Navigation 2 exposes URI, action,
+and MIME deep-link dimensions, while ViewCompose previously hard-coded the Android adapter to
+`ACTION_VIEW` plus data even though Core already owned strict URI parsing. The completed slice adds
+one platform-neutral `NavDeepLinkRequest`, permits URI-, action-, MIME-, and combined declarations,
+and routes string, `Uri`, structured, and `Intent` entry points through the same Core matcher. The
+Android layer now adapts only `Intent.data`, `action`, and `type`; it owns no ranking or decoding
+policy.
+
+The design deliberately differs from a permissive fallback matcher. Every declared constraint must
+match, malformed supplied fields are rejected before a broad action-only fallback can win, combined
+declarations rank ahead of single-dimension candidates, and tied most-specific candidates remain a
+structured ambiguity. MIME matching is locale-independent and supports exact or component-wildcard
+constraints. The obsolete `matchingPatterns` string diagnostic was hard-cut in favor of immutable
+`NavDeepLink` candidates because action-only and MIME-only declarations have no URI pattern to
+report. This is a source/binary breaking Core alpha correction and is recorded accordingly.
+
+Documentation Governance V2 classified zero detected application-entry API changes for this
+committed slice because its detector intentionally covers DSL, Modifier, component, host,
+integration, and tooling entry declarations rather than low-level Core model constructors or
+controller members. Adding impact records for those symbols is therefore rejected as a false
+classification. The accepted manual disposition is the new `navigation.deep-links` capability,
+Q3 Core and Android compiled samples, canonical KDoc, both module manuals, production guide,
+architecture, Compose migration, generated Reference, translated mirrors, and the breaking/feature
+Changeset. No Tutorial or redirect applies: first-success navigation does not accept untrusted
+external input, and no symbol or document route moved.
+
+Fresh Navigation Core tests passed 76/76 with zero failures, errors, or skips, compared with the
+Phase 6 baseline of 71: five added cases, a 7.0% increase. Fresh Navigation Android tests passed
+166/166 with zero failures, errors, or skips, compared with 165: one added Robolectric case, a 0.6%
+increase. Coverage includes action-only routing, MIME wildcard and case behavior, three-dimension
+matching, combined-declaration precedence, missing and mismatched constraints, malformed-field
+rejection before fallback, duplicate matcher identity, Android Intent adaptation, and the direct
+structured host entry point. The result is **improved** capability and regression confidence.
+
+The strict Navigation Core API-documentation audit passed after replacing two inherited reducer
+property links with literal property names; all new deep-link declarations, overloads, and Q3
+sample links were accepted. The Android publication task remains **inconclusive** because Dokka
+rejects the module's pre-existing overlapping `androidJvm` and `release` source roots before it
+inspects declarations. A direct retry reproduced the same configuration error for
+`src/main/kotlin` and `src/main/java`; it did not report a new API-comment defect. The next action is
+to correct the shared Android Dokka convention once for every affected Android artifact, then rerun
+the strict Android audit instead of weakening this module's source layout or audit policy here.
+
+These are deterministic JVM/Robolectric results; no new device claim is needed for the
+platform-neutral matching algorithm, but OEM Intent delivery, line/branch coverage, memory, leaks,
+and performance remain **inconclusive** and stay in Phase 7. Next action: disposition typed-route
+serialization and navigation results before running the broader evidence matrix.
 
 ### Phase 8: document, release, and archive
 

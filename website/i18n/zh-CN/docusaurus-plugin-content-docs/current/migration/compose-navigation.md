@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: 596bd610ac5764f6b942e4d44b6d65f2b70d648100904e82a3c9f37c9e4d50b8
+translation_source_hash: b3322f359e51391e229ebc484bca62abe7a2494f906eb4d261a5b47a3ea36434
 translation_status: current
 ---
 
@@ -133,7 +133,7 @@ owner 传播、多返回栈、恢复、Predictive Back，也不覆盖任何 Navi
 | Destination Presentation Context | Navigation 3 Entry 内容可以在自己的 Entry Scope 中观察 Scene Metadata；Compose 内容也会观察 Composition Local。 | `LocalNavDestinationContext` 提供稳定的 Per-entry Holder，其只读 Presentation 就是 Core Scene Entry 本身。它可跨原生 Presentation 释放/重建存活，按最近 Host 嵌套，并排除逐帧 Progress。AndroidX Lifecycle 仍是资源阈值 API。 | Supported | `NavDestinationContext.kt`、`NavEntryOwnerEnvironment.kt`，以及 Navigation Android 中针对 Holder、Local Capture、嵌套 Host、Pane、Overlay、移除和 Predictive Progress 的测试。即使 Context 可表达 Core Overlay Scene，通用 Overlay 导航仍未支持。 |
 | 隐藏目的地 composition | 导航状态可以独立于 Compose 内容是否仍在 Composition 中而保留。Navigation 3 decorator 会保留 entry 状态。 | 逻辑 Entry Owner、ViewModel、Saved State 与 Saveable State 独立于原生展示存活。`DisposeWhenHidden` 是有界默认；也可显式全保留或按“最久未隐藏”保留正数上限。再次展示时会事务性重建缺失 Presentation。 | Supported | `NavPresentationRetentionPolicy.kt`、`NavDestinationSessionStore.kt`、Owner/Rebuild/LRU 单测，以及 `NavigationBackDeviceTest.kt` 中的真机 Identity 与资源数量覆盖。 |
 | 多返回栈 | Navigation 2 使用保存/恢复选项；Navigation 3 记录了应用拥有多个列表的方案。 | 一个 `NavStackConfiguration` 拥有全部栈、选择历史和根 Back 行为。未选择栈的 Owner 保持存活，可选 Presentation 则遵循 Host Retention Policy。 | Intentionally different | [`NavStackConfiguration.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavStackConfiguration.kt)、[`NavBackStackSetControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackSetControllerTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的多栈恢复覆盖。 |
-| 深层链接 | Navigation 2 匹配 URI、action 和 MIME type。Navigation 3 提供把外部输入解析成应用 key 的方案。 | ViewCompose 解析严格的绝对 URI pattern 和 Android `ACTION_VIEW` 输入，支持嵌套 graph 与调用方指定的 launch mode，拒绝歧义匹配，且不匹配任意 action 或 MIME type。输入中的额外 query 参数可存在，但不能影响 route 参数或导航策略。 | Partially supported | [`NavDeepLink.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt)、[`NavDeepLinkTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavDeepLinkTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的公共 host 策略覆盖。部分支持来自刻意缩小的 action/MIME 能力面，而不是未解决的 query 契约。 |
+| 深层链接 | Navigation 2 匹配 URI、action 和 MIME type。Navigation 3 提供把外部输入解析成应用 key 的方案。 | `NavDeepLinkRequest` 与 `NavDeepLink` 在不引入 Android 类型的前提下匹配严格 URI、action、MIME 或组合声明。Android 把 `Intent.data`、`action` 与 `type` 映射到同一解析器；嵌套 graph、launch mode、结构化拒绝、歧义拒绝与惰性额外 query 值继续受支持。 | Supported | [`NavDeepLink.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt)、[`NavDeepLinkTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavDeepLinkTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的 Intent/事务覆盖。ViewCompose 有意省略 Navigation 2 的 Android 专用 Builder 表面，但在 Core 中保留实质匹配能力。 |
 | 保存、恢复与进程死亡 | Navigation 2 恢复控制器和 entry 状态；Navigation 3 恢复可保存 key 和 decorator 状态。二者都不会恢复存活的 ViewModel 实例。 | ViewCompose 保存完整的已配置栈集合、route value、entry 和 graph saved state、saveable value，以及私有 host-scope 身份。它只在配置重建期间通过父 store 保留存活 ViewModel；版本 4 快照会用新的 scope 身份迁移；损坏或结构无效的状态会被拒绝。 | Supported | [`NavHostSavedState.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostSavedState.kt)、[`NavHostSavedStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostSavedStateTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的恢复覆盖。存活的 View、ViewModel、Effect、动画和未提交事务都不会跨进程恢复。 |
 | 系统 Back 与 Predictive Back | Navigation 2 Compose 集成 Predictive Back。Navigation 3 使用 NavigationEvent 和 scene transition。Activity 1.13 在 NavigationEvent 之上继续兼容 `OnBackPressedDispatcher`。 | Android 宿主注册 `OnBackPressedCallback`，并通过事务式 preview driver 支持 predictive start、progress、cancel 和 commit。 | Supported | [`AndroidNavHostBackAdapter.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/AndroidNavHostBackAdapter.kt)、[`AndroidNavHostBackAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/AndroidNavHostBackAdapterTest.kt)，以及 API 33 Pixel 4 XL 真机上 2/2 项定向 Predictive/Lifecycle Instrumentation。此次未重跑 API 34 平台边缘手势分发。 |
 | 直接 NavigationEvent 集成 | Activity 和 Navigation3 公开 `NavigationEventDispatcher`、嵌套 dispatcher owner、测试工具与 Compose handler。Navigation3 1.1.3 使用 NavigationEvent 1.1.2，其中包括 Android Studio Preview inspection mode 下的 Predictive Back。 | ViewCompose 使用兼容的 Activity `OnBackPressedDispatcher` 路径，但没有直接 NavigationEvent callback、dispatcher owner、forward event、测试或 Preview 集成。 | Unsupported | 未找到对应的 ViewCompose 公共 API。Activity 在 NavigationEvent 之上实现了 `OnBackPressedDispatcher`，所以现有 Back 行为仍受支持；此处 Unsupported 仅指直接集成。 |
@@ -274,9 +274,14 @@ Lifecycle 2.11 Navigation3 集成可以在多个栈显示之间提升 ViewModelS
 
 ## 深层链接 {/* #deep-links */}
 
-ViewCompose 深层链接使用严格的绝对 URI pattern，并可以指向嵌套 graph。解析会拒绝错误输入、
-不可信 URI 组件、重复参数和歧义匹配。Android 宿主通过 `ACTION_VIEW` 接收受支持的外部 route。
-Navigation 2 action 和 MIME type 匹配没有直接对应能力。
+ViewCompose 深层链接使用一份平台无关请求承载 URI、action 与 MIME 数据。声明可以约束任一维度
+或组合多个维度，且所有已声明约束都必须匹配。MIME 约束支持精确值与组件通配符；action 精确且
+区分大小写。约束更多的声明优先，然后比较 URI 与 MIME 具体度；同分最佳匹配会被拒绝。URI 声明
+可以指向嵌套 graph，并解码封闭的 `NavValue` 参数集合。
+
+解析会在修改栈前拒绝格式错误的已提供字段、不可信 URI 组件、重复参数与歧义匹配。Android
+宿主把 `Intent.data`、`Intent.action` 与 `Intent.type` 映射到同一请求，并忽略 extras 与
+categories。
 
 ### 额外 query 参数
 
@@ -322,7 +327,7 @@ inspection mode 中启用 Predictive Back；Navigation3 1.1.5 保留该行为。
 3. 把 `NavOptions`、`popUpTo`、single-top 和保存/恢复意图改写成显式的预期栈结果。
 4. 映射目的地和 graph ViewModel 作用域，包括 factory、extras 和 saved-state 需求。
 5. 显式配置多栈和根 Back 行为。
-6. 围绕受支持 URI pattern 与 `ACTION_VIEW` 重建深层链接；替换 action/MIME 规则。
+6. 把 URI、action、MIME 与组合规则迁移为 `NavDeepLink` 声明，并显式验证被拒绝和歧义的外部请求。
 7. 验证事务回滚、进程死亡、系统 Back 和 predictive cancel。
 
 ### 从 Navigation 3 迁移
@@ -340,7 +345,6 @@ inspection mode 中启用 Predictive Back；Navigation3 1.1.5 保留该行为。
 
 - 不支持 Activity 和 Fragment 目的地；它们只保留 Android 宿主角色。
 - 不支持任意可序列化 route 对象，也不对齐编译器生成的类型化 route。
-- 不支持 Navigation 2 action 和 MIME 深层链接匹配。
 - 不支持直接 NavigationEvent dispatcher owner、callback、forward event、测试和 Preview API。
 - 不支持通用 Navigation3 scene 策略与 metadata；pane 策略范围更窄。
 - 隐藏会话保留 Effect 和原生 View，增加生命周期与内存风险。
