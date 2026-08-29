@@ -60,6 +60,24 @@ const xmlSourceRoots = {
   uniqueItems: true,
   items: {type: 'string', minLength: 1, maxLength: 4096},
 };
+const generatedPreviewAsset = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['mediaType', 'encoding', 'data', 'bytes', 'sha256', 'widthPx', 'heightPx'],
+  properties: {
+    mediaType: {const: 'image/png'},
+    encoding: {const: 'base64'},
+    data: {
+      type: 'string',
+      maxLength: 699052,
+      pattern: '^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$',
+    },
+    bytes: {type: 'integer', minimum: 1, maximum: 524288},
+    sha256: {type: 'string', pattern: '^[a-f0-9]{64}$'},
+    widthPx: {type: 'integer', minimum: 1, maximum: 1024},
+    heightPx: {type: 'integer', minimum: 1, maximum: 1024},
+  },
+};
 const generatedPreviewBindings = {
   type: 'array',
   maxItems: 64,
@@ -95,6 +113,7 @@ const generatedPreviewBindings = {
           kind: {const: 'image-source'},
           parameter: {type: 'string', pattern: '^[a-z][A-Za-z0-9]{0,127}$'},
           source: {type: 'string', pattern: '^@drawable/[a-z][a-z0-9_]*$'},
+          asset: generatedPreviewAsset,
         },
       },
     ],

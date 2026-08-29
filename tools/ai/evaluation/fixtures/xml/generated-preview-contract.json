@@ -133,6 +133,7 @@
       "requestFingerprint",
       "generatedKotlinFingerprint",
       "wrapperFingerprint",
+      "assets",
       "pngSha256",
       "renderTreeSha256",
       "outputFingerprint",
@@ -185,7 +186,9 @@
       "expectedGeneratedKotlinFingerprint": "6c4f6dafef9e0b4808eefab440d14e331b1a3b55bc8becff7a05d3669cc73be1",
       "expectedWrapperFingerprint": "8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821",
       "expectedWrapperExpressions": ["emailState = TextFieldState(),"],
-      "expectedBuildFingerprint": "77a71a6650ac829fdb7fa072860a817438ac045164b27431697a1358b16715df",
+      "expectedSourceLine": 22,
+      "expectedCapabilityIds": ["foundation.components", "modifier.layout"],
+      "expectedBuildFingerprint": "87affa2585fc27354049e780b24c00e7d6ea5181e7b9b65af6d8a88e7d5ed08d",
       "expectedOutputFingerprint": "6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab",
       "expectedPreviewId": "generatedpreviewkt-generatedxmlpreview-8ccd5bd7b4eb",
       "expectedVariantId": "generated-xml-loginview-abee9c74",
@@ -205,11 +208,12 @@
         "texts": [
           "Sign in to ViewCompose",
           "Sign in"
-        ]
+        ],
+        "contentDescriptions": []
       }
     },
     {
-      "status": "contract-frozen",
+      "status": "implemented",
       "source": "profile-card.xml",
       "generatedKotlin": "profile-card.viewcompose.kt",
       "request": "generated-preview/image-binding.preview-request.json",
@@ -219,13 +223,42 @@
       "expectedAssets": 1,
       "expectedAssetBytes": 70,
       "expectedAssetSha256": "4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5",
+      "expectedAssetWidthPx": 1,
+      "expectedAssetHeightPx": 1,
       "expectedResourceName": "vc_ai_4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5",
       "expectedRequestFingerprint": "1d81d2ed9db84ee022d806042cd883c426f4fe0061aa65c757ef0de3a91225f6",
       "expectedGeneratedKotlinFingerprint": "15b15098e92b62bc9730ab7b3f2bde7715596f22069490a18b1e7830ff92ad35",
       "expectedWrapperFingerprint": "461d7c9e7b9898b9b9f7373775fa10c8a180097664627b442d36a8b2abd2a4b2",
       "expectedWrapperExpressions": [
         "profileAvatar = ImageSource.Resource(R.drawable.vc_ai_4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5),"
-      ]
+      ],
+      "expectedSourceLine": 23,
+      "expectedCapabilityIds": [
+        "foundation.components",
+        "image.foundation",
+        "modifier.drawing",
+        "modifier.layout"
+      ],
+      "expectedBuildFingerprint": "76b256d15f1801358b009127e50467c5936af8b99714f6895e06dddef7a7b990",
+      "expectedOutputFingerprint": "31fb45a13a4d35badee2cf61ce7760a0540b60ed2e0def2d3e3910cfdb4268f5",
+      "expectedPreviewId": "generatedpreviewkt-generatedxmlpreview-8ccd5bd7b4eb",
+      "expectedVariantId": "generated-xml-profilecardview-abee9c74",
+      "expectedImage": {
+        "widthPx": 1079,
+        "heightPx": 2339,
+        "bytes": 15217,
+        "sha256": "bb130675ac0de5df6ad6ff93ded020cbe93704a80030301da3a2d57a56b9cd3f"
+      },
+      "expectedRenderTree": {
+        "bytes": 120988,
+        "sha256": "58bbd8da9df6295da2419dc85bf4c7d4636419f8022237740b694966763b31e9",
+        "vnodeCount": 3,
+        "mountedNodeCount": 3,
+        "maxVNodeDepth": 2,
+        "maxMountedDepth": 2,
+        "texts": ["Available"],
+        "contentDescriptions": ["Profile photo"]
+      }
     }
   ],
   "unsupportedFixtures": [

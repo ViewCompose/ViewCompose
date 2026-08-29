@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,9 +14,11 @@ requestKey?.let { value ->
     }
 }
 val requestIdentity = requestKey ?: "inactive"
-val requestSourceDirectory = rootProject.layout.buildDirectory.dir(
-    "ai/preview/requests/$requestIdentity/input",
+val requestRootDirectory = rootProject.layout.buildDirectory.dir(
+    "ai/preview/requests/$requestIdentity",
 )
+val requestSourceDirectory = requestRootDirectory.map { directory -> directory.dir("input") }
+val requestResourceDirectory = requestRootDirectory.map { directory -> directory.dir("res") }
 
 android {
     namespace = "com.viewcompose.ai.preview.harness"
@@ -38,6 +42,7 @@ android {
     }
 
     sourceSets.getByName("debug").java.srcDir(requestSourceDirectory.get().asFile)
+    sourceSets.getByName("debug").res.srcDir(requestResourceDirectory.get().asFile)
 }
 
 dependencies {
@@ -51,13 +56,14 @@ dependencies {
 val validateAiPreviewRequest by tasks.registering {
     group = "verification"
     description = "Validate the fixed content-addressed source input for one AI Preview request."
-    inputs.dir(requestSourceDirectory)
+    inputs.dir(requestRootDirectory)
 
     doLast {
         require(requestKey != null) {
             "The tool-owned Preview harness requires -PviewComposeAiPreviewRequestKey=<sha256>."
         }
         val input = requestSourceDirectory.get().asFile
+        val requestRoot = requestRootDirectory.get().asFile
         require(input.isDirectory) {
             "The tool-owned Preview input directory is missing for request $requestKey."
         }
@@ -65,8 +71,41 @@ val validateAiPreviewRequest by tasks.registering {
             listOf("GeneratedPreview.kt", "GeneratedView.kt")) {
             "The tool-owned Preview input must contain exactly GeneratedPreview.kt and GeneratedView.kt."
         }
-        require(input.listFiles().orEmpty().all { it.isFile }) {
+        require(input.listFiles().orEmpty().all { file ->
+            file.isFile && !Files.isSymbolicLink(file.toPath())
+        }) {
             "The tool-owned Preview input contains a non-file entry."
+        }
+        val resources = requestResourceDirectory.get().asFile
+        if (resources.exists()) {
+            require(
+                resources.isDirectory &&
+                    !Files.isSymbolicLink(resources.toPath()) &&
+                    resources.listFiles().orEmpty().map { it.name } == listOf("drawable"),
+            ) {
+                "The tool-owned Preview resource root must contain only drawable."
+            }
+            val drawable = resources.resolve("drawable")
+            require(
+                drawable.isDirectory &&
+                    !Files.isSymbolicLink(drawable.toPath()) &&
+                    drawable.listFiles().orEmpty().isNotEmpty() &&
+                    drawable.listFiles().orEmpty().all { file ->
+                        Regex("^vc_ai_[a-f0-9]{64}\\.png$").matches(file.name) &&
+                            file.isFile &&
+                            !Files.isSymbolicLink(file.toPath())
+                    },
+            ) {
+                "The tool-owned Preview drawable directory contains an invalid asset."
+            }
+        }
+        val expectedRootEntries = if (resources.exists()) {
+            listOf("input", "res")
+        } else {
+            listOf("input")
+        }
+        require(requestRoot.listFiles().orEmpty().map { it.name }.sorted() == expectedRootEntries) {
+            "The tool-owned Preview request directory contains an unexpected entry."
         }
     }
 }

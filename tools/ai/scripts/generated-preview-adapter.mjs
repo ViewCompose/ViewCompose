@@ -22,6 +22,12 @@ const MAX_GENERATED_KOTLIN_BYTES = 1024 * 1024;
 const MAX_WRAPPER_BYTES = 256 * 1024;
 const MAX_BINDINGS = 64;
 const MAX_BINDING_TEXT_BYTES = 64 * 1024;
+const MAX_ASSETS = 16;
+const MAX_ASSET_BYTES = 512 * 1024;
+const MAX_TOTAL_ASSET_BYTES = 1024 * 1024;
+const MAX_ASSET_WIDTH_PX = 1024;
+const MAX_ASSET_HEIGHT_PX = 1024;
+const MAX_PNG_CHUNKS = 256;
 const SHA256 = /^[a-f0-9]{64}$/u;
 const bindingKindByType = Object.freeze({
   String: 'string',
@@ -84,7 +90,17 @@ function canonicalBinding(binding) {
         kind: 'image-source',
         parameter: binding.parameter,
         source: binding.source,
-        ...(binding.asset === undefined ? {} : {asset: binding.asset}),
+        ...(binding.asset === undefined ? {} : {
+          asset: {
+            mediaType: binding.asset.mediaType,
+            encoding: binding.asset.encoding,
+            data: binding.asset.data,
+            bytes: binding.asset.bytes,
+            sha256: binding.asset.sha256,
+            widthPx: binding.asset.widthPx,
+            heightPx: binding.asset.heightPx,
+          },
+        }),
       };
     default:
       return binding;
@@ -103,6 +119,116 @@ function reportBindings(report) {
 
 function hasDuplicates(values) {
   return new Set(values).size !== values.length;
+}
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function decodeEmbeddedPng(asset) {
+  const bytes = Buffer.from(asset.data, 'base64');
+  if (
+    bytes.toString('base64') !== asset.data ||
+    bytes.length !== asset.bytes ||
+    bytes.length > MAX_ASSET_BYTES ||
+    sha256(bytes) !== asset.sha256 ||
+    bytes.length < 33 ||
+    bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a'
+  ) {
+    return planIssue(
+      'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+      'Embedded Preview PNG bytes do not match their canonical encoding, size, hash, or signature.',
+      'Provide exact canonical PNG bytes and matching immutable identity fields.',
+    );
+  }
+  let cursor = 8;
+  let chunks = 0;
+  let ihdr = 0;
+  let iend = 0;
+  while (cursor < bytes.length) {
+    if (cursor + 12 > bytes.length) {
+      return planIssue(
+        'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+        'Embedded Preview PNG has a truncated chunk header.',
+        'Provide one complete bounded PNG.',
+      );
+    }
+    const length = bytes.readUInt32BE(cursor);
+    const typeStart = cursor + 4;
+    const dataStart = typeStart + 4;
+    const dataEnd = dataStart + length;
+    const crcEnd = dataEnd + 4;
+    if (crcEnd > bytes.length) {
+      return planIssue(
+        'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+        'Embedded Preview PNG chunk exceeds the declared bytes.',
+        'Provide one complete bounded PNG.',
+      );
+    }
+    chunks += 1;
+    if (chunks > MAX_PNG_CHUNKS) {
+      return planIssue(
+        'VC-AI-PREVIEW-ASSET-LIMIT',
+        `Embedded Preview PNG exceeds the ${MAX_PNG_CHUNKS}-chunk limit.`,
+        'Use a simpler bounded PNG.',
+        'limited',
+      );
+    }
+    const type = bytes.subarray(typeStart, dataStart).toString('ascii');
+    if (crc32(bytes.subarray(typeStart, dataEnd)) !== bytes.readUInt32BE(dataEnd)) {
+      return planIssue(
+        'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+        `Embedded Preview PNG chunk ${type} has an invalid CRC.`,
+        'Provide exact unmodified PNG bytes.',
+      );
+    }
+    if (type === 'IHDR') {
+      ihdr += 1;
+      if (
+        chunks !== 1 || length !== 13 ||
+        bytes.readUInt32BE(dataStart) !== asset.widthPx ||
+        bytes.readUInt32BE(dataStart + 4) !== asset.heightPx ||
+        asset.widthPx > MAX_ASSET_WIDTH_PX ||
+        asset.heightPx > MAX_ASSET_HEIGHT_PX
+      ) {
+        return planIssue(
+          'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+          'Embedded Preview PNG IHDR does not match the exact bounded dimensions.',
+          'Provide matching PNG width and height identity.',
+        );
+      }
+    }
+    if (type === 'IEND') {
+      iend += 1;
+      if (length !== 0 || crcEnd !== bytes.length) {
+        return planIssue(
+          'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+          'Embedded Preview PNG IEND does not terminate the exact bytes.',
+          'Remove trailing or malformed PNG data.',
+        );
+      }
+    }
+    cursor = crcEnd;
+  }
+  if (ihdr !== 1 || iend !== 1) {
+    return planIssue(
+      'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+      'Embedded Preview PNG requires exactly one leading IHDR and terminal IEND.',
+      'Provide one structurally complete PNG.',
+    );
+  }
+  return {
+    status: 'success',
+    bytes,
+    resourceName: `vc_ai_${asset.sha256}`,
+  };
 }
 
 export async function validateGeneratedPreviewRequest(request) {
@@ -140,6 +266,10 @@ export function generatePreviewWrapper(request) {
   if (request.bindings.some((binding) => binding.kind === 'text-field-state')) {
     imports.push('com.viewcompose.text.TextFieldState');
   }
+  if (request.bindings.some((binding) => binding.kind === 'image-source')) {
+    imports.push('com.viewcompose.ai.preview.harness.R');
+    imports.push('com.viewcompose.ui.node.ImageSource');
+  }
   imports.push('com.viewcompose.ui.foundation.UiTreeBuilder');
   const arguments_ = request.bindings.map((binding) => {
     let expression;
@@ -149,6 +279,8 @@ export function generatePreviewWrapper(request) {
       expression = binding.initialText.length === 0
         ? 'TextFieldState()'
         : `TextFieldState().apply { setTextAndPlaceCursorAtEnd(${kotlinString(binding.initialText)}) }`;
+    } else if (binding.kind === 'image-source') {
+      expression = `ImageSource.Resource(R.drawable.vc_ai_${binding.asset.sha256})`;
     } else {
       throw new Error(`Unsupported generated Preview binding kind: ${binding.kind}`);
     }
@@ -272,6 +404,7 @@ export async function createGeneratedPreviewPlan({
       'unsupported',
     );
   }
+  const assetsBySha = new Map();
   for (let index = 0; index < declaredBindings.length; index += 1) {
     const declared = declaredBindings[index];
     const supplied = bindings[index];
@@ -296,13 +429,35 @@ export async function createGeneratedPreviewPlan({
           'unsupported',
         );
       }
-      return planIssue(
-        'VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED',
-        'Embedded ImageSource assets are contract-frozen but not yet staged by this implementation.',
-        'Finish at compiled evidence until the tool-owned resource staging gate is implemented.',
-        'unsupported',
-      );
+      const decoded = decodeEmbeddedPng(supplied.asset);
+      if (decoded.status !== 'success') return decoded;
+      const existing = assetsBySha.get(supplied.asset.sha256);
+      if (existing && !existing.bytes.equals(decoded.bytes)) {
+        return planIssue(
+          'VC-AI-PREVIEW-ASSET-INTEGRITY-INVALID',
+          'Two embedded Preview assets claim one SHA-256 but have different bytes.',
+          'Provide one exact byte sequence for each asset identity.',
+        );
+      }
+      assetsBySha.set(supplied.asset.sha256, {
+        sha256: supplied.asset.sha256,
+        resourceName: decoded.resourceName,
+        widthPx: supplied.asset.widthPx,
+        heightPx: supplied.asset.heightPx,
+        bytes: decoded.bytes,
+      });
     }
+  }
+  const assets = [...assetsBySha.values()].sort((left, right) =>
+    left.sha256.localeCompare(right.sha256));
+  const totalAssetBytes = assets.reduce((total, asset) => total + asset.bytes.length, 0);
+  if (assets.length > MAX_ASSETS || totalAssetBytes > MAX_TOTAL_ASSET_BYTES) {
+    return planIssue(
+      'VC-AI-PREVIEW-ASSET-LIMIT',
+      `Generated Preview assets exceed ${MAX_ASSETS} unique files or ${MAX_TOTAL_ASSET_BYTES} total bytes.`,
+      'Use fewer or smaller exact embedded PNG assets.',
+      'limited',
+    );
   }
   const bindingTextBytes = bindings.reduce((total, binding) => total + utf8Bytes(
     binding.kind === 'string' ? binding.value : binding.initialText ?? '',
@@ -331,6 +486,7 @@ export async function createGeneratedPreviewPlan({
     generatedKotlinFingerprint: request.generatedSource.kotlinFingerprint,
     wrapper,
     wrapperFingerprint: sha256(wrapper),
+    assets,
   };
 }
 
@@ -372,11 +528,12 @@ async function persistImmutableInput(path, content) {
   if (metadata?.isSymbolicLink() || (metadata && !metadata.isFile())) {
     throw new Error('CACHE_INPUT_UNSAFE');
   }
+  const expected = Buffer.isBuffer(content) ? content : Buffer.from(content, 'utf8');
   try {
-    await writeFile(path, content, {encoding: 'utf8', flag: 'wx'});
+    await writeFile(path, expected, {flag: 'wx'});
   } catch (error) {
     if (error?.code !== 'EEXIST') throw error;
-    if (await readFile(path, 'utf8') !== content) throw new Error('CACHE_INPUT_MISMATCH');
+    if (!(await readFile(path)).equals(expected)) throw new Error('CACHE_INPUT_MISMATCH');
   }
 }
 
@@ -388,6 +545,30 @@ async function stagePlan(plan, repository, cacheRoot) {
   await persistImmutableInput(resolve(inputDirectory, 'GeneratedPreview.kt'), plan.wrapper);
   const children = (await readdir(inputDirectory)).sort();
   if (JSON.stringify(children) !== JSON.stringify(['GeneratedPreview.kt', 'GeneratedView.kt'])) {
+    throw new Error('CACHE_INPUT_UNSAFE');
+  }
+  if (plan.assets.length > 0) {
+    const resourceRoot = resolve(requestRoot, 'res');
+    const drawableDirectory = resolve(resourceRoot, 'drawable');
+    await ensureContainedDirectory(repository, drawableDirectory);
+    for (const asset of plan.assets) {
+      await persistImmutableInput(
+        resolve(drawableDirectory, `${asset.resourceName}.png`),
+        asset.bytes,
+      );
+    }
+    const assetChildren = (await readdir(drawableDirectory)).sort();
+    const expectedAssets = plan.assets.map((asset) => `${asset.resourceName}.png`).sort();
+    if (
+      JSON.stringify(assetChildren) !== JSON.stringify(expectedAssets) ||
+      JSON.stringify((await readdir(resourceRoot)).sort()) !== JSON.stringify(['drawable'])
+    ) {
+      throw new Error('CACHE_INPUT_UNSAFE');
+    }
+  }
+  const requestChildren = (await readdir(requestRoot)).sort();
+  const expectedRequestChildren = plan.assets.length > 0 ? ['input', 'res'] : ['input'];
+  if (JSON.stringify(requestChildren) !== JSON.stringify(expectedRequestChildren)) {
     throw new Error('CACHE_INPUT_UNSAFE');
   }
 }
@@ -454,6 +635,9 @@ export async function renderGeneratedPreview({
       renderLane: RENDER_LANE,
     });
   }
+  const capabilityIds = plan.assets.length > 0
+    ? ['foundation.components', 'image.foundation', 'modifier.drawing', 'modifier.layout']
+    : ['foundation.components', 'modifier.layout'];
   const target = Object.freeze({
     modulePath: ':tools:ai-preview-harness',
     projectDirectory: 'tools/ai-preview-harness',
@@ -463,7 +647,7 @@ export async function renderGeneratedPreview({
     displayName: GENERATED_PREVIEW_FUNCTION,
     ownerClassName: 'generated.viewcompose.GeneratedPreviewKt',
     methodName: GENERATED_PREVIEW_FUNCTION,
-    capabilityIds: Object.freeze(['foundation.components', 'modifier.layout']),
+    capabilityIds: Object.freeze(capabilityIds),
     configuration: Object.freeze({
       widthDp: GENERATED_PREVIEW_CONFIGURATION.widthDp,
       heightDp: GENERATED_PREVIEW_CONFIGURATION.heightDp,
@@ -479,7 +663,7 @@ export async function renderGeneratedPreview({
   });
   const rendered = await serialized(() => render({
     targetId: GENERATED_TARGET_ID,
-    capabilityIds: ['foundation.components', 'modifier.layout'],
+    capabilityIds,
     requestId,
     limits,
     signal,
@@ -521,6 +705,13 @@ export async function renderGeneratedPreview({
         wrapperFingerprint: plan.wrapperFingerprint,
         pngSha256: rendered.data.image.sha256,
         renderTreeSha256: rendered.data.renderTree.sha256,
+        assets: plan.assets.map((asset) => ({
+          resourceName: asset.resourceName,
+          bytes: asset.bytes.length,
+          sha256: asset.sha256,
+          widthPx: asset.widthPx,
+          heightPx: asset.heightPx,
+        })),
       },
     },
   };

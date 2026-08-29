@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen embedded-PNG ImageSource staging contract in the generated Preview adapter and harness, then render the XML v2 profile-card denominator with exact artifact evidence.
+next_action: Freeze a generated-layout semantic and geometry comparison contract that evaluates Design IR expectations against accepted render-tree evidence before screenshot or prompt generation begins.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -74,16 +74,16 @@ The generated-screen Preview contract is now also frozen and implemented: it bin
 Kotlin, explicit preview values, one fixed configuration, the current-source compiler and renderer
 lanes, and all accepted artifacts into a content-addressed request while denying inspected-project
 build execution. The tool-owned harness, source-bound CLI/MCP render mode, exact artifact gate,
-stable cache proof, and installed-package render denominator now pass. The next foundational gap
-now has a frozen contract: exact embedded PNG bytes become a tool-owned Android resource without
-any caller path, URL, inspected-project resource read, or network access. Implementing and
-rendering that contract for the accepted XML v2 image fixture is the active increment.
+stable cache proof, and installed-package render denominator now pass. Exact embedded PNG bytes now
+also become a tool-owned Android resource without any caller path, URL, inspected-project resource
+read, or network access; the accepted XML v2 profile-card fixture compiles and renders through that
+lane. The active foundational gap is structured semantic and geometry comparison between the
+converter's Design IR expectations and accepted render-tree evidence.
 
 Last verified: 2026-08-30.
 
-Next action: implement the frozen embedded-PNG `ImageSource` staging contract and render the XML v2
-profile-card fixture without granting access to inspected-project resources, build logic, paths,
-URLs, or network.
+Next action: freeze generated-layout semantic and geometry comparison against Design IR and the
+accepted render tree before adding screenshot, prompt, or repair adapters.
 
 ## Maven release changesets
 
@@ -1263,9 +1263,9 @@ Compared with compile-only XML migration, this is **improved** executable visual
 **no material Android runtime behavior change** because the harness, adapter, CLI/MCP path, and
 quality gate remain downstream development tooling. The result does not prove pixel parity against
 the original XML, interaction, state restoration, accessibility traversal, alternate
-configurations, or inspected-application integration. `ImageSource` is still deliberately blocked,
-so the next foundational increment is a bounded offline asset-staging contract followed by semantic
-and geometry comparison rather than a broader prompt or screenshot generator.
+configurations, or inspected-application integration. `ImageSource` was deliberately blocked,
+which made bounded offline asset staging the next foundational increment rather than a broader
+prompt or screenshot generator. The following contract and implementation close that gap.
 
 ### Contract freeze — isolated embedded PNG asset staging
 
@@ -1296,19 +1296,69 @@ The negative denominator preserves the same generator binding without bytes and 
 
 Phase 0 now contains eight schemas, 36 metrics, 35 evaluation cases, 32 fixture-backed cases, and
 five generated-Preview fixtures. The embedded asset is schema-valid, byte/hash/dimension exact,
-CRC-valid, bounded, and source-matched; the existing login render remains the only implemented
-positive render until the staging code lands. Node 25.6.0 passed 125/125 AI-tooling tests. Two clean
+CRC-valid, bounded, and source-matched. At contract freeze, the existing login render remained the
+only implemented positive render. Node 25.6.0 passed 125/125 AI-tooling tests. Two clean
 package builds remained byte-identical; the 45-file, 273,818-byte archive contains 1,551,859
 declared file bytes and has SHA-256
 `4522557fafe2351627371a169540e0572fdebd265f32a91b244cdf0cdbe68362`. Its offline lifecycle,
 SPDX/license inventory, both MCP protocol versions, four installed compile denominators, and the
 previous login Preview render all remained green.
 
-This is **improved** safety and measurability with
+The contract-only result was **improved** safety and measurability with
 **no material Android runtime or accepted render behavior change**. Current limitations are
 intentional: only embedded PNG is frozen, the contract does not read application resources or prove
-the source XML's original pixels, and the profile-card request must continue to stop at static
-unsupported evidence until the tool-owned resource staging and real Layoutlib gate pass.
+the source XML's original pixels, and the profile-card request remained static unsupported evidence
+until the following tool-owned resource staging and real Layoutlib gate passed.
+
+### Implementation evidence — isolated embedded PNG asset staging
+
+The generated Preview adapter now canonicalizes every embedded asset field, verifies the complete
+bounded PNG contract, deduplicates exact bytes by full SHA-256, and persists assets with create-only
+semantics under the request's content-addressed `res/drawable` directory. Existing bytes are
+reopened and compared before reuse. Unexpected request-root, resource-root, drawable, or input
+entries and any file or directory symbolic link produce cache-poison evidence before Gradle. Raw
+base64 never enters the public result; only resource name, byte count, hash, and dimensions remain.
+
+The harness mounts that request-owned directory as its debug Android resource source and validates
+the exact directory and filename grammar before compilation. The wrapper imports only the harness
+`R` class and constructs `ImageSource.Resource`; no image loader, inspected-project resource table,
+project build logic, filesystem path, URI, or network client is added. Image-bearing requests carry
+the exact `image.foundation` and drawing capability identities, while text-only login requests keep
+their prior narrower capability set.
+
+On 2026-08-30, the profile-card request compiled and rendered on the pinned lane. Its 1 by 1 px red
+fixture expanded through the declared 96 dp cropped image region without corruption; the screenshot
+was 1,079 by 2,339 px and 15,217 bytes. The 120,988-byte render tree contained three virtual and
+three mounted nodes at depth two, preserved `Profile photo` as the image content description and
+`Available` as the hidden text node, and reported no warnings or layout diagnostics. Exact accepted
+evidence is:
+
+- build: `76b256d15f1801358b009127e50467c5936af8b99714f6895e06dddef7a7b990`;
+- aggregate output: `31fb45a13a4d35badee2cf61ce7760a0540b60ed2e0def2d3e3910cfdb4268f5`;
+- PNG: `bb130675ac0de5df6ad6ff93ded020cbe93704a80030301da3a2d57a56b9cd3f`;
+- render tree: `58bbd8da9df6295da2419dc85bf4c7d4636419f8022237740b694966763b31e9`.
+
+The dedicated gate now reproduces 2/2 exact generated renders, 2/2 second-request cache hits, and
+3/3 fail-closed missing binding, missing asset, and caller build-selection inputs. Node 25.6.0
+passes 128/128 tests, including exact asset request/wrapper/resource planning, public schema
+acceptance with path rejection, CRC tampering, immutable resource reuse, raw-byte redaction, and
+symbolic-link cache poisoning.
+
+The installed-package lifecycle exercises both generated screens through the same public CLI. Two
+clean builds produced the same 45-file, 275,681-byte archive with 1,559,691 declared file bytes and
+SHA-256 `11ce6376f6c0d5df91b74b3e0756200c222c9e2680752075793a4badb6f2d607`.
+Offline installation, uninstall cleanup, SPDX inventory, both MCP protocol eras, compilation
+fixtures, the login render, and the image render all passed. The quality-build plugin suite passed;
+the combined generated-Preview, documentation-structure, development-tooling-isolation, and
+release-intent root gate passed 22 actionable tasks, with eight executed and 14 up-to-date.
+
+Compared with the text-only Preview lane, this is **improved** executable image evidence with
+**no material Android runtime behavior change**: all new work remains in the downstream adapter,
+harness, package, and quality gate. It still accepts only embedded PNG, not XML/vector drawables,
+JPEG/WebP, arbitrary files, remote images, or application resource merging. It proves the generated
+screen and its declared semantics, not pixel parity against the original XML or complete
+accessibility behavior. The next foundational step is an exact semantic and geometry comparison
+contract over Design IR and render-tree evidence before screenshot-driven generation or repair.
 
 ### Implementation evidence — bounded XML to Design IR
 

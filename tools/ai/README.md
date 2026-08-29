@@ -214,16 +214,17 @@ Kotlin, wrapper, framework bundle, configuration, compiler lane, and render lane
 content-addressed. The harness is offline and cannot select or execute the inspected project's
 build, task, dependencies, resources, scripts, or output paths.
 
-Generated Preview v1 supports exact `String` values and fresh `TextFieldState` values with explicit
-initial text. Missing, extra, duplicate, reordered, source-mismatched, or type-mismatched bindings
-fail before Gradle. The first embedded-PNG `ImageSource` staging contract is frozen but not yet
-implemented, so image layouts still finish at compiled evidence instead of fabricating a resource
-or using the network. A successful implemented render returns the request, generated-source,
-wrapper, PNG,
-render-tree, and combined output fingerprints at `rendered` evidence. Custom Views, Data Binding,
-unknown attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities, malformed XML,
-duplicate IDs, and limit violations return localized diagnostics and no Kotlin. String resources
-remain explicit caller `String` bindings, drawable resources remain caller `ImageSource` bindings,
+Generated Preview v1 supports exact `String` values, fresh `TextFieldState` values with explicit
+initial text, and exact embedded PNG bytes for `ImageSource`. An embedded image provides canonical
+base64, decoded byte count, SHA-256, and dimensions; the adapter validates bounded PNG chunks and
+CRC values, then stages one immutable tool-owned `R.drawable` resource by full hash. It accepts no
+asset path, URL, URI, project resource ID, XML/vector drawable, alternate media type, or network
+load. Missing, extra, duplicate, reordered, source-mismatched, type-mismatched, or asset-invalid
+bindings fail before Gradle. A successful render returns the request, generated-source, wrapper,
+asset, PNG, render-tree, and combined output fingerprints at `rendered` evidence. Custom Views,
+Data Binding, unknown attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities,
+malformed XML, duplicate IDs, and limit violations return localized diagnostics and no Kotlin.
+String resources remain explicit caller `String` bindings, drawable resources remain caller `ImageSource` bindings,
 and `TextFieldState` remains caller-owned; the tool does not invent listeners or rewrite
 ViewBinding/application call sites.
 

@@ -27,6 +27,9 @@ const generatedPreviewContractPath = fileURLToPath(
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
+const generatedImagePreviewRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/generated-preview/image-binding.preview-request.json', import.meta.url),
+);
 const xmlV2FixturePath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/profile-card.xml', import.meta.url),
 );
@@ -360,6 +363,30 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot, generatedPrev
   ) {
     throw new Error('Installed CLI did not render the frozen generated XML Preview.');
   }
+  const imagePreviewRequest = await readJson(generatedImagePreviewRequestPath);
+  const renderedImageXml = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    source: xmlV2,
+    path: 'res/layout/profile-card.xml',
+    mode: 'render',
+    previewBindings: imagePreviewRequest.bindings,
+  }, 'distribution-xml-image-render', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  const expectedImagePreview = generatedPreviewContract.supportedFixtures.find(
+    (fixture) => fixture.expectedFunction === 'ProfileCardView',
+  );
+  if (
+    renderedImageXml.status !== 'success' ||
+    renderedImageXml.evidence.level !== 'rendered' ||
+    renderedImageXml.evidence.outputFingerprint !== expectedImagePreview.expectedOutputFingerprint ||
+    renderedImageXml.data?.preview?.generatedPreview?.requestFingerprint !==
+      expectedImagePreview.expectedRequestFingerprint ||
+    renderedImageXml.data?.preview?.generatedPreview?.assets?.[0]?.sha256 !==
+      expectedImagePreview.expectedAssetSha256 ||
+    renderedImageXml.data?.preview?.image?.sha256 !== expectedImagePreview.expectedImage.sha256 ||
+    renderedImageXml.data?.preview?.renderTree?.sha256 !==
+      expectedImagePreview.expectedRenderTree.sha256
+  ) {
+    throw new Error('Installed CLI did not render the frozen generated XML image Preview.');
+  }
   const compiledXmlV2 = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
     source: xmlV2,
     path: 'res/layout/profile-card.xml',
@@ -410,6 +437,7 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot, generatedPrev
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlPreview: renderedXml.evidence.outputFingerprint,
+    xmlImagePreview: renderedImageXml.evidence.outputFingerprint,
     xmlV2: compiledXmlV2.evidence.outputFingerprint,
     xmlLayoutDependencies: compiledXmlLayoutDependencies.evidence.outputFingerprint,
   };
@@ -627,7 +655,8 @@ async function main() {
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview rendered as ` +
-      `${compileFingerprints.xmlPreview}.\n`,
+      `${compileFingerprints.xmlPreview}, and generated XML image Preview rendered as ` +
+      `${compileFingerprints.xmlImagePreview}.\n`,
     );
   } finally {
     if (!uninstalled) {

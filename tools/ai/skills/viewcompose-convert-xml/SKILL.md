@@ -41,8 +41,9 @@ resource, state, and behavior decision.
 7. When the generated function has only supported `String` and `TextFieldState` parameters, call
    `convert_xml_to_viewcompose` in `render` mode with the same input and one explicit ordered
    `previewBindings` entry for every reported parameter. Never guess a resource value or initial
-   state. Missing, extra, reordered, or mismatched bindings must remain blocked. If any parameter
-   is `ImageSource`, finish at compiled evidence until the tool reports accepted asset staging.
+   state. Missing, extra, reordered, or mismatched bindings must remain blocked. An `ImageSource`
+   may render only from explicitly provided exact PNG bytes with matching size, SHA-256, and
+   dimensions; never pass a path, URL, project resource ID, XML drawable, or invented substitute.
    Use the separate `render_preview` and `diagnose_layout` tools only for their own allowlisted
    repository Preview targets.
 8. Deliver the source and optional project-context fingerprints, generated-code fingerprint,

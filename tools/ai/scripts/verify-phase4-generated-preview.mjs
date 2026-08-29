@@ -62,6 +62,9 @@ async function inspectArtifacts(preview, fixture) {
   const tree = JSON.parse(treeBytes.toString('utf8'));
   const texts = [...new Set([...treeBytes.toString('utf8').matchAll(/"text":\s*"([^"]+)"/gu)]
     .map((match) => match[1]))];
+  const contentDescriptions = [...new Set([
+    ...treeBytes.toString('utf8').matchAll(/"contentDescription":\s*"([^"]+)"/gu),
+  ].map((match) => match[1]))];
   if (
     JSON.stringify(tree.structure) !== JSON.stringify({
       vnodeCount: fixture.expectedRenderTree.vnodeCount,
@@ -70,12 +73,14 @@ async function inspectArtifacts(preview, fixture) {
       maxMountedDepth: fixture.expectedRenderTree.maxMountedDepth,
     }) ||
     JSON.stringify(texts) !== JSON.stringify(fixture.expectedRenderTree.texts) ||
+    JSON.stringify(contentDescriptions) !==
+      JSON.stringify(fixture.expectedRenderTree.contentDescriptions) ||
     tree.warnings?.length !== 0 ||
     tree.layoutDiagnostics?.length !== 0
   ) {
     throw new Error(`${fixture.source}: Preview render-tree semantics changed`);
   }
-  return {texts, structure: tree.structure};
+  return {texts, contentDescriptions, structure: tree.structure};
 }
 
 function assertRendered(result, fixture, requiredCache) {
@@ -104,11 +109,10 @@ function assertRendered(result, fixture, requiredCache) {
       layoutDirection: 'Ltr',
       theme: 'Light',
     }) ||
-    JSON.stringify(preview?.capabilityIds) !==
-      JSON.stringify(['foundation.components', 'modifier.layout']) ||
+    JSON.stringify(preview?.capabilityIds) !== JSON.stringify(fixture.expectedCapabilityIds) ||
     preview?.source?.path !==
       `build/ai/preview/requests/${fixture.expectedRequestFingerprint}/input/GeneratedPreview.kt` ||
-    preview?.source?.line !== 22 ||
+    preview?.source?.line !== fixture.expectedSourceLine ||
     preview?.source?.column !== 1 ||
     preview?.image?.mediaType !== 'image/png' ||
     preview?.image?.widthPx !== fixture.expectedImage.widthPx ||
@@ -122,7 +126,16 @@ function assertRendered(result, fixture, requiredCache) {
       fixture.expectedGeneratedKotlinFingerprint ||
     preview?.generatedPreview?.wrapperFingerprint !== fixture.expectedWrapperFingerprint ||
     preview?.generatedPreview?.pngSha256 !== fixture.expectedImage.sha256 ||
-    preview?.generatedPreview?.renderTreeSha256 !== fixture.expectedRenderTree.sha256
+    preview?.generatedPreview?.renderTreeSha256 !== fixture.expectedRenderTree.sha256 ||
+    JSON.stringify(preview?.generatedPreview?.assets ?? []) !== JSON.stringify(
+      fixture.expectedAssets === undefined ? [] : [{
+        resourceName: fixture.expectedResourceName,
+        bytes: fixture.expectedAssetBytes,
+        sha256: fixture.expectedAssetSha256,
+        widthPx: fixture.expectedAssetWidthPx,
+        heightPx: fixture.expectedAssetHeightPx,
+      }],
+    )
   ) {
     const codes = result.diagnostics?.map((diagnostic) => diagnostic.code).join(', ') ?? 'none';
     throw new Error(`${fixture.source}: generated Preview evidence changed (${codes})`);
@@ -142,6 +155,7 @@ export async function verifyPhase4GeneratedPreview({
   for (const metricId of [
     'xml.generated-preview-render-success',
     'xml.generated-preview-binding-exactness',
+    'xml.generated-preview-asset-integrity',
     'xml.generated-preview-isolation',
   ]) {
     const metric = metrics.metrics.find((entry) => entry.id === metricId);

@@ -92,6 +92,39 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
   }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
   assert.deepEqual(projectRenderedXml, []);
 
+  const embeddedAsset = {
+    mediaType: 'image/png',
+    encoding: 'base64',
+    data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
+    bytes: 70,
+    sha256: '4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5',
+    widthPx: 1,
+    heightPx: 1,
+  };
+  const renderedImageXml = validateSchemaValue({
+    source: '<ImageView />',
+    mode: 'render',
+    previewBindings: [{
+      kind: 'image-source',
+      parameter: 'avatar',
+      source: '@drawable/avatar',
+      asset: embeddedAsset,
+    }],
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(renderedImageXml, []);
+
+  const imagePathDenied = validateSchemaValue({
+    source: '<ImageView />',
+    mode: 'render',
+    previewBindings: [{
+      kind: 'image-source',
+      parameter: 'avatar',
+      source: '@drawable/avatar',
+      asset: {...embeddedAsset, path: '/workspace/avatar.png'},
+    }],
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(imagePathDenied, ['$: expected exactly one oneOf match, found 0']);
+
   const generatedBuildSelection = validateSchemaValue({
     source: '<TextView />',
     mode: 'render',
