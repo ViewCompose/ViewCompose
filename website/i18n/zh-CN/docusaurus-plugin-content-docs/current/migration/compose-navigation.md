@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: fb69896d820e388d2c25347cfb3940f5cf08a9a4c3f86c94e261993257e9f323
+translation_source_hash: bd2b7034989d98ecb8971e1c5ccae44b1b22708cf3a66825f89c7a38d5213130
 translation_status: current
 ---
 
@@ -312,17 +312,11 @@ ViewCompose saveable value，以及私有 host-scope 身份。Decoder 验证格�
 
 ## 系统 Back 与 Predictive Back {/* #system-back-and-predictive-back */}
 
-当生命周期至少为 `STARTED` 且 Stack 可以 Pop 时，ViewCompose Android Adapter 会向最近的
-`ViewTreeNavigationEventDispatcherOwner` 注册一个默认优先级 Handler。若该 Owner 不存在，则以
-`OnBackPressedDispatcherOwner` 作为兼容回退；两条注册路径互斥。两者驱动同一套暂存的 Predictive
-与普通 Pop 事务。Stop、Detach、禁用、Owner 替换和销毁都会先取消再注销，已取消手势迟到的终态
-Callback 也不会变成一次普通 Back。位于根时会禁用 Handler，由 Dispatcher 选择下一个 Handler
-或 Fallback。
-
-Host 依赖 NavigationEvent 1.1.2，测试使用官方 Testing Dispatcher。它不会公开重复的 ViewCompose
-Owner/Callback Facade、Forward-event History 或 Inspection-mode Preview Handler。Navigation3
-1.1.6 保留 NavigationEvent 支持的 Preview；该 Preview 路径仍不在 ViewCompose 设备与 Adapter
-证据内。
+处于 `STARTED` 且可 Pop 时，Android Adapter 向最近的
+`ViewTreeNavigationEventDispatcherOwner` 安装一个 Handler，仅在无直接 Owner 时使用 Activity
+Back。两条路径共用事务；根节点向外委派，移除前先取消并抑制已取消手势迟到的终态。Host 使用
+NavigationEvent 1.1.2 与官方测试 Dispatcher，但不公开重复 Owner Facade、Forward History 或
+Android Studio Preview 输入；Navigation3 1.1.6 已包含该 Preview 路径。
 
 ## 迁移路径
 
@@ -360,8 +354,8 @@ Owner/Callback Facade、Forward-event History 或 Inspection-mode Preview Handle
 - 隐藏会话保留 Effect 和原生 View，增加生命周期与内存风险。
 - `NavHost` 缺少 `LocalViewModelStoreOwner` 时会直接失败；自定义 `renderInto` 宿主必须显式提供。
 - 精确或签名 deep-link query 集合需要应用在路由前验证；未声明值默认可存在但完全不参与导航。
-- NavigationEvent Preview 行为尚未验证；下述真机结果只覆盖文档所述 Android Host 与平台
-  Back 路径。
+- Pixel 4 XL/API 33 的 Host 与平台 Back 真机用例通过 16/16。直接嵌套 Owner 输入通过官方 JVM
+  Dispatcher Fixture；Android Studio Preview 输入仍未验证。
 
 ## 重新核验要求
 

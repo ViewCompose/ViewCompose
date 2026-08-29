@@ -364,18 +364,12 @@ an in-memory stack switch.
 
 ## System Back and Predictive Back
 
-The ViewCompose Android adapter registers one default-priority handler with the nearest
-`ViewTreeNavigationEventDispatcherOwner` while its lifecycle is at least `STARTED` and its stack can
-pop. When that owner is absent, it uses `OnBackPressedDispatcherOwner` as a compatibility fallback;
-the registrations are mutually exclusive. Both paths drive the same staged predictive and ordinary
-pop transaction. Stop, detach, disablement, owner replacement, and destruction cancel before
-unregistering, and a late terminal callback from that cancelled gesture cannot become an ordinary
-Back. At a root the handler is disabled and the dispatcher selects the next handler or fallback.
-
-The host depends on NavigationEvent 1.1.2 and its tests use the official testing dispatcher. It does
-not expose a duplicate ViewCompose owner/callback facade, forward-event history, or an
-inspection-mode Preview handler. Navigation3 1.1.6 retains NavigationEvent-backed Preview support;
-that Preview path remains outside ViewCompose's device and adapter evidence.
+While `STARTED` and able to pop, the Android adapter installs one handler on the nearest
+`ViewTreeNavigationEventDispatcherOwner`, using Activity Back only when no direct owner exists.
+Both paths share one transaction; roots delegate, and every removal cancels before unregistering
+and suppresses the cancelled gesture's late terminal. The host uses NavigationEvent 1.1.2 and its
+official test dispatcher, but exposes no duplicate owner facade, forward history, or Android Studio
+Preview input. Navigation3 1.1.6 includes that Preview path.
 
 ## Migration paths
 
@@ -417,8 +411,8 @@ that Preview path remains outside ViewCompose's device and adapter evidence.
 - Arbitrary non-navigation UI scopes still require an application-owned provider boundary.
 - Exact or signed deep-link query sets require application validation before routing; undeclared
   values are otherwise tolerated and inert.
-- NavigationEvent Preview behavior is not verified; the physical-device result below covers the
-  documented Android host and platform Back path only.
+- Pixel 4 XL/API 33 passed 16/16 host and platform-Back device cases. Direct nested-owner input
+  passed the official JVM dispatcher fixture; Android Studio Preview input remains unverified.
 
 ## Re-verification requirements
 

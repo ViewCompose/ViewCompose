@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 29e54b3f85e1c5f336f3db6086fc37d244af1ac63b1077024b519a8ad9efc89f
+translation_source_hash: 5f5fef08510ded88ca7d36f463db9a56cad269eb5042b6d923caa0b834f8f512
 translation_status: current
 ---
 
@@ -37,10 +37,9 @@ Identity、参数和 Destination State。
 
 ## 恢复状态并接入平台返回
 
-普通 Activity 或 Fragment Host 保持 `systemBackEnabled = true`。只有生命周期至少为 `STARTED`
-且 Controller 能消费返回时，`NavHost` 才直接向最近的 View-tree NavigationEvent Owner 注册；若
-该 Owner 不存在，则使用 Activity Back Dispatcher 兼容路径。活动根会禁用自己的 Handler，让
-保留栈历史或外层 Fallback 继续处理；不要在 Host 外再包一层重复的 Owner 或 Callback。
+保持 `systemBackEnabled = true`。处于 `STARTED` 且可 Pop 时，`NavHost` 使用最近的 View-tree
+NavigationEvent Owner，仅在不存在时回退 Activity Back。根节点向外委派；不要再包第二个 Owner
+或 Callback。
 
 界面内返回按钮调用 `popBackStack`。系统返回和 Predictive Back 就会使用同一事务边界。
 Predictive Preview 不发布候选栈；取消恢复已提交 Scene，完成走程序化 Pop 路径。
