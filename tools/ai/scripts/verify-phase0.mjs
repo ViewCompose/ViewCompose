@@ -311,6 +311,110 @@ async function verifyXmlSubset(schemas) {
   return contract;
 }
 
+async function verifyXmlSubsetV2(schemas) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/xml');
+  const contract = await readJson(resolve(fixtureDirectory, 'subset-v2-contract.json'));
+  if (
+    contract.schemaVersion !== 1 ||
+    contract.subsetId !== 'android-xml-layout-v2' ||
+    contract.baseSubsetId !== 'android-xml-layout-v1'
+  ) {
+    throw new Error('XML subset v2 must explicitly extend android-xml-layout-v1');
+  }
+  if (
+    contract.source?.networkAccess !== false ||
+    contract.source?.allowDoctype !== false ||
+    contract.source?.allowEntities !== false ||
+    JSON.stringify(contract.addedElements?.map((element) => element.source)) !==
+      JSON.stringify(['FrameLayout', 'ImageView']) ||
+    JSON.stringify(contract.addedAttributes?.commonOptional) !==
+      JSON.stringify(['android:visibility']) ||
+    contract.normalization?.drawableResourceStrategy !==
+      'caller ImageSource parameter preserving @drawable identity' ||
+    contract.normalization?.contentDescriptionStrategy !==
+      'required Image parameter unless explicit @null marks decorative content'
+  ) {
+    throw new Error('XML subset v2 container, image, accessibility, or safety boundary changed');
+  }
+  for (const [name, ceiling] of Object.entries({
+    maxInputBytes: 262144,
+    maxDepth: 32,
+    maxNodes: 500,
+    maxAttributesPerNode: 64,
+    maxUnsupportedFragments: 1000,
+  })) {
+    const value = contract.limits?.[name];
+    if (!Number.isInteger(value) || value <= 0 || value > ceiling) {
+      throw new Error(`XML subset v2 limit ${name} exceeds its frozen ceiling`);
+    }
+  }
+  if (
+    contract.unsupportedPolicy?.status !== 'unsupported' ||
+    contract.unsupportedPolicy?.emitKotlin !== false ||
+    contract.unsupportedPolicy?.preserveSource !== true ||
+    contract.unsupportedPolicy?.localizeEveryFragment !== true
+  ) {
+    throw new Error('XML subset v2 unsupported policy must fail closed without Kotlin output');
+  }
+  assertUnique(contract.diagnosticCodes, 'XML subset v2 diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-XML-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid XML subset v2 diagnostic code: ${code}`);
+    }
+  }
+
+  const designSchema = schemas.get('design-ir.schema.json');
+  const declaredSources = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const sourcePath = resolve(fixtureDirectory, fixture.source);
+    const [source, golden, goldenKotlin] = await Promise.all([
+      readFile(sourcePath),
+      readJson(resolve(fixtureDirectory, fixture.goldenIr)),
+      readFile(resolve(fixtureDirectory, fixture.goldenKotlin), 'utf8'),
+    ]);
+    assertSchemaValue(golden, designSchema, fixture.goldenIr);
+    if (
+      golden.source.fingerprint !== createHash('sha256').update(source).digest('hex') ||
+      golden.source.identity !== relative(repositoryRoot, sourcePath).replaceAll(sep, '/')
+    ) {
+      throw new Error(`${fixture.goldenIr}: XML subset v2 source identity is stale`);
+    }
+    const facts = designIrFacts(golden);
+    if (
+      facts.nodes !== fixture.expectedNodes ||
+      JSON.stringify(facts.resources) !== JSON.stringify(fixture.expectedResources) ||
+      JSON.stringify(facts.stateBindings) !== JSON.stringify(fixture.expectedStateBindings)
+    ) {
+      throw new Error(`${fixture.goldenIr}: XML subset v2 denominator differs from its golden`);
+    }
+    if (
+      !goldenKotlin.startsWith('package generated.viewcompose\n') ||
+      !goldenKotlin.includes(`fun UiTreeBuilder.${fixture.expectedFunction}(`) ||
+      fixture.expectedBindings.some(({parameter, type}) =>
+        !goldenKotlin.includes(`    ${parameter}: ${type},`)) ||
+      !goldenKotlin.includes('contentDescription = profilePhoto,') ||
+      !goldenKotlin.endsWith('\n')
+    ) {
+      throw new Error(`${fixture.goldenKotlin}: XML subset v2 Kotlin contract is incomplete`);
+    }
+    declaredSources.add(fixture.source);
+  }
+  for (const fixture of contract.unsupportedFixtures) {
+    const source = await readFile(resolve(fixtureDirectory, fixture.source), 'utf8');
+    if (source.includes('android:contentDescription=')) {
+      throw new Error(`${fixture.source}: missing-description denominator no longer proves absence`);
+    }
+    for (const code of fixture.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`${fixture.source}: undeclared XML subset v2 diagnostic code ${code}`);
+      }
+    }
+    declaredSources.add(fixture.source);
+  }
+  assertUnique([...declaredSources], 'XML subset v2 source fixtures');
+  return contract;
+}
+
 async function readProjectFixtureFile(projectRoot, projectPath) {
   const candidate = resolve(projectRoot, projectPath);
   if (!isWithin(projectRoot, candidate)) {
@@ -571,6 +675,7 @@ export async function verifyPhase0() {
   const schemas = await verifySchemas(versions);
   await verifyExamples(schemas);
   const xmlSubset = await verifyXmlSubset(schemas);
+  const xmlSubsetV2 = await verifyXmlSubsetV2(schemas);
   const xmlProjectContext = await verifyXmlProjectContext(schemas);
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
@@ -581,6 +686,8 @@ export async function verifyPhase0() {
     fixtures: corpus.cases.filter((item) => item.input.kind === 'fixture').length,
     reservedCapabilities: versions.reservedCapabilities.length,
     xmlFixtures: xmlSubset.supportedFixtures.length + xmlSubset.unsupportedFixtures.length,
+    xmlV2Fixtures:
+      xmlSubsetV2.supportedFixtures.length + xmlSubsetV2.unsupportedFixtures.length,
     xmlProjectContextFixtures:
       xmlProjectContext.supportedFixtures.length + xmlProjectContext.unsupportedFixtures.length,
   };
@@ -594,6 +701,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.reservedCapabilities} reserved capabilities, ${summary.metrics} metrics, ` +
           `${summary.cases} cases, ${summary.fixtures} fixture-backed cases, and ` +
           `${summary.xmlFixtures} frozen XML fixtures and ` +
+          `${summary.xmlV2Fixtures} frozen XML v2 fixtures and ` +
           `${summary.xmlProjectContextFixtures} frozen XML project-context fixtures.`,
       );
     })

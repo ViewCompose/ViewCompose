@@ -266,6 +266,35 @@
       "metricIds": ["xml.supported-compile", "xml.resource-preservation"]
     },
     {
+      "id": "xml.supported-profile-card-v2",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/profile-card.xml"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compiled"
+      },
+      "metricIds": ["xml.supported-compile", "xml.resource-preservation"]
+    },
+    {
+      "id": "xml.missing-image-description-v2",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/image-missing-description.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-ACCESSIBILITY-REQUIRED"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
       "id": "xml.project-context-styled-login",
       "phase": 4,
       "category": "xml-migration",

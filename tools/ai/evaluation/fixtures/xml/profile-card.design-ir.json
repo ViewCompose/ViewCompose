@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "documentId": "profile-card",
+  "source": {
+    "kind": "android-xml",
+    "identity": "tools/ai/evaluation/fixtures/xml/profile-card.xml",
+    "fingerprint": "8e58936aeb989ef84b91b3fafd807f76daa38e7c46172d026e24bff4058b4a8f"
+  },
+  "roots": [
+    {
+      "id": "id:profile_card",
+      "kind": "box",
+      "properties": [],
+      "modifiers": [
+        {
+          "kind": "size",
+          "arguments": [
+            { "name": "width", "value": { "kind": "layout-dimension", "value": "match-parent" } },
+            { "name": "height", "value": { "kind": "dimension", "value": 160, "unit": "dp" } }
+          ]
+        },
+        {
+          "kind": "padding",
+          "arguments": [
+            { "name": "all", "value": { "kind": "dimension", "value": 16, "unit": "dp" } }
+          ]
+        }
+      ],
+      "semantics": [],
+      "events": [],
+      "state": [],
+      "children": [
+        {
+          "id": "id:avatar",
+          "kind": "image",
+          "properties": [
+            {
+              "name": "source",
+              "value": { "kind": "resource", "resourceType": "drawable", "name": "profile_avatar" }
+            },
+            {
+              "name": "contentDescription",
+              "value": { "kind": "resource", "resourceType": "string", "name": "profile_photo" }
+            },
+            {
+              "name": "contentScale",
+              "value": { "kind": "enum", "type": "image-content-scale", "value": "crop" }
+            }
+          ],
+          "modifiers": [
+            {
+              "kind": "size",
+              "arguments": [
+                { "name": "width", "value": { "kind": "dimension", "value": 96, "unit": "dp" } },
+                { "name": "height", "value": { "kind": "dimension", "value": 96, "unit": "dp" } }
+              ]
+            }
+          ],
+          "semantics": [
+            {
+              "name": "role",
+              "value": { "kind": "enum", "type": "semantic-role", "value": "image" }
+            }
+          ],
+          "events": [],
+          "state": [],
+          "children": [],
+          "provenance": {
+            "sourceId": "@id/avatar",
+            "sourceSpan": "tools/ai/evaluation/fixtures/xml/profile-card.xml:7",
+            "confidence": 1,
+            "decision": "Map ImageView to Image with caller-owned drawable source and explicit content description."
+          }
+        },
+        {
+          "id": "id:status",
+          "kind": "text",
+          "properties": [
+            {
+              "name": "text",
+              "value": { "kind": "resource", "resourceType": "string", "name": "status_label" }
+            }
+          ],
+          "modifiers": [
+            {
+              "kind": "size",
+              "arguments": [
+                { "name": "width", "value": { "kind": "layout-dimension", "value": "wrap-content" } },
+                { "name": "height", "value": { "kind": "layout-dimension", "value": "wrap-content" } }
+              ]
+            },
+            {
+              "kind": "visibility",
+              "arguments": [
+                { "name": "value", "value": { "kind": "enum", "type": "visibility", "value": "gone" } }
+              ]
+            }
+          ],
+          "semantics": [],
+          "events": [],
+          "state": [],
+          "children": [],
+          "provenance": {
+            "sourceId": "@id/status",
+            "sourceSpan": "tools/ai/evaluation/fixtures/xml/profile-card.xml:14",
+            "confidence": 1,
+            "decision": "Map TextView to Text and preserve its string resource as a caller binding."
+          }
+        }
+      ],
+      "provenance": {
+        "sourceId": "@id/profile_card",
+        "sourceSpan": "tools/ai/evaluation/fixtures/xml/profile-card.xml:2",
+        "confidence": 1,
+        "decision": "Map FrameLayout to Box, preserve overlay child order, size, and padding."
+      }
+    }
+  ],
+  "unsupported": []
+}

@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Freeze the next Android XML subset around basic container, image, accessibility, and resource semantics before widening parsing or generation.
+next_action: Implement the frozen Android XML layout v2 parser and generator mappings, require exact profile-card IR/Kotlin goldens, and compile the generated function.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -63,12 +63,14 @@ sixth client-neutral consumer workflow. The next increment is now frozen as Andr
 context v1: explicit-root resource and style resolution plus a read-only, bounded lexical call-site
 inventory whose completeness is never claimed. That context is now integrated as an explicit
 project input form of the shared CLI/MCP converter, and its styled golden passes the hermetic
-compiler without changing standalone source input.
+compiler without changing standalone source input. Android XML layout v2 is now contract-frozen as
+the next compatible subset for `FrameLayout`, `ImageView`, explicit image accessibility, drawable
+bindings, image scaling, and visibility; implementation has not yet widened the tool.
 
 Last verified: 2026-08-29.
 
-Next action: freeze the next Android XML subset around basic container, image, accessibility, and
-resource semantics before widening parsing or generation.
+Next action: implement the frozen Android XML layout v2 parser and generator mappings, require exact
+profile-card IR/Kotlin goldens, and compile the generated function.
 
 ## Maven release changesets
 
@@ -981,8 +983,42 @@ consumer interoperability with **no material runtime change** because all work r
 downstream package and no published Android artifact changed. Limitations remain explicit: the
 subset does not emulate AGP variants or resource merging, resolve themes or qualified defaults,
 prove call-site completeness, edit host source, render the generated project screen, or establish
-visual/accessibility parity. The next action is a new contract freeze for basic container, image,
-accessibility, and resource semantics; implementation must not widen the subset first.
+visual/accessibility parity. At that slice boundary the next action was a new basic container,
+image, accessibility, and resource contract; the following section records that freeze before
+implementation.
+
+### Contract freeze — Android XML layout v2
+
+The next compatible XML subset is frozen separately from `android-xml-layout-v1`, so the accepted
+login denominator and existing gates remain immutable while implementation is pending. Layout v2
+adds only `FrameLayout` mapped to ordered-overlay `Box`, `ImageView` mapped to `Image`, and the common
+`android:visibility` attribute. `FrameLayout` accepts the already bounded all-edge padding.
+`ImageView` accepts one unqualified `@drawable/name`, one of `fitCenter`, `centerCrop`, `fitXY`, or
+`centerInside`, and a content description that is a literal, an unqualified string resource, or
+explicit `@null` for decorative content.
+
+Drawable identity is preserved as a caller-owned `ImageSource` parameter instead of inventing an
+Android `R` class inside the hermetic compiler. String identities remain caller-owned `String`
+parameters. Visible nodes omit a redundant modifier; `invisible` and `gone` map to ViewCompose's
+native visibility modifier. An `ImageView` that omits `android:contentDescription` fails closed with
+`VC-AI-XML-ACCESSIBILITY-REQUIRED`; the converter may not silently choose decorative semantics.
+Unknown scale types, qualified/package resources, source selectors, tint, layout gravity, and
+style-supplied v2 attributes remain outside this increment.
+
+The frozen positive denominator is a three-node profile card with one `FrameLayout`, one cropped
+image, one gone text node, one drawable binding, two string bindings, exact Design IR v1 provenance,
+and exact intended Kotlin. The negative denominator is an image with a drawable source but no
+accessibility decision. This expands Phase 4 to 27 evaluation cases, 24 fixture-backed cases, four
+base XML v1 fixtures, two XML v2 fixtures, and three project-context fixtures while retaining the
+same 30 metrics.
+
+On 2026-08-29, Node 25.6.0 passed 100/100 AI-tooling tests and the expanded Phase 0 verifier. The
+compiled root contract and documentation-structure gates passed 20 actionable tasks (6 executed
+and 14 up-to-date). Compared with the previous denominator, this is **improved** measurable basic
+container, image, accessibility, and resource coverage with **no material tool or runtime behavior
+change**: the v2 fixtures and intended goldens are contract evidence only, are not in the installed
+runtime package, and are not yet accepted by the parser or generator. The next action is exact
+implementation plus hermetic compilation; no broader XML feature may bypass that boundary.
 
 ### Implementation evidence — bounded XML to Design IR
 
