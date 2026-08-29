@@ -7,6 +7,7 @@ owner:
   id: viewcompose-navigation-android
 version_lane: released
 capability_ids:
+  - navigation.deep-links
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
@@ -16,6 +17,7 @@ artifact_ids:
 sample_ids:
   - module.navigation-android-dependency
   - module.navigation-android-destination-context
+  - module.navigation-android-deep-link
   - module.navigation-android-host
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
@@ -389,10 +391,35 @@ direction maps primary-to-tertiary roles to the correct physical order for LTR a
 
 ## Deep links and retained stacks
 
-The string, Android `Uri`, and `ACTION_VIEW Intent` entry points all use the same strict graph
-resolver. A match is converted to one atomic command that updates the declared target stack and
-selects it. `NavDeepLinkResult.Navigated` still contains a `NavResult`, so rendering or commit failure
-is not confused with URI matching success.
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-deep-link" sample_id="module.navigation-android-deep-link" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun navigateSharedImageRequest(controller: NavHostController): NavDeepLinkResult {
+    return controller.navigateDeepLink(
+        NavDeepLinkRequest(
+            action = Intent.ACTION_SEND,
+            mimeType = "image/png",
+        ),
+    )
+}
+
+fun navigateSharedImageIntent(
+    controller: NavHostController,
+    intent: Intent,
+): NavDeepLinkResult {
+    return controller.navigateDeepLink(intent)
+}
+```
+
+The platform-neutral `NavDeepLinkRequest`, string URI, Android `Uri`, and Android `Intent` entry
+points all use the same strict Core resolver. The Intent adapter maps only `data`, `action`, and
+`type`; extras and categories never enter route arguments or matching policy. URI-only declarations
+continue to accept `ACTION_VIEW` Intents, while action-only, MIME-only, and combined declarations
+support shares and other explicit integrations without Android types in Navigation Core.
+
+A match is converted to one atomic command that updates the declared target stack and selects it.
+`NavDeepLinkResult.Navigated` still contains a `NavResult`, so rendering or commit failure is not
+confused with request matching success. An Intent without data, action, or MIME type returns
+`NoMatch`; malformed supplied fields return the Core resolver's structured rejection.
 
 For multiple tabs, declare one `NavStackConfiguration` and remember it with the shared graph. Do not
 create one controller per tab or mirror active-stack state in application fields; the controller
@@ -408,61 +435,6 @@ already retains each stack and owns selection history.
 
 The complete generated reference is available in the
 [`viewcompose-navigation-android` API tree](https://docs.viewcompose.com/api/viewcompose-navigation-android/current/).
-
-## Shared scoped-owner acceptance
-
-The comparison baseline was the 148-test Navigation Android suite with navigation-owned
-ViewModelStore allocation and direct Activity/Fragment owner injection. The clean Phase 3 run
-passed 151/151 Navigation Android tests and 21/21 aggregate Android host cases with zero skips,
-failures, or errors. Three new navigation contracts cover missing-owner failure, retained
-ViewModel identity across host recreation, and version-4 state migration; aggregate host source
-coverage increased from 10 to 11 test methods and now distinguishes Activity ViewTree discovery
-from Fragment explicit-owner precedence.
-
-Conclusion: **improved**. Navigation now shares the general Lifecycle 2.11 provider, retains
-ViewModels across configuration recreation, clears them at logical removal, and allocates no
-private ViewModelStore. The result is JVM/Robolectric evidence; it does not measure device memory,
-process-kill behavior, frame time, or OEM lifecycle ordering, so those dimensions remain
-**inconclusive**. Phase 4 next removes the standalone SavedStateHandle holder path; the separate
-navigation lifecycle-and-scene plan retains device, memory, presentation-retention, and transition
-projection acceptance.
-
-## Transition lifecycle acceptance
-
-The previous 151-test Navigation Android baseline encoded premature `RESUMED` for an incoming page
-and retained a popped outgoing page at `STARTED`. A fresh run passed 151/151 tests after replacing
-those expectations with frozen semantic-scene assertions. The focused ordinary, predictive,
-redirect, host-cap, and adaptive transition subset passed 20/20.
-
-The app device harness then passed 2/2 selected cases on a physical Pixel 4 XL running API 33. The
-new case reads the nearest `LocalLifecycleOwner` captured inside destination DSL and verifies push,
-predictive preview, cancellation, commit, popped exit, destruction, and terminal resume. The
-existing companion case verifies predictive progress and cancellation against real native Views.
-This is an **improved** lifecycle result with no premature resume in the supported host scenes.
-General navigation overlays, API-34 platform edge-gesture delivery, memory, leak, and performance
-results remain **inconclusive**; the next plan phase owns presentation-retention policy and its
-device measurements.
-
-## Execution reducer acceptance
-
-The Phase 5 baseline passed 162/162 Navigation Android tests. A fresh Phase 6 run passed 165/165,
-adding three host-boundary contracts for typed interaction execution, dynamic system-Back
-enablement without accidental host replacement, and explicit-key runtime replacement with the same
-controller. This is an absolute increase of three tests and a normalized increase of 1.9%.
-
-The final physical-device run passed all 15 `NavigationBackDeviceTest` cases on a Pixel 4 XL running
-API 33. An earlier 14/15 run exposed that an inline `overlayHostFactory` lambda incorrectly
-participated in host identity and could replace the runtime during an ordinary recomposition. The
-factory is now captured at host creation, its function identity is excluded from reconciliation,
-and an explicit `key` remains the tested replacement boundary. The coordinator shrank from 1,597 to
-1,176 lines, an absolute reduction of 421 lines or 26.4%, while production call sites no longer
-reconstruct lifecycle, scene, retention, rollback, cleanup, or Back policy outside the Core plan.
-
-Conclusion: **improved**. The same typed plan now drives deterministic Core policy and Android
-effects, and the complete existing device Back matrix remains green. General overlay navigation,
-typed-route serialization, direct NavigationEvent integration, representative memory and leak
-tests, line/branch coverage, and broader device/performance matrices remain **inconclusive** and
-are assigned to Phase 7.
 
 ## Compatibility notes
 

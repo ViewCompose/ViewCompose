@@ -7,6 +7,7 @@ owner:
   id: navigation.host
 version_lane: released
 capability_ids:
+  - navigation.deep-links
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
@@ -49,9 +50,10 @@ framework-owned page rather than an Activity or Fragment. The capability is spli
 published artifacts:
 
 - `viewcompose-navigation-core` owns the platform-neutral route, graph, retained-stack, transaction,
-  lifecycle-plan, deep-link, and pane-scene models;
+  lifecycle-plan, structured URI/action/MIME deep-link matcher, and pane-scene models;
 - `viewcompose-navigation-android` owns destination and graph Android owners, child render sessions,
-  native View presentation, SavedState encoding, system and predictive Back, and visual motion.
+  native View presentation, SavedState encoding, `Intent` adaptation, system and predictive Back,
+  and visual motion.
 
 The split keeps Android ownership out of the state machine while giving the native host one place
 to coordinate stack state, rendering, lifecycle, and View hierarchy changes.
@@ -238,7 +240,7 @@ state.
 The invariant boundary is covered at three levels:
 
 - Navigation Core tests exercise two-phase transactions, deterministic retained stacks, graph
-  validation, strict deep links, lifecycle plans, and pane-scene validation.
+  validation, strict URI/action/MIME deep links, lifecycle plans, and pane-scene validation.
 - Navigation Android tests exercise candidate rollback, retained owner identity, lifecycle order,
   shared scoped-store recreation and terminal cleanup, SavedState compatibility, queued commands,
   transition redirection, adaptive transition scenes, and predictive Back.

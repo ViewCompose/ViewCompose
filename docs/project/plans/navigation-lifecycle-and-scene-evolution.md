@@ -11,6 +11,7 @@ capability_ids:
   - lifecycle.effects
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
+  - navigation.deep-links
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
@@ -21,9 +22,11 @@ artifact_ids:
   - viewcompose-navigation-core
 sample_ids:
   - module.navigation-android-destination-context
+  - module.navigation-android-deep-link
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
   - module.navigation-core-execution-plan
+  - module.navigation-core-deep-link
   - module.navigation-core-scene-projection
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
@@ -50,12 +53,13 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 7 capability-gap closure, coverage, leak, memory, performance, and broader device evidence.
+next_action: Continue Phase 7 with typed-route and navigation-result dispositions, then coverage, leak, memory, performance, and broader device evidence.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
   - release/changes/20260829-navigation-presentation-retention.json
   - release/changes/20260829-navigation-scene-projection.json
+  - release/changes/20260829-navigation-structured-deep-links.json
   - release/changes/20260829-navigation-transition-lifecycle.json
 ---
 
@@ -66,12 +70,13 @@ maven_release_changesets:
 Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
-complete. Phase 6 reducer/executor convergence and acceptance are complete; Phase 7 is next.
+complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
+structured deep-link slice is complete.
 
 Last verified: 2026-08-29.
 
-Next action: execute Phase 7 capability-gap closure, coverage, leak, memory, performance, and
-broader device evidence.
+Next action: continue Phase 7 with typed-route and navigation-result dispositions, then coverage,
+leak, memory, performance, and broader device evidence.
 
 ## Maven release changesets
 
@@ -79,6 +84,7 @@ broader device evidence.
 - `release/changes/20260829-navigation-execution-reducer.json`
 - `release/changes/20260829-navigation-presentation-retention.json`
 - `release/changes/20260829-navigation-scene-projection.json`
+- `release/changes/20260829-navigation-structured-deep-links.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
 
 ## Release intent rationale
@@ -827,6 +833,45 @@ remains the retry boundary for that network-dependent publication check.
    guidance.
 3. Run fresh unit, device, restoration, coverage, leak, memory, and performance matrices.
 4. Hard-cut all obsolete production, test, sample, diagnostic, and documentation paths.
+
+#### Capability slice 7.1: structured deep-link requests
+
+The audit accepted action and MIME matching as a material gap. The completed slice adds the
+platform-neutral `NavDeepLinkRequest`; URI-, action-, MIME-, and combined declarations now share one
+Core matcher, while Android only adapts `Intent.data`, `action`, and `type`. Every declared
+constraint must match, malformed supplied fields cannot fall through to a broad candidate, combined
+declarations rank first, and equally specific matches remain ambiguous. MIME matching is
+locale-independent and supports exact and component-wildcard constraints. The obsolete URI-only
+`matchingPatterns` diagnostic was hard-cut to immutable `NavDeepLink` candidates; this Core alpha
+correction is classified as source/binary breaking.
+
+Governance recorded `navigation.deep-links`, canonical KDoc, Q3 Core and Android compiled samples,
+both module manuals, guide, architecture, Compose migration, generated Reference, translations, and
+the breaking/feature Changeset. No Tutorial or redirect applies. The application-entry detector
+correctly reported zero entry declarations because these low-level Core models and controller
+members are outside its DSL/host/tooling taxonomy.
+
+Acceptance evidence:
+
+- Core passed 76/76 tests, up 5 from the Phase 6 baseline of 71 (+7.0%); Android passed 166/166, up
+  1 from 165 (+0.6%), with no failures, errors, or skips. The new action, MIME, combined-ranking,
+  malformed-input, ambiguity, Intent-adapter, and host cases make confidence **improved**.
+- The strict Core API-documentation audit passed. Android remains **inconclusive** because its
+  pre-existing Dokka `androidJvm`/`release` source-root overlap fails before declaration inspection;
+  fix the shared Android Dokka convention and rerun without weakening source layout or policy.
+- After the demo's stale URI-only result model was hard-cut, `qaQuick` passed 2,268 tasks (192
+  executed, 2,076 up to date) and `qaPreview` passed 1,209 (140/1,069), including both Preview hosts.
+  Repository integration is **improved** and Preview output has **no material change**; cache ratios
+  are context, not performance evidence. Documentation, release-intent, and tooling gates passed.
+- CI first measured 49,227,197 B of non-API site output, 48,983 B above the 46.9 MiB limit. Moving
+  duplicated phase evidence from published manuals to this active plan reduced the same local build
+  by 73,087 B (0.15%) to 49,154,110 B, leaving 24,104 B headroom; documentation size is
+  **improved** without raising the budget. Local version verification remains **inconclusive**
+  because the checkout lacks the CI-generated complete API trees; rerun the full site gate in CI.
+- A physical Pixel 4 XL/API 33 passed 1/1 explicit `ACTION_SEND` + `image/png` Activity test after a
+  full package rebuild cleared stale incremental output. Adapter confidence is **improved**; one
+  device does not cover implicit/OEM delivery, coverage, leaks, memory, or performance, which remain
+  **inconclusive**. Next: disposition typed routes and navigation results, then run that matrix.
 
 ### Phase 8: document, release, and archive
 

@@ -7,6 +7,7 @@ owner:
   id: navigation.host
 version_lane: released
 capability_ids:
+  - navigation.deep-links
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
@@ -154,7 +155,7 @@ and **Unsupported**.
 | Destination presentation context | Navigation 3 entry content can observe scene metadata through its entry scope; Compose content also observes composition-local values. | `LocalNavDestinationContext` exposes a stable per-entry holder whose read-only presentation is the exact Core scene entry. It survives native presentation disposal/recreation, nests by nearest host, and excludes frame progress. AndroidX Lifecycle remains the resource-threshold API. | Supported | [`NavDestinationContext.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationContext.kt), [`NavEntryOwnerEnvironment.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt), and holder, local-capture, nested-host, pane, overlay, removal, and predictive-progress coverage in Navigation Android tests. General overlay navigation remains unsupported even though the context can represent a Core overlay scene. |
 | Hidden destination composition | Navigation state can be retained independently of whether Compose content remains in Composition. Navigation 3 decorators retain entry state. | Logical entry owners, ViewModels, saved state, and saveable state survive independently of native presentation. `DisposeWhenHidden` is the bounded default; explicit retain-all and bounded least-recently-hidden policies are available. Reveal rebuilds a missing presentation transactionally. | Supported | [`NavPresentationRetentionPolicy.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavPresentationRetentionPolicy.kt), [`NavDestinationSessionStore.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationSessionStore.kt), unit ownership/rebuild/LRU coverage, and physical-device identity and resource-count coverage in [`NavigationBackDeviceTest.kt`](../../app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt). |
 | Multiple back stacks | Navigation 2 uses save/restore options; Navigation 3 documents application-owned multiple-list recipes. | One `NavStackConfiguration` owns all stacks, selection history, and root-back behavior. Non-selected stack owners remain live while their optional presentations follow the host retention policy. | Intentionally different | [`NavStackConfiguration.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavStackConfiguration.kt), [`NavBackStackSetControllerTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackSetControllerTest.kt), and multi-stack restoration in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
-| Deep links | Navigation 2 matches URI, action, and MIME type. Navigation 3 supplies recipes for parsing external input into application keys. | ViewCompose resolves strict absolute URI patterns and Android `ACTION_VIEW` input, supports nested graphs and caller-selected launch modes, rejects ambiguous matches, and does not match arbitrary actions or MIME types. Extra input query parameters are tolerated but cannot influence route arguments or navigation policy. | Partially supported | [`NavDeepLink.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt), [`NavDeepLinkTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavDeepLinkTest.kt), and public-host policy coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). Partial support reflects the intentionally smaller action/MIME surface, not an unresolved query contract. |
+| Deep links | Navigation 2 matches URI, action, and MIME type. Navigation 3 supplies recipes for parsing external input into application keys. | `NavDeepLinkRequest` and `NavDeepLink` match strict URI, action, MIME, or combined declarations without Android types. Android maps `Intent.data`, `action`, and `type` into the same resolver; nested graphs, launch modes, structured rejection, ambiguity rejection, and inert extra query values remain supported. | Supported | [`NavDeepLink.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt), [`NavDeepLinkTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavDeepLinkTest.kt), and Intent/transaction coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). ViewCompose deliberately omits Navigation 2's Android-specific builder surface while preserving the material matching capability in Core. |
 | Save, restore, and process death | Navigation 2 restores controller and entry state; Navigation 3 restores saveable keys and decorator state. Neither restores live ViewModel instances. | ViewCompose saves the complete configured stack set, route values, entry and graph saved state, saveable values, and a private host-scope identity. It retains live ViewModels only through the parent store during configuration recreation, migrates version-4 snapshots with a fresh scope identity, and rejects corrupt or structurally invalid state. | Supported | [`NavHostSavedState.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostSavedState.kt), [`NavHostSavedStateTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostSavedStateTest.kt), and restoration coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). Live Views, ViewModels, effects, animations, and uncommitted transactions are not process-restored. |
 | System Back and Predictive Back | Navigation 2 Compose integrates Predictive Back. Navigation 3 uses NavigationEvent and scene transitions. Activity 1.13 keeps `OnBackPressedDispatcher` compatible on top of NavigationEvent. | The Android host registers an `OnBackPressedCallback` and supports predictive start, progress, cancellation, and commit through a transactional preview driver. | Supported | [`AndroidNavHostBackAdapter.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/AndroidNavHostBackAdapter.kt), [`AndroidNavHostBackAdapterTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/AndroidNavHostBackAdapterTest.kt), and 2/2 selected predictive/lifecycle instrumentation cases on a physical API-33 Pixel 4 XL. API-34 platform edge-gesture delivery was not rerun in this slice. |
 | Direct NavigationEvent integration | Activity and Navigation3 expose `NavigationEventDispatcher`, nested dispatcher owners, testing utilities, and Compose handlers. Navigation3 1.1.3 uses NavigationEvent 1.1.2, including Predictive Back in Android Studio Preview inspection mode. | ViewCompose uses the compatible Activity `OnBackPressedDispatcher` path but exposes no direct NavigationEvent callback, dispatcher-owner, forward-event, testing, or Preview integration. | Unsupported | No corresponding ViewCompose public API was found. Existing back behavior remains supported because Activity implements `OnBackPressedDispatcher` on top of NavigationEvent; unsupported refers to direct integration only. |
@@ -311,10 +312,16 @@ the intended identity.
 
 ## Deep links
 
-ViewCompose deep links use strict absolute URI patterns and can target nested graphs. Resolution
-rejects malformed input, untrusted URI components, duplicate parameters, and ambiguous matches.
-The Android host accepts the supported external route through `ACTION_VIEW`. Navigation 2 action
-and MIME-type matching have no direct counterpart.
+ViewCompose deep links use one platform-neutral request for URI, action, and MIME data. A
+declaration may constrain any one dimension or combine them, and all declared constraints must
+match. MIME constraints support exact values and component wildcards; actions are exact and
+case-sensitive. More constrained declarations win before URI and MIME specificity, while tied best
+matches are rejected. URI declarations can target nested graphs and decode the closed `NavValue`
+argument set.
+
+Resolution rejects malformed supplied fields, untrusted URI components, duplicate parameters, and
+ambiguous matches before stack mutation. The Android host maps `Intent.data`, `Intent.action`, and
+`Intent.type` into the same request and ignores extras and categories.
 
 ### Extra query parameters
 
@@ -369,7 +376,8 @@ carried as existing repository evidence rather than a fresh result.
    results.
 4. Map destination and graph ViewModel scopes, including factory, extras, and saved-state needs.
 5. Configure multiple stacks and root-back behavior explicitly.
-6. Rebuild deep links around supported URI patterns and `ACTION_VIEW`; replace action/MIME rules.
+6. Translate URI, action, MIME, and combined rules into `NavDeepLink` declarations, then verify
+   rejected and ambiguous external requests explicitly.
 7. Verify transaction rollback, process death, system Back, and predictive cancellation.
 
 ### From Navigation 3
@@ -389,7 +397,6 @@ carried as existing repository evidence rather than a fresh result.
 
 - Activity and Fragment destinations are unsupported; only their role as Android hosts remains.
 - Arbitrary serializable route objects and compiler-generated typed-route parity are unsupported.
-- Navigation 2 action and MIME deep-link matching are unsupported.
 - Direct NavigationEvent dispatcher-owner, callback, forward-event, testing, and Preview APIs are
   unsupported.
 - General Navigation3 scene strategies and metadata are unsupported; the pane policy is narrower.

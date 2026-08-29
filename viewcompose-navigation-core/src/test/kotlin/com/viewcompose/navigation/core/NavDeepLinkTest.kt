@@ -82,7 +82,7 @@ class NavDeepLinkTest {
             NavDeepLinkRejectionReason.AmbiguousMatch,
             (resolution as NavDeepLinkResolution.Rejected).rejection.reason,
         )
-        assertEquals(2, resolution.rejection.matchingPatterns.size)
+        assertEquals(2, resolution.rejection.candidates.size)
     }
 
     @Test
@@ -129,6 +129,10 @@ class NavDeepLinkTest {
             (invalidArgument as NavDeepLinkResolution.Rejected).rejection.reason,
         )
         assertEquals("userId", invalidArgument.rejection.argumentName)
+        assertEquals(
+            "https://example.com/users/{userId}",
+            invalidArgument.rejection.candidates.single().uriPattern,
+        )
     }
 
     @Test
@@ -187,7 +191,150 @@ class NavDeepLinkTest {
             NavDeepLinkRejectionReason.AmbiguousMatch,
             (ambiguous as NavDeepLinkResolution.Rejected).rejection.reason,
         )
-        assertEquals(2, ambiguous.rejection.matchingPatterns.size)
+        assertEquals(2, ambiguous.rejection.candidates.size)
+    }
+
+    @Test
+    fun `action MIME and combined requests share one strict matcher`() {
+        val actionLink = NavDeepLink(action = "com.example.OPEN_SETTINGS")
+        val imageLink = NavDeepLink(mimeType = "image/*")
+        val combinedLink = NavDeepLink(
+            uriPattern = "content://example/items/{itemId}",
+            action = "com.example.EDIT",
+            mimeType = "Image/PNG",
+        )
+        val graph = graphWith(
+            "settings" to listOf(actionLink),
+            "image" to listOf(imageLink),
+            "editor" to listOf(combinedLink),
+        )
+
+        val actionMatch = graph.resolveDeepLink(
+            NavDeepLinkRequest(action = "com.example.OPEN_SETTINGS"),
+        ) as NavDeepLinkResolution.Matched
+        val mimeMatch = graph.resolveDeepLink(
+            NavDeepLinkRequest(mimeType = "IMAGE/JPEG"),
+        ) as NavDeepLinkResolution.Matched
+        val combinedMatch = graph.resolveDeepLink(
+            NavDeepLinkRequest(
+                uri = "content://example/items/42",
+                action = "com.example.EDIT",
+                mimeType = "image/png",
+            ),
+        ) as NavDeepLinkResolution.Matched
+
+        assertEquals("settings", actionMatch.match.route.name)
+        assertEquals("image", mimeMatch.match.route.name)
+        assertEquals("editor", combinedMatch.match.route.name)
+        assertEquals(NavValue.Text("42"), combinedMatch.match.route["itemId"])
+        assertEquals("image/png", combinedLink.mimeType)
+    }
+
+    @Test
+    fun `more constrained request declaration wins over broad candidates`() {
+        val combined = NavDeepLink(
+            uriPattern = "content://example/items/{itemId}",
+            action = "com.example.EDIT",
+            mimeType = "image/*",
+        )
+        val graph = graphWith(
+            "uri-only" to listOf(NavDeepLink("content://example/items/{itemId}")),
+            "action-only" to listOf(NavDeepLink(action = "com.example.EDIT")),
+            "combined" to listOf(combined),
+        )
+
+        val resolution = graph.resolveDeepLink(
+            NavDeepLinkRequest(
+                uri = "content://example/items/42",
+                action = "com.example.EDIT",
+                mimeType = "image/png",
+            ),
+        )
+
+        assertEquals(
+            "combined",
+            (resolution as NavDeepLinkResolution.Matched).match.route.name,
+        )
+    }
+
+    @Test
+    fun `missing or mismatched action and MIME constraints do not partially match`() {
+        val graph = graphWith(
+            "editor" to listOf(
+                NavDeepLink(
+                    uriPattern = "content://example/items/42",
+                    action = "com.example.EDIT",
+                    mimeType = "image/png",
+                ),
+            ),
+        )
+
+        assertSame(
+            NavDeepLinkResolution.NoMatch,
+            graph.resolveDeepLink(NavDeepLinkRequest(uri = "content://example/items/42")),
+        )
+        assertSame(
+            NavDeepLinkResolution.NoMatch,
+            graph.resolveDeepLink(
+                NavDeepLinkRequest(
+                    uri = "content://example/items/42",
+                    action = "com.example.VIEW",
+                    mimeType = "image/png",
+                ),
+            ),
+        )
+        assertSame(
+            NavDeepLinkResolution.NoMatch,
+            graph.resolveDeepLink(
+                NavDeepLinkRequest(
+                    uri = "content://example/items/42",
+                    action = "com.example.EDIT",
+                    mimeType = "text/plain",
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `malformed structured request fields are rejected before broad fallback`() {
+        val graph = graphWith(
+            "action" to listOf(NavDeepLink(action = "com.example.OPEN")),
+        )
+
+        val malformedUri = graph.resolveDeepLink(
+            NavDeepLinkRequest(uri = "https://example.com/%GG", action = "com.example.OPEN"),
+        ) as NavDeepLinkResolution.Rejected
+        val malformedAction = graph.resolveDeepLink(
+            NavDeepLinkRequest(action = "\n"),
+        ) as NavDeepLinkResolution.Rejected
+        val malformedMime = graph.resolveDeepLink(
+            NavDeepLinkRequest(mimeType = "image"),
+        ) as NavDeepLinkResolution.Rejected
+
+        assertEquals(NavDeepLinkRejectionReason.MalformedUri, malformedUri.rejection.reason)
+        assertEquals(NavDeepLinkRejectionReason.MalformedAction, malformedAction.rejection.reason)
+        assertEquals(NavDeepLinkRejectionReason.MalformedMimeType, malformedMime.rejection.reason)
+    }
+
+    @Test
+    fun `same URI may declare distinct action constraints while exact duplicates fail`() {
+        val uri = "content://example/items/42"
+        val graph = graphWith(
+            "view" to listOf(NavDeepLink(uriPattern = uri, action = "com.example.VIEW")),
+            "edit" to listOf(NavDeepLink(uriPattern = uri, action = "com.example.EDIT")),
+        )
+
+        val match = graph.resolveDeepLink(
+            NavDeepLinkRequest(uri = uri, action = "com.example.EDIT"),
+        ) as NavDeepLinkResolution.Matched
+
+        assertEquals("edit", match.match.route.name)
+        assertThrows<IllegalStateException> {
+            graphWith(
+                "first" to listOf(NavDeepLink(action = "com.example.OPEN")),
+                "second" to listOf(NavDeepLink(action = "com.example.OPEN")),
+            )
+        }
     }
 
     @Test
@@ -265,6 +412,24 @@ class NavDeepLinkTest {
                     "missing" to NavDeepLinkArgumentType.Long,
                 ),
             )
+        }
+        assertThrows<IllegalArgumentException> {
+            NavDeepLink()
+        }
+        assertThrows<IllegalArgumentException> {
+            NavDeepLink(action = " ")
+        }
+        assertThrows<IllegalArgumentException> {
+            NavDeepLink(mimeType = "image")
+        }
+        assertThrows<IllegalArgumentException> {
+            NavDeepLink(
+                action = "com.example.OPEN",
+                argumentTypes = mapOf("missing" to NavDeepLinkArgumentType.Long),
+            )
+        }
+        assertThrows<IllegalArgumentException> {
+            NavDeepLinkRequest()
         }
         assertThrows<IllegalStateException> {
             graphWith(

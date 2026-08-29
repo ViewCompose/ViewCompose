@@ -4,6 +4,7 @@ import com.viewcompose.navigation.core.NavBackStackController
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavDeepLink
 import com.viewcompose.navigation.core.NavDeepLinkArgumentType
+import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavDeepLinkResolution
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
@@ -69,23 +70,55 @@ fun deepLinkResolutionSample() {
                 ),
             ),
         )
+        destination(
+            route = "shared-image",
+            deepLinks = listOf(
+                NavDeepLink(
+                    action = "android.intent.action.SEND",
+                    mimeType = "image/*",
+                ),
+            ),
+        )
     }
 
     val matched = graph.resolveDeepLink("https://viewcompose.com/users/42")
         as NavDeepLinkResolution.Matched
     check(matched.match.route["userId"] == NavValue.LongValue(42L))
     check(matched.match.deepLink.targetStackId == NavStackId("account"))
+    val shared = graph.resolveDeepLink(
+        NavDeepLinkRequest(
+            action = "android.intent.action.SEND",
+            mimeType = "image/png",
+        ),
+    ) as NavDeepLinkResolution.Matched
+    check(shared.match.route.name == "shared-image")
 }
 
 fun deepLinkDeclarationSample() {
     // DOCS_REGION_START(navigation-core-deep-link)
-val profileLink = NavDeepLink(
-    uriPattern = "https://viewcompose.com/users/{userId}",
-    argumentTypes = mapOf("userId" to NavDeepLinkArgumentType.Long),
-    targetStackId = NavStackId("account"),
+val graph = navGraph(
+    route = "root",
+    startDestination = NavRoute("home"),
+) {
+    destination("home")
+    destination(
+        route = "shared-image",
+        deepLinks = listOf(
+            NavDeepLink(
+                action = "android.intent.action.SEND",
+                mimeType = "image/*",
+            ),
+        ),
+    )
+}
+val result = graph.resolveDeepLink(
+    NavDeepLinkRequest(
+        action = "android.intent.action.SEND",
+        mimeType = "image/png",
+    ),
 )
+check((result as NavDeepLinkResolution.Matched).match.route.name == "shared-image")
     // DOCS_REGION_END(navigation-core-deep-link)
-    check(profileLink.targetStackId == NavStackId("account"))
 }
 
 fun transactionalNavigationSample() {

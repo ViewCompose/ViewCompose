@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add one platform-neutral URI, action, and MIME deep-link request matcher and route Android Intent input through it.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-core", "impact": "breaking" },
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

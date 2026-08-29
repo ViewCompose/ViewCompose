@@ -7,6 +7,7 @@ owner:
   id: navigation.host
 version_lane: released
 capability_ids:
+  - navigation.deep-links
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
@@ -56,6 +57,12 @@ provide both explicitly; `NavHost` intentionally refuses to create a private fal
 Use a stable `NavGraph` when routes need typed arguments, nested ownership, or deep links. Restore
 fails closed when the current graph no longer accepts the saved route hierarchy. Treat that as a
 safe restart at the configured start destination, not as a partially restored stack.
+
+Model external navigation with `NavDeepLinkRequest`. A declaration may constrain URI, action,
+MIME type, or all three; every declared constraint must match. The Android `Intent` overload maps
+only `data`, `action`, and `type` into that same Core request. Inspect `NavDeepLinkResult` before
+assuming navigation occurred, and validate the complete URI before routing when signatures or an
+exact query-key set are part of the application's security boundary.
 
 ## Restore state and connect platform Back
 
@@ -182,7 +189,8 @@ completion is a failed configuration.
 
 ## Choose the next focused task
 
-- Use strict deep-link declarations and inspect `NavDeepLinkResult` before accepting external URIs.
+- Use strict URI/action/MIME deep-link declarations and inspect `NavDeepLinkResult` before accepting
+  external requests.
 - Use `NavStackConfiguration` for independently retained tab stacks and derive tab selection from
   `navigationState.activeStackId`.
 - Use `NavPanePolicy.Adaptive` only when multiple visible destinations are intended to share the

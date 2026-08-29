@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSelectionMode
 import com.viewcompose.navigation.core.NavValue
 import org.junit.Assert.assertEquals
@@ -206,6 +207,28 @@ class SystemNavigationDemoDeviceTest {
                     NavValue.IntValue(2),
                     state.activeStack.top.route[SystemNavigationDemoModel.PageArgument],
                 )
+            }
+        }
+    }
+
+    @Test
+    fun actionAndMimeIntentUsesTheStructuredDeepLinkMatcherOnDevice() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = Intent(
+            Intent.ACTION_SEND,
+            null,
+            context,
+            NavigationDeepLinkTestActivity::class.java,
+        ).setType("image/png")
+
+        launchDemoActivity<NavigationDeepLinkTestActivity>(intent).use { scenario ->
+            awaitNavigation()
+
+            scenario.onActivity { activity ->
+                val state = activity.navigationSnapshotForTest()
+                assertEquals("navigated", activity.deepLinkOutcomeForTest())
+                assertEquals(NavStackId("deep-link-account"), state.activeStackId)
+                assertEquals("profile", state.activeStack.top.route.name)
             }
         }
     }

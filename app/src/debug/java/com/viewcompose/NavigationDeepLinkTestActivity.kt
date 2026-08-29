@@ -86,6 +86,13 @@ class NavigationDeepLinkTestActivity : ComponentActivity() {
         consumeDeepLink(intent)
     }
 
+    /** Returns the current immutable navigation state to device instrumentation. */
+    internal fun navigationSnapshotForTest(): NavStackSetSnapshot =
+        checkNotNull(controller).stackState
+
+    /** Returns the latest serialized deep-link outcome to device instrumentation. */
+    internal fun deepLinkOutcomeForTest(): String = outcome.value
+
     /**
      * 消费当前 Intent 中的 deep link，并记录导航结果。
      * Consumes the deep link in the current Intent and records the navigation outcome.
@@ -186,6 +193,11 @@ class NavigationDeepLinkTestActivity : ComponentActivity() {
                     deepLinks = listOf(
                         NavDeepLink(
                             uriPattern = "viewcompose://navigation/account/profile",
+                            targetStackId = AccountStack,
+                        ),
+                        NavDeepLink(
+                            action = Intent.ACTION_SEND,
+                            mimeType = "image/*",
                             targetStackId = AccountStack,
                         ),
                     ),

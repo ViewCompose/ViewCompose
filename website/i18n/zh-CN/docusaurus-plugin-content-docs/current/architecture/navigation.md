@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: 209202daba5b9b5d52d422b762f29256beacadf6b27c53f158b7ed600b97f2a7
+translation_source_hash: 18ca5c395f8a5da63b739b97919752cc1a2827dabd0db4dd82567a26dde04826
 translation_status: current
 ---
 
@@ -12,9 +12,10 @@ ViewCompose 导航使用 Activity 或 Window 作为最外层 Android Host，但 
 的页面，而不是 Activity 或 Fragment。能力分布在两个已发布产物中：
 
 - `viewcompose-navigation-core` 持有平台无关的 Route、Graph、保留栈、事务、Lifecycle Plan、
-  Deep Link 和 Pane Scene 模型；
+  结构化 URI/action/MIME Deep Link 匹配器和 Pane Scene 模型；
 - `viewcompose-navigation-android` 持有 Destination 与 Graph 的 Android Owner、子
-  RenderSession、原生 View 展示、SavedState 编码、系统与 Predictive Back，以及视觉 Motion。
+  RenderSession、原生 View 展示、SavedState 编码、`Intent` 适配、系统与 Predictive Back，
+  以及视觉 Motion。
 
 这一分层让状态机不依赖 Android 所有权，同时让原生 Host 在唯一位置协调栈状态、渲染、
 Lifecycle 和 View 层级变化。
@@ -173,7 +174,7 @@ Destination Root，不持有页面或 Session，也不能接收输入或无障�
 
 不变量边界有三个层次的覆盖：
 
-- Navigation Core 测试覆盖两阶段事务、确定性保留栈、Graph 校验、严格 Deep Link、
+- Navigation Core 测试覆盖两阶段事务、确定性保留栈、Graph 校验、严格 URI/action/MIME Deep Link、
   Lifecycle Plan 和 Pane Scene 校验。
 - Navigation Android 测试覆盖候选回滚、保留 Owner 身份、Lifecycle 顺序、共享 Scoped Store
   重建与终态清理、SavedState 兼容、队列命令、转场重定向、自适应转场 Scene 和 Predictive Back。

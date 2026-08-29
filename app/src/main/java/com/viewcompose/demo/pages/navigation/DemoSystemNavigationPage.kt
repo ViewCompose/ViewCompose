@@ -273,7 +273,7 @@ internal sealed interface SystemNavigationDeepLinkOutcome {
     data object ControllerUnavailable : SystemNavigationDeepLinkOutcome
 
     data class Navigated(
-        val uriPattern: String,
+        val matcher: String,
         val route: String,
         val result: SystemNavigationResultSummary,
     ) : SystemNavigationDeepLinkOutcome
@@ -310,7 +310,7 @@ internal fun NavResult.toDemoSummary(): SystemNavigationResultSummary = when (th
 
 internal fun NavDeepLinkResult.toDemoOutcome(): SystemNavigationDeepLinkOutcome = when (this) {
     is NavDeepLinkResult.Navigated -> SystemNavigationDeepLinkOutcome.Navigated(
-        uriPattern = match.deepLink.uriPattern,
+        matcher = match.deepLink.toDemoMatcher(),
         route = match.route.name,
         result = navigationResult.toDemoSummary(),
     )
@@ -323,6 +323,12 @@ internal fun NavDeepLinkResult.toDemoOutcome(): SystemNavigationDeepLinkOutcome 
 
     NavDeepLinkResult.Unsupported -> SystemNavigationDeepLinkOutcome.Unsupported
 }
+
+private fun NavDeepLink.toDemoMatcher(): String = buildList {
+    uriPattern?.let { pattern -> add("uri=$pattern") }
+    action?.let { value -> add("action=$value") }
+    mimeType?.let { value -> add("mimeType=$value") }
+}.joinToString()
 
 private fun NavFailure.toDemoEvent(): SystemNavigationEvent.HostFailure =
     SystemNavigationEvent.HostFailure(

@@ -29,6 +29,7 @@ import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavDeepLink
 import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
+import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.navigation.core.NavSceneVisibility
@@ -646,6 +647,54 @@ class NavHostPublicApiTest {
             controller.stackSnapshot(accountStack).entries.map { entry -> entry.route.name },
         )
         assertEquals(2, fixture.navHostView.childCount)
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `Intent and structured requests use the same action and MIME resolver`() {
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            destination(
+                route = "shared-image",
+                deepLinks = listOf(
+                    NavDeepLink(
+                        action = Intent.ACTION_SEND,
+                        mimeType = "image/*",
+                    ),
+                ),
+            )
+        }
+        val entryIds = ArrayDeque(listOf("home", "shared-image", "shared-image-again"))
+        val controller = createNavHostController(
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory { NavEntryId(entryIds.removeFirst()) },
+        )
+        val fixture = renderPublicHost(controller = controller)
+
+        val fromIntent = controller.navigateDeepLink(
+            Intent(Intent.ACTION_SEND).setType("image/png"),
+        ) as NavDeepLinkResult.Navigated
+        val noMatch = controller.navigateDeepLink(
+            Intent(Intent.ACTION_SEND).setType("text/plain"),
+        )
+        val fromCoreRequest = controller.navigateDeepLink(
+            request = NavDeepLinkRequest(
+                action = Intent.ACTION_SEND,
+                mimeType = "image/jpeg",
+            ),
+            launchMode = NavDeepLinkLaunchMode.Push,
+        ) as NavDeepLinkResult.Navigated
+
+        assertTrue(fromIntent.navigationResult is NavResult.Committed)
+        assertSame(NavDeepLinkResult.NoMatch, noMatch)
+        assertTrue(fromCoreRequest.navigationResult is NavResult.Committed)
+        assertEquals(
+            listOf("shared-image", "shared-image"),
+            controller.snapshot.entries.map { entry -> entry.route.name },
+        )
         fixture.session.dispose()
     }
 

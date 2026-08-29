@@ -216,7 +216,7 @@ class NavBackStackController private constructor(
     initialState: NavStackSetSnapshot,
     private val entryIdFactory: NavEntryIdFactory,
     private val routeResolver: (NavRoute) -> NavGraphResolution,
-    private val deepLinkResolver: ((String) -> NavDeepLinkResolution)?,
+    private val deepLinkResolver: ((NavDeepLinkRequest) -> NavDeepLinkResolution)?,
     val rootBackBehavior: NavRootBackBehavior,
 ) {
     private var currentState = initialState
@@ -256,7 +256,21 @@ class NavBackStackController private constructor(
     @Synchronized
     /** Resolves [uri] through the bound graph, or returns `Unsupported` for a graphless controller. */
     fun resolveDeepLink(uri: String): NavDeepLinkResolution {
-        return deepLinkResolver?.invoke(uri) ?: NavDeepLinkResolution.Unsupported
+        return resolveDeepLink(NavDeepLinkRequest(uri = uri))
+    }
+
+    @Synchronized
+    /**
+     * Resolves structured external-navigation [request] data through the bound graph.
+     *
+     * This query does not mutate stacks or allocate entry identities. Graphless controllers return
+     * [NavDeepLinkResolution.Unsupported].
+     *
+     * @param request immutable URI, action, and MIME input
+     * @return a match, no-match result, structured rejection, or unsupported result
+     */
+    fun resolveDeepLink(request: NavDeepLinkRequest): NavDeepLinkResolution {
+        return deepLinkResolver?.invoke(request) ?: NavDeepLinkResolution.Unsupported
     }
 
     @Synchronized

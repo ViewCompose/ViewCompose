@@ -132,8 +132,8 @@ class NavExecutionPlan internal constructor(
  * registers Back callbacks, or starts motion.
  *
  * `maxRetainedHiddenPresentations` is `null` for unbounded explicit retention or a non-negative
- * bound otherwise. [presentedEntryIds] uses native creation order, while
- * [hiddenPresentationRecency] is oldest-first. The reducer protects every visible or transitioning
+ * bound otherwise. `presentedEntryIds` uses native creation order, while
+ * `hiddenPresentationRecency` is oldest-first. The reducer protects every visible or transitioning
  * presentation from eviction and returns deterministic rollback and terminal cleanup order.
  * Calls are side-effect free, allocate one immutable plan plus bounded collection copies, may run on
  * any thread, and require callers not to mutate input collections concurrently. Validation fails

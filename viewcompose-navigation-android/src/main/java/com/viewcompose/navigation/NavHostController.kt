@@ -10,6 +10,7 @@ import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
 import com.viewcompose.navigation.core.NavDeepLinkMatch
+import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavDeepLinkRejection
 import com.viewcompose.navigation.core.NavDeepLinkResolution
 import com.viewcompose.navigation.core.NavEntry
@@ -266,20 +267,26 @@ class NavHostController internal constructor(
     }
 
     /**
-     * Resolves an allowlisted graph URI and atomically updates and selects its destination stack.
+     * Resolves a structured external-navigation [request] and atomically opens its destination.
      *
-     * Input query parameters not declared by the matched pattern are ignored. They cannot become
-     * route arguments or override the declaration's target stack or the caller's [launchMode].
+     * URI, action, and MIME matching is owned entirely by Navigation Core. The Android host starts
+     * its rollback-safe render and lifecycle transaction only after one declaration wins. Unknown
+     * URI query parameters cannot become route arguments or override the declaration's target
+     * stack or the caller's [launchMode].
      *
+     * @sample com.viewcompose.navigation.samples.navigateSharedImageRequest
+     * @param request immutable platform-neutral URI, action, and MIME input
+     * @param launchMode mutation applied to the matched target stack
      * @return a resolver diagnostic, or `Navigated` containing the host transaction result
+     * @throws IllegalStateException when called off the main thread or without an attached host
      */
     @MainThread
     fun navigateDeepLink(
-        uri: String,
+        request: NavDeepLinkRequest,
         launchMode: NavDeepLinkLaunchMode = NavDeepLinkLaunchMode.Reset,
     ): NavDeepLinkResult {
         requireMainThread()
-        return when (val resolution = backStackController.resolveDeepLink(uri)) {
+        return when (val resolution = backStackController.resolveDeepLink(request)) {
             is NavDeepLinkResolution.Matched -> {
                 NavDeepLinkResult.Navigated(
                     match = resolution.match,
@@ -302,6 +309,25 @@ class NavHostController internal constructor(
         }
     }
 
+    /**
+     * Resolves a URI-only request with the same transaction behavior as the structured entry point.
+     *
+     * @param uri untrusted absolute hierarchical URI input
+     * @param launchMode mutation applied to the matched target stack
+     * @return a resolver diagnostic, or `Navigated` containing the host transaction result
+     * @throws IllegalStateException when called off the main thread or without an attached host
+     */
+    @MainThread
+    fun navigateDeepLink(
+        uri: String,
+        launchMode: NavDeepLinkLaunchMode = NavDeepLinkLaunchMode.Reset,
+    ): NavDeepLinkResult {
+        return navigateDeepLink(
+            request = NavDeepLinkRequest(uri = uri),
+            launchMode = launchMode,
+        )
+    }
+
     /** Resolves an Android [Uri] with the same behavior as the string entry point. */
     @MainThread
     fun navigateDeepLink(
@@ -314,19 +340,36 @@ class NavHostController internal constructor(
         )
     }
 
-    /** Maps an Android `ACTION_VIEW` [Intent] into the same strict graph deep-link transaction. */
+    /**
+     * Maps Android [Intent] data, action, and MIME type into one strict core request.
+     *
+     * An Intent with none of those fields returns [NavDeepLinkResult.NoMatch]. Extra request fields
+     * do not weaken a declaration: every constraint declared by the winning deep link must match.
+     *
+     * @sample com.viewcompose.navigation.samples.navigateSharedImageIntent
+     * @param intent external or internal Android request; extras and categories are ignored
+     * @param launchMode mutation applied to the matched target stack
+     * @return a resolver diagnostic, or `Navigated` containing the host transaction result
+     * @throws IllegalStateException when called off the main thread or without an attached host
+     */
     @MainThread
     fun navigateDeepLink(
         intent: Intent,
         launchMode: NavDeepLinkLaunchMode = NavDeepLinkLaunchMode.Reset,
     ): NavDeepLinkResult {
         requireMainThread()
-        val uri = intent.data
-        if (intent.action != Intent.ACTION_VIEW || uri == null) {
+        val uri = intent.data?.toString()
+        val action = intent.action
+        val mimeType = intent.type
+        if (uri == null && action == null && mimeType == null) {
             return NavDeepLinkResult.NoMatch
         }
         return navigateDeepLink(
-            uri = uri,
+            request = NavDeepLinkRequest(
+                uri = uri,
+                action = action,
+                mimeType = mimeType,
+            ),
             launchMode = launchMode,
         )
     }

@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 417df2ea3062206cc7a71ba7c2a01d17796699b314021a4cab2fffa966343746
+translation_source_hash: bdf8d8c3fdd02b7d6c70bc8fa9076ae667a4cfc10107cc4366fe1e7fdcdb2074
 translation_status: current
 ---
 
@@ -26,6 +26,11 @@ Destination 自有 SavedState。
 当 Route 需要类型化参数、嵌套所有权或深链时，请使用稳定的 `NavGraph`。如果当前 Graph 已不
 接受保存的 Route 层级，恢复会失败关闭。应把结果视为安全回到配置的起始目标页，不得拼接出
 部分恢复的栈。
+
+使用 `NavDeepLinkRequest` 表达外部导航。声明可以约束 URI、action、MIME type 或三者组合，且
+每个声明约束都必须匹配。Android `Intent` 重载只把 `data`、`action` 与 `type` 映射到同一份 Core
+请求。假定导航已发生前必须检查 `NavDeepLinkResult`；当签名或精确 query key 集合属于应用安全
+边界时，还应在路由前验证完整 URI。
 
 ## 恢复状态并接入平台返回
 
@@ -141,7 +146,8 @@ Internal，因为平台 Mutation 属于 Host 职责，而不是应用 DSL API。
 
 ## 选择下一项聚焦任务
 
-- 使用严格 Deep Link 声明，并在接受外部 URI 前检查 `NavDeepLinkResult`。
+- 使用严格的 URI/action/MIME Deep Link 声明，并在接受外部请求前检查
+  `NavDeepLinkResult`。
 - 使用 `NavStackConfiguration` 配置相互独立的保留 Tab 栈，并从
   `navigationState.activeStackId` 派生 Tab 选中态。
 - 只有确实希望多个可见 Destination 共享已验证 Pane Scene 时，才使用

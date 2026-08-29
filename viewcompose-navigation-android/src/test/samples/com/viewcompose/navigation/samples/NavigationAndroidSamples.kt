@@ -1,9 +1,11 @@
 package com.viewcompose.navigation.samples
 
+import android.content.Intent
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.navigation.LocalNavDestinationContext
+import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavDestinationMotionSpec
 import com.viewcompose.navigation.NavDestinationTransform
 import com.viewcompose.navigation.NavHost
@@ -14,6 +16,7 @@ import com.viewcompose.navigation.NavPresentationRetentionPolicy
 import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
+import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.ui.foundation.OverlayHost
@@ -36,6 +39,24 @@ fun navHostControllerSample(controller: NavHostController) {
         is NavResult.Failed -> throw result.failure.cause ?: IllegalStateException(result.failure.toString())
     }
 }
+
+// DOCS_REGION_START(navigation-android-deep-link)
+fun navigateSharedImageRequest(controller: NavHostController): NavDeepLinkResult {
+    return controller.navigateDeepLink(
+        NavDeepLinkRequest(
+            action = Intent.ACTION_SEND,
+            mimeType = "image/png",
+        ),
+    )
+}
+
+fun navigateSharedImageIntent(
+    controller: NavHostController,
+    intent: Intent,
+): NavDeepLinkResult {
+    return controller.navigateDeepLink(intent)
+}
+// DOCS_REGION_END(navigation-android-deep-link)
 
 fun UiTreeBuilder.rememberedNavHostSample() {
     val controller = rememberNavHostController(

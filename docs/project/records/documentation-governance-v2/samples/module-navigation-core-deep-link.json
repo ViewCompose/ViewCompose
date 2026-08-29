@@ -3,7 +3,7 @@
   "sample_id": "module.navigation-core-deep-link",
   "sample_class": "compiled-region",
   "language": "kotlin",
-  "capability_id": "navigation.host",
+  "capability_id": "navigation.deep-links",
   "document_ids": ["module.viewcompose-navigation-core"],
   "version_lane": "released",
   "source": "viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt",
