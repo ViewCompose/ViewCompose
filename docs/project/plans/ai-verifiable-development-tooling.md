@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Integrate the internal bounded repair orchestrator with a deterministic typed Design IR patch applier and the existing compile/render/comparison lanes before exposing any public repair mode.
+next_action: Integrate the internal bounded repair orchestrator and typed Design IR patch applier with the existing compile/render/comparison lanes before exposing any public repair mode.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -114,9 +114,9 @@ orientation, system bars, and accepted semantic evidence exactly match the rende
 16×24 inference wireframe is therefore not assigned a pixel score.
 
 The bounded deterministic repair contract and its provider-offline internal orchestrator are now
-implemented, but automatic repair is not yet a public tool mode. Next action: integrate typed patch
-application with the existing compile/render/comparison lanes without claiming perceptual or
-cross-device equivalence.
+implemented, including typed Design IR patch application, but automatic repair is not yet a public
+tool mode. Next action: integrate repaired candidates with the existing compile/render/comparison
+lanes without claiming perceptual or cross-device equivalence.
 
 ## Maven release changesets
 
@@ -2277,11 +2277,65 @@ passes 24 actionable tasks, with 12 executed and 12 up-to-date.
 No published ViewCompose artifact, public/protected API, Android runtime, or application process
 changes, so this implementation slice needs no Maven changeset or module-manual update. This is
 **improved** deterministic repair control, evidence retention, cancellation, and safety with **no
-material Android runtime behavior change**. A real Design IR patch applier, compile/render evaluator,
-repair policy that can derive an eligible patch from structured findings, public repair mode,
+material Android runtime behavior change**. A compile/render evaluator, repair policy that can
+derive an eligible patch from structured findings, public repair mode,
 perceptual comparison, and accessibility/interaction completeness remain unclaimed. The next action
-is to connect the internal orchestrator to a deterministic typed patch applier and existing
-source-bound evidence lanes before any public activation.
+is to connect the repaired candidate to existing source-bound compile, render, and comparison lanes
+before any public activation.
+
+### Implementation evidence — typed Design IR repair patches
+
+The repair core now owns deterministic application of its four typed patch operations rather than
+delegating mutation to an arbitrary source callback. Every request binds one immutable patch to the
+exact canonical fingerprint of a resolved screenshot Design IR. The applier first validates the
+complete IR, requires `source.kind: screenshot`, rejects unresolved/unsupported entries and any
+expression value, bounds the tree to 1,000 nodes and depth 64, and rejects duplicate node IDs or
+field names before cloning the candidate.
+
+`replace-field` may replace only an existing `properties`, `semantics`, or `state` value;
+`replace-modifier-argument` requires the exact existing modifier index and argument;
+`replace-node-kind` accepts only the seven currently generated component kinds; and
+`reorder-children` must be an exact permutation of the target's existing child IDs. Missing targets,
+non-permutations, executable values, changed lineage, duplicate operation targets, and no-op values
+fail before an output identity is published. The caller's IR is never mutated. The final candidate
+is schema-validated again and exposes only canonical input/output Design IR fingerprints, immutable
+change fingerprint, operation count, changed logical paths, and a compact output fingerprint.
+
+The accepted title-text fixture has change fingerprint
+`b1a8fb0a331181bd5cbc93230e7a8cf288163ed4285e4a876ee64c39ad231371`, repaired Design IR
+fingerprint `442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d`, and output
+fingerprint `ea77e571ae5977da628cdb40f12d83f664c2ed43b9375c42743ecd574098c219`. The focused gate
+reproduces it twice and retains the original accepted IR unchanged. Seven applier tests cover all
+four operations, deterministic replay, missing targets, invalid permutations, no-op changes,
+executable content, changed lineage, unsupported input, and cancellation.
+
+Phase 0 remains at 15 schemas and 64 metrics and now contains 72 cases, 69 fixture-backed cases,
+and seven screenshot-repair fixtures. The focused repair gate now reproduces 1/1 zero-iteration
+convergence, 1/1 typed patch golden, and 5/5 fail-closed orchestration denominators. Node 25.6.0
+passes 213/213 AI-tooling tests.
+
+The dependency-free offline package now contains 65 files and 1,824,726 declared bytes; its
+326,747-byte archive has SHA-256
+`5a617743fd1a71c605e445cddbdf28ad957d620e3615517d9541f7d214bda60d`. Relative to the internal
+orchestrator package, the patch applier and packaged documentation add one file, 8,185 declared
+bytes (+0.45%), and 1,719 archive bytes (+0.53%), with no runtime dependency or provider boundary.
+
+The first combined acceptance run completed every patch, orchestration, and Phase 0 denominator but
+the installed CLI's unrelated frozen screenshot Preview replay returned one
+`VC-AI-PREVIEW-BUILD-FAILED`. An immediate full `verifyAiDistribution --rerun-tasks` replay with no
+source change passed 2/2 reproducible builds, offline install/uninstall, SPDX/license inventory,
+both MCP protocol versions, and all installed compile/render/comparison flows. The initial result is
+therefore **inconclusive** transient build-environment evidence rather than a repair regression; the
+clean rerun is accepted for this slice. Limitation and next action: if the Preview build failure
+recurs, retain its worker log and add a dedicated reproducible denominator instead of masking it with
+automatic retry.
+
+No published ViewCompose artifact, public/protected API, Android runtime, or application process
+changes, so this slice needs no Maven changeset or module-manual update. This is **improved** typed
+mutation integrity, lineage, determinism, and failure localization with **no material Android runtime
+behavior change**. Compilation, rendering, semantic/structural/pixel evaluation of the repaired
+candidate, finding-to-patch policy, and public activation remain unclaimed. The next action is to
+bind patched Design IR candidates to the existing source-bound evidence lanes.
 
 ### Implementation evidence — bounded XML to Design IR
 

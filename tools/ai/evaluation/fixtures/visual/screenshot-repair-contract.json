@@ -11,6 +11,7 @@
     "status": "implemented-internal",
     "publicRepairMode": false,
     "implementation": true,
+    "typedPatchApplier": true,
     "successEvidence": "compared",
     "incompleteEvidence": "rendered"
   },
@@ -93,6 +94,15 @@
       "expectedTermination": "initial-pass",
       "expectedIterations": 0,
       "expectedRepairFingerprint": "b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d"
+    }
+  ],
+  "patchFixtures": [
+    {
+      "resolutionResult": "screenshot-resolution/wireframe.result.json",
+      "patch": "screenshot-repair/title-text.patch.json",
+      "expectedDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+      "expectedOutputFingerprint": "ea77e571ae5977da628cdb40f12d83f664c2ed43b9375c42743ecd574098c219",
+      "expectedChangedPaths": ["wireframe-title.properties.text"]
     }
   ],
   "failClosedFixtures": [

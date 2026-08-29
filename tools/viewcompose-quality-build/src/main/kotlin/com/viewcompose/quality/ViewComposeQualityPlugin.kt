@@ -985,11 +985,15 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.fileTree(project.rootDir.resolve("tools/ai")) {
                     include(
                         "contracts/screenshot-repair.schema.json",
+                        "contracts/design-ir.schema.json",
                         "evaluation/fixtures/visual/screenshot-repair-contract.json",
                         "evaluation/fixtures/visual/screenshot-repair/**",
                         "evaluation/fixtures/visual/screenshot-pixel/render-one-channel.mutation.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/design-ir-repair-patch.mjs",
                         "scripts/repair-orchestrator.mjs",
                         "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
                         "scripts/verify-phase5-screenshot-repair.mjs",
                     )
                 },

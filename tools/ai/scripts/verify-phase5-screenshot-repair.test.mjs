@@ -6,6 +6,7 @@ test('freezes bounded screenshot repair convergence and fail-closed stops', asyn
   const summary = await verifyPhase5ScreenshotRepair();
   assert.deepEqual(summary, {
     supportedGoldens: 1,
+    patchGoldens: 1,
     failClosedDenominators: 5,
     repairFingerprint: 'b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d',
   });

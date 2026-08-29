@@ -340,7 +340,10 @@ contract.
 The orchestrator accepts only bounded `replace-field`, `replace-modifier-argument`,
 `replace-node-kind`, or `reorder-children` operations. It rejects executable Design IR values,
 duplicate operation targets, oversized candidates, invalid or repeated fingerprints, and candidate
-evidence that runs a later gate after an earlier failure. Candidate proposal and deterministic gate
+evidence that runs a later gate after an earlier failure. The internal patch applier binds each patch
+to an exact resolved screenshot Design IR fingerprint, requires existing nodes/fields/modifier
+arguments or an exact child permutation, rejects no-op operations, and revalidates the complete
+candidate before publishing its canonical fingerprint. Candidate proposal and deterministic gate
 evaluation remain injected internal boundaries; no MCP/CLI caller can activate them yet.
 
 Run the local MCP server and its protocol/parity gate with:

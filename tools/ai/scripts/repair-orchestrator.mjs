@@ -1,6 +1,7 @@
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {validateSchemaValue} from './schema-validator.mjs';
+import {canonicalJson} from './screenshot-contract.mjs';
 
 const repairSchemaPath = new URL('../contracts/screenshot-repair.schema.json', import.meta.url);
 const designIrSchemaPath = new URL('../contracts/design-ir.schema.json', import.meta.url);
@@ -44,6 +45,10 @@ function loadSchemas() {
 
 function fingerprint(value) {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
+export function fingerprintRepairValue(value) {
+  return createHash('sha256').update(canonicalJson(value)).digest('hex');
 }
 
 function fingerprintWithout(value, key) {
@@ -153,7 +158,7 @@ function operationValid(operation, designIrSchema) {
   return false;
 }
 
-async function validPatch(patch) {
+export async function validateRepairPatch(patch) {
   const [, designIrSchema] = await loadSchemas();
   const operationKeys = patch?.operations?.map((operation, index) => {
     if (!isObject(operation)) return `invalid:${index}`;
@@ -370,7 +375,7 @@ export async function orchestrateScreenshotRepair({
         )],
       });
     }
-    if (!await validPatch(patch)) {
+    if (!await validateRepairPatch(patch)) {
       return inputInvalid(initialCopy, iterations, current, 'The proposed Design IR patch is invalid.');
     }
     if (changeFingerprints.has(patch.changeFingerprint)) {

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "operations": [
+    {
+      "op": "replace-field",
+      "nodeId": "wireframe-title",
+      "collection": "properties",
+      "name": "text",
+      "value": {"kind": "literal", "value": "Hello"}
+    }
+  ],
+  "changeFingerprint": "b1a8fb0a331181bd5cbc93230e7a8cf288163ed4285e4a876ee64c39ad231371"
+}

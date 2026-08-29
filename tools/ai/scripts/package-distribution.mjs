@@ -50,6 +50,7 @@ const sourcePaths = Object.freeze([
   'scripts/bounded-process.mjs',
   'scripts/compiler-adapter.mjs',
   'scripts/design-ir-to-kotlin.mjs',
+  'scripts/design-ir-repair-patch.mjs',
   'scripts/generated-preview-adapter.mjs',
   'scripts/knowledge-retriever.mjs',
   'scripts/layout-diagnoser.mjs',

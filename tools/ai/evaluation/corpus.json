@@ -599,6 +599,20 @@
       ]
     },
     {
+      "id": "visual.screenshot-repair-typed-patch",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-repair/title-text.patch.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": ["visual.repair-evidence-completeness"]
+    },
+    {
       "id": "visual.screenshot-repair-no-eligible-change",
       "phase": 5,
       "category": "visual-generation",

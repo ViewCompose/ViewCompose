@@ -2245,7 +2245,8 @@ export async function verifyPhase0() {
       screenshotPixelComparison.supportedGoldens +
         screenshotPixelComparison.failClosedDenominators,
     screenshotRepairFixtures:
-      screenshotRepair.supportedGoldens + screenshotRepair.failClosedDenominators,
+      screenshotRepair.supportedGoldens + screenshotRepair.patchGoldens +
+        screenshotRepair.failClosedDenominators,
   };
 }
 

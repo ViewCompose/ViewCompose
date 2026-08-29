@@ -9,6 +9,7 @@ import {
   sealRepairEvaluation,
   sealRepairPatch,
 } from './repair-orchestrator.mjs';
+import {applyDesignIrRepairPatch} from './design-ir-repair-patch.mjs';
 
 const visualRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = resolve(visualRoot, 'screenshot-repair-contract.json');
@@ -130,7 +131,8 @@ function assertContract(contract, schema) {
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
     contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
-    contract.activation?.implementation !== true
+    contract.activation?.implementation !== true ||
+    contract.activation?.typedPatchApplier !== true
   ) {
     throw new Error('Screenshot repair activation boundary changed');
   }
@@ -373,6 +375,32 @@ export async function verifyPhase5ScreenshotRepair() {
   if (!same(reproducedGolden, golden)) {
     throw new Error('Screenshot repair zero-iteration implementation does not reproduce its golden');
   }
+  for (const fixture of contract.patchFixtures) {
+    const [resolution, patch] = await Promise.all([
+      readJson(resolve(visualRoot, fixture.resolutionResult)),
+      readJson(resolve(visualRoot, fixture.patch)),
+    ]);
+    const first = await applyDesignIrRepairPatch({
+      designIr: resolution.designIr,
+      expectedDesignIrFingerprint: resolution.designIrFingerprint,
+      patch,
+    });
+    const second = await applyDesignIrRepairPatch({
+      designIr: resolution.designIr,
+      expectedDesignIrFingerprint: resolution.designIrFingerprint,
+      patch,
+    });
+    if (
+      !same(first, second) ||
+      first.designIrFingerprint !== fixture.expectedDesignIrFingerprint ||
+      first.outputFingerprint !== fixture.expectedOutputFingerprint ||
+      !same(first.changedPaths, fixture.expectedChangedPaths) ||
+      first.changeFingerprint !== patch.changeFingerprint ||
+      first.inputDesignIrFingerprint !== resolution.designIrFingerprint
+    ) {
+      throw new Error('Typed screenshot Design IR repair patch output changed');
+    }
+  }
   for (const fixture of contract.failClosedFixtures) {
     const mutation = await readJson(resolve(visualRoot, fixture.mutation));
     assertMutation(mutation, fixture);
@@ -389,6 +417,7 @@ export async function verifyPhase5ScreenshotRepair() {
   }
   return {
     supportedGoldens: contract.supportedFixtures.length,
+    patchGoldens: contract.patchFixtures.length,
     failClosedDenominators: contract.failClosedFixtures.length,
     repairFingerprint: golden.repairFingerprint,
   };
@@ -399,7 +428,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     .then((summary) => {
       console.log(
         `Verified bounded screenshot repair implementation: ${summary.supportedGoldens}/` +
-          `${summary.supportedGoldens} zero-iteration convergence and ` +
+          `${summary.supportedGoldens} zero-iteration convergence, ` +
+          `${summary.patchGoldens}/${summary.patchGoldens} typed patch golden, and ` +
           `${summary.failClosedDenominators}/${summary.failClosedDenominators} ` +
           `fail-closed denominators; repair fingerprint ${summary.repairFingerprint}.`,
       );
