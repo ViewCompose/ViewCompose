@@ -179,8 +179,9 @@ Tool argument failures remain actionable tool errors, while malformed requests a
 remain JSON-RPC errors. Progress is emitted only for a caller-provided token. Cancellation aborts
 the underlying bounded execution and suppresses every later response or progress message. The
 stdio boundary accepts at most 4 MiB per message and four concurrent calls, writes only MCP JSON to
-stdout, uses content-free stderr diagnostics, and opens no socket. The current server is still an
-internal repository tool rather than an installed or semantically versioned distribution.
+stdout, uses content-free stderr diagnostics, and opens no socket. The source-tree commands above
+remain the contributor entrypoints; the versioned local distribution below is the consumer
+boundary.
 
 ## Consumer Agent workflows
 
@@ -208,9 +209,53 @@ npm --prefix tools/ai run verify:phase3-workflows
 
 The gate checks the frozen five-workflow denominator, known tool names, evidence ordering, stable
 skill paths and frontmatter, safety boundaries, path containment, provider neutrality, and a 16 KiB
-entrypoint limit. This source tree is not yet an installed distribution; installation, checksums,
-SBOM/license review, uninstallation, and client compatibility evidence belong to the packaging
-slice.
+entrypoint limit.
+
+## Local distribution
+
+Build the dependency-free npm tarball and its deterministic sidecars with:
+
+```bash
+npm --prefix tools/ai run package:distribution
+```
+
+The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
+exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the eight-tool CLI/MCP core,
+five consumer skills, the immutable Knowledge Bundle, an SPDX 2.3 package record, the MIT license,
+and a reviewed empty runtime-dependency license inventory. It intentionally contains no
+`node_modules`, Gradle project, Android SDK, JDK, provider adapter, network listener, or model.
+
+Verify reproducibility, inventory, offline lifecycle, installed CLI compilation, and both supported
+MCP protocol versions with:
+
+```bash
+JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase3-distribution
+./gradlew verifyAiDistribution
+```
+
+Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
+
+```bash
+npm install --global --prefix <install-prefix> --offline --ignore-scripts \
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.1.0.tgz
+<install-prefix>/bin/viewcompose-mcp
+npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
+  @viewcompose/ai-tooling
+```
+
+`get_api_reference`, `get_component_reference`, `search_component`, `get_sample`, static
+`validate_code`, and `analyze_project` work from the installed package alone. Compile-mode
+`validate_code`, `render_preview`, and `diagnose_layout` remain source-bound: set
+`VIEWCOMPOSE_SOURCE_ROOT` to the absolute root of the matching ViewCompose checkout and provide the
+pinned JDK/Android/Gradle offline lane. The adapter requires the exact Knowledge Bundle source
+revision to be present in that checkout's Git ancestry and rejects missing wrapper/settings files,
+symbolic-link replacements, and mismatched history before Gradle. The package never searches
+arbitrary parent directories or silently converts static evidence into compiled/rendered evidence.
+
+The checked-in package is a local artifact rather than an npm-registry publication. `SHA256SUMS` is
+an unsigned integrity record; artifact signing and public-registry release policy remain Phase 6
+operations work. The package layout follows npm's local tarball installation contract, and its SBOM
+uses the [SPDX 2.3 specification](https://spdx.github.io/spdx-spec/v2.3/).
 
 ## Version lanes
 

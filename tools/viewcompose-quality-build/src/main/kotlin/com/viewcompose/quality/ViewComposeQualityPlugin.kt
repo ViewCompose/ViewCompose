@@ -610,6 +610,29 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiDistribution") {
+            group = "verification"
+            description =
+                "Builds and verifies the installable offline ViewCompose AI distribution."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-distribution")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/mcp-protocol.json",
+                        "contracts/tool-envelope.schema.json",
+                        "evaluation/fixtures/distribution/package-contract.json",
+                        "evaluation/fixtures/kotlin/foundation-profile-summary-valid.kt",
+                        "generated/current-source/**",
+                        "scripts/*.mjs",
+                        "skills/**",
+                        "README.md",
+                    )
+                },
+                project.rootDir.resolve("LICENSE"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

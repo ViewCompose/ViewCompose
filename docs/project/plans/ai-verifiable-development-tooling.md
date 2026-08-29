@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Package the accepted eight-tool server and five consumer skills with checksums, SBOM/license review, installation/uninstallation, offline, and client compatibility evidence.
+next_action: Freeze Design IR v1 and the first supported XML-to-ViewCompose migration subset before implementing conversion.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -50,12 +50,14 @@ generation, hosted discovery, freshness gates, and full-site acceptance are comp
 static validation, pinned compilation, Preview evidence, read-only project findings, and internal
 CLI foundations are complete. Phase 3 deterministic Knowledge Bundle retrieval, its CLI surface,
 dual-era stdio MCP, deterministic Preview layout diagnosis, and five client-neutral consumer Agent
-workflows are complete; installable packaging remains active.
+workflows are complete. The reproducible local distribution, offline lifecycle, SPDX/license
+inventory, installed compile example, and protocol compatibility gates complete the Phase 3
+foundation.
 
 Last verified: 2026-08-29.
 
-Next action: package the accepted eight-tool server and five consumer skills with checksums,
-SBOM/license review, installation/uninstallation, offline, and client compatibility evidence.
+Next action: freeze Design IR v1 and the first supported XML-to-ViewCompose migration subset before
+implementing conversion.
 
 ## Maven release changesets
 
@@ -752,10 +754,57 @@ preserve review versus mutation authority; the conclusion is **improved** workfl
 with **no material runtime change** because the skills and verifier remain downstream tooling.
 
 Limitations: deterministic structure checks prove contract presence, not that every model/client
-will follow the workflow correctly. No provider adapter, installed distribution, checksum, SBOM,
-license inventory, uninstall path, offline installation test, or client compatibility matrix is
-claimed yet. The next action is the packaging and compatibility slice for the eight-tool server and
-five consumer skills.
+will follow the workflow correctly. No provider adapter or provider-specific behavior claim is made;
+the entrypoints remain portable protocol-level workflows. At this slice, the next action was the
+packaging and compatibility implementation recorded below.
+
+### Implementation evidence — reproducible distribution and compatibility slice
+
+The fifth Phase 3 slice packages `@viewcompose/ai-tooling` version `0.1.0` as a local npm tarball
+with no runtime dependency. Its exact 34-file allowlist contains the eight-tool CLI/MCP core, five
+skills, immutable Knowledge Bundle, two required schemas, MIT license, deterministic distribution
+metadata, SPDX 2.3 package record, and reviewed empty third-party runtime inventory. The packager
+rejects symbolic links, non-regular inputs, path escape, file-set drift, dependency drift, broad
+output roots, and disagreement between staged and npm-packed file lists. Every file receives a
+SHA-256 record; the archive and external manifest receive an unsigned `SHA256SUMS` sidecar.
+
+The installed executables resolve npm-created symbolic links before entering the CLI or stdio
+server. Retrieval, static validation, and project analysis are standalone. Compile and Preview
+remain explicitly source-bound through `VIEWCOMPOSE_SOURCE_ROOT`, the pinned JDK/Android/Gradle
+lane, and the existing evidence contracts. A configured checkout must contain regular wrapper and
+settings files plus the exact Knowledge Bundle source revision in its Git ancestry; mismatch fails
+before Gradle, and the package never upgrades those modes implicitly. The verification lifecycle
+builds twice, compares full archive bytes, installs from the local tarball with npm offline mode and
+an unreachable registry, revalidates every installed byte, retrieves `Column` and its compiled
+sample, rejects one mismatched checkout, compiles the frozen UI Foundation example, exercises
+modern `2026-07-28` and legacy `2025-11-25` stdio discovery, uninstalls offline, and checks that
+package and binary paths are absent.
+
+On 2026-08-29, both clean builds produced the same 236,152-byte archive with SHA-256
+`286d97e2f88b9827b45f6bca9c7c2f79c9eb63e859b8bb112009b61835a0eb70`. The offline lifecycle,
+SPDX/license inventory, and both installed protocol lanes each matched their complete frozen
+denominator for exact-match ratios of 1.00; the installed compile example returned fingerprint
+`9877c5a41372f6a77423071dc79cad680daa6febb3f7621cf2b1d755d9481acb`. Node 25.6.0 passed
+75/75 AI-tooling tests in 1.40 seconds, the compiled quality-build suite passed all tests in 8
+seconds, and the combined tooling, distribution, documentation, isolation, and release-intent gates
+passed 23 tasks (9 executed and 14 up-to-date) in 35 seconds. Compared with the source-tree-only
+baseline, the result is **improved** distribution reproducibility and interoperability with **no
+material runtime change** because the complete package and installation gate remain downstream
+development tooling. The first root lifecycle attempt exhausted the local disk after 2,214 tasks
+and 7 minutes 47 seconds rather than reporting a code failure. After deleting only reproducible
+worktree outputs and three incomplete Gradle transforms, the incremental retry passed all 2,276
+tasks (325 executed and 1,951 up-to-date) in 3 minutes 50 seconds. After adding the source-checkout
+identity rejection, the final lifecycle rerun again passed all 2,276 tasks (263 executed and 2,013
+up-to-date) in 3 minutes 51 seconds; disk capacity is therefore an environmental limitation and the
+final successful rerun is the accepted root evidence.
+
+Limitations: the artifact is local and unpublished; `SHA256SUMS` is not signed. The evidence covers
+Node 25.6.0 on macOS, not every engine-compatible Node release, Windows npm shims, public-registry
+installation, upgrade migration, package signing, vulnerability-feed review, or branded client UI.
+Compile and Preview still require the matching source checkout and prepared offline toolchain. The
+installed end-to-end example proves retrieval, sample lineage, and compilation; installed rendering
+continues to rely on the separately accepted source-bound Preview gate. Phase 4 starts with the
+Design IR and XML migration contract freeze.
 
 ### Acceptance gate
 

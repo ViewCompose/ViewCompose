@@ -1,10 +1,11 @@
 import {spawnSync} from 'node:child_process';
-import {readFile} from 'node:fs/promises';
-import {resolve} from 'node:path';
+import {lstat, readFile} from 'node:fs/promises';
+import {isAbsolute, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const aiRoot = fileURLToPath(new URL('../', import.meta.url));
 const repository = resolve(aiRoot, '../..');
+export const SOURCE_ROOT_ENVIRONMENT_VARIABLE = 'VIEWCOMPOSE_SOURCE_ROOT';
 const manifestPath = fileURLToPath(
   new URL('../generated/current-source/manifest.json', import.meta.url),
 );
@@ -21,7 +22,46 @@ export function aiToolingRoot() {
 }
 
 export function repositoryRoot() {
+  const configured = process.env[SOURCE_ROOT_ENVIRONMENT_VARIABLE];
+  if (configured !== undefined) {
+    if (
+      configured.length === 0 ||
+      configured.length > 4096 ||
+      configured.includes('\0') ||
+      !isAbsolute(configured)
+    ) {
+      throw new Error(`${SOURCE_ROOT_ENVIRONMENT_VARIABLE} must be an absolute local path.`);
+    }
+    return resolve(configured);
+  }
   return repository;
+}
+
+export async function verifyConfiguredSourceRoot(root = repositoryRoot()) {
+  if (process.env[SOURCE_ROOT_ENVIRONMENT_VARIABLE] === undefined) {
+    return {matched: true, mode: 'inferred'};
+  }
+  const manifest = await loadKnowledgeManifest();
+  for (const path of ['gradlew', 'settings.gradle.kts']) {
+    const metadata = await lstat(resolve(root, path)).catch((error) => {
+      if (error?.code === 'ENOENT') return null;
+      throw error;
+    });
+    if (!metadata?.isFile() || metadata.isSymbolicLink()) {
+      return {matched: false, mode: 'configured', reason: 'required-file'};
+    }
+  }
+  const revision = manifest.source.revision;
+  const resolved = spawnSync('git', ['-C', root, 'rev-parse', '--verify', `${revision}^{commit}`], {
+    encoding: 'utf8',
+  });
+  const ancestor = spawnSync('git', ['-C', root, 'merge-base', '--is-ancestor', revision, 'HEAD'], {
+    encoding: 'utf8',
+  });
+  if (resolved.error || resolved.status !== 0 || ancestor.error || ancestor.status !== 0) {
+    return {matched: false, mode: 'configured', reason: 'framework-identity'};
+  }
+  return {matched: true, mode: 'configured'};
 }
 
 export function detectJavaFeature(javaHome = process.env.JAVA_HOME) {

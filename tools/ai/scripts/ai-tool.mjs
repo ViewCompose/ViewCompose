@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {realpathSync} from 'node:fs';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -265,7 +266,7 @@ async function main() {
   process.stdout.write(`${JSON.stringify(result, null, arguments_.includes('--pretty') ? 2 : 0)}\n`);
 }
 
-const entryPath = process.argv[1] ? resolve(process.argv[1]) : '';
+const entryPath = process.argv[1] ? realpathSync(resolve(process.argv[1])) : '';
 if (entryPath === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     process.stderr.write(`ViewCompose AI internal CLI rejected the request: ${error.message}\n`);

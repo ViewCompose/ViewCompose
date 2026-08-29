@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {createHash} from 'node:crypto';
+import {realpathSync} from 'node:fs';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -343,7 +344,7 @@ export async function serveStdio({input = process.stdin, output = process.stdout
   await Promise.allSettled(pending);
 }
 
-const entryPath = process.argv[1] ? resolve(process.argv[1]) : '';
+const entryPath = process.argv[1] ? realpathSync(resolve(process.argv[1])) : '';
 if (entryPath === fileURLToPath(import.meta.url)) {
   serveStdio().catch((error) => {
     process.stderr.write(`ViewCompose MCP server stopped (${error?.name ?? 'Error'}).\n`);

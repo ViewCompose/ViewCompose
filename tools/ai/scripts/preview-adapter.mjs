@@ -7,6 +7,7 @@ import {
   diagnostic,
   repositoryRoot,
   toolResult,
+  verifyConfiguredSourceRoot,
 } from './tool-core.mjs';
 
 export const PREVIEW_COMPILER_LANE =
@@ -548,6 +549,18 @@ export async function renderPreview({
       code: 'VC-AI-PREVIEW-LANE-MISMATCH',
       message: `The ${RENDER_LANE} render lane requires JAVA_HOME to resolve JDK 21.`,
       nextAction: 'Select the pinned JDK 21 lane before rendering.',
+      elapsedMs: performance.now() - started,
+    });
+  }
+  const sourceRoot = await verifyConfiguredSourceRoot(repository);
+  if (!sourceRoot.matched) {
+    return previewFailure({
+      requestId,
+      status: 'unsupported',
+      level: 'static',
+      code: 'VC-AI-SOURCE-ROOT-MISMATCH',
+      message: 'The configured ViewCompose source root does not contain the packaged framework identity.',
+      nextAction: 'Select a matching ViewCompose checkout with the required Gradle wrapper.',
       elapsedMs: performance.now() - started,
     });
   }

@@ -17,6 +17,7 @@ import {
   repositoryRoot,
   toolResult,
   utf8Bytes,
+  verifyConfiguredSourceRoot,
 } from './tool-core.mjs';
 import {validateKotlin} from './static-validator.mjs';
 
@@ -360,6 +361,17 @@ export async function compileKotlin({
       code: 'VC-AI-COMPILER-LANE-MISMATCH',
       message: `The ${COMPILER_LANE} compiler lane requires JAVA_HOME to resolve JDK 21.`,
       nextAction: 'Select the pinned JDK 21 lane before compiling.',
+      elapsedMs: performance.now() - started,
+    });
+  }
+  const sourceRoot = await verifyConfiguredSourceRoot();
+  if (!sourceRoot.matched) {
+    return compilerFailure({
+      requestId,
+      status: 'unsupported',
+      code: 'VC-AI-SOURCE-ROOT-MISMATCH',
+      message: 'The configured ViewCompose source root does not contain the packaged framework identity.',
+      nextAction: 'Select a matching ViewCompose checkout with the required Gradle wrapper.',
       elapsedMs: performance.now() - started,
     });
   }
