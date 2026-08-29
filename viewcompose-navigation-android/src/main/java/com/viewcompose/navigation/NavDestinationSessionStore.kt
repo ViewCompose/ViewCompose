@@ -10,6 +10,7 @@ import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.RenderFrameReport
 import com.viewcompose.ui.foundation.RenderFrameStatus
 import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.foundation.UiLocalSnapshot
@@ -214,6 +215,18 @@ internal class NavDestinationSessionStore(
     @MainThread
     fun sessionOrNull(entryId: NavEntryId): NavDestinationSession? = sessions[entryId]
 
+    /** Renders one committed presentation from its latest environment. */
+    @MainThread
+    fun renderCurrent(entryId: NavEntryId): RenderFrameReport {
+        val session = checkNotNull(sessions[entryId]) {
+            "Destination $entryId has no committed presentation to render."
+        }
+        check(session.isRenderingActive) {
+            "Destination $entryId cannot render while its presentation is inactive."
+        }
+        return session.renderCurrent()
+    }
+
     @MainThread
     fun presentationState(): NavDestinationPresentationState {
         return NavDestinationPresentationState(
@@ -255,8 +268,8 @@ internal class NavDestinationSessionStore(
     fun present(
         layerOrder: List<NavEntryId>,
         visibleEntryIds: Set<NavEntryId>,
-        paneLayouts: Map<NavEntryId, NavPaneLayout> = visibleEntryIds.associateWith {
-            NavPaneLayout.Single
+        destinationLayouts: Map<NavEntryId, NavDestinationLayout> = visibleEntryIds.associateWith {
+            NavDestinationLayout.Content(NavPaneLayout.Single)
         },
     ) {
         check(layerOrder.distinct().size == layerOrder.size) {
@@ -268,12 +281,15 @@ internal class NavDestinationSessionStore(
         check(visibleEntryIds.all(layerOrder::contains)) {
             "Every visible destination must be included in the destination layer order."
         }
-        check(paneLayouts.keys == visibleEntryIds) {
-            "Every visible destination must have exactly one pane layout."
+        check(destinationLayouts.keys == visibleEntryIds) {
+            "Every visible destination must have exactly one native layout."
         }
         hiddenPresentationRecency.removeAll(visibleEntryIds)
         sessions.forEach { (entryId, session) ->
             if (entryId in visibleEntryIds) {
+                session.container.applyDestinationLayout(
+                    checkNotNull(destinationLayouts[entryId]),
+                )
                 session.container.visibility = View.VISIBLE
                 session.setRenderingActive(true)
             } else {
@@ -286,8 +302,8 @@ internal class NavDestinationSessionStore(
                 entryId !in visibleEntryIds && entryId !in hiddenPresentationRecency
             }
             .forEach(hiddenPresentationRecency::add)
-        hostView.updatePaneLayouts(
-            paneLayouts.mapKeys { (entryId, _) ->
+        hostView.updateDestinationLayouts(
+            destinationLayouts.mapKeys { (entryId, _) ->
                 checkNotNull(sessions[entryId]).container
             },
         )

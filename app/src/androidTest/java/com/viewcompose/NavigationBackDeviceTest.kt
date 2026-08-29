@@ -7,6 +7,7 @@ import android.os.Debug
 import android.os.SystemClock
 import android.util.Log
 import android.util.SparseIntArray
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.BackEventCompat
@@ -320,6 +321,162 @@ class NavigationBackDeviceTest {
                     listOf(Lifecycle.State.RESUMED),
                     activity.resultDeliveryLifecycleStates(),
                 )
+            }
+        }
+    }
+
+    @Test
+    fun modalOverlayOwnsLifecycleInputMotionRestoreResultAndCleanup() {
+        launchHost(
+            destinationContextCertification = true,
+            resultCertification = true,
+            overlaySceneCertification = true,
+        ).use { scenario ->
+            scenario.onActivity { activity ->
+                assertTrue(
+                    activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is NavResult.Committed,
+                )
+            }
+            awaitTransition()
+
+            lateinit var homeContext: NavigationBackTestActivity.DestinationContextSnapshot
+            lateinit var overlayContext: NavigationBackTestActivity.DestinationContextSnapshot
+            scenario.onActivity { activity ->
+                homeContext = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                overlayContext = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(NavSceneVisibility.Covered, homeContext.visibility)
+                assertEquals(NavSceneInteraction.NonInteractive, homeContext.interaction)
+                assertEquals(NavSceneLayerRole.Content, homeContext.layerRole)
+                assertEquals(NavPaneRole.Primary, homeContext.paneRole)
+                assertEquals(NavSceneVisibility.Visible, overlayContext.visibility)
+                assertEquals(NavSceneInteraction.Interactive, overlayContext.interaction)
+                assertEquals(NavSceneLayerRole.Overlay, overlayContext.layerRole)
+                assertNull(overlayContext.paneRole)
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+
+                val home = activity.destinationContainer(NavigationBackTestActivity.HOME_ROUTE)
+                val overlay = activity.destinationContainer(NavigationBackTestActivity.DETAILS_ROUTE)
+                val host = overlay.parent as ViewGroup
+                assertEquals(View.VISIBLE, home.visibility)
+                assertEquals(View.VISIBLE, overlay.visibility)
+                assertEquals(host.width, overlay.width)
+                assertEquals(host.height, overlay.height)
+                assertNull(overlay.background)
+                assertTrue(host.indexOfChild(overlay) > host.indexOfChild(home))
+                assertEquals(
+                    View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS,
+                    home.importantForAccessibility,
+                )
+                assertEquals(
+                    View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+                    overlay.importantForAccessibility,
+                )
+                val down = MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_DOWN, 1f, 1f, 0)
+                val up = MotionEvent.obtain(0L, 1L, MotionEvent.ACTION_UP, 1f, 1f, 0)
+                try {
+                    assertTrue(overlay.dispatchTouchEvent(down))
+                    assertTrue(overlay.dispatchTouchEvent(up))
+                } finally {
+                    down.recycle()
+                    up.recycle()
+                }
+
+                activity.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(0f))
+                activity.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(0.55f))
+                assertEquals(0f, home.translationX, 0f)
+                assertTrue(overlay.translationX > 0f)
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                activity.onBackPressedDispatcher.dispatchOnBackCancelled()
+            }
+            awaitBackCancellation()
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertTrue(activity.popWithPageResult(RETURNED_ITEM_ID) is NavResult.Committed)
+            }
+            awaitTransition()
+
+            lateinit var restoredOverlayEntryId: String
+            scenario.onActivity { activity ->
+                assertEquals(listOf(RETURNED_ITEM_ID), activity.receivedPageResults())
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertTrue(
+                    activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is NavResult.Committed,
+                )
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                restoredOverlayEntryId = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.DETAILS_ROUTE),
+                ).entryId
+            }
+
+            scenario.recreate()
+            waitForUiIdle()
+
+            scenario.onActivity { activity ->
+                val restoredHome = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                val restoredOverlay = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(homeContext.entryId, restoredHome.entryId)
+                assertEquals(restoredOverlayEntryId, restoredOverlay.entryId)
+                assertEquals(NavSceneVisibility.Covered, restoredHome.visibility)
+                assertEquals(NavSceneLayerRole.Overlay, restoredOverlay.layerRole)
+                assertTrue(activity.navController.popBackStack() is NavResult.Committed)
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    listOf(NavigationBackTestActivity.HOME_ROUTE),
+                    activity.routeNames(),
+                )
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(
+                    Lifecycle.State.DESTROYED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertNull(
+                    activity.findDestinationTextViewOrNull(
+                        NavigationBackTestActivity.DETAILS_ROUTE,
+                    ),
+                )
+                assertEquals(0, activity.failureCount)
             }
         }
     }
@@ -1213,6 +1370,7 @@ class NavigationBackDeviceTest {
         disableTransitions: Boolean = false,
         destinationContextCertification: Boolean = false,
         resultCertification: Boolean = false,
+        overlaySceneCertification: Boolean = false,
     ): ActivityScenario<NavigationBackTestActivity> {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, NavigationBackTestActivity::class.java).apply {
@@ -1237,6 +1395,10 @@ class NavigationBackDeviceTest {
             putExtra(
                 NavigationBackTestActivity.EXTRA_RESULT_CERTIFICATION,
                 resultCertification,
+            )
+            putExtra(
+                NavigationBackTestActivity.EXTRA_OVERLAY_SCENE_CERTIFICATION,
+                overlaySceneCertification,
             )
         }
         return ActivityScenario.launch<NavigationBackTestActivity>(intent).also { scenario ->

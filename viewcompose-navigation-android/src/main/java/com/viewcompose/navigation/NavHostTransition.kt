@@ -4,8 +4,8 @@ import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
-import com.viewcompose.navigation.core.NavPaneScene
 import com.viewcompose.navigation.core.NavScene
+import com.viewcompose.navigation.core.NavSceneLayout
 import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackMutation
 
@@ -30,8 +30,9 @@ internal enum class NavHostTransitionOutcome {
 /**
  * Visual transition model for a committed navigation transaction.
  *
- * [beforeScene] and [afterScene] keep pane projections, [scene] freezes lifecycle and presentation
- * semantics for the whole active transition, and [layerOrder] determines draw order during motion.
+ * [beforeScene] and [afterScene] keep complete content-and-overlay projections, [scene] freezes
+ * lifecycle and presentation semantics for the whole active transition, and [layerOrder] determines
+ * draw order during motion.
  */
 internal data class NavHostTransition(
     val id: NavHostTransitionId,
@@ -41,8 +42,8 @@ internal data class NavHostTransition(
     val mutation: NavStackMutation,
     val outgoingEntry: NavEntry,
     val incomingEntry: NavEntry,
-    val beforeScene: NavPaneScene,
-    val afterScene: NavPaneScene,
+    val beforeScene: NavSceneLayout,
+    val afterScene: NavSceneLayout,
     val retainedEntries: List<NavEntry>,
     val scene: NavScene,
     val layerOrder: List<NavEntryId>,
@@ -103,8 +104,8 @@ internal data class NavHostBackPreview(
     val snapshot: NavBackStackSnapshot,
     val outgoingEntry: NavEntry,
     val incomingEntry: NavEntry,
-    val beforeScene: NavPaneScene,
-    val afterScene: NavPaneScene,
+    val beforeScene: NavSceneLayout,
+    val afterScene: NavSceneLayout,
     val retainedEntries: List<NavEntry>,
     val scene: NavScene,
     val layerOrder: List<NavEntryId>,

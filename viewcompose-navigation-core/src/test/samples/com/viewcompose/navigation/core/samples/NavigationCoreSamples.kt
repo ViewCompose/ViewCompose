@@ -24,6 +24,8 @@ import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavScene
 import com.viewcompose.navigation.core.NavSceneEntry
 import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneLayout
+import com.viewcompose.navigation.core.NavSceneStrategies
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackConfiguration
@@ -31,6 +33,7 @@ import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
+import com.viewcompose.navigation.core.resolveNavSceneLayout
 import com.viewcompose.navigation.core.toRoute
 
 // DOCS_REGION_START(navigation-core-typed-route)
@@ -277,11 +280,11 @@ fun navigationExecutionPlanSample() {
             before.top.id to NavEntryLifecycleState.Resumed,
         ),
         transaction = transaction,
-        beforePaneScene = NavPaneScene(
-            listOf(NavPane(NavPaneRole.Primary, before.top.id)),
+        beforeSceneLayout = NavSceneLayout(
+            NavPaneScene(listOf(NavPane(NavPaneRole.Primary, before.top.id))),
         ),
-        afterPaneScene = NavPaneScene(
-            listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id)),
+        afterSceneLayout = NavSceneLayout(
+            NavPaneScene(listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id))),
         ),
         hostState = NavHostLifecycleState.Resumed,
         presentedEntryIds = listOf(before.top.id),
@@ -295,4 +298,24 @@ fun navigationExecutionPlanSample() {
     check(plan.lifecycle.targetStates.values.none(NavEntryLifecycleState.Resumed::equals))
     // DOCS_REGION_END(navigation-core-execution-plan)
     transaction.rollback()
+}
+
+fun navigationSceneStrategySample() {
+    val home = NavEntry(NavEntryId("home"), NavRoute("home"))
+    val dialog = NavEntry(NavEntryId("confirm-dialog"), NavRoute("confirm-dialog"))
+    val snapshot = com.viewcompose.navigation.core.NavBackStackSnapshot(listOf(home, dialog))
+    // DOCS_REGION_START(navigation-core-scene-strategy)
+    val overlayStrategy = NavSceneStrategies.trailingOverlays { entry ->
+        entry.route.name.endsWith("-dialog")
+    }
+    val layout = resolveNavSceneLayout(
+        snapshot = snapshot,
+        maxPaneCount = 1,
+        sceneStrategies = listOf(overlayStrategy),
+    )
+
+    check(layout.contentPaneScene.visibleEntryIds == setOf(home.id))
+    check(layout.overlayEntryIds == listOf(dialog.id))
+    check(layout.interactiveEntryIds == setOf(dialog.id))
+    // DOCS_REGION_END(navigation-core-scene-strategy)
 }

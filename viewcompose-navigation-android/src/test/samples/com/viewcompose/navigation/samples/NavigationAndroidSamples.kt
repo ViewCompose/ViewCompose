@@ -21,6 +21,7 @@ import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavRouteSpec
 import com.viewcompose.navigation.core.NavResultKey
+import com.viewcompose.navigation.core.NavSceneStrategies
 import com.viewcompose.navigation.core.toRoute
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.ui.foundation.OverlayHost
@@ -86,6 +87,21 @@ fun UiTreeBuilder.rememberedNavHostSample() {
         }
     }
 }
+
+// DOCS_REGION_START(navigation-android-overlay-scene)
+val ModalDestinationStrategy = NavSceneStrategies.trailingOverlays { entry ->
+    entry.route.name.endsWith("-dialog")
+}
+
+fun UiTreeBuilder.overlaySceneNavHostSample(controller: NavHostController) {
+    NavHost(
+        controller = controller,
+        sceneStrategies = listOf(ModalDestinationStrategy),
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+// DOCS_REGION_END(navigation-android-overlay-scene)
 
 // DOCS_REGION_START(navigation-android-results)
 val SelectedItemResult = NavResultKey.text("catalog.selection")

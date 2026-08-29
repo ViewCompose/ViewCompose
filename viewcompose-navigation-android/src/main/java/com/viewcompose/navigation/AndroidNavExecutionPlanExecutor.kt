@@ -5,6 +5,7 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavExecutionPlan
 import com.viewcompose.navigation.core.NavHostLifecycleState
+import com.viewcompose.navigation.core.NavSceneLayerRole
 import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.ui.foundation.RenderFrameReport
 import com.viewcompose.ui.foundation.RenderFrameStatus
@@ -158,7 +159,7 @@ internal class AndroidNavExecutionPlanExecutor(
         sessionStore.present(
             layerOrder = plan.layerOrder,
             visibleEntryIds = visibleEntryIds,
-            paneLayouts = plan.paneLayouts(),
+            destinationLayouts = plan.destinationLayouts(),
         )
         sessionStore.applyInteraction(
             inputEntryIds = plan.inputEntryIds,
@@ -179,6 +180,23 @@ internal class AndroidNavExecutionPlanExecutor(
     @MainThread
     fun publishLifecycle(plan: NavExecutionPlan) {
         ownerStore.execute(plan)
+    }
+
+    /**
+     * Reconciles a result consumer after terminal lifecycle promotion.
+     *
+     * A covered destination can remain mounted across a modal pop. Its scene invalidation may render
+     * while the owner is still `STARTED`, before the same plan promotes it to `RESUMED`. Rendering
+     * once after settlement prevents that ordering from delaying [NavResultEffect] indefinitely.
+     */
+    @MainThread
+    fun synchronizeResultConsumer(plan: NavExecutionPlan) {
+        val delivery = plan.resultDelivery ?: return
+        val report = sessionStore.renderCurrent(delivery.targetEntryId)
+        check(report.status == RenderFrameStatus.Committed) {
+            "Navigation result consumer ${delivery.targetEntryId} failed to render after " +
+                "lifecycle settlement (${report.failures.size} failure(s))."
+        }
     }
 
     /** Executes permanent-removal cleanup after committed motion reaches a terminal state. */
@@ -273,21 +291,26 @@ internal class AndroidNavExecutionPlanExecutor(
     }
 }
 
-private fun NavExecutionPlan.paneLayouts(): Map<NavEntryId, NavPaneLayout> {
-    val beforePanes = beforePaneScene.panes.associateBy { pane -> pane.entryId }
-    val afterPanes = afterPaneScene.panes.associateBy { pane -> pane.entryId }
+private fun NavExecutionPlan.destinationLayouts(): Map<NavEntryId, NavDestinationLayout> {
+    val beforePanes = beforeSceneLayout.contentPaneScene.panes.associateBy { pane -> pane.entryId }
+    val afterPanes = afterSceneLayout.contentPaneScene.panes.associateBy { pane -> pane.entryId }
     return scene.entries
         .filter { entry -> entry.visibility != NavSceneVisibility.Hidden }
         .associate { entry ->
+            if (entry.layerRole == NavSceneLayerRole.Overlay) {
+                return@associate entry.entryId to NavDestinationLayout.Overlay
+            }
             val afterPane = afterPanes[entry.entryId]
             val pane = afterPane ?: checkNotNull(beforePanes[entry.entryId])
-            entry.entryId to NavPaneLayout(
-                role = pane.role,
-                paneCount = if (afterPane == null) {
-                    beforePaneScene.panes.size
-                } else {
-                    afterPaneScene.panes.size
-                },
+            entry.entryId to NavDestinationLayout.Content(
+                NavPaneLayout(
+                    role = pane.role,
+                    paneCount = if (afterPane == null) {
+                        beforeSceneLayout.contentPaneScene.panes.size
+                    } else {
+                        afterSceneLayout.contentPaneScene.panes.size
+                    },
+                ),
             )
         }
 }

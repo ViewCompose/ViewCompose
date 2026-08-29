@@ -11,14 +11,15 @@ import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavExecutionPlan
 import com.viewcompose.navigation.core.NavExecutionReducer
 import com.viewcompose.navigation.core.NavHostLifecycleState
-import com.viewcompose.navigation.core.NavPaneScene
 import com.viewcompose.navigation.core.NavPaneStrategies
 import com.viewcompose.navigation.core.NavPaneStrategy
 import com.viewcompose.navigation.core.NavPreparation
+import com.viewcompose.navigation.core.NavSceneLayout
+import com.viewcompose.navigation.core.NavSceneStrategy
 import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavTransaction
 import com.viewcompose.navigation.core.NavTransactionStatus
-import com.viewcompose.navigation.core.calculateValidated
+import com.viewcompose.navigation.core.resolveNavSceneLayout
 import com.viewcompose.ui.foundation.RenderFrameReport
 import com.viewcompose.ui.foundation.UiLocalSnapshot
 import java.util.ArrayDeque
@@ -36,6 +37,7 @@ internal class TransactionalNavHostCoordinator(
     private val sessionStore: NavDestinationSessionStore,
     initialHostLifecycleState: NavHostLifecycleState = NavHostLifecycleState.Created,
     private val transitionDriver: NavHostTransitionDriver = ImmediateNavHostTransitionDriver,
+    initialSceneStrategies: List<NavSceneStrategy> = emptyList(),
     initialPaneStrategy: NavPaneStrategy = NavPaneStrategies.Single,
     initialMaxPaneCount: Int = 1,
 ) {
@@ -75,13 +77,14 @@ internal class TransactionalNavHostCoordinator(
     private var nextBackPreviewId = 0L
     private var activeTransitionRecord: ActiveNavHostTransition? = null
     private var activeBackPreviewRecord: ActiveNavHostBackPreview? = null
+    private var sceneStrategies = initialSceneStrategies.toList()
     private var paneStrategy = initialPaneStrategy
     private var maxPaneCount = initialMaxPaneCount
     private val planExecutor = AndroidNavExecutionPlanExecutor(ownerStore, sessionStore)
     private var currentExecutionPlan: NavExecutionPlan? = null
 
     init {
-        paneStrategy.calculateValidated(controller.snapshot(), maxPaneCount)
+        calculateSceneLayout(controller.snapshot())
     }
 
     @MainThread
@@ -193,35 +196,60 @@ internal class TransactionalNavHostCoordinator(
     }
 
     @MainThread
-    fun updatePaneStrategy(
+    fun updateSceneProjection(
+        sceneStrategies: List<NavSceneStrategy>,
         strategy: NavPaneStrategy,
         maxPaneCount: Int,
         onDestinationRefreshFailure: (NavHostDestinationRefreshFailure) -> Unit = {},
-    ): NavPaneScene {
+    ): NavSceneLayout {
         requireMainThread()
         check(state != NavHostCoordinatorState.Destroyed) {
-            "A destroyed navigation host cannot change its pane strategy."
+            "A destroyed navigation host cannot change its scene projection."
         }
         val snapshot = controller.snapshot()
-        val scene = strategy.calculateValidated(snapshot, maxPaneCount)
-        if (strategy === paneStrategy && maxPaneCount == this.maxPaneCount) {
-            return scene
+        val frozenSceneStrategies = sceneStrategies.toList()
+        val layout = resolveNavSceneLayout(
+            snapshot = snapshot,
+            maxPaneCount = maxPaneCount,
+            sceneStrategies = frozenSceneStrategies,
+            paneStrategy = strategy,
+        )
+        if (
+            frozenSceneStrategies == this.sceneStrategies &&
+            strategy === paneStrategy &&
+            maxPaneCount == this.maxPaneCount
+        ) {
+            return layout
         }
         if (state == NavHostCoordinatorState.Detached) {
+            this.sceneStrategies = frozenSceneStrategies
             paneStrategy = strategy
             this.maxPaneCount = maxPaneCount
-            return scene
+            return layout
+        }
+        if (
+            state == NavHostCoordinatorState.Attached &&
+            activeTransitionRecord == null &&
+            activeBackPreviewRecord == null &&
+            currentExecutionPlan?.afterSceneLayout == layout
+        ) {
+            // A new policy identity may affect future stacks without changing the current scene.
+            this.sceneStrategies = frozenSceneStrategies
+            paneStrategy = strategy
+            this.maxPaneCount = maxPaneCount
+            return layout
         }
         check(state == NavHostCoordinatorState.Attached) {
-            "Navigation panes can change only while detached or attached; current=$state."
+            "Navigation scenes can change only while detached or attached; current=$state."
         }
         check(!executing) {
-            "Navigation panes cannot change during another host operation."
+            "Navigation scenes cannot change during another host operation."
         }
         executing = true
         val previousStrategy = paneStrategy
         val previousMaxPaneCount = this.maxPaneCount
-        val previousScene = calculatePaneScene(snapshot)
+        val previousScene = calculateSceneLayout(snapshot)
+        val previousSceneStrategies = this.sceneStrategies
         var destinationRefreshFailure: NavHostDestinationRefreshFailure? = null
         val result = try {
             redirectActiveBackPreview(preserveVisualState = false)
@@ -229,7 +257,7 @@ internal class TransactionalNavHostCoordinator(
             val plan = reduceSettledState(
                 snapshot = snapshot,
                 beforeScene = previousScene,
-                afterScene = scene,
+                afterScene = layout,
             )
             when (
                 val preparation = planExecutor.prepare(
@@ -240,12 +268,13 @@ internal class TransactionalNavHostCoordinator(
                 )
             ) {
                 is NavPlanPreparationResult.Ready -> {
+                    this.sceneStrategies = frozenSceneStrategies
                     paneStrategy = strategy
                     this.maxPaneCount = maxPaneCount
                     planExecutor.publish(plan)
                     currentExecutionPlan = plan
                     drainQueuedCommandsWhileExecuting()
-                    scene
+                    layout
                 }
 
                 is NavPlanPreparationResult.Failed -> {
@@ -255,6 +284,7 @@ internal class TransactionalNavHostCoordinator(
                 }
             }
         } catch (throwable: Throwable) {
+            this.sceneStrategies = previousSceneStrategies
             paneStrategy = previousStrategy
             this.maxPaneCount = previousMaxPaneCount
             runCatching { applySettledState(controller.snapshot()) }
@@ -331,15 +361,15 @@ internal class TransactionalNavHostCoordinator(
                 is NavCommand.OpenDeepLink,
                 -> error("System Back produced a forward navigation command: $command")
             }
-            val beforeScene = calculatePaneScene(currentSnapshot)
-            val afterScene = calculatePaneScene(afterSnapshot)
+            val beforeScene = calculateSceneLayout(currentSnapshot)
+            val afterScene = calculateSceneLayout(afterSnapshot)
             val presentationState = sessionStore.presentationState()
             val plan = NavExecutionReducer.predictivePreview(
                 currentLifecycleStates = ownerStore.currentLifecycleStates(),
                 stackState = stackState,
                 prospectiveActiveStack = afterSnapshot,
-                beforePaneScene = beforeScene,
-                afterPaneScene = afterScene,
+                beforeSceneLayout = beforeScene,
+                afterSceneLayout = afterScene,
                 hostState = hostLifecycleState,
                 presentedEntryIds = presentationState.presentedEntryIds,
                 hiddenPresentationRecency = presentationState.hiddenEntryIdsOldestFirst,
@@ -584,7 +614,7 @@ internal class TransactionalNavHostCoordinator(
                 activeBackPreviewRecord != null -> {
                     checkNotNull(activeBackPreviewRecord).preview.visibleEntryIds
                 }
-                else -> calculatePaneScene(controller.snapshot()).visibleEntryIds
+                else -> calculateSceneLayout(controller.snapshot()).visibleEntryIds
             }
             entries.filter { entry -> entry.id in visibleEntryIds }.forEach { entry ->
                 reports[entry.id] = checkNotNull(sessionStore.sessionOrNull(entry.id)) {
@@ -716,8 +746,8 @@ internal class TransactionalNavHostCoordinator(
             NavExecutionReducer.transition(
                 currentLifecycleStates = ownerStore.currentLifecycleStates(),
                 transaction = transaction,
-                beforePaneScene = calculatePaneScene(transaction.before),
-                afterPaneScene = calculatePaneScene(transaction.after),
+                beforeSceneLayout = calculateSceneLayout(transaction.before),
+                afterSceneLayout = calculateSceneLayout(transaction.after),
                 hostState = hostLifecycleState,
                 presentedEntryIds = presentationState.presentedEntryIds,
                 hiddenPresentationRecency = presentationState.hiddenEntryIdsOldestFirst,
@@ -796,7 +826,7 @@ internal class TransactionalNavHostCoordinator(
 
     private fun applySettledState(
         snapshot: NavBackStackSnapshot,
-        scene: NavPaneScene = calculatePaneScene(snapshot),
+        scene: NavSceneLayout = calculateSceneLayout(snapshot),
     ) {
         val plan = reduceSettledState(snapshot, scene, scene)
         planExecutor.publish(plan)
@@ -805,8 +835,8 @@ internal class TransactionalNavHostCoordinator(
 
     private fun reduceSettledState(
         snapshot: NavBackStackSnapshot,
-        beforeScene: NavPaneScene = calculatePaneScene(snapshot),
-        afterScene: NavPaneScene = beforeScene,
+        beforeScene: NavSceneLayout = calculateSceneLayout(snapshot),
+        afterScene: NavSceneLayout = beforeScene,
     ): NavExecutionPlan {
         val stackState = controller.stackStateSnapshot()
         check(stackState.activeStack == snapshot) {
@@ -817,8 +847,8 @@ internal class TransactionalNavHostCoordinator(
         return NavExecutionReducer.settled(
             currentLifecycleStates = ownerStore.currentLifecycleStates(),
             stackState = stackState,
-            paneScene = afterScene,
-            previousPaneScene = beforeScene,
+            sceneLayout = afterScene,
+            previousSceneLayout = beforeScene,
             hostState = hostLifecycleState,
             presentedEntryIds = presentationState.presentedEntryIds,
             hiddenPresentationRecency = presentationState.hiddenEntryIdsOldestFirst,
@@ -866,8 +896,8 @@ internal class TransactionalNavHostCoordinator(
             mutation = checkNotNull(plan.mutation),
             outgoingEntry = plan.before.top,
             incomingEntry = committedSnapshot.top,
-            beforeScene = plan.beforePaneScene,
-            afterScene = plan.afterPaneScene,
+            beforeScene = plan.beforeSceneLayout,
+            afterScene = plan.afterSceneLayout,
             retainedEntries = plan.retainedEntries,
             scene = plan.scene,
             layerOrder = plan.layerOrder,
@@ -910,8 +940,13 @@ internal class TransactionalNavHostCoordinator(
         return transition
     }
 
-    private fun calculatePaneScene(snapshot: NavBackStackSnapshot): NavPaneScene {
-        return paneStrategy.calculateValidated(snapshot, maxPaneCount)
+    private fun calculateSceneLayout(snapshot: NavBackStackSnapshot): NavSceneLayout {
+        return resolveNavSceneLayout(
+            snapshot = snapshot,
+            maxPaneCount = maxPaneCount,
+            sceneStrategies = sceneStrategies,
+            paneStrategy = paneStrategy,
+        )
     }
 
     private fun terminateTransition(
@@ -1031,13 +1066,22 @@ internal class TransactionalNavHostCoordinator(
         runCatching {
             planExecutor.terminalCleanup(active.plan)
         }.exceptionOrNull()?.let(failures::add)
-        runCatching {
+        val settlementFailure = runCatching {
             applySettledState(active.transition.after)
-        }.exceptionOrNull()?.let(failures::add)
+        }.exceptionOrNull()
+        // A result callback may inspect this record and enqueue navigation during reconciliation.
+        // Publish it first; any drained command replaces it only when that later transition terminates.
         lastTransitionResult = NavHostTransitionResult(
             transition = active.transition,
             outcome = outcome,
         )
+        if (settlementFailure == null) {
+            runCatching {
+                planExecutor.synchronizeResultConsumer(active.plan)
+            }.exceptionOrNull()?.let(failures::add)
+        } else {
+            failures += settlementFailure
+        }
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first

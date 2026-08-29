@@ -14,12 +14,12 @@ class NavExecutionReducerTest {
         val home = entry("home")
         val details = entry("details")
         val stack = stackState(home, details)
-        val panes = paneScene(home to NavPaneRole.Primary, details to NavPaneRole.Secondary)
+        val layout = sceneLayout(home to NavPaneRole.Primary, details to NavPaneRole.Secondary)
 
         val plan = NavExecutionReducer.settled(
             currentLifecycleStates = emptyMap(),
             stackState = stack,
-            paneScene = panes,
+            sceneLayout = layout,
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = listOf(home.id),
             systemBackCommand = NavCommand.Pop,
@@ -36,6 +36,73 @@ class NavExecutionReducerTest {
     }
 
     @Test
+    fun `settled overlays cover content and expose only the top overlay`() {
+        val home = entry("home")
+        val details = entry("details")
+        val firstOverlay = entry("first-overlay")
+        val topOverlay = entry("top-overlay")
+        val stack = stackState(home, details, firstOverlay, topOverlay)
+        val layout = NavSceneLayout(
+            contentPaneScene = paneScene(
+                home to NavPaneRole.Primary,
+                details to NavPaneRole.Secondary,
+            ),
+            overlayEntryIds = listOf(firstOverlay.id, topOverlay.id),
+        )
+
+        val plan = NavExecutionReducer.settled(
+            currentLifecycleStates = emptyMap(),
+            stackState = stack,
+            sceneLayout = layout,
+            hostState = NavHostLifecycleState.Resumed,
+        )
+
+        assertEquals(setOf(topOverlay.id), plan.inputEntryIds)
+        assertEquals(setOf(topOverlay.id), plan.accessibilityEntryIds)
+        assertEquals(NavSceneVisibility.Covered, plan.scene[home.id]?.visibility)
+        assertEquals(NavSceneVisibility.Covered, plan.scene[details.id]?.visibility)
+        assertEquals(NavSceneVisibility.Covered, plan.scene[firstOverlay.id]?.visibility)
+        assertEquals(NavSceneVisibility.Visible, plan.scene[topOverlay.id]?.visibility)
+        assertEquals(NavSceneLayerRole.Content, plan.scene[details.id]?.layerRole)
+        assertEquals(NavSceneLayerRole.Overlay, plan.scene[topOverlay.id]?.layerRole)
+        assertEquals(NavEntryLifecycleState.Started, plan.lifecycle.targetStates[details.id])
+        assertEquals(NavEntryLifecycleState.Started, plan.lifecycle.targetStates[firstOverlay.id])
+        assertEquals(NavEntryLifecycleState.Resumed, plan.lifecycle.targetStates[topOverlay.id])
+        assertEquals(topOverlay.id, plan.layerOrder.last())
+    }
+
+    @Test
+    fun `overlay push keeps content covered while the overlay enters`() {
+        val controller = controller("home", "dialog")
+        val before = controller.snapshot()
+        val transaction = controller.ready(NavCommand.Push(NavRoute("dialog")))
+        val after = transaction.after
+
+        val plan = NavExecutionReducer.transition(
+            currentLifecycleStates = mapOf(before.top.id to NavEntryLifecycleState.Resumed),
+            transaction = transaction,
+            beforeSceneLayout = singleLayout(before),
+            afterSceneLayout = NavSceneLayout(
+                contentPaneScene = paneScene(before.top to NavPaneRole.Primary),
+                overlayEntryIds = listOf(after.top.id),
+            ),
+            hostState = NavHostLifecycleState.Resumed,
+            presentedEntryIds = listOf(before.top.id),
+        )
+
+        assertEquals(NavSceneVisibility.Covered, plan.scene[before.top.id]?.visibility)
+        assertEquals(NavSceneVisibility.Visible, plan.scene[after.top.id]?.visibility)
+        assertEquals(NavSceneTransitionPhase.Settled, plan.scene[before.top.id]?.transitionPhase)
+        assertEquals(NavSceneTransitionPhase.Entering, plan.scene[after.top.id]?.transitionPhase)
+        assertEquals(NavEntryLifecycleState.Started, plan.lifecycle.targetStates[before.top.id])
+        assertEquals(NavEntryLifecycleState.Started, plan.lifecycle.targetStates[after.top.id])
+        assertTrue(plan.inputEntryIds.isEmpty())
+        assertEquals(setOf(after.top.id), plan.accessibilityEntryIds)
+        assertEquals(after.top.id, plan.layerOrder.last())
+        transaction.rollback()
+    }
+
+    @Test
     fun `push transition prepares target and freezes one noninteractive lifecycle scene`() {
         val controller = controller("home", "details")
         val before = controller.snapshot()
@@ -45,8 +112,8 @@ class NavExecutionReducerTest {
         val plan = NavExecutionReducer.transition(
             currentLifecycleStates = mapOf(before.top.id to NavEntryLifecycleState.Resumed),
             transaction = transaction,
-            beforePaneScene = singlePane(before),
-            afterPaneScene = singlePane(after),
+            beforeSceneLayout = singleLayout(before),
+            afterSceneLayout = singleLayout(after),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = listOf(before.top.id),
         )
@@ -82,8 +149,8 @@ class NavExecutionReducerTest {
                 }
             },
             transaction = transaction,
-            beforePaneScene = singlePane(before),
-            afterPaneScene = singlePane(after),
+            beforeSceneLayout = singleLayout(before),
+            afterSceneLayout = singleLayout(after),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = before.entries.map(NavEntry::id),
         )
@@ -108,8 +175,8 @@ class NavExecutionReducerTest {
                 entry.id to NavEntryLifecycleState.Created
             },
             transaction = transaction,
-            beforePaneScene = singlePane(before),
-            afterPaneScene = singlePane(transaction.after),
+            beforeSceneLayout = singleLayout(before),
+            afterSceneLayout = singleLayout(transaction.after),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = before.entries.map(NavEntry::id),
         )
@@ -143,8 +210,8 @@ class NavExecutionReducerTest {
                 entry.id to NavEntryLifecycleState.Created
             },
             transaction = transaction,
-            beforePaneScene = singlePane(before),
-            afterPaneScene = singlePane(transaction.after),
+            beforeSceneLayout = singleLayout(before),
+            afterSceneLayout = singleLayout(transaction.after),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = before.entries.map(NavEntry::id),
         )
@@ -175,8 +242,8 @@ class NavExecutionReducerTest {
             ),
             stackState = committed,
             prospectiveActiveStack = prospective,
-            beforePaneScene = singlePane(committed.activeStack),
-            afterPaneScene = singlePane(prospective),
+            beforeSceneLayout = singleLayout(committed.activeStack),
+            afterSceneLayout = singleLayout(prospective),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = listOf(details.id),
             systemBackCommand = NavCommand.Pop,
@@ -198,6 +265,39 @@ class NavExecutionReducerTest {
     }
 
     @Test
+    fun `predictive overlay pop keeps the outgoing modal above covered content`() {
+        val home = entry("home")
+        val dialog = entry("dialog")
+        val committed = stackState(home, dialog)
+        val prospective = NavBackStackSnapshot(listOf(home))
+
+        val plan = NavExecutionReducer.predictivePreview(
+            currentLifecycleStates = mapOf(
+                home.id to NavEntryLifecycleState.Started,
+                dialog.id to NavEntryLifecycleState.Resumed,
+            ),
+            stackState = committed,
+            prospectiveActiveStack = prospective,
+            beforeSceneLayout = NavSceneLayout(
+                contentPaneScene = paneScene(home to NavPaneRole.Primary),
+                overlayEntryIds = listOf(dialog.id),
+            ),
+            afterSceneLayout = singleLayout(prospective),
+            hostState = NavHostLifecycleState.Resumed,
+            presentedEntryIds = listOf(home.id, dialog.id),
+            systemBackCommand = NavCommand.Pop,
+        )
+
+        assertEquals(NavSceneVisibility.Covered, plan.scene[home.id]?.visibility)
+        assertEquals(NavSceneVisibility.Visible, plan.scene[dialog.id]?.visibility)
+        assertEquals(NavSceneLayerRole.Overlay, plan.scene[dialog.id]?.layerRole)
+        assertEquals(setOf(dialog.id), plan.accessibilityEntryIds)
+        assertEquals(NavEntryLifecycleState.Started, plan.lifecycle.targetStates[home.id])
+        assertEquals(NavEntryLifecycleState.Started, plan.lifecycle.targetStates[dialog.id])
+        assertEquals(dialog.id, plan.layerOrder.last())
+    }
+
+    @Test
     fun `hidden presentation eviction is deterministic and never evicts visible entries`() {
         val home = entry("home")
         val details = entry("details")
@@ -207,7 +307,7 @@ class NavExecutionReducerTest {
         val plan = NavExecutionReducer.settled(
             currentLifecycleStates = emptyMap(),
             stackState = stack,
-            paneScene = singlePane(stack.activeStack),
+            sceneLayout = singleLayout(stack.activeStack),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = listOf(home.id, details.id, support.id),
             hiddenPresentationRecency = listOf(home.id, details.id),
@@ -228,7 +328,7 @@ class NavExecutionReducerTest {
         val plan = NavExecutionReducer.settled(
             currentLifecycleStates = emptyMap(),
             stackState = stack,
-            paneScene = singlePane(stack.activeStack),
+            sceneLayout = singleLayout(stack.activeStack),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = listOf(home.id, details.id),
             hiddenPresentationRecency = listOf(home.id),
@@ -247,7 +347,7 @@ class NavExecutionReducerTest {
         val initial = NavExecutionReducer.settled(
             currentLifecycleStates = emptyMap(),
             stackState = stack,
-            paneScene = singlePane(stack.activeStack),
+            sceneLayout = singleLayout(stack.activeStack),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = listOf(home.id, details.id),
             hiddenPresentationRecency = listOf(home.id),
@@ -281,8 +381,8 @@ class NavExecutionReducerTest {
         val pushedPlan = NavExecutionReducer.transition(
             currentLifecycleStates = emptyMap(),
             transaction = push,
-            beforePaneScene = singlePane(push.before),
-            afterPaneScene = singlePane(push.after),
+            beforeSceneLayout = singleLayout(push.before),
+            afterSceneLayout = singleLayout(push.after),
             hostState = NavHostLifecycleState.Resumed,
         )
         assertEquals(NavCommand.Pop, pushedPlan.systemBackCommand)
@@ -293,8 +393,8 @@ class NavExecutionReducerTest {
         val resetPlan = NavExecutionReducer.transition(
             currentLifecycleStates = pushedPlan.lifecycle.targetStates,
             transaction = reset,
-            beforePaneScene = singlePane(reset.before),
-            afterPaneScene = singlePane(reset.after),
+            beforeSceneLayout = singleLayout(reset.before),
+            afterSceneLayout = singleLayout(reset.after),
             hostState = NavHostLifecycleState.Resumed,
         )
         assertNull(resetPlan.systemBackCommand)
@@ -311,7 +411,7 @@ class NavExecutionReducerTest {
         val plan = NavExecutionReducer.settled(
             currentLifecycleStates = emptyMap(),
             stackState = stack,
-            paneScene = singlePane(stack.activeStack),
+            sceneLayout = singleLayout(stack.activeStack),
             hostState = NavHostLifecycleState.Resumed,
             presentedEntryIds = presented,
         )
@@ -338,7 +438,7 @@ class NavExecutionReducerTest {
             NavExecutionReducer.settled(
                 currentLifecycleStates = emptyMap(),
                 stackState = stack,
-                paneScene = paneScene(unknown to NavPaneRole.Primary),
+                sceneLayout = sceneLayout(unknown to NavPaneRole.Primary),
                 hostState = NavHostLifecycleState.Resumed,
             )
         }
@@ -346,7 +446,7 @@ class NavExecutionReducerTest {
             NavExecutionReducer.settled(
                 currentLifecycleStates = emptyMap(),
                 stackState = stack,
-                paneScene = singlePane(stack.activeStack),
+                sceneLayout = singleLayout(stack.activeStack),
                 hostState = NavHostLifecycleState.Resumed,
                 presentedEntryIds = listOf(home.id, home.id),
             )
@@ -355,7 +455,7 @@ class NavExecutionReducerTest {
             NavExecutionReducer.settled(
                 currentLifecycleStates = emptyMap(),
                 stackState = stack,
-                paneScene = singlePane(stack.activeStack),
+                sceneLayout = singleLayout(stack.activeStack),
                 hostState = NavHostLifecycleState.Resumed,
                 systemBackCommand = NavCommand.Push(NavRoute("unknown")),
             )
@@ -368,8 +468,8 @@ class NavExecutionReducerTest {
                 currentLifecycleStates = emptyMap(),
                 stackState = previewState,
                 prospectiveActiveStack = previewState.activeStack,
-                beforePaneScene = singlePane(previewState.activeStack),
-                afterPaneScene = singlePane(previewState.activeStack),
+                beforeSceneLayout = singleLayout(previewState.activeStack),
+                afterSceneLayout = singleLayout(previewState.activeStack),
                 hostState = NavHostLifecycleState.Resumed,
                 systemBackCommand = NavCommand.Pop,
             )
@@ -382,8 +482,8 @@ class NavExecutionReducerTest {
             NavExecutionReducer.transition(
                 currentLifecycleStates = emptyMap(),
                 transaction = transaction,
-                beforePaneScene = singlePane(transaction.before),
-                afterPaneScene = singlePane(transaction.after),
+                beforeSceneLayout = singleLayout(transaction.before),
+                afterSceneLayout = singleLayout(transaction.after),
                 hostState = NavHostLifecycleState.Resumed,
             )
         }
@@ -419,8 +519,12 @@ class NavExecutionReducerTest {
         )
     }
 
-    private fun singlePane(snapshot: NavBackStackSnapshot): NavPaneScene {
-        return paneScene(snapshot.top to NavPaneRole.Primary)
+    private fun singleLayout(snapshot: NavBackStackSnapshot): NavSceneLayout {
+        return sceneLayout(snapshot.top to NavPaneRole.Primary)
+    }
+
+    private fun sceneLayout(vararg panes: Pair<NavEntry, NavPaneRole>): NavSceneLayout {
+        return NavSceneLayout(paneScene(*panes))
     }
 
     private fun paneScene(vararg panes: Pair<NavEntry, NavPaneRole>): NavPaneScene {
