@@ -22,8 +22,11 @@ sample_ids:
 invariants:
   - Concrete application-process tooling remains downstream, debug-only, optional, and inactive until a valid explicit request.
   - The inactive runtime path performs no tooling-owned I/O, traversal, serialization, recurring observation, or hot-path callback registration.
+  - AI knowledge has one generated canonical lineage, while static, compiled, rendered, and compared remain distinct cumulative evidence levels.
+  - AI compilation never executes inspected-project build logic; analysis is bounded and read-only, model providers remain client-owned, and migration uses a tooling-owned Design IR rather than runtime nodes.
 evidence:
   - Tooling isolation verification, Host and Preview request-gate suites, plugin protocol tests, release-classpath checks, and accepted same-device performance evidence.
+  - tools/ai/contracts/versions.json, frozen AI JSON Schemas, evaluation metrics/corpus, and ./gradlew verifyAiToolingContracts.
 ---
 
 # ADR-0009: Development tooling isolation and request-driven inspection

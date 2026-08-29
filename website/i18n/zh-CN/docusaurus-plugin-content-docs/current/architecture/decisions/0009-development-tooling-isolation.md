@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0009-development-tooling-isolation.md
-translation_source_hash: 851f5915e60ad2fccff63d92eb958881e69882b46bed35e7b1ec5de68443e93f
+translation_source_hash: a60a1246f3782428efc20432619c2d79fde9aeaa4552f677c6c4b2f2f6716130
 translation_status: current
 ---
 
