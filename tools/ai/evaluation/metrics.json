@@ -408,6 +408,33 @@
       "environment": "missing question coverage, changed validation lineage, executable expressions, guessed resources, and callback source fail closed before code-generation eligibility"
     },
     {
+      "id": "visual.screenshot-generation-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact resolved-result and Design IR lineage, deterministic Kotlin bytes, typed caller state and event parameters, and complete accessibility disposition report"
+    },
+    {
+      "id": "visual.screenshot-generation-compile-success",
+      "phase": 5,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "frozen screenshot-derived Kotlin golden in the pinned JDK 21 and Kotlin 2.3.10 UI Foundation compiler lane"
+    },
+    {
+      "id": "visual.screenshot-generation-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "ineligible resolution, changed lineage, unsupported events, expressions, resources, callback source, project build execution, and network access fail closed"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",

@@ -858,6 +858,34 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotGeneration") {
+            group = "verification"
+            description =
+                "Verifies resolved screenshot Design IR to Kotlin mapping and hermetic compilation."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-generation")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "evaluation/fixtures/visual/screenshot-generation/**",
+                        "evaluation/fixtures/visual/screenshot-kotlin-generation-contract.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "generated/current-source/**",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-generation.mjs",
+                    )
+                },
+                project.rootDir.resolve("settings.gradle.kts"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

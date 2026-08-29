@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "kind": "report",
+  "requestFingerprint": "176fd47687381494a4cb9331d5ae682d7a52b4483641ac3930621afbf29c4551",
+  "input": {
+    "resolutionResultFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
+    "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603"
+  },
+  "target": {
+    "language": "kotlin",
+    "packageName": "generated.viewcompose",
+    "functionName": "ScreenshotWireframeView",
+    "artifactIds": ["viewcompose-ui-foundation"],
+    "capabilityIds": ["foundation.components"]
+  },
+  "bindings": {
+    "states": [
+      {
+        "source": "emailState",
+        "parameter": "emailState",
+        "type": "TextFieldState",
+        "status": "resolved",
+        "nodeIds": ["wireframe-field"]
+      }
+    ],
+    "events": [
+      {
+        "source": "onEmailSubmit",
+        "parameter": "onEmailSubmit",
+        "event": "keyboard-action",
+        "type": "(TextFieldImeAction) -> Boolean",
+        "status": "resolved",
+        "nodeIds": ["wireframe-field"]
+      },
+      {
+        "source": "onContinue",
+        "parameter": "onContinue",
+        "event": "click",
+        "type": "() -> Unit",
+        "status": "resolved",
+        "nodeIds": ["wireframe-button"]
+      }
+    ]
+  },
+  "accessibility": {
+    "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444",
+    "nodes": [
+      {
+        "nodeId": "wireframe-root",
+        "role": "none",
+        "labelSource": "none",
+        "traversalIndex": 0,
+        "decorative": false,
+        "emission": {
+          "role": "not-applicable",
+          "label": "none",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      },
+      {
+        "nodeId": "wireframe-title",
+        "role": "none",
+        "labelSource": "visible-text",
+        "traversalIndex": 1,
+        "decorative": false,
+        "emission": {
+          "role": "not-applicable",
+          "label": "visible-text",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      },
+      {
+        "nodeId": "wireframe-field",
+        "role": "text-field",
+        "labelSource": "field-label",
+        "traversalIndex": 2,
+        "decorative": false,
+        "emission": {
+          "role": "component-default",
+          "label": "component-placeholder",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      },
+      {
+        "nodeId": "wireframe-button",
+        "role": "button",
+        "labelSource": "visible-text",
+        "traversalIndex": 3,
+        "decorative": false,
+        "emission": {
+          "role": "component-default",
+          "label": "visible-text",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      }
+    ],
+    "traversal": {
+      "mode": "hierarchy-order",
+      "explicitModifier": false,
+      "orderedNodeIds": [
+        "wireframe-root",
+        "wireframe-title",
+        "wireframe-field",
+        "wireframe-button"
+      ],
+      "reviewRequired": true
+    }
+  },
+  "callSiteReview": {
+    "required": true,
+    "items": [
+      "Retain caller ownership and restoration policy for every TextFieldState parameter.",
+      "Keep keyboard, focus, and click callbacks synchronous with their documented renderer-thread contracts.",
+      "Verify structural accessibility traversal and labels on the target Android API levels before integration.",
+      "Render and compare the generated screen before claiming screenshot visual parity."
+    ]
+  },
+  "verification": {
+    "generation": "deterministic",
+    "compilation": "required",
+    "rendering": "not-claimed",
+    "visualComparison": "not-claimed"
+  },
+  "kotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
+  "reportFingerprint": "51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d"
+}

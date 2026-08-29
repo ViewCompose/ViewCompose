@@ -771,6 +771,69 @@
         "diagnosticCodes": ["VC-AI-SCREENSHOT-RESOLUTION-LINEAGE-MISMATCH"]
       },
       "metricIds": ["visual.screenshot-resolution-safety"]
+    },
+    {
+      "id": "visual.screenshot-generation-wireframe-contract",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-generation/wireframe.generated.kt"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compiled",
+        "capabilityIds": ["foundation.components"]
+      },
+      "metricIds": [
+        "visual.screenshot-generation-exactness",
+        "visual.screenshot-generation-compile-success"
+      ]
+    },
+    {
+      "id": "visual.screenshot-generation-not-eligible",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-generation/not-eligible.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-GENERATION-NOT-ELIGIBLE"]
+      },
+      "metricIds": ["visual.screenshot-generation-safety"]
+    },
+    {
+      "id": "visual.screenshot-generation-lineage-mismatch",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-generation/lineage-mismatch.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-GENERATION-LINEAGE-MISMATCH"]
+      },
+      "metricIds": ["visual.screenshot-generation-safety"]
+    },
+    {
+      "id": "visual.screenshot-generation-unsupported-event",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-generation/unsupported-event.mutation.json"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-GENERATION-UNSUPPORTED"]
+      },
+      "metricIds": ["visual.screenshot-generation-safety"]
     }
   ]
 }

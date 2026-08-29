@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze the screenshot-specific resolved-Design-IR-to-Kotlin mapping for typed state, event, and accessibility bindings, then require exact generation and hermetic compilation before any render claim.
+next_action: Implement the frozen screenshot-specific resolved-Design-IR-to-Kotlin generator and expose generate/compile evidence through the shared CLI and MCP without adding a render claim.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -96,14 +96,16 @@ placeholder bindings reach zero. Its offline adapter is now the twelfth shared C
 revalidates the imported inference identity, applies only component-compatible typed fields and
 caller bindings, persists the complete accessibility review into Design IR, and reproduces the
 resolved golden through the installed package with no provider, network, or answer execution. The
-next boundary is screenshot-specific Kotlin generation and hermetic compilation; provider selection
-remains a separate, explicitly authorized decision.
+next screenshot-specific Kotlin generation contract is now frozen. Its checked-in golden maps the
+typed state and event bindings to real public APIs, preserves every accessibility disposition in a
+machine-checked report, and passes the hermetic compiler. The generator and public tool are not yet
+implemented; provider selection remains a separate, explicitly authorized decision.
 
 Last verified: 2026-08-30.
 
-Next action: freeze the screenshot-specific resolved-Design-IR-to-Kotlin mapping for typed state,
-event, and accessibility bindings, then require exact generation and hermetic compilation before
-any render claim or provider-backed adapter.
+Next action: implement the frozen screenshot-specific resolved-Design-IR-to-Kotlin generator and
+expose generate/compile evidence through the shared CLI and MCP without adding a render claim or
+provider-backed adapter.
 
 ## Maven release changesets
 
@@ -1765,6 +1767,60 @@ resolved IR is eligible for generation but has not yet produced, compiled, rende
 compared screenshot-derived Kotlin. The next action is to freeze and implement a screenshot-specific
 IR-to-Kotlin mapping for its typed state, event, and accessibility bindings, using hermetic
 compilation as the first acceptance boundary.
+
+### Contract freeze — screenshot Design IR to Kotlin and hermetic compilation
+
+Screenshot Kotlin generation v1 now freezes the first executable boundary after typed resolution.
+The request binds the exact resolution-result fingerprint
+`61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a` and resolved Design IR
+fingerprint `6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603` and requires resolved
+status, `codeGenerationAllowed = true`, zero remaining questions, zero unsupported semantics, and
+zero placeholder bindings. Expressions, resources, callback source, project build execution, and
+network access are outside the accepted surface.
+
+The mapping is separate from the XML generator because screenshot resolution owns typed behavior
+and accessibility review that the bounded XML subset deliberately rejects. The four-node golden
+maps `emailState` to a caller-owned `TextFieldState`, `onEmailSubmit` to
+`(TextFieldImeAction) -> Boolean`, and `onContinue` to `() -> Unit`. It emits real `Column`, `Text`,
+`TextField`, and `Button` calls with stable node keys and `TextFieldInputProfile.Email`. The exact
+Kotlin fingerprint is `5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9`.
+
+Every reviewed node also has one report record for role, label source, traversal index, decorative
+status, and emission disposition. `Button` and `TextField` roles use component defaults; visible
+text and the field placeholder carry labels. ViewCompose currently exposes no public
+`traversalIndex` modifier, so the contract requires the reviewed ascending order to equal generated
+hierarchy order and records that no explicit modifier was emitted. This is a deliberate honesty
+boundary, not a fabricated API or a claim that all Android accessibility services traverse every
+configuration identically. The report fingerprint is
+`51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d`.
+
+The dedicated JDK 21/Kotlin 2.3.10 source lane passes 1/1 golden compile with class-output
+fingerprint `7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67`.
+The contract gate also passes 4/4 node mappings, 1/1 state binding, 2/2 event bindings, 4/4
+accessibility records, and 3/3 fail-closed denominators for ineligible resolution, changed lineage,
+and an unsupported event. Phase 0 now verifies 13 schemas, 51 metrics, 53 cases, 50 fixture-backed
+cases, and four screenshot-generation fixtures. The previously implemented screenshot-resolution
+gate and the new generation gate are both dependencies of `qaQuick`; this closes the lifecycle gap
+where the resolution task existed but was not part of that aggregate.
+
+The complete offline distribution still passes 2/2 reproducible builds, one offline
+install/uninstall lifecycle, SPDX/license inventory, both MCP protocol eras, the installed compiler,
+and the existing generated-layout comparison denominators. Only the generation schema is shipped at
+this contract-only step; no unimplemented tool is advertised. Relative to the implemented
+resolution slice, package file count increases from 56 to 57 (+1.79%), declared bytes from
+1,711,367 to 1,720,941 (+0.56%), and archive bytes from 305,305 to 306,601 (+0.42%). The archive
+SHA-256 is `336a81e18c666241b4fadae770bb4fcac0ec3bb14f002b7ac188bec79f2ebede`.
+The quality-build plugin suite, documentation structure, development-tooling isolation, and release
+intent gates pass. The combined AI-contract, screenshot preprocessing, inference, resolution,
+generation, installed-distribution, documentation-structure, development-tooling-isolation, and
+release-intent root gate passes 27 actionable tasks, with 13 executed and 14 up-to-date.
+
+This is **improved** executable-contract precision and compile evidence with **no material Android
+runtime behavior change**. It proves only that the frozen source is schema-valid, lineage-bound,
+deterministic by bytes, and compilable against the accepted artifact. It does not yet prove a
+generator can reproduce the source, expose it through CLI/MCP, render it, match the screenshot, or
+behave correctly in an application. The next action is to implement the frozen generator and a
+bounded generate/compile tool before any render or visual-comparison claim.
 
 ### Implementation evidence — bounded XML to Design IR
 

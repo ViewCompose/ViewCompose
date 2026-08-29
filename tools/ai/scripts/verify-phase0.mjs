@@ -7,6 +7,7 @@ import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {canonicalJson} from './screenshot-contract.mjs';
 import {TOOL_DEFINITIONS, TOOL_NAMES} from './tool-catalog.mjs';
 import {verifyPhase5ScreenshotResolution} from './verify-phase5-screenshot-resolution.mjs';
+import {verifyPhase5ScreenshotGeneration} from './verify-phase5-screenshot-generation.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -2187,6 +2188,7 @@ export async function verifyPhase0() {
     screenshotPreprocessing,
   );
   const screenshotInferenceResolution = await verifyPhase5ScreenshotResolution();
+  const screenshotKotlinGeneration = await verifyPhase5ScreenshotGeneration({compileGolden: false});
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -2215,6 +2217,9 @@ export async function verifyPhase0() {
     screenshotInferenceResolutionFixtures:
       screenshotInferenceResolution.supportedGoldens +
         screenshotInferenceResolution.failClosedDenominators,
+    screenshotKotlinGenerationFixtures:
+      screenshotKotlinGeneration.supportedGoldens +
+        screenshotKotlinGeneration.failClosedDenominators,
   };
 }
 
@@ -2233,7 +2238,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.layoutComparisonFixtures} frozen layout-comparison fixtures and ` +
           `${summary.screenshotPreprocessingFixtures} frozen screenshot-preprocessing fixtures and ` +
           `${summary.screenshotDesignInferenceFixtures} frozen screenshot-inference fixtures and ` +
-          `${summary.screenshotInferenceResolutionFixtures} frozen screenshot-resolution fixtures.`,
+          `${summary.screenshotInferenceResolutionFixtures} frozen screenshot-resolution fixtures and ` +
+          `${summary.screenshotKotlinGenerationFixtures} frozen screenshot-generation fixtures.`,
       );
     })
     .catch((error) => {

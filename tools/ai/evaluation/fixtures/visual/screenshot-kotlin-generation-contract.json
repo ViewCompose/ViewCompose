@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-kotlin-generation-v1",
+  "requiresContracts": [
+    "design-ir-v1",
+    "screenshot-inference-resolution-v1",
+    "screenshot-kotlin-generation-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "contract-only",
+    "publicTool": false,
+    "implementation": false,
+    "evidence": "compiled-golden"
+  },
+  "lineage": {
+    "acceptedInput": "resolved-screenshot-inference-only",
+    "resolutionStatus": "resolved",
+    "codeGenerationAllowed": true,
+    "resolutionResultFingerprint": "exact",
+    "resolvedDesignIrFingerprint": "exact",
+    "requestFingerprint": "sha256-canonical-json",
+    "kotlinFingerprint": "sha256-source-bytes",
+    "reportFingerprint": "sha256-canonical-json-without-reportFingerprint"
+  },
+  "mapping": {
+    "sourceKind": "screenshot",
+    "rootCount": 1,
+    "supportedNodeKinds": ["button", "column", "text", "text-field"],
+    "containerOrientation": {
+      "column": {"type": "axis", "value": "vertical"}
+    },
+    "properties": {
+      "text.text": "Text.text",
+      "button.text": "Button.text",
+      "text-field.hint": "TextField.placeholder",
+      "text-field.inputType.text": "TextFieldInputProfile.Text",
+      "text-field.inputType.textEmailAddress": "TextFieldInputProfile.Email",
+      "text-field.inputType.textPassword": "TextFieldInputProfile.Password",
+      "text-field.inputType.number": "TextFieldInputProfile.Number"
+    },
+    "state": {
+      "text-field.text": {
+        "parameterType": "TextFieldState",
+        "ownership": "caller"
+      }
+    },
+    "events": {
+      "button.click": {
+        "argument": "onClick",
+        "parameterType": "() -> Unit"
+      },
+      "text-field.focus-change": {
+        "argument": "onFocusChange",
+        "parameterType": "(Boolean) -> Unit"
+      },
+      "text-field.keyboard-action": {
+        "argument": "onKeyboardAction",
+        "parameterType": "(TextFieldImeAction) -> Boolean"
+      }
+    },
+    "key": "node-id",
+    "expressions": false,
+    "resources": false,
+    "callbackSource": false,
+    "placeholderBindings": false
+  },
+  "accessibility": {
+    "reviewReceiptRequired": true,
+    "allNodesReported": true,
+    "role": {
+      "button": "component-default",
+      "text-field": "component-default",
+      "none": "not-applicable"
+    },
+    "labelSource": {
+      "visible-text": "visible-text",
+      "field-label": "component-placeholder",
+      "none": "none"
+    },
+    "traversal": {
+      "resolvedField": "traversalIndex",
+      "publicModifierAvailable": false,
+      "emission": "hierarchy-order",
+      "exactAscendingOrderRequired": true,
+      "callSiteReviewRequired": true
+    },
+    "decorative": {
+      "false": "default-visible",
+      "true": "hidden"
+    }
+  },
+  "compiler": {
+    "required": true,
+    "lane": "jdk21-kotlin-2.3.10-source",
+    "artifactIds": ["viewcompose-ui-foundation"],
+    "capabilityIds": ["foundation.components"],
+    "evidenceLevel": "compiled",
+    "projectBuildExecution": false,
+    "networkAccess": false
+  },
+  "claims": {
+    "deterministicGeneration": true,
+    "goldenCompilation": true,
+    "runtimeRendering": false,
+    "visualParity": false
+  },
+  "limits": {
+    "maxNodes": 1000,
+    "maxBindings": 1000,
+    "maxGeneratedBytes": 262144
+  },
+  "diagnosticCodes": [
+    "VC-AI-SCREENSHOT-GENERATION-INPUT-INVALID",
+    "VC-AI-SCREENSHOT-GENERATION-LINEAGE-MISMATCH",
+    "VC-AI-SCREENSHOT-GENERATION-NOT-ELIGIBLE",
+    "VC-AI-SCREENSHOT-GENERATION-UNSUPPORTED"
+  ],
+  "supportedFixtures": [
+    {
+      "resolutionResult": "screenshot-resolution/wireframe.result.json",
+      "request": "screenshot-generation/wireframe.request.json",
+      "goldenKotlin": "screenshot-generation/wireframe.generated.kt",
+      "goldenReport": "screenshot-generation/wireframe.report.json",
+      "expectedRequestFingerprint": "176fd47687381494a4cb9331d5ae682d7a52b4483641ac3930621afbf29c4551",
+      "expectedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
+      "expectedReportFingerprint": "51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d",
+      "expectedNodes": 4,
+      "expectedStateBindings": 1,
+      "expectedEventBindings": 2,
+      "expectedAccessibilityRecords": 4
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "mutation": "screenshot-generation/not-eligible.mutation.json",
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-GENERATION-NOT-ELIGIBLE"]
+    },
+    {
+      "mutation": "screenshot-generation/lineage-mismatch.mutation.json",
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-GENERATION-LINEAGE-MISMATCH"]
+    },
+    {
+      "mutation": "screenshot-generation/unsupported-event.mutation.json",
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-GENERATION-UNSUPPORTED"]
+    }
+  ]
+}

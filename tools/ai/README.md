@@ -280,6 +280,18 @@ unsupported semantics, or placeholder bindings, so it becomes eligible for a fut
 screenshot-specific generator. That eligibility is not a compilation, render, or visual-parity
 claim. The adapter calls no provider, opens no network connection, and executes no answer content.
 
+Screenshot Kotlin generation v1 is contract-frozen but is not yet a public tool. It accepts only a
+resolved screenshot inference result whose exact result and Design IR fingerprints match the
+request and whose mechanical code-generation gate is true. The frozen mapping turns caller-owned
+text state into `TextFieldState`, keyboard actions into
+`(TextFieldImeAction) -> Boolean`, focus changes into `(Boolean) -> Unit`, and button clicks into
+`() -> Unit`; it never accepts callback source, expressions, or guessed resources. Component roles
+and visible labels use the real `Button`, `TextField`, and `Text` behavior. Because ViewCompose has
+no public traversal-index modifier, the report preserves every reviewed accessibility decision and
+requires the resolved ascending traversal to equal generated hierarchy order instead of inventing
+an API. The exact wireframe Kotlin golden compiles in the pinned JDK 21/Kotlin UI Foundation lane.
+Rendering and visual parity remain explicit non-claims until a later gate.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -288,10 +300,12 @@ npm --prefix tools/ai run verify:phase3-mcp
 npm --prefix tools/ai run verify:phase5-screenshot
 npm --prefix tools/ai run verify:phase5-screenshot-inference
 npm --prefix tools/ai run verify:phase5-screenshot-resolution
+npm --prefix tools/ai run verify:phase5-screenshot-generation
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
 ./gradlew verifyAiScreenshotResolution
+./gradlew verifyAiScreenshotGeneration
 ```
 
 The preferred protocol follows the

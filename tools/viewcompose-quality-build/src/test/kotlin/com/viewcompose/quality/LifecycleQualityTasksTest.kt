@@ -82,6 +82,8 @@ class LifecycleQualityTasksTest {
                 "verifyAiGeneratedPreview",
                 "verifyAiScreenshotPreprocessing",
                 "verifyAiScreenshotInference",
+                "verifyAiScreenshotResolution",
+                "verifyAiScreenshotGeneration",
                 "verifyDocumentationStructure",
                 "verifyDslApiContracts",
                 "verifyMigrationPairedSamples",
