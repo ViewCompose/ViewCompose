@@ -12,6 +12,7 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
   - navigation.host
+  - navigation.presentation-retention
   - navigation.scene-projection
   - viewmodel.scoped-owners
 artifact_ids:
@@ -30,9 +31,11 @@ evidence:
   - docs/architecture/decisions/0023-retained-viewmodel-scope-ownership.md
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavLifecyclePlannerTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
+  - app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt
 translation_source: architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md
-translation_source_hash: f621dacba0f433dfd1226e90b966cd374ef937b47f2877d15ed7d4b00d04fba2
+translation_source_hash: 5f9ad6f63982c0987df61fff1f25864c70999fa8705d0010a19f0a2d595658bc
 translation_status: current
 ---
 
@@ -137,7 +140,15 @@ Presentation 会结束其 Child `RenderSession`、View Tree、Effect、Focus、A
 - 对应用已经证明昂贵的 Surface 显式保留 Presentation
 - 以正数上限保留有界 LRU 集合，并执行确定性 Eviction
 
-安全默认值不由偏好决定。Phase 4 根据已接受的真机内存、重建耗时与 Settled Frame 证据选择。
+Phase 4 根据证据选择有界的 `DisposeWhenHidden` 作为默认策略。在运行 API 33 的 Pixel 4 XL
+真机上，合成的重型 13 层栈把保留 Presentation 从 13 个降至 1 个，进程 PSS 从 191,953 KiB
+降至 185,510 KiB：Presentation 少 12 个（92.3%），PSS 少 6,443 KiB（3.4%）。同步 Pop 并重建
+的中位耗时从 13,318 us 增至 49,573 us，即增加 36,255 us（272.2%）；但两个策略在 90 Hz 下
+都采集到 252 帧，P95 都为 9 ms，且超过 32 ms 的帧都为 0。结论为 **mixed**：空闲资源上界
+得到改善，实测稳定转场 **no material change**，而实测重建昂贵的页面可显式选择 `Bounded` 或
+`RetainAll`。单台设备、合成内容、进程级 PSS 和短时运行限制了结论外推；Phase 7 继续负责更广的
+设备、泄漏与真实负载证据。
+
 默认策略不得无界。永久移除 Entry 时，先销毁 Presentation，再销毁 Owner 并终止清理 ViewModel。
 配置或进程恢复不会重建任何 Live View、Effect、Animation 或 Candidate Transaction。
 
@@ -238,8 +249,8 @@ ViewModel 与 Saveable State Identity 并不需要 Live Presentation。
    删除 Visible/Interactive-only Planning。
 3. Phase 3 在 Android 应用已接受的 Transition、Overlay、Pane、Host Cap、Graph Order、Focus 与
    Terminal Lifecycle Matrix。
-4. Phase 4 分离 Presentation、实现三种策略，并只在解释 Device Memory、Restoration、Recreation、
-   Leak 与 Frame 证据后选择默认值。
+4. Phase 4 分离 Presentation、实现三种策略，并根据已经解释的 Device Memory、Restoration、
+   Recreation 与 Frame 证据选择 `DisposeWhenHidden`；更广的 Leak 与负载矩阵保留到 Phase 7。
 5. Phase 5 发布 Destination Context 与 Compiled Q3 Sample，并验证稳定 Holder Identity、Delayed
    Capture、Presentation Recreation、Nested Host、Pane、Overlay 与 Removal。
 6. Phase 6 收敛 Reducer/Executor 并删除被替代的命令编排。

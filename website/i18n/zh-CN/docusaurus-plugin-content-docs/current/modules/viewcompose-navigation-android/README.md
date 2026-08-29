@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: bfef9962b5d9d44a6ea904021e69fd81a441f428c308f87769e3c019b832d2e2
+translation_source_hash: 6c8bc72620c7438f20c97298e9f3a4bbcd3c119a482e19d9c62920e77d270ac7
 translation_status: current
 ---
 
@@ -8,8 +8,8 @@ translation_status: current
 
 `viewcompose-navigation-android` 把 `viewcompose-navigation-core` 状态挂载为原生 Android View 页面。
 它负责目的地和图的生命周期边界、带作用域的 ViewModel Owner Lease、SavedStateRegistry
-命名空间、子渲染会话、事务失败恢复、Android 系统返回与预测性返回、自适应 pane 布局，以及
-感知命令类型的 View motion。
+命名空间、受策略约束的子渲染会话、事务失败恢复、Android 系统返回与预测性返回、自适应 pane
+布局，以及感知命令类型的 View motion。
 
 应用仍使用 Activity 或 Window 作为最外层 Android 宿主，但单个页面不需要 Activity 或 Fragment。
 平台无关返回栈仍位于 `viewcompose-navigation-core`；本模块是它的 Android 执行边界。
@@ -52,10 +52,11 @@ fun UiTreeBuilder.AppNavigation() {
 一个 `NavHostController` 同时只能连接一个活跃 `NavHost`。导航命令必须在主线程调用且要求宿主
 已连接，确保 core 事务、目的地渲染、owner 生命周期和原生 View 层级共用同一个提交边界。
 
-`NavHost` 为每个目的地创建一个保留的子渲染会话。隐藏 entry 会保留会话和 owner，但暂停帧驱动
-渲染。宿主会更新其捕获环境，但不会立即渲染所有保留页面。保留目的地通过 pop、stack
-选择或历史、预测性返回、自适应 pane 扩展而新进入可见 pane 集合前，同一个会话会先使用最新环境
-完成渲染；新准备的目的地不会重复渲染。
+`NavHost` 为每个目的地保留一条逻辑 owner 记录，并仅在策略和可见性要求原生展示时创建子渲染
+会话。隐藏 entry 始终保留 Lifecycle、ViewModel、Saved-state、Saveable-state、Route 和 Graph
+Identity。没有展示实例的目的地通过 Pop、Stack 选择或历史、预测性返回、自适应 Pane 扩展而进入
+可见集合前，会先使用最新捕获环境重建展示。重建失败会释放所有候选展示，并保留此前的 Stack 与
+Scene。
 
 每个目的地 Session 都会获得 `NavigationDestination` 诊断角色，以及随 `NavHost` Local 快照
 捕获的父 Session ID。保留期间逻辑身份不变；失败候选会发出自己的终止序列，重建目的地则获得
@@ -67,6 +68,42 @@ fun UiTreeBuilder.AppNavigation() {
 
 默认嵌套 Overlay Factory 显式构造 `viewcompose-overlay-android`，不会按 Classpath 顺序发现
 Material Backend。具名设计集成在目的地 Surface 需要额外 Presenter 时可以传入显式 Factory。
+
+## 展示保留策略
+
+`NavPresentationRetentionPolicy` 独立于 Entry Ownership 控制原生展示生命周期。
+`DisposeWhenHidden` 是默认策略：转场稳定后，每个完全隐藏页面的子 `RenderSession` 和 View Tree
+都会释放，而 Entry Owner 仍保留在 `CREATED`。`RetainAll` 是显式的无界选择，只应在实测证明
+Surface 重建代价足以抵消内存、Effect、Focus、Accessibility 与原生资源成本时使用。`Bounded`
+保留正数上限的隐藏展示，并按确定性的“最久未隐藏”顺序淘汰。可见 Pane、普通转场参与者和预测性
+转场参与者都不计入该上限。
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-presentation-retention" sample_id="module.navigation-android-presentation-retention" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
+    NavHost(
+        controller = controller,
+        presentationRetentionPolicy = NavPresentationRetentionPolicy.Bounded(
+            maxHiddenPresentations = 2,
+        ),
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+```
+
+修改现有 Host 的策略不会重建 Host 或任何 Entry Owner。收紧上限会立即释放超限的隐藏展示；放宽
+策略只影响之后创建或隐藏的展示，不会急切构建当前不可见页面。首次连接、配置恢复连接和进程恢复
+连接都只物化当前可见 Pane 集合，即使选择 `RetainAll` 也是如此。
+
+Phase 4 的真机对比使用一台运行 API 33 的 Pixel 4 XL 和合成的重型 13 层栈。
+`DisposeWhenHidden` 保留 1 个 Presentation，进程 PSS 为 185,510 KiB；`RetainAll` 保留 13 个，
+PSS 为 191,953 KiB。即 Presentation 少 12 个（92.3%），进程 PSS 少 6,443 KiB（3.4%）。同步
+Pop 并重建的中位耗时从 13,318 us 增至 49,573 us，即增加 272.2%。另一轮带动画对比为每个策略
+在 90 Hz 下采集 252 帧；两者 P95 均为 9 ms，超过 32 ms 的帧均为 0。结论为 **mixed**：有界
+默认策略改善空闲资源所有权，并在本次稳定帧样本中为 **no material change**；实测重建昂贵的页面
+可以选择 `Bounded` 或 `RetainAll`。这不是通用 Benchmark：它只使用一台设备、合成内容、进程级
+PSS 与短时运行。下一步由 Phase 7 继续验证更广设备、泄漏和代表性负载。
 
 ## 命令结果与重入
 
@@ -156,6 +193,7 @@ Android 宿主保持 navigation core 的两阶段保证：先准备新目的地�
 - 每个页面或图拥有的 ViewCompose saveable 值。
 
 待处理事务、运行动画、View、会话、LifecycleRegistry 实例和 ViewModelStore 内容不会序列化。
+首次连接和恢复连接只物化可见 Pane 集合；保留的隐藏 Owner 会重建，但不会急切执行目的地内容。
 配置重建可以通过父 Store 保留活跃 ViewModel；进程重建则会根据恢复后的状态输入创建新实例。
 
 恢复采用防御式策略。未知版本、错误集合类型、过多 entry、配置不匹配或图层级变化都会丢弃不兼容

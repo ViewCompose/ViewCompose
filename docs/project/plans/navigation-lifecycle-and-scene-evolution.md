@@ -12,12 +12,14 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
   - navigation.host
+  - navigation.presentation-retention
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-lifecycle-androidx
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-android-presentation-retention
   - module.navigation-core-scene-projection
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
@@ -44,8 +46,9 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 4 by separating logical entry retention from native presentation retention and measuring the safe default policy.
+next_action: Execute Phase 5 by publishing the stable per-entry destination presentation context without duplicating Lifecycle APIs or frame-rate state.
 maven_release_changesets:
+  - release/changes/20260829-navigation-presentation-retention.json
   - release/changes/20260829-navigation-scene-projection.json
   - release/changes/20260829-navigation-transition-lifecycle.json
 ---
@@ -55,16 +58,17 @@ maven_release_changesets:
 ## Status
 
 Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
-stabilization, Phase 2 Core scene projection, and Phase 3 Android transition lifecycle correction
-are complete.
+stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction, and
+Phase 4 entry/presentation lifetime separation are complete.
 
 Last verified: 2026-08-29.
 
-Next action: execute Phase 4 by separating logical entry retention from native presentation
-retention and measuring the safe default policy.
+Next action: execute Phase 5 by publishing the stable per-entry destination presentation context
+without duplicating Lifecycle APIs or frame-rate state.
 
 ## Maven release changesets
 
+- `release/changes/20260829-navigation-presentation-retention.json`
 - `release/changes/20260829-navigation-scene-projection.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
 
@@ -83,6 +87,13 @@ The app debug host and instrumentation are unpublished evidence. Governance V2 d
 application-facing declaration, so its one-impact-per-detected-change rule admits no public API
 impact record; the Changeset and owning architecture, module, migration, and plan documents record
 the behavior correction.
+
+Phase 4 classifies Navigation Android as breaking because the Alpha `NavHost` declaration gains the
+explicit `presentationRetentionPolicy` input and its previous implicit retain-all behavior is
+hard-cut to the bounded `DisposeWhenHidden` default. The new Q3
+`NavPresentationRetentionPolicy` capability, compiled sample, public-host impact disposition, and
+immutable Changeset travel with the same slice. The app debug host and instrumentation remain
+unpublished acceptance evidence; release planning derives reverse-dependency propagation.
 
 ## Objective
 
@@ -406,8 +417,8 @@ same slice that establishes its replacement:
 | 1 | Generic Lifecycle DSL stabilization | One consumption surface passes host, race, replacement, failure, effect, and Flow contracts | Complete |
 | 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Complete |
 | 3 | Android transition lifecycle correction | Ordinary, predictive, and pane transitions match the matrix; unsupported general overlay execution has an explicit disposition | Complete |
-| 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Next |
-| 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Pending |
+| 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Complete |
+| 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Next |
 | 6 | Reducer and executor convergence | One typed plan owns stack, scene, lifecycle, presentation, focus, and effects; obsolete paths are absent | Pending |
 | 7 | Capability and test closure | Typed routes and ecosystem gaps have accepted dispositions; unit, device, coverage, memory, and performance gates pass | Pending |
 | 8 | Documentation, release, and archive | Durable conclusions are current, Changesets are released or accepted, all gates pass, and the plan is archived | Pending |
@@ -630,6 +641,56 @@ memory/frame measurements.
 3. Restore hidden presentations transactionally before they become visible or interactive.
 4. Select the default using accepted device memory, recreation, and frame evidence; interpret the
    result in active performance and navigation documentation.
+
+#### Phase 4 acceptance
+
+Navigation Android now stores retained entry ownership independently from its optional native
+presentation. `DisposeWhenHidden` is the bounded default, `RetainAll` is an explicit unbounded
+opt-in, and `Bounded(maxHiddenPresentations)` applies a positive deterministic
+least-recently-hidden limit. Visible panes and ordinary or predictive transition participants are
+never eviction candidates. Initial and restored attachment materializes only visible entries;
+revealing an entry without a presentation transactionally renders and stages every candidate before
+publishing the new stack and scene. Candidate failure disposes new presentations while preserving
+the old scene, entry owner, ViewModel, and saved state. Permanent removal disposes presentation
+before owner destruction.
+
+The public policy and changed `NavHost` contract remain Q3 and carry canonical KDoc, complete
+capability-impact dispositions, one compiled sample, module/architecture/guide/migration updates,
+required Simplified Chinese mirrors, and one breaking Navigation Android Changeset. No legacy
+implicit retain-all path or compatibility flag remains.
+
+A fresh Navigation Android JVM/Robolectric run passed 157 of 157 tests with zero failures, errors,
+or skips, six more than the 151-test Phase 3 baseline (4.0%). New focused coverage proves hidden
+disposal and rebuild, stable owner/ViewModel/rememberSaveable/SavedStateHandle identity, failed
+rebuild rollback and retry, deterministic bounded eviction, permanent removal after prior disposal,
+invalid bounds, restored attachment, and public-host behavior. This improves contract coverage; it
+does not measure reachability leaks or OEM behavior.
+
+Two instrumentation invocations passed 4 of 4 selected cases on a physical Pixel 4 XL running API
+33. The ownership case proves disposal and recreation preserve the same owner and ViewModel plus
+saveable and SavedStateHandle values; the bounded case proves the exact hidden-presentation limit.
+The comparative synthetic heavy 13-entry stack retained 1 presentation under `DisposeWhenHidden`
+and 13 under `RetainAll`, while process PSS was 185,510 KiB versus 191,953 KiB. This is 12 fewer
+presentations (92.3%) and 6,443 KiB lower PSS (3.4%). Synchronous pop-and-rebuild median time was
+49,573 us versus 13,318 us, a 36,255 us or 272.2% increase. The separate animated comparison
+captured 252 frames per policy at 90 Hz; both reported 9 ms P95 and zero frames above 32 ms.
+
+Conclusion: **mixed** performance and **improved** bounded resource ownership. The default accepts
+rebuild work in exchange for eliminating unbounded hidden View/RenderSession retention; measured
+settled-frame behavior showed **no material change**, and applications can select `Bounded` or
+`RetainAll` for measured expensive surfaces. The evidence is limited to one API-33 device,
+synthetic content, process-wide PSS, short runs, and in-process recreation rather than process-kill.
+Leak reachability, broader devices, multiple retained stacks, and representative workloads remain
+**inconclusive** and stay assigned to Phase 7. Next action: execute Phase 5's stable destination
+presentation context.
+
+The full `qaQuick` gate then passed all 2,268 actionable tasks: 206 executed and 2,062 were up to
+date. Governance V2 reported zero issues against base `a29780d4`, translation verification reported
+126 current and zero stale required Chinese pages, release-intent verification classified exactly
+one breaking Navigation Android artifact, and development-tooling isolation passed. `qaPreview`
+passed all 1,209 actionable tasks: 140 executed and 1,069 were up to date, including Paparazzi and
+both Preview host suites. This is **improved** integration confidence and **no material change** in
+Preview behavior; the mixed cache state is verification context rather than performance evidence.
 
 ### Phase 5: expose destination presentation context
 

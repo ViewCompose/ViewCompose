@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - navigation.host
+  - navigation.presentation-retention
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
@@ -18,11 +19,13 @@ success_checks:
   - Destination state survives host recreation and valid process-state restoration.
   - Programmatic and system Back operations observe the same committed stack.
   - Failed destination preparation preserves the previously visible destination.
+  - Hidden presentation resources follow one explicit bounded retention policy without clearing entry state.
 failure_checks:
   - A controller is attached to more than one active NavHost or receives commands while detached.
   - NavHost is mounted without a LocalViewModelStoreOwner boundary.
   - Route or graph changes silently reuse incompatible restored ownership state.
   - A queued command is treated as committed completion.
+  - RetainAll is selected without application-specific memory and rebuild evidence.
 ---
 
 # Configure a production navigation host
@@ -77,6 +80,26 @@ Observable ViewCompose state invalidates the owning destination session directly
 controller, lifecycle owner, parent ViewModelStore owner, overlay factory, debug identity, or host
 `key` changes ownership and therefore recreates the native host.
 
+## Choose presentation retention deliberately
+
+Keep the default `NavPresentationRetentionPolicy.DisposeWhenHidden` unless device evidence for a
+specific destination shows that rebuilding its native View tree is unacceptable. The default
+disposes a fully hidden `RenderSession`, View tree, effects, focus, accessibility state, and native
+resources after transition settlement. It preserves the destination owner, ViewModels,
+SavedStateRegistry, `rememberSaveable` values, route arguments, and graph identity. Reveal then
+rebuilds the presentation transactionally before publishing the new scene.
+
+Use `NavPresentationRetentionPolicy.Bounded(maxHiddenPresentations = n)` when an application needs
+a measured cache across several recently hidden surfaces. The positive maximum counts only hidden
+presentations; visible panes and transition participants are outside the bound. Use `RetainAll`
+only as an explicit, measured opt-in. It is unbounded across deep and multiple stacks and therefore
+is not a safe general default.
+
+Changing the policy does not recreate `NavHost` or its entry owners. Tightening a policy evicts
+excess hidden presentations immediately; relaxing it affects future presentations and does not
+eagerly compose hidden stacks. Initial, configuration-restored, and process-restored attachment
+materializes only the visible pane set.
+
 ## Handle command outcomes
 
 Every controller command returns `NavResult`:
@@ -112,10 +135,13 @@ Then verify one real host journey:
    the stack unchanged; completion must pop exactly once.
 5. Inject a destination-render failure through the application's test seam. The previous page must
    remain visible when `stackCommitted` is false, and `onFailure` must receive the exact phase.
+6. Build a deep stack under the selected presentation policy. Verify the native presentation count,
+   then reveal an evicted page and confirm owner, ViewModel, and saveable-state identity are stable.
 
-The task is complete only when all five checks pass. A detached-command exception, changed entry
+The task is complete only when all six checks pass. A detached-command exception, changed entry
 identity after ordinary Activity recreation, duplicate pop, visible candidate after failed render,
-premature ViewModel clear, or treating `Queued` as completion is a failed configuration.
+premature ViewModel clear, unbounded hidden Views without explicit policy, or treating `Queued` as
+completion is a failed configuration.
 
 ## Choose the next focused task
 

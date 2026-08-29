@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: 1363de49917a356a0a0aa0288e785e722948b428961bba37bbd1ff84fd923c66
+translation_source_hash: 723ab24c61d904840a1014019cdefbb192ed67e9d4b17c7fead1389143ab4483
 translation_status: current
 ---
 
@@ -129,8 +129,8 @@ owner 传播、多返回栈、恢复、Predictive Back，也不覆盖任何 Navi
 | Entry 与 graph owner | `NavBackStackEntry` 拥有生命周期、ViewModel 和保存状态。Lifecycle 2.11 增加了可继承父级 factory 与 `CreationExtras` 的 Navigation3 ViewModel decorator。 | 每个目的地和 graph 都有自己的 lifecycle、saved-state owner、ViewCompose saveable-state registry 和租赁的 ViewModelStore。owner 继承必需的 host 父级默认 Factory 与初始 extra，再替换自己的子级所有权与 route 默认值。 | Supported | [`NavEntryOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt)、[`NavGraphOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt)、[`NavEntryOwnerEnvironment.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt)，以及 [`NavEntryOwnerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt)与 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的 Factory、extra、SavedStateHandle、目的地和 graph 覆盖。 |
 | Scoped ViewModel 与多栈 | Lifecycle 2.11 可把 `ViewModelStoreProvider` 提升到 Navigation3 decorator 之上，让多个返回栈保留彼此隔离的 entry store。 | `NavHost` 在必需的父 owner 之下使用共享 `ViewModelScopeProvider`。保存的 host-scope 身份与 entry/graph 身份会让彼此隔离的 store 跨栈切换和配置重建保留；终态 pop、graph 删除和宿主正常移除会清理它们。 | Supported | [`NavHostRuntime.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostRuntime.kt)、[`NavEntryOwnerStore.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerStore.kt)、[`NavEntryOwnerStoreTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的同 route 保留栈隔离测试。导航只负责生命周期和身份协调，不再维护第二套 ViewModelStore 分配器。 |
 | 目的地生命周期 | 导航 Entry 是 Lifecycle Owner；Navigation 3 Scene 可以呈现多个 Entry。 | `NavSceneEntry` 根据 Presence、Visibility、Interaction、Transition、Pane 与 Layer Role 推导 Scene 和 Entry Cap；Planner 应用 `min(host, scene, entry)`。Android Host 为普通与 Predictive 转场冻结 Scene，把可见参与者限制为 `STARTED`、已 Pop 的离场页面限制为 `CREATED`，并只在终态结束后 Resume 稳定的可交互 Pane。 | Supported | `NavScene.kt`、`NavLifecyclePlanner.kt`、转场与自适应 Coordinator 测试，以及 `NavigationBackDeviceTest.kt` 中定向真机 Lifecycle 测试。支持范围包括当前单 Pane 与多 Pane Host Scene；通用 Overlay 导航仍是独立的部分支持能力。 |
-| 隐藏目的地 composition | 导航状态可以独立于 Compose 内容是否仍在 Composition 中而保留。Navigation 3 decorator 会保留 entry 状态。 | 隐藏目的地保留其 `RenderSession`；帧驱动渲染会禁用，但 composition 作用域的协程和 Effect 仍由存活会话拥有。 | Partially supported | [`NavDestinationSessionStore.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationSessionStore.kt)、[`RenderSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt)和 [`NavDestinationSessionStoreTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt)。隐藏不等于已释放。 |
-| 多返回栈 | Navigation 2 使用保存/恢复选项；Navigation 3 记录了应用拥有多个列表的方案。 | 一个 `NavStackConfiguration` 拥有全部栈、选择历史和根 Back 行为。未选择栈的会话与 owner 仍保持存活。 | Intentionally different | [`NavStackConfiguration.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavStackConfiguration.kt)、[`NavBackStackSetControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackSetControllerTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的多栈恢复覆盖。 |
+| 隐藏目的地 composition | 导航状态可以独立于 Compose 内容是否仍在 Composition 中而保留。Navigation 3 decorator 会保留 entry 状态。 | 逻辑 Entry Owner、ViewModel、Saved State 与 Saveable State 独立于原生展示存活。`DisposeWhenHidden` 是有界默认；也可显式全保留或按“最久未隐藏”保留正数上限。再次展示时会事务性重建缺失 Presentation。 | Supported | `NavPresentationRetentionPolicy.kt`、`NavDestinationSessionStore.kt`、Owner/Rebuild/LRU 单测，以及 `NavigationBackDeviceTest.kt` 中的真机 Identity 与资源数量覆盖。 |
+| 多返回栈 | Navigation 2 使用保存/恢复选项；Navigation 3 记录了应用拥有多个列表的方案。 | 一个 `NavStackConfiguration` 拥有全部栈、选择历史和根 Back 行为。未选择栈的 Owner 保持存活，可选 Presentation 则遵循 Host Retention Policy。 | Intentionally different | [`NavStackConfiguration.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavStackConfiguration.kt)、[`NavBackStackSetControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackSetControllerTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的多栈恢复覆盖。 |
 | 深层链接 | Navigation 2 匹配 URI、action 和 MIME type。Navigation 3 提供把外部输入解析成应用 key 的方案。 | ViewCompose 解析严格的绝对 URI pattern 和 Android `ACTION_VIEW` 输入，支持嵌套 graph 与调用方指定的 launch mode，拒绝歧义匹配，且不匹配任意 action 或 MIME type。输入中的额外 query 参数可存在，但不能影响 route 参数或导航策略。 | Partially supported | [`NavDeepLink.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt)、[`NavDeepLinkTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavDeepLinkTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的公共 host 策略覆盖。部分支持来自刻意缩小的 action/MIME 能力面，而不是未解决的 query 契约。 |
 | 保存、恢复与进程死亡 | Navigation 2 恢复控制器和 entry 状态；Navigation 3 恢复可保存 key 和 decorator 状态。二者都不会恢复存活的 ViewModel 实例。 | ViewCompose 保存完整的已配置栈集合、route value、entry 和 graph saved state、saveable value，以及私有 host-scope 身份。它只在配置重建期间通过父 store 保留存活 ViewModel；版本 4 快照会用新的 scope 身份迁移；损坏或结构无效的状态会被拒绝。 | Supported | [`NavHostSavedState.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostSavedState.kt)、[`NavHostSavedStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostSavedStateTest.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的恢复覆盖。存活的 View、ViewModel、Effect、动画和未提交事务都不会跨进程恢复。 |
 | 系统 Back 与 Predictive Back | Navigation 2 Compose 集成 Predictive Back。Navigation 3 使用 NavigationEvent 和 scene transition。Activity 1.13 在 NavigationEvent 之上继续兼容 `OnBackPressedDispatcher`。 | Android 宿主注册 `OnBackPressedCallback`，并通过事务式 preview driver 支持 predictive start、progress、cancel 和 commit。 | Supported | [`AndroidNavHostBackAdapter.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/AndroidNavHostBackAdapter.kt)、[`AndroidNavHostBackAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/AndroidNavHostBackAdapterTest.kt)，以及 API 33 Pixel 4 XL 真机上 2/2 项定向 Predictive/Lifecycle Instrumentation。此次未重跑 API 34 平台边缘手势分发。 |
@@ -163,6 +163,13 @@ route 身份、屏幕内容、生命周期收集、ViewModel 作用域、保存�
 
 宿主暂存 controller 状态，尝试渲染原生树，并且只在渲染成功后提交导航事务。失败时保留此前
 已提交的栈和已挂载目的地树。
+
+隐藏 Presentation 生命周期是一项显式迁移决策。默认
+`NavPresentationRetentionPolicy.DisposeWhenHidden` 最接近“保留导航状态并不要求存活
+Composition”的模型：它保留 Destination/Graph Owner、ViewModel、SavedStateRegistry 和
+`rememberSaveable` 值，同时释放原生 View Tree 与 Composition Effect。应用只应在选定正数缓存
+上限后使用 `Bounded`，也只应在真机证据证明无界隐藏资源合理时使用 `RetainAll`。恢复后的 Host
+只创建可见 Pane 集合；选择非活跃 Stack 时会先重建 Presentation，再发布该 Scene。
 
 ## Graph、route 与参数 {/* #graphs-routes-and-arguments */}
 
@@ -237,20 +244,20 @@ entry 修复属于上游可靠性变化，并不能证明 ViewCompose 支持任�
 
 ## 隐藏目的地保留 {/* #hidden-destination-retention */}
 
-隐藏的 ViewCompose 目的地会保留其 `RenderSession`、owner、已挂载 View 树和 composition
-协程作用域。宿主把帧驱动渲染设为 inactive 并隐藏根 View，但仅仅隐藏不会释放 composition，
-也不会取消 composition 作用域工作。
+隐藏的 ViewCompose 目的地始终保留逻辑 Owner、ViewModel、Saved State 与 Saveable State，但
+原生 Presentation 由 `NavPresentationRetentionPolicy` 独立控制。默认 `DisposeWhenHidden` 会在
+转场稳定后释放 `RenderSession`、已挂载 View Tree 和 Composition Scope；页面 Lifecycle 仍保持
+`CREATED`，再次可见前会事务性重建 Presentation。
 
-任何需要在页面隐藏时停止的工作都必须感知生命周期，并在低于所需目的地生命周期状态时停止。
-不要只依赖 composition 释放，因为只有在 entry 被永久删除、graph 被销毁或宿主被拆除时才会
-释放。这与“Compose 内容离开 Composition、只保留 saveable entry 状态”的迁移代码存在实质
-差异。
+`Bounded` 按正数上限保留最近隐藏的 Presentation，`RetainAll` 则是显式无界选择。无论使用哪种
+策略，需要随页面可见或可交互阈值启停的业务工作仍应感知 Lifecycle；Presentation 释放只是资源
+所有权边界，不替代 Lifecycle 协议。
 
 ## 多返回栈
 
 `NavStackConfiguration` 声明栈集合、初始选择、选择历史行为和根 Back 策略。选择另一个栈时，
-会保留上一个栈的 entry、owner、View 和会话。因此，状态成本来自存活对象保留，而不只是序列化
-返回栈。
+会保留上一个栈的 Entry 与 Owner，而 View 和 Session 是否存活由 Presentation Retention Policy
+决定。因此，状态成本与原生展示成本可以分别约束。
 
 Lifecycle 2.11 Navigation3 集成可以在多个栈显示之间提升 ViewModelStore provider，同时隔离
 重复 key 的 store。ViewCompose 依赖自己的 stack 和 entry 身份。跨 tab 迁移重复 route key

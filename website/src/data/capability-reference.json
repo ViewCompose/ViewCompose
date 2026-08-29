@@ -805,6 +805,22 @@
       }
     },
     {
+      "capabilityId": "navigation.presentation-retention",
+      "referenceId": "reference.navigation.presentation-retention",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "architecture.scene-derived-navigation-lifecycle-presentation-ownership",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-android-presentation-retention",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "navigation.scene-projection",
       "referenceId": "reference.navigation.scene-projection",
       "relatedDocumentIds": [
@@ -4150,6 +4166,14 @@
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.presentation-retention",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavPresentationRetentionPolicy"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
           "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
@@ -4580,7 +4604,7 @@
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
-      "entryCount": 168,
+      "entryCount": 169,
       "groupId": "integrations"
     },
     {
@@ -6338,13 +6362,13 @@
       "component": 72,
       "dsl": 33,
       "host": 53,
-      "integration": 168,
+      "integration": 169,
       "modifier": 77,
       "tooling": 130
     },
-    "entryCount": 533,
+    "entryCount": 534,
     "groupCount": 15,
-    "ownedEntryCount": 533,
-    "sourceFingerprint": "fc101529fa0a047f346c465d8ffbceee326d6d15b8366a03fc751fc2c6992b56"
+    "ownedEntryCount": 534,
+    "sourceFingerprint": "9701e56af575b2d3a9ec02714ec56777c7acb0b245a10be4fa5f5f9171cc1483"
   }
 }

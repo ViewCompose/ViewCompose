@@ -8,11 +8,13 @@ owner:
 version_lane: released
 capability_ids:
   - navigation.host
+  - navigation.presentation-retention
 artifact_ids:
   - viewcompose-navigation-android
 sample_ids:
   - module.navigation-android-dependency
   - module.navigation-android-host
+  - module.navigation-android-presentation-retention
 coordinate: com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02
 minimal_usage_sample_id: module.navigation-android-dependency
 ---
@@ -21,8 +23,8 @@ minimal_usage_sample_id: module.navigation-android-dependency
 
 `viewcompose-navigation-android` mounts `viewcompose-navigation-core` state as native Android View pages. It
 owns destination and graph lifecycle boundaries, scoped ViewModel owner leases, SavedStateRegistry
-namespaces, child render sessions, transactional failure recovery, Android system and predictive
-Back, adaptive pane layout, and command-aware View motion.
+namespaces, policy-bound child render sessions, transactional failure recovery, Android system and
+predictive Back, adaptive pane layout, and command-aware View motion.
 
 The application still uses an Activity or Window as its outer Android host, but individual pages do
 not require an Activity or Fragment. The platform-neutral back stack remains in
@@ -69,12 +71,12 @@ One `NavHostController` can be attached to exactly one active `NavHost`. Navigat
 main-thread APIs and require attachment so the core transaction, destination rendering, owner
 lifecycle, and native View hierarchy share one commit boundary.
 
-`NavHost` creates one retained child render session per destination. Hidden stack entries keep their
-session and owners but pause frame-driven rendering. The host updates their captured environment
-without eagerly rendering every retained page. Immediately before a retained destination newly
-enters the visible pane set through pop, stack selection/history, predictive Back, or adaptive-pane
-expansion, that same session renders against the latest environment. Newly prepared destinations
-are not rendered twice.
+`NavHost` retains one logical owner record per destination and creates a child render session only
+when policy and visibility require a native presentation. Hidden entries always retain lifecycle,
+ViewModel, saved-state, saveable-state, route, and graph identity. A missing presentation is rebuilt
+against the latest captured environment before pop, stack selection/history, predictive Back, or
+adaptive-pane expansion can publish the entry as visible. Failed rebuilds dispose every candidate
+presentation and preserve the previous stack and scene.
 
 Each destination session receives the `NavigationDestination` diagnostics role and the parent
 session ID captured with the `NavHost` Local snapshot. Retention preserves that logical identity;
@@ -89,6 +91,47 @@ ownership rather than content.
 The default nested overlay factory explicitly constructs `viewcompose-overlay-android`; it never
 discovers a Material backend from classpath order. A named design integration may pass an explicit
 factory when its destination surfaces require additional presenters.
+
+## Presentation retention
+
+`NavPresentationRetentionPolicy` controls native presentation lifetime independently of entry
+ownership. `DisposeWhenHidden` is the default: after transition settlement, every fully hidden
+child `RenderSession` and View tree is disposed while its entry owner remains at `CREATED`.
+`RetainAll` is an explicit unbounded opt-in for surfaces whose measured rebuild cost justifies the
+memory, effect, focus, accessibility, and native-resource cost. `Bounded` retains a positive maximum
+of hidden presentations and evicts the least-recently-hidden presentation deterministically.
+Visible panes and ordinary or predictive transition participants do not count against that bound.
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-presentation-retention" sample_id="module.navigation-android-presentation-retention" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
+    NavHost(
+        controller = controller,
+        presentationRetentionPolicy = NavPresentationRetentionPolicy.Bounded(
+            maxHiddenPresentations = 2,
+        ),
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+```
+
+Changing the policy on an existing host does not recreate the host or any entry owner. Tightening
+the bound disposes excess hidden presentations immediately. Relaxing it affects presentations that
+are created or hidden later; it does not eagerly build pages that are not visible. On initial,
+configuration-restored, or process-restored attachment, only the current visible pane set is
+materialized even under `RetainAll`.
+
+The Phase 4 device comparison used a physical Pixel 4 XL on API 33 and a synthetic heavy 13-entry
+stack. `DisposeWhenHidden` retained 1 presentation and reported 185,510 KiB PSS; `RetainAll`
+retained 13 and reported 191,953 KiB. That is 12 fewer presentations (92.3%) and 6,443 KiB lower
+process PSS (3.4%). Synchronous pop-and-rebuild median time increased from 13,318 us to 49,573 us,
+or 272.2%. A separate animated comparison captured 252 frames per policy at 90 Hz; both reported
+9 ms P95 and zero frames above 32 ms. The interpretation is **mixed**: the bounded default improves
+idle resource ownership and has **no material change** in this settled-frame sample, while measured
+expensive pages may prefer `Bounded` or `RetainAll`. This is not a universal benchmark: it uses one
+device, synthetic content, process-wide PSS, and a short run. Phase 7 keeps broader device, leak,
+and representative-workload validation as the next action.
 
 ## Command results and re-entrancy
 
@@ -191,9 +234,10 @@ surfaced as `NavHostException` with the original cause, failed entry, and render
 - ViewCompose saveable values owned by each page or graph.
 
 Pending transactions, running animations, Views, sessions, LifecycleRegistry instances, and
-ViewModelStore contents are not serialized. Configuration recreation may retain live ViewModels
-through the parent store; process recreation restores their saved-state inputs into newly created
-instances.
+ViewModelStore contents are not serialized. Initial and restored attachment materialize only the
+visible pane set; retained hidden owners are recreated without executing destination content.
+Configuration recreation may retain live ViewModels through the parent store; process recreation
+restores their saved-state inputs into newly created instances.
 
 Restore is defensive. Unknown versions, malformed collection types, excessive entry counts,
 configuration mismatch, or graph hierarchy changes discard incompatible saved state and create the
