@@ -283,6 +283,10 @@ class NavHostTransitionCoordinatorTest {
         val preview = checkNotNull(
             coordinator.beginBackPreview(backEvent(progress = 0f)),
         )
+        val rootContext = checkNotNull(ownerStore.ownerOrNull(root.id)).destinationContext
+        val detailsContext = checkNotNull(ownerStore.ownerOrNull(details.id)).destinationContext
+        val rootPreviewPresentation = rootContext.presentation.value
+        val detailsPreviewPresentation = detailsContext.presentation.value
 
         assertSame(preview, coordinator.activeBackPreview)
         assertEquals(listOf("home", "details"), coordinator.routeNames())
@@ -301,6 +305,8 @@ class NavHostTransitionCoordinatorTest {
                         entry.interaction == NavSceneInteraction.NonInteractive
                 },
         )
+        assertSame(preview.scene[root.id], rootPreviewPresentation)
+        assertSame(preview.scene[details.id], detailsPreviewPresentation)
 
         assertTrue(
             coordinator.updateBackPreview(
@@ -310,6 +316,8 @@ class NavHostTransitionCoordinatorTest {
         )
         assertEquals(0.4f, transitionDriver.latestBackPreview.events.last().progress)
         assertEquals(listOf("home", "details"), coordinator.routeNames())
+        assertSame(rootPreviewPresentation, rootContext.presentation.value)
+        assertSame(detailsPreviewPresentation, detailsContext.presentation.value)
     }
 
     @Test

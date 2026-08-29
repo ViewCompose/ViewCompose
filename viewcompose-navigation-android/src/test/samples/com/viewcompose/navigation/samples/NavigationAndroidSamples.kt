@@ -2,6 +2,7 @@ package com.viewcompose.navigation.samples
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
+import com.viewcompose.navigation.LocalNavDestinationContext
 import com.viewcompose.navigation.NavDestinationMotionSpec
 import com.viewcompose.navigation.NavDestinationTransform
 import com.viewcompose.navigation.NavHost
@@ -13,17 +14,17 @@ import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavRoute
-import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
-import com.viewcompose.viewmodel.viewModel
+import com.viewcompose.runtime.MutableState
 import com.viewcompose.ui.foundation.Text
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.sharedBounds
-import com.viewcompose.ui.shared.SharedContentKey
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTreeBuilder
-import com.viewcompose.runtime.MutableState
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.sharedBounds
+import com.viewcompose.ui.shared.SharedContentKey
+import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
+import com.viewcompose.viewmodel.viewModel
 
 fun navHostControllerSample(controller: NavHostController) {
     when (val result = controller.navigate(NavRoute("details"))) {
@@ -74,6 +75,15 @@ fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
     }
 }
 // DOCS_REGION_END(navigation-android-presentation-retention)
+
+// DOCS_REGION_START(navigation-android-destination-context)
+fun UiTreeBuilder.destinationContextSample(controller: NavHostController) {
+    NavHost(controller = controller) { entry ->
+        val presentation = checkNotNull(LocalNavDestinationContext.current).presentation.value
+        Text("${entry.route.name}: ${presentation.visibility}, ${presentation.paneRole}")
+    }
+}
+// DOCS_REGION_END(navigation-android-destination-context)
 
 private fun UiTreeBuilder.HomePage(controller: NavHostController) {
     Text("Home: ${controller.snapshot.top.route.name}")

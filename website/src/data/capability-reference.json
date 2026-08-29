@@ -787,6 +787,22 @@
       }
     },
     {
+      "capabilityId": "navigation.destination-context",
+      "referenceId": "reference.navigation.destination-context",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "architecture.scene-derived-navigation-lifecycle-presentation-ownership",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-android-destination-context",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "navigation.host",
       "referenceId": "reference.navigation.host",
       "relatedDocumentIds": [
@@ -4054,6 +4070,14 @@
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.destination-context",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.LocalNavDestinationContext"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
           "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
@@ -4070,11 +4094,27 @@
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.destination-context",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavDestinationContext"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
           "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
           "symbol": "com.viewcompose.navigation.NavDestinationMotionSpec"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.destination-context",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavDestinationPresentation"
         },
         {
           "artifact": "viewcompose-navigation-android",
@@ -4604,7 +4644,7 @@
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
-      "entryCount": 169,
+      "entryCount": 172,
       "groupId": "integrations"
     },
     {
@@ -6362,13 +6402,13 @@
       "component": 72,
       "dsl": 33,
       "host": 53,
-      "integration": 169,
+      "integration": 172,
       "modifier": 77,
       "tooling": 130
     },
-    "entryCount": 534,
+    "entryCount": 537,
     "groupCount": 15,
-    "ownedEntryCount": 534,
-    "sourceFingerprint": "9701e56af575b2d3a9ec02714ec56777c7acb0b245a10be4fa5f5f9171cc1483"
+    "ownedEntryCount": 537,
+    "sourceFingerprint": "0fd26fefc2003e5f8a097ba6ba2dfda140bbb80e8353d086d7a8c52861661e5e"
   }
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 6c8bc72620c7438f20c97298e9f3a4bbcd3c119a482e19d9c62920e77d270ac7
+translation_source_hash: e38506d957e526c58bc3c26bb2c12146e5c4ab6e075a64708b0638c7a3706187
 translation_status: current
 ---
 
@@ -68,6 +68,34 @@ Scene。
 
 默认嵌套 Overlay Factory 显式构造 `viewcompose-overlay-android`，不会按 Classpath 顺序发现
 Material Backend。具名设计集成在目的地 Surface 需要额外 Presenter 时可以传入显式 Factory。
+
+## Destination Context 上下文
+
+只有在声明最近 Destination 的内容时，`LocalNavDestinationContext.current` 才非空。稳定的
+`NavDestinationContext` 会公开精确的 `NavEntry` 身份和只读
+`State<NavDestinationPresentation>`。`NavDestinationPresentation` 是 Navigation Core
+`NavSceneEntry` 的源码别名，因此 Visibility、Interaction、Transition Phase、Pane Role 和
+Content/Overlay Layer Role 不会与 Lifecycle 规划所用 Scene 分叉。
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-destination-context" sample_id="module.navigation-android-destination-context" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.destinationContextSample(controller: NavHostController) {
+    NavHost(controller = controller) { entry ->
+        val presentation = checkNotNull(LocalNavDestinationContext.current).presentation.value
+        Text("${entry.route.name}: ${presentation.visibility}, ${presentation.paneRole}")
+    }
+}
+```
+
+后续回调需要 Destination 身份时，应在 DSL 声明阶段捕获 Context Holder，不要在 Effect 回调内读取
+Local。同一个 Retained Entry 的 Holder 可跨隐藏 Presentation 的释放与重建保持稳定。Entry 永久
+移除后它不再接收 Presentation 更新；Entry 的 AndroidX Lifecycle 会到达 `DESTROYED`，并继续作为
+资源终止的权威信号。
+
+数据收集、相机、传感器或播放器等资源阈值应使用 AndroidX Lifecycle API；Visible/Covered、Pane
+Role 或 Transition Role 等粗粒度 UI 决策才使用 Destination Presentation。普通与 Predictive
+动画进度被刻意排除，因此反复的逐帧 Progress 不会使普通 Destination 内容失效。嵌套 Host 会提供
+各自最近的 Context；框架不存在全局 Current Page 查询。
 
 ## 展示保留策略
 

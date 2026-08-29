@@ -11,6 +11,7 @@ capability_ids:
   - lifecycle.effects
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
+  - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
   - navigation.scene-projection
@@ -33,9 +34,10 @@ evidence:
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt
   - app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt
 translation_source: architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md
-translation_source_hash: 5f9ad6f63982c0987df61fff1f25864c70999fa8705d0010a19f0a2d595658bc
+translation_source_hash: 0bdf5139a9d61b9122d48e16158719e4287ad007abf7d6d2c2674ab6fdd9fadd
 translation_status: current
 ---
 
@@ -126,6 +128,11 @@ Presentation 销毁与重建继续存在。捕获的 Local 保存 Holder，而�
 
 粗粒度 Presentation 变化可以使 Destination Content 失效。逐帧 Transition 或 Predictive Progress
 被明确排除；需要连续 Motion 的内容使用独立 Opt-in Motion API，避免普通页面每帧重组。
+
+Phase 5 把该边界实现为 `NavEntryOwner` 持有的 Holder。Android 侧
+`NavDestinationPresentation` 名称是 Core `NavSceneEntry` 本身的源码别名；Owner Reconcile 会
+发布同一个不可变实例。单测证明了延迟 Local Capture、Presentation 释放/重建、嵌套 Host 覆盖、
+Pane 与 Overlay Role、永久移除，以及反复 Predictive Progress 不会发布更新。
 
 ### Entry 与 Presentation 生命周期相互独立
 

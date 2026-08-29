@@ -30,6 +30,8 @@ import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavDeepLink
 import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
+import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSelectionMode
@@ -60,6 +62,68 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class NavHostPublicApiTest {
+    @Test
+    fun `destination context survives hidden presentation disposal and recreation`() {
+        val contexts = mutableMapOf<String, NavDestinationContext>()
+        val observedPhases = mutableMapOf<String, MutableList<NavSceneTransitionPhase>>()
+        val controller = deterministicController()
+        val fixture = renderPublicHost(
+            controller = controller,
+            presentationRetentionPolicy = NavPresentationRetentionPolicy.DisposeWhenHidden,
+        ) { entry ->
+            val context = checkNotNull(LocalNavDestinationContext.current)
+            contexts[entry.route.name]?.let { previous -> assertSame(previous, context) }
+            contexts[entry.route.name] = context
+            observedPhases.getOrPut(entry.route.name, ::mutableListOf) +=
+                context.presentation.value.transitionPhase
+            Text(entry.route.name)
+        }
+        val homeContext = checkNotNull(contexts["home"])
+
+        controller.navigate(NavRoute("details"))
+
+        assertEquals(NavSceneVisibility.Hidden, homeContext.presentation.value.visibility)
+        assertEquals(1, fixture.navHostView.childCount)
+
+        controller.popBackStack()
+
+        assertSame(homeContext, contexts["home"])
+        assertSame(homeContext.entry, controller.snapshot.top)
+        assertEquals(NavSceneVisibility.Visible, homeContext.presentation.value.visibility)
+        assertEquals(NavSceneTransitionPhase.Settled, homeContext.presentation.value.transitionPhase)
+        assertTrue(checkNotNull(observedPhases["home"]).contains(NavSceneTransitionPhase.Prepared))
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `nested hosts override destination context without changing the parent holder`() {
+        val outerController = deterministicController()
+        val innerController = createNavHostController(
+            startDestination = NavRoute("nested-home"),
+            entryIdFactory = NavEntryIdFactory { NavEntryId("nested-root") },
+        )
+        var outerContext: NavDestinationContext? = null
+        var innerContext: NavDestinationContext? = null
+        val fixture = renderPublicHost(controller = outerController) { entry ->
+            outerContext = LocalNavDestinationContext.current
+            NavHost(
+                controller = innerController,
+                transitionSpec = NavTransitionSpec.None,
+                overlayHostFactory = { OverlayHostDefaults.noOp },
+            ) {
+                innerContext = LocalNavDestinationContext.current
+                Text("Nested")
+            }
+            assertSame(outerContext, LocalNavDestinationContext.current)
+            Text(entry.route.name)
+        }
+
+        assertSame(outerController.snapshot.top, checkNotNull(outerContext).entry)
+        assertSame(innerController.snapshot.top, checkNotNull(innerContext).entry)
+        assertNotSame(outerContext, innerContext)
+        fixture.session.dispose()
+    }
+
     @Test
     fun `public host rejects composition without a ViewModelStore owner`() {
         val application = RuntimeEnvironment.getApplication()

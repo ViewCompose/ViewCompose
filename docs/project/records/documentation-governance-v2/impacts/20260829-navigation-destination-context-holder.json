@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-destination-context-holder",
+  "change": "added",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.NavDestinationContext",
+  "capability_id": "navigation.destination-context",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.navigation.NavDestinationContext"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-navigation-android"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.navigation-android-destination-context"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.navigation.destination-context"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The introductory navigation tutorial does not need presentation-role observation to teach its first route transition."
+    },
+    "guide": {
+      "status": "updated",
+      "targets": ["guide.navigation-production-host"]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.navigation-runtime",
+        "architecture.scene-derived-navigation-lifecycle-presentation-ownership"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-navigation"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The capability adds a stable holder without moving an existing symbol or documentation route."
+    }
+  }
+}

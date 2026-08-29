@@ -20,6 +20,11 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
+import com.viewcompose.navigation.core.NavPaneRole
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneLayerRole
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
+import com.viewcompose.navigation.core.NavSceneVisibility
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -246,6 +251,107 @@ class NavigationBackDeviceTest {
                     Lifecycle.State.RESUMED,
                     activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
                 )
+                assertEquals(
+                    Lifecycle.State.DESTROYED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(0, activity.failureCount)
+            }
+        }
+    }
+
+    @Test
+    fun destinationContextSurvivesRebuildAndIgnoresPredictiveFrameProgress() {
+        launchHost(
+            retentionPolicy = NavigationBackTestActivity.PRESENTATION_RETENTION_DISPOSE,
+            destinationContextCertification = true,
+        ).use { scenario ->
+            lateinit var initialHome: NavigationBackTestActivity.DestinationContextSnapshot
+            scenario.onActivity { activity ->
+                initialHome = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(NavSceneVisibility.Visible, initialHome.visibility)
+                assertEquals(NavSceneInteraction.Interactive, initialHome.interaction)
+                assertEquals(NavSceneTransitionPhase.Settled, initialHome.transitionPhase)
+                assertEquals(NavPaneRole.Primary, initialHome.paneRole)
+                assertEquals(NavSceneLayerRole.Content, initialHome.layerRole)
+                assertTrue(
+                    activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is NavResult.Committed,
+                )
+
+                val outgoing = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                val incoming = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(NavSceneTransitionPhase.Exiting, outgoing.transitionPhase)
+                assertEquals(NavSceneTransitionPhase.Entering, incoming.transitionPhase)
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                val hiddenHome = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(initialHome.contextIdentity, hiddenHome.contextIdentity)
+                assertEquals(NavSceneVisibility.Hidden, hiddenHome.visibility)
+                assertEquals(NavSceneTransitionPhase.Settled, hiddenHome.transitionPhase)
+                assertTrue(!activity.hasDestinationPresentation(NavigationBackTestActivity.HOME_ROUTE))
+
+                activity.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(0f))
+            }
+            waitForUiIdle()
+
+            lateinit var previewHome: NavigationBackTestActivity.DestinationContextSnapshot
+            lateinit var previewDetails: NavigationBackTestActivity.DestinationContextSnapshot
+            scenario.onActivity { activity ->
+                previewHome = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                previewDetails = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(initialHome.contextIdentity, previewHome.contextIdentity)
+                assertEquals(NavSceneTransitionPhase.PredictivePreview, previewHome.transitionPhase)
+                assertEquals(
+                    NavSceneTransitionPhase.PredictivePreview,
+                    previewDetails.transitionPhase,
+                )
+                listOf(0.2f, 0.5f, 0.8f).forEach { progress ->
+                    activity.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(progress))
+                }
+            }
+            waitForUiIdle()
+
+            scenario.onActivity { activity ->
+                val progressedHome = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                val progressedDetails = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(previewHome.presentationIdentity, progressedHome.presentationIdentity)
+                assertEquals(previewDetails.presentationIdentity, progressedDetails.presentationIdentity)
+                assertEquals(previewHome.observedRenderCount, progressedHome.observedRenderCount)
+                assertEquals(previewDetails.observedRenderCount, progressedDetails.observedRenderCount)
+                activity.onBackPressedDispatcher.onBackPressed()
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                val restoredHome = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                val removedDetails = checkNotNull(
+                    activity.destinationContextSnapshot(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertEquals(initialHome.contextIdentity, restoredHome.contextIdentity)
+                assertEquals(initialHome.entryId, restoredHome.entryId)
+                assertEquals(NavSceneVisibility.Visible, restoredHome.visibility)
+                assertEquals(NavSceneTransitionPhase.Settled, restoredHome.transitionPhase)
+                assertEquals(NavSceneTransitionPhase.Exiting, removedDetails.transitionPhase)
                 assertEquals(
                     Lifecycle.State.DESTROYED,
                     activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
@@ -927,6 +1033,7 @@ class NavigationBackDeviceTest {
         retentionPolicy: String? = null,
         maxHiddenPresentations: Int = BOUNDED_HIDDEN_PRESENTATIONS,
         disableTransitions: Boolean = false,
+        destinationContextCertification: Boolean = false,
     ): ActivityScenario<NavigationBackTestActivity> {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, NavigationBackTestActivity::class.java).apply {
@@ -943,6 +1050,10 @@ class NavigationBackDeviceTest {
             putExtra(
                 NavigationBackTestActivity.EXTRA_DISABLE_TRANSITIONS,
                 disableTransitions,
+            )
+            putExtra(
+                NavigationBackTestActivity.EXTRA_DESTINATION_CONTEXT_CERTIFICATION,
+                destinationContextCertification,
             )
         }
         return ActivityScenario.launch<NavigationBackTestActivity>(intent).also { scenario ->

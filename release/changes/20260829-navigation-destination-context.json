@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Expose a stable destination-local context backed by the exact coarse Navigation Core scene projection across native presentation disposal and recreation.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

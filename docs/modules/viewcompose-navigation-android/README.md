@@ -7,12 +7,14 @@ owner:
   id: viewcompose-navigation-android
 version_lane: released
 capability_ids:
+  - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
 artifact_ids:
   - viewcompose-navigation-android
 sample_ids:
   - module.navigation-android-dependency
+  - module.navigation-android-destination-context
   - module.navigation-android-host
   - module.navigation-android-presentation-retention
 coordinate: com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02
@@ -91,6 +93,36 @@ ownership rather than content.
 The default nested overlay factory explicitly constructs `viewcompose-overlay-android`; it never
 discovers a Material backend from classpath order. A named design integration may pass an explicit
 factory when its destination surfaces require additional presenters.
+
+## Destination context
+
+`LocalNavDestinationContext.current` is non-null only while declaring content for the nearest
+destination. Its stable `NavDestinationContext` exposes the exact `NavEntry` identity and a
+read-only `State<NavDestinationPresentation>`. `NavDestinationPresentation` is a source alias for
+the Navigation Core `NavSceneEntry`, so visibility, interaction, transition phase, pane role, and
+content/overlay layer role cannot drift from the scene used for lifecycle planning.
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-destination-context" sample_id="module.navigation-android-destination-context" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.destinationContextSample(controller: NavHostController) {
+    NavHost(controller = controller) { entry ->
+        val presentation = checkNotNull(LocalNavDestinationContext.current).presentation.value
+        Text("${entry.route.name}: ${presentation.visibility}, ${presentation.paneRole}")
+    }
+}
+```
+
+Capture the context holder during DSL declaration when a later callback needs destination
+identity; do not read the Local from an effect callback. The holder survives hidden-presentation
+disposal and recreation for the same retained entry. After permanent removal it receives no more
+presentation updates, while the entry's AndroidX Lifecycle reaches `DESTROYED` and remains the
+terminal resource signal.
+
+Use AndroidX Lifecycle APIs for resource thresholds such as collection, camera, sensor, or player
+activation. Use destination presentation only for coarse UI decisions such as visible versus
+covered, pane role, or transition role. Predictive and ordinary animation progress is deliberately
+absent, so repeated frame progress cannot invalidate ordinary destination content. Nested hosts
+provide their own nearest context; there is no global current-page lookup.
 
 ## Presentation retention
 

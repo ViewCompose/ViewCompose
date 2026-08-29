@@ -23,10 +23,18 @@ import com.viewcompose.lifecycle.LocalSavedStateRegistryOwner
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavEntryPresence
+import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavSceneEntry
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
+import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.ui.foundation.LocalSaveableStateRegistry
 import com.viewcompose.ui.foundation.buildVNodeTree
+import com.viewcompose.ui.foundation.captureUiLocalSnapshot
+import com.viewcompose.ui.foundation.withUiLocalSnapshot
 import com.viewcompose.viewmodel.LocalViewModelStoreOwner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -230,6 +238,7 @@ class NavEntryOwnerTest {
         var savedStateOwner: Any? = null
         var viewModelOwner: Any? = null
         var saveableRegistry: Any? = null
+        var destinationContext: NavDestinationContext? = null
 
         buildVNodeTree {
             ProvideNavEntryOwner(owner) {
@@ -237,6 +246,7 @@ class NavEntryOwnerTest {
                 savedStateOwner = LocalSavedStateRegistryOwner.current
                 viewModelOwner = LocalViewModelStoreOwner.current
                 saveableRegistry = LocalSaveableStateRegistry.current
+                destinationContext = LocalNavDestinationContext.current
             }
         }
 
@@ -244,10 +254,44 @@ class NavEntryOwnerTest {
         assertSame(owner, savedStateOwner)
         assertSame(owner, viewModelOwner)
         assertSame(owner.compositionSaveableStateRegistry, saveableRegistry)
+        assertSame(owner.destinationContext, destinationContext)
+        assertSame(owner.entry, checkNotNull(destinationContext).entry)
+        assertEquals(
+            NavSceneTransitionPhase.Prepared,
+            checkNotNull(destinationContext).presentation.value.transitionPhase,
+        )
         assertNull(LocalLifecycleOwner.current)
         assertNull(LocalSavedStateRegistryOwner.current)
         assertNull(LocalViewModelStoreOwner.current)
         assertNull(LocalSaveableStateRegistry.current)
+        assertNull(LocalNavDestinationContext.current)
+    }
+
+    @Test
+    fun `captured destination local keeps holder and observes later scene updates`() {
+        val owner = owner(entry("root", "home"))
+        var snapshot: com.viewcompose.ui.foundation.UiLocalSnapshot? = null
+
+        buildVNodeTree {
+            ProvideNavEntryOwner(owner) {
+                snapshot = captureUiLocalSnapshot()
+            }
+        }
+        val settled = NavSceneEntry(
+            entryId = owner.entry.id,
+            presence = NavEntryPresence.Retained,
+            visibility = NavSceneVisibility.Visible,
+            interaction = NavSceneInteraction.Interactive,
+            transitionPhase = NavSceneTransitionPhase.Settled,
+            paneRole = NavPaneRole.Primary,
+        )
+        owner.destinationContext.updatePresentation(settled)
+
+        withUiLocalSnapshot(checkNotNull(snapshot)) {
+            val captured = checkNotNull(LocalNavDestinationContext.current)
+            assertSame(owner.destinationContext, captured)
+            assertSame(settled, captured.presentation.value)
+        }
     }
 
     @Test

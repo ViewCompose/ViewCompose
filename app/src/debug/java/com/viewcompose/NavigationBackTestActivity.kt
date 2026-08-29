@@ -16,17 +16,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.material3.android.setMaterial3UiContent
+import com.viewcompose.navigation.LocalNavDestinationContext
+import com.viewcompose.navigation.LocalNavGraphOwnerScope
+import com.viewcompose.navigation.NavDestinationContext
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
 import com.viewcompose.navigation.NavPresentationRetentionPolicy
 import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
-import com.viewcompose.navigation.LocalNavGraphOwnerScope
 import com.viewcompose.navigation.ProvideNavGraphOwner
 import com.viewcompose.navigation.core.NavEntryId
+import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavRootBackBehavior
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneLayerRole
+import com.viewcompose.navigation.core.NavSceneTransitionPhase
+import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSpec
@@ -35,12 +42,12 @@ import com.viewcompose.navigation.core.navGraph
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.rememberSaveable
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.viewmodel.viewModel
 
 /**
@@ -57,6 +64,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
     private val destinationLifecycleOwners = linkedMapOf<String, LifecycleOwner>()
     private val destinationRetentionRecords = linkedMapOf<String, DestinationRetentionRecord>()
     private val destinationRenderCounts = linkedMapOf<String, Int>()
+    private val destinationContexts = linkedMapOf<String, NavDestinationContext>()
+    private val destinationContextRenderCounts = linkedMapOf<String, Int>()
     private val processDeathRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     private val processDeathGraphRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     /**
@@ -175,6 +184,15 @@ class NavigationBackTestActivity : AppCompatActivity() {
                 overlayHostFactory = { OverlayHostDefaults.noOp },
                 onFailure = failures::add,
             ) { entry ->
+                val destinationContext = checkNotNull(LocalNavDestinationContext.current) {
+                    "Navigation destination ${entry.route.name} has no destination context."
+                }
+                destinationContexts[entry.route.name] = destinationContext
+                if (destinationContextCertificationEnabled()) {
+                    destinationContext.presentation.value
+                    destinationContextRenderCounts[entry.route.name] =
+                        destinationContextRenderCounts.getOrDefault(entry.route.name, 0) + 1
+                }
                 val destinationOwner = checkNotNull(
                     LocalLifecycleOwner.current,
                 ) {
@@ -310,6 +328,23 @@ class NavigationBackTestActivity : AppCompatActivity() {
         return destinationLifecycleOwners[routeName]?.lifecycle?.currentState
     }
 
+    /** Returns the stable context identity and current coarse presentation observed for a route. */
+    fun destinationContextSnapshot(routeName: String): DestinationContextSnapshot? {
+        val context = destinationContexts[routeName] ?: return null
+        val presentation = context.presentation.value
+        return DestinationContextSnapshot(
+            contextIdentity = System.identityHashCode(context),
+            presentationIdentity = System.identityHashCode(presentation),
+            entryId = context.entry.id.value,
+            visibility = presentation.visibility,
+            interaction = presentation.interaction,
+            transitionPhase = presentation.transitionPhase,
+            paneRole = presentation.paneRole,
+            layerRole = presentation.layerRole,
+            observedRenderCount = destinationContextRenderCounts.getOrDefault(routeName, 0),
+        )
+    }
+
     /**
      * 为展示保留策略真机验证写入页面级可保存状态和 ViewModel SavedStateHandle。
      * Seeds page saveable state and its ViewModel SavedStateHandle for retention-policy validation.
@@ -438,6 +473,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
 
     private fun retentionCertificationEnabled(): Boolean {
         return intent.hasExtra(EXTRA_PRESENTATION_RETENTION_POLICY)
+    }
+
+    private fun destinationContextCertificationEnabled(): Boolean {
+        return intent.getBooleanExtra(EXTRA_DESTINATION_CONTEXT_CERTIFICATION, false)
     }
 
     private fun presentationRetentionPolicy(): NavPresentationRetentionPolicy {
@@ -599,6 +638,19 @@ class NavigationBackTestActivity : AppCompatActivity() {
         val lifecycleState: Lifecycle.State,
     )
 
+    /** Device-observable stable holder identity and immutable coarse scene projection. */
+    data class DestinationContextSnapshot(
+        val contextIdentity: Int,
+        val presentationIdentity: Int,
+        val entryId: String,
+        val visibility: NavSceneVisibility,
+        val interaction: NavSceneInteraction,
+        val transitionPhase: NavSceneTransitionPhase,
+        val paneRole: NavPaneRole?,
+        val layerRole: NavSceneLayerRole,
+        val observedRenderCount: Int,
+    )
+
     private data class DestinationRetentionRecord(
         val owner: LifecycleOwner,
         val saveableValue: MutableState<Int>,
@@ -635,6 +687,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
             "com.viewcompose.extra.MAX_HIDDEN_PRESENTATIONS"
         const val EXTRA_DISABLE_TRANSITIONS =
             "com.viewcompose.extra.DISABLE_TRANSITIONS"
+        const val EXTRA_DESTINATION_CONTEXT_CERTIFICATION =
+            "com.viewcompose.extra.DESTINATION_CONTEXT_CERTIFICATION"
         const val PRESENTATION_RETENTION_DISPOSE = "dispose"
         const val PRESENTATION_RETENTION_BOUNDED = "bounded"
         const val PRESENTATION_RETENTION_RETAIN_ALL = "retain-all"
