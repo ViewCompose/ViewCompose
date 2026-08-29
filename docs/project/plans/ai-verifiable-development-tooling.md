@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement the frozen Android XML layout v2 parser and generator mappings, require exact profile-card IR/Kotlin goldens, and compile the generated function.
+next_action: Freeze the explicit-root Android layout dependency contract for bounded include and merge expansion, cycle rejection, provenance, and call-site evidence before implementation.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -65,12 +65,13 @@ inventory whose completeness is never claimed. That context is now integrated as
 project input form of the shared CLI/MCP converter, and its styled golden passes the hermetic
 compiler without changing standalone source input. Android XML layout v2 is now contract-frozen as
 the next compatible subset for `FrameLayout`, `ImageView`, explicit image accessibility, drawable
-bindings, image scaling, and visibility; implementation has not yet widened the tool.
+bindings, image scaling, and visibility. Its parser, IR, generator, project composition, installed
+CLI/MCP generation, and hermetic compile gates now pass.
 
 Last verified: 2026-08-29.
 
-Next action: implement the frozen Android XML layout v2 parser and generator mappings, require exact
-profile-card IR/Kotlin goldens, and compile the generated function.
+Next action: freeze the explicit-root Android layout dependency contract for bounded `include` and
+`merge` expansion, cycle rejection, provenance, and call-site evidence before implementation.
 
 ## Maven release changesets
 
@@ -1019,6 +1020,45 @@ container, image, accessibility, and resource coverage with **no material tool o
 change**: the v2 fixtures and intended goldens are contract evidence only, are not in the installed
 runtime package, and are not yet accepted by the parser or generator. The next action is exact
 implementation plus hermetic compilation; no broader XML feature may bypass that boundary.
+
+### Implementation evidence — Android XML layout v2
+
+The dependency-free parser now maps `FrameLayout` to ordered-overlay `Box`, maps `ImageView` to
+`Image`, and applies non-visible Android visibility as ViewCompose's native visibility modifier.
+`@drawable/name` remains a typed IR resource and becomes a caller-owned `ImageSource`; it never
+becomes a fabricated numeric resource ID. The four accepted scale types normalize to typed IR and
+the exact `ImageContentScale` values. `visible` is omitted, while `invisible` and `gone` retain
+distinct layout behavior.
+
+Accessibility is an input contract, not a post-generation lint suggestion. A non-empty literal or
+string resource becomes the `Image` content-description argument and image semantic role. Explicit
+`@null` remains a decorative image with no image semantics. A missing or empty description returns
+`VC-AI-XML-ACCESSIBILITY-REQUIRED`, preserves the localized source fragment, and emits no Kotlin.
+Project mode composes the same v2 mapping with explicit resource roots: a temporary project fixture
+resolved both string resources, preserved the drawable identity without pretending to merge it,
+returned `not-proven` call-site completeness, and generated the same typed function.
+
+On 2026-08-29, Node 25.6.0 passed 106/106 AI-tooling tests. The Design IR gate matched 2/2 schema
+goldens, 2/2 deterministic outputs, 7/7 provenance-complete nodes, 2/2 resource denominators, and
+4/4 fail-closed unsupported fixtures. The XML gate matched 2/2 Kotlin goldens, 2/2 resource reports,
+and 2/2 hermetic compiles. The profile-card Kotlin fingerprint is
+`15b15098e92b62bc9730ab7b3f2bde7715596f22069490a18b1e7830ff92ad35`; its class fingerprint is
+`6020181fabf964e19c54c2a9a6ff8034657cb89ec338f48c9de25a41b9af04d4`.
+
+The installed distribution generated v2 through both CLI and modern MCP and compiled it through
+the matching source checkout. Two clean builds remained byte-identical: the 41-file,
+262,894-byte archive has SHA-256
+`f1d2724d17073ce6804ec21b40951b73dc68cd12244546c0d1e70514576e8fab` and 1,494,896
+declared file bytes. The combined Design IR, XML compile, distribution, and documentation gates
+passed 22 actionable tasks (8 executed and 14 up-to-date).
+
+Compared with the contract-only denominator, this is **improved** executable container, image,
+accessibility, and resource fidelity with **no material Android runtime change** because only the
+downstream tooling package changed. Limitations remain explicit: no visual or device parity is yet
+claimed; source selectors, tint, gravity, qualified drawables, style-supplied v2 attributes,
+includes, merge roots, and Android resource merging remain unsupported. The next foundational gap
+is a frozen explicit-root layout dependency graph for bounded `include`/`merge` expansion; the
+resolver must not traverse layout dependencies before that contract exists.
 
 ### Implementation evidence — bounded XML to Design IR
 

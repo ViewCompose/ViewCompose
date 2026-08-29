@@ -166,8 +166,9 @@ JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-xml
 ./gradlew verifyAiDesignIr verifyAiXmlProjectContext verifyAiXmlMigration
 ```
 
-`convert_xml_to_viewcompose` accepts only the frozen Android XML layout v1 subset documented by
-`evaluation/fixtures/xml/subset-contract.json`. Its arguments select exactly one input form:
+`convert_xml_to_viewcompose` accepts only the compatible frozen Android XML layout v1 and v2
+subsets documented by `evaluation/fixtures/xml/subset-contract.json` and
+`evaluation/fixtures/xml/subset-v2-contract.json`. Its arguments select exactly one input form:
 
 - Source form supplies `source`, optional logical `path`, and `mode`.
 - Project form supplies an absolute `projectRoot`, project-relative `layoutPath`, ordered
@@ -182,14 +183,23 @@ evidence only; themes, aliases, implicit style parents, resource conflicts, form
 and unsafe or missing defaults fail closed. The returned `projectContext` and migration report use
 project-relative paths and fingerprints and contain no raw application source.
 
+Layout v2 adds `FrameLayout` as ordered-overlay `Box`, `ImageView` as `Image`, and
+`android:visibility`. Drawable references become caller-owned `ImageSource` parameters; the tool
+does not invent an `R` class or resource ID. Image descriptions must be a non-empty literal, a
+string resource, or explicit `@null` decoration. Omission returns
+`VC-AI-XML-ACCESSIBILITY-REQUIRED` and no Kotlin. `fitCenter`, `centerCrop`, `fitXY`, and
+`centerInside` map to the corresponding ViewCompose image scales. Other image attributes and scale
+types remain unsupported.
+
 `generate` parses the selected source into typed Design IR and returns deterministic ViewCompose
 Kotlin plus resource/state bindings and a mandatory call-site review checklist. It never invokes
 Gradle. `compile` performs the same steps and then enters the fixed hermetic compiler; callers must
 select this deeper mode explicitly. Custom Views, Data Binding, unknown
 attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities, malformed XML, duplicate
 IDs, and limit violations return localized diagnostics and no Kotlin. String resources remain
-explicit caller `String` bindings and `TextFieldState` remains caller-owned; the tool does not invent
-listeners or rewrite ViewBinding/application call sites.
+explicit caller `String` bindings, drawable resources remain caller `ImageSource` bindings, and
+`TextFieldState` remains caller-owned; the tool does not invent listeners or rewrite
+ViewBinding/application call sites.
 
 Run the local MCP server and its protocol/parity gate with:
 

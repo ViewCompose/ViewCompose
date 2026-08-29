@@ -46,13 +46,18 @@ function facts(ir) {
 }
 
 export async function verifyPhase4DesignIr() {
-  const contract = await readJson(resolve(fixtureRoot, 'subset-contract.json'));
+  const contracts = await Promise.all([
+    readJson(resolve(fixtureRoot, 'subset-contract.json')),
+    readJson(resolve(fixtureRoot, 'subset-v2-contract.json')),
+  ]);
+  const supportedFixtures = contracts.flatMap((contract) => contract.supportedFixtures);
+  const unsupportedFixtures = contracts.flatMap((contract) => contract.unsupportedFixtures);
   let deterministicMatches = 0;
   let schemaMatches = 0;
   let provenanceNodes = 0;
   let totalNodes = 0;
   let resourceMatches = 0;
-  for (const fixture of contract.supportedFixtures) {
+  for (const fixture of supportedFixtures) {
     const sourcePath = resolve(fixtureRoot, fixture.source);
     const source = await readFile(sourcePath, 'utf8');
     const path = `tools/ai/evaluation/fixtures/xml/${fixture.source}`;
@@ -86,7 +91,7 @@ export async function verifyPhase4DesignIr() {
   }
 
   let unsupportedMatches = 0;
-  for (const fixture of contract.unsupportedFixtures) {
+  for (const fixture of unsupportedFixtures) {
     const source = await readFile(resolve(fixtureRoot, fixture.source), 'utf8');
     const result = await convertXmlToDesignIr({
       source,
@@ -108,21 +113,21 @@ export async function verifyPhase4DesignIr() {
       deterministicMatches,
       schemaMatches,
       resourceMatches,
-      fixtures: contract.supportedFixtures.length,
+      fixtures: supportedFixtures.length,
       provenanceNodes,
       totalNodes,
     },
     unsupported: {
       matches: unsupportedMatches,
-      fixtures: contract.unsupportedFixtures.length,
+      fixtures: unsupportedFixtures.length,
     },
   };
   if (
-    deterministicMatches !== contract.supportedFixtures.length ||
-    schemaMatches !== contract.supportedFixtures.length ||
-    resourceMatches !== contract.supportedFixtures.length ||
+    deterministicMatches !== supportedFixtures.length ||
+    schemaMatches !== supportedFixtures.length ||
+    resourceMatches !== supportedFixtures.length ||
     provenanceNodes !== totalNodes ||
-    unsupportedMatches !== contract.unsupportedFixtures.length
+    unsupportedMatches !== unsupportedFixtures.length
   ) {
     throw new Error('Phase 4 Design IR metrics did not reach their frozen 1.00 thresholds');
   }

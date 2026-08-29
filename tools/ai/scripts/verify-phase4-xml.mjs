@@ -13,12 +13,20 @@ async function readJson(path) {
 }
 
 export async function verifyPhase4XmlMigration({compile = compileKotlin} = {}) {
-  const contract = await readJson(resolve(fixtureRoot, 'subset-contract.json'));
+  const contracts = await Promise.all([
+    readJson(resolve(fixtureRoot, 'subset-contract.json')),
+    readJson(resolve(fixtureRoot, 'subset-v2-contract.json')),
+  ]);
+  const supportedFixtures = contracts.flatMap((contract) =>
+    contract.supportedFixtures.map((fixture) => ({
+      ...fixture,
+      compileArtifacts: contract.codeGeneration.compileArtifacts,
+    })));
   let generated = 0;
   let compiled = 0;
   let resourcesPreserved = 0;
   const fingerprints = [];
-  for (const fixture of contract.supportedFixtures) {
+  for (const fixture of supportedFixtures) {
     const source = await readFile(resolve(fixtureRoot, fixture.source), 'utf8');
     const converted = await convertXmlToDesignIr({
       source,
@@ -47,9 +55,14 @@ export async function verifyPhase4XmlMigration({compile = compileKotlin} = {}) {
       .map((binding) => binding.source.slice(1))
       .sort();
     const parameters = first.report.bindings.resources.map((binding) => binding.parameter);
+    const bindings = first.report.bindings.resources.map(({parameter, type}) => ({parameter, type}));
+    const expectedBindings = fixture.expectedBindings ??
+      fixture.expectedResourceParameters.map((parameter) => ({parameter, type: 'String'}));
+    const expectedParameters = expectedBindings.map((binding) => binding.parameter);
     if (
       JSON.stringify(resourceNames) !== JSON.stringify(fixture.expectedResources) ||
-      JSON.stringify(parameters) !== JSON.stringify(fixture.expectedResourceParameters) ||
+      JSON.stringify(parameters) !== JSON.stringify(expectedParameters) ||
+      JSON.stringify(bindings) !== JSON.stringify(expectedBindings) ||
       first.report.callSiteReview.required !== true
     ) {
       throw new Error(`${fixture.source}: generated migration report lost a resource or review item`);
@@ -58,8 +71,13 @@ export async function verifyPhase4XmlMigration({compile = compileKotlin} = {}) {
     const compileResult = await compile({
       source: first.kotlin,
       path: `generated/viewcompose/${fixture.expectedFunction}.kt`,
-      artifactIds: contract.codeGeneration.compileArtifacts,
-      capabilityIds: ['foundation.components', 'modifier.layout'],
+      artifactIds: fixture.compileArtifacts,
+      capabilityIds: [
+        'foundation.components',
+        'image.foundation',
+        'modifier.drawing',
+        'modifier.layout',
+      ],
       requestId: `xml-${fixture.expectedFunction}-compile`,
     });
     if (compileResult.status !== 'success' || compileResult.evidence?.level !== 'compiled') {
@@ -74,9 +92,9 @@ export async function verifyPhase4XmlMigration({compile = compileKotlin} = {}) {
     });
   }
   if (
-    generated !== contract.supportedFixtures.length ||
-    compiled !== contract.supportedFixtures.length ||
-    resourcesPreserved !== contract.supportedFixtures.length
+    generated !== supportedFixtures.length ||
+    compiled !== supportedFixtures.length ||
+    resourcesPreserved !== supportedFixtures.length
   ) {
     throw new Error('Phase 4 XML migration metrics did not reach their frozen 1.00 thresholds');
   }
@@ -84,7 +102,7 @@ export async function verifyPhase4XmlMigration({compile = compileKotlin} = {}) {
     generated,
     compiled,
     resourcesPreserved,
-    fixtures: contract.supportedFixtures.length,
+    fixtures: supportedFixtures.length,
     fingerprints,
   };
 }

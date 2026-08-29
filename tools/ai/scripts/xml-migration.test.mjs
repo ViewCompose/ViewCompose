@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {convertXmlToViewCompose} from './xml-migration.mjs';
 
@@ -31,6 +33,27 @@ test('returns standalone deterministic XML migration data without invoking compi
   assert.equal(result.data.migrationReport.callSiteReview.required, true);
   assert.equal(result.data.designIr.schemaVersion, 1);
   assert.equal(compiled, 0);
+});
+
+test('returns standalone XML v2 image and accessibility bindings', async () => {
+  const result = await convertXmlToViewCompose({
+    source: await fixture('profile-card.xml'),
+    path: 'res/layout/profile-card.xml',
+    mode: 'generate',
+    requestId: 'xml-v2-generate',
+  });
+
+  assert.equal(result.status, 'success');
+  assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.ProfileCardView('));
+  assert.ok(result.data.kotlin.includes('contentDescription = profilePhoto'));
+  assert.deepEqual(
+    result.data.migrationReport.bindings.resources.map(({source, type}) => ({source, type})),
+    [
+      {source: '@drawable/profile_avatar', type: 'ImageSource'},
+      {source: '@string/profile_photo', type: 'String'},
+      {source: '@string/status_label', type: 'String'},
+    ],
+  );
 });
 
 test('returns compiled conversion evidence through the same tool envelope', async () => {
@@ -81,6 +104,41 @@ test('resolves project resources, styles, and call sites before generation', asy
   assert.equal(result.data.migrationReport.projectEvidence.completeness, 'not-proven');
   assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.StyledLoginView('));
   assert.ok(result.data.kotlin.includes('padding(16.dp)'));
+});
+
+test('composes explicit project context with the XML v2 image subset', async (context) => {
+  const projectRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-xml-v2-project-'));
+  context.after(() => rm(projectRoot, {recursive: true, force: true}));
+  const layoutDirectory = resolve(projectRoot, 'app/src/main/res/layout');
+  const valuesDirectory = resolve(projectRoot, 'app/src/main/res/values');
+  await Promise.all([
+    mkdir(layoutDirectory, {recursive: true}),
+    mkdir(valuesDirectory, {recursive: true}),
+  ]);
+  await Promise.all([
+    writeFile(resolve(layoutDirectory, 'profile_card.xml'), await fixture('profile-card.xml')),
+    writeFile(resolve(valuesDirectory, 'strings.xml'), `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_photo">Profile photo</string>
+    <string name="status_label">Online</string>
+</resources>
+`),
+  ]);
+
+  const result = await convertXmlToViewCompose({
+    projectRoot,
+    layoutPath: 'app/src/main/res/layout/profile_card.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: [],
+    mode: 'generate',
+    requestId: 'xml-v2-project-generate',
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.data.projectContext.resources.length, 2);
+  assert.equal(result.data.projectContext.callSites.length, 0);
+  assert.ok(result.data.kotlin.includes('profileAvatar: ImageSource'));
+  assert.equal(result.data.migrationReport.projectEvidence.completeness, 'not-proven');
 });
 
 test('compiles project-aware generated Kotlin through the hermetic adapter', async () => {
@@ -144,6 +202,19 @@ test('preserves unsupported XML diagnostics and never emits Kotlin', async () =>
   assert.equal(result.diagnostics[0].code, 'VC-AI-XML-CUSTOM-VIEW-UNSUPPORTED');
   assert.equal(Object.hasOwn(result.data, 'kotlin'), false);
   assert.equal(result.data.unsupported[0].preservedSource.includes('AvatarView'), true);
+});
+
+test('does not emit Kotlin when an image accessibility decision is missing', async () => {
+  const result = await convertXmlToViewCompose({
+    source: await fixture('image-missing-description.xml'),
+    path: 'res/layout/image-missing-description.xml',
+    mode: 'generate',
+    requestId: 'xml-v2-accessibility',
+  });
+
+  assert.equal(result.status, 'unsupported');
+  assert.equal(result.diagnostics[0].code, 'VC-AI-XML-ACCESSIBILITY-REQUIRED');
+  assert.equal(Object.hasOwn(result.data, 'kotlin'), false);
 });
 
 test('honors cancellation before conversion', async () => {

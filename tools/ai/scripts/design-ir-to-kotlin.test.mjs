@@ -11,6 +11,13 @@ async function goldenIr() {
   ).then(JSON.parse);
 }
 
+async function profileIr() {
+  return readFile(
+    fileURLToPath(new URL('../evaluation/fixtures/xml/profile-card.design-ir.json', import.meta.url)),
+    'utf8',
+  ).then(JSON.parse);
+}
+
 test('generates the exact deterministic ViewCompose Kotlin golden and migration report', async () => {
   const [ir, golden] = await Promise.all([
     goldenIr(),
@@ -63,6 +70,30 @@ test('rejects schema-invalid, blocked, behavioral, and non-normalized IR', async
   const nonStringResult = await generateViewComposeKotlin(nonString);
   assert.equal(nonStringResult.status, 'unsupported');
   assert.ok(nonStringResult.diagnostics.some((item) => item.code === 'VC-AI-GENERATOR-UNSUPPORTED'));
+});
+
+test('generates the exact Box, Image, accessibility, drawable, and visibility golden', async () => {
+  const [ir, golden] = await Promise.all([
+    profileIr(),
+    readFile(
+      fileURLToPath(new URL('../evaluation/fixtures/xml/profile-card.viewcompose.kt', import.meta.url)),
+      'utf8',
+    ),
+  ]);
+  const result = await generateViewComposeKotlin(ir);
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.kotlin, golden);
+  assert.deepEqual(
+    result.report.bindings.resources.map(({source, parameter, type}) => ({source, parameter, type})),
+    [
+      {source: '@drawable/profile_avatar', parameter: 'profileAvatar', type: 'ImageSource'},
+      {source: '@string/profile_photo', parameter: 'profilePhoto', type: 'String'},
+      {source: '@string/status_label', parameter: 'statusLabel', type: 'String'},
+    ],
+  );
+  assert.ok(result.kotlin.includes('contentDescription = profilePhoto'));
+  assert.ok(result.kotlin.includes('Modifier.visibility(Visibility.Gone)'));
 });
 
 test('escapes Kotlin templates and deterministically disambiguates parameter names', async () => {

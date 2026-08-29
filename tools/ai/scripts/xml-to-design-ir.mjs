@@ -17,19 +17,36 @@ export const XML_MIGRATION_LIMITS = Object.freeze({
 const designIrSchemaPath = fileURLToPath(
   new URL('../contracts/design-ir.schema.json', import.meta.url),
 );
-const supportedElements = new Set(['LinearLayout', 'TextView', 'EditText', 'Button']);
+const supportedElements = new Set([
+  'LinearLayout',
+  'FrameLayout',
+  'TextView',
+  'EditText',
+  'Button',
+  'ImageView',
+]);
 const elementAttributes = Object.freeze({
   LinearLayout: new Set(['android:orientation', 'android:padding']),
+  FrameLayout: new Set(['android:padding']),
   TextView: new Set(['android:text']),
   EditText: new Set(['android:hint', 'android:inputType']),
   Button: new Set(['android:text']),
+  ImageView: new Set(['android:src', 'android:contentDescription', 'android:scaleType']),
 });
 const commonAttributes = new Set([
   'android:id',
   'android:layout_width',
   'android:layout_height',
+  'android:visibility',
 ]);
 const inputTypes = new Set(['text', 'textEmailAddress', 'textPassword', 'number']);
+const imageScaleTypes = new Map([
+  ['fitCenter', 'fit'],
+  ['centerCrop', 'crop'],
+  ['fitXY', 'fill-bounds'],
+  ['centerInside', 'inside'],
+]);
+const visibilityValues = new Set(['visible', 'invisible', 'gone']);
 let designIrSchemaPromise;
 
 function loadDesignIrSchema() {
@@ -380,6 +397,20 @@ function resourceOrLiteral(value) {
   return {kind: 'literal', value};
 }
 
+function drawableResource(value) {
+  const resource = /^@drawable\/([A-Za-z][A-Za-z0-9_]*)$/u.exec(value);
+  return resource
+    ? {kind: 'resource', resourceType: 'drawable', name: resource[1]}
+    : null;
+}
+
+function imageDescription(value) {
+  if (value === '@null') return {kind: 'literal', value: null};
+  const description = resourceOrLiteral(value);
+  if (description?.kind === 'literal' && description.value.trim().length === 0) return null;
+  return description;
+}
+
 function androidId(value) {
   return /^@\+?id\/([A-Za-z][A-Za-z0-9_]*)$/u.exec(value)?.[1] ?? null;
 }
@@ -606,6 +637,26 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
     decision = orientation === 'vertical'
       ? 'Map a vertical LinearLayout to Column and preserve size and padding.'
       : 'Map a horizontal LinearLayout to Row and preserve size and padding.';
+  } else if (node.name === 'FrameLayout') {
+    kind = 'box';
+    const paddingAttribute = attributes.get('android:padding');
+    if (paddingAttribute) {
+      const padding = dpDimension(paddingAttribute.value);
+      if (padding) {
+        modifiers.push({kind: 'padding', arguments: [{name: 'all', value: padding}]});
+      } else {
+        addUnsupported(state, unsupportedFragment({
+          node,
+          attribute: paddingAttribute,
+          code: 'VC-AI-XML-VALUE-UNSUPPORTED',
+          reason: 'android:padding must be a non-negative integer dp value.',
+          source,
+          path: sourcePath,
+          sourceId,
+        }));
+      }
+    }
+    decision = 'Map FrameLayout to Box, preserve overlay child order, size, and padding.';
   } else if (node.name === 'TextView') {
     kind = 'text';
     const textAttribute = attributes.get('android:text');
@@ -661,7 +712,7 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
     decision = inputTypeAttribute?.value === 'textEmailAddress'
       ? 'Map EditText to TextField with caller-owned state and the Email input profile.'
       : 'Map EditText to TextField with caller-owned state and the declared input profile.';
-  } else {
+  } else if (node.name === 'Button') {
     kind = 'button';
     const textAttribute = attributes.get('android:text');
     if (textAttribute) {
@@ -678,9 +729,87 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
       }));
     }
     decision = 'Map Button to Button without inventing an absent click listener.';
+  } else {
+    kind = 'image';
+    const sourceAttribute = attributes.get('android:src');
+    const imageSource = sourceAttribute ? drawableResource(sourceAttribute.value) : null;
+    if (imageSource) {
+      properties.push({name: 'source', value: imageSource});
+    } else {
+      addUnsupported(state, unsupportedFragment({
+        node,
+        attribute: sourceAttribute,
+        code: sourceAttribute ? 'VC-AI-XML-VALUE-UNSUPPORTED' : 'VC-AI-XML-REQUIRED-ATTRIBUTE',
+        reason: 'ImageView requires android:src as an unqualified @drawable/name.',
+        source,
+        path: sourcePath,
+        sourceId,
+      }));
+    }
+    const descriptionAttribute = attributes.get('android:contentDescription');
+    const contentDescription = descriptionAttribute
+      ? imageDescription(descriptionAttribute.value)
+      : null;
+    if (contentDescription) {
+      properties.push({name: 'contentDescription', value: contentDescription});
+    } else {
+      addUnsupported(state, unsupportedFragment({
+        node,
+        attribute: descriptionAttribute,
+        code: 'VC-AI-XML-ACCESSIBILITY-REQUIRED',
+        reason: 'ImageView requires a non-empty content description or explicit @null decoration.',
+        source,
+        path: sourcePath,
+        sourceId,
+      }));
+    }
+    const scaleAttribute = attributes.get('android:scaleType');
+    const scale = scaleAttribute?.value ?? 'fitCenter';
+    const mappedScale = imageScaleTypes.get(scale);
+    if (mappedScale) {
+      properties.push({
+        name: 'contentScale',
+        value: {kind: 'enum', type: 'image-content-scale', value: mappedScale},
+      });
+    } else {
+      addUnsupported(state, unsupportedFragment({
+        node,
+        attribute: scaleAttribute,
+        code: 'VC-AI-XML-VALUE-UNSUPPORTED',
+        reason: 'android:scaleType must be fitCenter, centerCrop, fitXY, or centerInside.',
+        source,
+        path: sourcePath,
+        sourceId,
+      }));
+    }
+    decision = 'Map ImageView to Image with caller-owned drawable source and explicit content description.';
   }
 
-  if (node.name !== 'LinearLayout' && node.children.length > 0) {
+  const visibilityAttribute = attributes.get('android:visibility');
+  if (visibilityAttribute) {
+    if (!visibilityValues.has(visibilityAttribute.value)) {
+      addUnsupported(state, unsupportedFragment({
+        node,
+        attribute: visibilityAttribute,
+        code: 'VC-AI-XML-VALUE-UNSUPPORTED',
+        reason: 'android:visibility must be visible, invisible, or gone.',
+        source,
+        path: sourcePath,
+        sourceId,
+      }));
+    } else if (visibilityAttribute.value !== 'visible') {
+      modifiers.push({
+        kind: 'visibility',
+        arguments: [{
+          name: 'value',
+          value: {kind: 'enum', type: 'visibility', value: visibilityAttribute.value},
+        }],
+      });
+    }
+  }
+
+  const container = node.name === 'LinearLayout' || node.name === 'FrameLayout';
+  if (!container && node.children.length > 0) {
     for (const [index, child] of node.children.entries()) {
       addUnsupported(state, unsupportedFragment({
         node: child,
@@ -693,7 +822,7 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
     }
   }
 
-  const children = node.name === 'LinearLayout'
+  const children = container
     ? node.children.map((child, index) => mapNode(child, sourcePath, source, state, `${sourceIndex}.${index}`))
       .filter(Boolean)
     : [];
@@ -701,7 +830,9 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
     ? [{name: 'role', value: {kind: 'enum', type: 'semantic-role', value: 'button'}}]
     : kind === 'text-field'
       ? [{name: 'role', value: {kind: 'enum', type: 'semantic-role', value: 'text-field'}}]
-      : [];
+      : kind === 'image' && properties.find((field) => field.name === 'contentDescription')?.value.value !== null
+        ? [{name: 'role', value: {kind: 'enum', type: 'semantic-role', value: 'image'}}]
+        : [];
   const stateFields = kind === 'text-field'
     ? [{
         name: 'text',

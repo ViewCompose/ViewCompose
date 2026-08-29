@@ -11,6 +11,9 @@ const loginPath = fileURLToPath(
 const goldenPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/login.design-ir.json', import.meta.url),
 );
+const profileGoldenPath = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/profile-card.design-ir.json', import.meta.url),
+);
 
 async function fixture(name) {
   return readFile(fileURLToPath(new URL(`../evaluation/fixtures/xml/${name}`, import.meta.url)), 'utf8');
@@ -67,6 +70,46 @@ test('maps horizontal defaults, literal strings, integer dp sizes, and supported
   });
   assert.equal(result.ir.roots[0].children[1].state[0].value.name, 'passwordState');
   assert.equal(result.ir.roots[0].children[1].properties[0].value.value, 'textPassword');
+});
+
+test('maps the frozen FrameLayout, ImageView, accessibility, drawable, and visibility subset', async () => {
+  const [source, golden] = await Promise.all([
+    fixture('profile-card.xml'),
+    readFile(profileGoldenPath, 'utf8').then(JSON.parse),
+  ]);
+  const result = await convertXmlToDesignIr({
+    source,
+    path: 'tools/ai/evaluation/fixtures/xml/profile-card.xml',
+  });
+
+  assert.equal(result.status, 'success');
+  assert.deepEqual(result.ir, golden);
+  assert.equal(result.ir.roots[0].kind, 'box');
+  assert.equal(result.ir.roots[0].children[0].kind, 'image');
+  assert.deepEqual(result.ir.roots[0].children[0].properties[0].value, {
+    kind: 'resource',
+    resourceType: 'drawable',
+    name: 'profile_avatar',
+  });
+  assert.equal(result.ir.roots[0].children[1].modifiers[1].kind, 'visibility');
+});
+
+test('requires an explicit image accessibility decision and preserves @null decoration', async () => {
+  const missing = await convertXmlToDesignIr({
+    source: await fixture('image-missing-description.xml'),
+    path: 'tools/ai/evaluation/fixtures/xml/image-missing-description.xml',
+  });
+  assert.equal(missing.status, 'unsupported');
+  assert.equal(missing.diagnostics[0].code, 'VC-AI-XML-ACCESSIBILITY-REQUIRED');
+
+  const decorative = await convertXmlToDesignIr({
+    source: '<ImageView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="48dp" android:layout_height="48dp" android:src="@drawable/avatar" android:contentDescription="@null" android:visibility="invisible"/>',
+    path: 'res/layout/decorative.xml',
+  });
+  assert.equal(decorative.status, 'success');
+  assert.deepEqual(decorative.ir.roots[0].properties[1].value, {kind: 'literal', value: null});
+  assert.deepEqual(decorative.ir.roots[0].semantics, []);
+  assert.equal(decorative.ir.roots[0].modifiers[1].arguments[0].value.value, 'invisible');
 });
 
 test('localizes custom Views, Data Binding, and unknown attributes without Kotlin claims', async () => {
@@ -141,12 +184,12 @@ test('requires a bounded logical source identity and the exact Android namespace
 test('meets every frozen Phase 4 Design IR and unsupported-honesty denominator', async () => {
   const summary = await verifyPhase4DesignIr();
   assert.deepEqual(summary.supported, {
-    deterministicMatches: 1,
-    schemaMatches: 1,
-    resourceMatches: 1,
-    fixtures: 1,
-    provenanceNodes: 4,
-    totalNodes: 4,
+    deterministicMatches: 2,
+    schemaMatches: 2,
+    resourceMatches: 2,
+    fixtures: 2,
+    provenanceNodes: 7,
+    totalNodes: 7,
   });
-  assert.deepEqual(summary.unsupported, {matches: 3, fixtures: 3});
+  assert.deepEqual(summary.unsupported, {matches: 4, fixtures: 4});
 });

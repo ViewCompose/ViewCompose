@@ -18,12 +18,13 @@ test('requires deterministic golden generation, resource preservation, and compi
     },
   });
 
-  assert.equal(summary.generated, 1);
-  assert.equal(summary.compiled, 1);
-  assert.equal(summary.resourcesPreserved, 1);
-  assert.equal(requests.length, 1);
+  assert.equal(summary.generated, 2);
+  assert.equal(summary.compiled, 2);
+  assert.equal(summary.resourcesPreserved, 2);
+  assert.equal(requests.length, 2);
   assert.deepEqual(requests[0].artifactIds, ['viewcompose-ui-foundation']);
   assert.ok(requests[0].source.includes('fun UiTreeBuilder.LoginView('));
+  assert.ok(requests[1].source.includes('fun UiTreeBuilder.ProfileCardView('));
 });
 
 test('rejects a compile result that does not carry compiled evidence', async () => {

@@ -41,7 +41,7 @@
     "values": {
       "android:visibility": "visible, invisible, or gone",
       "android:src": "unqualified @drawable/name",
-      "android:contentDescription": "literal, unqualified @string/name, or explicit @null for decorative content",
+      "android:contentDescription": "non-empty literal, unqualified @string/name, or explicit @null for decorative content",
       "android:scaleType": "fitCenter, centerCrop, fitXY, or centerInside"
     }
   },

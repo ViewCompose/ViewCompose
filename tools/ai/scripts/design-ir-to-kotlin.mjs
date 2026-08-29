@@ -5,7 +5,7 @@ import {validateSchemaValue} from './schema-validator.mjs';
 
 const schemaPath = fileURLToPath(new URL('../contracts/design-ir.schema.json', import.meta.url));
 const packageName = 'generated.viewcompose';
-const supportedKinds = new Set(['row', 'column', 'text', 'text-field', 'button']);
+const supportedKinds = new Set(['row', 'column', 'box', 'text', 'text-field', 'button', 'image']);
 const kotlinKeywords = new Set([
   'as', 'break', 'class', 'continue', 'do', 'else', 'false', 'for', 'fun', 'if', 'in',
   'interface', 'is', 'null', 'object', 'package', 'return', 'super', 'this', 'throw',
@@ -92,7 +92,7 @@ function collectBindings(ir) {
         binding = {
           source: identity,
           parameter: allocateIdentifier(field.value.name, used),
-          type: 'String',
+          type: field.value.resourceType === 'drawable' ? 'ImageSource' : 'String',
           nodes: [],
         };
         resourceByIdentity.set(identity, binding);
@@ -138,7 +138,16 @@ function sizeValueSupported(value) {
 }
 
 function semanticFieldsSupported(node) {
-  if (['row', 'column', 'text'].includes(node.kind)) return node.semantics.length === 0;
+  if (['row', 'column', 'box', 'text'].includes(node.kind)) return node.semantics.length === 0;
+  if (node.kind === 'image') {
+    const description = fieldMap(node.properties).get('contentDescription');
+    if (description?.kind === 'literal' && description.value === null) {
+      return node.semantics.length === 0;
+    }
+    const role = fieldMap(node.semantics).get('role');
+    return node.semantics.length === 1 &&
+      role?.kind === 'enum' && role.type === 'semantic-role' && role.value === 'image';
+  }
   const role = fieldMap(node.semantics).get('role');
   const expected = node.kind === 'button' ? 'button' : 'text-field';
   return node.semantics.length === 1 &&
@@ -171,9 +180,11 @@ function validateSupportedIr(ir) {
     const allowedProperties = {
       row: new Set(['orientation']),
       column: new Set(['orientation']),
+      box: new Set(),
       text: new Set(['text']),
       'text-field': new Set(['hint', 'inputType']),
       button: new Set(['text']),
+      image: new Set(['source', 'contentDescription', 'contentScale']),
     }[node.kind];
     for (const property of node.properties) {
       if (!allowedProperties.has(property.name)) {
@@ -188,7 +199,11 @@ function validateSupportedIr(ir) {
           `Node ${node.id} contains an unresolved expression.`,
         ));
       }
-      if (property.value.kind === 'resource' && property.value.resourceType !== 'string') {
+      const acceptedResource = property.value.kind !== 'resource' ||
+        property.value.resourceType === 'string' ||
+        node.kind === 'image' && property.name === 'source' &&
+          property.value.resourceType === 'drawable';
+      if (!acceptedResource) {
         diagnostics.push(generatorDiagnostic(
           'VC-AI-GENERATOR-UNSUPPORTED',
           `Node ${node.id} uses unsupported resource type ${property.value.resourceType}.`,
@@ -210,6 +225,12 @@ function validateSupportedIr(ir) {
           `Container ${node.id} does not have the normalized ${expected} orientation.`,
         ));
       }
+    }
+    if (node.kind === 'box' && node.properties.length !== 0) {
+      diagnostics.push(generatorDiagnostic(
+        'VC-AI-GENERATOR-UNSUPPORTED',
+        `Box ${node.id} contains properties outside the XML v2 mapping.`,
+      ));
     }
     if (node.kind === 'text' &&
         (node.properties.length > 1 ||
@@ -244,6 +265,32 @@ function validateSupportedIr(ir) {
         diagnostics.push(generatorDiagnostic(
           'VC-AI-GENERATOR-UNSUPPORTED',
           `Text field ${node.id} has an unsupported input profile.`,
+        ));
+      }
+    }
+    if (node.kind === 'image') {
+      const source = properties.get('source');
+      const description = properties.get('contentDescription');
+      const scale = properties.get('contentScale');
+      const descriptionSupported =
+        description?.kind === 'literal' &&
+          (description.value === null ||
+            typeof description.value === 'string' && description.value.trim().length > 0) ||
+        description?.kind === 'resource' &&
+          description.resourceType === 'string' && description.package === undefined;
+      if (
+        node.properties.length !== 3 ||
+        source?.kind !== 'resource' ||
+        source.resourceType !== 'drawable' ||
+        source.package !== undefined ||
+        !descriptionSupported ||
+        scale?.kind !== 'enum' ||
+        scale.type !== 'image-content-scale' ||
+        !['fit', 'crop', 'fill-bounds', 'inside'].includes(scale.value)
+      ) {
+        diagnostics.push(generatorDiagnostic(
+          'VC-AI-GENERATOR-UNSUPPORTED',
+          `Image ${node.id} is outside the normalized XML v2 mapping.`,
         ));
       }
     }
@@ -285,6 +332,19 @@ function validateSupportedIr(ir) {
             `Node ${node.id} has an unsupported padding modifier.`,
           ));
         }
+      } else if (modifier.kind === 'visibility') {
+        const value = arguments_.get('value');
+        if (
+          modifier.arguments.length !== 1 ||
+          value?.kind !== 'enum' ||
+          value.type !== 'visibility' ||
+          !['invisible', 'gone'].includes(value.value)
+        ) {
+          diagnostics.push(generatorDiagnostic(
+            'VC-AI-GENERATOR-UNSUPPORTED',
+            `Node ${node.id} has an unsupported visibility modifier.`,
+          ));
+        }
       } else {
         diagnostics.push(generatorDiagnostic(
           'VC-AI-GENERATOR-UNSUPPORTED',
@@ -307,7 +367,7 @@ function validateSupportedIr(ir) {
         ));
       }
     }
-    if (!['row', 'column'].includes(node.kind) && node.children.length > 0) {
+    if (!['row', 'column', 'box'].includes(node.kind) && node.children.length > 0) {
       diagnostics.push(generatorDiagnostic(
         'VC-AI-GENERATOR-UNSUPPORTED',
         `Leaf node ${node.id} cannot contain children.`,
@@ -365,6 +425,11 @@ function modifierExpression(node, imports) {
       imports.add('com.viewcompose.ui.modifier.padding');
       imports.add('com.viewcompose.ui.unit.dp');
       calls.push(`padding(${dimensionExpression(all)})`);
+    } else if (modifier.kind === 'visibility') {
+      const visibility = arguments_.get('value').value;
+      imports.add('com.viewcompose.ui.modifier.Visibility');
+      imports.add('com.viewcompose.ui.modifier.visibility');
+      calls.push(`visibility(Visibility.${visibility === 'gone' ? 'Gone' : 'Invisible'})`);
     }
   }
   if (calls.length === 0) return null;
@@ -378,6 +443,15 @@ function inputProfile(value) {
     textEmailAddress: 'Email',
     textPassword: 'Password',
     number: 'Number',
+  }[value?.value];
+}
+
+function imageContentScale(value) {
+  return {
+    fit: 'Fit',
+    crop: 'Crop',
+    'fill-bounds': 'FillBounds',
+    inside: 'Inside',
   }[value?.value];
 }
 
@@ -405,8 +479,8 @@ function emitNode(node, bindings, imports, indent, lines) {
   const modifier = modifierExpression(node, imports);
   const common = [['key', kotlinString(nodeKey(node))]];
   if (modifier) common.push(['modifier', modifier]);
-  if (node.kind === 'row' || node.kind === 'column') {
-    const name = node.kind === 'row' ? 'Row' : 'Column';
+  if (node.kind === 'row' || node.kind === 'column' || node.kind === 'box') {
+    const name = node.kind === 'row' ? 'Row' : node.kind === 'column' ? 'Column' : 'Box';
     imports.add(`com.viewcompose.ui.foundation.${name}`);
     emitCall(name, common, indent, () => {
       for (const child of node.children) emitNode(child, bindings, imports, indent + 4, lines);
@@ -426,10 +500,22 @@ function emitNode(node, bindings, imports, indent, lines) {
     const profile = inputProfile(properties.get('inputType'));
     if (profile) arguments_.push(['inputProfile', `TextFieldInputProfile.${profile}`]);
     emitCall('TextField', [...arguments_, ...common], indent, null, lines);
-  } else {
+  } else if (node.kind === 'button') {
     imports.add('com.viewcompose.ui.foundation.Button');
     const text = valueExpression(properties.get('text'), bindings) ?? kotlinString('');
     emitCall('Button', [['text', text], ...common], indent, null, lines);
+  } else {
+    imports.add('com.viewcompose.ui.foundation.Image');
+    imports.add('com.viewcompose.ui.node.ImageContentScale');
+    const source = valueExpression(properties.get('source'), bindings);
+    const description = valueExpression(properties.get('contentDescription'), bindings);
+    const scale = imageContentScale(properties.get('contentScale'));
+    emitCall('Image', [
+      ['source', source],
+      ['contentDescription', description],
+      ['contentScale', `ImageContentScale.${scale}`],
+      ...common,
+    ], indent, null, lines);
   }
 }
 
@@ -454,6 +540,9 @@ export async function generateViewComposeKotlin(ir) {
     'com.viewcompose.ui.foundation.UiTreeBuilder',
   ]);
   if (bindings.states.length > 0) imports.add('com.viewcompose.text.TextFieldState');
+  if (bindings.resources.some((binding) => binding.type === 'ImageSource')) {
+    imports.add('com.viewcompose.ui.node.ImageSource');
+  }
   const functionName = `${upperCamel(ir.documentId)}View`;
   const body = [];
   emitNode(ir.roots[0], bindings, imports, 4, body);
@@ -488,7 +577,7 @@ export async function generateViewComposeKotlin(ir) {
     callSiteReview: {
       required: true,
       items: [
-        'Resolve every string parameter from its recorded Android resource at the ViewCompose host boundary.',
+        'Resolve every caller resource parameter from its recorded Android resource at the ViewCompose host boundary.',
         'Retain caller ownership and restoration policy for every TextFieldState parameter.',
         'Review ViewBinding references, listeners, adapters, and imperative mutations outside the XML input.',
       ],

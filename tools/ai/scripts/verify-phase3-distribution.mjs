@@ -21,6 +21,9 @@ const compileFixturePath = fileURLToPath(
 const xmlFixturePath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/login.xml', import.meta.url),
 );
+const xmlV2FixturePath = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/profile-card.xml', import.meta.url),
+);
 const xmlProjectFixtureRoot = fileURLToPath(
   new URL('../evaluation/fixtures/xml/project-context/supported/', import.meta.url),
 );
@@ -277,6 +280,20 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
     throw new Error('Installed CLI did not preserve explicit-root XML project context.');
   }
 
+  const xmlV2 = await readFile(xmlV2FixturePath, 'utf8');
+  const generatedV2 = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    source: xmlV2,
+    path: 'res/layout/profile_card.xml',
+    mode: 'generate',
+  }, 'distribution-xml-v2-generate');
+  if (
+    generatedV2.status !== 'success' ||
+    !generatedV2.data?.kotlin?.includes('fun UiTreeBuilder.ProfileCardView(') ||
+    generatedV2.data?.migrationReport?.bindings?.resources?.[0]?.type !== 'ImageSource'
+  ) {
+    throw new Error('Installed CLI did not generate the frozen XML v2 migration.');
+  }
+
   const rejectedXmlCompile = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
     source: xml,
     path: 'res/layout/login.xml',
@@ -295,6 +312,14 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
   }, 'distribution-xml-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
   if (compiledXml.status !== 'success' || compiledXml.evidence.level !== 'compiled') {
     throw new Error('Installed CLI did not compile the frozen XML migration.');
+  }
+  const compiledXmlV2 = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    source: xmlV2,
+    path: 'res/layout/profile-card.xml',
+    mode: 'compile',
+  }, 'distribution-xml-v2-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  if (compiledXmlV2.status !== 'success' || compiledXmlV2.evidence.level !== 'compiled') {
+    throw new Error('Installed CLI did not compile the frozen XML v2 migration.');
   }
 
   const source = await readFile(compileFixturePath, 'utf8');
@@ -324,12 +349,16 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
   return {
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
+    xmlV2: compiledXmlV2.evidence.outputFingerprint,
   };
 }
 
 async function verifyMcpMatrix(mcp, contract) {
   const modernVersion = contract.compatibility.protocolVersions[0];
-  const xml = await readFile(xmlFixturePath, 'utf8');
+  const [xml, xmlV2] = await Promise.all([
+    readFile(xmlFixturePath, 'utf8'),
+    readFile(xmlV2FixturePath, 'utf8'),
+  ]);
   const modern = await runMcp(mcp, [{
     jsonrpc: '2.0',
     id: 'modern-list',
@@ -359,18 +388,30 @@ async function verifyMcpMatrix(mcp, contract) {
       },
       _meta: modernMeta(modernVersion),
     },
+  }, {
+    jsonrpc: '2.0',
+    id: 'modern-xml-v2',
+    method: 'tools/call',
+    params: {
+      name: 'convert_xml_to_viewcompose',
+      arguments: {source: xmlV2, path: 'res/layout/profile-card.xml', mode: 'generate'},
+      _meta: modernMeta(modernVersion),
+    },
   }]);
   const modernList = modern.find((response) => response.id === 'modern-list');
   const modernXml = modern.find((response) => response.id === 'modern-xml');
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
+  const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
   if (
-    modern.length !== 3 ||
+    modern.length !== 4 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
-      ?.includes('fun UiTreeBuilder.StyledLoginView(')
+      ?.includes('fun UiTreeBuilder.StyledLoginView(') ||
+    !modernXmlV2?.result?.structuredContent?.data?.kotlin
+      ?.includes('fun UiTreeBuilder.ProfileCardView(')
   ) {
     const responseSummary = modern.map((response) => ({
       id: response.id,
@@ -491,7 +532,8 @@ async function main() {
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
-      `and compiled XML migration ${compileFingerprints.xml}.\n`,
+      `compiled XML v1 migration ${compileFingerprints.xml}, and compiled XML v2 migration ` +
+      `${compileFingerprints.xmlV2}.\n`,
     );
   } finally {
     if (!uninstalled) {
