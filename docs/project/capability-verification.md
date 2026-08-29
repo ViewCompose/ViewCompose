@@ -14,6 +14,7 @@ workflow: Define repository and controlled-device verification matrices plus the
 validation:
   - ./gradlew qaQuick
   - ./gradlew verifyNavigationCoverage
+  - ./gradlew verifyNavigationBenchmarkTraceContracts
   - ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.P1CoreCapabilitiesUiTest
   - ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.NavigationBackDeviceTest
 lifecycle: Update whenever capability gates, device requirements, scenario ownership, or accepted verification evidence changes.
@@ -60,6 +61,10 @@ Android floors of `70%`/`60%`; its XML and HTML are under
 `build/reports/viewcompose-quality/navigation-coverage/`. These percentages intentionally describe
 the owned reducer, lifecycle/scene, executor, owner/session, retention, Back, runtime, and host
 paths—not every class in either module.
+
+Run `./gradlew verifyNavigationBenchmarkTraceContracts` to reject drift between the runtime's
+navigation/frame trace sections and the release benchmark's collectors and labels. `qaQuick`
+consumes both navigation verification tasks.
 
 Run `NavigationBackDeviceTest` with an explicit `ANDROID_SERIAL`. A current-target device must run
 the complete class; an API 28–30 device must also run terminal-pop reachability, bounded-eviction

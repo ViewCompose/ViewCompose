@@ -1,6 +1,6 @@
 ---
 translation_source: project/capability-verification.md
-translation_source_hash: b245710c126aed4b9cc5d047b8e85a6c7b8d2d082f207e0411849b286bbaca87
+translation_source_hash: 184ae158ecb15aab88421f0be3131717525d69ced1dc00d09609435918119660
 translation_status: current
 ---
 
@@ -40,6 +40,9 @@ bundle，并要求 Core 行/分支覆盖率不低于 `80%`/`70%`、Android 不�
 与 HTML 位于 `build/reports/viewcompose-quality/navigation-coverage/`。这些比例只描述归属明确的
 reducer、生命周期/scene、executor、owner/session、保留策略、Back、runtime 与 host 路径，
 并非两个模块的所有 class。
+
+运行 `./gradlew verifyNavigationBenchmarkTraceContracts`，拒绝 runtime 导航/帧 trace section 与
+release benchmark collector/label 之间的漂移。`qaQuick` 会执行两项导航验证任务。
 
 使用明确的 `ANDROID_SERIAL` 运行 `NavigationBackDeviceTest`。当前 target 设备必须运行完整
 测试类；API 28–30 设备还必须运行终态 pop 可达性、bounded 淘汰可达性和深度 13 保留证据。
