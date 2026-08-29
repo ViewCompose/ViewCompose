@@ -1,102 +1,16 @@
----
-draft: true
-schema_version: 2
-document_id: plan.navigation-lifecycle-scene-evolution
-doc_type: plan
-owner:
-  kind: module
-  id: viewcompose-navigation-android
-version_lane: version-agnostic
-capability_ids:
-  - lifecycle.effects
-  - lifecycle.flow-collection
-  - lifecycle.owner-boundaries
-  - navigation.deep-links
-  - navigation.destination-context
-  - navigation.host
-  - navigation.kotlinx-serialization-routes
-  - navigation.presentation-retention
-  - navigation.result-consumption
-  - navigation.results
-  - navigation.scene-projection
-  - navigation.typed-route-host
-  - navigation.typed-routes
-artifact_ids:
-  - viewcompose-lifecycle-androidx
-  - viewcompose-navigation-android
-  - viewcompose-navigation-core
-  - viewcompose-navigation-kotlinx-serialization
-sample_ids:
-  - module.navigation-android-destination-context
-  - module.navigation-android-deep-link
-  - module.navigation-android-host-construction
-  - module.navigation-android-presentation-retention
-  - module.navigation-android-results
-  - module.navigation-android-typed-route
-  - module.navigation-core-execution-plan
-  - module.navigation-core-deep-link
-  - module.navigation-core-results
-  - module.navigation-core-scene-projection
-  - module.navigation-core-typed-route
-  - module.navigation-kotlinx-serialization-route
-status: active
-scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
-non_goals:
-  - Replace AndroidX LifecycleOwner with a ViewCompose-specific public lifecycle type.
-  - Add Activity-, Fragment-, and navigation-specific copies of the same Lifecycle DSL APIs.
-  - Preserve defective Alpha transition, retention, or compatibility behavior through aliases, flags, or dual paths.
-  - Copy every Navigation 2, Navigation 3, Compose, or Flutter API name without a ViewCompose use case.
-  - Reopen the retained ViewModel scoped-owner design frozen by ADR-0023 and its completed implementation plan.
-baseline: The 2026-08-29 audit found strong transactional navigation and destination ownership with 201 passing JVM or Robolectric tests, but entering destinations reach RESUMED before transition settlement, popped exiting entries remain STARTED, hidden destinations retain complete RenderSessions and native View trees without a bounded policy, general scene and overlay semantics are absent, and no navigation device or line/branch coverage gate exists.
-ordered_work:
-  - Freeze Lifecycle DSL, scene, entry, presentation, focus, transition, and ownership terminology and capability dispositions before production changes.
-  - Stabilize one nearest-owner Lifecycle consumption surface for Activity, Fragment, navigation, graph, and custom-container boundaries.
-  - Replace visible and interactive set projection with explicit scene-level and entry-level lifecycle caps in navigation core.
-  - Correct committed, predictive, overlay, pane, and popped-exit lifecycle ordering in the Android host.
-  - Separate retained entry ownership from RenderSession and native View-tree retention with explicit bounded presentation policies.
-  - Add one stable destination context for navigation-specific presentation semantics without duplicating LifecycleOwner.
-  - Converge navigation events, scene projection, lifecycle plans, presentation operations, focus, and transitions on one reducer-produced plan.
-  - Complete unit, state-machine, device, restoration, memory, performance, public API, documentation, and deletion-guard evidence.
-completion:
-  - Activity, Fragment, navigation destination, graph, and custom-container content consume one Lifecycle DSL API family and always resolve the nearest intended owner.
-  - Effective destination lifecycle is derived from host, scene, and entry caps; transition and overlay matrices match the accepted contract with no premature RESUMED state.
-  - Retained entry state survives optional View-tree disposal and recreation, and every retention policy has bounded cleanup, restoration, and memory evidence.
-  - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
-  - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
-last_verified: 2026-08-30
-next_action: Merge the accepted capability slice 7.7, then execute Phase 8 documentation ownership, release readiness, and archival; forward history and Android Studio Preview input remain explicitly deferred.
-maven_release_changesets:
-  - release/changes/20260829-navigation-destination-context.json
-  - release/changes/20260829-navigation-event-host.json
-  - release/changes/20260829-navigation-execution-reducer.json
-  - release/changes/20260829-navigation-presentation-retention.json
-  - release/changes/20260829-navigation-results.json
-  - release/changes/20260829-navigation-scene-projection.json
-  - release/changes/20260829-navigation-structured-deep-links.json
-  - release/changes/20260829-navigation-transition-lifecycle.json
-  - release/changes/20260829-navigation-typed-routes.json
-  - release/changes/20260829-navigation-kotlinx-serialization.json
-  - release/changes/20260830-navigation-overlay-scenes.json
----
-
 # Navigation Lifecycle and Scene Evolution Plan
 
 ## Status
 
-Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
-stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
-Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
-complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7's
-structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
-Serialization adapter slices are complete. The remaining-gap audit, capability slice 7.5 direct
-NavigationEvent host integration, capability slice 7.6 coverage/resource evidence, and capability
-slice 7.7 unified content-and-overlay scene execution are complete. Phase 8 remains.
+Complete and archived. The architecture and test audit plus Phases 0 through 8 are implemented and
+accepted. Durable lifecycle, navigation, migration, API, release, and evidence contracts now live
+in active architecture, module, guide, migration, capability, and release documents.
 
 Last verified: 2026-08-30.
 
-Next action: merge accepted slice 7.7, then complete Phase 8 documentation ownership, release
-readiness, and archival. Synthetic forward history and Android Studio Preview input remain
-explicitly deferred.
+Next action: none for this plan. Synthetic forward history, arbitrary scenes, separate-window
+destinations, and Android Studio Preview input require new attributed plans if downstream use cases
+justify them.
 
 ## Maven release changesets
 
@@ -388,7 +302,7 @@ but a new aggregate public owner API is not justified solely to reduce implement
 ## Coordination with retained ViewModel architecture
 
 The completed AndroidX ViewModel evolution and
-[ADR-0023](../../architecture/decisions/0023-retained-viewmodel-scope-ownership.md) own the general
+[ADR-0023](../architecture/decisions/0023-retained-viewmodel-scope-ownership.md) own the general
 retained scoped-owner facility and ViewModelStore allocation policy. Navigation already consumes
 that facility and allocates no parallel child store. This plan owns navigation entry lifecycle,
 scene projection, destination context, RenderSession lifetime, and transition semantics.
@@ -500,8 +414,8 @@ same slice that establishes its replacement:
 | 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Complete |
 | 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Complete |
 | 6 | Reducer and executor convergence | One typed plan owns stack, scene, lifecycle, presentation, focus, and effects; obsolete paths are absent | Complete |
-| 7 | Capability and test closure | Typed routes and ecosystem gaps have accepted dispositions; unit, device, coverage, memory, and performance gates pass | Next |
-| 8 | Documentation, release, and archive | Durable conclusions are current, Changesets are released or accepted, all gates pass, and the plan is archived | Pending |
+| 7 | Capability and test closure | Typed routes and ecosystem gaps have accepted dispositions; unit, device, coverage, memory, and performance gates pass | Complete |
+| 8 | Documentation, release, and archive | Durable conclusions are current, Changesets are released or accepted, all gates pass, and the plan is archived | Complete |
 
 ### Phase 0: freeze contracts before implementation
 
@@ -521,7 +435,7 @@ same slice that establishes its replacement:
 #### Phase 0 acceptance
 
 The lifecycle, presentation, module-ownership, hard-cut, and test invariants in this plan are
-accepted without revision. [ADR-0024](../../architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md)
+accepted without revision. [ADR-0024](../architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md)
 records the cross-module decision: effective entry lifecycle is `min(host cap, scene cap, entry
 cap)`; coarse presentation is separate from Lifecycle; logical entry ownership is independent of
 an optional native presentation; and one reducer-produced plan owns navigation decisions.
@@ -1419,7 +1333,8 @@ Acceptance evidence:
   compiled samples and contracts. Documentation size is **improved**. Overlay runtime performance,
   power, and memory deltas remain **inconclusive** because this capability does not add an isomorphic
   overlay benchmark; arbitrary scenes, separate windows, forward history, and Preview input remain
-  unsupported or explicitly deferred. Merge this slice, then execute Phase 8 release/archive work.
+  unsupported or explicitly deferred. Phase 8 closes documentation ownership and archival only;
+  it does not reinterpret this runtime evidence.
 
 ### Phase 8: document, release, and archive
 
@@ -1432,6 +1347,38 @@ Acceptance evidence:
    acceptance gates.
 5. Record interpreted evidence and final next action, move this plan to `docs/archive/`, update both
    plan indexes, and release only after active-plan Changeset ownership is cleared.
+
+#### Phase 8 acceptance
+
+Capability slice 7.7 merged through pull request 251 as `ffff44fa`. Its remote required checks
+passed: complete `qaQuick` work in `16m05s`, `qaPreview` work in `5m26s`, and documentation work in
+`4m01s`. Phase 8 changes only documentation ownership and historical evidence. It moves this plan
+out of the active-plan registry, updates both plan indexes, points active architecture and ADR
+evidence at the archive, and leaves shipped Lifecycle, Navigation, samples, production sources, and
+publication inputs unchanged. Device and unit behavior therefore has **no material change** from
+the already accepted 93/93 Core, 188/188 Android, Pixel 19/19, and Xiaomi 1/1 evidence; rerunning a
+physical device for a documentation-only move would not exercise a changed runtime path.
+
+The first full site attempt correctly failed because relative links from published architecture to
+the unpublished archive resolved as nonexistent Docusaurus routes. The links now use the established
+GitHub archive target. Later attempts generated the English locale but exhausted local disk during
+parallel static generation. After deleting only reproducible build output and bundler caches, the
+same build ran with Docusaurus static-generation concurrency limited to one and passed in `52.4 s`:
+528 audited pages, 30 redirects, 133 immutable API versions, 133 module manuals, 133 Chinese fallback
+routes, and every existing accessibility and size budget. Output was `493,085,564` bytes; non-API
+output was `49,148,948` bytes, `3,009` bytes (`-0.0061%`) below slice 7.7. The conclusion is
+**improved** link correctness with **no material documentation-size change**. Concurrency changed
+only local peak resource use, not generated content or accepted budgets.
+
+The final cold repository gate passed all 2,281 `qaQuick` tasks in `7m44s` (2,009 executed and 272
+up to date), including navigation coverage, tests, compiled samples, R8, Lint Vital, Javadoc,
+signing, and local Maven consumption. Documentation Governance V2 reported zero issues against
+`ffff44fa`; all 77 documentation-script tests passed; 129 canonical English documents and all 127
+required Chinese mirrors were current. Release intent resolved zero artifacts, zero ignored paths,
+and zero shared classifications, proving that archival cleared active-plan Changeset ownership
+without inventing a documentation-only release. Conclusion: **improved** release readiness and
+documentation ownership. Next action: none; deferred forward history, arbitrary scenes,
+separate-window destinations, and Preview input require new evidence-backed plans.
 
 ## Verification commands
 

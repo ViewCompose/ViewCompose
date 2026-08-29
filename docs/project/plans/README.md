@@ -33,13 +33,8 @@ site, search index, or sitemap.
   hardware-deferred because no currently available physical device can prove the required stable
   CPU, GPU, and display-pipeline control. All other phases are complete; resume only to recapture
   the unchanged collection-stress revision-3 scroll baseline when a qualifying device is available.
-- [Navigation lifecycle and scene evolution](./navigation-lifecycle-and-scene-evolution.md) —
-  unify Lifecycle DSL consumption across hosts, correct destination lifecycle projection, separate
-  retained entry ownership from native presentation lifetime, and converge scenes, overlays,
-  focus, transitions, and bounded retention on one transactional navigation plan.
-
-Completed documentation-governance, architecture, ViewModel-ownership, animation-capability, design-system,
-theme-propagation, native-widget, component-appearance, tutorial, language-consistency,
+Completed documentation-governance, architecture, ViewModel-ownership, navigation-lifecycle-and-scene,
+animation-capability, design-system, theme-propagation, native-widget, component-appearance, tutorial, language-consistency,
 migration-sample, hosted-documentation, version-retention, and Paging-integration plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 

@@ -28,7 +28,7 @@ invariants:
   - Logical entry ownership survives optional native presentation disposal, and permanent removal disposes presentation before destroying the entry owner.
   - One reducer-produced plan owns stack, scene, lifecycle, presentation, focus, transition, rollback, and terminal cleanup decisions.
 evidence:
-  - docs/project/plans/navigation-lifecycle-and-scene-evolution.md
+  - docs/archive/navigation-lifecycle-and-scene-evolution.md
   - docs/architecture/decisions/0023-retained-viewmodel-scope-ownership.md
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavLifecyclePlannerTest.kt
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavExecutionReducerTest.kt
@@ -167,7 +167,9 @@ a 36,255 us or 272.2% increase, but both policies produced 252 measured transiti
 with 9 ms P95 and zero frames above 32 ms. The result is **mixed**: bounded idle resources improve
 and measured settled motion shows **no material change**, while expensive pages may justify an
 explicit `Bounded` or `RetainAll` override. The single device, synthetic content, process-wide PSS,
-and short run limit generalization; Phase 7 retains broader device, leak, and workload evidence.
+and short run limit generalization. Phase 7 later added two-device reachability and resource
+evidence plus a one-device release benchmark, while API 24, broader OEMs, and representative
+overlay workloads remain outside the accepted evidence boundary.
 
 No default may be unbounded. Permanent entry removal disposes its presentation before owner
 destruction and terminal ViewModel clear. Configuration or process restoration recreates no live
@@ -286,7 +288,7 @@ coupling it to entry ownership.
    lifecycle matrix on Android.
 4. Phase 4 separates presentations, implements all three policy modes, and selects
    `DisposeWhenHidden` from interpreted device memory, restoration, recreation, and frame evidence;
-   broader leak and workload matrices remain in Phase 7.
+   Phase 7 adds the accepted reachability, resource, and release-benchmark matrix.
 5. Phase 5 publishes destination context with compiled Q3 samples and proves stable holder identity,
    delayed capture, presentation recreation, nested hosts, panes, overlays, and removal.
 6. Phase 6 publishes the pure Core reducer and typed Android executor, then deletes superseded
@@ -295,7 +297,7 @@ coupling it to entry ownership.
 7. Phases 7 and 8 close typed-route/ecosystem dispositions, coverage, device, performance,
    documentation, release, and archival gates.
 
-The active
-[Navigation Lifecycle and Scene Evolution Plan](../../project/plans/navigation-lifecycle-and-scene-evolution.md)
-owns sequencing and acceptance evidence. Current architecture and module manuals change only when
-their corresponding implementation behavior lands.
+The
+[archived Navigation Lifecycle and Scene Evolution Plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/navigation-lifecycle-and-scene-evolution.md)
+records the completed sequencing and acceptance evidence. Active architecture and module manuals
+own the shipped contracts.

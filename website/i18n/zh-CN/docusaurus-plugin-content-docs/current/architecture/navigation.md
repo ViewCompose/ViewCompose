@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: 3de7ed385b33aeb70e43b6266dae56b6159f912aa2726bf388429b58ec9e5b34
+translation_source_hash: 0b933938b3c51ed37867bb82eb109c2865792f86ff3303d35620afcd659db929
 translation_status: current
 ---
 
@@ -81,7 +81,8 @@ ViewCompose Saveable-state Namespace，以及一个 Keyed ViewModelStore Lease�
 Scene。永久移除始终先释放展示，再销毁 Owner 并清理 ViewModel。
 
 API 33 合成对比据此选择有界默认策略：原生保留量与 PSS 改善，同步重建回退，短时稳定帧样本为
-**no material change**。精确结果与局限保留在[活跃计划](../project/plans/navigation-lifecycle-and-scene-evolution.md)中。
+**no material change**。精确结果与局限保留在
+[已归档计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/navigation-lifecycle-and-scene-evolution.md)中。
 
 Entry Owner 还会保留一个 `NavDestinationContext`。Destination DSL 通过
 `LocalNavDestinationContext` 读取它；嵌套 Host 会为 Child Entry 覆盖该 Local，结束后恢复父级
@@ -196,6 +197,6 @@ View Motion 与 DSL Lifecycle 观察。可编译的[导航教程](../tutorials/n
 执行确定性架构测试。只有指南中的真实返回、重建、Predictive Back 和失败路径也通过后，才能
 接受设备行为。
 
-当前测试增量、真机结果、局限与下一步均在
-[活跃导航计划](../project/plans/navigation-lifecycle-and-scene-evolution.md)中解释；
+已接受的测试增量、真机结果、局限与最终处置均在
+[已归档导航计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/navigation-lifecycle-and-scene-evolution.md)中解释；
 原始测试输出本身不会改变这些契约。
