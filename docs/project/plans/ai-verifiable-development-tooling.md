@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Integrate the accepted Android XML project context into an explicit project-aware convert_xml_to_viewcompose mode, preserve standalone source mode, and require the generated styled fixture to compile.
+next_action: Freeze the next Android XML subset around basic container, image, accessibility, and resource semantics before widening parsing or generation.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -61,14 +61,14 @@ accepted converter is the ninth shared CLI/MCP tool, works in standalone generat
 source-bound compile modes, ships in the reproducible offline package, and is orchestrated by the
 sixth client-neutral consumer workflow. The next increment is now frozen as Android XML project
 context v1: explicit-root resource and style resolution plus a read-only, bounded lexical call-site
-inventory whose completeness is never claimed. The isolated resolver now meets that frozen golden
-and fail-closed denominator without widening the shared CLI/MCP tool yet.
+inventory whose completeness is never claimed. That context is now integrated as an explicit
+project input form of the shared CLI/MCP converter, and its styled golden passes the hermetic
+compiler without changing standalone source input.
 
 Last verified: 2026-08-29.
 
-Next action: integrate the accepted Android XML project context into an explicit project-aware
-`convert_xml_to_viewcompose` mode, preserve standalone source mode, and require the generated styled
-fixture to compile.
+Next action: freeze the next Android XML subset around basic container, image, accessibility, and
+resource semantics before widening parsing or generation.
 
 ## Maven release changesets
 
@@ -935,8 +935,51 @@ fail-closed unsupported projects. The compiled quality-build suite and new root 
 passed 18 actionable tasks (6 executed and 12 up-to-date) in 46 seconds. Compared with the frozen
 contract, this is **improved** executable project evidence with **no material runtime or supported
 CLI/MCP behavior change**. The result still does not reproduce AGP variant merging, resolve themes,
-prove call-site completeness, modify application files, compile the styled conversion, or expose
-project-aware conversion through the installed package; those remain the next integration boundary.
+prove call-site completeness, or modify application files. At that slice boundary, styled
+compilation and installed project-aware conversion remained pending; the next evidence section
+records their completion.
+
+### Implementation evidence — project-aware XML conversion
+
+`convert_xml_to_viewcompose` now accepts exactly one of two schema-selected inputs. Source input
+retains the accepted `source`, logical `path`, and explicit `generate` or `compile` behavior.
+Project input requires an absolute `projectRoot`, project-relative `layoutPath`, ordered explicit
+`resourceRoots`, optional ordered `sourceRoots`, and the same explicit mode. Mixing both forms or
+omitting either form fails schema validation. CLI and both MCP protocol eras continue to share the
+same catalog and dispatcher.
+
+Before Design IR conversion, project input runs the accepted resolver, uses only its internal
+style-expanded XML, and returns its schema-validated context as evidence. The migration report now
+records the context fingerprint, resource/style/call-site counts, `not-proven` completeness, and
+the complete bounded call-site inventory without raw source. The outer tool may own a 120-second
+compile request while its project scan is independently tightened to the frozen 10-second maximum;
+the installed modern MCP test caught and fixed this boundary composition before acceptance.
+
+The supported project generates the exact frozen `StyledLoginView` Kotlin golden with three string
+parameters, one caller-owned `TextFieldState`, inherited `16.dp` padding, preserved IDs, and seven
+review call sites. The dedicated JDK 21 gate matched 1/1 deterministic context and Kotlin golden,
+four resources, two styles, seven call sites, 1/1 hermetic compile, and 2/2 fail-closed unsupported
+projects. Its identities are context
+`f635c856eab177a37aa29f1eb14bd096ca76e8dc0e3a99892574b00f2c90a14e`, Kotlin
+`8698ad4f919b8dbbaf92fc2487972d54c599706a0c5024acd192aa9fd741f4fe`, and classes
+`e30210ebcf946e11e4b47327504999bed20c918e164713d1cf0102544cc97987`.
+
+On 2026-08-29, Node 25.6.0 passed 100/100 AI-tooling tests and the full Phase 0 contract verifier.
+The root project-context and documentation-structure gates passed 20 actionable tasks (6 executed
+and 14 up-to-date). Two clean distribution builds were byte-identical: the 41-file, 260,817-byte
+archive has SHA-256
+`5cc93e62277f02e3c44a5c2324ff95954a07534b1d189add67ca43a7f159e490` and 1,484,822
+declared file bytes. Its offline install/uninstall, SPDX/license inventory, both MCP eras,
+standalone generation, installed explicit-project generation, and existing compiled examples all
+passed.
+
+Compared with the isolated resolver, this is **improved** end-to-end migration evidence and
+consumer interoperability with **no material runtime change** because all work remains in the
+downstream package and no published Android artifact changed. Limitations remain explicit: the
+subset does not emulate AGP variants or resource merging, resolve themes or qualified defaults,
+prove call-site completeness, edit host source, render the generated project screen, or establish
+visual/accessibility parity. The next action is a new contract freeze for basic container, image,
+accessibility, and resource semantics; implementation must not widen the subset first.
 
 ### Implementation evidence — bounded XML to Design IR
 

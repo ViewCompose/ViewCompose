@@ -48,5 +48,23 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
   const missingXmlMode = validateSchemaValue({
     source: '<TextView />',
   }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
-  assert.ok(missingXmlMode.some((violation) => violation.includes('missing required property mode')));
+  assert.deepEqual(missingXmlMode, ['$: expected exactly one oneOf match, found 0']);
+
+  const projectContext = validateSchemaValue({
+    projectRoot: '/workspace/sample',
+    layoutPath: 'app/src/main/res/layout/screen.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
+    mode: 'generate',
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(projectContext, []);
+
+  const ambiguousXmlInput = validateSchemaValue({
+    source: '<TextView />',
+    projectRoot: '/workspace/sample',
+    layoutPath: 'app/src/main/res/layout/screen.xml',
+    resourceRoots: ['app/src/main/res'],
+    mode: 'generate',
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(ambiguousXmlInput, ['$: expected exactly one oneOf match, found 0']);
 });

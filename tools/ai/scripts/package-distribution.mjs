@@ -51,6 +51,7 @@ const sourcePaths = Object.freeze([
   'scripts/tool-catalog.mjs',
   'scripts/tool-core.mjs',
   'scripts/xml-migration.mjs',
+  'scripts/xml-project-context.mjs',
   'scripts/xml-to-design-ir.mjs',
   'skills/manifest.json',
   'skills/viewcompose-api-reference/SKILL.md',

@@ -21,6 +21,9 @@ const compileFixturePath = fileURLToPath(
 const xmlFixturePath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/login.xml', import.meta.url),
 );
+const xmlProjectFixtureRoot = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/project-context/supported/', import.meta.url),
+);
 const outputRoot = resolve(aiRoot, 'build/distribution');
 const npmEnvironment = Object.freeze({
   npm_config_audit: 'false',
@@ -257,6 +260,23 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
     throw new Error('Installed CLI did not generate the frozen standalone XML migration.');
   }
 
+  const projectGenerated = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    projectRoot: xmlProjectFixtureRoot,
+    layoutPath: 'app/src/main/res/layout/styled_login.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
+    mode: 'generate',
+  }, 'distribution-xml-project-generate');
+  if (
+    projectGenerated.status !== 'success' ||
+    !projectGenerated.data?.kotlin?.includes('fun UiTreeBuilder.StyledLoginView(') ||
+    projectGenerated.data?.projectContext?.resources?.length !== 4 ||
+    projectGenerated.data?.projectContext?.styles?.length !== 2 ||
+    projectGenerated.data?.migrationReport?.callSiteReview?.inventory?.length !== 7
+  ) {
+    throw new Error('Installed CLI did not preserve explicit-root XML project context.');
+  }
+
   const rejectedXmlCompile = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
     source: xml,
     path: 'res/layout/login.xml',
@@ -324,14 +344,33 @@ async function verifyMcpMatrix(mcp, contract) {
       arguments: {source: xml, path: 'res/layout/login.xml', mode: 'generate'},
       _meta: modernMeta(modernVersion),
     },
+  }, {
+    jsonrpc: '2.0',
+    id: 'modern-xml-project',
+    method: 'tools/call',
+    params: {
+      name: 'convert_xml_to_viewcompose',
+      arguments: {
+        projectRoot: xmlProjectFixtureRoot,
+        layoutPath: 'app/src/main/res/layout/styled_login.xml',
+        resourceRoots: ['app/src/main/res'],
+        sourceRoots: ['app/src/main/java'],
+        mode: 'generate',
+      },
+      _meta: modernMeta(modernVersion),
+    },
   }]);
   const modernList = modern.find((response) => response.id === 'modern-list');
   const modernXml = modern.find((response) => response.id === 'modern-xml');
+  const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
   if (
-    modern.length !== 2 ||
+    modern.length !== 3 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
-    !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(')
+    !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
+    modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
+    !modernXmlProject?.result?.structuredContent?.data?.kotlin
+      ?.includes('fun UiTreeBuilder.StyledLoginView(')
   ) {
     const responseSummary = modern.map((response) => ({
       id: response.id,

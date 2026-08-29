@@ -412,6 +412,11 @@ async function verifyXmlProjectContext(schemas) {
       scannedBytes += content.byteLength;
     }
     const golden = await readJson(resolve(fixtureDirectory, fixture.goldenContext));
+    const goldenKotlinPath = resolve(fixtureDirectory, fixture.goldenKotlin);
+    if (!isWithin(fixtureDirectory, goldenKotlinPath)) {
+      throw new Error(`${fixture.projectRoot}: generated Kotlin golden escapes the XML fixture root`);
+    }
+    const goldenKotlin = await readFile(goldenKotlinPath, 'utf8');
     assertSchemaValue(golden, contextSchema, fixture.goldenContext);
     if (JSON.stringify(golden) !== JSON.stringify(publicExample)) {
       throw new Error('The public XML project-context example must equal the frozen supported golden');
@@ -448,6 +453,16 @@ async function verifyXmlProjectContext(schemas) {
       JSON.stringify(callSiteKinds) !== JSON.stringify(fixture.expectedCallSiteKinds)
     ) {
       throw new Error(`${fixture.projectRoot}: golden resources, styles, or call-site denominator changed`);
+    }
+    if (
+      !/^[A-Z][A-Za-z0-9]*$/u.test(fixture.expectedFunction) ||
+      !goldenKotlin.includes(`fun UiTreeBuilder.${fixture.expectedFunction}(`) ||
+      fixture.expectedResourceParameters.some((parameter) =>
+        !goldenKotlin.includes(`${parameter}: String`)) ||
+      fixture.expectedStateBindings.some((parameter) =>
+        !goldenKotlin.includes(`${parameter}: TextFieldState`))
+    ) {
+      throw new Error(`${fixture.projectRoot}: project-aware Kotlin golden or bindings changed`);
     }
     for (const callSite of golden.callSites) {
       const content = contentByPath.get(callSite.path)?.toString('utf8');

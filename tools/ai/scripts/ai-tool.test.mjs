@@ -7,6 +7,9 @@ import {dispatchToolRequest} from './ai-tool.mjs';
 import {loadKnowledgeManifest, toolResult} from './tool-core.mjs';
 
 const executable = fileURLToPath(new URL('./ai-tool.mjs', import.meta.url));
+const projectContextRoot = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/project-context/supported/', import.meta.url),
+);
 
 async function request(tool, arguments_, overrides = {}) {
   const manifest = await loadKnowledgeManifest();
@@ -95,6 +98,22 @@ test('dispatches standalone XML migration through the frozen tool envelope', asy
   assert.equal(result.data.migrationReport.callSiteReview.required, true);
 });
 
+test('dispatches explicit-root XML project migration through the same envelope', async () => {
+  const result = await dispatchToolRequest(await request('convert_xml_to_viewcompose', {
+    projectRoot: projectContextRoot,
+    layoutPath: 'app/src/main/res/layout/styled_login.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
+    mode: 'generate',
+  }));
+  assert.equal(result.status, 'success');
+  assert.equal(result.data.projectContext.resources.length, 4);
+  assert.equal(result.data.projectContext.styles.length, 2);
+  assert.equal(result.data.projectContext.callSites.length, 7);
+  assert.equal(result.data.migrationReport.callSiteReview.inventory.length, 7);
+  assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.StyledLoginView('));
+});
+
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {
   let invocations = 0;
   const drift = await dispatchToolRequest(await request('validate_code', {
@@ -146,8 +165,10 @@ test('maps compile, render, layout diagnosis, project, and XML limits into provi
     maxDepth: 5,
   }), {analyze: handler('analyze_project', 'static')});
   await dispatchToolRequest(await request('convert_xml_to_viewcompose', {
-    source: '<TextView />',
-    path: 'res/layout/screen.xml',
+    projectRoot: '/workspace/sample',
+    layoutPath: 'app/src/main/res/layout/screen.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
     mode: 'generate',
   }), {convertXml: handler('convert_xml_to_viewcompose', 'static')});
 
@@ -162,6 +183,9 @@ test('maps compile, render, layout diagnosis, project, and XML limits into provi
   assert.equal(captured[4].arguments_.limits.maxSourceBytes, 256 * 1024);
   assert.equal(captured[4].arguments_.signal instanceof AbortSignal, true);
   assert.equal(captured[4].arguments_.mode, 'generate');
+  assert.equal(captured[4].arguments_.projectRoot, '/workspace/sample');
+  assert.deepEqual(captured[4].arguments_.resourceRoots, ['app/src/main/res']);
+  assert.deepEqual(captured[4].arguments_.sourceRoots, ['app/src/main/java']);
 });
 
 test('propagates transport cancellation into the bounded execution signal', async () => {

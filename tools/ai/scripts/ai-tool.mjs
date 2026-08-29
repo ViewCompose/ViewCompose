@@ -208,6 +208,10 @@ export async function dispatchToolRequest(request, {
         result = await convertXml({
           source: request.arguments.source,
           path: request.arguments.path,
+          projectRoot: request.arguments.projectRoot,
+          layoutPath: request.arguments.layoutPath,
+          resourceRoots: request.arguments.resourceRoots,
+          sourceRoots: request.arguments.sourceRoots,
           mode: request.arguments.mode,
           requestId: request.requestId,
           limits: {

@@ -1,13 +1,30 @@
 import {compileKotlin} from './compiler-adapter.mjs';
 import {generateViewComposeKotlin} from './design-ir-to-kotlin.mjs';
 import {toolResult} from './tool-core.mjs';
+import {resolveXmlProjectContext} from './xml-project-context.mjs';
 import {convertXmlToDesignIr} from './xml-to-design-ir.mjs';
 
-function resultData(converted, generated) {
+function resultData(converted, generated, projectContext) {
+  const migrationReport = generated?.report && projectContext ? {
+    ...generated.report,
+    projectEvidence: {
+      schemaVersion: projectContext.schemaVersion,
+      fingerprint: projectContext.fingerprint,
+      resources: projectContext.resources.length,
+      styles: projectContext.styles.length,
+      callSites: projectContext.callSites.length,
+      completeness: projectContext.coverage.completeness,
+    },
+    callSiteReview: {
+      ...generated.report.callSiteReview,
+      inventory: projectContext.callSites,
+    },
+  } : generated?.report;
   return Object.fromEntries(Object.entries({
     designIr: converted.ir,
     kotlin: generated?.kotlin,
-    migrationReport: generated?.report,
+    migrationReport,
+    projectContext,
     unsupported: converted.unsupported,
     kotlinFingerprint: generated?.outputFingerprint,
   }).filter(([, value]) => value !== undefined));
@@ -16,11 +33,16 @@ function resultData(converted, generated) {
 export async function convertXmlToViewCompose({
   source,
   path = 'layout.xml',
+  projectRoot,
+  layoutPath,
+  resourceRoots,
+  sourceRoots,
   mode,
   requestId,
   limits,
   signal,
   compile = compileKotlin,
+  resolveProjectContext = resolveXmlProjectContext,
 } = {}) {
   const started = performance.now();
   if (signal?.aborted) {
@@ -33,9 +55,38 @@ export async function convertXmlToViewCompose({
       elapsedMs: performance.now() - started,
     });
   }
+  let projectContext;
+  let sourceToConvert = source;
+  let pathToConvert = path;
+  if (projectRoot !== undefined) {
+    const resolved = await resolveProjectContext({
+      projectRoot,
+      layoutPath,
+      resourceRoots,
+      sourceRoots,
+      limits: {
+        maxBytes: limits?.maxSourceBytes,
+        timeoutMs: Math.min(limits?.timeoutMs ?? 10_000, 10_000),
+      },
+    });
+    if (resolved.status !== 'success') {
+      return toolResult({
+        requestId,
+        tool: 'convert_xml_to_viewcompose',
+        status: resolved.status,
+        level: 'static',
+        diagnostics: resolved.diagnostics,
+        elapsedMs: performance.now() - started,
+        truncated: resolved.status === 'limited',
+      });
+    }
+    projectContext = resolved.context;
+    sourceToConvert = resolved.resolvedSource;
+    pathToConvert = resolved.context.layout.path;
+  }
   const converted = await convertXmlToDesignIr({
-    source,
-    path,
+    source: sourceToConvert,
+    path: pathToConvert,
     limits: {
       maxInputBytes: Math.min(limits?.maxSourceBytes ?? 262144, 262144),
     },
@@ -47,7 +98,7 @@ export async function convertXmlToViewCompose({
       status: converted.status,
       level: 'static',
       diagnostics: converted.diagnostics,
-      data: resultData(converted),
+      data: resultData(converted, undefined, projectContext),
       elapsedMs: performance.now() - started,
       truncated: converted.status === 'limited',
     });
@@ -60,7 +111,7 @@ export async function convertXmlToViewCompose({
       status: generated.status,
       level: 'static',
       diagnostics: generated.diagnostics,
-      data: resultData(converted),
+      data: resultData(converted, undefined, projectContext),
       elapsedMs: performance.now() - started,
     });
   }
@@ -71,7 +122,7 @@ export async function convertXmlToViewCompose({
       status: 'success',
       level: 'static',
       diagnostics: [],
-      data: resultData(converted, generated),
+      data: resultData(converted, generated, projectContext),
       elapsedMs: performance.now() - started,
       outputFingerprint: generated.outputFingerprint,
     });
@@ -97,7 +148,7 @@ export async function convertXmlToViewCompose({
     level: compilation.evidence.level,
     diagnostics: compilation.diagnostics,
     data: {
-      ...resultData(converted, generated),
+      ...resultData(converted, generated, projectContext),
       compilation: compilation.data,
     },
     elapsedMs: performance.now() - started,

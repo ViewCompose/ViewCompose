@@ -161,19 +161,35 @@ Run the bounded XML migration gates with:
 
 ```bash
 npm --prefix tools/ai run verify:phase4-design-ir
+JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-project-context
 JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-xml
-./gradlew verifyAiDesignIr verifyAiXmlMigration
+./gradlew verifyAiDesignIr verifyAiXmlProjectContext verifyAiXmlMigration
 ```
 
 `convert_xml_to_viewcompose` accepts only the frozen Android XML layout v1 subset documented by
-`evaluation/fixtures/xml/subset-contract.json`. `generate` parses XML into typed Design IR and
-returns deterministic ViewCompose Kotlin plus resource/state bindings and a mandatory call-site
-review checklist. It runs standalone and never invokes Gradle. `compile` performs the same steps and
-then enters the fixed hermetic compiler; callers must select this deeper mode explicitly. Custom
-Views, Data Binding, unknown attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities,
-malformed XML, duplicate IDs, and limit violations return localized diagnostics and no Kotlin.
-String resources remain explicit caller `String` bindings and `TextFieldState` remains caller-owned;
-the tool does not invent listeners or rewrite ViewBinding/application call sites.
+`evaluation/fixtures/xml/subset-contract.json`. Its arguments select exactly one input form:
+
+- Source form supplies `source`, optional logical `path`, and `mode`.
+- Project form supplies an absolute `projectRoot`, project-relative `layoutPath`, ordered
+  `resourceRoots`, optional ordered `sourceRoots`, and `mode`.
+
+Project form implements only the additional subset frozen by
+`evaluation/fixtures/xml/project-context-contract.json`. It resolves default `string` and `dimen`
+definitions plus explicit style-parent chains from the named roots and returns a bounded lexical
+Kotlin/Java call-site inventory. It never chooses a build variant, runs inspected-project Gradle
+logic, follows symbolic links, or claims call-site completeness. Qualified resources are inventory
+evidence only; themes, aliases, implicit style parents, resource conflicts, formatted resources,
+and unsafe or missing defaults fail closed. The returned `projectContext` and migration report use
+project-relative paths and fingerprints and contain no raw application source.
+
+`generate` parses the selected source into typed Design IR and returns deterministic ViewCompose
+Kotlin plus resource/state bindings and a mandatory call-site review checklist. It never invokes
+Gradle. `compile` performs the same steps and then enters the fixed hermetic compiler; callers must
+select this deeper mode explicitly. Custom Views, Data Binding, unknown
+attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities, malformed XML, duplicate
+IDs, and limit violations return localized diagnostics and no Kotlin. String resources remain
+explicit caller `String` bindings and `TextFieldState` remains caller-owned; the tool does not invent
+listeners or rewrite ViewBinding/application call sites.
 
 Run the local MCP server and its protocol/parity gate with:
 
@@ -264,8 +280,9 @@ npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
 ```
 
 `get_api_reference`, `get_component_reference`, `search_component`, `get_sample`, static
-`validate_code`, `analyze_project`, and generate-mode `convert_xml_to_viewcompose` work from the
-installed package alone. Compile-mode `validate_code`, compile-mode
+`validate_code`, `analyze_project`, and both source and explicit-project generate modes of
+`convert_xml_to_viewcompose` need no ViewCompose source checkout. Project generation reads only the
+caller-supplied bounded project roots. Compile-mode `validate_code`, compile-mode
 `convert_xml_to_viewcompose`, `render_preview`, and `diagnose_layout` remain source-bound: set
 `VIEWCOMPOSE_SOURCE_ROOT` to the absolute root of the matching ViewCompose checkout and provide the
 pinned JDK/Android/Gradle offline lane. The adapter requires the exact Knowledge Bundle source

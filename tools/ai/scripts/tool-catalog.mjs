@@ -125,20 +125,48 @@ const executableDefinitions = {
   convert_xml_to_viewcompose: {
     title: 'Convert Android XML to ViewCompose',
     description:
-      'Convert the frozen Android layout XML subset to Design IR and deterministic ViewCompose Kotlin.',
+      'Convert source-only or explicit-root Android XML project context to deterministic ViewCompose Kotlin.',
     inputSchema: {
       type: 'object',
-      additionalProperties: false,
-      required: ['source', 'mode'],
-      properties: {
-        source: {type: 'string', minLength: 1, maxLength: 262144},
-        path: {type: 'string', minLength: 1, maxLength: 1024},
-        mode: {enum: ['generate', 'compile']},
-      },
+      oneOf: [
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['source', 'mode'],
+          properties: {
+            source: {type: 'string', minLength: 1, maxLength: 262144},
+            path: {type: 'string', minLength: 1, maxLength: 1024},
+            mode: {enum: ['generate', 'compile']},
+          },
+        },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['projectRoot', 'layoutPath', 'resourceRoots', 'mode'],
+          properties: {
+            projectRoot: {type: 'string', minLength: 1, maxLength: 4096},
+            layoutPath: {type: 'string', minLength: 1, maxLength: 4096},
+            resourceRoots: {
+              type: 'array',
+              minItems: 1,
+              maxItems: 16,
+              uniqueItems: true,
+              items: {type: 'string', minLength: 1, maxLength: 4096},
+            },
+            sourceRoots: {
+              type: 'array',
+              maxItems: 16,
+              uniqueItems: true,
+              items: {type: 'string', minLength: 1, maxLength: 4096},
+            },
+            mode: {enum: ['generate', 'compile']},
+          },
+        },
+      ],
     },
     defaultLimits: {
       timeoutMs: 120000,
-      maxInputBytes: 262144,
+      maxInputBytes: 4194304,
       maxOutputBytes: 1048576,
     },
     evidenceLevel: 'static',

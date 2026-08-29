@@ -4,6 +4,10 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {convertXmlToViewCompose} from './xml-migration.mjs';
 
+const projectContextRoot = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/project-context/supported/', import.meta.url),
+);
+
 async function fixture(name) {
   return readFile(fileURLToPath(new URL(`../evaluation/fixtures/xml/${name}`, import.meta.url)), 'utf8');
 }
@@ -56,6 +60,76 @@ test('returns compiled conversion evidence through the same tool envelope', asyn
   assert.equal(result.evidence.outputFingerprint, 'b'.repeat(64));
   assert.ok(result.data.compilation.sourceBytes > 0);
   assert.match(result.data.kotlinFingerprint, /^[a-f0-9]{64}$/u);
+});
+
+test('resolves project resources, styles, and call sites before generation', async () => {
+  const result = await convertXmlToViewCompose({
+    projectRoot: projectContextRoot,
+    layoutPath: 'app/src/main/res/layout/styled_login.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
+    mode: 'generate',
+    requestId: 'xml-project-generate',
+    limits: {maxSourceBytes: 4 * 1024 * 1024, timeoutMs: 120_000},
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.data.projectContext.resources.length, 4);
+  assert.equal(result.data.projectContext.styles.length, 2);
+  assert.equal(result.data.projectContext.callSites.length, 7);
+  assert.equal(result.data.migrationReport.callSiteReview.inventory.length, 7);
+  assert.equal(result.data.migrationReport.projectEvidence.completeness, 'not-proven');
+  assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.StyledLoginView('));
+  assert.ok(result.data.kotlin.includes('padding(16.dp)'));
+});
+
+test('compiles project-aware generated Kotlin through the hermetic adapter', async () => {
+  let compiledSource;
+  const result = await convertXmlToViewCompose({
+    projectRoot: projectContextRoot,
+    layoutPath: 'app/src/main/res/layout/styled_login.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
+    mode: 'compile',
+    requestId: 'xml-project-compile',
+    compile: async (request) => {
+      compiledSource = request.source;
+      return {
+        status: 'success',
+        evidence: {
+          level: 'compiled',
+          cache: 'miss',
+          compilerLane: 'test-compiler-lane',
+          outputFingerprint: 'c'.repeat(64),
+        },
+        diagnostics: [],
+        data: {sourceBytes: Buffer.byteLength(request.source)},
+        truncated: false,
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compiled');
+  assert.ok(compiledSource.includes('fun UiTreeBuilder.StyledLoginView('));
+  assert.equal(result.data.projectContext.callSites.length, 7);
+});
+
+test('fails closed when project context uses unsupported style semantics', async () => {
+  const result = await convertXmlToViewCompose({
+    projectRoot: fileURLToPath(
+      new URL('../evaluation/fixtures/xml/project-context/style-cycle/', import.meta.url),
+    ),
+    layoutPath: 'app/src/main/res/layout/cycle.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: [],
+    mode: 'generate',
+    requestId: 'xml-project-unsupported',
+  });
+
+  assert.equal(result.status, 'unsupported');
+  assert.ok(result.diagnostics.some((entry) => entry.code === 'VC-AI-XML-STYLE-CYCLE'));
+  assert.equal(result.data, undefined);
 });
 
 test('preserves unsupported XML diagnostics and never emits Kotlin', async () => {

@@ -123,6 +123,10 @@
       ],
       "sourceFiles": ["app/src/main/java/com/example/LoginActivity.kt"],
       "goldenContext": "project-context/styled-login.context.json",
+      "goldenKotlin": "project-context/styled-login.viewcompose.kt",
+      "expectedFunction": "StyledLoginView",
+      "expectedResourceParameters": ["loginTitle", "emailHint", "loginAction"],
+      "expectedStateBindings": ["emailState"],
       "expectedResources": [
         "@dimen/screen_padding",
         "@string/email_hint",
