@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 82c01c12f77c5fd4cf8b3560e9c1ec2787e4394b68d1d6e613ee23b50a5d9775
+translation_source_hash: ec94f1098709def2fe065da87ec70a5bf3dcca932743a79108141b88c55b6378
 translation_status: current
 ---
 
@@ -31,6 +31,11 @@ Destination 自有 SavedState。
 类型化命令与 `NavEntry.toRoute` 中复用。只编码可持久化标识符和少量基础值，领域对象应由目标页
 ViewModel 加载。跨版本保持显式 Route Name 与参数 Schema 兼容。Codec 异常属于调用方错误，且会
 在 Android Host 启动导航事务前发生。
+
+Route Class 已使用 Kotlinx Serialization 时，可选
+[`viewcompose-navigation-kotlinx-serialization`](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-kotlinx-serialization)
+制品可为扁平 Scalar Schema 派生 Spec。Nested、Collection、Polymorphic、Contextual、Unsigned
+或领域特定 Wire Shape 应继续使用显式 Core Codec。
 
 使用 `NavDeepLinkRequest` 表达外部导航。声明可以约束 URI、action、MIME type 或三者组合，且
 每个声明约束都必须匹配。Android `Intent` 重载只把 `data`、`action` 与 `type` 映射到同一份 Core

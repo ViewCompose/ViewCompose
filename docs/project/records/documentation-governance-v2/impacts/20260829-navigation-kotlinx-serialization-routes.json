@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-kotlinx-serialization-routes",
+  "change": "added",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-kotlinx-serialization",
+  "symbol_id": "com.viewcompose.navigation.serialization.serializableNavRouteSpec",
+  "capability_id": "navigation.kotlinx-serialization-routes",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "outputs",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.navigation.serialization.serializableNavRouteSpec"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-navigation-kotlinx-serialization"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.navigation-kotlinx-serialization-route"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.navigation.kotlinx-serialization-routes"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The introductory navigation tutorial should not require an optional serialization dependency to teach its first route transition."
+    },
+    "guide": {
+      "status": "updated",
+      "targets": ["guide.navigation-production-host"]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": ["architecture.navigation-runtime"]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-navigation"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The integration adds a new artifact and factory without moving an existing symbol or documentation route."
+    }
+  }
+}

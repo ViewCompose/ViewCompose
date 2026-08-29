@@ -14,6 +14,7 @@ capability_ids:
   - navigation.deep-links
   - navigation.destination-context
   - navigation.host
+  - navigation.kotlinx-serialization-routes
   - navigation.presentation-retention
   - navigation.result-consumption
   - navigation.results
@@ -24,6 +25,7 @@ artifact_ids:
   - viewcompose-lifecycle-androidx
   - viewcompose-navigation-android
   - viewcompose-navigation-core
+  - viewcompose-navigation-kotlinx-serialization
 sample_ids:
   - module.navigation-android-destination-context
   - module.navigation-android-deep-link
@@ -36,6 +38,7 @@ sample_ids:
   - module.navigation-core-results
   - module.navigation-core-scene-projection
   - module.navigation-core-typed-route
+  - module.navigation-kotlinx-serialization-route
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
 non_goals:
@@ -71,6 +74,7 @@ maven_release_changesets:
   - release/changes/20260829-navigation-structured-deep-links.json
   - release/changes/20260829-navigation-transition-lifecycle.json
   - release/changes/20260829-navigation-typed-routes.json
+  - release/changes/20260829-navigation-kotlinx-serialization.json
 ---
 
 # Navigation Lifecycle and Scene Evolution Plan
@@ -98,6 +102,7 @@ typed-route contract before the broader evidence matrix.
 - `release/changes/20260829-navigation-structured-deep-links.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
 - `release/changes/20260829-navigation-typed-routes.json`
+- `release/changes/20260829-navigation-kotlinx-serialization.json`
 
 ## Release intent rationale
 
@@ -146,6 +151,15 @@ scanner; its one-impact-per-detected-change rule therefore admits no immutable i
 two capability records, canonical KDoc, compiled samples, module/architecture/migration owners,
 generated Reference, translations, and one two-artifact Changeset provide the structured
 dispositions without claiming `No documentation impact`.
+
+Slice 7.4 registers `viewcompose-navigation-kotlinx-serialization` as an unpublished first-release
+feature. Its public factory returns Core `NavRouteSpec<T>` and accepts `KSerializer<T>`, so
+Navigation Core and `kotlinx-serialization-core` are compile dependencies; the JSON bridge is a
+private runtime dependency. Governance V2 detects the factory overload set and admits exactly one
+Q3 impact record covering codec behavior, inputs/outputs, callback, failure, performance, and
+compatibility fields. The module catalog, strict API list, dependency contract, source-registered
+version, compiled sample, bilingual manual, generated Reference, and one Changeset travel with the
+same first-release registration.
 
 ## Objective
 

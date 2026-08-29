@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 3401c6cccff58743bc0aeda602518eaab0659b0adeb20b1e36f7d5676b5e7b30
+translation_source_hash: a286087b2508c222e51dec2242d45378adc056ace052d011cc73fd8bd417e527
 translation_status: current
 ---
 
@@ -344,6 +344,9 @@ entry，并要求栈顶始终可见。`NavPaneScene` 默认把所有可见 Pane 
 
 完整生成参考位于
 [`viewcompose-navigation-core` API 树](https://docs.viewcompose.com/api/viewcompose-navigation-core/current/)。
+使用受支持扁平 Kotlinx Serialization Route Schema 的应用可以添加可选
+[`viewcompose-navigation-kotlinx-serialization`](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-kotlinx-serialization)
+Adapter；Core 本身仍不依赖 Serialization。
 
 ## 兼容性说明
 

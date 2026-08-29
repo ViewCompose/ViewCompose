@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.navigation-kotlinx-serialization-route",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "navigation.kotlinx-serialization-routes",
+  "document_ids": ["module.viewcompose-navigation-kotlinx-serialization"],
+  "version_lane": "next",
+  "source": "viewcompose-navigation-kotlinx-serialization/src/test/samples/com/viewcompose/navigation/serialization/samples/NavigationSerializationSamples.kt",
+  "region": "navigation-kotlinx-serialization-route",
+  "build_target": ":viewcompose-navigation-kotlinx-serialization:compileTestKotlin"
+}

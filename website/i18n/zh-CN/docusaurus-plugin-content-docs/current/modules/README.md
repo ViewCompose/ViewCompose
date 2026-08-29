@@ -12,6 +12,7 @@ artifact_ids:
   - viewcompose-text-core
   - viewcompose-ui-contract
   - viewcompose-navigation-core
+  - viewcompose-navigation-kotlinx-serialization
   - viewcompose-navigation-android
   - viewcompose-renderer-android
   - viewcompose-ui-foundation
@@ -52,7 +53,7 @@ validation:
   - ./gradlew verifyDocumentationStructure verifyViewComposePublishingConfiguration
 lifecycle: 公共制品新增、重命名、退役、发布或调整模块分类时更新。
 translation_source: modules/README.md
-translation_source_hash: 809d74a1ea509f399504d80d46b9177e4da3bdd31d9cbc4c1a6d03af31013199
+translation_source_hash: d3be63479e71a11254065bd0b6c8c2a073c78a6d9cf7f5111086ba8031a0c711
 translation_status: current
 ---
 
@@ -71,6 +72,7 @@ translation_status: current
 | `viewcompose-text-core` | Kernel | 平台无关的文本编辑模型 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-text-core) |
 | `viewcompose-ui-contract` | Kernel | 平台无关的 UI 契约与节点规范 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract) |
 | `viewcompose-navigation-core` | Kernel | 平台无关的导航状态与事务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-core) |
+| `viewcompose-navigation-kotlinx-serialization` | Integration | 可选 Kotlinx Serialization Route Codec | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-kotlinx-serialization) |
 | `viewcompose-renderer-android` | Android Engine | Android View 渲染与协调引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android) |
 | `viewcompose-ui-foundation` | UI Foundation | 核心 DSL、组件、token 与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation) |
 | `viewcompose-diagnostics` | Integration | 有界且隐私安全的生产故障聚合 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics) |

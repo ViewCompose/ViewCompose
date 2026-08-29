@@ -10,6 +10,7 @@ capability_ids:
   - navigation.deep-links
   - navigation.destination-context
   - navigation.host
+  - navigation.kotlinx-serialization-routes
   - navigation.presentation-retention
   - navigation.result-consumption
   - navigation.results
@@ -23,6 +24,7 @@ capability_ids:
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
+  - viewcompose-navigation-kotlinx-serialization
 sample_ids:
   - module.navigation-core-results
   - module.navigation-core-execution-plan
@@ -53,14 +55,16 @@ evidence:
 ## 1. Ownership boundary
 
 ViewCompose navigation uses an Activity or Window as the outer Android host, but a destination is a
-framework-owned page rather than an Activity or Fragment. The capability is split across two
-published artifacts:
+framework-owned page rather than an Activity or Fragment. Two published artifacts own the required
+runtime, with one optional serialization integration:
 
 - `viewcompose-navigation-core` owns the platform-neutral route, graph, retained-stack, transaction,
   lifecycle-plan, structured URI/action/MIME deep-link matcher, and pane-scene models;
 - `viewcompose-navigation-android` owns destination and graph Android owners, child render sessions,
   native View presentation, SavedState encoding, `Intent` adaptation, system and predictive Back,
   and visual motion.
+- `viewcompose-navigation-kotlinx-serialization` optionally derives Core specs from supported
+  Kotlinx serializer descriptors without entering stack or host ownership.
 
 The split keeps Android ownership out of the state machine while giving the native host one place
 to coordinate stack state, rendering, lifecycle, and View hierarchy changes.
@@ -70,6 +74,8 @@ model. Its stable name is used for graph declaration; its encoder produces close
 arguments; its decoder reconstructs application values from an entry. Android typed commands
 encode before entering the host transaction. Graphs never retain codec callbacks, snapshots never
 retain application objects, and string routes remain the interoperability and recovery boundary.
+The optional Kotlinx adapter maps supported flat scalar descriptors onto that same model and fails
+unsupported schemas when a spec is created; JSON remains a private call-local bridge.
 
 ## 2. Transaction boundary
 

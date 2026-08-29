@@ -12,6 +12,7 @@ artifact_ids:
   - viewcompose-text-core
   - viewcompose-ui-contract
   - viewcompose-navigation-core
+  - viewcompose-navigation-kotlinx-serialization
   - viewcompose-navigation-android
   - viewcompose-renderer-android
   - viewcompose-ui-foundation
@@ -69,6 +70,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-text-core` | Kernel | Platform-neutral text editing model | [Available](./viewcompose-text-core/README.md) |
 | `viewcompose-ui-contract` | Kernel | Platform-neutral UI contracts and node specifications | [Available](./viewcompose-ui-contract/README.md) |
 | `viewcompose-navigation-core` | Kernel | Platform-neutral navigation state and transactions | [Available](./viewcompose-navigation-core/README.md) |
+| `viewcompose-navigation-kotlinx-serialization` | Integration | Optional Kotlinx Serialization route codecs | [Available](./viewcompose-navigation-kotlinx-serialization/README.md) |
 | `viewcompose-renderer-android` | Android Engine | Android View renderer and reconciliation engine | [Available](./viewcompose-renderer-android/README.md) |
 | `viewcompose-ui-foundation` | UI Foundation | Core DSL, components, tokens, and local values | [Available](./viewcompose-ui-foundation/README.md) |
 | `viewcompose-diagnostics` | Integration | Bounded, privacy-safe production failure aggregation | [Available](./viewcompose-diagnostics/README.md) |

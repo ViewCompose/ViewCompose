@@ -10,6 +10,7 @@ capability_ids:
   - navigation.deep-links
   - navigation.destination-context
   - navigation.host
+  - navigation.kotlinx-serialization-routes
   - navigation.presentation-retention
   - navigation.result-consumption
   - navigation.results
@@ -19,6 +20,7 @@ capability_ids:
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
+  - viewcompose-navigation-kotlinx-serialization
 sample_ids:
   - module.navigation-android-results
   - module.navigation-core-execution-plan
@@ -71,6 +73,11 @@ Declare one stable `NavRouteSpec<T>` per application route and reuse it in `dest
 and small primitive values; load domain objects from the destination ViewModel. Keep the explicit
 route name and argument schema compatible across releases. A codec exception is a caller error and
 occurs before the Android host begins a navigation transaction.
+
+When route classes already use Kotlinx Serialization, the optional
+[`viewcompose-navigation-kotlinx-serialization`](../modules/viewcompose-navigation-kotlinx-serialization/README.md)
+artifact derives the spec for flat scalar schemas. Keep an explicit Core codec for nested,
+collection, polymorphic, contextual, unsigned, or domain-specific wire shapes.
 
 Model external navigation with `NavDeepLinkRequest`. A declaration may constrain URI, action,
 MIME type, or all three; every declared constraint must match. The Android `Intent` overload maps
