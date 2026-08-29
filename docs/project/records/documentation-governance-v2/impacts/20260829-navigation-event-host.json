@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-event-host",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.UiTreeBuilder.NavHost",
+  "capability_id": "navigation.host",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.navigation.UiTreeBuilder.NavHost"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-navigation-android"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.navigation-android-host"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.navigation.host"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The existing NavHost default adopts direct backward input without adding an application choice or a second teaching path."
+    },
+    "guide": {
+      "status": "updated",
+      "targets": ["guide.navigation-production-host"]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": ["architecture.navigation-runtime"]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-navigation"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "NavHost remains at the same package and documentation route; only its Android input ownership changes."
+    }
+  }
+}

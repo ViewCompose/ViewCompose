@@ -245,6 +245,12 @@ cancels an unfinished preview because the platform dispatcher may no longer deli
 callback. Preview participants remain `STARTED`; on commit the popped outgoing entry becomes
 `CREATED` until its exit presentation is disposed.
 
+While `STARTED`, the Android host registers with the nearest View-tree NavigationEvent owner;
+Activity Back is used only when no direct owner exists. The mutually exclusive paths share one
+state machine, roots disable their handler, and stop, detach, disablement, owner change, or destroy
+cancels before unregistering and suppresses the cancelled gesture's late terminal. Forward history
+is not synthesized.
+
 `NavTransitionSpec` and shared-content capture are presentation policy. They operate on already
 owned destination roots after commit, own no page/session retention, and cannot receive input or
 accessibility focus. Capture failure degrades the affected visual pair without changing navigation

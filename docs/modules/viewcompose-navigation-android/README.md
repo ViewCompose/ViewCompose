@@ -55,9 +55,9 @@ dependencies {
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
 - API dependencies are Navigation Core, Runtime, UI Contract, and UI Foundation because their
   route, state, node, and builder types form the public navigation surface.
-- Implementation dependencies are Android Host, Lifecycle, ViewModel integration, and the neutral
-  Android overlay transport. Android Renderer arrives privately through Android Host and is not a
-  direct dependency of this artifact.
+- Runtime-only dependencies include the Android integrations, Activity Back fallback, and direct
+  NavigationEvent 1.1.2 input. Android Renderer stays private through Android Host, while
+  `navigationevent-testing` stays test-only.
 - The artifact transitively supplies `viewcompose-navigation-core`; applications may depend on the
   core artifact alone when they need only the platform-neutral model.
 
@@ -273,11 +273,12 @@ is accepted with a fresh host-scope identity.
 
 ## Android system and predictive Back
 
-`NavHost` registers with the nearest AndroidX Back dispatcher only while it can consume Back, using
-retained-stack history at an active root. Predictive preview does not commit the stack: cancel
-restores the settled scene, completion uses the ordinary pop transaction, and command redirection
-continues from current visuals. Preview owners stay at most `STARTED`; detach, disable, or destroy
-cancels an unfinished preview.
+While `STARTED` and able to pop, `NavHost` installs one handler on the nearest
+`ViewTreeNavigationEventDispatcherOwner`, falling back to Activity Back only when that owner is
+absent. A root disables the handler for outer fallback. Both mutually exclusive paths use one
+transactional preview/pop state machine: cancellation restores the scene, commit pops once, and
+stop, detach, disablement, owner change, or destruction cancels before unregistering and suppresses
+the cancelled gesture's late terminal. Forward history and Android Studio Preview input are absent.
 
 ## Motion
 

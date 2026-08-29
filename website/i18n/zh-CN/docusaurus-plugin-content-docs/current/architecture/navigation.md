@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: daac9bb175c18abf6e9d21f7a02ac1a6071644fac0d7a6bf31b3bc79359dfcec
+translation_source_hash: d764e6853047a95320eec829587935dea8cc4c97d7546ffc71e77562f530f6fa
 translation_status: current
 ---
 
@@ -172,6 +172,10 @@ Pane 集合；隐藏目的地内容不会急切执行。配置重建可以通过
 创建预览，但不改变 Core 栈。取消时恢复稳定 Scene，完成时执行普通 Pop 事务。Detach、禁用
 Back 或销毁 Host 都会取消未结束的预览，因为平台 Dispatcher 可能不再提供终态回调。
 Preview 参与者保持在 `STARTED`；提交后，被 Pop 的离场 Entry 会在退出展示释放前进入 `CREATED`。
+
+处于 `STARTED` 时，Android Host 向最近的 View-tree NavigationEvent Owner 注册；仅在无直接 Owner
+时使用 Activity Back。两条互斥路径共用状态机，根节点禁用 Handler；Stop、Detach、禁用、Owner
+变化或销毁均先取消再注销，并抑制已取消手势迟到的终态。不会合成 Forward History。
 
 `NavTransitionSpec` 和 Shared Content 捕获只是展示策略。它们在提交后作用于已经拥有的
 Destination Root，不持有页面或 Session，也不能接收输入或无障碍焦点。捕获失败只降级对应

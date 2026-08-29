@@ -64,9 +64,10 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Re-audit and disposition direct NavigationEvent integration, general scene strategies, diagnostics, and testing utilities before the coverage, leak, memory, and performance matrix.
+next_action: Execute the Phase 7 coverage, leak, memory, and representative performance matrix after the accepted NavigationEvent slice 7.5.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
+  - release/changes/20260829-navigation-event-host.json
   - release/changes/20260829-navigation-execution-reducer.json
   - release/changes/20260829-navigation-presentation-retention.json
   - release/changes/20260829-navigation-results.json
@@ -86,16 +87,18 @@ stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecyc
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
 structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
-Serialization adapter slices are complete.
+Serialization adapter slices are complete. The remaining-gap audit and capability slice 7.5 direct
+NavigationEvent host integration are complete. Phase 7 continues with its coverage, leak, memory,
+and representative performance matrix.
 
 Last verified: 2026-08-29.
 
-Next action: re-audit and disposition direct NavigationEvent integration, general scene strategies,
-diagnostics, and testing utilities before the coverage, leak, memory, and performance matrix.
+Next action: execute the Phase 7 coverage, leak, memory, and representative performance matrix.
 
 ## Maven release changesets
 
 - `release/changes/20260829-navigation-destination-context.json`
+- `release/changes/20260829-navigation-event-host.json`
 - `release/changes/20260829-navigation-execution-reducer.json`
 - `release/changes/20260829-navigation-presentation-retention.json`
 - `release/changes/20260829-navigation-results.json`
@@ -161,6 +164,12 @@ Q3 impact record covering codec behavior, inputs/outputs, callback, failure, per
 compatibility fields. The module catalog, strict API list, dependency contract, source-registered
 version, compiled sample, bilingual manual, generated Reference, and one Changeset travel with the
 same first-release registration.
+
+Slice 7.5 classifies Navigation Android as a feature because the existing Q3 `NavHost` changes from
+transitive Activity Back handling to direct NavigationEvent 1.1.2 ownership, with an exclusive
+legacy compatibility fallback. No public declaration is added: canonical KDoc, the existing
+compiled host sample, one host impact disposition, bilingual owning documents, and one immutable
+Changeset describe the changed Android behavior and dependency metadata.
 
 ## Objective
 
@@ -1093,6 +1102,99 @@ Acceptance evidence:
   custom `NavType`, Navigation3 instance/class key precedence, broader coverage, leaks, memory, and
   representative performance remain **inconclusive**. Next: disposition direct NavigationEvent,
   general scene strategies, diagnostics, and testing utilities, then execute the evidence matrix.
+
+#### Capability slice 7.5: direct NavigationEvent host integration
+
+The remaining-gap audit accepts direct AndroidX NavigationEvent input as a material host gap. The
+stable baseline is NavigationEvent 1.1.2: Activity 1.12 is implemented on the same dispatcher, the
+official View tree defines nested ownership, and the official testing artifact supplies dispatcher
+fixtures. Keeping only `OnBackPressedDispatcher` behavior works transitively but prevents the host
+from participating directly in nested dispatch, handler precedence, and non-Activity inputs.
+
+The frozen implementation remains internal to `NavHost`; it does not add another DSL Local,
+provider, owner interface, callback type, or dispatcher facade:
+
+1. `AndroidNavHostBackAdapter` resolves the nearest
+   `ViewTreeNavigationEventDispatcherOwner` first and registers one default-priority back handler.
+   When no NavigationEvent owner exists, it falls back to the existing nearest
+   `OnBackPressedDispatcherOwner` path. The two registrations are mutually exclusive.
+2. NavigationEvent and legacy callbacks feed one existing `NavHostBackEvent`/preview state machine.
+   Started, progressed, cancelled, ordinary-completed, and predictive-completed events therefore
+   cannot mutate the stack twice or create parallel transition semantics.
+3. The handler is effective only while the host lifecycle is at least `STARTED`, system Back is
+   enabled, and the active stack can pop. Dropping below `STARTED`, disabling Back, detaching,
+   changing owner, or destroying the host cancels an active preview before unregistering. Reattach
+   re-queries the View tree instead of retaining a stale Activity or nested owner.
+4. At a root entry the handler becomes disabled. The NavigationEvent dispatcher then selects the
+   next eligible handler or its fallback; ViewCompose does not manually call an Activity fallback.
+   Forward events remain deliberately unsupported because the controller has no forward-history
+   model.
+5. `androidx.navigationevent:navigationevent:1.1.2` becomes an explicit Android runtime dependency,
+   and `navigationevent-testing` is test-only. Focused tests must cover direct ordinary and
+   predictive events, root fallback, lifecycle gating, enablement changes, disposal, owner
+   precedence, and legacy fallback without a NavigationEvent owner.
+
+No new public or protected declaration is required. `navigation.host` remains the stable Q3
+capability; the existing `NavHost` API and compiled host sample own the behavior change. Its KDoc,
+Android module manual, architecture, guide, Compose migration comparison, dependency contract,
+Simplified Chinese mirrors, one feature Changeset, and interpreted acceptance evidence change in
+the implementation PR.
+
+The other audited gaps receive explicit dispositions:
+
+- **General scene strategies:** current `NavPaneStrategy` already supports deterministic custom
+  one-to-three content-pane selection. A general strategy list is deferred until an overlay
+  navigation use case can define entry membership, z-order, Back precedence, exit retention, and
+  result ownership together. Publishing an inert strategy surface now would be overdesign.
+- **Diagnostics:** immediate `NavResult`, immutable controller snapshots, observable host state,
+  `onFailure`, and trace sections cover current actionable diagnostics. A second navigation event
+  bus or public debug snapshot is deferred until a downstream diagnostic consumer identifies data
+  unavailable through those sources.
+- **Testing utilities:** pure Core construction, public snapshots, host tests, and the official
+  NavigationEvent test fixtures cover current needs. A `viewcompose-navigation-testing` artifact is
+  deferred until repeated downstream fixtures prove a stable abstraction; copying
+  `TestNavHostController` without such evidence would duplicate the production controller.
+
+This slice changes platform callback routing, so targeted Robolectric tests and the existing
+physical `NavigationBackDeviceTest` matrix are required. Coverage, leak, memory, and representative
+performance remain Phase 7 acceptance work after this bounded integration.
+
+Acceptance evidence:
+
+- The host now prefers the nearest direct NavigationEvent owner, uses Activity Back only when that
+  owner is absent, and drives both through the existing transaction state machine. A locally
+  cancelled preview suppresses its next late terminal callback, closing the stop/detach/owner-change
+  race without adding a public owner, dispatcher, DSL Local, forward model, or second Back policy.
+  The result is **improved** nested ownership and cancellation correctness.
+- Navigation Android passed 181/181 JVM or Robolectric tests with no failures, errors, or skips,
+  versus 176 before the slice: +5 tests (+2.84%). The focused adapter suite passed 13/13 versus 8:
+  +5 (+62.5%), covering direct and legacy exclusivity, lifecycle/root enablement, ordinary and
+  predictive input, disposal, owner changes, and the cancelled-terminal race. Accepted line and
+  branch coverage remain **inconclusive** because no report exists.
+- On the explicitly selected Pixel 4 XL (`98101FFBA003AE`, API 33), the complete
+  `NavigationBackDeviceTest` matrix passed 16/16 with no failure, error, or skip in 49.348 seconds.
+  It covers platform Back, predictive progress/cancel/commit, lifecycle, recreation, results,
+  repeated dispatch, retention, and frame budgets. This is **improved** physical-host confidence,
+  limited to one device/API/OEM; direct nested-owner injection is JVM-fixture evidence, and Android
+  Studio Preview input remains unverified.
+- Publishing, dependency-boundary, and release-intent gates passed with exactly one feature
+  artifact. The generated POM exposes NavigationEvent 1.1.2 and Activity 1.12.4 at runtime while
+  excluding test-only `navigationevent-testing`. Local publication and release Javadoc generation
+  passed. The selected strict Dokka audit remains **inconclusive** because the shared Dokka V2
+  convention rejects existing `androidJvm` and `release` common source roots before declaration
+  inspection; fixing that repository convention remains the next API-documentation action.
+- `qaQuick` passed 2,277 actionable tasks in 10m18s (1,847 executed, 430 up to date), and
+  `qaPreview` passed 1,218 in 16s (146/1,072). Governance reported zero issues, all 77 documentation
+  script tests passed, and all 127 required Chinese mirrors were current. Repository confidence is
+  **improved**; Preview rendering is **no material change**, not evidence for NavigationEvent input
+  in Android Studio Preview.
+- The complete bilingual site passed 528-page accessibility, 30 redirects, 133 immutable API and
+  module-manual versions, and every unchanged budget. It produced 49,165,167 non-API bytes in
+  32.8 seconds, 2,365 bytes (+0.0048%) above slice 7.4's 49,162,802-byte comparator and 13,047 bytes
+  below the ceiling. This is **no material change** with narrow headroom; build time is one local
+  run, not performance evidence. Leak, memory, representative navigation performance, Android
+  Studio Preview input, forward history, and general overlay scenes remain **inconclusive** and are
+  the next Phase 7 matrix or explicitly deferred capabilities.
 
 ### Phase 8: document, release, and archive
 

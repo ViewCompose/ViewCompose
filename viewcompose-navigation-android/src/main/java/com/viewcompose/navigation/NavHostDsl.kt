@@ -35,9 +35,12 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * owner identity recreates this host so retained navigation owners never mix provider contracts
  * from different parents.
  *
- * When [systemBackEnabled] is true, the host participates in the nearest AndroidX back dispatcher
- * only while its stack can pop. Predictive-back progress previews the previous destination without
- * changing the committed stack until the gesture completes.
+ * When [systemBackEnabled] is true, a started host that can pop participates directly in the nearest
+ * AndroidX NavigationEvent dispatcher. If that View tree has no NavigationEvent owner, the host
+ * uses the nearest Activity Back dispatcher as a compatibility fallback. At a root entry the host
+ * disables its handler so an outer handler or dispatcher fallback can continue. Predictive-back
+ * progress previews the previous destination without changing the committed stack until the
+ * gesture completes.
  *
  * [panePolicy] can adapt the same committed entries into multiple native View panes without
  * recreating their lifecycle, ViewModel, or saved-state owners.
@@ -63,7 +66,7 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * @param transitionSpec visual policy for committed and predictive-Back transitions
  * @param panePolicy width-dependent pane projection
  * @param presentationRetentionPolicy resource policy for fully hidden destination presentations
- * @param systemBackEnabled whether to register with the nearest AndroidX Back dispatcher
+ * @param systemBackEnabled whether this started host may consume backward platform navigation
  * @param contentKey invalidation key for non-observable destination-content dependencies
  * @param debug enables navigation runtime diagnostics
  * @param debugTag Android log tag used by diagnostics

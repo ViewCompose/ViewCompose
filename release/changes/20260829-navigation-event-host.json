@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Integrate NavHost directly with the nearest lifecycle-bound AndroidX NavigationEvent owner while retaining an exclusive Activity Back compatibility fallback.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}
