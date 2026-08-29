@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "kind": "request",
+  "source": {"identity": "fixture:screenshot/path-input"},
+  "screenshot": {"path": "/tmp/screenshot.png"},
+  "interpretation": {
+    "density": 1,
+    "fontScale": 1,
+    "localeTag": "en-US",
+    "layoutDirection": "Ltr",
+    "colorSpace": "sRGB",
+    "alphaMode": "straight",
+    "orientation": "upright",
+    "systemBars": {"leftPx": 0, "topPx": 0, "rightPx": 0, "bottomPx": 0},
+    "crop": {"x": 0, "y": 0, "width": 1, "height": 1}
+  },
+  "privacy": {
+    "review": "complete",
+    "providerTransfer": false,
+    "persistInput": false,
+    "logs": "metadata-only",
+    "redactions": []
+  },
+  "output": {
+    "mediaType": "image/png",
+    "resize": "none",
+    "stripMetadata": true,
+    "maxWidthPx": 1,
+    "maxHeightPx": 1
+  }
+}

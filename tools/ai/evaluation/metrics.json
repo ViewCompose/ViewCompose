@@ -318,6 +318,33 @@
       "environment": "labeled unsupported XML and Compose semantics"
     },
     {
+      "id": "visual.screenshot-input-integrity",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical embedded PNG bytes with exact size, SHA-256, dimensions, chunk CRC, decoded byte count, and no path, URL, URI, credential, or network input"
+    },
+    {
+      "id": "visual.screenshot-preprocessing-determinism",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "fixed decode, source-pixel crop, cropped-output-pixel redaction, metadata stripping, filter-zero PNG encoding, zlib level 9, and canonical JSON fingerprint"
+    },
+    {
+      "id": "visual.screenshot-privacy-redaction",
+      "phase": 5,
+      "measure": "blocked_or_redacted_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "completed caller privacy review, explicit rectangle redactions, no provider transfer, no persistence, metadata-only logs, and fail-closed path input"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",

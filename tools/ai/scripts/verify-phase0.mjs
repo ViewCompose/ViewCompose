@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {lstat, readFile, realpath, readdir} from 'node:fs/promises';
 import {dirname, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {inflateSync} from 'node:zlib';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -35,6 +36,120 @@ function crc32(bytes) {
     }
   }
   return (crc ^ 0xffffffff) >>> 0;
+}
+
+function paethPredictor(left, above, upperLeft) {
+  const prediction = left + above - upperLeft;
+  const leftDistance = Math.abs(prediction - left);
+  const aboveDistance = Math.abs(prediction - above);
+  const upperLeftDistance = Math.abs(prediction - upperLeft);
+  if (leftDistance <= aboveDistance && leftDistance <= upperLeftDistance) return left;
+  if (aboveDistance <= upperLeftDistance) return above;
+  return upperLeft;
+}
+
+function decodeScreenshotPng(asset, limits, label) {
+  const bytes = Buffer.from(asset.data, 'base64');
+  if (
+    bytes.toString('base64') !== asset.data ||
+    bytes.length !== asset.bytes ||
+    bytes.length > limits.maxCompressedBytes ||
+    createHash('sha256').update(bytes).digest('hex') !== asset.sha256 ||
+    bytes.length < 33 ||
+    bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a'
+  ) {
+    throw new Error(`${label}: embedded screenshot PNG identity changed`);
+  }
+  let cursor = 8;
+  let ihdr = 0;
+  let iend = 0;
+  const chunkTypes = [];
+  const idatParts = [];
+  while (cursor < bytes.length) {
+    if (cursor + 12 > bytes.length) throw new Error(`${label}: truncated PNG chunk header`);
+    const length = bytes.readUInt32BE(cursor);
+    const typeStart = cursor + 4;
+    const dataStart = typeStart + 4;
+    const dataEnd = dataStart + length;
+    const crcEnd = dataEnd + 4;
+    if (crcEnd > bytes.length) throw new Error(`${label}: PNG chunk exceeds embedded bytes`);
+    const type = bytes.subarray(typeStart, dataStart).toString('ascii');
+    if (crc32(bytes.subarray(typeStart, dataEnd)) !== bytes.readUInt32BE(dataEnd)) {
+      throw new Error(`${label}: PNG chunk ${type} has a changed CRC`);
+    }
+    chunkTypes.push(type);
+    if (chunkTypes.length > limits.maxPngChunks) {
+      throw new Error(`${label}: PNG chunk ceiling changed`);
+    }
+    if (type === 'IHDR') {
+      ihdr += 1;
+      if (
+        chunkTypes.length !== 1 || length !== 13 ||
+        bytes.readUInt32BE(dataStart) !== asset.widthPx ||
+        bytes.readUInt32BE(dataStart + 4) !== asset.heightPx ||
+        asset.widthPx > limits.maxDimensionPx ||
+        asset.heightPx > limits.maxDimensionPx ||
+        bytes[dataStart + 8] !== 8 ||
+        bytes[dataStart + 9] !== 6 ||
+        bytes[dataStart + 10] !== 0 ||
+        bytes[dataStart + 11] !== 0 ||
+        bytes[dataStart + 12] !== 0
+      ) {
+        throw new Error(`${label}: only non-interlaced 8-bit RGBA PNG is frozen`);
+      }
+    } else if (type === 'IDAT') {
+      idatParts.push(bytes.subarray(dataStart, dataEnd));
+    } else if (type === 'IEND') {
+      iend += 1;
+      if (length !== 0 || crcEnd !== bytes.length) {
+        throw new Error(`${label}: PNG IEND must terminate the embedded bytes`);
+      }
+    } else if (type[0] === type[0]?.toUpperCase()) {
+      throw new Error(`${label}: unsupported critical PNG chunk ${type}`);
+    }
+    cursor = crcEnd;
+  }
+  if (ihdr !== 1 || iend !== 1 || idatParts.length === 0) {
+    throw new Error(`${label}: PNG requires one IHDR, IDAT data, and one IEND`);
+  }
+  const rowBytes = asset.widthPx * 4;
+  const decodedBytes = (rowBytes + 1) * asset.heightPx;
+  if (decodedBytes > limits.maxDecodedBytes) {
+    throw new Error(`${label}: decoded PNG byte ceiling changed`);
+  }
+  let filtered;
+  try {
+    filtered = inflateSync(Buffer.concat(idatParts), {maxOutputLength: decodedBytes});
+  } catch (error) {
+    throw new Error(`${label}: PNG IDAT cannot be decoded: ${error.message}`);
+  }
+  if (filtered.length !== decodedBytes) {
+    throw new Error(`${label}: PNG decoded byte count changed`);
+  }
+  const pixels = Buffer.alloc(rowBytes * asset.heightPx);
+  for (let y = 0; y < asset.heightPx; y += 1) {
+    const filteredOffset = y * (rowBytes + 1);
+    const filterType = filtered[filteredOffset];
+    if (![0, 1, 2, 3, 4].includes(filterType)) {
+      throw new Error(`${label}: unsupported PNG filter type ${filterType}`);
+    }
+    const rowOffset = y * rowBytes;
+    for (let x = 0; x < rowBytes; x += 1) {
+      const encoded = filtered[filteredOffset + 1 + x];
+      const left = x >= 4 ? pixels[rowOffset + x - 4] : 0;
+      const above = y > 0 ? pixels[rowOffset - rowBytes + x] : 0;
+      const upperLeft = y > 0 && x >= 4 ? pixels[rowOffset - rowBytes + x - 4] : 0;
+      const predictor = {
+        0: 0,
+        1: left,
+        2: above,
+        3: Math.floor((left + above) / 2),
+        4: paethPredictor(left, above, upperLeft),
+      }[filterType];
+      pixels[rowOffset + x] = (encoded + predictor) & 0xff;
+    }
+  }
+  return {bytes, chunkTypes, pixels};
 }
 
 function verifyEmbeddedPng(asset, limits, label) {
@@ -157,6 +272,7 @@ async function verifySchemas(versions) {
     xmlLayoutDependencies: 'xml-layout-dependencies.schema.json',
     generatedPreviewRequest: 'generated-preview-request.schema.json',
     layoutComparison: 'layout-comparison.schema.json',
+    screenshotPreprocessing: 'screenshot-preprocessing.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -238,6 +354,8 @@ async function verifyExamples(schemas) {
     ['xml-project-context.json', 'xml-project-context.schema.json'],
     ['xml-layout-dependencies.json', 'xml-layout-dependencies.schema.json'],
     ['layout-comparison.json', 'layout-comparison.schema.json'],
+    ['screenshot-preprocessing-request.json', 'screenshot-preprocessing.schema.json'],
+    ['screenshot-preprocessing-result.json', 'screenshot-preprocessing.schema.json'],
   ];
   for (const [exampleName, schemaName] of examples) {
     const example = await readJson(resolve(contractsDirectory, 'examples', exampleName));
@@ -1216,6 +1334,235 @@ async function verifyLayoutComparison(schemas) {
   return contract;
 }
 
+async function verifyScreenshotPreprocessing(schemas) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/visual');
+  const contract = await readJson(
+    resolve(fixtureDirectory, 'screenshot-preprocessing-contract.json'),
+  );
+  if (
+    contract.schemaVersion !== 1 ||
+    contract.contractId !== 'viewcompose-screenshot-preprocessing-v1' ||
+    JSON.stringify(contract.requiresContracts) !== JSON.stringify([
+      'screenshot-preprocessing-v1',
+    ]) ||
+    contract.activation?.tool !== 'prepare_screenshot' ||
+    contract.activation?.status !== 'contract-frozen' ||
+    contract.activation?.evidence !== 'static'
+  ) {
+    throw new Error('Screenshot preprocessing activation or required contract changed');
+  }
+  if (
+    contract.input?.embeddedPngOnly !== true ||
+    contract.input?.pathInputAllowed !== false ||
+    contract.input?.urlInputAllowed !== false ||
+    contract.input?.uriInputAllowed !== false ||
+    contract.input?.credentialsAllowed !== false ||
+    JSON.stringify(contract.input?.acceptedBitDepths) !== JSON.stringify([8]) ||
+    JSON.stringify(contract.input?.acceptedColorTypes) !== JSON.stringify([6]) ||
+    JSON.stringify(contract.input?.acceptedFilterTypes) !== JSON.stringify([0, 1, 2, 3, 4]) ||
+    JSON.stringify(contract.input?.acceptedInterlaceMethods) !== JSON.stringify([0])
+  ) {
+    throw new Error('Screenshot preprocessing must accept only embedded non-interlaced RGBA PNG');
+  }
+  if (
+    JSON.stringify(contract.processing?.order) !== JSON.stringify([
+      'verify', 'decode', 'crop', 'redact', 'encode',
+    ]) ||
+    contract.processing?.cropCoordinates !== 'source-image-pixels' ||
+    contract.processing?.redactionCoordinates !== 'cropped-output-pixels' ||
+    contract.processing?.redactionReplacement !== '#000000ff' ||
+    contract.processing?.redactionOverlap !== 'request-order-idempotent' ||
+    contract.processing?.resize !== 'none' ||
+    contract.interpretation?.systemBars !== 'declaration-only' ||
+    contract.interpretation?.automaticSystemBarInference !== false
+  ) {
+    throw new Error('Screenshot preprocessing ordering or coordinate semantics changed');
+  }
+  if (
+    contract.output?.mediaType !== 'image/png' ||
+    JSON.stringify(contract.output?.canonicalChunks) !== JSON.stringify(['IHDR', 'IDAT', 'IEND']) ||
+    contract.output?.stripAncillaryChunks !== true ||
+    contract.output?.filterType !== 0 ||
+    contract.output?.zlibLevel !== 9 ||
+    contract.output?.colorSpace !== 'sRGB' ||
+    contract.output?.alphaMode !== 'straight'
+  ) {
+    throw new Error('Screenshot preprocessing canonical PNG output changed');
+  }
+  if (
+    contract.privacy?.reviewRequired !== true ||
+    contract.privacy?.providerTransfer !== false ||
+    contract.privacy?.networkAccess !== false ||
+    contract.privacy?.inputPersistence !== false ||
+    contract.privacy?.outputPersistence !== false ||
+    contract.privacy?.logs !== 'metadata-only' ||
+    contract.privacy?.redactions !== 'explicit-rectangles-only' ||
+    contract.privacy?.automaticSensitiveContentDetection !== false
+  ) {
+    throw new Error('Screenshot privacy, persistence, or provider boundary changed');
+  }
+  if (
+    contract.integrity?.verifyCanonicalBase64 !== true ||
+    contract.integrity?.verifyDeclaredBytes !== true ||
+    contract.integrity?.verifySha256 !== true ||
+    contract.integrity?.verifyDimensions !== true ||
+    contract.integrity?.verifyChunkCrc !== true ||
+    contract.integrity?.verifyDecodedByteCount !== true ||
+    contract.integrity?.outputFingerprint !==
+      'sha256-canonical-json-without-outputFingerprint'
+  ) {
+    throw new Error('Screenshot preprocessing integrity contract changed');
+  }
+  for (const [name, ceiling] of Object.entries({
+    maxCompressedBytes: 8 * 1024 * 1024,
+    maxDimensionPx: 4096,
+    maxDecodedBytes: 64 * 1024 * 1024,
+    maxPngChunks: 256,
+    maxRedactions: 64,
+    maxOutputBytes: 8 * 1024 * 1024,
+  })) {
+    const value = contract.limits?.[name];
+    if (!Number.isInteger(value) || value <= 0 || value > ceiling) {
+      throw new Error(`Screenshot preprocessing limit ${name} exceeds its frozen ceiling`);
+    }
+  }
+  assertUnique(contract.diagnosticCodes, 'Screenshot preprocessing diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-SCREENSHOT-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid screenshot preprocessing diagnostic code: ${code}`);
+    }
+  }
+
+  const schema = schemas.get('screenshot-preprocessing.schema.json');
+  const declaredRequests = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const [request, result] = await Promise.all([
+      readJson(resolve(fixtureDirectory, fixture.request)),
+      readJson(resolve(fixtureDirectory, fixture.result)),
+    ]);
+    assertSchemaValue(request, schema, fixture.request);
+    assertSchemaValue(result, schema, fixture.result);
+    const requestFingerprint = createHash('sha256')
+      .update(JSON.stringify(request))
+      .digest('hex');
+    const fingerprintedResult = {...result};
+    delete fingerprintedResult.outputFingerprint;
+    const outputFingerprint = createHash('sha256')
+      .update(JSON.stringify(fingerprintedResult))
+      .digest('hex');
+    const input = decodeScreenshotPng(request.screenshot, contract.limits, fixture.request);
+    const output = decodeScreenshotPng(result.output, contract.limits, fixture.result);
+    const crop = request.interpretation.crop;
+    if (
+      crop.x + crop.width > request.screenshot.widthPx ||
+      crop.y + crop.height > request.screenshot.heightPx ||
+      crop.width > request.output.maxWidthPx ||
+      crop.height > request.output.maxHeightPx ||
+      request.interpretation.systemBars.leftPx +
+        request.interpretation.systemBars.rightPx > request.screenshot.widthPx ||
+      request.interpretation.systemBars.topPx +
+        request.interpretation.systemBars.bottomPx > request.screenshot.heightPx
+    ) {
+      throw new Error(`${fixture.request}: crop, output, or system-bar bounds changed`);
+    }
+    const expectedPixels = Buffer.alloc(crop.width * crop.height * 4);
+    for (let y = 0; y < crop.height; y += 1) {
+      const sourceOffset = ((crop.y + y) * request.screenshot.widthPx + crop.x) * 4;
+      input.pixels.copy(expectedPixels, y * crop.width * 4, sourceOffset, sourceOffset + crop.width * 4);
+    }
+    for (const redaction of request.privacy.redactions) {
+      const rectangle = redaction.rectangle;
+      if (
+        rectangle.x + rectangle.width > crop.width ||
+        rectangle.y + rectangle.height > crop.height
+      ) {
+        throw new Error(`${fixture.request}: redaction leaves the cropped output`);
+      }
+      for (let y = rectangle.y; y < rectangle.y + rectangle.height; y += 1) {
+        for (let x = rectangle.x; x < rectangle.x + rectangle.width; x += 1) {
+          expectedPixels.set([0, 0, 0, 255], (y * crop.width + x) * 4);
+        }
+      }
+    }
+    const expectedTransformations = [
+      {kind: 'crop', rectangle: crop},
+      ...request.privacy.redactions.map((redaction) => ({
+        kind: 'redact',
+        rectangle: redaction.rectangle,
+        replacement: redaction.replacement,
+      })),
+      {kind: 'strip-metadata'},
+    ];
+    if (
+      !['contract-frozen', 'implemented'].includes(fixture.status) ||
+      requestFingerprint !== fixture.expectedRequestFingerprint ||
+      requestFingerprint !== result.requestFingerprint ||
+      request.screenshot.sha256 !== fixture.expectedInputSha256 ||
+      result.output.sha256 !== fixture.expectedOutputSha256 ||
+      outputFingerprint !== fixture.expectedOutputFingerprint ||
+      outputFingerprint !== result.outputFingerprint ||
+      JSON.stringify([request.screenshot.widthPx, request.screenshot.heightPx]) !==
+        JSON.stringify(fixture.expectedInputSize) ||
+      JSON.stringify([result.output.widthPx, result.output.heightPx]) !==
+        JSON.stringify(fixture.expectedOutputSize) ||
+      result.output.widthPx !== crop.width ||
+      result.output.heightPx !== crop.height ||
+      result.output.bytes > contract.limits.maxOutputBytes ||
+      !output.pixels.equals(expectedPixels) ||
+      JSON.stringify(output.chunkTypes) !== JSON.stringify(contract.output.canonicalChunks) ||
+      JSON.stringify(result.transformations) !== JSON.stringify(expectedTransformations) ||
+      result.privacy.redactionsApplied !== request.privacy.redactions.length ||
+      result.privacy.redactionsApplied !== fixture.expectedRedactions ||
+      result.privacy.providerTransfer !== request.privacy.providerTransfer ||
+      result.privacy.inputPersisted !== request.privacy.persistInput ||
+      result.privacy.logs !== request.privacy.logs ||
+      result.diagnostics.length !== 0
+    ) {
+      throw new Error(`${fixture.request}: screenshot preprocessing golden changed`);
+    }
+    declaredRequests.add(fixture.request);
+  }
+  for (const fixture of contract.unsupportedFixtures) {
+    const request = await readJson(resolve(fixtureDirectory, fixture.request));
+    const violations = validateSchemaValue(request, schema);
+    const provesPathInput = Object.hasOwn(request.screenshot ?? {}, 'path');
+    const provesProviderTransfer = request.privacy?.providerTransfer === true;
+    if (
+      fixture.schemaValid !== false ||
+      violations.length === 0 ||
+      (fixture.diagnosticCodes.includes('VC-AI-SCREENSHOT-PATH-DENIED') && !provesPathInput) ||
+      (fixture.diagnosticCodes.includes('VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED') &&
+        !provesProviderTransfer)
+    ) {
+      throw new Error(`${fixture.request}: screenshot fail-closed denominator changed`);
+    }
+    for (const code of fixture.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`${fixture.request}: undeclared screenshot diagnostic ${code}`);
+      }
+    }
+    declaredRequests.add(fixture.request);
+  }
+  assertUnique([...declaredRequests], 'Screenshot preprocessing fixture requests');
+
+  const [exampleRequest, exampleResult] = await Promise.all([
+    readJson(resolve(contractsDirectory, 'examples/screenshot-preprocessing-request.json')),
+    readJson(resolve(contractsDirectory, 'examples/screenshot-preprocessing-result.json')),
+  ]);
+  const fixture = contract.supportedFixtures[0];
+  const [fixtureRequest, fixtureResult] = await Promise.all([
+    readJson(resolve(fixtureDirectory, fixture.request)),
+    readJson(resolve(fixtureDirectory, fixture.result)),
+  ]);
+  if (
+    JSON.stringify(exampleRequest) !== JSON.stringify(fixtureRequest) ||
+    JSON.stringify(exampleResult) !== JSON.stringify(fixtureResult)
+  ) {
+    throw new Error('Screenshot preprocessing examples must stay aligned with the golden fixture');
+  }
+  return contract;
+}
+
 async function verifyMetrics(schemas) {
   const metrics = await readJson(resolve(evaluationDirectory, 'metrics.json'));
   assertSchemaValue(metrics, schemas.get('metric-contract.schema.json'), 'evaluation/metrics.json');
@@ -1301,6 +1648,7 @@ export async function verifyPhase0() {
   const xmlLayoutDependencies = await verifyXmlLayoutDependencies(schemas);
   const generatedPreview = await verifyGeneratedPreview(schemas);
   const layoutComparison = await verifyLayoutComparison(schemas);
+  const screenshotPreprocessing = await verifyScreenshotPreprocessing(schemas);
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -1320,6 +1668,9 @@ export async function verifyPhase0() {
     generatedPreviewFixtures:
       generatedPreview.supportedFixtures.length + generatedPreview.unsupportedFixtures.length,
     layoutComparisonFixtures: layoutComparison.supportedFixtures.length,
+    screenshotPreprocessingFixtures:
+      screenshotPreprocessing.supportedFixtures.length +
+        screenshotPreprocessing.unsupportedFixtures.length,
   };
 }
 
@@ -1335,7 +1686,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.xmlProjectContextFixtures} frozen XML project-context fixtures and ` +
           `${summary.xmlLayoutDependencyFixtures} frozen XML layout-dependency fixtures and ` +
           `${summary.generatedPreviewFixtures} frozen generated-Preview fixtures and ` +
-          `${summary.layoutComparisonFixtures} frozen layout-comparison fixtures.`,
+          `${summary.layoutComparisonFixtures} frozen layout-comparison fixtures and ` +
+          `${summary.screenshotPreprocessingFixtures} frozen screenshot-preprocessing fixtures.`,
       );
     })
     .catch((error) => {

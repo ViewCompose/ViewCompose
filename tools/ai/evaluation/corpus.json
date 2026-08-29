@@ -579,6 +579,57 @@
         "evidenceLevel": "compared"
       },
       "metricIds": ["visual.semantic-preservation", "visual.geometry-pass", "visual.repair-bound"]
+    },
+    {
+      "id": "visual.screenshot-privacy-grid",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot/privacy-grid.request.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "visual.screenshot-input-integrity",
+        "visual.screenshot-preprocessing-determinism",
+        "visual.screenshot-privacy-redaction"
+      ]
+    },
+    {
+      "id": "visual.screenshot-path-input-denied",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot/path-input.request.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-PATH-DENIED"]
+      },
+      "metricIds": [
+        "visual.screenshot-input-integrity",
+        "visual.screenshot-privacy-redaction"
+      ]
+    },
+    {
+      "id": "visual.screenshot-provider-transfer-denied",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot/provider-transfer.request.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED"]
+      },
+      "metricIds": ["visual.screenshot-privacy-redaction"]
     }
   ]
 }

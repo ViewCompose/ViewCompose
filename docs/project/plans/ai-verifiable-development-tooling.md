@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze the provider-neutral screenshot-to-Design-IR request, preprocessing, privacy, and evaluation boundary while keeping model/provider execution outside the deterministic tooling core.
+next_action: Implement the dependency-free deterministic screenshot preprocessor against the frozen embedded-PNG, crop, redaction, privacy, and fingerprint contract without adding provider execution.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -79,12 +79,13 @@ also become a tool-owned Android resource without any caller path, URL, inspecte
 read, or network access; the accepted XML v2 profile-card fixture compiles and renders through that
 lane. The exact structured semantic and geometry comparison contract between the converter's Design
 IR expectations and accepted render-tree evidence is now implemented. Both generated fixtures pass
-the public `compared` evidence gate through the installed package. The next foundational boundary is
-provider-neutral screenshot input and preprocessing before any model-backed generation begins.
+the public `compared` evidence gate through the installed package. The provider-neutral screenshot
+input, deterministic preprocessing, privacy, and evaluation boundary is now frozen before any
+model-backed generation begins. Its first implementation remains the next action.
 
 Last verified: 2026-08-30.
 
-Next action: freeze screenshot-to-Design-IR input, preprocessing, privacy, and evaluation contracts
+Next action: implement the dependency-free screenshot preprocessor against the frozen contract
 before adding any provider-backed generation or repair adapter.
 
 ## Maven release changesets
@@ -1458,6 +1459,50 @@ development tool over artifacts the Preview adapter already accepted. It does no
 placeholder rendering, state/event behavior, full accessibility, style, typography, pixels, touch
 targets, alternate configurations, or source-XML screenshot parity. Those limitations remain
 separate denominators rather than being hidden by the passing deterministic checks.
+
+### Contract freeze — deterministic screenshot preprocessing
+
+The first Phase 5 input boundary is now frozen without adding a model, provider SDK, credential,
+network call, or provider-specific request shape. Screenshot preprocessing v1 accepts only an
+embedded canonical-base64 PNG with exact byte count, SHA-256, and dimensions. The caller must
+declare density, font scale, locale, layout direction, sRGB color space, straight alpha, upright
+orientation, system-bar insets, and a source-image-pixel crop. Paths, URLs, URIs, credentials,
+provider transfer, persistence, and content-bearing logs remain schema-invalid.
+
+Processing is deterministic and ordered: verify, decode, crop, apply explicit caller redactions in
+cropped-output pixel coordinates, then encode. Version 1 accepts only non-interlaced 8-bit RGBA PNG,
+bounds compressed input and output to 8 MiB, dimensions to 4,096 px, decoded data to 64 MiB, PNG
+chunks to 256, and redactions to 64. It performs no resize or automatic system-bar/sensitive-content
+inference. Canonical output contains only `IHDR`, `IDAT`, and `IEND`, uses PNG filter 0 and zlib level
+9, and carries both the output-byte SHA-256 and canonical JSON result fingerprint.
+
+The accepted 4×4 privacy-grid input is 112 bytes with SHA-256
+`ff96bfc58337301e15ff1515d39a2653a855a46ef74e50f8884889cd28f21cc0`. Cropping the full image
+and replacing the explicit central 2×2 rectangle with opaque black produces the exact 106-byte PNG
+with SHA-256 `201c08259fb2891c57c3f85e0f9e1157ad9df9ae8303c4f8d679735cf2850b99` and result
+fingerprint `3cfb37a6ea282853bccfbdd3b23e26dacee875f3a29f179e4564bf5f3df96808`. The contract verifier
+checks canonical base64, PNG signature/chunks/CRC, image format, bounded inflate size, every PNG
+filter reconstruction, crop/redaction bounds, exact output pixels, transformation order, privacy
+record, and both fingerprints. Separate fixtures keep absolute-path input and provider transfer
+schema-invalid with reason-coded expected diagnostics.
+
+Node 25.6.0 remains at 135/135 passing tooling tests. Phase 0 now verifies 10 schemas, 41 metrics,
+40 cases, 37 fixture-backed cases, and three screenshot-preprocessing fixtures. The installed
+package lifecycle still passes 2/2 reproducible builds, offline installation/uninstallation,
+SPDX/license inventory, both MCP protocol eras, compiled migrations, and both exact generated-layout
+comparisons. Relative to the preceding comparison slice, the package adds one contract file: file
+count increases from 47 to 48 (+2.13%), declared bytes from 1,596,570 to 1,604,880 (+0.52%), and
+archive bytes from 283,631 to 284,567 (+0.33%). The new archive SHA-256 is
+`ffe2c17ada8c13267047ca6b01a47f9a5387441afc8570f9ca1375c150ae22a1`. The quality-build
+plugin test suite passed, and the combined AI-contract, installed-distribution,
+documentation-structure, development-tooling-isolation, and release-intent root gate passed 23
+actionable tasks, with nine executed and 14 up-to-date.
+
+This is **improved** input integrity, privacy, and evaluation measurability with **no material
+execution or Android runtime behavior change**. `prepare_screenshot` is not yet in the CLI/MCP
+catalog, and no screenshot has been converted to Design IR, compiled, rendered, compared, repaired,
+or sent to a provider. The next action is a dependency-free implementation that reproduces this
+golden and fail-closed boundary before any provider-neutral generation adapter is designed.
 
 ### Implementation evidence — bounded XML to Design IR
 

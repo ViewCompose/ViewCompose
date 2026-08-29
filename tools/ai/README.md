@@ -238,6 +238,17 @@ returns reason-coded findings and retains only `rendered` evidence. Placeholder 
 state/event behavior, traversal, style, typography, pixels, touch targets, and other device
 configurations remain explicit non-claims.
 
+Screenshot preprocessing v1 is contract-frozen but is not yet a public tool. It accepts only one
+embedded, canonical-base64 PNG with declared byte count, SHA-256, dimensions, density, font scale,
+locale, layout direction, color space, alpha mode, orientation, system-bar insets, and source-pixel
+crop. It accepts no path, URL, URI, credential, network transfer, or provider execution. A completed
+privacy review is mandatory; provider transfer and persistence are false, logs are metadata-only,
+and sensitive content is removed only through explicit caller rectangles in cropped-output pixel
+coordinates. The deterministic output strips ancillary PNG metadata, keeps 8-bit straight-alpha
+sRGB RGBA, uses filter type 0 and zlib level 9, and carries exact content and canonical-result
+fingerprints. The future `prepare_screenshot` tool cannot enter the catalog until it reproduces the
+checked-in crop-and-redaction golden and all fail-closed denominators.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
