@@ -430,6 +430,7 @@ data class NavTransitionSpec(
         return when (command) {
             is NavCommand.Push -> push
             NavCommand.Pop -> pop
+            is NavCommand.PopWithResult -> pop
             is NavCommand.ReplaceTop -> replace
             is NavCommand.Reset -> reset
             is NavCommand.SelectStack,

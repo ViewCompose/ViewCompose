@@ -1,0 +1,56 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.results",
+  "kind": "state",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-core" },
+  "artifact": "viewcompose-navigation-core",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha03" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavResultKey",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavResult.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavResultPayload",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavResult.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavResultDelivery",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavResult.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavCommand.PopWithResult",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.core.NavExecutionPlan.resultDelivery",
+      "kind": "property",
+      "visibility": "public",
+      "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.navigation.results",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.navigation-core-results"
+  },
+  "document_owners": {
+    "guide": ["guide.navigation-production-host"],
+    "architecture": ["architecture.navigation-runtime"],
+    "module": [
+      "module.viewcompose-navigation-core",
+      "module.viewcompose-navigation-android"
+    ],
+    "migration": ["migration.compose-navigation"]
+  }
+}

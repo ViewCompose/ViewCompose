@@ -15,6 +15,7 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.results
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-lifecycle-androidx
@@ -25,8 +26,10 @@ sample_ids:
   - module.navigation-android-deep-link
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
+  - module.navigation-android-results
   - module.navigation-core-execution-plan
   - module.navigation-core-deep-link
+  - module.navigation-core-results
   - module.navigation-core-scene-projection
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
@@ -53,7 +56,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Continue Phase 7 with typed-route and navigation-result dispositions, then coverage, leak, memory, performance, and broader device evidence.
+next_action: Implement the frozen entry-targeted navigation-result mailbox, then disposition typed-route serialization before the broader evidence matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
@@ -75,8 +78,8 @@ structured deep-link slice is complete.
 
 Last verified: 2026-08-29.
 
-Next action: continue Phase 7 with typed-route and navigation-result dispositions, then coverage,
-leak, memory, performance, and broader device evidence.
+Next action: implement the frozen entry-targeted navigation-result mailbox, then disposition
+typed-route serialization before the broader evidence matrix.
 
 ## Maven release changesets
 
@@ -872,6 +875,26 @@ Acceptance evidence:
   full package rebuild cleared stale incremental output. Adapter confidence is **improved**; one
   device does not cover implicit/OEM delivery, coverage, leaks, memory, or performance, which remain
   **inconclusive**. Next: disposition typed routes and navigation results, then run that matrix.
+
+#### Capability slice 7.2: entry-targeted navigation results
+
+The audit distinguishes command outcome `NavResult` from business data returned by a popped page;
+the latter is currently absent. The accepted Q3 contract adds `navigation.results`: Core represents
+a typed key, closed `NavValue` payload, `PopWithResult`, and one delivery instruction targeting the
+surviving `after.top` entry. Delivery exists only on the committed transition plan, so render or
+stack failure cannot publish a result and predictive Back remains an ordinary result-free Pop.
+
+Android owns one FIFO inbox per retained entry. Pending values survive presentation disposal,
+configuration recreation, and process-state save; permanent entry removal destroys them. The
+existing `NavDestinationContext` exposes the inbox, while one `NavResultEffect` reads the nearest
+shared `LifecycleOwner` and consumes only after the destination is `RESUMED` and its frame commits.
+There are no Activity-, Fragment-, or navigation-specific Lifecycle copies. Explicit `peek` and
+`consume` remain available for callers that need manual acknowledgement or retry policy.
+
+The hard boundary is one active producer-to-previous-entry transaction: no global event bus, route
+name addressing, arbitrary cross-stack delivery, live object persistence, or overloading of command
+failure diagnostics. Repeated values for one key retain FIFO order rather than SavedStateHandle's
+last-write-wins behavior. Typed-route serialization remains a separate compatibility decision.
 
 ### Phase 8: document, release, and archive
 

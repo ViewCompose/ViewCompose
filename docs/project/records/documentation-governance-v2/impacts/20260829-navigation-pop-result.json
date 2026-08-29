@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-pop-result",
+  "change": "modified",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.NavHostController.popBackStack",
+  "capability_id": "navigation.results",
+  "q_level": "Q3",
+  "contract_fields": [
+    "inputs",
+    "behavior",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": { "status": "updated", "targets": ["com.viewcompose.navigation.NavHostController.popBackStack"] },
+    "module": { "status": "updated", "targets": ["module.viewcompose-navigation-android"] },
+    "sample": { "status": "updated", "targets": ["module.navigation-android-results"] },
+    "reference": { "status": "updated", "targets": ["reference.navigation.results"] },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The introductory navigation tutorial uses ordinary Back and has no child-to-parent return contract."
+    },
+    "guide": { "status": "updated", "targets": ["guide.navigation-production-host"] },
+    "architecture": { "status": "updated", "targets": ["architecture.navigation-runtime"] },
+    "migration": { "status": "updated", "targets": ["migration.compose-navigation"] },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The additive overload does not move an existing symbol or documentation route."
+    }
+  }
+}

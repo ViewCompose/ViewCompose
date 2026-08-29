@@ -313,6 +313,10 @@ internal class TransactionalNavHostCoordinator(
                     currentSnapshot.entries.dropLast(1),
                 )
 
+                is NavCommand.PopWithResult -> error(
+                    "Predictive system Back cannot carry a navigation result.",
+                )
+
                 NavCommand.PopStackHistory -> {
                     val previousStackId = checkNotNull(
                         controller.stackStateSnapshot().selectionHistory.lastOrNull(),

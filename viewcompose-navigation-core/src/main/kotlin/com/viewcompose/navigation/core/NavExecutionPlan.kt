@@ -63,6 +63,8 @@ class NavExecutionPlan internal constructor(
     accessibilityEntryIds: Set<NavEntryId>,
     /** Core command handled by system Back after the decision, or `null` to delegate outward. */
     val systemBackCommand: NavCommand?,
+    /** Result delivered once after this transition commits, or `null` for result-free decisions. */
+    val resultDelivery: NavResultDelivery?,
     rollbackPresentationEntryIds: List<NavEntryId>,
     rollbackOwnerEntryIds: List<NavEntryId>,
     terminalCleanupEntryIds: List<NavEntryId>,
@@ -184,6 +186,7 @@ object NavExecutionReducer {
             hiddenPresentationRecency = hiddenPresentationRecency,
             maxRetainedHiddenPresentations = maxRetainedHiddenPresentations,
             systemBackCommand = systemBackCommand,
+            resultDelivery = null,
         )
     }
 
@@ -233,6 +236,13 @@ object NavExecutionReducer {
             hiddenPresentationRecency = hiddenPresentationRecency,
             maxRetainedHiddenPresentations = maxRetainedHiddenPresentations,
             systemBackCommand = transaction.owner.systemBackCommand(transaction.afterState),
+            resultDelivery = (transaction.command as? NavCommand.PopWithResult)?.let { command ->
+                NavResultDelivery(
+                    transactionId = transaction.transactionId,
+                    targetEntryId = transaction.after.top.id,
+                    payload = command.result,
+                )
+            },
         )
     }
 
@@ -291,6 +301,10 @@ object NavExecutionReducer {
                 checkNotNull(stackState[previousStackId])
             }
 
+            is NavCommand.PopWithResult -> throw IllegalArgumentException(
+                "Predictive system Back cannot carry an application navigation result.",
+            )
+
             is NavCommand.Push,
             is NavCommand.ReplaceTop,
             is NavCommand.Reset,
@@ -317,6 +331,7 @@ object NavExecutionReducer {
             hiddenPresentationRecency = hiddenPresentationRecency,
             maxRetainedHiddenPresentations = maxRetainedHiddenPresentations,
             systemBackCommand = systemBackCommand,
+            resultDelivery = null,
         )
     }
 
@@ -370,6 +385,7 @@ object NavExecutionReducer {
             hiddenPresentationRecency = hiddenPresentationRecency,
             maxRetainedHiddenPresentations = maxRetainedHiddenPresentations,
             systemBackCommand = systemBackCommand,
+            resultDelivery = plan.resultDelivery,
         )
     }
 
@@ -387,6 +403,7 @@ object NavExecutionReducer {
         hiddenPresentationRecency: List<NavEntryId>,
         maxRetainedHiddenPresentations: Int?,
         systemBackCommand: NavCommand?,
+        resultDelivery: NavResultDelivery?,
     ): NavExecutionPlan {
         validatePaneScene(before, beforePaneScene, "before")
         validatePaneScene(after, afterPaneScene, "after")
@@ -404,6 +421,12 @@ object NavExecutionReducer {
         }
         require((phase == NavExecutionPhase.Transition) == (mutation != null)) {
             "Only a committed transition plan may contain a stack mutation."
+        }
+        require(resultDelivery == null || phase == NavExecutionPhase.Transition) {
+            "Only a committed transition plan may deliver a navigation result."
+        }
+        require(resultDelivery == null || resultDelivery.targetEntryId == after.top.id) {
+            "A navigation result must target the surviving active-stack top."
         }
         validateSystemBackCommand(
             command = systemBackCommand,
@@ -575,6 +598,7 @@ object NavExecutionReducer {
             inputEntryIds = interactiveEntryIds,
             accessibilityEntryIds = accessibilityEntryIds,
             systemBackCommand = systemBackCommand,
+            resultDelivery = resultDelivery,
             rollbackPresentationEntryIds = preparePresentationEntryIds.asReversed(),
             rollbackOwnerEntryIds = rollbackOwnerEntryIds,
             terminalCleanupEntryIds = terminalCleanupEntryIds,
@@ -607,6 +631,9 @@ object NavExecutionReducer {
             NavCommand.PopStackHistory -> require(activeStack.entries.size == 1) {
                 "System Back can select stack history only from an active stack root."
             }
+            is NavCommand.PopWithResult -> throw IllegalArgumentException(
+                "System Back cannot carry an application navigation result.",
+            )
             is NavCommand.Push,
             is NavCommand.ReplaceTop,
             is NavCommand.Reset,
