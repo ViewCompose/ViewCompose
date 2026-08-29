@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze a source-bound generated-screen Preview contract so XML migration can advance from compiled evidence to deterministic render evidence without executing the inspected project build.
+next_action: Implement the tool-owned generated Preview harness and the source-bound convert_xml_to_viewcompose render mode against the frozen binding, identity, and isolation contract.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -70,12 +70,16 @@ CLI/MCP generation, and hermetic compile gates now pass. The following explicit-
 dependency contract is also frozen: it bounds default-layout selection, `include`/`merge`
 expansion, dependency cycles, graph identity, and cross-file provenance before implementation. Its
 resolver, project-context composition, CLI/MCP distribution, and hermetic compile gate now pass.
+The generated-screen Preview contract is now also frozen: it binds generated Kotlin, explicit
+preview values, one fixed configuration, the current-source compiler and renderer lanes, and all
+accepted artifacts into a content-addressed request while denying inspected-project build
+execution. Implementation of that contract is the active increment.
 
 Last verified: 2026-08-30.
 
-Next action: freeze a source-bound generated-screen Preview contract so XML migration can advance
-from compiled evidence to deterministic render evidence without executing the inspected project
-build.
+Next action: implement the tool-owned generated Preview harness and the source-bound
+`convert_xml_to_viewcompose` render mode against the frozen binding, identity, and isolation
+contract.
 
 ## Maven release changesets
 
@@ -1158,6 +1162,53 @@ v2 image/visibility fields are not an accepted subset, qualified layouts and And
 merging remain inventory-only, and compilation does not prove pixels, interaction, accessibility
 behavior, or host call-site replacement. The next foundational gap is a generated screen Preview
 lane that can render converter output without executing the inspected project build.
+
+### Contract freeze — source-bound generated XML Preview v1
+
+The next migration boundary is now explicit before converter output enters Layoutlib. Render mode
+may accept only Kotlin produced by the same successful XML conversion. Its exact bytes, generator
+function, artifact set, declared bindings, framework bundle, compiler lane, renderer lane, and one
+frozen Preview configuration become a schema-validated, content-addressed request. A source or
+function mismatch fails before Gradle runs. Callers cannot submit arbitrary Kotlin, a Gradle task,
+a dependency coordinate, a build script, an output directory, or an inspected-project path.
+
+The Preview wrapper is deterministic and has one public-static-compatible
+`UiTreeBuilder.GeneratedXmlPreview()` entry point. Every generator-reported parameter must have
+exactly one ordered binding with the same parameter, source identity, and type. V1 supports exact
+`String` values and fresh `TextFieldState` values with explicit initial text. Missing, extra, or
+duplicate bindings fail closed. `ImageSource` remains explicitly unsupported until an isolated,
+offline asset-staging contract exists; the harness never fabricates a numeric resource ID, reads
+an inspected project's resources, or downloads an image.
+
+The tool-owned `:tools:ai-preview-harness` is the only accepted execution owner. It is fixed to JDK
+21, AGP 9.1.1, Kotlin 2.2.10, Android 37/JVM 11 compilation, Preview protocol 1, Paparazzi
+2.0.0-alpha05, Layoutlib 16.2.1, a 411 dp auto-height light `en-US`/LTR configuration, offline
+dependency resolution, and one concurrent request. Evidence must progress through compilation to
+`rendered`, reopen and verify both `preview.png` and `render-tree.json`, and return request,
+generated-source, wrapper, PNG, tree, and aggregate output fingerprints without public absolute
+paths.
+
+The frozen positive denominator binds the existing four-parameter login Kotlin golden to an exact
+816-byte wrapper. Its canonical request fingerprint is
+`8b2d5460fea40ee539fc5aba01af5cac97d59002476c17b744fb7baa1144d063`, and the wrapper fingerprint
+is `8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821`. Three negative
+denominators preserve a missing state binding, an unsupported image binding, and forbidden caller
+build-task selection. Phase 4 therefore has eight schemas, 35 metrics, 34 evaluation cases, 31
+fixture-backed cases, and four generated-Preview fixtures in addition to the accepted XML,
+project-context, and layout-dependency denominators.
+
+On 2026-08-30, Node 25.6.0 passed the expanded Phase 0 verifier with exact schema, request,
+generated-Kotlin, framework-bundle, configuration, lane, binding-set, wrapper, diagnostic, ceiling,
+and isolation checks; all 115 Node AI-tooling tests remained green. The request schema entered two
+byte-identical local package builds: the 44-file, 267,773-byte archive has 1,525,913 declared file
+bytes and SHA-256
+`c794cbe42ebc9a01427fdf82e63189990b0c36ec41e80e06f28e1be23460cf2e`.
+
+This is **improved** measurable render readiness with **no material converter, Preview, or Android
+runtime behavior change**: the schema and fixtures intentionally make no render success claim until
+the harness produces accepted PNG/tree evidence. The next action is the fixed harness plus
+`convert_xml_to_viewcompose` render mode; no alternate module or inspected-project build may
+satisfy this contract.
 
 ### Implementation evidence — bounded XML to Design IR
 

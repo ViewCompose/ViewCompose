@@ -255,6 +255,33 @@
       "environment": "bounded project-only include and merge fixtures with cross-file provenance"
     },
     {
+      "id": "xml.generated-preview-render-success",
+      "phase": 4,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "source-bound XML-generated Kotlin, exact bindings, fixed Preview configuration, and pinned offline render lane"
+    },
+    {
+      "id": "xml.generated-preview-binding-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "generator-reported binding parameter, source, type, order, and explicitly supported preview values"
+    },
+    {
+      "id": "xml.generated-preview-isolation",
+      "phase": 4,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "fixed tool-owned harness with no inspected-project build, caller task, dependency, output path, network, or symlink traversal"
+    },
+    {
       "id": "migration.unsupported-honesty",
       "phase": 4,
       "measure": "reported_ratio",

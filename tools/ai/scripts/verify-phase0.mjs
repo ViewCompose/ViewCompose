@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {lstat, readFile, realpath, readdir} from 'node:fs/promises';
 import {dirname, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {assertSchemaValue} from './schema-validator.mjs';
+import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -89,6 +89,7 @@ async function verifySchemas(versions) {
     designIr: 'design-ir.schema.json',
     xmlProjectContext: 'xml-project-context.schema.json',
     xmlLayoutDependencies: 'xml-layout-dependencies.schema.json',
+    generatedPreviewRequest: 'generated-preview-request.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -717,6 +718,190 @@ async function verifyXmlLayoutDependencies(schemas) {
   return contract;
 }
 
+async function verifyGeneratedPreview(schemas) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/xml');
+  const contract = await readJson(resolve(fixtureDirectory, 'generated-preview-contract.json'));
+  if (
+    contract.schemaVersion !== 1 ||
+    contract.contractId !== 'viewcompose-generated-preview-v1' ||
+    JSON.stringify(contract.requiresContracts) !== JSON.stringify([
+      'android-xml-layout-v1',
+      'viewcompose-preview-protocol-v1',
+      'generated-preview-request-v1',
+    ]) ||
+    contract.activation?.tool !== 'convert_xml_to_viewcompose' ||
+    contract.activation?.mode !== 'render' ||
+    contract.activation?.sourceLane !== 'current-source'
+  ) {
+    throw new Error('Generated Preview must extend the exact XML, Preview, and request contracts');
+  }
+  if (
+    contract.execution?.harnessModule !== ':tools:ai-preview-harness' ||
+    contract.execution?.readInspectedProject !== false ||
+    contract.execution?.executeInspectedProjectBuildLogic !== false ||
+    contract.execution?.networkAccess !== false ||
+    contract.execution?.followSymbolicLinks !== false ||
+    contract.execution?.callerSelectedGradleTask !== false ||
+    contract.execution?.callerSelectedDependency !== false ||
+    contract.execution?.callerSelectedOutputPath !== false ||
+    contract.execution?.callerSuppliedKotlin !== false ||
+    contract.source?.mismatch !== 'fail closed before Gradle execution' ||
+    contract.evidence?.requiredLevel !== 'rendered' ||
+    contract.evidence?.compileBeforeRender !== true ||
+    contract.evidence?.absolutePathsInPublicResult !== false
+  ) {
+    throw new Error('Generated Preview execution, source, or evidence isolation boundary changed');
+  }
+  if (
+    JSON.stringify(contract.bindings?.supported?.map((binding) => binding.type)) !==
+      JSON.stringify(['String', 'TextFieldState']) ||
+    JSON.stringify(contract.bindings?.unsupported?.map((binding) => binding.type)) !==
+      JSON.stringify(['ImageSource']) ||
+    contract.bindings?.missing !== 'fail closed' ||
+    contract.bindings?.extra !== 'fail closed' ||
+    contract.bindings?.duplicate !== 'fail closed' ||
+    contract.bindings?.applicationBehavior !== 'never invented'
+  ) {
+    throw new Error('Generated Preview binding support or fail-closed policy changed');
+  }
+  const expectedConfiguration = {
+    widthDp: 411,
+    heightDp: -1,
+    density: 2.625,
+    fontScale: 1,
+    localeTag: 'en-US',
+    layoutDirection: 'Ltr',
+    theme: 'Light',
+    apiLevel: null,
+  };
+  if (
+    JSON.stringify(Object.fromEntries(Object.entries(contract.configuration)
+      .filter(([name]) => name !== 'matrix'))) !== JSON.stringify(expectedConfiguration) ||
+    contract.configuration?.matrix !== 'single frozen configuration in v1'
+  ) {
+    throw new Error('Generated Preview v1 configuration must remain the single frozen lane');
+  }
+  for (const [name, ceiling] of Object.entries({
+    maxGeneratedKotlinBytes: 1024 * 1024,
+    maxWrapperBytes: 256 * 1024,
+    maxBindings: 64,
+    maxBindingTextBytes: 64 * 1024,
+    maxProcessOutputBytes: 2 * 1024 * 1024,
+    maxImageBytes: 16 * 1024 * 1024,
+    maxRenderTreeBytes: 8 * 1024 * 1024,
+    timeoutMs: 120_000,
+    maxConcurrentRequests: 1,
+  })) {
+    const value = contract.limits?.[name];
+    if (!Number.isInteger(value) || value <= 0 || value > ceiling) {
+      throw new Error(`Generated Preview limit ${name} exceeds its frozen ceiling`);
+    }
+  }
+  assertUnique(contract.diagnosticCodes, 'Generated Preview diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-PREVIEW-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid generated Preview diagnostic code: ${code}`);
+    }
+  }
+
+  const schema = schemas.get('generated-preview-request.schema.json');
+  const manifest = await readJson(resolve(aiRoot, 'generated/current-source/manifest.json'));
+  const declaredRequests = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const [generatedKotlin, request, wrapper] = await Promise.all([
+      readFile(resolve(fixtureDirectory, fixture.generatedKotlin)),
+      readJson(resolve(fixtureDirectory, fixture.request)),
+      readFile(resolve(fixtureDirectory, fixture.wrapper)),
+    ]);
+    assertSchemaValue(request, schema, fixture.request);
+    if (
+      request.generatedSource.kotlinFingerprint !==
+        createHash('sha256').update(generatedKotlin).digest('hex') ||
+      request.generatedSource.functionName !== fixture.expectedFunction ||
+      request.generatedSource.declaredBindings.length !== fixture.expectedBindings ||
+      request.framework.identity !== manifest.framework.identity ||
+      request.framework.bundleFingerprint !== manifest.bundleFingerprint ||
+      JSON.stringify(request.configuration) !== JSON.stringify(expectedConfiguration) ||
+      request.lanes.compiler !== contract.lanes.compiler ||
+      request.lanes.render !== contract.lanes.render
+    ) {
+      throw new Error(`${fixture.request}: generated source, framework, binding, or lane identity is stale`);
+    }
+    assertUnique(
+      request.generatedSource.declaredBindings.map((binding) => binding.parameter),
+      `${fixture.request} declared binding parameters`,
+    );
+    assertUnique(
+      request.bindings.map((binding) => binding.parameter),
+      `${fixture.request} Preview binding parameters`,
+    );
+    const declared = request.generatedSource.declaredBindings.map((binding) =>
+      `${binding.parameter}\0${binding.source}\0${binding.type}`);
+    const supplied = request.bindings.map((binding) => {
+      const type = {
+        string: 'String',
+        'text-field-state': 'TextFieldState',
+        'image-source': 'ImageSource',
+      }[binding.kind];
+      return `${binding.parameter}\0${binding.source}\0${type}`;
+    });
+    if (JSON.stringify(declared) !== JSON.stringify(supplied)) {
+      throw new Error(`${fixture.request}: Preview bindings no longer exactly match generator bindings`);
+    }
+    const requestFingerprint = createHash('sha256')
+      .update(JSON.stringify(request))
+      .digest('hex');
+    const wrapperFingerprint = createHash('sha256').update(wrapper).digest('hex');
+    const wrapperSource = wrapper.toString('utf8');
+    if (
+      requestFingerprint !== fixture.expectedRequestFingerprint ||
+      wrapperFingerprint !== fixture.expectedWrapperFingerprint ||
+      wrapper.byteLength > contract.limits.maxWrapperBytes ||
+      !wrapperSource.includes('fun UiTreeBuilder.GeneratedXmlPreview()') ||
+      !wrapperSource.includes(`${fixture.expectedFunction}(`) ||
+      !wrapperSource.includes('emailState = TextFieldState(),') ||
+      !wrapperSource.endsWith('\n')
+    ) {
+      throw new Error(`${fixture.wrapper}: generated Preview wrapper golden is stale`);
+    }
+    declaredRequests.add(fixture.request);
+  }
+  for (const fixture of contract.unsupportedFixtures) {
+    const request = await readJson(resolve(fixtureDirectory, fixture.request));
+    const violations = validateSchemaValue(request, schema);
+    if (fixture.schemaValid === false) {
+      if (violations.length === 0 || !Object.hasOwn(request, 'gradleTask')) {
+        throw new Error(`${fixture.request}: unsafe build selection must remain schema-invalid`);
+      }
+    } else {
+      if (violations.length > 0) {
+        throw new Error(`${fixture.request}: unsupported binding fixture must remain schema-valid`);
+      }
+      const declared = new Map(request.generatedSource.declaredBindings.map((binding) => [
+        binding.parameter,
+        binding,
+      ]));
+      const supplied = new Map(request.bindings.map((binding) => [binding.parameter, binding]));
+      const provesMissing = [...declared.keys()].some((parameter) => !supplied.has(parameter));
+      const provesImage = request.bindings.some((binding) => binding.kind === 'image-source');
+      if (
+        fixture.diagnosticCodes.includes('VC-AI-PREVIEW-BINDING-MISSING') && !provesMissing ||
+        fixture.diagnosticCodes.includes('VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED') && !provesImage
+      ) {
+        throw new Error(`${fixture.request}: unsupported binding denominator changed`);
+      }
+    }
+    for (const code of fixture.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`${fixture.request}: undeclared generated Preview diagnostic ${code}`);
+      }
+    }
+    declaredRequests.add(fixture.request);
+  }
+  assertUnique([...declaredRequests], 'Generated Preview fixture requests');
+  return contract;
+}
+
 async function verifyMetrics(schemas) {
   const metrics = await readJson(resolve(evaluationDirectory, 'metrics.json'));
   assertSchemaValue(metrics, schemas.get('metric-contract.schema.json'), 'evaluation/metrics.json');
@@ -800,6 +985,7 @@ export async function verifyPhase0() {
   const xmlSubsetV2 = await verifyXmlSubsetV2(schemas);
   const xmlProjectContext = await verifyXmlProjectContext(schemas);
   const xmlLayoutDependencies = await verifyXmlLayoutDependencies(schemas);
+  const generatedPreview = await verifyGeneratedPreview(schemas);
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -816,6 +1002,8 @@ export async function verifyPhase0() {
     xmlLayoutDependencyFixtures:
       xmlLayoutDependencies.supportedFixtures.length +
         xmlLayoutDependencies.unsupportedFixtures.length,
+    generatedPreviewFixtures:
+      generatedPreview.supportedFixtures.length + generatedPreview.unsupportedFixtures.length,
   };
 }
 
@@ -829,7 +1017,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.xmlFixtures} frozen XML fixtures and ` +
           `${summary.xmlV2Fixtures} frozen XML v2 fixtures and ` +
           `${summary.xmlProjectContextFixtures} frozen XML project-context fixtures and ` +
-          `${summary.xmlLayoutDependencyFixtures} frozen XML layout-dependency fixtures.`,
+          `${summary.xmlLayoutDependencyFixtures} frozen XML layout-dependency fixtures and ` +
+          `${summary.generatedPreviewFixtures} frozen generated-Preview fixtures.`,
       );
     })
     .catch((error) => {

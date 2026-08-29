@@ -360,6 +360,68 @@
       "metricIds": ["migration.unsupported-honesty"]
     },
     {
+      "id": "xml.generated-preview-login",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/generated-preview/login.preview-request.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "rendered"
+      },
+      "metricIds": [
+        "xml.generated-preview-render-success",
+        "xml.generated-preview-binding-exactness"
+      ]
+    },
+    {
+      "id": "xml.generated-preview-missing-binding",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/generated-preview/missing-binding.preview-request.json"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-MISSING"]
+      },
+      "metricIds": ["xml.generated-preview-binding-exactness"]
+    },
+    {
+      "id": "xml.generated-preview-image-binding",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/generated-preview/image-binding.preview-request.json"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED"]
+      },
+      "metricIds": ["xml.generated-preview-binding-exactness"]
+    },
+    {
+      "id": "xml.generated-preview-build-selection",
+      "phase": 4,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/generated-preview/build-selection.preview-request.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-PREVIEW-BUILD-SELECTION-DENIED"]
+      },
+      "metricIds": ["xml.generated-preview-isolation"]
+    },
+    {
       "id": "xml.unsupported-style-cycle",
       "phase": 4,
       "category": "xml-migration",
