@@ -630,6 +630,87 @@
         "diagnosticCodes": ["VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED"]
       },
       "metricIds": ["visual.screenshot-privacy-redaction"]
+    },
+    {
+      "id": "visual.screenshot-inference-wireframe-preprocessing",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot/inference-wireframe.request.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "visual.screenshot-input-integrity",
+        "visual.screenshot-preprocessing-determinism",
+        "visual.screenshot-privacy-redaction"
+      ]
+    },
+    {
+      "id": "visual.screenshot-inference-wireframe-contract",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-inference/wireframe.result.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "visual.screenshot-inference-lineage",
+        "visual.screenshot-inference-evidence-coverage",
+        "visual.screenshot-inference-uncertainty-honesty"
+      ]
+    },
+    {
+      "id": "visual.screenshot-inference-provider-without-consent",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-inference/provider-without-consent.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-INFERENCE-CONSENT-REQUIRED"]
+      },
+      "metricIds": ["visual.screenshot-inference-consent-safety"]
+    },
+    {
+      "id": "visual.screenshot-inference-credential-denied",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-inference/credential-input.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED"]
+      },
+      "metricIds": ["visual.screenshot-inference-consent-safety"]
+    },
+    {
+      "id": "visual.screenshot-inference-lineage-mismatch",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-inference/changed-preprocessing-fingerprint.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-INFERENCE-LINEAGE-MISMATCH"]
+      },
+      "metricIds": ["visual.screenshot-inference-lineage"]
     }
   ]
 }

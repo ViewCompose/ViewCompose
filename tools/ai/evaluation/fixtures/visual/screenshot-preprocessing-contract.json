@@ -120,6 +120,18 @@
       "expectedInputSize": [4, 4],
       "expectedOutputSize": [4, 4],
       "expectedRedactions": 1
+    },
+    {
+      "request": "screenshot/inference-wireframe.request.json",
+      "result": "screenshot/inference-wireframe.result.json",
+      "status": "implemented",
+      "expectedRequestFingerprint": "7aa09c79680bfd82eac6ba7ee04f69a8175dc04243f4baf8adcb3bd17f94f0a2",
+      "expectedInputSha256": "26817c1dd0bc39c1828fc854c549dd0df3217a8fd947787e801618aad01342ed",
+      "expectedOutputSha256": "db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+      "expectedOutputFingerprint": "58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
+      "expectedInputSize": [16, 24],
+      "expectedOutputSize": [16, 24],
+      "expectedRedactions": 1
     }
   ],
   "unsupportedFixtures": [

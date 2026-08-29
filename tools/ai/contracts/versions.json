@@ -9,6 +9,7 @@
     "generatedPreviewRequest": 1,
     "layoutComparison": 1,
     "screenshotPreprocessing": 1,
+    "screenshotDesignInference": 1,
     "evaluationCorpus": 1,
     "metricContract": 1
   },

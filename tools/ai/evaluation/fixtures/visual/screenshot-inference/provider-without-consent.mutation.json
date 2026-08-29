@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "request-mutation",
+  "baseFixture": "screenshot-inference/wireframe.request.json",
+  "operation": "replace",
+  "path": "/authorization",
+  "value": {
+    "mode": "provider-adapter",
+    "privacyReview": "complete",
+    "redactionsVerified": true,
+    "approvedInputFingerprint": "58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
+    "providerTransfer": true,
+    "networkAccess": true,
+    "providerId": "example-provider",
+    "approvedPurpose": "screenshot-to-design-ir",
+    "retentionReview": "complete",
+    "inputPersistence": false,
+    "outputPersistence": false,
+    "logs": "metadata-only"
+  },
+  "expectedSchemaValid": false
+}

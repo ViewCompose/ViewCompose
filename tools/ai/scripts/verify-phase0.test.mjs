@@ -4,18 +4,19 @@ import {resolveFixturePath, verifyPhase0} from './verify-phase0.mjs';
 
 test('accepts the checked-in Phase 0 contracts and evaluation corpus', async () => {
   const summary = await verifyPhase0();
-  assert.equal(summary.schemas, 10);
+  assert.equal(summary.schemas, 11);
   assert.equal(summary.reservedCapabilities, 5);
-  assert.equal(summary.metrics, 41);
-  assert.equal(summary.cases, 40);
-  assert.equal(summary.fixtures, 37);
+  assert.equal(summary.metrics, 45);
+  assert.equal(summary.cases, 45);
+  assert.equal(summary.fixtures, 42);
   assert.equal(summary.xmlFixtures, 4);
   assert.equal(summary.xmlV2Fixtures, 2);
   assert.equal(summary.xmlProjectContextFixtures, 3);
   assert.equal(summary.xmlLayoutDependencyFixtures, 3);
   assert.equal(summary.generatedPreviewFixtures, 5);
   assert.equal(summary.layoutComparisonFixtures, 2);
-  assert.equal(summary.screenshotPreprocessingFixtures, 3);
+  assert.equal(summary.screenshotPreprocessingFixtures, 4);
+  assert.equal(summary.screenshotDesignInferenceFixtures, 4);
 });
 
 test('rejects a fixture that resolves outside the repository', async () => {

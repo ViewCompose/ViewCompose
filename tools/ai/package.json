@@ -24,6 +24,7 @@
     "verify:phase4-layout-dependencies": "node scripts/verify-phase4-layout-dependencies.mjs",
     "verify:phase4-generated-preview": "node scripts/verify-phase4-generated-preview.mjs",
     "verify:phase4-xml": "node scripts/verify-phase4-xml.mjs",
-    "verify:phase5-screenshot": "node scripts/verify-phase5-screenshot-preprocessing.mjs"
+    "verify:phase5-screenshot": "node scripts/verify-phase5-screenshot-preprocessing.mjs",
+    "verify:phase5-screenshot-inference": "node scripts/verify-phase5-screenshot-inference.mjs"
   }
 }

@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "kind": "result",
+  "status": "incomplete",
+  "requestFingerprint": "f789490fa61fa8d6a74e546b8defa536a78c9cebc83a123ba70da9967030a62b",
+  "input": {
+    "preprocessingOutputFingerprint": "58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
+    "screenshotSha256": "db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+    "widthPx": 16,
+    "heightPx": 24
+  },
+  "producer": {
+    "kind": "human-golden",
+    "identity": "viewcompose-fixture-review",
+    "networkAccess": false,
+    "providerTransfer": false
+  },
+  "designIr": {
+    "schemaVersion": 1,
+    "documentId": "screenshot-wireframe",
+    "source": {
+      "kind": "screenshot",
+      "identity": "preprocessed:58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
+      "fingerprint": "db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3"
+    },
+    "roots": [
+      {
+        "id": "wireframe-root",
+        "kind": "column",
+        "properties": [
+          {
+            "name": "orientation",
+            "value": {
+              "kind": "enum",
+              "type": "axis",
+              "value": "vertical"
+            }
+          }
+        ],
+        "modifiers": [],
+        "semantics": [],
+        "events": [],
+        "state": [],
+        "children": [
+          {
+            "id": "wireframe-title",
+            "kind": "text",
+            "properties": [
+              {
+                "name": "text",
+                "value": {
+                  "kind": "binding",
+                  "name": "titleText",
+                  "status": "placeholder"
+                }
+              }
+            ],
+            "modifiers": [],
+            "semantics": [],
+            "events": [],
+            "state": [],
+            "children": [],
+            "provenance": {
+              "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+              "sourceSpan": "pixels:2,2,8,2",
+              "confidence": 0.9,
+              "decision": "A compact high-contrast horizontal region is structurally text-like; its content is not observable."
+            }
+          },
+          {
+            "id": "wireframe-field",
+            "kind": "text-field",
+            "properties": [],
+            "modifiers": [],
+            "semantics": [],
+            "events": [],
+            "state": [
+              {
+                "name": "text",
+                "value": {
+                  "kind": "binding",
+                  "name": "fieldText",
+                  "status": "placeholder"
+                }
+              }
+            ],
+            "children": [],
+            "provenance": {
+              "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+              "sourceSpan": "pixels:2,7,12,5",
+              "confidence": 0.85,
+              "decision": "The outlined region is consistent with an input field, but purpose, text, state, and behavior need confirmation."
+            }
+          },
+          {
+            "id": "wireframe-button",
+            "kind": "button",
+            "properties": [
+              {
+                "name": "text",
+                "value": {
+                  "kind": "binding",
+                  "name": "buttonText",
+                  "status": "placeholder"
+                }
+              }
+            ],
+            "modifiers": [],
+            "semantics": [],
+            "events": [],
+            "state": [],
+            "children": [],
+            "provenance": {
+              "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+              "sourceSpan": "pixels:2,15,12,5",
+              "confidence": 0.9,
+              "decision": "The filled high-emphasis region is structurally button-like; label and click behavior are unresolved."
+            }
+          }
+        ],
+        "provenance": {
+          "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+          "sourceSpan": "pixels:0,0,16,24",
+          "confidence": 0.98,
+          "decision": "The three vertically ordered regions form one column-like screen root."
+        }
+      }
+    ],
+    "unsupported": [
+      {
+        "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+        "sourceSpan": "pixels:2,2,8,2",
+        "code": "VC-AI-SCREENSHOT-TEXT-UNRESOLVED",
+        "reason": "The title glyph content is not observable in this fixture.",
+        "preservedSource": "",
+        "disposition": "blocked"
+      },
+      {
+        "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+        "sourceSpan": "pixels:2,7,12,5",
+        "code": "VC-AI-SCREENSHOT-CONTENT-UNRESOLVED",
+        "reason": "The field purpose and visible content are not observable.",
+        "preservedSource": "",
+        "disposition": "blocked"
+      },
+      {
+        "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+        "sourceSpan": "pixels:2,7,12,5",
+        "code": "VC-AI-SCREENSHOT-BEHAVIOR-UNRESOLVED",
+        "reason": "Input state, validation, keyboard, and submission behavior cannot be inferred from pixels.",
+        "preservedSource": "",
+        "disposition": "blocked"
+      },
+      {
+        "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+        "sourceSpan": "pixels:2,15,12,5",
+        "code": "VC-AI-SCREENSHOT-TEXT-UNRESOLVED",
+        "reason": "The button label is not observable in this fixture.",
+        "preservedSource": "",
+        "disposition": "blocked"
+      },
+      {
+        "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+        "sourceSpan": "pixels:2,15,12,5",
+        "code": "VC-AI-SCREENSHOT-BEHAVIOR-UNRESOLVED",
+        "reason": "Click ownership and resulting action cannot be inferred from pixels.",
+        "preservedSource": "",
+        "disposition": "blocked"
+      },
+      {
+        "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+        "sourceSpan": "pixels:0,0,16,24",
+        "code": "VC-AI-SCREENSHOT-ACCESSIBILITY-UNRESOLVED",
+        "reason": "Roles, labels, traversal, and decorative decisions require explicit review.",
+        "preservedSource": "",
+        "disposition": "blocked"
+      }
+    ]
+  },
+  "nodeEvidence": [
+    {
+      "nodeId": "wireframe-root",
+      "sourceRegion": {"x": 0, "y": 0, "width": 16, "height": 24},
+      "observations": ["geometry", "structure"],
+      "assessments": [
+        {
+          "dimension": "geometry",
+          "confidence": 0.98,
+          "basis": "human-annotated",
+          "decision": "The root region equals the full preprocessed viewport."
+        },
+        {
+          "dimension": "structure",
+          "confidence": 0.98,
+          "basis": "human-annotated",
+          "decision": "Three ordered children form one vertical group."
+        }
+      ],
+      "decision": "Accept one column root."
+    },
+    {
+      "nodeId": "wireframe-title",
+      "sourceRegion": {"x": 2, "y": 2, "width": 8, "height": 2},
+      "observations": ["content", "geometry", "structure"],
+      "assessments": [
+        {
+          "dimension": "content",
+          "confidence": 0.1,
+          "basis": "not-observed",
+          "decision": "No title string is recoverable."
+        },
+        {
+          "dimension": "geometry",
+          "confidence": 0.98,
+          "basis": "pixel-observed",
+          "decision": "The high-contrast rectangle has exact visible bounds."
+        },
+        {
+          "dimension": "structure",
+          "confidence": 0.9,
+          "basis": "human-annotated",
+          "decision": "The rectangle is text-like but not semantically labeled."
+        }
+      ],
+      "alternatives": [
+        {
+          "kind": "image",
+          "confidence": 0.2,
+          "reason": "A small decorative mark could share the same silhouette."
+        }
+      ],
+      "decision": "Keep a placeholder text node and block its content."
+    },
+    {
+      "nodeId": "wireframe-field",
+      "sourceRegion": {"x": 2, "y": 7, "width": 12, "height": 5},
+      "observations": ["geometry", "semantics", "structure", "style"],
+      "assessments": [
+        {
+          "dimension": "geometry",
+          "confidence": 0.98,
+          "basis": "pixel-observed",
+          "decision": "The outlined rectangle has exact visible bounds."
+        },
+        {
+          "dimension": "semantics",
+          "confidence": 0.4,
+          "basis": "not-observed",
+          "decision": "Input purpose and accessibility role are not proven by the outline."
+        },
+        {
+          "dimension": "structure",
+          "confidence": 0.85,
+          "basis": "human-annotated",
+          "decision": "The outlined region is consistent with a text field."
+        },
+        {
+          "dimension": "style",
+          "confidence": 0.95,
+          "basis": "pixel-observed",
+          "decision": "The visible border is directly observable."
+        }
+      ],
+      "alternatives": [
+        {
+          "kind": "box",
+          "confidence": 0.35,
+          "reason": "An outlined container without input behavior is also plausible."
+        }
+      ],
+      "decision": "Keep a provisional text-field node and block purpose, state, and behavior."
+    },
+    {
+      "nodeId": "wireframe-button",
+      "sourceRegion": {"x": 2, "y": 15, "width": 12, "height": 5},
+      "observations": ["content", "geometry", "semantics", "structure", "style"],
+      "assessments": [
+        {
+          "dimension": "content",
+          "confidence": 0.1,
+          "basis": "not-observed",
+          "decision": "No button label is recoverable."
+        },
+        {
+          "dimension": "geometry",
+          "confidence": 0.98,
+          "basis": "pixel-observed",
+          "decision": "The filled rectangle has exact visible bounds."
+        },
+        {
+          "dimension": "semantics",
+          "confidence": 0.5,
+          "basis": "not-observed",
+          "decision": "Clickability and role are not directly observable."
+        },
+        {
+          "dimension": "structure",
+          "confidence": 0.9,
+          "basis": "human-annotated",
+          "decision": "The high-emphasis filled region is button-like."
+        },
+        {
+          "dimension": "style",
+          "confidence": 0.95,
+          "basis": "pixel-observed",
+          "decision": "The fill color and bounds are directly observable."
+        }
+      ],
+      "alternatives": [
+        {
+          "kind": "box",
+          "confidence": 0.25,
+          "reason": "A non-interactive emphasis panel is also possible."
+        }
+      ],
+      "decision": "Keep a provisional button node and block label, role, and behavior."
+    }
+  ],
+  "unresolvedQuestions": [
+    {
+      "id": "question-title-text",
+      "nodeId": "wireframe-title",
+      "sourceRegion": {"x": 2, "y": 2, "width": 8, "height": 2},
+      "category": "content",
+      "question": "What exact title text should this region display?",
+      "blocking": true,
+      "requiredAction": "human-answer",
+      "forbiddenDefault": true
+    },
+    {
+      "id": "question-field-purpose",
+      "nodeId": "wireframe-field",
+      "sourceRegion": {"x": 2, "y": 7, "width": 12, "height": 5},
+      "category": "content",
+      "question": "What is the input purpose, label, hint, and initial value?",
+      "blocking": true,
+      "requiredAction": "human-answer",
+      "forbiddenDefault": true
+    },
+    {
+      "id": "question-field-behavior",
+      "nodeId": "wireframe-field",
+      "sourceRegion": {"x": 2, "y": 7, "width": 12, "height": 5},
+      "category": "behavior",
+      "question": "Who owns input state, validation, keyboard configuration, and submission?",
+      "blocking": true,
+      "requiredAction": "source-inspection",
+      "forbiddenDefault": true
+    },
+    {
+      "id": "question-button-text",
+      "nodeId": "wireframe-button",
+      "sourceRegion": {"x": 2, "y": 15, "width": 12, "height": 5},
+      "category": "content",
+      "question": "What exact label should the button display?",
+      "blocking": true,
+      "requiredAction": "human-answer",
+      "forbiddenDefault": true
+    },
+    {
+      "id": "question-button-behavior",
+      "nodeId": "wireframe-button",
+      "sourceRegion": {"x": 2, "y": 15, "width": 12, "height": 5},
+      "category": "behavior",
+      "question": "What action should activation invoke and who owns it?",
+      "blocking": true,
+      "requiredAction": "source-inspection",
+      "forbiddenDefault": true
+    },
+    {
+      "id": "question-accessibility",
+      "sourceRegion": {"x": 0, "y": 0, "width": 16, "height": 24},
+      "category": "accessibility",
+      "question": "Which roles, labels, traversal order, and decorative decisions are required?",
+      "blocking": true,
+      "requiredAction": "human-answer",
+      "forbiddenDefault": true
+    }
+  ],
+  "summary": {
+    "nodes": 4,
+    "evidenceRecords": 4,
+    "unresolvedQuestions": 6,
+    "blockingQuestions": 6,
+    "unsupportedSemantics": 6,
+    "confidenceAggregation": "none",
+    "codeGenerationAllowed": false
+  },
+  "diagnostics": [
+    {
+      "code": "VC-AI-SCREENSHOT-INFERENCE-UNRESOLVED",
+      "severity": "warning",
+      "message": "The human golden preserves six blocking questions instead of inventing content, behavior, or accessibility semantics.",
+      "nextAction": "Resolve every blocking question before code generation is allowed."
+    }
+  ],
+  "resultFingerprint": "4bd30960cccdfe3b9a4402293b3739a3238a25fcef12fb2911c595a3df7a66c0"
+}

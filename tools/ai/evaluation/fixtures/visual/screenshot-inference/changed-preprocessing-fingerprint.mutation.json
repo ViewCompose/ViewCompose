@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "kind": "request-mutation",
+  "baseFixture": "screenshot-inference/wireframe.request.json",
+  "operation": "replace",
+  "path": "/source/preprocessingOutputFingerprint",
+  "value": "0000000000000000000000000000000000000000000000000000000000000000",
+  "expectedSchemaValid": true
+}

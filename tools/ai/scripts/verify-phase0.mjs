@@ -275,6 +275,7 @@ async function verifySchemas(versions) {
     generatedPreviewRequest: 'generated-preview-request.schema.json',
     layoutComparison: 'layout-comparison.schema.json',
     screenshotPreprocessing: 'screenshot-preprocessing.schema.json',
+    screenshotDesignInference: 'screenshot-design-inference.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -1606,6 +1607,481 @@ async function verifyScreenshotPreprocessing(schemas) {
   return contract;
 }
 
+function applyScreenshotInferenceMutation(base, descriptor, label) {
+  if (
+    descriptor.schemaVersion !== 1 ||
+    descriptor.kind !== 'request-mutation' ||
+    descriptor.baseFixture !== 'screenshot-inference/wireframe.request.json' ||
+    !['add', 'replace'].includes(descriptor.operation) ||
+    typeof descriptor.path !== 'string' ||
+    !descriptor.path.startsWith('/') ||
+    typeof descriptor.expectedSchemaValid !== 'boolean'
+  ) {
+    throw new Error(`${label}: screenshot inference mutation contract changed`);
+  }
+  const segments = descriptor.path.slice(1).split('/').map((segment) =>
+    segment.replaceAll('~1', '/').replaceAll('~0', '~'));
+  const mutated = structuredClone(base);
+  let owner = mutated;
+  for (const segment of segments.slice(0, -1)) {
+    if (!owner || typeof owner !== 'object' || !Object.hasOwn(owner, segment)) {
+      throw new Error(`${label}: mutation path does not resolve`);
+    }
+    owner = owner[segment];
+  }
+  const key = segments.at(-1);
+  if (!key || !owner || typeof owner !== 'object') {
+    throw new Error(`${label}: mutation target is invalid`);
+  }
+  if (descriptor.operation === 'replace' && !Object.hasOwn(owner, key)) {
+    throw new Error(`${label}: replace target does not exist`);
+  }
+  if (descriptor.operation === 'add' && Object.hasOwn(owner, key)) {
+    throw new Error(`${label}: add target already exists`);
+  }
+  owner[key] = structuredClone(descriptor.value);
+  return mutated;
+}
+
+function collectScreenshotInferenceNodes(roots) {
+  const nodes = [];
+  function visit(node, depth) {
+    nodes.push({node, depth});
+    for (const child of node.children) visit(child, depth + 1);
+  }
+  for (const root of roots) visit(root, 1);
+  return nodes;
+}
+
+function screenshotRegionSpan(region) {
+  return `pixels:${region.x},${region.y},${region.width},${region.height}`;
+}
+
+function assertScreenshotRegion(region, widthPx, heightPx, label) {
+  if (
+    region.x + region.width > widthPx ||
+    region.y + region.height > heightPx
+  ) {
+    throw new Error(`${label}: source region leaves the preprocessed screenshot`);
+  }
+}
+
+async function verifyScreenshotDesignInference(schemas, screenshotPreprocessing) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/visual');
+  const contract = await readJson(
+    resolve(fixtureDirectory, 'screenshot-inference-contract.json'),
+  );
+  if (
+    contract.schemaVersion !== 1 ||
+    contract.contractId !== 'viewcompose-screenshot-design-inference-v1' ||
+    JSON.stringify(contract.requiresContracts) !== JSON.stringify([
+      'screenshot-preprocessing-v1',
+      'design-ir-v1',
+      'screenshot-design-inference-v1',
+    ]) ||
+    contract.activation?.tool !== 'infer_screenshot_design' ||
+    contract.activation?.status !== 'contract-frozen' ||
+    contract.activation?.publicTool !== false ||
+    contract.activation?.evidence !== 'static' ||
+    contract.execution?.providerExecution !== false ||
+    contract.execution?.networkAccess !== false ||
+    contract.execution?.credentialsAccepted !== false ||
+    contract.execution?.providerSelected !== false
+  ) {
+    throw new Error('Screenshot inference activation or execution boundary changed');
+  }
+  if (
+    contract.lineage?.acceptedInput !== 'prepare_screenshot-output-only' ||
+    contract.lineage?.callerPathAllowed !== false ||
+    contract.lineage?.callerUrlAllowed !== false ||
+    contract.lineage?.callerUriAllowed !== false ||
+    contract.lineage?.requestFingerprint !== 'sha256-canonical-json' ||
+    contract.lineage?.resultFingerprint !==
+      'sha256-canonical-json-without-resultFingerprint' ||
+    contract.lineage?.approvedInputFingerprint !==
+      'exact-preprocessing-output-fingerprint' ||
+    contract.lineage?.screenshotIdentity !== 'exact-preprocessing-output-asset' ||
+    contract.lineage?.designIrSourceIdentity !== 'preprocessed-output-fingerprint' ||
+    contract.lineage?.designIrSourceFingerprint !== 'screenshot-sha256'
+  ) {
+    throw new Error('Screenshot inference source-lineage contract changed');
+  }
+  if (
+    contract.inferencePolicy?.designIrSchemaVersion !== 1 ||
+    JSON.stringify(contract.inferencePolicy?.allowedNodeKinds) !== JSON.stringify([
+      'box', 'button', 'column', 'image', 'row', 'text', 'text-field',
+    ]) ||
+    contract.inferencePolicy?.behaviorInference !== 'forbidden' ||
+    contract.inferencePolicy?.resourceInference !== 'placeholder-only' ||
+    contract.inferencePolicy?.textInference !== 'observed-or-unresolved' ||
+    contract.inferencePolicy?.accessibilityInference !== 'observed-or-unresolved' ||
+    contract.inferencePolicy?.minimumAcceptedConfidence !== 0.8 ||
+    contract.inferencePolicy?.unresolvedBelowConfidence !== true ||
+    contract.inferencePolicy?.confidenceAggregation !== 'none' ||
+    contract.inferencePolicy?.codeGenerationWithBlockingQuestions !== false
+  ) {
+    throw new Error('Screenshot inference uncertainty or semantic policy changed');
+  }
+  if (
+    contract.provenance?.evidenceRecordsPerNode !== 1 ||
+    contract.provenance?.sourceRegionWithinScreenshot !== true ||
+    contract.provenance?.evidenceNodeIdMatchesDesignIrNodeId !== true ||
+    contract.provenance?.evidenceRegionMatchesSourceSpan !== true ||
+    contract.provenance?.sourceSpanFormat !== 'pixels:x,y,width,height' ||
+    contract.provenance?.sourceId !== 'screenshot:<sha256>' ||
+    contract.provenance?.assessmentDimensionsUniquePerNode !== true ||
+    contract.provenance?.nodeKindsRestrictedToRequestAllowlist !== true
+  ) {
+    throw new Error('Screenshot inference evidence coverage contract changed');
+  }
+  const humanAuthorization = contract.authorization?.humanGolden;
+  const providerAuthorization = contract.authorization?.providerAdapter;
+  if (
+    humanAuthorization?.privacyReviewRequired !== true ||
+    humanAuthorization?.redactionsVerified !== true ||
+    humanAuthorization?.providerTransfer !== false ||
+    humanAuthorization?.networkAccess !== false ||
+    humanAuthorization?.inputPersistence !== false ||
+    humanAuthorization?.outputPersistence !== false ||
+    humanAuthorization?.logs !== 'metadata-only' ||
+    providerAuthorization?.status !== 'future' ||
+    providerAuthorization?.explicitProviderIdRequired !== true ||
+    providerAuthorization?.consentReceiptRequired !== true ||
+    providerAuthorization?.consentBoundToExactInput !== true ||
+    providerAuthorization?.approvedPurpose !== 'screenshot-to-design-ir' ||
+    providerAuthorization?.retentionReviewRequired !== true ||
+    providerAuthorization?.rawRequestPersistence !== false ||
+    providerAuthorization?.rawResponsePersistence !== false ||
+    providerAuthorization?.immutableModelIdentityRequired !== true
+  ) {
+    throw new Error('Screenshot inference authorization boundary changed');
+  }
+  if (
+    contract.result?.humanAndProviderProducersSeparated !== true ||
+    contract.result?.providerRequestFingerprintRequired !== true ||
+    contract.result?.providerResponseFingerprintRequired !== true ||
+    contract.result?.incompleteWhenBlockingQuestionsRemain !== true ||
+    contract.result?.allUnresolvedQuestionsForbidDefaults !== true ||
+    contract.result?.allUnsupportedSemanticsBlocked !== true ||
+    contract.limits?.maxNodes !== 1000 ||
+    contract.limits?.maxDepth !== 64 ||
+    contract.limits?.maxEvidenceRecords !== 1000 ||
+    contract.limits?.maxUnresolvedQuestions !== 1000 ||
+    contract.limits?.maxAlternativesPerNode !== 3
+  ) {
+    throw new Error('Screenshot inference result or resource limits changed');
+  }
+  assertUnique(contract.diagnosticCodes, 'Screenshot inference diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-SCREENSHOT-INFERENCE-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid screenshot inference diagnostic code: ${code}`);
+    }
+  }
+
+  const inferenceSchema = schemas.get('screenshot-design-inference.schema.json');
+  const designIrSchema = schemas.get('design-ir.schema.json');
+  const inferencePolicySchema = inferenceSchema.$defs?.request?.properties?.policy?.properties;
+  const providerAuthorizationSchema = inferenceSchema.$defs?.authorization?.oneOf?.find(
+    (candidate) => candidate.properties?.mode?.const === 'provider-adapter',
+  );
+  const providerProducerSchema = inferenceSchema.$defs?.producer?.oneOf?.find(
+    (candidate) => candidate.properties?.kind?.const === 'provider-adapter',
+  );
+  if (
+    inferencePolicySchema?.behaviorInference?.const !==
+      contract.inferencePolicy.behaviorInference ||
+    inferencePolicySchema?.resourceInference?.const !==
+      contract.inferencePolicy.resourceInference ||
+    inferencePolicySchema?.textInference?.const !== contract.inferencePolicy.textInference ||
+    inferencePolicySchema?.accessibilityInference?.const !==
+      contract.inferencePolicy.accessibilityInference ||
+    inferencePolicySchema?.maxNodes?.maximum !== contract.limits.maxNodes ||
+    inferencePolicySchema?.maxDepth?.maximum !== contract.limits.maxDepth ||
+    inferenceSchema.$defs?.result?.properties?.nodeEvidence?.maxItems !==
+      contract.limits.maxEvidenceRecords ||
+    inferenceSchema.$defs?.result?.properties?.unresolvedQuestions?.maxItems !==
+      contract.limits.maxUnresolvedQuestions ||
+    inferenceSchema.$defs?.nodeEvidence?.properties?.alternatives?.maxItems !==
+      contract.limits.maxAlternativesPerNode ||
+    inferenceSchema.$defs?.result?.properties?.summary?.properties
+      ?.confidenceAggregation?.const !== contract.inferencePolicy.confidenceAggregation ||
+    !providerAuthorizationSchema?.required?.includes('consentReceipt') ||
+    !providerAuthorizationSchema?.required?.includes('consentInputFingerprint') ||
+    !providerAuthorizationSchema?.required?.includes('providerId') ||
+    !providerAuthorizationSchema?.required?.includes('retentionReview') ||
+    !providerProducerSchema?.required?.includes('modelId') ||
+    !providerProducerSchema?.required?.includes('modelVersion') ||
+    !providerProducerSchema?.required?.includes('providerRequestFingerprint') ||
+    !providerProducerSchema?.required?.includes('providerResponseFingerprint')
+  ) {
+    throw new Error('Screenshot inference schema and frozen policy diverged');
+  }
+  const preprocessingFixture = screenshotPreprocessing.supportedFixtures.find(
+    (fixture) => fixture.request === 'screenshot/inference-wireframe.request.json',
+  );
+  if (!preprocessingFixture) {
+    throw new Error('Screenshot inference requires its exact preprocessing golden');
+  }
+  const [preprocessingRequest, preprocessingResult] = await Promise.all([
+    readJson(resolve(fixtureDirectory, preprocessingFixture.request)),
+    readJson(resolve(fixtureDirectory, preprocessingFixture.result)),
+  ]);
+  const declaredRequests = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const [request, result] = await Promise.all([
+      readJson(resolve(fixtureDirectory, fixture.request)),
+      readJson(resolve(fixtureDirectory, fixture.result)),
+    ]);
+    assertSchemaValue(request, inferenceSchema, fixture.request);
+    assertSchemaValue(result, inferenceSchema, fixture.result);
+    assertSchemaValue(result.designIr, designIrSchema, `${fixture.result} Design IR`);
+    const requestFingerprint = createHash('sha256')
+      .update(canonicalJson(request))
+      .digest('hex');
+    const fingerprintedResult = {...result};
+    delete fingerprintedResult.resultFingerprint;
+    const resultFingerprint = createHash('sha256')
+      .update(canonicalJson(fingerprintedResult))
+      .digest('hex');
+    const designIrFingerprint = createHash('sha256')
+      .update(canonicalJson(result.designIr))
+      .digest('hex');
+    const screenshot = decodeScreenshotPng(
+      request.screenshot,
+      screenshotPreprocessing.limits,
+      fixture.request,
+    );
+    if (
+      fixture.status !== 'contract-frozen' ||
+      requestFingerprint !== fixture.expectedRequestFingerprint ||
+      requestFingerprint !== result.requestFingerprint ||
+      resultFingerprint !== fixture.expectedResultFingerprint ||
+      resultFingerprint !== result.resultFingerprint ||
+      designIrFingerprint !== fixture.expectedDesignIrFingerprint ||
+      request.source.preprocessingRequestFingerprint !==
+        preprocessingFixture.expectedRequestFingerprint ||
+      createHash('sha256').update(canonicalJson(preprocessingRequest)).digest('hex') !==
+        request.source.preprocessingRequestFingerprint ||
+      request.source.preprocessingOutputFingerprint !==
+        preprocessingFixture.expectedOutputFingerprint ||
+      request.authorization.approvedInputFingerprint !==
+        preprocessingFixture.expectedOutputFingerprint ||
+      JSON.stringify(request.screenshot) !== JSON.stringify(preprocessingResult.output) ||
+      request.screenshot.sha256 !== preprocessingFixture.expectedOutputSha256 ||
+      screenshot.chunkTypes.join(',') !== screenshotPreprocessing.output.canonicalChunks.join(',') ||
+      result.input.preprocessingOutputFingerprint !==
+        request.source.preprocessingOutputFingerprint ||
+      result.input.screenshotSha256 !== request.screenshot.sha256 ||
+      result.input.widthPx !== request.screenshot.widthPx ||
+      result.input.heightPx !== request.screenshot.heightPx ||
+      request.policy.designIrSchemaVersion !== contract.inferencePolicy.designIrSchemaVersion ||
+      request.policy.minimumAcceptedConfidence !==
+        contract.inferencePolicy.minimumAcceptedConfidence ||
+      JSON.stringify(request.policy.allowedNodeKinds) !==
+        JSON.stringify(contract.inferencePolicy.allowedNodeKinds)
+    ) {
+      throw new Error(`${fixture.request}: screenshot inference lineage or fingerprint changed`);
+    }
+    if (
+      request.authorization.mode !== 'human-golden' ||
+      request.authorization.providerTransfer !== false ||
+      request.authorization.networkAccess !== false ||
+      result.producer.kind !== 'human-golden' ||
+      result.producer.providerTransfer !== false ||
+      result.producer.networkAccess !== false
+    ) {
+      throw new Error(`${fixture.request}: human golden crossed a provider boundary`);
+    }
+    const expectedSourceId = `screenshot:${request.screenshot.sha256}`;
+    if (
+      result.designIr.source.kind !== 'screenshot' ||
+      result.designIr.source.identity !==
+        `preprocessed:${request.source.preprocessingOutputFingerprint}` ||
+      result.designIr.source.fingerprint !== request.screenshot.sha256
+    ) {
+      throw new Error(`${fixture.result}: Design IR source identity changed`);
+    }
+    const nodesWithDepth = collectScreenshotInferenceNodes(result.designIr.roots);
+    const nodes = nodesWithDepth.map(({node}) => node);
+    assertUnique(nodes.map((node) => node.id), `${fixture.result} Design IR node IDs`);
+    if (
+      nodes.length > request.policy.maxNodes ||
+      nodes.length > contract.limits.maxNodes ||
+      Math.max(...nodesWithDepth.map(({depth}) => depth)) > request.policy.maxDepth ||
+      Math.max(...nodesWithDepth.map(({depth}) => depth)) > contract.limits.maxDepth ||
+      result.nodeEvidence.length > contract.limits.maxEvidenceRecords ||
+      result.unresolvedQuestions.length > contract.limits.maxUnresolvedQuestions
+    ) {
+      throw new Error(`${fixture.result}: screenshot inference limits were exceeded`);
+    }
+    const evidenceByNode = new Map();
+    for (const evidence of result.nodeEvidence) {
+      if (evidenceByNode.has(evidence.nodeId)) {
+        throw new Error(`${fixture.result}: duplicate evidence for ${evidence.nodeId}`);
+      }
+      assertScreenshotRegion(
+        evidence.sourceRegion,
+        request.screenshot.widthPx,
+        request.screenshot.heightPx,
+        `${fixture.result} ${evidence.nodeId}`,
+      );
+      assertUnique(
+        evidence.assessments.map((assessment) => assessment.dimension),
+        `${fixture.result} ${evidence.nodeId} assessment dimensions`,
+      );
+      for (const assessment of evidence.assessments) {
+        if (!evidence.observations.includes(assessment.dimension)) {
+          throw new Error(`${fixture.result}: assessment lacks an observation dimension`);
+        }
+      }
+      for (const alternative of evidence.alternatives ?? []) {
+        if (!request.policy.allowedNodeKinds.includes(alternative.kind)) {
+          throw new Error(`${fixture.result}: alternative kind leaves the request allowlist`);
+        }
+      }
+      evidenceByNode.set(evidence.nodeId, evidence);
+    }
+    const questionsByNode = new Map();
+    for (const question of result.unresolvedQuestions) {
+      assertScreenshotRegion(
+        question.sourceRegion,
+        request.screenshot.widthPx,
+        request.screenshot.heightPx,
+        `${fixture.result} ${question.id}`,
+      );
+      if (question.nodeId) {
+        const questions = questionsByNode.get(question.nodeId) ?? [];
+        questions.push(question);
+        questionsByNode.set(question.nodeId, questions);
+      }
+      if (question.forbiddenDefault !== true) {
+        throw new Error(`${fixture.result}: unresolved questions cannot invent defaults`);
+      }
+    }
+    for (const node of nodes) {
+      const evidence = evidenceByNode.get(node.id);
+      if (
+        !request.policy.allowedNodeKinds.includes(node.kind) ||
+        !evidence ||
+        node.provenance.sourceId !== expectedSourceId ||
+        node.provenance.sourceSpan !== screenshotRegionSpan(evidence.sourceRegion) ||
+        node.events.length !== 0
+      ) {
+        throw new Error(`${fixture.result}: node evidence or behavior boundary changed for ${node.id}`);
+      }
+      const hasLowConfidence = evidence.assessments.some(
+        (assessment) => assessment.confidence < request.policy.minimumAcceptedConfidence,
+      );
+      if (hasLowConfidence && !(questionsByNode.get(node.id)?.length > 0)) {
+        throw new Error(`${fixture.result}: low-confidence node ${node.id} lacks a question`);
+      }
+      for (const fields of [node.properties, node.semantics, node.state]) {
+        for (const field of fields) {
+          if (field.value.kind === 'resource' ||
+              (field.value.kind === 'binding' && field.value.status !== 'placeholder')) {
+            throw new Error(`${fixture.result}: screenshot inference invented a resolved value`);
+          }
+        }
+      }
+    }
+    if (evidenceByNode.size !== nodes.length) {
+      throw new Error(`${fixture.result}: every Design IR node requires exactly one evidence record`);
+    }
+    for (const unsupported of result.designIr.unsupported) {
+      if (
+        unsupported.sourceId !== expectedSourceId ||
+        unsupported.disposition !== 'blocked' ||
+        !unsupported.sourceSpan.startsWith('pixels:')
+      ) {
+        throw new Error(`${fixture.result}: unsupported screenshot semantics were not blocked`);
+      }
+    }
+    const blockingQuestions = result.unresolvedQuestions.filter((question) => question.blocking);
+    if (
+      result.summary.nodes !== nodes.length ||
+      result.summary.nodes !== fixture.expectedNodes ||
+      result.summary.evidenceRecords !== result.nodeEvidence.length ||
+      result.summary.evidenceRecords !== fixture.expectedEvidenceRecords ||
+      result.summary.unresolvedQuestions !== result.unresolvedQuestions.length ||
+      result.summary.unresolvedQuestions !== fixture.expectedUnresolvedQuestions ||
+      result.summary.blockingQuestions !== blockingQuestions.length ||
+      result.summary.blockingQuestions !== fixture.expectedBlockingQuestions ||
+      result.summary.unsupportedSemantics !== result.designIr.unsupported.length ||
+      result.summary.unsupportedSemantics !== fixture.expectedUnsupportedSemantics ||
+      result.summary.confidenceAggregation !== 'none' ||
+      result.summary.codeGenerationAllowed !== fixture.expectedCodeGenerationAllowed ||
+      (blockingQuestions.length > 0 && result.summary.codeGenerationAllowed !== false) ||
+      result.status !== fixture.expectedStatus ||
+      (blockingQuestions.length > 0 && result.status !== 'incomplete')
+    ) {
+      throw new Error(`${fixture.result}: uncertainty summary or code-generation gate changed`);
+    }
+    for (const diagnostic of result.diagnostics) {
+      if (!contract.diagnosticCodes.includes(diagnostic.code)) {
+        throw new Error(`${fixture.result}: undeclared inference diagnostic ${diagnostic.code}`);
+      }
+    }
+    declaredRequests.add(fixture.request);
+  }
+
+  for (const fixture of contract.unsupportedFixtures) {
+    const mutationPath = resolve(fixtureDirectory, fixture.mutation);
+    const descriptor = await readJson(mutationPath);
+    const baseRequest = await readJson(resolve(fixtureDirectory, descriptor.baseFixture));
+    const mutated = applyScreenshotInferenceMutation(baseRequest, descriptor, fixture.mutation);
+    const violations = validateSchemaValue(mutated, inferenceSchema);
+    if (
+      descriptor.expectedSchemaValid !== fixture.schemaValid ||
+      (fixture.schemaValid && violations.length > 0) ||
+      (!fixture.schemaValid && violations.length === 0)
+    ) {
+      throw new Error(`${fixture.mutation}: inference fail-closed denominator changed`);
+    }
+    const provesMissingConsent =
+      mutated.authorization?.mode === 'provider-adapter' &&
+      !Object.hasOwn(mutated.authorization, 'consentReceipt');
+    const provesCredential = Object.hasOwn(mutated.authorization ?? {}, 'apiKey');
+    const provesLineageMismatch =
+      mutated.source?.preprocessingOutputFingerprint !==
+        preprocessingFixture.expectedOutputFingerprint;
+    if (
+      (fixture.diagnosticCodes.includes('VC-AI-SCREENSHOT-INFERENCE-CONSENT-REQUIRED') &&
+        !provesMissingConsent) ||
+      (fixture.diagnosticCodes.includes('VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED') &&
+        !provesCredential) ||
+      (fixture.diagnosticCodes.includes('VC-AI-SCREENSHOT-INFERENCE-LINEAGE-MISMATCH') &&
+        !provesLineageMismatch)
+    ) {
+      throw new Error(`${fixture.mutation}: inference failure reason changed`);
+    }
+    for (const code of fixture.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`${fixture.mutation}: undeclared inference diagnostic ${code}`);
+      }
+    }
+    declaredRequests.add(fixture.mutation);
+  }
+  assertUnique([...declaredRequests], 'Screenshot inference fixture inputs');
+  return contract;
+}
+
+export async function verifyScreenshotDesignInferenceContracts() {
+  const schemas = new Map();
+  for (const name of [
+    'design-ir.schema.json',
+    'screenshot-design-inference.schema.json',
+    'screenshot-preprocessing.schema.json',
+  ]) {
+    schemas.set(name, await readJson(resolve(contractsDirectory, name)));
+  }
+  const screenshotPreprocessing = await verifyScreenshotPreprocessing(schemas);
+  const screenshotDesignInference = await verifyScreenshotDesignInference(
+    schemas,
+    screenshotPreprocessing,
+  );
+  return {screenshotPreprocessing, screenshotDesignInference};
+}
+
 async function verifyMetrics(schemas) {
   const metrics = await readJson(resolve(evaluationDirectory, 'metrics.json'));
   assertSchemaValue(metrics, schemas.get('metric-contract.schema.json'), 'evaluation/metrics.json');
@@ -1692,6 +2168,10 @@ export async function verifyPhase0() {
   const generatedPreview = await verifyGeneratedPreview(schemas);
   const layoutComparison = await verifyLayoutComparison(schemas);
   const screenshotPreprocessing = await verifyScreenshotPreprocessing(schemas);
+  const screenshotDesignInference = await verifyScreenshotDesignInference(
+    schemas,
+    screenshotPreprocessing,
+  );
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -1714,6 +2194,9 @@ export async function verifyPhase0() {
     screenshotPreprocessingFixtures:
       screenshotPreprocessing.supportedFixtures.length +
         screenshotPreprocessing.unsupportedFixtures.length,
+    screenshotDesignInferenceFixtures:
+      screenshotDesignInference.supportedFixtures.length +
+        screenshotDesignInference.unsupportedFixtures.length,
   };
 }
 
@@ -1730,7 +2213,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.xmlLayoutDependencyFixtures} frozen XML layout-dependency fixtures and ` +
           `${summary.generatedPreviewFixtures} frozen generated-Preview fixtures and ` +
           `${summary.layoutComparisonFixtures} frozen layout-comparison fixtures and ` +
-          `${summary.screenshotPreprocessingFixtures} frozen screenshot-preprocessing fixtures.`,
+          `${summary.screenshotPreprocessingFixtures} frozen screenshot-preprocessing fixtures and ` +
+          `${summary.screenshotDesignInferenceFixtures} frozen screenshot-inference fixtures.`,
       );
     })
     .catch((error) => {

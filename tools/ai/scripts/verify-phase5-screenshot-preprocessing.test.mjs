@@ -4,8 +4,8 @@ import {verifyPhase5ScreenshotPreprocessing} from './verify-phase5-screenshot-pr
 
 test('meets every frozen screenshot preprocessing and privacy denominator', async () => {
   const summary = await verifyPhase5ScreenshotPreprocessing();
-  assert.equal(summary.supportedGoldens, 1);
-  assert.equal(summary.deterministicRuns, 3);
+  assert.equal(summary.supportedGoldens, 2);
+  assert.equal(summary.deterministicRuns, 5);
   assert.equal(summary.privacyDenials, 2);
   assert.equal(summary.integrityDenials, 1);
   assert.equal(summary.cancellations, 1);
@@ -20,5 +20,13 @@ test('meets every frozen screenshot preprocessing and privacy denominator', asyn
   assert.equal(
     summary.outputFingerprint,
     '74d3e3190dca4157d07cefd51f9a3a809094dad93785cef3c327f566a6e832b1',
+  );
+  assert.equal(
+    summary.inferenceOutputSha256,
+    'db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3',
+  );
+  assert.equal(
+    summary.inferenceOutputFingerprint,
+    '58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3',
   );
 });

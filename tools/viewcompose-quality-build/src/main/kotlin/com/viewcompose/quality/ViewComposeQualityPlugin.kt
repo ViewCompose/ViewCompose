@@ -794,6 +794,35 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotInference") {
+            group = "verification"
+            description =
+                "Verifies screenshot-to-Design-IR lineage, evidence, uncertainty, and consent contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-inference")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/examples/screenshot-preprocessing-request.json",
+                        "contracts/examples/screenshot-preprocessing-result.json",
+                        "contracts/screenshot-design-inference.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "evaluation/fixtures/visual/screenshot/**",
+                        "evaluation/fixtures/visual/screenshot-inference/**",
+                        "evaluation/fixtures/visual/screenshot-inference-contract.json",
+                        "evaluation/fixtures/visual/screenshot-preprocessing-contract.json",
+                        "scripts/knowledge-retriever.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/verify-phase0.mjs",
+                        "scripts/verify-phase5-screenshot-inference.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

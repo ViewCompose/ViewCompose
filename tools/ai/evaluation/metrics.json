@@ -345,6 +345,42 @@
       "environment": "completed caller privacy review, explicit rectangle redactions, no provider transfer, no persistence, metadata-only logs, and fail-closed path input"
     },
     {
+      "id": "visual.screenshot-inference-lineage",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact prepare_screenshot request/result fingerprints, canonical output PNG identity, inference request fingerprint, and Design IR screenshot source identity"
+    },
+    {
+      "id": "visual.screenshot-inference-evidence-coverage",
+      "phase": 5,
+      "measure": "complete_node_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exactly one in-bounds pixel region and dimension-separated evidence record for every screenshot-derived Design IR node"
+    },
+    {
+      "id": "visual.screenshot-inference-uncertainty-honesty",
+      "phase": 5,
+      "measure": "reported_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "no aggregate confidence; low-confidence content, semantics, behavior, state, resources, and accessibility remain explicit blocking questions with forbidden defaults"
+    },
+    {
+      "id": "visual.screenshot-inference-consent-safety",
+      "phase": 5,
+      "measure": "blocked_or_authorized_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "human-golden mode remains offline; future provider mode requires explicit provider identity, exact-input consent receipt, purpose, retention review, and accepts no credential field"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",

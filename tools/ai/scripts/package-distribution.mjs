@@ -29,6 +29,7 @@ const sourcePaths = Object.freeze([
   'contracts/generated-preview-request.schema.json',
   'contracts/layout-comparison.schema.json',
   'contracts/mcp-protocol.json',
+  'contracts/screenshot-design-inference.schema.json',
   'contracts/screenshot-preprocessing.schema.json',
   'contracts/tool-envelope.schema.json',
   'contracts/xml-project-context.schema.json',

@@ -11,6 +11,12 @@ const requestPath = fileURLToPath(
 const resultPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot/privacy-grid.result.json', import.meta.url),
 );
+const inferenceRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot/inference-wireframe.request.json', import.meta.url),
+);
+const inferenceResultPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot/inference-wireframe.result.json', import.meta.url),
+);
 const pathInputPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot/path-input.request.json', import.meta.url),
 );
@@ -29,9 +35,11 @@ function requireDiagnostic(result, status, code, label) {
 }
 
 export async function verifyPhase5ScreenshotPreprocessing() {
-  const [request, expected, pathInput, providerTransfer] = await Promise.all([
+  const [request, expected, inferenceRequest, inferenceExpected, pathInput, providerTransfer] = await Promise.all([
     readJson(requestPath),
     readJson(resultPath),
+    readJson(inferenceRequestPath),
+    readJson(inferenceResultPath),
     readJson(pathInputPath),
     readJson(providerTransferPath),
   ]);
@@ -48,6 +56,18 @@ export async function verifyPhase5ScreenshotPreprocessing() {
     second.evidence.outputFingerprint !== expected.outputFingerprint
   ) {
     throw new Error('Screenshot preprocessing did not reproduce the exact golden twice');
+  }
+  const [inferenceFirst, inferenceSecond] = await Promise.all([
+    prepareScreenshot(inferenceRequest, {requestId: 'phase5-inference-first'}),
+    prepareScreenshot(inferenceRequest, {requestId: 'phase5-inference-second'}),
+  ]);
+  if (
+    inferenceFirst.status !== 'success' ||
+    inferenceSecond.status !== 'success' ||
+    JSON.stringify(inferenceFirst.data) !== JSON.stringify(inferenceExpected) ||
+    JSON.stringify(inferenceSecond.data) !== JSON.stringify(inferenceExpected)
+  ) {
+    throw new Error('Screenshot preprocessing did not reproduce the inference golden twice');
   }
 
   const reordered = {
@@ -125,14 +145,16 @@ export async function verifyPhase5ScreenshotPreprocessing() {
   }
 
   return {
-    supportedGoldens: 1,
-    deterministicRuns: 3,
+    supportedGoldens: 2,
+    deterministicRuns: 5,
     privacyDenials: 2,
     integrityDenials: 1,
     cancellations: 1,
     inputSha256: first.data.input.sha256,
     outputSha256: first.data.output.sha256,
     outputFingerprint: first.data.outputFingerprint,
+    inferenceOutputSha256: inferenceFirst.data.output.sha256,
+    inferenceOutputFingerprint: inferenceFirst.data.outputFingerprint,
   };
 }
 
@@ -140,12 +162,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   verifyPhase5ScreenshotPreprocessing()
     .then((summary) => {
       process.stdout.write(
-        `Verified Phase 5 screenshot preprocessing: ${summary.supportedGoldens}/1 golden, ` +
-        `${summary.deterministicRuns}/3 deterministic/canonical runs, ` +
+        `Verified Phase 5 screenshot preprocessing: ${summary.supportedGoldens}/2 goldens, ` +
+        `${summary.deterministicRuns}/5 deterministic/canonical runs, ` +
         `${summary.privacyDenials}/2 privacy denials, ` +
         `${summary.integrityDenials}/1 integrity denial, and ` +
         `${summary.cancellations}/1 cancellation; output ${summary.outputSha256}, ` +
-        `result ${summary.outputFingerprint}.\n`,
+        `result ${summary.outputFingerprint}; inference input ${summary.inferenceOutputSha256}, ` +
+        `result ${summary.inferenceOutputFingerprint}.\n`,
       );
     })
     .catch((error) => {

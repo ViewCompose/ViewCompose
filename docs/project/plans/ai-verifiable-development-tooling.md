@@ -83,12 +83,15 @@ the public `compared` evidence gate through the installed package. The provider-
 input, deterministic preprocessing, privacy, and evaluation boundary is now frozen before any
 model-backed generation begins. The dependency-free preprocessor is now the tenth shared CLI/MCP
 tool and reproduces the same privacy golden through the installed package. It still performs no UI
-inference. The next boundary is provider-neutral screenshot-to-Design-IR inference and consent.
+inference. The provider-neutral screenshot-to-Design-IR request/result, lineage, evidence,
+uncertainty, and consent contract is now frozen without selecting a provider. The next boundary is
+an offline validator/import adapter for externally produced inference results; provider selection
+remains a separate, explicitly authorized decision.
 
 Last verified: 2026-08-30.
 
-Next action: freeze screenshot-to-Design-IR inference, consent, provenance, uncertainty, and
-evaluation contracts before selecting or implementing any provider-backed adapter.
+Next action: implement a provider-independent, offline screenshot-inference result validator/import
+adapter against the frozen contract before selecting or implementing any provider-backed adapter.
 
 ## Maven release changesets
 
@@ -1546,6 +1549,69 @@ tool usability with **no material Android runtime behavior change**. It does not
 resources, semantics, state, behavior, or confidence; generate Kotlin; render/compare a reconstructed
 screen; call a model; or authorize provider transfer. The next action is a provider-neutral
 screenshot-to-Design-IR request/result and consent contract that keeps those uncertainties visible.
+
+### Contract freeze — screenshot-to-Design-IR inference
+
+Screenshot-to-Design-IR inference v1 now freezes the provider-neutral request, result, evidence,
+uncertainty, and authorization boundary without exposing a public tool or selecting a model. The
+request accepts only the exact canonical PNG, preprocessing request fingerprint, and preprocessing
+output fingerprint produced by `prepare_screenshot`. Its authorization binds the reviewed input to
+that exact output fingerprint. A changed lineage identity fails even when the mutated request still
+conforms to JSON Schema; caller paths and credentials remain outside the accepted shape.
+
+The offline human-reviewed golden begins with a 16×24, 130-byte preprocessed PNG whose SHA-256 is
+`db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3` and whose preprocessing
+result fingerprint is `58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3`. The inference request
+fingerprint is `f789490fa61fa8d6a74e546b8defa536a78c9cebc83a123ba70da9967030a62b`. It yields four Design IR
+nodes and exactly four evidence records. Every node owns one in-bounds pixel rectangle, and its
+Design IR `sourceId`/`sourceSpan` must match the screenshot SHA-256 and exact
+`pixels:x,y,width,height` evidence region. The Design IR fingerprint is
+`585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a`.
+
+Confidence remains dimension-specific for asset, content, geometry, semantics, structure, and
+style; version 1 defines no aggregate score. The golden deliberately preserves six unsupported
+semantics and six blocking questions for text, field purpose/state/behavior, button
+label/behavior, and accessibility. Unknown values use placeholder bindings, all unsupported
+entries remain blocked, all questions forbid invented defaults, and code generation stays false.
+The incomplete result fingerprint is
+`4bd30960cccdfe3b9a4402293b3739a3238a25fcef12fb2911c595a3df7a66c0`.
+
+Human-golden authorization performs zero provider transfers, zero network requests, zero input or
+output persistence, and metadata-only logging. The future provider-adapter shape requires an
+explicit provider ID, an exact-input consent receipt, the approved `screenshot-to-design-ir`
+purpose, completed retention review, immutable model and provider request/response identities, and
+no raw request or response persistence. This schema permits a future authorized adapter contract;
+the current execution contract keeps provider selection and execution false. Dedicated invalid
+denominators reject provider transfer without consent, any credential-shaped input, and a changed
+preprocessing output fingerprint.
+
+Node 25.6.0 passes 144/144 tooling tests. The focused preprocessing gate now reproduces 2/2
+goldens, 5/5 repeated or key-order-independent runs, 2/2 privacy denials, 1/1 changed-identity
+denial, and 1/1 cancellation. The inference gate accepts 1/1 human golden, verifies 4/4
+node/evidence records and all six blocking questions, rejects 3/3 failure denominators, and records
+zero provider executions and zero network requests. Phase 0 verifies 11 schemas, 45 metrics, 45
+cases, 42 fixture-backed cases, four screenshot-preprocessing fixtures, and four screenshot-
+inference fixtures. The fixed generated-Preview lane remains green at 2/2 exact renders, 2/2 stable
+cache hits, and 3/3 unsafe or unsupported failures.
+
+The complete offline distribution lifecycle passes 2/2 reproducible builds, installation and
+uninstallation, SPDX/license inventory, both MCP protocol eras, compilation, and both exact layout
+comparisons. Relative to the implemented preprocessor slice, the package adds the frozen inference
+schema and updates its existing README contract: file count increases from 50 to 51 (+2.00%),
+declared bytes from 1,627,459 to
+1,643,944 (+1.01%), and archive bytes from 290,571 to 292,512 (+0.67%). The archive SHA-256 is
+`535eb785b54b117db47ea2f38adca14d0048ab86f791675727b71aac06357d72`. The quality-build plugin
+suite passed. The combined AI-contract, preprocessing, inference, installed-distribution,
+documentation-structure, development-tooling-isolation, and release-intent root gate passed 25
+actionable tasks, with 11 executed and 14 up-to-date.
+
+This is **improved** lineage integrity, evidence completeness, uncertainty honesty, consent safety,
+and evaluation measurability with **no material Android runtime behavior change**. It is still a
+reviewed contract fixture, not a claim that pixels prove text, behavior, state, resources,
+accessibility, or production visual fidelity. It does not call a model, generate Kotlin, compile a
+reconstructed screen, render or compare that screen, or authorize any provider. The next action is
+an offline validator/import adapter that can accept externally produced results only after all
+frozen schema, lineage, evidence, uncertainty, and authorization checks pass.
 
 ### Implementation evidence — bounded XML to Design IR
 

@@ -137,6 +137,7 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(project.tasks.getByName("verifyAiXmlMigration") is Exec)
         assertTrue(project.tasks.getByName("verifyAiGeneratedPreview") is Exec)
         assertTrue(project.tasks.getByName("verifyAiScreenshotPreprocessing") is Exec)
+        assertTrue(project.tasks.getByName("verifyAiScreenshotInference") is Exec)
         assertTrue(project.tasks.getByName("generateAiKnowledgeBundle") is Exec)
         assertTrue(project.tasks.getByName("verifyAiKnowledgeBundle") is Exec)
         assertTrue(project.tasks.getByName("verifyDocumentLanguages") is Exec)

@@ -251,14 +251,29 @@ types 0 through 4, and fails closed on changed identity/CRC, unsupported PNG for
 external references, provider transfer, limits, and cancellation. It does not infer UI, call a
 model, or convert the image to Design IR.
 
+Screenshot-to-Design-IR inference v1 is contract-frozen but is not a public tool or provider
+adapter. Its request accepts only the exact output asset and fingerprints returned by
+`prepare_screenshot`; a caller path, URL, URI, credential, changed preprocessing identity, or
+unreviewed provider transfer fails closed. The checked-in offline human golden maps every Design IR
+node to exactly one in-bounds pixel region and keeps structure, geometry, style, content, and
+semantics confidence separate. It does not aggregate confidence or infer behavior. Unknown text,
+state, resources, behavior, and accessibility remain placeholder bindings, blocked unsupported
+semantics, and explicit questions whose defaults are forbidden; code generation remains disabled
+while any blocking question exists. A future provider adapter must identify the provider and
+immutable model, bind an explicit consent receipt to the exact preprocessed input and approved
+purpose, complete retention review, persist neither raw request nor raw response, and use
+metadata-only logs. No provider has been selected or executed by this contract slice.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
 npm --silent --prefix tools/ai run mcp
 npm --prefix tools/ai run verify:phase3-mcp
 npm --prefix tools/ai run verify:phase5-screenshot
+npm --prefix tools/ai run verify:phase5-screenshot-inference
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
+./gradlew verifyAiScreenshotInference
 ```
 
 The preferred protocol follows the
