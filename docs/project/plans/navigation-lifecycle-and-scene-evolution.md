@@ -61,7 +61,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Publish the optional Kotlinx Serialization adapter over the completed typed-route contract before the broader evidence matrix.
+next_action: Implement the frozen optional Kotlinx Serialization adapter over the completed typed-route contract before the broader evidence matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
@@ -85,8 +85,8 @@ structured deep-link, entry-targeted result, and typed-route contract slices are
 
 Last verified: 2026-08-29.
 
-Next action: publish the optional Kotlinx Serialization adapter over the completed typed-route
-contract before the broader evidence matrix.
+Next action: implement the frozen optional Kotlinx Serialization adapter over the completed
+typed-route contract before the broader evidence matrix.
 
 ## Maven release changesets
 
@@ -1007,6 +1007,40 @@ Acceptance evidence:
   **no material change**, not a device-pass claim. Serialization-backed schema convenience,
   coverage, leaks, memory, and representative performance remain **inconclusive**. Next: publish
   the optional Kotlinx Serialization adapter as slice 7.4.
+
+#### Capability slice 7.4: optional Kotlinx Serialization adapter
+
+The dependency and schema audit freezes one new platform-neutral integration artifact:
+`viewcompose-navigation-kotlinx-serialization`. Navigation Core remains dependency-free. The new
+artifact exposes Navigation Core and `kotlinx-serialization-core` as compile dependencies, keeps
+the JSON tree implementation private, and is registered as an unpublished `0.1.0-alpha01`
+artifact until its first signed Maven release.
+
+The Q3 API is one explicit factory family:
+
+1. `serializableNavRouteSpec(name, serializer)` is the Java-visible and custom-serializer entry;
+   `serializableNavRouteSpec<T>(name)` obtains the generated serializer for Kotlin callers.
+2. The adapter validates the complete serializer descriptor when the spec is created. The root
+   must be a class or object whose fields are scalar, enum, nullable scalar, or a supported inline
+   scalar. Nested objects, collections, maps, polymorphic/contextual shapes, unsigned values, and
+   non-object roots fail immediately with the field path in the diagnostic.
+3. Mapping is descriptor-driven rather than value-size-driven: Boolean maps to `BooleanValue`;
+   Byte/Short/Int to `IntValue`; Long to `LongValue`; Float to `FloatValue`; Double to
+   `DoubleValue`; Char/String/enum to `Text`; and an explicit nullable value to `Null`. A small
+   Long therefore never changes storage type as its value crosses Int range.
+4. Encoding uses a strict internal JSON object tree only as a serializer bridge, then stores the
+   existing immutable `NavRoute`/`NavValue` map. Decoding rebuilds that tree only after rejecting
+   unknown names, nullability violations, and mismatched `NavValue` variants. Defaults may remain
+   omitted and are reconstructed by the serializer. No JSON string, serializer, registry, or
+   decoded object enters snapshots or host retention.
+
+The artifact owns `navigation.kotlinx-serialization-routes`, canonical KDoc, one compiled Q3
+sample, a bilingual module manual, catalog/publishing/dependency registration, migration and
+architecture dispositions, generated Reference input, focused schema/round-trip/error tests, and
+one first-release feature Changeset. The implementation PR must prove strict API documentation,
+published dependency metadata, local JVM consumption, documentation/site budgets, and repository
+QA. Android device evidence is not applicable unless implementation unexpectedly changes a
+platform module.
 
 ### Phase 8: document, release, and archive
 
