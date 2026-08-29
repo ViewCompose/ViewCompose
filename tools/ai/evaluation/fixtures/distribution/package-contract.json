@@ -18,7 +18,8 @@
       "render_preview",
       "diagnose_layout",
       "analyze_project",
-      "convert_xml_to_viewcompose"
+      "convert_xml_to_viewcompose",
+      "prepare_screenshot"
     ],
     "skills": [
       "viewcompose-api-reference",
@@ -64,6 +65,8 @@
       "scripts/preview-adapter.mjs",
       "scripts/project-analyzer.mjs",
       "scripts/schema-validator.mjs",
+      "scripts/screenshot-contract.mjs",
+      "scripts/screenshot-preprocessor.mjs",
       "scripts/static-validator.mjs",
       "scripts/tool-catalog.mjs",
       "scripts/tool-core.mjs",
@@ -113,7 +116,8 @@
       "get_sample",
       "validate_code:static",
       "analyze_project",
-      "convert_xml_to_viewcompose:generate"
+      "convert_xml_to_viewcompose:generate",
+      "prepare_screenshot"
     ],
     "sourceBoundModes": [
       "validate_code:compile",

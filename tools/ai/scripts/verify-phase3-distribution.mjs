@@ -27,6 +27,12 @@ const generatedPreviewContractPath = fileURLToPath(
 const layoutComparisonContractPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/layout-comparison-contract.json', import.meta.url),
 );
+const screenshotRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot/privacy-grid.request.json', import.meta.url),
+);
+const screenshotResultPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot/privacy-grid.result.json', import.meta.url),
+);
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
@@ -255,6 +261,25 @@ async function verifyCliFlow(
   generatedPreviewContract,
   layoutComparisonContract,
 ) {
+  const [screenshotRequest, screenshotExpected] = await Promise.all([
+    readJson(screenshotRequestPath),
+    readJson(screenshotResultPath),
+  ]);
+  const screenshot = await runCli(
+    cli,
+    knowledge,
+    'prepare_screenshot',
+    screenshotRequest,
+    'distribution-screenshot',
+  );
+  if (
+    screenshot.status !== 'success' ||
+    screenshot.evidence.level !== 'static' ||
+    screenshot.evidence.outputFingerprint !== screenshotExpected.outputFingerprint ||
+    JSON.stringify(screenshot.data) !== JSON.stringify(screenshotExpected)
+  ) {
+    throw new Error('Installed CLI did not reproduce the frozen screenshot preprocessing golden.');
+  }
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
     name: 'Column',
@@ -458,6 +483,7 @@ async function verifyCliFlow(
     throw new Error('Installed CLI did not compile the frozen end-to-end sample.');
   }
   return {
+    screenshot: screenshot.evidence.outputFingerprint,
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlPreview: renderedXml.evidence.outputFingerprint,
@@ -469,9 +495,11 @@ async function verifyCliFlow(
 
 async function verifyMcpMatrix(mcp, contract) {
   const modernVersion = contract.compatibility.protocolVersions[0];
-  const [xml, xmlV2] = await Promise.all([
+  const [xml, xmlV2, screenshotRequest, screenshotExpected] = await Promise.all([
     readFile(xmlFixturePath, 'utf8'),
     readFile(xmlV2FixturePath, 'utf8'),
+    readJson(screenshotRequestPath),
+    readJson(screenshotResultPath),
   ]);
   const modern = await runMcp(mcp, [{
     jsonrpc: '2.0',
@@ -527,18 +555,32 @@ async function verifyMcpMatrix(mcp, contract) {
       },
       _meta: modernMeta(modernVersion),
     },
+  }, {
+    jsonrpc: '2.0',
+    id: 'modern-screenshot',
+    method: 'tools/call',
+    params: {
+      name: 'prepare_screenshot',
+      arguments: screenshotRequest,
+      _meta: modernMeta(modernVersion),
+    },
   }]));
   const modernList = modern.find((response) => response.id === 'modern-list');
   const modernXml = modern.find((response) => response.id === 'modern-xml');
+  const modernScreenshot = modern.find((response) => response.id === 'modern-screenshot');
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
   const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
   const modernXmlLayoutDependencies = modern.find(
     (response) => response.id === 'modern-xml-layout-dependencies',
   );
   if (
-    modern.length !== 5 ||
+    modern.length !== 6 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
+    modernScreenshot?.result?.structuredContent?.evidence?.outputFingerprint !==
+      screenshotExpected.outputFingerprint ||
+    JSON.stringify(modernScreenshot?.result?.structuredContent?.data) !==
+      JSON.stringify(screenshotExpected) ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
@@ -678,6 +720,7 @@ async function main() {
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
+      `prepared screenshot ${compileFingerprints.screenshot}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +

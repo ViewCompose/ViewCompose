@@ -769,6 +769,31 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai-preview-harness/src/main/AndroidManifest.xml"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotPreprocessing") {
+            group = "verification"
+            description =
+                "Verifies deterministic screenshot integrity, crop, redaction, privacy, and transport evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "contracts/tool-envelope.schema.json",
+                        "evaluation/fixtures/visual/screenshot/**",
+                        "evaluation/fixtures/visual/screenshot-preprocessing-contract.json",
+                        "scripts/ai-tool.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-preprocessing.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

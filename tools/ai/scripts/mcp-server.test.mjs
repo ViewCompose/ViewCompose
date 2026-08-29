@@ -56,6 +56,7 @@ test('discovers the stateless modern server and deterministically lists the shar
     'diagnose_layout',
     'analyze_project',
     'convert_xml_to_viewcompose',
+    'prepare_screenshot',
   ]);
   assert.equal(listing.result.tools[0].inputSchema.required.includes('versionLane'), true);
 });
@@ -141,7 +142,7 @@ test('supports the 2025-11-25 initialize lifecycle without weakening modern requ
     params: {},
   });
   assert.equal(listing.result.resultType, undefined);
-  assert.equal(listing.result.tools.length, 9);
+  assert.equal(listing.result.tools.length, 10);
 });
 
 test('emits bounded opt-in progress and suppresses all output after cancellation', async () => {

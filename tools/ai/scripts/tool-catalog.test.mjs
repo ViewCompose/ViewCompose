@@ -14,6 +14,7 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     'diagnose_layout',
     'analyze_project',
     'convert_xml_to_viewcompose',
+    'prepare_screenshot',
   ]);
   assert.deepEqual(Object.keys(TOOL_DEFINITIONS).sort(), [...TOOL_NAMES].sort());
   for (const name of TOOL_NAMES) {
@@ -21,7 +22,8 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     assert.equal(definition.name, name);
     assert.equal(definition.inputSchema.type, 'object');
     assert.equal(definition.annotations.readOnlyHint, true);
-    assert.ok(TOOL_DEFINITIONS[name].defaultLimits.maxOutputBytes <= 1024 * 1024);
+    assert.ok(TOOL_DEFINITIONS[name].defaultLimits.maxOutputBytes <=
+      (name === 'prepare_screenshot' ? 2_000_000 : 1024 * 1024));
   }
 });
 
@@ -141,4 +143,19 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
     mode: 'generate',
   }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
   assert.deepEqual(ambiguousXmlInput, ['$: expected exactly one oneOf match, found 0']);
+
+  assert.equal(
+    TOOL_DEFINITIONS.prepare_screenshot.inputSchema.$defs.pngAsset.properties.bytes.maximum,
+    1_310_720,
+  );
+  const screenshotPath = validateSchemaValue({
+    schemaVersion: 1,
+    kind: 'request',
+    source: {identity: 'test'},
+    screenshot: {path: '/tmp/screenshot.png'},
+    interpretation: {},
+    privacy: {},
+    output: {},
+  }, TOOL_DEFINITIONS.prepare_screenshot.inputSchema);
+  assert.ok(screenshotPath.some((violation) => violation.includes('unexpected property path')));
 });

@@ -238,7 +238,7 @@ returns reason-coded findings and retains only `rendered` evidence. Placeholder 
 state/event behavior, traversal, style, typography, pixels, touch targets, and other device
 configurations remain explicit non-claims.
 
-Screenshot preprocessing v1 is contract-frozen but is not yet a public tool. It accepts only one
+Screenshot preprocessing v1 is implemented as the public `prepare_screenshot` tool. It accepts only one
 embedded, canonical-base64 PNG with declared byte count, SHA-256, dimensions, density, font scale,
 locale, layout direction, color space, alpha mode, orientation, system-bar insets, and source-pixel
 crop. It accepts no path, URL, URI, credential, network transfer, or provider execution. A completed
@@ -246,15 +246,19 @@ privacy review is mandatory; provider transfer and persistence are false, logs a
 and sensitive content is removed only through explicit caller rectangles in cropped-output pixel
 coordinates. The deterministic output strips ancillary PNG metadata, keeps 8-bit straight-alpha
 sRGB RGBA, uses filter type 0 and zlib level 9, and carries exact content and canonical-result
-fingerprints. The future `prepare_screenshot` tool cannot enter the catalog until it reproduces the
-checked-in crop-and-redaction golden and all fail-closed denominators.
+fingerprints. The adapter reproduces the checked-in crop-and-redaction golden, decodes PNG filter
+types 0 through 4, and fails closed on changed identity/CRC, unsupported PNG format, invalid bounds,
+external references, provider transfer, limits, and cancellation. It does not infer UI, call a
+model, or convert the image to Design IR.
 
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
 npm --silent --prefix tools/ai run mcp
 npm --prefix tools/ai run verify:phase3-mcp
+npm --prefix tools/ai run verify:phase5-screenshot
 ./gradlew verifyAiMcp
+./gradlew verifyAiScreenshotPreprocessing
 ```
 
 The preferred protocol follows the
@@ -262,9 +266,9 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns nine tools in stable
+lifecycle; it never silently downgrades either era. `tools/list` returns ten tools in stable
 order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
-`analyze_project`, followed by `convert_xml_to_viewcompose`.
+`analyze_project`, followed by `convert_xml_to_viewcompose` and `prepare_screenshot`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
 provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.

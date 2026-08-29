@@ -1,4 +1,5 @@
 import {KNOWLEDGE_TOOL_DEFINITIONS} from './knowledge-retriever.mjs';
+import {SCREENSHOT_REQUEST_SCHEMA} from './screenshot-contract.mjs';
 
 const stableId = {
   type: 'string',
@@ -262,6 +263,18 @@ const executableDefinitions = {
     },
     evidenceLevel: 'static',
   },
+  prepare_screenshot: {
+    title: 'Prepare a Screenshot for ViewCompose Generation',
+    description:
+      'Verify, crop, explicitly redact, and canonically encode one embedded PNG without provider or network access.',
+    inputSchema: SCREENSHOT_REQUEST_SCHEMA,
+    defaultLimits: {
+      timeoutMs: 10000,
+      maxInputBytes: 2000000,
+      maxOutputBytes: 2000000,
+    },
+    evidenceLevel: 'static',
+  },
 };
 
 const knowledgeDefaults = {
@@ -298,6 +311,7 @@ export const TOOL_NAMES = Object.freeze([
   'diagnose_layout',
   'analyze_project',
   'convert_xml_to_viewcompose',
+  'prepare_screenshot',
 ]);
 
 export function publicToolDefinition(name) {

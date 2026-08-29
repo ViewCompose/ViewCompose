@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "result",
   "status": "success",
-  "requestFingerprint": "0965268f988e8cbb0aded1f5e15a30ab2a5e9a2858ff36cc434c62cfbff53ecd",
+  "requestFingerprint": "e9db4c486dbcaa59cd214b557cca19fb4878f66eb668f9b94cbd14a4ca6dd77f",
   "input": {
     "sha256": "ff96bfc58337301e15ff1515d39a2653a855a46ef74e50f8884889cd28f21cc0",
     "widthPx": 4,
@@ -48,5 +48,5 @@
     "logs": "metadata-only"
   },
   "diagnostics": [],
-  "outputFingerprint": "3cfb37a6ea282853bccfbdd3b23e26dacee875f3a29f179e4564bf5f3df96808"
+  "outputFingerprint": "74d3e3190dca4157d07cefd51f9a3a809094dad93785cef3c327f566a6e832b1"
 }

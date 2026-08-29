@@ -4,6 +4,8 @@ import {dirname, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {inflateSync} from 'node:zlib';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
+import {canonicalJson} from './screenshot-contract.mjs';
+import {TOOL_DEFINITIONS, TOOL_NAMES} from './tool-catalog.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -1346,7 +1348,7 @@ async function verifyScreenshotPreprocessing(schemas) {
       'screenshot-preprocessing-v1',
     ]) ||
     contract.activation?.tool !== 'prepare_screenshot' ||
-    contract.activation?.status !== 'contract-frozen' ||
+    contract.activation?.status !== 'implemented' ||
     contract.activation?.evidence !== 'static'
   ) {
     throw new Error('Screenshot preprocessing activation or required contract changed');
@@ -1360,7 +1362,11 @@ async function verifyScreenshotPreprocessing(schemas) {
     JSON.stringify(contract.input?.acceptedBitDepths) !== JSON.stringify([8]) ||
     JSON.stringify(contract.input?.acceptedColorTypes) !== JSON.stringify([6]) ||
     JSON.stringify(contract.input?.acceptedFilterTypes) !== JSON.stringify([0, 1, 2, 3, 4]) ||
-    JSON.stringify(contract.input?.acceptedInterlaceMethods) !== JSON.stringify([0])
+    JSON.stringify(contract.input?.acceptedInterlaceMethods) !== JSON.stringify([0]) ||
+    contract.input?.acceptedSrgbChunk !== 'zero-or-one-valid-rendering-intent' ||
+    JSON.stringify(contract.input?.rejectedSemanticChunks) !== JSON.stringify([
+      'iCCP', 'cHRM', 'gAMA', 'cICP', 'mDCV', 'cLLI', 'tRNS', 'acTL', 'fcTL', 'fdAT',
+    ])
   ) {
     throw new Error('Screenshot preprocessing must accept only embedded non-interlaced RGBA PNG');
   }
@@ -1402,12 +1408,34 @@ async function verifyScreenshotPreprocessing(schemas) {
     throw new Error('Screenshot privacy, persistence, or provider boundary changed');
   }
   if (
+    contract.transport?.protocol !== 'mcp-stdio' ||
+    contract.transport?.maxMessageBytes !== 4 * 1024 * 1024 ||
+    contract.transport?.maxInputJsonBytes !== 2_000_000 ||
+    contract.transport?.maxToolResultJsonBytes !== 2_000_000 ||
+    contract.transport?.resultRepresentations !== 2 ||
+    contract.transport?.minimumResponseHeadroomBytes !== 194_304 ||
+    contract.transport.maxToolResultJsonBytes * contract.transport.resultRepresentations +
+      contract.transport.minimumResponseHeadroomBytes > contract.transport.maxMessageBytes
+  ) {
+    throw new Error('Screenshot preprocessing exceeds the frozen MCP stdio message boundary');
+  }
+  if (
+    TOOL_NAMES.at(-1) !== contract.activation.tool ||
+    TOOL_DEFINITIONS.prepare_screenshot?.defaultLimits?.maxInputBytes !==
+      contract.transport.maxInputJsonBytes ||
+    TOOL_DEFINITIONS.prepare_screenshot?.defaultLimits?.maxOutputBytes !==
+      contract.transport.maxToolResultJsonBytes
+  ) {
+    throw new Error('Screenshot public tool and frozen transport limits diverged');
+  }
+  if (
     contract.integrity?.verifyCanonicalBase64 !== true ||
     contract.integrity?.verifyDeclaredBytes !== true ||
     contract.integrity?.verifySha256 !== true ||
     contract.integrity?.verifyDimensions !== true ||
     contract.integrity?.verifyChunkCrc !== true ||
     contract.integrity?.verifyDecodedByteCount !== true ||
+    contract.integrity?.requestFingerprint !== 'sha256-canonical-json' ||
     contract.integrity?.outputFingerprint !==
       'sha256-canonical-json-without-outputFingerprint'
   ) {
@@ -1426,6 +1454,13 @@ async function verifyScreenshotPreprocessing(schemas) {
       throw new Error(`Screenshot preprocessing limit ${name} exceeds its frozen ceiling`);
     }
   }
+  if (
+    contract.limits.maxCompressedBytes !== 1_310_720 ||
+    contract.limits.maxDecodedBytes !== 16 * 1024 * 1024 ||
+    contract.limits.maxOutputBytes !== 1_310_720
+  ) {
+    throw new Error('Screenshot byte limits changed without transport and latency review');
+  }
   assertUnique(contract.diagnosticCodes, 'Screenshot preprocessing diagnostic codes');
   for (const code of contract.diagnosticCodes) {
     if (!/^VC-AI-SCREENSHOT-[A-Z0-9-]+$/u.test(code)) {
@@ -1434,6 +1469,14 @@ async function verifyScreenshotPreprocessing(schemas) {
   }
 
   const schema = schemas.get('screenshot-preprocessing.schema.json');
+  if (
+    schema.$defs?.pngAsset?.properties?.bytes?.maximum !==
+      contract.limits.maxCompressedBytes ||
+    schema.$defs?.pngAsset?.properties?.data?.maxLength !==
+      Math.ceil(contract.limits.maxCompressedBytes / 3) * 4
+  ) {
+    throw new Error('Screenshot schema and transport-safe PNG byte limits diverged');
+  }
   const declaredRequests = new Set();
   for (const fixture of contract.supportedFixtures) {
     const [request, result] = await Promise.all([
@@ -1443,12 +1486,12 @@ async function verifyScreenshotPreprocessing(schemas) {
     assertSchemaValue(request, schema, fixture.request);
     assertSchemaValue(result, schema, fixture.result);
     const requestFingerprint = createHash('sha256')
-      .update(JSON.stringify(request))
+      .update(canonicalJson(request))
       .digest('hex');
     const fingerprintedResult = {...result};
     delete fingerprintedResult.outputFingerprint;
     const outputFingerprint = createHash('sha256')
-      .update(JSON.stringify(fingerprintedResult))
+      .update(canonicalJson(fingerprintedResult))
       .digest('hex');
     const input = decodeScreenshotPng(request.screenshot, contract.limits, fixture.request);
     const output = decodeScreenshotPng(result.output, contract.limits, fixture.result);
@@ -1494,7 +1537,7 @@ async function verifyScreenshotPreprocessing(schemas) {
       {kind: 'strip-metadata'},
     ];
     if (
-      !['contract-frozen', 'implemented'].includes(fixture.status) ||
+      fixture.status !== 'implemented' ||
       requestFingerprint !== fixture.expectedRequestFingerprint ||
       requestFingerprint !== result.requestFingerprint ||
       request.screenshot.sha256 !== fixture.expectedInputSha256 ||

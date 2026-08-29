@@ -12,6 +12,7 @@ import {
   searchComponents,
 } from './knowledge-retriever.mjs';
 import {renderPreview} from './preview-adapter.mjs';
+import {prepareScreenshot} from './screenshot-preprocessor.mjs';
 import {diagnoseLayout} from './layout-diagnoser.mjs';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
@@ -64,6 +65,7 @@ export async function dispatchToolRequest(request, {
   searchComponent = searchComponents,
   getSample = retrieveSample,
   convertXml = convertXmlToViewCompose,
+  prepare = prepareScreenshot,
   renderGenerated,
   compareGenerated,
   signal,
@@ -102,11 +104,28 @@ export async function dispatchToolRequest(request, {
   }
   const argumentViolations = validateSchemaValue(request.arguments, definition.inputSchema);
   if (argumentViolations.length > 0) {
+    const screenshotPathDenied = request.tool === 'prepare_screenshot' &&
+      request.arguments?.screenshot && ['path', 'url', 'uri'].some((key) =>
+        Object.hasOwn(request.arguments.screenshot, key));
+    const screenshotProviderTransferDenied = request.tool === 'prepare_screenshot' &&
+      request.arguments?.privacy?.providerTransfer === true;
     return boundaryResult(request, {
       status: 'invalid',
-      code: 'VC-AI-ARGUMENTS-INVALID',
-      message: `${request.tool} arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`,
-      nextAction: 'Use the exact arguments declared by the current tool catalog.',
+      code: screenshotPathDenied
+        ? 'VC-AI-SCREENSHOT-PATH-DENIED'
+        : screenshotProviderTransferDenied
+          ? 'VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED'
+          : 'VC-AI-ARGUMENTS-INVALID',
+      message: screenshotPathDenied
+        ? 'Screenshot preprocessing accepts no path, URL, or URI input.'
+        : screenshotProviderTransferDenied
+          ? 'The deterministic screenshot preprocessor cannot transfer input to a provider.'
+          : `${request.tool} arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`,
+      nextAction: screenshotPathDenied
+        ? 'Embed one integrity-declared PNG as canonical base64.'
+        : screenshotProviderTransferDenied
+          ? 'Set providerTransfer to false and use a separately reviewed provider adapter later.'
+          : 'Use the exact arguments declared by the current tool catalog.',
       level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
     });
   }
@@ -226,6 +245,12 @@ export async function dispatchToolRequest(request, {
           compile,
           render: renderGenerated,
           compare: compareGenerated,
+        });
+        break;
+      case 'prepare_screenshot':
+        result = await prepare(request.arguments, {
+          requestId: request.requestId,
+          signal: controller.signal,
         });
         break;
       default:

@@ -10,6 +10,22 @@ const executable = fileURLToPath(new URL('./ai-tool.mjs', import.meta.url));
 const projectContextRoot = fileURLToPath(
   new URL('../evaluation/fixtures/xml/project-context/supported/', import.meta.url),
 );
+const screenshotRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot/privacy-grid.request.json',
+  import.meta.url,
+);
+const screenshotResultPath = new URL(
+  '../evaluation/fixtures/visual/screenshot/privacy-grid.result.json',
+  import.meta.url,
+);
+const screenshotPathInput = new URL(
+  '../evaluation/fixtures/visual/screenshot/path-input.request.json',
+  import.meta.url,
+);
+const screenshotProviderTransfer = new URL(
+  '../evaluation/fixtures/visual/screenshot/provider-transfer.request.json',
+  import.meta.url,
+);
 
 async function request(tool, arguments_, overrides = {}) {
   const manifest = await loadKnowledgeManifest();
@@ -167,6 +183,36 @@ test('dispatches explicit-root XML project migration through the same envelope',
   assert.equal(result.data.projectContext.callSites.length, 7);
   assert.equal(result.data.migrationReport.callSiteReview.inventory.length, 7);
   assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.StyledLoginView('));
+});
+
+test('dispatches deterministic screenshot preprocessing and preserves fail-closed diagnostics', async () => {
+  const [screenshot, expected, pathInput, providerTransfer] = await Promise.all([
+    readFile(screenshotRequestPath, 'utf8').then(JSON.parse),
+    readFile(screenshotResultPath, 'utf8').then(JSON.parse),
+    readFile(screenshotPathInput, 'utf8').then(JSON.parse),
+    readFile(screenshotProviderTransfer, 'utf8').then(JSON.parse),
+  ]);
+  const result = await dispatchToolRequest(await request('prepare_screenshot', screenshot, {
+    requestId: 'screenshot-dispatch',
+    limits: {maxInputBytes: 2_000_000, maxOutputBytes: 2_000_000},
+  }));
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'static');
+  assert.deepEqual(result.data, expected);
+
+  const path = await dispatchToolRequest(await request('prepare_screenshot', pathInput));
+  assert.equal(path.status, 'invalid');
+  assert.equal(path.diagnostics[0].code, 'VC-AI-SCREENSHOT-PATH-DENIED');
+
+  const provider = await dispatchToolRequest(await request(
+    'prepare_screenshot',
+    providerTransfer,
+  ));
+  assert.equal(provider.status, 'invalid');
+  assert.equal(
+    provider.diagnostics[0].code,
+    'VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED',
+  );
 });
 
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {
