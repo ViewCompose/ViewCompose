@@ -21,7 +21,7 @@
   },
   "designIr": {
     "schemaVersion": 1,
-    "documentId": "screenshot-wireframe-login",
+    "documentId": "screenshot-wireframe",
     "source": {
       "kind": "screenshot",
       "identity": "preprocessed:58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
@@ -38,7 +38,14 @@
           }
         ],
         "modifiers": [],
-        "semantics": [],
+        "semantics": [
+          {
+            "name": "accessibilityLabelSource",
+            "value": {"kind": "enum", "type": "accessibility-label-source", "value": "none"}
+          },
+          {"name": "traversalIndex", "value": {"kind": "literal", "value": 0}},
+          {"name": "decorative", "value": {"kind": "literal", "value": false}}
+        ],
         "events": [],
         "state": [],
         "children": [
@@ -49,7 +56,18 @@
               {"name": "text", "value": {"kind": "literal", "value": "Welcome"}}
             ],
             "modifiers": [],
-            "semantics": [],
+            "semantics": [
+              {
+                "name": "accessibilityLabelSource",
+                "value": {
+                  "kind": "enum",
+                  "type": "accessibility-label-source",
+                  "value": "visible-text"
+                }
+              },
+              {"name": "traversalIndex", "value": {"kind": "literal", "value": 1}},
+              {"name": "decorative", "value": {"kind": "literal", "value": false}}
+            ],
             "events": [],
             "state": [],
             "children": [],
@@ -79,7 +97,17 @@
               {
                 "name": "role",
                 "value": {"kind": "enum", "type": "semantic-role", "value": "text-field"}
-              }
+              },
+              {
+                "name": "accessibilityLabelSource",
+                "value": {
+                  "kind": "enum",
+                  "type": "accessibility-label-source",
+                  "value": "field-label"
+                }
+              },
+              {"name": "traversalIndex", "value": {"kind": "literal", "value": 2}},
+              {"name": "decorative", "value": {"kind": "literal", "value": false}}
             ],
             "events": [
               {"kind": "keyboard-action", "binding": "onEmailSubmit", "status": "resolved"}
@@ -109,7 +137,17 @@
               {
                 "name": "role",
                 "value": {"kind": "enum", "type": "semantic-role", "value": "button"}
-              }
+              },
+              {
+                "name": "accessibilityLabelSource",
+                "value": {
+                  "kind": "enum",
+                  "type": "accessibility-label-source",
+                  "value": "visible-text"
+                }
+              },
+              {"name": "traversalIndex", "value": {"kind": "literal", "value": 3}},
+              {"name": "decorative", "value": {"kind": "literal", "value": false}}
             ],
             "events": [
               {"kind": "click", "binding": "onContinue", "status": "resolved"}
@@ -134,7 +172,7 @@
     ],
     "unsupported": []
   },
-  "designIrFingerprint": "0ae93f54fea2dfee3f3ea4c9a712bf3dcf4ce21143c00e3488a159a8551f6821",
+  "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
   "resolutionRecords": [
     {
       "questionId": "question-title-text",
@@ -206,5 +244,5 @@
     "codeGenerationAllowed": true
   },
   "diagnostics": [],
-  "resultFingerprint": "b6466ed78cfe2386e4b1a77238758e1c01d50a4fe374b0b36efae419e22e7f88"
+  "resultFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a"
 }

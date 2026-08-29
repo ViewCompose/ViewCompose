@@ -59,6 +59,8 @@ const sourcePaths = Object.freeze([
   'scripts/screenshot-inference-contract.mjs',
   'scripts/screenshot-inference-validator.mjs',
   'scripts/screenshot-preprocessor.mjs',
+  'scripts/screenshot-resolution-adapter.mjs',
+  'scripts/screenshot-resolution-contract.mjs',
   'scripts/static-validator.mjs',
   'scripts/tool-catalog.mjs',
   'scripts/tool-core.mjs',

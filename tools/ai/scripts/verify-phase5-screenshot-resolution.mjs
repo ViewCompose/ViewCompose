@@ -3,7 +3,9 @@ import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {canonicalJson} from './screenshot-contract.mjs';
+import {resolveScreenshotInference} from './screenshot-resolution-adapter.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
+import {TOOL_DEFINITIONS, TOOL_NAMES} from './tool-catalog.mjs';
 
 const contractPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot-resolution-contract.json', import.meta.url),
@@ -13,6 +15,9 @@ const inferenceContractPath = fileURLToPath(
 );
 const inferenceResultPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot-inference/wireframe.result.json', import.meta.url),
+);
+const inferenceRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-inference/wireframe.request.json', import.meta.url),
 );
 const resolutionSchemaPath = fileURLToPath(
   new URL('../contracts/screenshot-inference-resolution.schema.json', import.meta.url),
@@ -77,12 +82,14 @@ export async function verifyPhase5ScreenshotResolution() {
   const [
     contract,
     inferenceContract,
+    inferenceRequest,
     inferenceResult,
     resolutionSchema,
     designIrSchema,
   ] = await Promise.all([
     readJson(contractPath),
     readJson(inferenceContractPath),
+    readJson(inferenceRequestPath),
     readJson(inferenceResultPath),
     readJson(resolutionSchemaPath),
     readJson(designIrSchemaPath),
@@ -96,15 +103,18 @@ export async function verifyPhase5ScreenshotResolution() {
       'screenshot-inference-resolution-v1',
     ]) ||
     contract.activation?.tool !== 'resolve_screenshot_inference' ||
-    contract.activation?.status !== 'contract-frozen' ||
-    contract.activation?.publicTool !== false ||
+    contract.activation?.status !== 'implemented' ||
+    contract.activation?.publicTool !== true ||
     contract.activation?.evidence !== 'static' ||
     contract.activation?.generationImplementation !== false ||
     contract.execution?.providerExecution !== false ||
     contract.execution?.networkAccess !== false ||
     contract.execution?.credentialsAccepted !== false ||
     contract.execution?.executableSourceAccepted !== false ||
-    contract.execution?.resourceGuessing !== false
+    contract.execution?.resourceGuessing !== false ||
+    !TOOL_NAMES.includes(contract.activation.tool) ||
+    TOOL_DEFINITIONS[contract.activation.tool]?.defaultLimits?.maxInputBytes !== 2_000_000 ||
+    TOOL_DEFINITIONS[contract.activation.tool]?.defaultLimits?.maxOutputBytes !== 2_000_000
   ) {
     throw new Error('Screenshot resolution activation or execution boundary changed');
   }
@@ -151,6 +161,7 @@ export async function verifyPhase5ScreenshotResolution() {
   const eligibility = contract.resolutionPolicy?.codeGenerationEligibility;
   if (
     contract.resolutionPolicy?.preserveScreenshotProvenance !== true ||
+    contract.resolutionPolicy?.accessibilityReviewPersistedInDesignIr !== true ||
     contract.resolutionPolicy?.resolveOnlyQuestionBoundUnsupportedSemantics !== true ||
     contract.resolutionPolicy?.unansweredQuestionsRemainBlocking !== true ||
     contract.resolutionPolicy?.unresolvedUnsupportedSemanticsRemainBlocked !== true ||
@@ -223,8 +234,33 @@ export async function verifyPhase5ScreenshotResolution() {
   const resolvedDesignIrFingerprint = fingerprint(result.designIr);
   const inputDesignIrFingerprint = fingerprint(inferenceResult.designIr);
   const inferenceResultFingerprint = fingerprint(inferenceResult, 'resultFingerprint');
+  const validatedInference = {
+    schemaVersion: 1,
+    kind: 'validated-screenshot-inference',
+    status: inferenceResult.status,
+    authorization: Object.fromEntries(Object.entries({
+      mode: inferenceRequest.authorization.mode,
+      providerId: inferenceRequest.authorization.providerId,
+      approvedInputFingerprint: inferenceRequest.authorization.approvedInputFingerprint,
+    }).filter(([, value]) => value !== undefined)),
+    producer: inferenceResult.producer,
+    fingerprints: {
+      preprocessingRequest: inferenceRequest.source.preprocessingRequestFingerprint,
+      preprocessingOutput: inferenceRequest.source.preprocessingOutputFingerprint,
+      screenshot: inferenceRequest.screenshot.sha256,
+      inferenceRequest: fingerprint(inferenceRequest),
+      inferenceResult: inferenceResultFingerprint,
+      designIr: inputDesignIrFingerprint,
+    },
+    designIr: inferenceResult.designIr,
+    nodeEvidence: inferenceResult.nodeEvidence,
+    unresolvedQuestions: inferenceResult.unresolvedQuestions,
+    summary: inferenceResult.summary,
+    inferenceDiagnostics: inferenceResult.diagnostics,
+  };
+  validatedInference.validationFingerprint = fingerprint(validatedInference);
   if (
-    golden.status !== 'contract-frozen' ||
+    golden.status !== 'implemented' ||
     requestFingerprint !== golden.expectedRequestFingerprint ||
     requestFingerprint !== result.requestFingerprint ||
     resultFingerprint !== golden.expectedResultFingerprint ||
@@ -242,6 +278,20 @@ export async function verifyPhase5ScreenshotResolution() {
     JSON.stringify(result.authorization) !== JSON.stringify(request.authorization)
   ) {
     throw new Error('Screenshot resolution golden lineage or fingerprint changed');
+  }
+  const resolutionArguments = {validatedInference, resolutionRequest: request};
+  const [firstResolution, secondResolution] = await Promise.all([
+    resolveScreenshotInference(resolutionArguments, {requestId: 'phase5-resolution-first'}),
+    resolveScreenshotInference(resolutionArguments, {requestId: 'phase5-resolution-second'}),
+  ]);
+  if (
+    validatedInference.validationFingerprint !== request.input.validationFingerprint ||
+    firstResolution.status !== 'success' ||
+    secondResolution.status !== 'success' ||
+    JSON.stringify(firstResolution.data) !== JSON.stringify(result) ||
+    JSON.stringify(secondResolution.data) !== JSON.stringify(result)
+  ) {
+    throw new Error('Screenshot resolution adapter did not reproduce the exact result twice');
   }
 
   const questions = inferenceResult.unresolvedQuestions;
@@ -295,6 +345,7 @@ export async function verifyPhase5ScreenshotResolution() {
       return !resolved || resolved.kind !== node.kind ||
         JSON.stringify(resolved.provenance) !== JSON.stringify(node.provenance);
     }) ||
+    result.designIr.documentId !== inferenceResult.designIr.documentId ||
     result.designIr.source.fingerprint !== inferenceResult.designIr.source.fingerprint ||
     result.designIr.source.identity !== inferenceResult.designIr.source.identity
   ) {
@@ -306,6 +357,33 @@ export async function verifyPhase5ScreenshotResolution() {
     event.status === 'resolved').length;
   const semanticRoles = resolvedNodes.flatMap((node) => node.semantics).filter((field) =>
     field.name === 'role' && field.value.kind === 'enum').length;
+  const accessibilityAnswer = request.answers.find((answer) =>
+    answer.decision.kind === 'accessibility-review');
+  for (const decision of accessibilityAnswer.decision.nodes) {
+    const semantics = new Map(
+      resolvedNodeById.get(decision.nodeId).semantics.map((field) => [field.name, field.value]),
+    );
+    const role = semantics.get('role');
+    const labelSource = semantics.get('accessibilityLabelSource');
+    const traversalIndex = semantics.get('traversalIndex');
+    const decorative = semantics.get('decorative');
+    if (
+      (decision.role === 'none' ? role !== undefined :
+        role?.kind !== 'enum' || role.type !== 'semantic-role' || role.value !== decision.role) ||
+      labelSource?.kind !== 'enum' ||
+      labelSource.type !== 'accessibility-label-source' ||
+      labelSource.value !== decision.labelSource ||
+      traversalIndex?.kind !== 'literal' ||
+      traversalIndex.value !== decision.traversalIndex ||
+      decorative?.kind !== 'literal' ||
+      decorative.value !== decision.decorative
+    ) {
+      throw new Error(`${decision.nodeId}: accessibility review was not persisted in Design IR`);
+    }
+  }
+  const accessibilityFields = resolvedNodes.flatMap((node) => node.semantics).filter((field) =>
+    ['role', 'accessibilityLabelSource', 'traversalIndex', 'decorative'].includes(field.name)
+  ).length;
   if (
     result.resolutionRecords.length !== golden.expectedResolutionRecords ||
     result.summary.answeredQuestions !== golden.expectedAnsweredQuestions ||
@@ -318,6 +396,7 @@ export async function verifyPhase5ScreenshotResolution() {
     result.summary.placeholderBindings !== placeholders ||
     events !== golden.expectedResolvedEvents ||
     semanticRoles !== golden.expectedResolvedSemanticRoles ||
+    accessibilityFields !== golden.expectedResolvedAccessibilityFields ||
     result.summary.codeGenerationAllowed !== golden.expectedCodeGenerationAllowed ||
     result.status !== 'resolved'
   ) {
@@ -359,6 +438,16 @@ export async function verifyPhase5ScreenshotResolution() {
     ) {
       throw new Error(`${fixture.mutation}: failure reason changed`);
     }
+    const rejected = await resolveScreenshotInference({
+      validatedInference,
+      resolutionRequest: mutated,
+    }, {requestId: `phase5-${descriptor.operation}`});
+    if (
+      rejected.status !== 'invalid' ||
+      rejected.diagnostics?.[0]?.code !== fixture.diagnosticCodes[0]
+    ) {
+      throw new Error(`${fixture.mutation}: adapter did not return the frozen failure`);
+    }
   }
 
   return {
@@ -368,6 +457,7 @@ export async function verifyPhase5ScreenshotResolution() {
     resolvedUnsupportedSemantics: result.summary.resolvedUnsupportedSemantics,
     resolvedEvents: events,
     resolvedSemanticRoles: semanticRoles,
+    resolvedAccessibilityFields: accessibilityFields,
     remainingQuestions: result.summary.remainingQuestions,
     remainingUnsupportedSemantics: result.summary.remainingUnsupportedSemantics,
     placeholders,
@@ -375,6 +465,7 @@ export async function verifyPhase5ScreenshotResolution() {
     resultFingerprint,
     resolvedDesignIrFingerprint,
     codeGenerationAllowed: result.summary.codeGenerationAllowed,
+    deterministicResolutions: 2,
     providerExecutions: 0,
     networkRequests: 0,
   };
@@ -386,8 +477,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     process.stdout.write(
       `Verified Phase 5 screenshot inference resolution contract: ${result.supportedGoldens}/1 golden, ` +
       `${result.answers}/6 typed answers, ${result.resolvedUnsupportedSemantics}/6 resolved unsupported semantics, ` +
-      `${result.resolvedEvents}/2 event bindings, ${result.resolvedSemanticRoles}/2 semantic roles, ` +
-      `${result.failClosedDenominators}/3 fail-closed denominators, ${result.remainingQuestions} questions, ` +
+      `${result.resolvedEvents}/2 event bindings, ${result.resolvedAccessibilityFields}/14 accessibility fields, ` +
+      `${result.failClosedDenominators}/3 fail-closed denominators, ${result.deterministicResolutions}/2 deterministic resolutions, ` +
+      `${result.remainingQuestions} questions, ` +
       `${result.remainingUnsupportedSemantics} unsupported semantics, ${result.placeholders} placeholders, ` +
       `code generation ${result.codeGenerationAllowed}, ${result.providerExecutions} provider executions, and ` +
       `${result.networkRequests} network requests; resolved Design IR ${result.resolvedDesignIrFingerprint}, ` +

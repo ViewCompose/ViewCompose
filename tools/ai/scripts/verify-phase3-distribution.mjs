@@ -42,6 +42,9 @@ const inferenceRequestPath = fileURLToPath(
 const inferenceResultPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot-inference/wireframe.result.json', import.meta.url),
 );
+const resolutionRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-resolution/wireframe.request.json', import.meta.url),
+);
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
@@ -316,6 +319,23 @@ async function verifyCliFlow(
   ) {
     throw new Error('Installed CLI did not validate the frozen screenshot inference golden.');
   }
+  const resolutionRequest = await readJson(resolutionRequestPath);
+  const resolvedInference = await runCli(
+    cli,
+    knowledge,
+    'resolve_screenshot_inference',
+    {validatedInference: validatedInference.data, resolutionRequest},
+    'distribution-screenshot-resolution',
+  );
+  if (
+    resolvedInference.status !== 'success' ||
+    resolvedInference.evidence.level !== 'static' ||
+    resolvedInference.evidence.outputFingerprint !==
+      '61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a' ||
+    resolvedInference.data?.summary?.codeGenerationAllowed !== true
+  ) {
+    throw new Error('Installed CLI did not resolve the frozen screenshot inference golden.');
+  }
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
     name: 'Column',
@@ -521,6 +541,7 @@ async function verifyCliFlow(
   return {
     screenshot: screenshot.evidence.outputFingerprint,
     screenshotInference: validatedInference.evidence.outputFingerprint,
+    screenshotResolution: resolvedInference.evidence.outputFingerprint,
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlPreview: renderedXml.evidence.outputFingerprint,
@@ -540,6 +561,7 @@ async function verifyMcpMatrix(mcp, contract) {
     inferencePreprocessingRequest,
     inferenceRequest,
     inferenceResult,
+    resolutionRequest,
   ] = await Promise.all([
     readFile(xmlFixturePath, 'utf8'),
     readFile(xmlV2FixturePath, 'utf8'),
@@ -548,6 +570,7 @@ async function verifyMcpMatrix(mcp, contract) {
     readJson(inferencePreprocessingRequestPath),
     readJson(inferenceRequestPath),
     readJson(inferenceResultPath),
+    readJson(resolutionRequestPath),
   ]);
   const {interpretation, intent, policy, authorization} = inferenceRequest;
   const modern = await runMcp(mcp, [{
@@ -633,13 +656,29 @@ async function verifyMcpMatrix(mcp, contract) {
   const modernScreenshotInference = modern.find(
     (response) => response.id === 'modern-screenshot-inference',
   );
+  modern.push(...await runMcp(mcp, [{
+    jsonrpc: '2.0',
+    id: 'modern-screenshot-resolution',
+    method: 'tools/call',
+    params: {
+      name: 'resolve_screenshot_inference',
+      arguments: {
+        validatedInference: modernScreenshotInference?.result?.structuredContent?.data,
+        resolutionRequest,
+      },
+      _meta: modernMeta(modernVersion),
+    },
+  }]));
+  const modernScreenshotResolution = modern.find(
+    (response) => response.id === 'modern-screenshot-resolution',
+  );
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
   const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
   const modernXmlLayoutDependencies = modern.find(
     (response) => response.id === 'modern-xml-layout-dependencies',
   );
   if (
-    modern.length !== 7 ||
+    modern.length !== 8 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
     modernScreenshot?.result?.structuredContent?.evidence?.outputFingerprint !==
@@ -648,6 +687,8 @@ async function verifyMcpMatrix(mcp, contract) {
       JSON.stringify(screenshotExpected) ||
     modernScreenshotInference?.result?.structuredContent?.evidence?.outputFingerprint !==
       '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845' ||
+    modernScreenshotResolution?.result?.structuredContent?.evidence?.outputFingerprint !==
+      '61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
@@ -789,6 +830,7 @@ async function main() {
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
       `prepared screenshot ${compileFingerprints.screenshot}, ` +
       `validated screenshot inference ${compileFingerprints.screenshotInference}, ` +
+      `resolved screenshot inference ${compileFingerprints.screenshotResolution}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +

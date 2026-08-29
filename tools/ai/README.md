@@ -267,16 +267,18 @@ model identity plus an explicit consent receipt bound to the exact preprocessed 
 purpose. The validator selects or executes no provider, opens no network connection, and persists
 neither the screenshot nor the raw inference result.
 
-Screenshot inference resolution v1 is contract-frozen but is not yet a public tool. It accepts only
-typed human answers bound to an exact validated import, question ID, node, pixel region, required
-action, reviewer identity, and review receipt. Content decisions may set only literal, input-profile,
-or caller-owned state values; behavior decisions name caller callback bindings without callback
-source; accessibility review records an explicit role, label source, traversal position, and
-decorative decision for every node. Expressions, guessed resources, unknown questions, changed
-lineage, and incomplete blocking-question coverage fail closed. The resolved golden has no remaining
-questions, unsupported semantics, or placeholder bindings, so the contract marks it eligible for a
-future screenshot-specific generator. That eligibility is not a compilation, render, or visual
-parity claim, and no resolution adapter is public in this slice.
+Screenshot inference resolution v1 is implemented as the public `resolve_screenshot_inference`
+tool. It accepts one unchanged `validated-screenshot-inference` import and typed human answers bound
+to its exact validation identity, question ID, node, pixel region, required action, reviewer, and
+review receipt. Content decisions may set only literal, input-profile, or caller-owned state values;
+behavior decisions name caller callback bindings without callback source. Accessibility review
+records role, label source, traversal position, and decorative status for every node, and the
+adapter persists all of those decisions in Design IR. Expressions, guessed resources, unknown or
+moved questions, changed lineage, incomplete coverage, incompatible component fields/events, and
+partial accessibility review fail closed. The resolved golden has no remaining questions,
+unsupported semantics, or placeholder bindings, so it becomes eligible for a future
+screenshot-specific generator. That eligibility is not a compilation, render, or visual-parity
+claim. The adapter calls no provider, opens no network connection, and executes no answer content.
 
 Run the local MCP server and its protocol/parity gate with:
 
@@ -297,10 +299,10 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns eleven tools in stable
+lifecycle; it never silently downgrades either era. `tools/list` returns twelve tools in stable
 order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
 `analyze_project`, followed by `convert_xml_to_viewcompose`, `prepare_screenshot`, and
-`validate_screenshot_inference`.
+`validate_screenshot_inference`, then `resolve_screenshot_inference`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
 provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.

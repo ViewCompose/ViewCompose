@@ -8,8 +8,8 @@
   ],
   "activation": {
     "tool": "resolve_screenshot_inference",
-    "status": "contract-frozen",
-    "publicTool": false,
+    "status": "implemented",
+    "publicTool": true,
     "evidence": "static",
     "generationImplementation": false
   },
@@ -61,6 +61,7 @@
   },
   "resolutionPolicy": {
     "preserveScreenshotProvenance": true,
+    "accessibilityReviewPersistedInDesignIr": true,
     "resolveOnlyQuestionBoundUnsupportedSemantics": true,
     "unansweredQuestionsRemainBlocking": true,
     "unresolvedUnsupportedSemanticsRemainBlocked": true,
@@ -107,11 +108,11 @@
     {
       "request": "screenshot-resolution/wireframe.request.json",
       "result": "screenshot-resolution/wireframe.result.json",
-      "status": "contract-frozen",
+      "status": "implemented",
       "expectedRequestFingerprint": "c2712d96b7f1e821e18c0952dcd31becafb48eea0df848e2983efb319dd3fea6",
-      "expectedResultFingerprint": "b6466ed78cfe2386e4b1a77238758e1c01d50a4fe374b0b36efae419e22e7f88",
+      "expectedResultFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
       "expectedInputDesignIrFingerprint": "585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a",
-      "expectedResolvedDesignIrFingerprint": "0ae93f54fea2dfee3f3ea4c9a712bf3dcf4ce21143c00e3488a159a8551f6821",
+      "expectedResolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
       "expectedAnsweredQuestions": 6,
       "expectedResolutionRecords": 6,
       "expectedResolvedUnsupportedSemantics": 6,
@@ -120,6 +121,7 @@
       "expectedPlaceholderBindings": 0,
       "expectedResolvedEvents": 2,
       "expectedResolvedSemanticRoles": 2,
+      "expectedResolvedAccessibilityFields": 14,
       "expectedCodeGenerationAllowed": true
     }
   ],

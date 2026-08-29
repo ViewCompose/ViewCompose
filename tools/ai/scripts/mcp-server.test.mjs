@@ -26,6 +26,10 @@ const inferenceResultPath = new URL(
   '../evaluation/fixtures/visual/screenshot-inference/wireframe.result.json',
   import.meta.url,
 );
+const resolutionRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-resolution/wireframe.request.json',
+  import.meta.url,
+);
 const protocolVersionKey = 'io.modelcontextprotocol/protocolVersion';
 const clientInfoKey = 'io.modelcontextprotocol/clientInfo';
 const clientCapabilitiesKey = 'io.modelcontextprotocol/clientCapabilities';
@@ -71,6 +75,7 @@ test('discovers the stateless modern server and deterministically lists the shar
     'convert_xml_to_viewcompose',
     'prepare_screenshot',
     'validate_screenshot_inference',
+    'resolve_screenshot_inference',
   ]);
   assert.equal(listing.result.tools[0].inputSchema.required.includes('versionLane'), true);
 });
@@ -142,6 +147,46 @@ test('returns the same offline screenshot inference import through CLI and MCP',
   assert.equal(response.result.isError, false);
 });
 
+test('returns the same typed screenshot resolution through CLI and MCP', async () => {
+  const [preprocessingRequest, inferenceRequest, inferenceResult, resolutionRequest] =
+    await Promise.all([
+      readFile(inferencePreprocessingRequestPath, 'utf8').then(JSON.parse),
+      readFile(inferenceRequestPath, 'utf8').then(JSON.parse),
+      readFile(inferenceResultPath, 'utf8').then(JSON.parse),
+      readFile(resolutionRequestPath, 'utf8').then(JSON.parse),
+    ]);
+  const {interpretation, intent, policy, authorization} = inferenceRequest;
+  const imported = await dispatchToolRequest(await createToolRequest({
+    tool: 'validate_screenshot_inference',
+    arguments: {
+      preprocessingRequest,
+      inferenceDeclaration: {interpretation, intent, policy, authorization},
+      inferenceResult,
+    },
+    requestId: 'resolution-import',
+  }));
+  const arguments_ = {validatedInference: imported.data, resolutionRequest};
+  const id = 'screenshot-resolution-parity';
+  const direct = await dispatchToolRequest(await createToolRequest({
+    tool: 'resolve_screenshot_inference',
+    arguments: arguments_,
+    requestId: mcpToolRequestId(id),
+  }));
+  const response = await new ViewComposeMcpSession().receive(request(id, 'tools/call', {
+    name: 'resolve_screenshot_inference',
+    arguments: arguments_,
+  }));
+  assert.deepEqual(
+    semanticToolResult(response.result.structuredContent),
+    semanticToolResult(direct),
+  );
+  assert.equal(
+    response.result.structuredContent.data.resultFingerprint,
+    '61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a',
+  );
+  assert.equal(response.result.isError, false);
+});
+
 test('keeps invalid tool arguments actionable and unknown tools at protocol level', async () => {
   const session = new ViewComposeMcpSession();
   const invalid = await session.receive(request(1, 'tools/call', {
@@ -189,7 +234,7 @@ test('supports the 2025-11-25 initialize lifecycle without weakening modern requ
     params: {},
   });
   assert.equal(listing.result.resultType, undefined);
-  assert.equal(listing.result.tools.length, 11);
+  assert.equal(listing.result.tools.length, 12);
 });
 
 test('emits bounded opt-in progress and suppresses all output after cancellation', async () => {

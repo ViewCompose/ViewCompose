@@ -1,6 +1,7 @@
 import {KNOWLEDGE_TOOL_DEFINITIONS} from './knowledge-retriever.mjs';
 import {SCREENSHOT_REQUEST_SCHEMA} from './screenshot-contract.mjs';
 import {SCREENSHOT_INFERENCE_VALIDATION_ARGUMENTS_SCHEMA} from './screenshot-inference-contract.mjs';
+import {SCREENSHOT_RESOLUTION_ARGUMENTS_SCHEMA} from './screenshot-resolution-contract.mjs';
 
 const stableId = {
   type: 'string',
@@ -288,6 +289,18 @@ const executableDefinitions = {
     },
     evidenceLevel: 'static',
   },
+  resolve_screenshot_inference: {
+    title: 'Resolve Validated Screenshot Inference',
+    description:
+      'Apply exact typed human answers to one validated screenshot inference without executable content, provider execution, or network access.',
+    inputSchema: SCREENSHOT_RESOLUTION_ARGUMENTS_SCHEMA,
+    defaultLimits: {
+      timeoutMs: 10000,
+      maxInputBytes: 2000000,
+      maxOutputBytes: 2000000,
+    },
+    evidenceLevel: 'static',
+  },
 };
 
 const knowledgeDefaults = {
@@ -326,6 +339,7 @@ export const TOOL_NAMES = Object.freeze([
   'convert_xml_to_viewcompose',
   'prepare_screenshot',
   'validate_screenshot_inference',
+  'resolve_screenshot_inference',
 ]);
 
 export function publicToolDefinition(name) {

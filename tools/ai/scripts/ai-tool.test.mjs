@@ -38,6 +38,10 @@ const inferenceResultPath = new URL(
   '../evaluation/fixtures/visual/screenshot-inference/wireframe.result.json',
   import.meta.url,
 );
+const resolutionRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-resolution/wireframe.request.json',
+  import.meta.url,
+);
 
 async function request(tool, arguments_, overrides = {}) {
   const manifest = await loadKnowledgeManifest();
@@ -262,6 +266,53 @@ test('dispatches offline screenshot inference validation and denies credential-s
   assert.equal(
     denied.diagnostics[0].code,
     'VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED',
+  );
+});
+
+test('dispatches exact typed screenshot resolution and denies executable content', async () => {
+  const [preprocessingRequest, inferenceRequest, inferenceResult, resolutionRequest] =
+    await Promise.all([
+      readFile(inferencePreprocessingRequestPath, 'utf8').then(JSON.parse),
+      readFile(inferenceRequestPath, 'utf8').then(JSON.parse),
+      readFile(inferenceResultPath, 'utf8').then(JSON.parse),
+      readFile(resolutionRequestPath, 'utf8').then(JSON.parse),
+    ]);
+  const {interpretation, intent, policy, authorization} = inferenceRequest;
+  const imported = await dispatchToolRequest(await request('validate_screenshot_inference', {
+    preprocessingRequest,
+    inferenceDeclaration: {interpretation, intent, policy, authorization},
+    inferenceResult,
+  }, {
+    limits: {maxInputBytes: 4_000_000, maxOutputBytes: 2_000_000},
+  }));
+  const arguments_ = {validatedInference: imported.data, resolutionRequest};
+  const result = await dispatchToolRequest(await request(
+    'resolve_screenshot_inference',
+    arguments_,
+    {requestId: 'resolution-dispatch', limits: {maxInputBytes: 2_000_000, maxOutputBytes: 2_000_000}},
+  ));
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'static');
+  assert.equal(
+    result.data.resultFingerprint,
+    '61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a',
+  );
+  assert.equal(result.data.summary.codeGenerationAllowed, true);
+
+  const executable = structuredClone(arguments_);
+  executable.resolutionRequest.answers[0].decision.fields[0].value = {
+    kind: 'expression',
+    language: 'kotlin',
+    source: 'loadTitle()',
+  };
+  const denied = await dispatchToolRequest(await request(
+    'resolve_screenshot_inference',
+    executable,
+  ));
+  assert.equal(denied.status, 'invalid');
+  assert.equal(
+    denied.diagnostics[0].code,
+    'VC-AI-SCREENSHOT-RESOLUTION-EXECUTABLE-DENIED',
   );
 });
 

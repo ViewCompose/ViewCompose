@@ -14,6 +14,7 @@ import {
 import {renderPreview} from './preview-adapter.mjs';
 import {prepareScreenshot} from './screenshot-preprocessor.mjs';
 import {validateScreenshotInference} from './screenshot-inference-validator.mjs';
+import {resolveScreenshotInference} from './screenshot-resolution-adapter.mjs';
 import {diagnoseLayout} from './layout-diagnoser.mjs';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
@@ -68,6 +69,7 @@ export async function dispatchToolRequest(request, {
   convertXml = convertXmlToViewCompose,
   prepare = prepareScreenshot,
   validateScreenshot = validateScreenshotInference,
+  resolveScreenshot = resolveScreenshotInference,
   renderGenerated,
   compareGenerated,
   signal,
@@ -120,6 +122,13 @@ export async function dispatchToolRequest(request, {
     const inferenceConsentRequired = inferenceAuthorization?.mode === 'provider-adapter' &&
       (!Object.hasOwn(inferenceAuthorization, 'consentReceipt') ||
         !Object.hasOwn(inferenceAuthorization, 'consentInputFingerprint'));
+    const resolutionAnswers = request.tool === 'resolve_screenshot_inference'
+      ? request.arguments?.resolutionRequest?.answers ?? []
+      : [];
+    const resolutionExecutableDenied = resolutionAnswers.some((answer) =>
+      (answer.decision?.fields ?? []).some((field) =>
+        ['expression', 'resource'].includes(field.value?.kind)) ||
+      Object.hasOwn(answer.decision ?? {}, 'source'));
     return boundaryResult(request, {
       status: 'invalid',
       code: screenshotPathDenied
@@ -130,8 +139,12 @@ export async function dispatchToolRequest(request, {
             ? 'VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED'
             : inferenceConsentRequired
               ? 'VC-AI-SCREENSHOT-INFERENCE-CONSENT-REQUIRED'
+              : resolutionExecutableDenied
+                ? 'VC-AI-SCREENSHOT-RESOLUTION-EXECUTABLE-DENIED'
               : request.tool === 'validate_screenshot_inference'
                 ? 'VC-AI-SCREENSHOT-INFERENCE-INPUT-INVALID'
+                : request.tool === 'resolve_screenshot_inference'
+                  ? 'VC-AI-SCREENSHOT-RESOLUTION-INPUT-INVALID'
           : 'VC-AI-ARGUMENTS-INVALID',
       message: screenshotPathDenied
         ? 'Screenshot preprocessing accepts no path, URL, or URI input.'
@@ -141,8 +154,12 @@ export async function dispatchToolRequest(request, {
             ? 'Screenshot inference validation accepts no credential field.'
             : inferenceConsentRequired
               ? 'Provider-produced inference requires consent bound to the exact preprocessed input.'
+              : resolutionExecutableDenied
+                ? 'Screenshot resolution accepts no executable expression, callback source, or guessed resource.'
               : request.tool === 'validate_screenshot_inference'
                 ? `Screenshot inference arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
+                : request.tool === 'resolve_screenshot_inference'
+                  ? `Screenshot resolution arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
           : `${request.tool} arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`,
       nextAction: screenshotPathDenied
         ? 'Embed one integrity-declared PNG as canonical base64.'
@@ -152,8 +169,12 @@ export async function dispatchToolRequest(request, {
             ? 'Remove credentials; this validator performs no provider or network execution.'
             : inferenceConsentRequired
               ? 'Provide the consent receipt identity and exact approved input fingerprint.'
+              : resolutionExecutableDenied
+                ? 'Use only typed literal, binding, event, and accessibility decisions.'
               : request.tool === 'validate_screenshot_inference'
                 ? 'Use the exact preprocessing request, inference declaration, and result contracts.'
+                : request.tool === 'resolve_screenshot_inference'
+                  ? 'Use the unchanged validated import and exact human-resolution request.'
           : 'Use the exact arguments declared by the current tool catalog.',
       level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
     });
@@ -287,6 +308,12 @@ export async function dispatchToolRequest(request, {
           requestId: request.requestId,
           signal: controller.signal,
           prepare,
+        });
+        break;
+      case 'resolve_screenshot_inference':
+        result = await resolveScreenshot(request.arguments, {
+          requestId: request.requestId,
+          signal: controller.signal,
         });
         break;
       default:

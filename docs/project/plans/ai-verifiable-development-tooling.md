@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the provider-independent screenshot-inference resolution adapter against the frozen typed-answer contract, then expose it through the shared CLI/MCP package without making a compile or render claim.
+next_action: Freeze the screenshot-specific resolved-Design-IR-to-Kotlin mapping for typed state, event, and accessibility bindings, then require exact generation and hermetic compilation before any render claim.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -92,14 +92,18 @@ provider execution and no network request. The typed human-resolution patch cont
 frozen: it binds every answer to the exact validated import, question, node, pixel region, required
 action, reviewer, and review receipt; forbids executable expressions and guessed resources; and
 derives code-generation eligibility only after all blocking questions, unsupported semantics, and
-placeholder bindings reach zero. The next boundary is its offline resolution adapter and shared
-CLI/MCP surface; provider selection remains a separate, explicitly authorized decision.
+placeholder bindings reach zero. Its offline adapter is now the twelfth shared CLI/MCP tool. It
+revalidates the imported inference identity, applies only component-compatible typed fields and
+caller bindings, persists the complete accessibility review into Design IR, and reproduces the
+resolved golden through the installed package with no provider, network, or answer execution. The
+next boundary is screenshot-specific Kotlin generation and hermetic compilation; provider selection
+remains a separate, explicitly authorized decision.
 
 Last verified: 2026-08-30.
 
-Next action: implement the provider-independent screenshot-inference resolution adapter against the
-frozen typed-answer contract, then add it to the shared CLI/MCP package before enabling
-Design-IR-to-Kotlin generation or selecting any provider-backed adapter.
+Next action: freeze the screenshot-specific resolved-Design-IR-to-Kotlin mapping for typed state,
+event, and accessibility bindings, then require exact generation and hermetic compilation before
+any render claim or provider-backed adapter.
 
 ## Maven release changesets
 
@@ -1686,18 +1690,19 @@ record and the same review receipt.
 
 The exact wireframe golden answers all six imported blocking questions: title and button labels,
 input purpose/state, field keyboard behavior, button click ownership, and the four-node
-accessibility review. It adds two resolved caller event bindings and two semantic roles while
-preserving all four nodes, kinds, hierarchy, screenshot source identity, and pixel provenance. The
+accessibility review. It adds two resolved caller event bindings and persists all 14 explicit
+accessibility fields—including two semantic roles—while preserving all four nodes, kinds,
+hierarchy, screenshot source identity, and pixel provenance. The
 resolved Design IR fingerprint is
-`0ae93f54fea2dfee3f3ea4c9a712bf3dcf4ce21143c00e3488a159a8551f6821`; the resolution request
+`6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603`; the resolution request
 fingerprint is `c2712d96b7f1e821e18c0952dcd31becafb48eea0df848e2983efb319dd3fea6`, and the result
-fingerprint is `b6466ed78cfe2386e4b1a77238758e1c01d50a4fe374b0b36efae419e22e7f88`. The result has zero
+fingerprint is `61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a`. The result has zero
 remaining questions, unsupported semantics, and placeholder bindings, so
 `codeGenerationAllowed` is mechanically true. That flag is eligibility only: this contract makes no
 compilation, render, pixel, visual-parity, or production-behavior claim.
 
 The focused gate passes 1/1 golden, 6/6 typed answers, 6/6 resolved unsupported semantics, 2/2
-event bindings, 2/2 semantic roles, and 3/3 fail-closed denominators for missing coverage,
+event bindings, 14/14 accessibility fields, and 3/3 fail-closed denominators for missing coverage,
 expression injection, and changed validation lineage. It performs zero provider executions and zero
 network requests. Node 25.6.0 passes 154/154 tooling tests. Phase 0 now verifies 12 schemas, 48
 metrics, 49 cases, 46 fixture-backed cases, and four screenshot-resolution fixtures in addition to
@@ -1717,6 +1722,49 @@ change**. The resolution is still a frozen fixture rather than a public mutation
 action is an offline adapter that reproduces this patch from the validated import, exposes it through
 the shared CLI/MCP package, and preserves the same fail-closed boundary before screenshot-specific
 Kotlin generation begins.
+
+### Implementation evidence — typed screenshot inference resolution
+
+`resolve_screenshot_inference` is now the twelfth public CLI/MCP tool. It accepts only the unchanged
+data returned by `validate_screenshot_inference` plus the frozen human-resolution request. Before
+mutation it recomputes the validation and input-Design-IR fingerprints and verifies the request,
+authorization, inference result, Design IR, question set, and summary share one lineage. It then
+requires exact answer coverage and matches every answer to the imported question's node, category,
+required action, and pixel rectangle. The adapter applies only component-compatible text,
+text-field, button, caller-state, and caller-event decisions. It never evaluates a string as code,
+loads a resource, calls a provider, opens a network connection, or accepts callback source.
+
+The implementation review found that the contract-only golden retained accessibility roles but not
+the equally explicit label-source, traversal, and decorative decisions. The result was hardened
+before the public adapter was accepted: all four fields now live in each applicable node's Design IR
+semantics, producing 14/14 persisted accessibility fields. The adapter also preserves the original
+document ID, four-node hierarchy, kinds, screenshot source identity, and pixel provenance. It
+reproduces the exact resolved Design IR fingerprint
+`6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603` and result fingerprint
+`61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a` twice. Missing answers,
+expression injection, and changed validation lineage return their exact three fail-closed
+diagnostics; additional unit denominators cover moved pixel regions, component-incompatible fields,
+partial accessibility review, and cancellation.
+
+Node 25.6.0 passes 163/163 tooling tests. Phase 0 remains at 12 schemas, 48 metrics, 49 cases, 46
+fixture-backed cases, and four screenshot-resolution fixtures. Direct CLI and MCP results are
+semantically identical, and the installed package reproduces the same resolved fingerprint through
+both supported MCP protocol eras. The complete distribution still passes 2/2 reproducible builds,
+offline install/uninstall, SPDX/license inventory, compilation, and exact generated-layout
+comparisons. Relative to the contract-only resolution slice, package file count increases from 54
+to 56 (+3.70%), declared bytes from 1,686,032 to 1,711,367 (+1.50%), and archive bytes from 299,922
+to 305,305 (+1.79%). The archive SHA-256 is
+`12a9148c1992b163d9861202176ed2f32c35af96a2f3c6eaf450d73500e8c7a6`. The quality-build
+plugin suite passed. The combined AI-contract, screenshot preprocessing, inference, resolution,
+installed-distribution, documentation-structure, development-tooling-isolation, and release-intent
+root gate passed 26 actionable tasks, with 12 executed and 14 up-to-date.
+
+This is **improved** deterministic resolution, review-evidence preservation, executable-content
+safety, and installed transport parity with **no material Android runtime behavior change**. The
+resolved IR is eligible for generation but has not yet produced, compiled, rendered, or visually
+compared screenshot-derived Kotlin. The next action is to freeze and implement a screenshot-specific
+IR-to-Kotlin mapping for its typed state, event, and accessibility bindings, using hermetic
+compilation as the first acceptance boundary.
 
 ### Implementation evidence — bounded XML to Design IR
 

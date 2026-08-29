@@ -838,13 +838,20 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.fileTree(project.rootDir.resolve("tools/ai")) {
                     include(
                         "contracts/design-ir.schema.json",
+                        "contracts/screenshot-design-inference.schema.json",
                         "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
                         "evaluation/fixtures/visual/screenshot-inference/**",
                         "evaluation/fixtures/visual/screenshot-inference-contract.json",
                         "evaluation/fixtures/visual/screenshot-resolution/**",
                         "evaluation/fixtures/visual/screenshot-resolution-contract.json",
                         "scripts/schema-validator.mjs",
                         "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-inference-contract.mjs",
+                        "scripts/screenshot-resolution-adapter.mjs",
+                        "scripts/screenshot-resolution-contract.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
                         "scripts/verify-phase5-screenshot-resolution.mjs",
                     )
                 },
