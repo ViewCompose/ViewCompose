@@ -3,6 +3,8 @@ package com.viewcompose.navigation.serialization
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavValue
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.builtins.serializer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -73,6 +75,25 @@ class SerializableNavRouteSpecTest {
 
         assertEquals(NavValue.LongValue(7L), encoded["userId"])
         assertEquals(InlineRoute(UserId(7L)), spec.decode(encoded))
+    }
+
+    @Test
+    fun `serialized field names are the stable route argument names`() {
+        val spec = serializableNavRouteSpec<NamedRoute>("named")
+
+        val encoded = spec.encode(NamedRoute(userId = 9L))
+
+        assertEquals(setOf("user_id"), encoded.arguments.keys)
+        assertEquals(NamedRoute(9L), spec.decode(encoded))
+    }
+
+    @Test
+    fun `non-finite floating point values are rejected`() {
+        val spec = serializableNavRouteSpec<FloatRoute>("float")
+
+        assertThrows(SerializationException::class.java) {
+            spec.encode(FloatRoute(Float.NaN))
+        }
     }
 
     @Test
@@ -159,6 +180,12 @@ class SerializableNavRouteSpecTest {
 
     @Serializable
     private data class InlineRoute(val userId: UserId)
+
+    @Serializable
+    private data class NamedRoute(@SerialName("user_id") val userId: Long)
+
+    @Serializable
+    private data class FloatRoute(val value: Float)
 
     @Serializable
     private data class NestedValue(val value: String)
