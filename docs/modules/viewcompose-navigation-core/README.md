@@ -18,6 +18,7 @@ sample_ids:
   - module.navigation-core-stacks
   - module.navigation-core-deep-link
   - module.navigation-core-scene-projection
+  - module.navigation-core-execution-plan
 coordinate: com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03
 minimal_usage_sample_id: module.navigation-core-dependency
 ---
@@ -228,6 +229,65 @@ check(plan.targetStates[list.id] == NavEntryLifecycleState.Created)
 check(plan.targetStates[detail.id] == NavEntryLifecycleState.Resumed)
 check(plan.transitions.first().entryId == list.id)
 ```
+
+## Unified execution reducer
+
+`NavExecutionReducer` is the single policy boundary above stack transactions, pane scenes, and
+lifecycle projection. Its `settled`, `transition`, and `predictivePreview` entry points make each
+event's preconditions explicit, then delegate to one implementation and return the same immutable
+`NavExecutionPlan`. `reconcile` retains the plan's stack and scene decision while recalculating
+outer-host lifecycle, presentation inventory, retention, or Back ownership.
+
+The plan contains the candidate or committed stack delta, exact semantic scene, ordered lifecycle
+targets, presentation prepare/refresh/retain/evict/dispose lists, input/focus/accessibility and Back
+ownership, rendering suspension, pre-commit rollback, and terminal cleanup. It contains IDs and
+Core values only—never a View, `LifecycleOwner`, callback, or animation progress value. Platform
+adapters must prepare every requested presentation before committing a transaction, publish effects
+in plan order after commit, and use the recorded rollback or cleanup lists instead of deriving a
+second policy from controller state.
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-execution-plan" sample_id="module.navigation-core-execution-plan" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val plan = NavExecutionReducer.transition(
+    currentLifecycleStates = mapOf(
+        before.top.id to NavEntryLifecycleState.Resumed,
+    ),
+    transaction = transaction,
+    beforePaneScene = NavPaneScene(
+        listOf(NavPane(NavPaneRole.Primary, before.top.id)),
+    ),
+    afterPaneScene = NavPaneScene(
+        listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id)),
+    ),
+    hostState = NavHostLifecycleState.Resumed,
+    presentedEntryIds = listOf(before.top.id),
+    maxRetainedHiddenPresentations = 0,
+)
+
+// A platform adapter prepares these identities before committing the stack.
+check(plan.preparePresentationEntryIds == listOf(transaction.after.top.id))
+check(plan.inputEntryIds.isEmpty())
+check(plan.rollbackOwnerEntryIds == listOf(transaction.after.top.id))
+check(plan.lifecycle.targetStates.values.none(NavEntryLifecycleState.Resumed::equals))
+```
+
+All reducer calls are side-effect free and linear in retained entries, graph depth, current owners,
+and presentations. `null` is the explicit unbounded hidden-presentation limit; non-negative values
+are deterministic oldest-first bounds. The API is Alpha and intentionally has no legacy dual-plan
+bridge.
+
+## Execution reducer acceptance
+
+The Phase 5 baseline passed 60/60 Navigation Core tests. A fresh Phase 6 run passed 71/71 with zero
+failures, errors, or skips: 11 reducer tests now cover settled, push, pop, reset, predictive preview,
+bounded and unbounded retention, reconciliation, candidate Back ownership, immutable snapshots, and
+invalid inputs. This is an absolute increase of 11 tests and a normalized increase of 18.3%.
+
+Conclusion: **improved**. Stack mutation, semantic scene, lifecycle, presentation inventory,
+interaction, Back, rollback, and terminal cleanup now have one pure deterministic result. This run
+does not establish line/branch coverage, Android executor correctness, device behavior, leak
+freedom, or representative performance; those dimensions are **inconclusive** here and are covered
+by the Android module evidence or Phase 7.
 
 ## Adaptive panes
 

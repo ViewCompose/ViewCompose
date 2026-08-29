@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add one platform-neutral navigation execution reducer and make Android lifecycle, presentation, interaction, Back, transition, rollback, and cleanup behavior execute its typed plan.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-core", "impact": "feature" },
+    { "artifact": "viewcompose-navigation-android", "impact": "fix" }
+  ],
+  "ignored": [],
+  "shared": []
+}
