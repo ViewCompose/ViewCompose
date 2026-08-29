@@ -84,6 +84,7 @@ function canonicalBinding(binding) {
         kind: 'image-source',
         parameter: binding.parameter,
         source: binding.source,
+        ...(binding.asset === undefined ? {} : {asset: binding.asset}),
       };
     default:
       return binding;
@@ -287,10 +288,18 @@ export async function createGeneratedPreviewPlan({
       );
     }
     if (declared.type === 'ImageSource') {
+      if (supplied.asset === undefined) {
+        return planIssue(
+          'VC-AI-PREVIEW-ASSET-MISSING',
+          `ImageSource binding ${declared.parameter} has no explicit embedded Preview asset.`,
+          'Provide exact bounded PNG bytes; paths, URLs, project resources, and invented IDs remain forbidden.',
+          'unsupported',
+        );
+      }
       return planIssue(
         'VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED',
-        'ImageSource cannot render until an isolated offline asset-staging contract is accepted.',
-        'Finish at compiled evidence or replace the image only after an explicit asset contract exists.',
+        'Embedded ImageSource assets are contract-frozen but not yet staged by this implementation.',
+        'Finish at compiled evidence until the tool-owned resource staging gate is implemented.',
         'unsupported',
       );
     }

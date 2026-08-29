@@ -216,9 +216,10 @@ build, task, dependencies, resources, scripts, or output paths.
 
 Generated Preview v1 supports exact `String` values and fresh `TextFieldState` values with explicit
 initial text. Missing, extra, duplicate, reordered, source-mismatched, or type-mismatched bindings
-fail before Gradle. `ImageSource` remains explicitly unsupported until an isolated asset-staging
-contract exists, so image layouts finish at compiled evidence instead of fabricating a resource or
-using the network. A successful render returns the request, generated-source, wrapper, PNG,
+fail before Gradle. The first embedded-PNG `ImageSource` staging contract is frozen but not yet
+implemented, so image layouts still finish at compiled evidence instead of fabricating a resource
+or using the network. A successful implemented render returns the request, generated-source,
+wrapper, PNG,
 render-tree, and combined output fingerprints at `rendered` evidence. Custom Views, Data Binding,
 unknown attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities, malformed XML,
 duplicate IDs, and limit violations return localized diagnostics and no Kotlin. String resources

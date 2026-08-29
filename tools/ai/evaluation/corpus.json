@@ -400,11 +400,32 @@
         "fixture": "fixtures/xml/generated-preview/image-binding.preview-request.json"
       },
       "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "rendered"
+      },
+      "metricIds": [
+        "xml.generated-preview-render-success",
+        "xml.generated-preview-binding-exactness",
+        "xml.generated-preview-asset-integrity"
+      ]
+    },
+    {
+      "id": "xml.generated-preview-image-asset-missing",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/generated-preview/image-asset-missing.preview-request.json"
+      },
+      "expected": {
         "outcome": "unsupported",
         "evidenceLevel": "static",
-        "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED"]
+        "diagnosticCodes": ["VC-AI-PREVIEW-ASSET-MISSING"]
       },
-      "metricIds": ["xml.generated-preview-binding-exactness"]
+      "metricIds": [
+        "xml.generated-preview-binding-exactness",
+        "xml.generated-preview-asset-integrity"
+      ]
     },
     {
       "id": "xml.generated-preview-build-selection",

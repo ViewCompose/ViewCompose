@@ -154,7 +154,10 @@ export async function verifyPhase4GeneratedPreview({
   let cacheHits = 0;
   let blocked = 0;
   const fingerprints = [];
-  for (const fixture of contract.supportedFixtures) {
+  const implementedFixtures = contract.supportedFixtures.filter(
+    (fixture) => fixture.status === 'implemented',
+  );
+  for (const fixture of implementedFixtures) {
     const [source, request] = await Promise.all([
       readFile(resolve(fixtureRoot, fixture.source), 'utf8'),
       readJson(resolve(fixtureRoot, fixture.request)),
@@ -217,8 +220,8 @@ export async function verifyPhase4GeneratedPreview({
   }
 
   if (
-    rendered !== contract.supportedFixtures.length ||
-    cacheHits !== contract.supportedFixtures.length ||
+    rendered !== implementedFixtures.length ||
+    cacheHits !== implementedFixtures.length ||
     blocked !== contract.unsupportedFixtures.length
   ) {
     throw new Error('Phase 4 generated Preview metrics did not reach their frozen thresholds');
@@ -226,7 +229,7 @@ export async function verifyPhase4GeneratedPreview({
   return {
     rendered,
     cacheHits,
-    supported: contract.supportedFixtures.length,
+    supported: implementedFixtures.length,
     blocked,
     unsupported: contract.unsupportedFixtures.length,
     fingerprints,

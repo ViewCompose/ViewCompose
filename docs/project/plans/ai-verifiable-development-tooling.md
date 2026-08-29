@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze an isolated offline asset-staging contract for ImageSource so XML v2 image layouts can enter the generated Preview lane without reading inspected-project resources or using the network.
+next_action: Implement the frozen embedded-PNG ImageSource staging contract in the generated Preview adapter and harness, then render the XML v2 profile-card denominator with exact artifact evidence.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -75,13 +75,15 @@ Kotlin, explicit preview values, one fixed configuration, the current-source com
 lanes, and all accepted artifacts into a content-addressed request while denying inspected-project
 build execution. The tool-owned harness, source-bound CLI/MCP render mode, exact artifact gate,
 stable cache proof, and installed-package render denominator now pass. The next foundational gap
-is an equally isolated offline asset-staging contract for `ImageSource`, required before the
-accepted XML v2 image fixture can render.
+now has a frozen contract: exact embedded PNG bytes become a tool-owned Android resource without
+any caller path, URL, inspected-project resource read, or network access. Implementing and
+rendering that contract for the accepted XML v2 image fixture is the active increment.
 
 Last verified: 2026-08-30.
 
-Next action: freeze bounded offline `ImageSource` asset staging for the tool-owned generated
-Preview harness without granting access to inspected-project resources, build logic, or network.
+Next action: implement the frozen embedded-PNG `ImageSource` staging contract and render the XML v2
+profile-card fixture without granting access to inspected-project resources, build logic, paths,
+URLs, or network.
 
 ## Maven release changesets
 
@@ -1264,6 +1266,49 @@ the original XML, interaction, state restoration, accessibility traversal, alter
 configurations, or inspected-application integration. `ImageSource` is still deliberately blocked,
 so the next foundational increment is a bounded offline asset-staging contract followed by semantic
 and geometry comparison rather than a broader prompt or screenshot generator.
+
+### Contract freeze — isolated embedded PNG asset staging
+
+The first generated-Preview asset lane is now frozen without broadening project or network access.
+An `ImageSource` binding may carry only canonical RFC 4648 base64 for exact `image/png` bytes plus
+the decoded byte count, SHA-256, and IHDR width and height. It accepts no filesystem path, URL, URI,
+Android resource ID, project `R` symbol, XML/vector drawable, alternate media type, or loader model.
+The converter and harness therefore cannot silently substitute an inspected project's drawable or
+invent an asset when the binding is absent.
+
+Before staging, the adapter must re-decode and re-encode canonical base64, verify byte count and
+SHA-256, parse bounded PNG chunks, validate every CRC, require exactly one leading IHDR and terminal
+IEND, and match the declared dimensions. Each image is limited to 524,288 decoded bytes and 1,024
+by 1,024 pixels; one request permits at most 16 unique assets, 1,048,576 total asset bytes, and 256
+chunks per PNG. Identical bytes deduplicate by full SHA-256. Accepted bytes are written once beneath
+the request's immutable `res/drawable` directory as `vc_ai_<full-sha256>.png`; the deterministic
+wrapper alone maps that generated resource through
+`ImageSource.Resource(R.drawable.<resourceName>)`.
+
+The contract-positive denominator uses the existing XML v2 `ProfileCardView` golden with one
+70-byte, 1 by 1 px PNG. Its asset SHA-256 is
+`4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5`, canonical request
+fingerprint is `1d81d2ed9db84ee022d806042cd883c426f4fe0061aa65c757ef0de3a91225f6`, generated Kotlin
+fingerprint remains `15b15098e92b62bc9730ab7b3f2bde7715596f22069490a18b1e7830ff92ad35`, and the 917-byte
+wrapper fingerprint is `461d7c9e7b9898b9b9f7373775fa10c8a180097664627b442d36a8b2abd2a4b2`.
+The negative denominator preserves the same generator binding without bytes and requires
+`VC-AI-PREVIEW-ASSET-MISSING` before Gradle execution.
+
+Phase 0 now contains eight schemas, 36 metrics, 35 evaluation cases, 32 fixture-backed cases, and
+five generated-Preview fixtures. The embedded asset is schema-valid, byte/hash/dimension exact,
+CRC-valid, bounded, and source-matched; the existing login render remains the only implemented
+positive render until the staging code lands. Node 25.6.0 passed 125/125 AI-tooling tests. Two clean
+package builds remained byte-identical; the 45-file, 273,818-byte archive contains 1,551,859
+declared file bytes and has SHA-256
+`4522557fafe2351627371a169540e0572fdebd265f32a91b244cdf0cdbe68362`. Its offline lifecycle,
+SPDX/license inventory, both MCP protocol versions, four installed compile denominators, and the
+previous login Preview render all remained green.
+
+This is **improved** safety and measurability with
+**no material Android runtime or accepted render behavior change**. Current limitations are
+intentional: only embedded PNG is frozen, the contract does not read application resources or prove
+the source XML's original pixels, and the profile-card request must continue to stop at static
+unsupported evidence until the tool-owned resource staging and real Layoutlib gate pass.
 
 ### Implementation evidence — bounded XML to Design IR
 

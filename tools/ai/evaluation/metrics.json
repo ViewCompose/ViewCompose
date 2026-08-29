@@ -273,6 +273,15 @@
       "environment": "generator-reported binding parameter, source, type, order, and explicitly supported preview values"
     },
     {
+      "id": "xml.generated-preview-asset-integrity",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical embedded PNG bytes with exact size, SHA-256, dimensions, chunk structure, CRC, immutable staging, and no path or network input"
+    },
+    {
       "id": "xml.generated-preview-isolation",
       "phase": 4,
       "measure": "blocked_ratio",

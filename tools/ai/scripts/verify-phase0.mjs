@@ -26,6 +26,72 @@ function assertUnique(values, label) {
   }
 }
 
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function verifyEmbeddedPng(asset, limits, label) {
+  const bytes = Buffer.from(asset.data, 'base64');
+  if (
+    bytes.toString('base64') !== asset.data ||
+    bytes.length !== asset.bytes ||
+    bytes.length > limits.maxAssetBytes ||
+    createHash('sha256').update(bytes).digest('hex') !== asset.sha256 ||
+    bytes.length < 33 ||
+    bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a'
+  ) {
+    throw new Error(`${label}: embedded PNG bytes or identity changed`);
+  }
+  let cursor = 8;
+  let chunks = 0;
+  let ihdr = 0;
+  let iend = 0;
+  while (cursor < bytes.length) {
+    if (cursor + 12 > bytes.length) throw new Error(`${label}: truncated PNG chunk header`);
+    const length = bytes.readUInt32BE(cursor);
+    const typeStart = cursor + 4;
+    const dataStart = typeStart + 4;
+    const dataEnd = dataStart + length;
+    const crcEnd = dataEnd + 4;
+    if (crcEnd > bytes.length) throw new Error(`${label}: PNG chunk exceeds the embedded bytes`);
+    const type = bytes.subarray(typeStart, dataStart).toString('ascii');
+    const expectedCrc = bytes.readUInt32BE(dataEnd);
+    if (crc32(bytes.subarray(typeStart, dataEnd)) !== expectedCrc) {
+      throw new Error(`${label}: PNG chunk ${type} has a changed CRC`);
+    }
+    chunks += 1;
+    if (chunks > limits.maxPngChunks) throw new Error(`${label}: PNG chunk ceiling changed`);
+    if (type === 'IHDR') {
+      ihdr += 1;
+      if (
+        chunks !== 1 || length !== 13 ||
+        bytes.readUInt32BE(dataStart) !== asset.widthPx ||
+        bytes.readUInt32BE(dataStart + 4) !== asset.heightPx ||
+        asset.widthPx > limits.maxAssetWidthPx ||
+        asset.heightPx > limits.maxAssetHeightPx
+      ) {
+        throw new Error(`${label}: PNG IHDR identity changed`);
+      }
+    }
+    if (type === 'IEND') {
+      iend += 1;
+      if (length !== 0 || crcEnd !== bytes.length) {
+        throw new Error(`${label}: PNG IEND must terminate the exact bytes`);
+      }
+    }
+    cursor = crcEnd;
+  }
+  if (ihdr !== 1 || iend !== 1) throw new Error(`${label}: PNG requires one IHDR and IEND`);
+  return bytes;
+}
+
 function isWithin(parent, child) {
   const path = relative(parent, child);
   return path === '' || (!path.startsWith(`..${sep}`) && path !== '..' && !path.startsWith(sep));
@@ -745,6 +811,8 @@ async function verifyGeneratedPreview(schemas) {
     contract.execution?.callerSelectedDependency !== false ||
     contract.execution?.callerSelectedOutputPath !== false ||
     contract.execution?.callerSuppliedKotlin !== false ||
+    contract.execution?.callerSelectedAssetPath !== false ||
+    contract.execution?.callerSelectedAssetUrl !== false ||
     contract.source?.mismatch !== 'fail closed before Gradle execution' ||
     contract.evidence?.requiredLevel !== 'rendered' ||
     contract.evidence?.compileBeforeRender !== true ||
@@ -754,15 +822,27 @@ async function verifyGeneratedPreview(schemas) {
   }
   if (
     JSON.stringify(contract.bindings?.supported?.map((binding) => binding.type)) !==
-      JSON.stringify(['String', 'TextFieldState']) ||
-    JSON.stringify(contract.bindings?.unsupported?.map((binding) => binding.type)) !==
-      JSON.stringify(['ImageSource']) ||
+      JSON.stringify(['String', 'TextFieldState', 'ImageSource']) ||
+    contract.bindings?.unsupported?.length !== 2 ||
     contract.bindings?.missing !== 'fail closed' ||
     contract.bindings?.extra !== 'fail closed' ||
     contract.bindings?.duplicate !== 'fail closed' ||
     contract.bindings?.applicationBehavior !== 'never invented'
   ) {
     throw new Error('Generated Preview binding support or fail-closed policy changed');
+  }
+  if (
+    JSON.stringify(contract.assets?.mediaTypes) !== JSON.stringify(['image/png']) ||
+    contract.assets?.readInspectedProjectResource !== false ||
+    contract.assets?.acceptPath !== false ||
+    contract.assets?.acceptUrl !== false ||
+    contract.assets?.acceptAndroidResourceId !== false ||
+    contract.assets?.acceptXmlDrawable !== false ||
+    contract.assets?.networkAccess !== false ||
+    contract.assets?.symlinkTraversal !== false ||
+    contract.assets?.resourceName !== 'vc_ai_<full lowercase asset SHA-256>'
+  ) {
+    throw new Error('Generated Preview asset isolation boundary changed');
   }
   const expectedConfiguration = {
     widthDp: 411,
@@ -786,6 +866,12 @@ async function verifyGeneratedPreview(schemas) {
     maxWrapperBytes: 256 * 1024,
     maxBindings: 64,
     maxBindingTextBytes: 64 * 1024,
+    maxAssets: 16,
+    maxAssetBytes: 512 * 1024,
+    maxTotalAssetBytes: 1024 * 1024,
+    maxAssetWidthPx: 1024,
+    maxAssetHeightPx: 1024,
+    maxPngChunks: 256,
     maxProcessOutputBytes: 2 * 1024 * 1024,
     maxImageBytes: 16 * 1024 * 1024,
     maxRenderTreeBytes: 8 * 1024 * 1024,
@@ -850,6 +936,20 @@ async function verifyGeneratedPreview(schemas) {
     if (JSON.stringify(declared) !== JSON.stringify(supplied)) {
       throw new Error(`${fixture.request}: Preview bindings no longer exactly match generator bindings`);
     }
+    const assets = request.bindings.filter((binding) => binding.kind === 'image-source');
+    const assetBytes = assets.map((binding) =>
+      verifyEmbeddedPng(binding.asset, contract.limits, fixture.request));
+    if (
+      !['implemented', 'contract-frozen'].includes(fixture.status) ||
+      assets.length !== (fixture.expectedAssets ?? 0) ||
+      assetBytes.reduce((total, bytes) => total + bytes.length, 0) !==
+        (fixture.expectedAssetBytes ?? 0) ||
+      assets.some((binding) => binding.asset.sha256 !== fixture.expectedAssetSha256) ||
+      assetBytes.reduce((total, bytes) => total + bytes.length, 0) >
+        contract.limits.maxTotalAssetBytes
+    ) {
+      throw new Error(`${fixture.request}: embedded Preview asset denominator changed`);
+    }
     const requestFingerprint = createHash('sha256')
       .update(JSON.stringify(request))
       .digest('hex');
@@ -861,7 +961,7 @@ async function verifyGeneratedPreview(schemas) {
       wrapper.byteLength > contract.limits.maxWrapperBytes ||
       !wrapperSource.includes('fun UiTreeBuilder.GeneratedXmlPreview()') ||
       !wrapperSource.includes(`${fixture.expectedFunction}(`) ||
-      !wrapperSource.includes('emailState = TextFieldState(),') ||
+      fixture.expectedWrapperExpressions.some((expression) => !wrapperSource.includes(expression)) ||
       !wrapperSource.endsWith('\n')
     ) {
       throw new Error(`${fixture.wrapper}: generated Preview wrapper golden is stale`);
@@ -885,10 +985,11 @@ async function verifyGeneratedPreview(schemas) {
       ]));
       const supplied = new Map(request.bindings.map((binding) => [binding.parameter, binding]));
       const provesMissing = [...declared.keys()].some((parameter) => !supplied.has(parameter));
-      const provesImage = request.bindings.some((binding) => binding.kind === 'image-source');
+      const provesMissingAsset = request.bindings.some((binding) =>
+        binding.kind === 'image-source' && binding.asset === undefined);
       if (
         fixture.diagnosticCodes.includes('VC-AI-PREVIEW-BINDING-MISSING') && !provesMissing ||
-        fixture.diagnosticCodes.includes('VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED') && !provesImage
+        fixture.diagnosticCodes.includes('VC-AI-PREVIEW-ASSET-MISSING') && !provesMissingAsset
       ) {
         throw new Error(`${fixture.request}: unsupported binding denominator changed`);
       }

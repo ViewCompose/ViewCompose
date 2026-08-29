@@ -81,7 +81,7 @@ test('requires exact render, artifact inspection, cache, and blocked isolation d
         evidence: {level: 'static'},
         diagnostics: [{
           code: image
-            ? 'VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED'
+            ? 'VC-AI-PREVIEW-ASSET-MISSING'
             : 'VC-AI-PREVIEW-BINDING-MISSING',
         }],
       };

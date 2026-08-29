@@ -93,14 +93,16 @@ test('fails closed on missing and unsupported image bindings before rendering', 
   assert.equal(missingPlan.status, 'unsupported');
   assert.equal(missingPlan.diagnostic.code, 'VC-AI-PREVIEW-BINDING-MISSING');
 
-  const image = JSON.parse(await fixture('generated-preview/image-binding.preview-request.json'));
+  const image = JSON.parse(
+    await fixture('generated-preview/image-asset-missing.preview-request.json'),
+  );
   const imagePlan = await createGeneratedPreviewPlan({
     generatedKotlin: await fixture('profile-card.viewcompose.kt'),
     generationReport: profileReport(),
     previewBindings: image.bindings,
   });
   assert.equal(imagePlan.status, 'unsupported');
-  assert.equal(imagePlan.diagnostic.code, 'VC-AI-PREVIEW-BINDING-TYPE-UNSUPPORTED');
+  assert.equal(imagePlan.diagnostic.code, 'VC-AI-PREVIEW-ASSET-MISSING');
 });
 
 test('denies caller-selected build execution fields at the adapter boundary', async () => {

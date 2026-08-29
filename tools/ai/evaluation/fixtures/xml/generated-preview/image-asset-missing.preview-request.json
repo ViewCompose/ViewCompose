@@ -20,16 +20,7 @@
     {
       "kind": "image-source",
       "parameter": "profileAvatar",
-      "source": "@drawable/profile_avatar",
-      "asset": {
-        "mediaType": "image/png",
-        "encoding": "base64",
-        "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==",
-        "bytes": 70,
-        "sha256": "4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5",
-        "widthPx": 1,
-        "heightPx": 1
-      }
+      "source": "@drawable/profile_avatar"
     },
     {
       "kind": "string",
