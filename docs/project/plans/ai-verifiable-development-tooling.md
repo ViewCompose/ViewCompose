@@ -966,9 +966,12 @@ projects. Its identities are context
 
 On 2026-08-29, Node 25.6.0 passed 100/100 AI-tooling tests and the full Phase 0 contract verifier.
 The root project-context and documentation-structure gates passed 20 actionable tasks (6 executed
-and 14 up-to-date). Two clean distribution builds were byte-identical: the 41-file, 260,817-byte
+and 14 up-to-date). The XML consumer Skill now selects explicit project evidence when the scoped
+layout is available, preserves standalone pasted-source input, and reports `not-proven` call-site
+completeness; its independent validator passed and the workflow gate retained 6/6 exact contracts.
+Two clean distribution builds were byte-identical: the 41-file, 261,076-byte
 archive has SHA-256
-`5cc93e62277f02e3c44a5c2324ff95954a07534b1d189add67ca43a7f159e490` and 1,484,822
+`2118765a51bcd05450e1f0a0a759f1a55521509f79e926e9183b3a7f599d4cf8` and 1,485,644
 declared file bytes. Its offline install/uninstall, SPDX/license inventory, both MCP eras,
 standalone generation, installed explicit-project generation, and existing compiled examples all
 passed.

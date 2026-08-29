@@ -224,7 +224,8 @@ Six client-neutral consumer skills live below `skills/`:
 
 - `viewcompose-api-reference` retrieves exact APIs and compiled samples without writing files.
 - `viewcompose-create-screen` retrieves before implementation and requires compile-backed delivery.
-- `viewcompose-convert-xml` preserves migration boundaries and requires compile-backed integration.
+- `viewcompose-convert-xml` prefers explicit project evidence when a layout lives in the scoped
+  project, preserves standalone pasted-source migration, and requires compile-backed integration.
 - `viewcompose-review` keeps review read-only unless the caller also asks for a fix.
 - `viewcompose-debug-layout` uses only allowlisted Preview and structured layout evidence.
 - `viewcompose-validate` requires hermetic compilation and renders only covered allowlisted targets.

@@ -1,6 +1,6 @@
 ---
 name: viewcompose-convert-xml
-description: Convert a supported Android layout XML source to deterministic ViewCompose Kotlin, then integrate it with compile-backed evidence. Use only when ViewCompose is the requested target; do not claim automatic conversion for custom Views, Data Binding, or behavior outside the supported subset.
+description: Convert supported Android layout XML or explicit Android project context to deterministic ViewCompose Kotlin, then integrate it with compile-backed evidence. Use only when ViewCompose is the requested target; do not claim automatic conversion for custom Views, Data Binding, or behavior outside the supported subset.
 ---
 
 # Convert Android XML to ViewCompose
@@ -13,26 +13,35 @@ resource, state, and behavior decision.
 1. Select the exact framework version lane and bundle identity. When a repository is in scope, use
    `analyze_project` to confirm its ViewCompose coordinates and migration context without executing
    the project build.
-2. Call `convert_xml_to_viewcompose` in `generate` mode for the exact XML source and logical path.
-   Inspect its Design IR, unsupported diagnostics, resource/state bindings, source mapping, and
-   call-site review before changing the project. Never fabricate, guess, or substitute an API or
-   behavior to bypass a blocked fragment.
-3. For an unsupported component or usage shape, use `get_component_reference` and `get_sample` only
+2. Select exactly one converter input form:
+   - When the layout is inside the project in scope, prefer project form with the absolute project
+     root, project-relative layout path, ordered explicit resource roots, and ordered Kotlin/Java
+     source roots. Do not guess variants or scan undeclared roots.
+   - Use source form for pasted or standalone XML with its bounded logical path. Record that
+     resources, styles, ViewBinding, listeners, and imperative call sites were not resolved from a
+     project.
+3. Call `convert_xml_to_viewcompose` in `generate` mode. Inspect its Design IR, unsupported
+   diagnostics, resource/state bindings, source mapping, and call-site review before changing the
+   project. For project form, also inspect the context fingerprint, coverage, resource/style
+   evidence, confidence on every call site, and the explicit `not-proven` completeness result.
+   Never fabricate, guess, or substitute an API or behavior to bypass a blocked fragment.
+4. For an unsupported component or usage shape, use `get_component_reference` and `get_sample` only
    to prepare an explicit manual migration plan. Retrieval does not turn unsupported XML semantics
    into an automatic-conversion claim.
-4. If project writes were requested, integrate only the generated function and the caller bindings
+5. If project writes were requested, integrate only the generated function and the caller bindings
    needed by that layout. Preserve resource ownership, stable keys, state restoration decisions,
    listeners, ViewBinding references, adapters, and imperative mutations as explicit review work;
    do not invent missing behavior.
-5. Call `convert_xml_to_viewcompose` in `compile` mode for the unchanged generated result. After any
-   integration edit, run `validate_code` in static and compile modes over the final bounded code.
-   Converter compilation proves the isolated generated function, not an unvalidated call site.
-6. Use `render_preview` and `diagnose_layout` only when an allowlisted Preview covers the migrated
+6. Call `convert_xml_to_viewcompose` in `compile` mode with the same source or project input. After
+   any integration edit, run `validate_code` in static and compile modes over the final bounded
+   code. Converter compilation proves the isolated generated function, not an unvalidated call
+   site.
+7. Use `render_preview` and `diagnose_layout` only when an allowlisted Preview covers the migrated
    code. Otherwise finish at compiled evidence and state that visual or behavioral parity remains
    unproven.
-7. Deliver the source fingerprint, generated-code fingerprint, framework and compiler identity,
-   preserved bindings, unsupported fragments, call-site checklist, diagnostics, and maximum
-   evidence actually achieved.
+8. Deliver the source and optional project-context fingerprints, generated-code fingerprint,
+   framework and compiler identity, preserved bindings, unsupported fragments, call-site inventory
+   and completeness, diagnostics, and maximum evidence actually achieved.
 
 ## Stop and authority
 
