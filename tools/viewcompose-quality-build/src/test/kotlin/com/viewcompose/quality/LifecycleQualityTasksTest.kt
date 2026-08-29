@@ -70,6 +70,7 @@ class LifecycleQualityTasksTest {
                 "verifyAiToolingContracts",
                 "verifyAiKnowledgeBundle",
                 "verifyAiStaticTooling",
+                "verifyAiRetrieval",
                 "verifyDocumentationStructure",
                 "verifyDslApiContracts",
                 "verifyMigrationPairedSamples",

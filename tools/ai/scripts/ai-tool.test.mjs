@@ -59,6 +59,24 @@ test('dispatches static validation through the frozen request and result envelop
   assert.equal(result.evidence.level, 'static');
 });
 
+test('dispatches deterministic knowledge retrieval through the same envelope', async () => {
+  const search = await dispatchToolRequest(await request('search_component', {
+    versionLane: 'current-source',
+    query: 'add padding and fill the available width',
+    limit: 5,
+  }));
+  assert.equal(search.status, 'success');
+  assert.equal(search.evidence.level, 'knowledge');
+  assert.ok(search.data.results.some((entry) => entry.capabilityId === 'modifier.layout'));
+
+  const sample = await dispatchToolRequest(await request('get_sample', {
+    versionLane: 'current-source',
+    sampleId: 'module.ui-foundation-profile-summary',
+  }));
+  assert.equal(sample.status, 'success');
+  assert.equal(sample.data.executable, true);
+});
+
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {
   let invocations = 0;
   const drift = await dispatchToolRequest(await request('validate_code', {

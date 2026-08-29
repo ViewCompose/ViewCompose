@@ -27,6 +27,9 @@ The implementation order is fixed by
 9. `scripts/ai-tool.mjs` is the internal stdin/stdout CLI over the same provider-neutral static,
    compile, render, and project-analysis core. It validates the frozen envelope and exact Knowledge
    Bundle identity before dispatch and is the transport-parity reference for Phase 3.
+10. `scripts/knowledge-retriever.mjs` integrity-checks the complete immutable bundle before exposing
+    exact API, component, and sample lookup or deterministic ranked component search. Its input
+    schemas are shared catalog data for the CLI and later MCP transport.
 
 Run the Phase 0 gate with:
 
@@ -110,12 +113,29 @@ Invoke the Phase 2 internal CLI by writing exactly one frozen request envelope t
 npm --silent --prefix tools/ai run tool -- --pretty < request.json
 ```
 
-It currently dispatches `validate_code` (`static` or `compile`), `render_preview`, and
-`analyze_project`. The request must name the exact `framework.versionLane` and
+It currently dispatches `get_api_reference`, `get_component_reference`, `search_component`,
+`get_sample`, `validate_code` (`static` or `compile`), `render_preview`, and `analyze_project`. The
+request must name the exact `framework.versionLane` and
 `framework.identity` from `generated/current-source/manifest.json`; input, output, and timeout
 limits are mandatory and are propagated to the underlying adapter. Stdout contains only one JSON
 result. Operational errors use stderr and exit code 2. The CLI accepts no project-selected command,
 Gradle task, classpath, dependency coordinate, output directory, network endpoint, or credential.
+
+Run the frozen deterministic retrieval corpus directly or through the root quality gate:
+
+```bash
+npm --prefix tools/ai run verify:phase3-retrieval
+./gradlew verifyAiRetrieval
+```
+
+Every retrieval request selects `versionLane: "current-source"`; released lanes are not guessed.
+`get_api_reference` requires one exact symbol, capability, or artifact identifier.
+`get_component_reference` resolves overload parameters and defaults, artifact/capability versions,
+applicable reviewed rules, and the declared sample; ambiguous receiver families require an exact
+`symbolId` or receiver. `get_sample` preserves the distinction between compiled source and an
+explicitly non-executable evidence outline. `search_component` supports bounded artifact, artifact
+version, capability, and kind filters and uses a stable lexical score with deterministic tie breaks.
+No retrieval result reads canonical source files outside the integrity-checked bundle.
 
 ## Version lanes
 

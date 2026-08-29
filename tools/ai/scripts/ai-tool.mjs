@@ -4,6 +4,12 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {analyzeProject} from './project-analyzer.mjs';
 import {compileKotlin} from './compiler-adapter.mjs';
+import {
+  retrieveApiReference,
+  retrieveComponentReference,
+  retrieveSample,
+  searchComponents,
+} from './knowledge-retriever.mjs';
 import {renderPreview} from './preview-adapter.mjs';
 import {assertSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
@@ -48,6 +54,10 @@ export async function dispatchToolRequest(request, {
   compile = compileKotlin,
   render = renderPreview,
   analyze = analyzeProject,
+  getApiReference = retrieveApiReference,
+  getComponentReference = retrieveComponentReference,
+  searchComponent = searchComponents,
+  getSample = retrieveSample,
 } = {}) {
   const schema = await loadToolEnvelopeSchema();
   assertSchemaValue(request, schema, 'AI tool request');
@@ -78,6 +88,18 @@ export async function dispatchToolRequest(request, {
   let result;
   try {
     switch (request.tool) {
+      case 'get_api_reference':
+        result = await getApiReference(request.arguments, {requestId: request.requestId});
+        break;
+      case 'get_component_reference':
+        result = await getComponentReference(request.arguments, {requestId: request.requestId});
+        break;
+      case 'search_component':
+        result = await searchComponent(request.arguments, {requestId: request.requestId});
+        break;
+      case 'get_sample':
+        result = await getSample(request.arguments, {requestId: request.requestId});
+        break;
       case 'validate_code': {
         const mode = request.arguments.mode ?? 'static';
         if (!['static', 'compile'].includes(mode)) {
@@ -145,7 +167,7 @@ export async function dispatchToolRequest(request, {
           status: 'unsupported',
           code: 'VC-AI-TOOL-UNSUPPORTED',
           message: `Internal CLI tool ${request.tool} is not implemented.`,
-          nextAction: 'Use validate_code, render_preview, or analyze_project.',
+          nextAction: 'Use one tool declared by the current ViewCompose AI tool catalog.',
         });
     }
   } finally {

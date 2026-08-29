@@ -525,6 +525,26 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiRetrieval") {
+            group = "verification"
+            description =
+                "Verifies deterministic Knowledge Bundle retrieval ranking and ownership evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-retrieval")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "evaluation/corpus.json",
+                        "evaluation/metrics.json",
+                        "generated/current-source/**/*.json",
+                        "generated/current-source/**/*.jsonl",
+                        "scripts/knowledge-retriever.mjs",
+                        "scripts/verify-phase3-retrieval.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

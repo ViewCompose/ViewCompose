@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Begin Phase 3 with deterministic Knowledge Bundle retrieval shared by the local CLI and later stdio MCP transport.
+next_action: Add the Phase 3 stdio MCP server over the accepted shared tool catalog and prove semantic CLI/MCP parity.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -48,12 +48,13 @@ maven_release_changesets:
 Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 canonical knowledge
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
 static validation, pinned compilation, Preview evidence, read-only project findings, and internal
-CLI foundations are complete.
+CLI foundations are complete. Phase 3 deterministic Knowledge Bundle retrieval and its CLI surface
+are complete; stdio MCP and consumer Agent workflows remain active.
 
 Last verified: 2026-08-29.
 
-Next action: begin Phase 3 with deterministic Knowledge Bundle retrieval shared by the local CLI and
-later stdio MCP transport.
+Next action: add the Phase 3 stdio MCP server over the accepted shared tool catalog and prove
+semantic CLI/MCP parity.
 
 ## Maven release changesets
 
@@ -592,6 +593,43 @@ makes every step inspectable. Conversion tools enter only with Phase 4 evidence.
    contribution; provider-specific root files are not added merely as aliases.
 5. Packaging, checksums, SBOM/license review, installation/uninstallation, protocol compatibility,
    offline operation, and a minimal end-to-end example in CI.
+
+### Implementation evidence — deterministic retrieval and CLI slice
+
+The first Phase 3 slice adds one shared retrieval core over the accepted Knowledge Bundle. Before
+building indexes, it verifies the exact seven-file manifest set, every byte count and SHA-256,
+parsed record counts, and the aggregate bundle fingerprint. It exposes fixed input schemas for
+`get_api_reference`, `get_component_reference`, `search_component`, and `get_sample`; the internal
+CLI dispatches those same functions through the Phase 0 request/result envelope. No retrieval path
+reads canonical source outside the bundle or performs network, Gradle, model, or project work.
+
+Exact API retrieval distinguishes symbol, capability, and artifact identities while preserving the
+artifact's current published version separately from a capability's recorded version state.
+Component retrieval parses overload parameters and defaults, requires explicit disambiguation for
+receiver families, attaches artifact/capability ownership, includes the declared compiled or
+non-executable sample, and labels signature-derived rule applicability. Sample retrieval never
+presents an architecture outline as compilable code. Ranked search supports bounded artifact,
+artifact-version, capability, and kind filters, stable lexical scoring, and deterministic tie
+breaks in the exact `current-source` lane.
+
+On 2026-08-29, Node 25.6.0 passed 52/52 AI-tooling tests in 1.42 seconds. The two frozen retrieval
+cases both passed: the remembered stale `Column` package still resolved the governed current symbol
+at rank 1, and the layout intent resolved `modifier.layout` at rank 1. Top-five recall was 1.00
+against the frozen 0.95 threshold; exact-symbol reciprocal rank was 1.00 against the 1.00 threshold.
+The compiled quality-build suite and root `verifyAiRetrieval` task passed, and the gate is now owned
+by `qaQuick`; the root lifecycle completed 2,272 tasks (2,182 executed and 90 up-to-date) in 11
+minutes 57 seconds after the local incremental cache was invalidated. Compared with the bundle-only
+baseline, retrieval changed from unavailable to deterministic, integrity-checked, and measurable;
+the conclusion is **improved** Agent-facing knowledge access with **no material runtime change**
+because the code remains downstream tooling.
+
+Limitations: this first ranker is lexical and primarily serves canonical English names and terms;
+it does not claim fuzzy, multilingual, embedding, or model-semantic retrieval. Only the exact
+`current-source` bundle is selectable. Rule applicability is labeled as general, component, or
+signature-derived rather than inferred as typed program behavior. The CLI is still internal and
+unpackaged, and MCP protocol negotiation, cancellation/progress mapping, safe logs, resources,
+transport parity, client skills, and released-version bundles remain pending. The next action is a
+stdio MCP adapter over this same catalog and dispatcher, not a second implementation.
 
 ### Acceptance gate
 

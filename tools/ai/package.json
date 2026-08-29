@@ -11,6 +11,7 @@
     "verify:knowledge": "node scripts/generate-knowledge.mjs --verify",
     "verify:phase2-compile": "node scripts/verify-phase2-compile.mjs",
     "verify:phase2-render": "node scripts/verify-phase2-render.mjs",
-    "verify:phase2-static": "node scripts/verify-phase2-static.mjs"
+    "verify:phase2-static": "node scripts/verify-phase2-static.mjs",
+    "verify:phase3-retrieval": "node scripts/verify-phase3-retrieval.mjs"
   }
 }
