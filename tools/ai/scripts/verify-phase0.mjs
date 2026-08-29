@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import {lstat, readFile, realpath, readdir} from 'node:fs/promises';
 import {dirname, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -171,6 +172,133 @@ async function verifyExamples(schemas) {
   }
 }
 
+function visitDesignNodes(roots, visitor) {
+  for (const node of roots) {
+    visitor(node);
+    visitDesignNodes(node.children, visitor);
+  }
+}
+
+function designIrFacts(ir) {
+  const nodeIds = [];
+  const resources = [];
+  const stateBindings = [];
+  visitDesignNodes(ir.roots, (node) => {
+    nodeIds.push(node.id);
+    for (const fields of [node.properties, node.semantics, node.state]) {
+      assertUnique(fields.map((field) => field.name), `${node.id} field names`);
+      for (const field of fields) {
+        if (field.value.kind === 'resource') {
+          resources.push(`${field.value.resourceType}/${field.value.name}`);
+        }
+        if (field.value.kind === 'binding') stateBindings.push(field.value.name);
+      }
+    }
+    assertUnique(node.modifiers.map((modifier) => modifier.kind), `${node.id} modifier kinds`);
+    for (const modifier of node.modifiers) {
+      assertUnique(
+        modifier.arguments.map((argument) => argument.name),
+        `${node.id}.${modifier.kind} argument names`,
+      );
+    }
+  });
+  assertUnique(nodeIds, 'Design IR node IDs');
+  return {
+    nodes: nodeIds.length,
+    resources: [...new Set(resources)].sort(),
+    stateBindings: [...new Set(stateBindings)].sort(),
+  };
+}
+
+async function verifyXmlSubset(schemas) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/xml');
+  const contract = await readJson(resolve(fixtureDirectory, 'subset-contract.json'));
+  if (contract.schemaVersion !== 1 || contract.subsetId !== 'android-xml-layout-v1') {
+    throw new Error('XML subset contract must remain android-xml-layout-v1 schema version 1');
+  }
+  if (
+    contract.source?.networkAccess !== false ||
+    contract.source?.allowDoctype !== false ||
+    contract.source?.allowEntities !== false
+  ) {
+    throw new Error('XML subset contract must stay offline and reject DOCTYPE/entities');
+  }
+  for (const [name, ceiling] of Object.entries({
+    maxInputBytes: 262144,
+    maxDepth: 32,
+    maxNodes: 500,
+    maxAttributesPerNode: 64,
+    maxUnsupportedFragments: 1000,
+  })) {
+    const value = contract.limits?.[name];
+    if (!Number.isInteger(value) || value <= 0 || value > ceiling) {
+      throw new Error(`XML subset limit ${name} exceeds its frozen ceiling`);
+    }
+  }
+  const expectedElements = ['LinearLayout', 'TextView', 'EditText', 'Button'];
+  if (JSON.stringify(contract.elements?.map((element) => element.source)) !== JSON.stringify(expectedElements)) {
+    throw new Error('XML subset element order changed without contract review');
+  }
+  if (
+    contract.unsupportedPolicy?.status !== 'unsupported' ||
+    contract.unsupportedPolicy?.emitKotlin !== false ||
+    contract.unsupportedPolicy?.preserveSource !== true ||
+    contract.unsupportedPolicy?.localizeEveryFragment !== true
+  ) {
+    throw new Error('XML unsupported policy must fail closed without Kotlin output');
+  }
+  assertUnique(contract.diagnosticCodes, 'XML migration diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-XML-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid XML migration diagnostic code: ${code}`);
+    }
+  }
+
+  const designSchema = schemas.get('design-ir.schema.json');
+  const example = await readJson(resolve(contractsDirectory, 'examples/design-ir.json'));
+  const declaredSources = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const sourcePath = resolve(fixtureDirectory, fixture.source);
+    const goldenPath = resolve(fixtureDirectory, fixture.goldenIr);
+    const [source, golden] = await Promise.all([
+      readFile(sourcePath),
+      readJson(goldenPath),
+    ]);
+    assertSchemaValue(golden, designSchema, fixture.goldenIr);
+    const fingerprint = createHash('sha256').update(source).digest('hex');
+    if (golden.source.fingerprint !== fingerprint) {
+      throw new Error(`${fixture.goldenIr}: source fingerprint does not match ${fixture.source}`);
+    }
+    const expectedIdentity = relative(repositoryRoot, sourcePath).replaceAll(sep, '/');
+    if (golden.source.identity !== expectedIdentity) {
+      throw new Error(`${fixture.goldenIr}: source identity must be ${expectedIdentity}`);
+    }
+    const facts = designIrFacts(golden);
+    if (
+      facts.nodes !== fixture.expectedNodes ||
+      JSON.stringify(facts.resources) !== JSON.stringify(fixture.expectedResources) ||
+      JSON.stringify(facts.stateBindings) !== JSON.stringify(fixture.expectedStateBindings)
+    ) {
+      throw new Error(`${fixture.goldenIr}: declared Design IR denominator does not match the golden`);
+    }
+    declaredSources.add(fixture.source);
+    if (fixture.goldenIr === 'login.design-ir.json' && JSON.stringify(golden) !== JSON.stringify(example)) {
+      throw new Error('The public Design IR example must equal the frozen login golden');
+    }
+  }
+  for (const fixture of contract.unsupportedFixtures) {
+    await readFile(resolve(fixtureDirectory, fixture.source));
+    declaredSources.add(fixture.source);
+    for (const code of fixture.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`${fixture.source}: undeclared diagnostic code ${code}`);
+      }
+    }
+  }
+  assertUnique([...declaredSources], 'XML subset source fixtures');
+  return contract;
+}
+
 async function verifyMetrics(schemas) {
   const metrics = await readJson(resolve(evaluationDirectory, 'metrics.json'));
   assertSchemaValue(metrics, schemas.get('metric-contract.schema.json'), 'evaluation/metrics.json');
@@ -250,6 +378,7 @@ export async function verifyPhase0() {
   await verifyMcpProtocol();
   const schemas = await verifySchemas(versions);
   await verifyExamples(schemas);
+  const xmlSubset = await verifyXmlSubset(schemas);
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -258,6 +387,7 @@ export async function verifyPhase0() {
     cases: corpus.cases.length,
     fixtures: corpus.cases.filter((item) => item.input.kind === 'fixture').length,
     reservedCapabilities: versions.reservedCapabilities.length,
+    xmlFixtures: xmlSubset.supportedFixtures.length + xmlSubset.unsupportedFixtures.length,
   };
 }
 
@@ -267,7 +397,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(
         `Verified AI tooling Phase 0: ${summary.schemas} schemas, ` +
           `${summary.reservedCapabilities} reserved capabilities, ${summary.metrics} metrics, ` +
-          `${summary.cases} cases, and ${summary.fixtures} fixture-backed cases.`,
+          `${summary.cases} cases, ${summary.fixtures} fixture-backed cases, and ` +
+          `${summary.xmlFixtures} frozen XML fixtures.`,
       );
     })
     .catch((error) => {

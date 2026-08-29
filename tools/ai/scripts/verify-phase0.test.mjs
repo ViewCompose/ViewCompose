@@ -6,9 +6,10 @@ test('accepts the checked-in Phase 0 contracts and evaluation corpus', async () 
   const summary = await verifyPhase0();
   assert.equal(summary.schemas, 5);
   assert.equal(summary.reservedCapabilities, 5);
-  assert.ok(summary.metrics >= 15);
-  assert.ok(summary.cases >= 14);
-  assert.ok(summary.fixtures >= 10);
+  assert.equal(summary.metrics, 27);
+  assert.equal(summary.cases, 22);
+  assert.equal(summary.fixtures, 19);
+  assert.equal(summary.xmlFixtures, 4);
 });
 
 test('rejects a fixture that resolves outside the repository', async () => {

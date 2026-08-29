@@ -234,6 +234,24 @@
       "metricIds": ["protocol.installed-compatibility"]
     },
     {
+      "id": "design-ir.login-golden",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/login.design-ir.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "design-ir.schema-conformance",
+        "design-ir.deterministic-output",
+        "design-ir.provenance-completeness"
+      ]
+    },
+    {
       "id": "xml.supported-login-layout",
       "phase": 4,
       "category": "xml-migration",
@@ -245,7 +263,52 @@
         "outcome": "pass",
         "evidenceLevel": "compiled"
       },
-      "metricIds": ["xml.supported-compile"]
+      "metricIds": ["xml.supported-compile", "xml.resource-preservation"]
+    },
+    {
+      "id": "xml.unsupported-custom-view",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/custom-view.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-CUSTOM-VIEW-UNSUPPORTED"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
+      "id": "xml.unsupported-data-binding",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/data-binding.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-DATA-BINDING-UNSUPPORTED"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
+      "id": "xml.unsupported-attribute",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/unsupported-attribute.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-ATTRIBUTE-UNSUPPORTED"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
     },
     {
       "id": "compose.unsupported-custom-effect",

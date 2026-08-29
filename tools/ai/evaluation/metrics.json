@@ -165,6 +165,33 @@
       "environment": "installed stdio package against every frozen modern and legacy MCP version"
     },
     {
+      "id": "design-ir.schema-conformance",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "every declared Design IR v1 golden and converter output"
+    },
+    {
+      "id": "design-ir.deterministic-output",
+      "phase": 4,
+      "measure": "byte_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "two conversions of each supported source identity with identical bytes"
+    },
+    {
+      "id": "design-ir.provenance-completeness",
+      "phase": 4,
+      "measure": "complete_node_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "every emitted node has source id, source span, confidence, and mapping decision"
+    },
+    {
       "id": "xml.supported-compile",
       "phase": 4,
       "measure": "success_ratio",
@@ -172,6 +199,15 @@
       "threshold": 1,
       "unit": "ratio",
       "environment": "declared supported XML subset"
+    },
+    {
+      "id": "xml.resource-preservation",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "declared XML resource references against IR and generated parameter bindings"
     },
     {
       "id": "migration.unsupported-honesty",

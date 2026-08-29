@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Freeze Design IR v1 and the first supported XML-to-ViewCompose migration subset before implementing conversion.
+next_action: Implement the fail-closed Android XML v1 parser and prove exact Design IR output against the frozen login golden.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -53,11 +53,13 @@ dual-era stdio MCP, deterministic Preview layout diagnosis, and five client-neut
 workflows are complete. The reproducible local distribution, offline lifecycle, SPDX/license
 inventory, installed compile example, and protocol compatibility gates complete the Phase 3
 foundation.
+Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
+one supported golden and three explicit unsupported denominators.
 
 Last verified: 2026-08-29.
 
-Next action: freeze Design IR v1 and the first supported XML-to-ViewCompose migration subset before
-implementing conversion.
+Next action: implement the fail-closed Android XML v1 parser and prove exact Design IR output
+against the frozen login golden.
 
 ## Maven release changesets
 
@@ -823,6 +825,32 @@ Design IR and XML migration contract freeze.
 Build deterministic migration value on top of the accepted knowledge and validation loop. Android
 XML is first because it has explicit structure and resources and addresses an existing migration
 need; automatic Compose conversion follows only after explicit semantic mappings exist.
+
+### Contract freeze — Design IR v1 and Android XML layout v1
+
+The 2026-08-29 Phase 4 contract freeze replaces open property bags with ordered typed IR fields for
+literals, resources, dimensions, layout dimensions, enums, caller bindings, and preserved
+expressions. Every source has a SHA-256 identity; every emitted node requires a source identity,
+source span, confidence, and mapping decision. Unsupported fragments require a stable diagnostic,
+preserved source, localization, and an explicit blocked or preserved disposition. Node IDs, field
+names, modifier kinds, and modifier argument names are unique within their declared scopes.
+
+The first XML subset is intentionally smaller than the eventual Phase 4B target. It accepts only
+`LinearLayout`, `TextView`, `EditText`, and `Button`; fixed layout dimensions, one all-edge integer
+`dp` padding, literal or unqualified string resources, four input types, and Android IDs. String
+resources become explicit caller `String` parameters and remain named in the migration report;
+editable state becomes a caller-owned `TextFieldState`. An absent click listener stays absent.
+This keeps the first generated source inside the accepted Foundation compiler harness without
+inventing an Android resource environment or application behavior.
+
+Custom Views, Data Binding, unknown elements or attributes, unsupported values or namespaces,
+`DOCTYPE`/entities, duplicate IDs, malformed XML, and resource-limit violations fail closed with no
+Kotlin output. XML-only input cannot establish ViewBinding references or imperative call-site
+listeners, so every successful result must carry that review limitation. The frozen denominator is
+one four-node login golden with three string resources and one caller state binding, plus custom
+View, Data Binding, and unknown-attribute rejection fixtures. Phase 4 begins with 27 total metrics,
+22 evaluation cases, 19 fixture-backed cases, and four XML source fixtures; implementation may not
+widen this subset silently.
 
 ### Phase 4A: Design IR and code generation
 
