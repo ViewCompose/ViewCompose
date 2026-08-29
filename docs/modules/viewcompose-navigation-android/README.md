@@ -14,6 +14,8 @@ capability_ids:
   - navigation.result-consumption
   - navigation.results
   - navigation.scene-projection
+  - navigation.typed-route-host
+  - navigation.typed-routes
 artifact_ids:
   - viewcompose-navigation-android
 sample_ids:
@@ -24,6 +26,7 @@ sample_ids:
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
   - module.navigation-android-results
+  - module.navigation-android-typed-route
 coordinate: com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02
 minimal_usage_sample_id: module.navigation-android-dependency
 ---
@@ -99,6 +102,36 @@ fun UiTreeBuilder.customOverlayNavHostSample(
 One `NavHostController` can be attached to exactly one active `NavHost`. Navigation commands are
 main-thread APIs and require attachment so the core transaction, destination rendering, owner
 lifecycle, and native View hierarchy share one commit boundary.
+
+### Typed commands
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-typed-route" sample_id="module.navigation-android-typed-route" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+data class ArticleRoute(val articleId: Long)
+
+val ArticleDestination = NavRouteSpec(
+    name = "article",
+    encodeArguments = { article: ArticleRoute ->
+        mapOf("articleId" to NavValue.LongValue(article.articleId))
+    },
+    decodeArguments = { arguments ->
+        ArticleRoute(
+            articleId = (arguments.getValue("articleId") as NavValue.LongValue).value,
+        )
+    },
+)
+
+fun typedRouteNavigationSample(controller: NavHostController): ArticleRoute {
+    controller.navigate(ArticleDestination, ArticleRoute(articleId = 42L))
+    return controller.snapshot.top.toRoute(ArticleDestination)
+}
+```
+
+Use the same `NavRouteSpec<T>` with graph declarations, `navigate`, `replaceTop`, `reset`, and
+`NavEntry.toRoute`. Encoding runs on the main thread before a host transaction begins, so an
+encoder exception cannot mutate the stack, render tree, owner lifecycle, or result inbox. The
+controller and saved-state adapter still receive only `NavRoute`; no live route object or callback
+is retained.
 
 `NavHost` retains one logical owner record per destination and creates a child render session only
 when policy and visibility require a native presentation. Hidden entries always retain lifecycle,

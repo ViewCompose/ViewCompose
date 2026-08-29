@@ -14,6 +14,8 @@ capability_ids:
   - navigation.result-consumption
   - navigation.results
   - navigation.scene-projection
+  - navigation.typed-route-host
+  - navigation.typed-routes
   - viewmodel.owner-boundaries
   - viewmodel.scoped-owners
   - viewmodel.store-resolution
@@ -32,6 +34,7 @@ invariants:
   - Visual transitions and predictive Back never become a second source of navigation state.
   - A returned page value is published only by its successful pop transaction to the surviving entry.
   - Restored state is accepted only when it remains compatible with the current graph and stack configuration.
+  - Typed declarations compile to the same immutable NavRoute model used by graphs, transactions, deep links, and restoration.
 evidence:
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavExecutionReducerTest.kt
@@ -61,6 +64,12 @@ published artifacts:
 
 The split keeps Android ownership out of the state machine while giving the native host one place
 to coordinate stack state, rendering, lifecycle, and View hierarchy changes.
+
+`NavRouteSpec<T>` is an application-owned adapter at the Core boundary, not a second navigation
+model. Its stable name is used for graph declaration; its encoder produces closed `NavValue`
+arguments; its decoder reconstructs application values from an entry. Android typed commands
+encode before entering the host transaction. Graphs never retain codec callbacks, snapshots never
+retain application objects, and string routes remain the interoperability and recovery boundary.
 
 ## 2. Transaction boundary
 

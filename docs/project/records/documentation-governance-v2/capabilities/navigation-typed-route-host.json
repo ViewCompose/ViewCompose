@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.typed-route-host",
+  "kind": "host",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-android" },
+  "artifact": "viewcompose-navigation-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha02" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.navigation.NavHostController.navigate", "kind": "overload-set", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavHostController.replaceTop", "kind": "overload-set", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavHostController.reset", "kind": "overload-set", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.navigation.typed-route-host", "generated": true },
+  "sample_owner": { "sample_id": "module.navigation-android-typed-route" },
+  "document_owners": {
+    "guide": ["guide.navigation-production-host"],
+    "architecture": ["architecture.navigation-runtime"],
+    "module": ["module.viewcompose-navigation-android"],
+    "migration": ["migration.compose-navigation"]
+  }
+}

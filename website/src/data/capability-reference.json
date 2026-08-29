@@ -899,6 +899,37 @@
       }
     },
     {
+      "capabilityId": "navigation.typed-route-host",
+      "referenceId": "reference.navigation.typed-route-host",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-android-typed-route",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "navigation.typed-routes",
+      "referenceId": "reference.navigation.typed-routes",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "module.viewcompose-navigation-core",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-core-typed-route",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "nested.scroll",
       "referenceId": "reference.nested.scroll",
       "relatedDocumentIds": [

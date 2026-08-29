@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.navigation-android-typed-route",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "navigation.typed-route-host",
+  "document_ids": ["module.viewcompose-navigation-android"],
+  "version_lane": "released",
+  "source": "viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt",
+  "region": "navigation-android-typed-route",
+  "build_target": ":viewcompose-navigation-android:compileDebugUnitTestKotlin"
+}

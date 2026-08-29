@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.navigation-core-typed-route",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "navigation.typed-routes",
+  "document_ids": ["module.viewcompose-navigation-core"],
+  "version_lane": "released",
+  "source": "viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt",
+  "region": "navigation-core-typed-route",
+  "build_target": ":viewcompose-navigation-core:compileTestKotlin"
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 2f928fc4ad1981bcc88c03f965e5180eae72112237d4575e2b5739ec305b31c8
+translation_source_hash: 073f3c10b11d4387aa24059adf77cca3d74a2270955a7c1235aa2c05583886ba
 translation_status: current
 ---
 
@@ -71,6 +71,35 @@ fun UiTreeBuilder.customOverlayNavHostSample(
 
 一个 `NavHostController` 同时只能连接一个活跃 `NavHost`。导航命令必须在主线程调用且要求宿主
 已连接，确保 core 事务、目的地渲染、owner 生命周期和原生 View 层级共用同一个提交边界。
+
+### 类型化命令
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-typed-route" sample_id="module.navigation-android-typed-route" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+data class ArticleRoute(val articleId: Long)
+
+val ArticleDestination = NavRouteSpec(
+    name = "article",
+    encodeArguments = { article: ArticleRoute ->
+        mapOf("articleId" to NavValue.LongValue(article.articleId))
+    },
+    decodeArguments = { arguments ->
+        ArticleRoute(
+            articleId = (arguments.getValue("articleId") as NavValue.LongValue).value,
+        )
+    },
+)
+
+fun typedRouteNavigationSample(controller: NavHostController): ArticleRoute {
+    controller.navigate(ArticleDestination, ArticleRoute(articleId = 42L))
+    return controller.snapshot.top.toRoute(ArticleDestination)
+}
+```
+
+Graph 声明、`navigate`、`replaceTop`、`reset` 与 `NavEntry.toRoute` 共用同一个
+`NavRouteSpec<T>`。编码会在主线程且 Host 事务开始前完成，因此 Encoder 异常不会改变 Stack、
+Render Tree、Owner Lifecycle 或 Result Inbox。Controller 和 Saved-state Adapter 仍只接收
+`NavRoute`，不会保留存活 Route 对象或 Callback。
 
 `NavHost` 为每个目的地保留一条逻辑 owner 记录，并仅在策略和可见性要求原生展示时创建子渲染
 会话。隐藏 entry 始终保留 Lifecycle、ViewModel、Saved-state、Saveable-state、Route 和 Graph

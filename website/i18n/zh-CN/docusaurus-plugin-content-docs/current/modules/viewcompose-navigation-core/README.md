@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: f3f8e428e28cae970bb2915033174396d47255ff7a88897c570acdef7934022a
+translation_source_hash: 67c31132d81b34b2bbdb74171929afc9b977df32288f16536c00ebf5c1f84bb9
 translation_status: current
 ---
 
@@ -55,6 +55,51 @@ val graph = navGraph(
 `NavEntryId` 标识具体的目的地或图 owner，而不是 route。只要 owner 仍被保留，ID 就必须稳定，
 并随导航快照持久化。图 owner 允许 Android 宿主在同一个图实例内的目的地之间共享生命周期、
 Saved State 和 ViewModel，同时不把 Android 概念引入本模块。
+
+### 类型化 route 契约
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-typed-route" sample_id="module.navigation-core-typed-route" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+data class ProfileRoute(
+    val userId: Long,
+    val editable: Boolean,
+)
+
+val ProfileDestination = NavRouteSpec(
+    name = "profile",
+    encodeArguments = { profile: ProfileRoute ->
+        mapOf(
+            "userId" to NavValue.LongValue(profile.userId),
+            "editable" to NavValue.BooleanValue(profile.editable),
+        )
+    },
+    decodeArguments = { arguments ->
+        ProfileRoute(
+            userId = (arguments.getValue("userId") as NavValue.LongValue).value,
+            editable = (arguments.getValue("editable") as NavValue.BooleanValue).value,
+        )
+    },
+)
+
+fun typedRouteSample() {
+    val graph = navGraph(
+        route = "root",
+        startDestination = NavRoute("home"),
+    ) {
+        destination("home")
+        destination(ProfileDestination)
+    }
+    val route = ProfileDestination.encode(ProfileRoute(userId = 42L, editable = true))
+    val entry = NavEntry(NavEntryId("profile-42"), graph.resolve(route).destination)
+
+    check(entry.toRoute(ProfileDestination).userId == 42L)
+}
+```
+
+`NavRouteSpec<T>` 是 Graph Identity、类型化编码和 Entry 解码共用的唯一应用声明。它始终生成
+既有不可变 `NavRoute`；Graph 只保留稳定名称，Snapshot 与恢复仍只持久化封闭的 `NavValue`
+参数。进程重建前后必须保持名称和 Schema 兼容。解码失败会显式抛出，且 Route Name 不匹配时
+不会调用应用 Decoder。
 
 ## 两阶段事务
 

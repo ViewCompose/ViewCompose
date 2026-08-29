@@ -18,6 +18,8 @@ capability_ids:
   - navigation.result-consumption
   - navigation.results
   - navigation.scene-projection
+  - navigation.typed-route-host
+  - navigation.typed-routes
 artifact_ids:
   - viewcompose-lifecycle-androidx
   - viewcompose-navigation-android
@@ -28,10 +30,12 @@ sample_ids:
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
   - module.navigation-android-results
+  - module.navigation-android-typed-route
   - module.navigation-core-execution-plan
   - module.navigation-core-deep-link
   - module.navigation-core-results
   - module.navigation-core-scene-projection
+  - module.navigation-core-typed-route
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
 non_goals:
@@ -66,6 +70,7 @@ maven_release_changesets:
   - release/changes/20260829-navigation-scene-projection.json
   - release/changes/20260829-navigation-structured-deep-links.json
   - release/changes/20260829-navigation-transition-lifecycle.json
+  - release/changes/20260829-navigation-typed-routes.json
 ---
 
 # Navigation Lifecycle and Scene Evolution Plan
@@ -92,6 +97,7 @@ Serialization adapter before the broader evidence matrix.
 - `release/changes/20260829-navigation-scene-projection.json`
 - `release/changes/20260829-navigation-structured-deep-links.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
+- `release/changes/20260829-navigation-typed-routes.json`
 
 ## Release intent rationale
 

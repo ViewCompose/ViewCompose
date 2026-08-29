@@ -19,7 +19,10 @@ import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavRouteSpec
 import com.viewcompose.navigation.core.NavResultKey
+import com.viewcompose.navigation.core.NavValue
+import com.viewcompose.navigation.core.toRoute
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.Text
@@ -41,6 +44,27 @@ fun navHostControllerSample(controller: NavHostController) {
         is NavResult.Failed -> throw result.failure.cause ?: IllegalStateException(result.failure.toString())
     }
 }
+
+// DOCS_REGION_START(navigation-android-typed-route)
+data class ArticleRoute(val articleId: Long)
+
+val ArticleDestination = NavRouteSpec(
+    name = "article",
+    encodeArguments = { article: ArticleRoute ->
+        mapOf("articleId" to NavValue.LongValue(article.articleId))
+    },
+    decodeArguments = { arguments ->
+        ArticleRoute(
+            articleId = (arguments.getValue("articleId") as NavValue.LongValue).value,
+        )
+    },
+)
+
+fun typedRouteNavigationSample(controller: NavHostController): ArticleRoute {
+    controller.navigate(ArticleDestination, ArticleRoute(articleId = 42L))
+    return controller.snapshot.top.toRoute(ArticleDestination)
+}
+// DOCS_REGION_END(navigation-android-typed-route)
 
 // DOCS_REGION_START(navigation-android-deep-link)
 fun navigateSharedImageRequest(controller: NavHostController): NavDeepLinkResult {
