@@ -56,6 +56,7 @@ class AndroidViewNavHostTransitionDriverTest {
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,
+            initialPresentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
         )
         specHolder = TransitionSpecHolder(NavTransitionSpec.Default)
         coordinator = TransactionalNavHostCoordinator(

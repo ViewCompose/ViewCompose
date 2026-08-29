@@ -42,6 +42,10 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * [panePolicy] can adapt the same committed entries into multiple native View panes without
  * recreating their lifecycle, ViewModel, or saved-state owners.
  *
+ * [presentationRetentionPolicy] controls only hidden child render sessions and native Views. The
+ * logical entry and its owners remain retained independently, and a disposed presentation is
+ * rebuilt before a pop, stack selection, predictive-Back preview, or pane expansion reveals it.
+ *
  * [contentKey] must change when destination content or inherited locals depend on a non-observable
  * parent value. Observable state invalidates active destination sessions directly. Hidden retained
  * destinations keep the latest captured environment and render synchronously before a pop, stack
@@ -52,10 +56,12 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * @sample com.viewcompose.navigation.samples.rememberedNavHostSample
  * @sample com.viewcompose.navigation.samples.inheritedNavViewModelFactorySample
  * @sample com.viewcompose.navigation.samples.retainedDestinationThemeSample
+ * @sample com.viewcompose.navigation.samples.BoundedPresentationNavigation
  * @param controller stable controller mounted exclusively by this host
  * @param modifier layout modifier applied after the host's required fill constraint
  * @param transitionSpec visual policy for committed and predictive-Back transitions
  * @param panePolicy width-dependent pane projection
+ * @param presentationRetentionPolicy resource policy for fully hidden destination presentations
  * @param systemBackEnabled whether to register with the nearest AndroidX Back dispatcher
  * @param contentKey invalidation key for non-observable destination-content dependencies
  * @param debug enables navigation runtime diagnostics
@@ -71,6 +77,8 @@ fun UiTreeBuilder.NavHost(
     modifier: Modifier = Modifier,
     transitionSpec: NavTransitionSpec = NavTransitionSpec.Default,
     panePolicy: NavPanePolicy = NavPanePolicy.Single,
+    presentationRetentionPolicy: NavPresentationRetentionPolicy =
+        NavPresentationRetentionPolicy.Default,
     systemBackEnabled: Boolean = true,
     contentKey: Any? = Unit,
     debug: Boolean = false,
@@ -94,6 +102,7 @@ fun UiTreeBuilder.NavHost(
         parentViewModelStoreOwner = parentViewModelStoreOwner,
         transitionSpec = transitionSpec,
         panePolicy = panePolicy,
+        presentationRetentionPolicy = presentationRetentionPolicy,
         systemBackEnabled = systemBackEnabled,
         onFailure = onFailure,
         contentKey = contentKey,

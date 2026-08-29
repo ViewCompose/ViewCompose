@@ -58,6 +58,7 @@ class AndroidSharedNavTransitionIntegrationTest {
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(activity.get()),
             ownerStore = ownerStore,
+            initialPresentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
         )
         coordinator = TransactionalNavHostCoordinator(
             controller = controller,

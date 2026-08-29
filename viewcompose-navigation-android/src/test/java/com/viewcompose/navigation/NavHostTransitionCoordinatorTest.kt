@@ -63,6 +63,7 @@ class NavHostTransitionCoordinatorTest {
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,
+            initialPresentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
         )
         transitionDriver = RecordingTransitionDriver()
         coordinator = TransactionalNavHostCoordinator(

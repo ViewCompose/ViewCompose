@@ -24,6 +24,8 @@ internal data class NavHostRuntimeConfig(
     val parentViewModelStoreOwner: ViewModelStoreOwner,
     val transitionSpec: NavTransitionSpec,
     val panePolicy: NavPanePolicy,
+    val presentationRetentionPolicy: NavPresentationRetentionPolicy =
+        NavPresentationRetentionPolicy.Default,
     val systemBackEnabled: Boolean,
     val onFailure: ((NavFailure) -> Unit)?,
     val contentKey: Any?,
@@ -109,6 +111,7 @@ internal class NavHostRuntime private constructor(
         val previousConfig = committedConfig
         transitionSpecHolder.value = config.transitionSpec
         committedConfig = config
+        coordinator.updatePresentationRetentionPolicy(config.presentationRetentionPolicy)
         when (coordinator.state) {
             NavHostCoordinatorState.Detached -> {
                 applyPanePolicy(config.panePolicy)
@@ -375,6 +378,8 @@ internal class NavHostRuntime private constructor(
             val sessionStore = NavDestinationSessionStore(
                 hostView = hostView,
                 ownerStore = ownerStore,
+                initialPresentationRetentionPolicy =
+                    initialConfig.presentationRetentionPolicy,
                 overlayHost = overlayHostFactory(hostView),
                 debug = debug,
                 debugTag = debugTag,

@@ -152,6 +152,7 @@ class AndroidNavHostBackAdapterTest {
                     NavHost(
                         controller = controller,
                         transitionSpec = NavTransitionSpec.None,
+                        presentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
                         systemBackEnabled = systemBackEnabled,
                         overlayHostFactory = { OverlayHostDefaults.noOp },
                     ) { entry ->

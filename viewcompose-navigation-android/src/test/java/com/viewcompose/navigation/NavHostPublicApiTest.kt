@@ -444,15 +444,17 @@ class NavHostPublicApiTest {
         val homeRoot = controller.stackSnapshot(homeStack).top
         val searchRoot = controller.stackSnapshot(searchStack).top
 
-        assertEquals(2, fixture.navHostView.childCount)
+        assertEquals(1, fixture.navHostView.childCount)
         assertEquals(Lifecycle.State.RESUMED, checkNotNull(owners[homeRoot.id]).lifecycle.currentState)
-        assertEquals(Lifecycle.State.CREATED, checkNotNull(owners[searchRoot.id]).lifecycle.currentState)
+        assertNull(owners[searchRoot.id])
 
         controller.navigate(NavRoute("home-details"))
         val homeDetails = controller.snapshot.top
         val homeDetailsOwner = checkNotNull(owners[homeDetails.id])
         val selectedSearch = controller.selectStack(searchStack)
+        val searchRootOwner = checkNotNull(owners[searchRoot.id])
         assertEquals(searchStack, selectedSearch.stackState.activeStackId)
+        assertEquals(Lifecycle.State.RESUMED, searchRootOwner.lifecycle.currentState)
         assertEquals(
             listOf("home", "home-details"),
             checkNotNull(selectedSearch.stackState[homeStack])
@@ -751,6 +753,59 @@ class NavHostPublicApiTest {
     }
 
     @Test
+    fun `disposed hidden presentation rebuilds with the same owner ViewModel and saveable state`() {
+        val owners = mutableMapOf<String, NavEntryOwner>()
+        val viewModels = mutableMapOf<String, RestorableReleaseTrackingViewModel>()
+        val counters = mutableMapOf<String, RestorableCounter>()
+        val renderCounts = mutableMapOf<String, Int>()
+        val controller = deterministicController()
+        val fixture = renderPublicHost(
+            controller = controller,
+            presentationRetentionPolicy = NavPresentationRetentionPolicy.DisposeWhenHidden,
+        ) { entry ->
+            val routeName = entry.route.name
+            renderCounts[routeName] = renderCounts.getOrDefault(routeName, 0) + 1
+            owners[routeName] = LocalLifecycleOwner.current as NavEntryOwner
+            viewModels[routeName] = viewModel(key = "retained-vm") {
+                RestorableReleaseTrackingViewModel(createSavedStateHandle())
+            }
+            counters[routeName] = rememberSaveable(
+                key = "retained-counter",
+                saver = RestorableCounterSaver,
+            ) {
+                RestorableCounter(-1)
+            }
+            Text(routeName)
+        }
+        val homeOwner = checkNotNull(owners["home"])
+        val homeViewModel = checkNotNull(viewModels["home"])
+        val homeCounter = checkNotNull(counters["home"])
+        val homeContainer = fixture.navHostView.getChildAt(0)
+        homeCounter.value = 73
+        homeViewModel.handle["token"] = "retained"
+
+        controller.navigate(NavRoute("details"))
+        val detailsOwner = checkNotNull(owners["details"])
+
+        assertEquals(1, fixture.navHostView.childCount)
+        assertNull(homeContainer.parent)
+        assertEquals(Lifecycle.State.CREATED, homeOwner.lifecycle.currentState)
+        assertFalse(homeViewModel.cleared)
+
+        controller.popBackStack()
+
+        assertSame(homeOwner, owners["home"])
+        assertSame(homeViewModel, viewModels["home"])
+        assertEquals(73, checkNotNull(counters["home"]).value)
+        assertEquals("retained", homeViewModel.handle["token"])
+        assertEquals(2, renderCounts["home"])
+        assertEquals(Lifecycle.State.RESUMED, homeOwner.lifecycle.currentState)
+        assertEquals(Lifecycle.State.DESTROYED, detailsOwner.lifecycle.currentState)
+        assertEquals(1, fixture.navHostView.childCount)
+        fixture.session.dispose()
+    }
+
+    @Test
     fun `public host can attach during activity onCreate lifecycle state`() {
         val application = RuntimeEnvironment.getApplication()
         val root = FrameLayout(application)
@@ -764,6 +819,7 @@ class NavHostPublicApiTest {
                     NavHost(
                         controller = controller,
                         transitionSpec = NavTransitionSpec.None,
+                        presentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
                         overlayHostFactory = { OverlayHostDefaults.noOp },
                     ) { entry ->
                         destinationOwner = LocalLifecycleOwner.current
@@ -912,7 +968,7 @@ class NavHostPublicApiTest {
 
         assertTrue(controller.isAttached)
         assertEquals(listOf("home", "details"), controller.routeNames())
-        assertEquals(2, second.navHostView.childCount)
+        assertEquals(1, second.navHostView.childCount)
         second.session.dispose()
     }
 
@@ -974,8 +1030,9 @@ class NavHostPublicApiTest {
         val restored = renderRememberedHost(restoredRegistry)
 
         assertEquals(expectedSnapshot, restored.controller.snapshot)
-        assertEquals(11, checkNotNull(restored.homeState).value)
         assertEquals(29, checkNotNull(restored.detailsState).value)
+        restored.controller.popBackStack()
+        assertEquals(11, checkNotNull(restored.homeState).value)
         restored.session.dispose()
     }
 
@@ -1004,13 +1061,13 @@ class NavHostPublicApiTest {
         assertEquals(expectedState, restored.controller.stackState)
         assertEquals(MultiHomeStack, restored.controller.activeStackId)
         assertEquals(11, restored.state("home").value)
-        assertEquals(22, restored.state("search").value)
-        assertEquals(33, restored.state("search-result").value)
 
         restored.controller.selectStack(MultiSearchStack)
 
         assertEquals("search-result", restored.controller.snapshot.top.route.name)
         assertEquals(33, restored.state("search-result").value)
+        restored.controller.popBackStack()
+        assertEquals(22, restored.state("search").value)
         restored.session.dispose()
     }
 
@@ -1018,6 +1075,8 @@ class NavHostPublicApiTest {
         controller: NavHostController = deterministicController(),
         onFailure: ((NavFailure) -> Unit)? = null,
         contentKey: () -> Any? = { Unit },
+        presentationRetentionPolicy: NavPresentationRetentionPolicy =
+            NavPresentationRetentionPolicy.RetainAll,
         parentViewModelStoreOwner: ViewModelStoreOwner =
             NavigationTestParentViewModelStoreOwner(),
         content: com.viewcompose.ui.foundation.UiTreeBuilder.(
@@ -1035,6 +1094,7 @@ class NavHostPublicApiTest {
                     NavHost(
                         controller = controller,
                         transitionSpec = NavTransitionSpec.None,
+                        presentationRetentionPolicy = presentationRetentionPolicy,
                         overlayHostFactory = { OverlayHostDefaults.noOp },
                         onFailure = onFailure,
                         contentKey = contentKey(),
@@ -1093,6 +1153,8 @@ class NavHostPublicApiTest {
                         NavHost(
                             controller = rememberedController,
                             transitionSpec = NavTransitionSpec.None,
+                            presentationRetentionPolicy =
+                                NavPresentationRetentionPolicy.RetainAll,
                             overlayHostFactory = { OverlayHostDefaults.noOp },
                         ) { entry ->
                             val state = rememberSaveable(
@@ -1146,6 +1208,8 @@ class NavHostPublicApiTest {
                         NavHost(
                             controller = rememberedController,
                             transitionSpec = NavTransitionSpec.None,
+                            presentationRetentionPolicy =
+                                NavPresentationRetentionPolicy.RetainAll,
                             overlayHostFactory = { OverlayHostDefaults.noOp },
                         ) { entry ->
                             states[entry.route.name] = rememberSaveable(

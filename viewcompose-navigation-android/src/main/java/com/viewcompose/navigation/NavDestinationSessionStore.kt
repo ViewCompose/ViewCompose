@@ -23,6 +23,8 @@ internal typealias NavDestinationContent = UiTreeBuilder.(NavEntry) -> Unit
 internal class NavDestinationSessionStore(
     val hostView: NavHostView,
     private val ownerStore: NavEntryOwnerStore,
+    initialPresentationRetentionPolicy: NavPresentationRetentionPolicy =
+        NavPresentationRetentionPolicy.Default,
     private val overlayHost: OverlayHost = OverlayHostDefaults.noOp,
     private val debug: Boolean = false,
     private val debugTag: String = "ViewComposeNavigation",
@@ -30,6 +32,9 @@ internal class NavDestinationSessionStore(
     private val sessions = linkedMapOf<NavEntryId, NavDestinationSession>()
     private var pendingEntryId: NavEntryId? = null
     private var pendingCandidate: NavDestinationCandidate? = null
+    private val hiddenPresentationRecency = linkedSetOf<NavEntryId>()
+    private var presentationRetentionPolicy = initialPresentationRetentionPolicy
+    private var lastVisibleEntryIds = emptySet<NavEntryId>()
     private var destroyed = false
 
     @MainThread
@@ -48,9 +53,7 @@ internal class NavDestinationSessionStore(
         check(entry.id !in sessions) {
             "Destination ${entry.id} already owns a committed page session."
         }
-        check(ownerStore.ownerOrNull(entry.id) == null) {
-            "Destination ${entry.id} already owns page state without a committed session."
-        }
+        val removeOwnerOnRollback = ownerStore.ownerOrNull(entry.id) == null
         pendingEntryId = entry.id
         val newGraphOwnerIds = entry.graphEntries
             .filter { graphEntry -> ownerStore.graphOwnerOrNull(graphEntry.id) == null }
@@ -120,6 +123,7 @@ internal class NavDestinationSessionStore(
                 cleanupFailedPreparation(
                     entryId = entry.id,
                     newGraphOwnerIds = newGraphOwnerIds,
+                    removeOwnerOnFailure = removeOwnerOnRollback,
                     renderSession = renderSession,
                     container = container,
                 )
@@ -133,6 +137,7 @@ internal class NavDestinationSessionStore(
                     store = this,
                     destinationSession = destinationSession,
                     newGraphOwnerIds = newGraphOwnerIds,
+                    removeOwnerOnRollback = removeOwnerOnRollback,
                 )
                 pendingCandidate = candidate
                 NavDestinationPreparation.Ready(candidate)
@@ -141,6 +146,7 @@ internal class NavDestinationSessionStore(
             cleanupFailedPreparation(
                 entryId = entry.id,
                 newGraphOwnerIds = newGraphOwnerIds,
+                removeOwnerOnFailure = removeOwnerOnRollback,
                 renderSession = renderSession,
                 container = container,
             )
@@ -190,7 +196,9 @@ internal class NavDestinationSessionStore(
         try {
             session.dispose()
         } finally {
-            ownerStore.remove(candidate.entry.id)
+            if (candidate.removeOwnerOnRollback) {
+                ownerStore.remove(candidate.entry.id)
+            }
             candidate.newGraphOwnerIds.forEach(ownerStore::removeGraphOwner)
             pendingCandidate = null
             pendingEntryId = null
@@ -211,6 +219,18 @@ internal class NavDestinationSessionStore(
     }
 
     @MainThread
+    fun updatePresentationRetentionPolicy(policy: NavPresentationRetentionPolicy) {
+        check(!destroyed) {
+            "A destroyed destination session store cannot change presentation retention."
+        }
+        if (presentationRetentionPolicy == policy) {
+            return
+        }
+        presentationRetentionPolicy = policy
+        enforcePresentationRetention(lastVisibleEntryIds)
+    }
+
+    @MainThread
     fun present(
         layerOrder: List<NavEntryId>,
         visibleEntryIds: Set<NavEntryId>,
@@ -221,9 +241,6 @@ internal class NavDestinationSessionStore(
         check(layerOrder.distinct().size == layerOrder.size) {
             "Destination layer order must not contain duplicate entry IDs."
         }
-        check(layerOrder.all(sessions::containsKey)) {
-            "Destination layer order contains an entry without a committed page session."
-        }
         check(visibleEntryIds.all(sessions::containsKey)) {
             "A visible destination must own a committed page session."
         }
@@ -233,7 +250,7 @@ internal class NavDestinationSessionStore(
         check(paneLayouts.keys == visibleEntryIds) {
             "Every visible destination must have exactly one pane layout."
         }
-        // Visibility and render-active are separate: hidden pages keep sessions but pause frame work.
+        hiddenPresentationRecency.removeAll(visibleEntryIds)
         sessions.forEach { (entryId, session) ->
             if (entryId in visibleEntryIds) {
                 session.container.visibility = View.VISIBLE
@@ -243,14 +260,23 @@ internal class NavDestinationSessionStore(
                 session.container.visibility = View.GONE
             }
         }
+        sessions.keys
+            .filter { entryId ->
+                entryId !in visibleEntryIds && entryId !in hiddenPresentationRecency
+            }
+            .forEach(hiddenPresentationRecency::add)
         hostView.updatePaneLayouts(
             paneLayouts.mapKeys { (entryId, _) ->
                 checkNotNull(sessions[entryId]).container
             },
         )
         layerOrder.forEach { entryId ->
-            hostView.bringChildToFront(checkNotNull(sessions[entryId]).container)
+            sessions[entryId]?.let { session ->
+                hostView.bringChildToFront(session.container)
+            }
         }
+        lastVisibleEntryIds = visibleEntryIds.toSet()
+        enforcePresentationRetention(visibleEntryIds)
     }
 
     /**
@@ -275,15 +301,22 @@ internal class NavDestinationSessionStore(
 
     @MainThread
     fun remove(entryId: NavEntryId) {
+        try {
+            disposePresentation(entryId)
+        } finally {
+            ownerStore.remove(entryId)
+        }
+    }
+
+    @MainThread
+    fun disposePresentation(entryId: NavEntryId) {
+        hiddenPresentationRecency.remove(entryId)
+        lastVisibleEntryIds = lastVisibleEntryIds - entryId
         val session = sessions.remove(entryId) ?: return
         if (session.container.parent === hostView) {
             hostView.removeView(session.container)
         }
-        try {
-            session.dispose()
-        } finally {
-            ownerStore.remove(entryId)
-        }
+        session.dispose()
     }
 
     @MainThread
@@ -306,6 +339,8 @@ internal class NavDestinationSessionStore(
             }.exceptionOrNull()?.let(failures::add)
         }
         sessions.clear()
+        hiddenPresentationRecency.clear()
+        lastVisibleEntryIds = emptySet()
         try {
             ownerStore.destroy(retainViewModelScopes)
         } catch (throwable: Throwable) {
@@ -328,6 +363,7 @@ internal class NavDestinationSessionStore(
     private fun cleanupFailedPreparation(
         entryId: NavEntryId,
         newGraphOwnerIds: Set<NavEntryId>,
+        removeOwnerOnFailure: Boolean,
         renderSession: com.viewcompose.host.android.RenderSession?,
         container: View,
     ) {
@@ -338,10 +374,33 @@ internal class NavDestinationSessionStore(
             renderSession?.dispose()
         } finally {
             // Failed candidates must also release new graph owners so retries do not reuse half-built owners.
-            ownerStore.remove(entryId)
+            if (removeOwnerOnFailure) {
+                ownerStore.remove(entryId)
+            }
             newGraphOwnerIds.forEach(ownerStore::removeGraphOwner)
             pendingCandidate = null
             pendingEntryId = null
+        }
+    }
+
+    private fun enforcePresentationRetention(visibleEntryIds: Set<NavEntryId>) {
+        hiddenPresentationRecency.removeAll(visibleEntryIds)
+        hiddenPresentationRecency.retainAll(sessions.keys)
+        val retainedHiddenCount = when (val policy = presentationRetentionPolicy) {
+            NavPresentationRetentionPolicy.DisposeWhenHidden -> 0
+            NavPresentationRetentionPolicy.RetainAll -> Int.MAX_VALUE
+            is NavPresentationRetentionPolicy.Bounded -> policy.maxHiddenPresentations
+        }
+        val failures = mutableListOf<Throwable>()
+        while (hiddenPresentationRecency.size > retainedHiddenCount) {
+            val entryId = hiddenPresentationRecency.first()
+            runCatching {
+                disposePresentation(entryId)
+            }.exceptionOrNull()?.let(failures::add)
+        }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
         }
     }
 }

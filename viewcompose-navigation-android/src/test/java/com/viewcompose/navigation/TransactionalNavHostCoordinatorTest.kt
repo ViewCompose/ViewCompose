@@ -72,6 +72,7 @@ class TransactionalNavHostCoordinatorTest {
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,
+            initialPresentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
         )
         coordinator = TransactionalNavHostCoordinator(
             controller = controller,
@@ -402,11 +403,10 @@ class TransactionalNavHostCoordinatorTest {
         val homeRoot = controller.stackSnapshot(HomeStack).top
         val searchRoot = controller.stackSnapshot(SearchStack).top
         val homeSession = checkNotNull(sessionStore.sessionOrNull(homeRoot.id))
-        val searchSession = checkNotNull(sessionStore.sessionOrNull(searchRoot.id))
 
-        assertEquals(2, coordinator.hostView.childCount)
+        assertEquals(1, coordinator.hostView.childCount)
         assertEquals(View.VISIBLE, homeSession.container.visibility)
-        assertEquals(View.GONE, searchSession.container.visibility)
+        assertNull(sessionStore.sessionOrNull(searchRoot.id))
         assertEquals(
             NavEntryLifecycleState.Resumed,
             checkNotNull(ownerStore.ownerOrNull(homeRoot.id)).entryLifecycleState,
@@ -420,6 +420,7 @@ class TransactionalNavHostCoordinatorTest {
         val homeDetails = controller.snapshot().top
         val homeDetailsSession = checkNotNull(sessionStore.sessionOrNull(homeDetails.id))
         coordinator.navigate(NavCommand.SelectStack(SearchStack))
+        val searchSession = checkNotNull(sessionStore.sessionOrNull(searchRoot.id))
 
         assertEquals(SearchStack, controller.stackStateSnapshot().activeStackId)
         assertEquals(View.VISIBLE, searchSession.container.visibility)
@@ -462,7 +463,7 @@ class TransactionalNavHostCoordinatorTest {
         }
         val homeRoot = controller.snapshot().top
         val searchRoot = controller.stackSnapshot(SearchStack).top
-        val searchSession = checkNotNull(sessionStore.sessionOrNull(searchRoot.id))
+        assertNull(sessionStore.sessionOrNull(searchRoot.id))
         failSearch = true
 
         val result = coordinator.navigate(NavCommand.SelectStack(SearchStack))
@@ -474,9 +475,12 @@ class TransactionalNavHostCoordinatorTest {
         assertFalse(result.stackCommitted)
         assertEquals(HomeStack, controller.stackStateSnapshot().activeStackId)
         assertSame(homeRoot, coordinator.snapshot.top)
-        assertSame(searchSession, sessionStore.sessionOrNull(searchRoot.id))
+        assertNull(sessionStore.sessionOrNull(searchRoot.id))
         assertEquals(View.VISIBLE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
-        assertEquals(View.GONE, searchSession.container.visibility)
+        assertEquals(
+            NavEntryLifecycleState.Created,
+            checkNotNull(ownerStore.ownerOrNull(searchRoot.id)).entryLifecycleState,
+        )
         assertEquals(
             NavEntryLifecycleState.Created,
             checkNotNull(ownerStore.ownerOrNull(searchRoot.id)).entryLifecycleState,
@@ -603,6 +607,7 @@ class TransactionalNavHostCoordinatorTest {
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,
+            initialPresentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
         )
         coordinator = TransactionalNavHostCoordinator(
             controller = controller,
