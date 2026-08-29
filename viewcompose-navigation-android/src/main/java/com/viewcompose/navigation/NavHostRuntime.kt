@@ -11,6 +11,7 @@ import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavHostLifecycleState
+import com.viewcompose.navigation.core.NavSceneStrategy
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.UiLocalSnapshot
 import com.viewcompose.viewmodel.ViewModelScopeProvider
@@ -23,6 +24,7 @@ internal data class NavHostRuntimeConfig(
     val lifecycleOwner: LifecycleOwner,
     val parentViewModelStoreOwner: ViewModelStoreOwner,
     val transitionSpec: NavTransitionSpec,
+    val sceneStrategies: List<NavSceneStrategy> = emptyList(),
     val panePolicy: NavPanePolicy,
     val presentationRetentionPolicy: NavPresentationRetentionPolicy =
         NavPresentationRetentionPolicy.Default,
@@ -114,7 +116,7 @@ internal class NavHostRuntime private constructor(
         coordinator.updatePresentationRetentionPolicy(config.presentationRetentionPolicy)
         when (coordinator.state) {
             NavHostCoordinatorState.Detached -> {
-                applyPanePolicy(config.panePolicy)
+                applyScenePolicy(config.sceneStrategies, config.panePolicy)
                 attach(config)
             }
             NavHostCoordinatorState.Attached -> {
@@ -128,7 +130,7 @@ internal class NavHostRuntime private constructor(
                 ) {
                     refresh(config)
                 }
-                applyPanePolicy(config.panePolicy)
+                applyScenePolicy(config.sceneStrategies, config.panePolicy)
             }
             NavHostCoordinatorState.Attaching -> {
                 error("NavHost cannot commit configuration while attachment is still running.")
@@ -157,7 +159,11 @@ internal class NavHostRuntime private constructor(
         val policy = committedConfig?.panePolicy
             ?: stagedConfig?.panePolicy
             ?: return
-        applyPanePolicy(
+        val strategies = committedConfig?.sceneStrategies
+            ?: stagedConfig?.sceneStrategies
+            ?: return
+        applyScenePolicy(
+            sceneStrategies = strategies,
             policy = policy,
             widthPixels = widthPixels,
         )
@@ -323,13 +329,15 @@ internal class NavHostRuntime private constructor(
         handler(failure)
     }
 
-    private fun applyPanePolicy(
+    private fun applyScenePolicy(
+        sceneStrategies: List<NavSceneStrategy>,
         policy: NavPanePolicy,
         widthPixels: Int = hostView.width,
     ) {
         val density = hostView.resources.displayMetrics.density
         var refreshFailed = false
-        coordinator.updatePaneStrategy(
+        coordinator.updateSceneProjection(
+            sceneStrategies = sceneStrategies,
             strategy = policy.strategy,
             maxPaneCount = policy.resolvePaneCount(
                 widthPixels = widthPixels,
@@ -396,6 +404,7 @@ internal class NavHostRuntime private constructor(
                     sessionStore = sessionStore,
                     specProvider = { transitionSpecHolder.value },
                 ),
+                initialSceneStrategies = initialConfig.sceneStrategies,
                 initialPaneStrategy = initialConfig.panePolicy.strategy,
                 initialMaxPaneCount = initialConfig.panePolicy.resolvePaneCount(
                     widthPixels = hostView.width,

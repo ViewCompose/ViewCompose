@@ -23,9 +23,14 @@
     { "symbol_id": "com.viewcompose.navigation.core.NavScene", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavSceneEntry", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavSceneInteraction", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavSceneLayout", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavSceneLayout.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavSceneLayerRole", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavSceneStrategies", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavSceneLayout.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavSceneStrategy", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavSceneLayout.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavSceneStrategyScope", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavSceneLayout.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavSceneTransitionPhase", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" },
-    { "symbol_id": "com.viewcompose.navigation.core.NavSceneVisibility", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" }
+    { "symbol_id": "com.viewcompose.navigation.core.NavSceneVisibility", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.resolveNavSceneLayout", "kind": "function", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavSceneLayout.kt" }
   ],
   "reference_owner": { "reference_id": "reference.navigation.scene-projection", "generated": true },
   "sample_owner": { "sample_id": "module.navigation-core-execution-plan" },

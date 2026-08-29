@@ -11,6 +11,7 @@ import com.viewcompose.host.android.AndroidView
 import com.viewcompose.overlay.android.AndroidOverlayHost
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.navigation.core.NavEntry
+import com.viewcompose.navigation.core.NavSceneStrategy
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.foundation.OverlayHost
@@ -43,7 +44,9 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * gesture completes.
  *
  * [panePolicy] can adapt the same committed entries into multiple native View panes without
- * recreating their lifecycle, ViewModel, or saved-state owners.
+ * recreating their lifecycle, ViewModel, or saved-state owners. [sceneStrategies] run in order
+ * before that content-only fallback; the first strategy returning a layout can retain content panes
+ * below a trailing modal overlay suffix.
  *
  * [presentationRetentionPolicy] controls only hidden child render sessions and native Views. The
  * logical entry and its owners remain retained independently, and a disposed presentation is
@@ -57,6 +60,7 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * hidden retained page eagerly.
  *
  * @sample com.viewcompose.navigation.samples.rememberedNavHostSample
+ * @sample com.viewcompose.navigation.samples.overlaySceneNavHostSample
  * @sample com.viewcompose.navigation.samples.customOverlayNavHostSample
  * @sample com.viewcompose.navigation.samples.inheritedNavViewModelFactorySample
  * @sample com.viewcompose.navigation.samples.retainedDestinationThemeSample
@@ -64,6 +68,8 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * @param controller stable controller mounted exclusively by this host
  * @param modifier layout modifier applied after the host's required fill constraint
  * @param transitionSpec visual policy for committed and predictive-Back transitions
+ * @param sceneStrategies ordered scene policies; the first non-null projection wins and an empty
+ * list always uses [panePolicy]'s content-only projection
  * @param panePolicy width-dependent pane projection
  * @param presentationRetentionPolicy resource policy for fully hidden destination presentations
  * @param systemBackEnabled whether this started host may consume backward platform navigation
@@ -81,6 +87,7 @@ fun UiTreeBuilder.NavHost(
     controller: NavHostController,
     modifier: Modifier = Modifier,
     transitionSpec: NavTransitionSpec = NavTransitionSpec.Default,
+    sceneStrategies: List<NavSceneStrategy> = emptyList(),
     panePolicy: NavPanePolicy = NavPanePolicy.Single,
     presentationRetentionPolicy: NavPresentationRetentionPolicy =
         NavPresentationRetentionPolicy.Default,
@@ -106,6 +113,7 @@ fun UiTreeBuilder.NavHost(
         lifecycleOwner = lifecycleOwner,
         parentViewModelStoreOwner = parentViewModelStoreOwner,
         transitionSpec = transitionSpec,
+        sceneStrategies = sceneStrategies.toList(),
         panePolicy = panePolicy,
         presentationRetentionPolicy = presentationRetentionPolicy,
         systemBackEnabled = systemBackEnabled,

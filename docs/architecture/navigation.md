@@ -130,7 +130,7 @@ entries keep their identity and stored state even when no presentation exists.
 `NavPresentationRetentionPolicy` controls presentation resources only. The default
 `DisposeWhenHidden` removes every fully hidden presentation after transition settlement.
 `RetainAll` is an explicit unbounded opt-in, and `Bounded` keeps a deterministic
-least-recently-hidden set with a positive maximum. Visible panes and transition participants are
+least-recently-hidden set with a positive maximum. Visible scene entries and transition participants are
 never eviction candidates. A newly visible entry without a presentation is rendered into a hidden
 candidate container, staged, and committed before the scene changes; failure disposes all
 candidates and keeps the previous stack and scene. Permanent removal always disposes presentation
@@ -194,6 +194,7 @@ The accepted targets are:
 | Role | Target state |
 | --- | --- |
 | Interactive settled destination and its graph path | `RESUMED` |
+| Covered content pane or lower modal overlay | `STARTED` |
 | Visible transition participant | `STARTED` |
 | Popped destination retaining an exit presentation | `CREATED` |
 | Retained hidden destination or graph | `CREATED` |
@@ -215,9 +216,10 @@ settled scene, while commit hands the same pages to the ordinary pop transition 
 the incoming entry to `RESUMED` at terminal settlement. Adaptive panes use the same rule, so no
 pane resumes early during a scene change.
 
-Core can model content and overlay layers, but the current Android navigation host has no general
-overlay-navigation surface. Overlay lifecycle execution therefore remains unclaimed rather than
-being inferred from the model or the separate UI overlay transport.
+`NavSceneLayout` partitions the stack into content panes plus a trailing overlay suffix. Covered
+layers remain visible at `STARTED`; only the top overlay owns input, accessibility, and `RESUMED`.
+Android uses one full-host modal boundary and the same sessions, owners, results, restore, Back, and
+cleanup paths. Modal motion moves only the overlay and forbids cross-layer shared matching.
 
 ## 6. Restoration boundary
 
@@ -226,7 +228,8 @@ selection history, a private host-scope identity, destination and graph SavedSta
 and ViewCompose saveable values. They do not serialize Views, render sessions, LifecycleRegistry
 instances, ViewModelStore contents, pending transactions, or running animations. Initial and
 restored attachment creates owners for every retained entry but materializes only the current
-visible pane set; hidden destination content is not executed eagerly. Configuration recreation can
+content-and-overlay scene layout; hidden destination content is not executed eagerly. Scene
+strategies are recomputed from the restored stack and current width. Configuration recreation can
 retain live ViewModels through the parent store; process recreation creates new instances from
 restored owner state.
 

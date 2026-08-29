@@ -34,6 +34,7 @@ success_checks:
   - Hidden presentation resources follow one explicit bounded retention policy without clearing entry state.
   - Destination content observes the nearest stable entry context without treating transition progress as lifecycle.
   - One typed route declaration is reused for graph registration, controller commands, and entry decoding.
+  - A modal overlay alone owns input, accessibility, and RESUMED lifecycle while covered content stays STARTED.
 failure_checks:
   - A controller is attached to more than one active NavHost or receives commands while detached.
   - NavHost is mounted without a LocalViewModelStoreOwner boundary.
@@ -42,6 +43,7 @@ failure_checks:
   - RetainAll is selected without application-specific memory and rebuild evidence.
   - Resource work is started from destination presentation state instead of AndroidX Lifecycle.
   - Typed codecs retain page objects or depend on mutable process-only registration state.
+  - An overlay strategy emits a non-trailing overlay set or lets input fall through to covered content.
 ---
 
 # Configure a production navigation host
@@ -109,12 +111,20 @@ distinguish presentation roles, and capture that nearest holder for callbacks. I
 hidden-presentation disposal; permanent removal ends updates and destroys its Lifecycle. Active
 resources still follow AndroidX Lifecycle because this context is coarse and has no frame progress.
 
+## Add modal destinations without a second lifecycle model
+
+Pass a stable
+[`NavSceneStrategies.trailingOverlays`](../modules/viewcompose-navigation-android/README.md#modal-navigation-scenes)
+strategy to `NavHost`. Its predicate selects only a trailing stack suffix; pane policy lays out the
+prefix. Destination content draws its surface/scrim, while the host owns modal input and lifecycle.
+Use ordinary Back, result, restore, and predictive APIs rather than parallel page owners.
+
 ## Choose presentation retention deliberately
 
 Keep the default `NavPresentationRetentionPolicy.DisposeWhenHidden` unless device evidence for a
 destination proves rebuild cost unacceptable. It releases hidden native presentation but retains
 owner state. Use measured `Bounded(n)` caching when needed; `RetainAll` is unbounded. Policy changes
-preserve owners, and initial or restored attachment materializes only visible panes.
+preserve owners, and initial or restored attachment materializes only the current scene layout.
 
 ## Keep one policy source in custom integrations
 

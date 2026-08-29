@@ -15,7 +15,9 @@ import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLaunchMode
+import com.viewcompose.navigation.core.NavPaneStrategies
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavSceneStrategies
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.captureUiLocalSnapshot
@@ -133,6 +135,57 @@ class AndroidViewNavHostTransitionDriverTest {
         assertEquals(View.LAYER_TYPE_NONE, session(root.id).container.layerType)
         assertEquals(View.GONE, session(root.id).container.visibility)
         assertEquals(View.VISIBLE, incoming.visibility)
+    }
+
+    @Test
+    fun `overlay push animates only the modal destination and leaves covered content stationary`() {
+        attachAndLayoutHost()
+        specHolder.value = NavTransitionSpec.None
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val details = coordinator.snapshot.top
+        val detailsView = session(details.id).container
+        coordinator.updateSceneProjection(
+            sceneStrategies = listOf(
+                NavSceneStrategies.trailingOverlays { entry ->
+                    entry.route.name == "confirmation"
+                },
+            ),
+            strategy = NavPaneStrategies.Single,
+            maxPaneCount = 1,
+        )
+        specHolder.value = NavTransitionSpec.Default
+
+        val result = coordinator.navigate(
+            NavCommand.Push(NavRoute("confirmation")),
+        ) as NavHostNavigationResult.Committed
+        val overlayView = session(coordinator.snapshot.top.id).container
+        val density = overlayView.resources.displayMetrics.density
+
+        assertEquals(0f, detailsView.translationX)
+        assertEquals(0f, detailsView.translationY)
+        assertEquals(1f, detailsView.alpha)
+        assertEquals(1f, detailsView.scaleX)
+        assertEquals(View.LAYER_TYPE_NONE, detailsView.layerType)
+        assertTrue(session(details.id).isRenderingActive)
+        assertEquals(96f * density, overlayView.translationX)
+        assertEquals(0f, overlayView.alpha)
+        assertEquals(View.LAYER_TYPE_HARDWARE, overlayView.layerType)
+
+        coordinator.cancelTransition(result.transition.id)
+        assertEquals(0f, overlayView.translationX)
+        assertEquals(1f, overlayView.alpha)
+        assertEquals(0f, detailsView.translationX)
+        assertEquals(1f, detailsView.alpha)
+
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(
+                backEvent(progress = 0.5f, swipeEdge = NavHostBackSwipeEdge.Left),
+            ),
+        )
+        assertTrue(overlayView.translationX != 0f)
+        assertEquals(0f, detailsView.translationX)
+        assertEquals(1f, detailsView.alpha)
+        assertTrue(coordinator.cancelBackPreview(preview.id))
     }
 
     @Test

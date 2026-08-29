@@ -34,6 +34,7 @@ import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavSceneInteraction
 import com.viewcompose.navigation.core.NavSceneLayerRole
+import com.viewcompose.navigation.core.NavSceneStrategies
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackConfiguration
@@ -183,6 +184,11 @@ class NavigationBackTestActivity : AppCompatActivity() {
                     NavTransitionSpec.None
                 } else {
                     NavTransitionSpec.Default
+                },
+                sceneStrategies = if (overlaySceneCertificationEnabled()) {
+                    listOf(MODAL_DESTINATION_STRATEGY)
+                } else {
+                    emptyList()
                 },
                 presentationRetentionPolicy = presentationRetentionPolicy(),
                 systemBackEnabled = systemBackEnabledState.value,
@@ -538,6 +544,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
         return intent.getBooleanExtra(EXTRA_RESULT_CERTIFICATION, false)
     }
 
+    private fun overlaySceneCertificationEnabled(): Boolean {
+        return intent.getBooleanExtra(EXTRA_OVERLAY_SCENE_CERTIFICATION, false)
+    }
+
     private fun presentationRetentionPolicy(): NavPresentationRetentionPolicy {
         return when (intent.getStringExtra(EXTRA_PRESENTATION_RETENTION_POLICY)) {
             PRESENTATION_RETENTION_DISPOSE -> {
@@ -778,6 +788,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
             "com.viewcompose.extra.DESTINATION_CONTEXT_CERTIFICATION"
         const val EXTRA_RESULT_CERTIFICATION =
             "com.viewcompose.extra.RESULT_CERTIFICATION"
+        const val EXTRA_OVERLAY_SCENE_CERTIFICATION =
+            "com.viewcompose.extra.OVERLAY_SCENE_CERTIFICATION"
         const val PRESENTATION_RETENTION_DISPOSE = "dispose"
         const val PRESENTATION_RETENTION_BOUNDED = "bounded"
         const val PRESENTATION_RETENTION_RETAIN_ALL = "retain-all"
@@ -817,6 +829,9 @@ class NavigationBackTestActivity : AppCompatActivity() {
         private const val RETENTION_PAYLOAD_TEXT_COUNT = 40
         private const val DEFAULT_MAX_HIDDEN_PRESENTATIONS = 2
         private val PAGE_RESULT_KEY = NavResultKey.text("device.page-result")
+        private val MODAL_DESTINATION_STRATEGY = NavSceneStrategies.trailingOverlays { entry ->
+            entry.route.name == DETAILS_ROUTE
+        }
 
         fun destinationText(routeName: String): String {
             return "$DESTINATION_PREFIX$routeName"

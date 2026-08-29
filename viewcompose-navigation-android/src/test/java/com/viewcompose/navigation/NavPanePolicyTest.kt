@@ -68,11 +68,17 @@ class NavPanePolicyTest {
         host.addView(secondary)
         host.addView(tertiary)
         host.paneSpacingPixels = 12
-        host.updatePaneLayouts(
+        host.updateDestinationLayouts(
             mapOf(
-                primary to NavPaneLayout(NavPaneRole.Primary, 3),
-                secondary to NavPaneLayout(NavPaneRole.Secondary, 3),
-                tertiary to NavPaneLayout(NavPaneRole.Tertiary, 3),
+                primary to NavDestinationLayout.Content(
+                    NavPaneLayout(NavPaneRole.Primary, 3),
+                ),
+                secondary to NavDestinationLayout.Content(
+                    NavPaneLayout(NavPaneRole.Secondary, 3),
+                ),
+                tertiary to NavDestinationLayout.Content(
+                    NavPaneLayout(NavPaneRole.Tertiary, 3),
+                ),
             ),
         )
 

@@ -43,14 +43,12 @@ internal class AndroidViewNavHostTransitionDriver(
         onCompleted: () -> Unit,
     ): NavHostTransitionHandle {
         backSettleController.cancelActive(preserveVisualState = true)
-        val outgoing = destinationViews(
-            transition.beforeScene.visibleEntryIds -
-                transition.afterScene.visibleEntryIds,
-        )
-        val incoming = destinationViews(
-            transition.afterScene.visibleEntryIds -
-                transition.beforeScene.visibleEntryIds,
-        )
+        val outgoingEntryIds = transition.beforeScene.visibleEntryIds -
+            transition.afterScene.visibleEntryIds
+        val incomingEntryIds = transition.afterScene.visibleEntryIds -
+            transition.beforeScene.visibleEntryIds
+        val outgoing = destinationViews(outgoingEntryIds)
+        val incoming = destinationViews(incomingEntryIds)
         val animatedViews = outgoing + incoming
         // Views redirected from the previous run keep visual properties so the next transition continues.
         val redirectedViews = interruptedViews.toSet()
@@ -84,19 +82,27 @@ internal class AndroidViewNavHostTransitionDriver(
             .filterNot(redirectedViews::contains)
             .forEach(::resetProperties)
 
-        val sharedTransition = AndroidSharedTransitionOverlay(
-            host = sessionStore.hostView,
-            outgoingRoots = outgoing,
-            incomingRoots = incoming,
-        )
+        val overlayEntryIds = transition.beforeScene.overlayEntryIds.toSet() +
+            transition.afterScene.overlayEntryIds
+        val sharedTransition = if (
+            (outgoingEntryIds + incomingEntryIds).none(overlayEntryIds::contains)
+        ) {
+            AndroidSharedTransitionOverlay(
+                host = sessionStore.hostView,
+                outgoingRoots = outgoing,
+                incomingRoots = incoming,
+            )
+        } else {
+            null
+        }
 
         val direction = navTransitionDirection(
             command = transition.command,
             layoutDirection = sessionStore.hostView.layoutDirection,
         )
         val paneCount = maxOf(
-            transition.beforeScene.panes.size,
-            transition.afterScene.panes.size,
+            transition.beforeScene.contentPaneScene.panes.size,
+            transition.afterScene.contentPaneScene.panes.size,
         )
         val paneWidth = hostWidth / paneCount.toFloat()
         incoming.forEach { view ->
@@ -121,8 +127,8 @@ internal class AndroidViewNavHostTransitionDriver(
                 resetProperties(view)
             },
             preserveView = ::preserveForNextTransition,
-            onGeometryFrame = sharedTransition::update,
-            onTerminated = sharedTransition::finish,
+            onGeometryFrame = { progress -> sharedTransition?.update(progress) },
+            onTerminated = { committed -> sharedTransition?.finish(committed) },
             onCompleted = onCompleted,
         ).start()
     }
@@ -133,14 +139,14 @@ internal class AndroidViewNavHostTransitionDriver(
     ): NavHostBackPreviewHandle {
         // A new preview always stops old settle animation so gesture input is the only visual source.
         backSettleController.cancelActive(preserveVisualState = false)
-        val outgoing = destinationViews(
-            preview.beforeScene.visibleEntryIds -
-                preview.afterScene.visibleEntryIds,
-        )
-        val incoming = destinationViews(
-            preview.afterScene.visibleEntryIds -
-                preview.beforeScene.visibleEntryIds,
-        )
+        val outgoingEntryIds = preview.beforeScene.visibleEntryIds -
+            preview.afterScene.visibleEntryIds
+        val incomingEntryIds = preview.afterScene.visibleEntryIds -
+            preview.beforeScene.visibleEntryIds
+        val overlayEntryIds = preview.beforeScene.overlayEntryIds.toSet() +
+            preview.afterScene.overlayEntryIds
+        val outgoing = destinationViews(outgoingEntryIds)
+        val incoming = destinationViews(incomingEntryIds)
         (outgoing + incoming).forEach { view ->
             view.animate().cancel()
             resetProperties(view)
@@ -152,12 +158,14 @@ internal class AndroidViewNavHostTransitionDriver(
             incoming = incoming,
             spec = predictiveSpec,
             travelWidth = sessionStore.hostView.width / maxOf(
-                preview.beforeScene.panes.size,
-                preview.afterScene.panes.size,
+                preview.beforeScene.contentPaneScene.panes.size,
+                preview.afterScene.contentPaneScene.panes.size,
             ).toFloat(),
             travelHeight = sessionStore.hostView.height.toFloat(),
             density = sessionStore.hostView.resources.displayMetrics.density,
             layoutDirection = sessionStore.hostView.layoutDirection,
+            sharedTransitionsEnabled = (outgoingEntryIds + incomingEntryIds)
+                .none(overlayEntryIds::contains),
             canAnimate = sessionStore.hostView.isLaidOut &&
                 sessionStore.hostView.isAttachedToWindow &&
                 sessionStore.hostView.width > 0,
@@ -254,6 +262,7 @@ private class AndroidBackPreviewHandle(
     private val travelHeight: Float,
     private val density: Float,
     private val layoutDirection: Int,
+    private val sharedTransitionsEnabled: Boolean,
     private val canAnimate: Boolean,
     host: NavHostView,
     private val interruptedViews: MutableSet<View>,
@@ -261,7 +270,9 @@ private class AndroidBackPreviewHandle(
     private val resetView: (View) -> Unit,
     private val settleController: BackProgressSpringController,
 ) : NavHostBackPreviewHandle {
-    private val sharedTransition = if (canAnimate && !spec.isDisabled) {
+    private val sharedTransition = if (
+        canAnimate && !spec.isDisabled && sharedTransitionsEnabled
+    ) {
         AndroidSharedTransitionOverlay(
             host = host,
             outgoingRoots = outgoing,

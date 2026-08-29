@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-overlay-scene-host",
+  "change": "changed",
+  "breaking": true,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.UiTreeBuilder.NavHost",
+  "capability_id": "navigation.host",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.navigation.UiTreeBuilder.NavHost"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-navigation-android"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.navigation-android-overlay-scene"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.navigation.host"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The beginner tutorial keeps the content-only default; modal scene policy belongs in the module and production guide."
+    },
+    "guide": {
+      "status": "updated",
+      "targets": ["guide.navigation-production-host"]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.navigation-runtime",
+        "architecture.scene-derived-navigation-lifecycle-presentation-ownership"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-navigation"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "NavHost remains at the same package and documentation route; its Alpha parameter list changes in place."
+    }
+  }
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 3a902148497fd71cb714105e76f2ed40489f498ea52841dfe33d13cc9ca46cfe
+translation_source_hash: d08b7b212512707860b09e38d42ae738fbe73040017652e88987b635af74260f
 translation_status: current
 ---
 
@@ -8,8 +8,8 @@ translation_status: current
 
 `viewcompose-navigation-android` 把 `viewcompose-navigation-core` 状态挂载为原生 Android View 页面。
 它负责目的地和图的生命周期边界、带作用域的 ViewModel Owner Lease、SavedStateRegistry
-命名空间、受策略约束的子渲染会话、事务失败恢复、Android 系统返回与预测性返回、自适应 pane
-布局，以及感知命令类型的 View motion。
+命名空间、受策略约束的子渲染会话、事务失败恢复、Android 系统返回与预测性返回、自适应内容
+Pane、模态 Overlay Scene，以及感知命令类型的 View motion。
 
 应用仍使用 Activity 或 Window 作为最外层 Android 宿主，但单个页面不需要 Activity 或 Fragment。
 平台无关返回栈仍位于 `viewcompose-navigation-core`；本模块是它的 Android 执行边界。
@@ -120,6 +120,32 @@ Presentation 后仍保留它，永久移除后则停止更新。资源阈值使�
 仅用于粗粒度可见性、Pane 与 Transition UI。嵌套 Host 提供最近 Context，不存在全局 Current Page
 查询。
 
+## 模态导航 Scene
+
+向 `NavHost` 传入稳定且有序的 `sceneStrategies`，把末尾 Destination 投影到普通内容 Pane 之上；
+首个返回 Layout 的 Strategy 生效：
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-overlay-scene" sample_id="module.navigation-android-overlay-scene" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+val ModalDestinationStrategy = NavSceneStrategies.trailingOverlays { entry ->
+    entry.route.name.endsWith("-dialog")
+}
+
+fun UiTreeBuilder.overlaySceneNavHostSample(controller: NavHostController) {
+    NavHost(
+        controller = controller,
+        sceneStrategies = listOf(ModalDestinationStrategy),
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+```
+
+Covered Layer 保持可见且处于 `STARTED`；只有顶部 Overlay 拥有 Input、Accessibility 与
+`RESUMED`。透明全宿主 Container 会阻止 Pointer、Generic-motion 与 Key 穿透；Destination 内容
+绘制 Surface/Scrim。Overlay 复用内容的 Owner、Result、Restore、Back 与 Cleanup。模态 Motion
+只移动 Overlay，并禁止跨 Layer Shared Matching。Layout 必须保留内容并仅分类精确末尾后缀。
+
 ## 向上一页返回结果
 
 {/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-results" sample_id="module.navigation-android-results" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
@@ -144,7 +170,7 @@ fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult
 `DisposeWhenHidden` 是默认策略：转场稳定后，每个完全隐藏页面的子 `RenderSession` 和 View Tree
 都会释放，而 Entry Owner 仍保留在 `CREATED`。`RetainAll` 是显式的无界选择，只应在实测证明
 Surface 重建代价足以抵消内存、Effect、Focus、Accessibility 与原生资源成本时使用。`Bounded`
-保留正数上限的隐藏展示，并按确定性的“最久未隐藏”顺序淘汰。可见 Pane、普通转场参与者和预测性
+保留正数上限的隐藏展示，并按确定性的“最久未隐藏”顺序淘汰。可见 Scene Entry、普通转场参与者和预测性
 转场参与者都不计入该上限。
 
 {/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-presentation-retention" sample_id="module.navigation-android-presentation-retention" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
@@ -163,7 +189,7 @@ fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
 
 修改现有 Host 的策略不会重建 Host 或任何 Entry Owner。收紧上限会立即释放超限的隐藏展示；放宽
 策略只影响之后创建或隐藏的展示，不会急切构建当前不可见页面。首次连接、配置恢复连接和进程恢复
-连接都只物化当前可见 Pane 集合，即使选择 `RetainAll` 也是如此。
+连接都只物化当前 Scene Layout，即使选择 `RetainAll` 也是如此。
 
 Retention 权衡与证据解释由[导航架构](../../architecture/navigation.md)维护。
 
@@ -200,7 +226,8 @@ SavedStateHandle 默认参数和 Saveable State；Graph 实例为其后代持有
 `NavHost` 要求最近的 `LocalViewModelStoreOwner` 并继承默认 Factory 与 `CreationExtras`；底层
 `renderInto` 调用者必须显式提供。持久化 Host-scope ID 允许配置重建继续租用相同 Entry/Graph
 Store，永久移除则清理它们。在 Destination 内容内使用 `ProvideNavGraphOwner(route)` 选择活跃
-Graph Scope。通用 Overlay 导航生命周期尚不支持，Overlay Transport 本身不会创建该 Scene。
+Graph Scope。内容 Pane 与模态 Overlay 使用同一组 Owner 和 Lifecycle 阈值；独立的 UI Overlay
+Transport 只用于承载临时 Motion Snapshot。
 
 ## 失败与回滚
 
@@ -211,7 +238,7 @@ Android 宿主保持 navigation core 的两阶段保证：先准备新目的地�
 并回滚 core 事务；提交后失败保留已提交状态并报告副作用问题，不会假装旧栈仍是事实来源。
 
 保留页面在显示前刷新失败时，会以 `DestinationRefresh` 和 `stackCommitted = false` 报告。
-此前的 stack、pane scene、可见 View、owner 与会话继续有效，预测性返回 preview 或 pane 扩展
+此前的 Stack、Scene Layout、可见 View、Owner 与会话继续有效，预测性返回 Preview 或 Pane 扩展
 不会发布。
 
 可向 `NavHost` 传入 `onFailure` 处理日志、降级或测试。未处理失败会抛出 `NavHostException`，
@@ -220,8 +247,9 @@ Android 宿主保持 navigation core 的两阶段保证：先准备新目的地�
 ## 保存、恢复与进程死亡
 
 Saveable Registry 会持久化 Stack、历史、Entry/Graph ID 与 Route、Owner Bundle 和 Saveable
-值，不会序列化待处理工作、View、Session、Lifecycle 对象或 ViewModel 内容。恢复连接只物化可见
-Pane。版本、结构、上限、配置或 Graph 层级无效时会 Fail Closed 到初始状态；相邻 Version 4 格式
+值，不会序列化待处理工作、View、Session、Lifecycle 对象或 ViewModel 内容。恢复连接只物化当前
+Content-and-overlay Scene；Scene Strategy 会针对恢复后的 Stack 和当前宽度重新运行。版本、结构、
+上限、配置或 Graph 层级无效时会 Fail Closed 到初始状态；相邻 Version 4 格式
 会以新的 Host-scope ID 恢复。
 
 ## Android 系统返回与预测性返回
@@ -243,15 +271,17 @@ Owner 语义。
 `sharedElement` 与 `sharedBounds` 是在单个 Destination Pair 内按 Key 与 Mode 唯一匹配的 Q3 标记。
 无效、Detach、Surface-backed 或超预算端点按 Key 回退，不影响导航。单 Window 实现会在不可交互
 Overlay 中执行有界 Snapshot 动画，保持 Incoming Input/Accessibility Ownership，且只清理一次；
-Predictive Back 驱动同一视觉层，但不会获得 Commit 权限。
+Predictive Back 驱动同一视觉层，但不会获得 Commit 权限。模态转场跳过 Shared Matching，避免
+Snapshot 跨越 Overlay 边界。
 
 ## 自适应 pane
 
 `NavPanePolicy.Single` 在所有宽度下保持单页面全屏宿主。`Adaptive` 会在每个 pane 都满足最小宽度
 时展示最多三个最新 entry。决定 pane 数之前会扣除 `paneSpacingDp`。
 
-宽度变化会复用已提交返回栈、目的地会话和 owner，只在重新计算原生 child bounds 前刷新新进入
-pane scene 的保留 entry。布局方向会把 primary 到 tertiary 映射为 LTR 或 RTL 下正确的物理顺序。
+宽度变化会复用已提交返回栈、目的地会话和 Owner，只在重新计算原生 Child Bounds 前刷新新进入
+Content Scene 的保留 Entry。Scene Strategy 在 Pane 选择前运行，因此 Overlay 分类跨宽度保持稳定，
+只有内容前缀重新流式布局。布局方向会把 Primary 到 Tertiary 映射为 LTR 或 RTL 下正确的物理顺序。
 
 ## 深链与保留栈
 
@@ -304,3 +334,6 @@ Lifecycle 2.11 硬切要求 `NavHost` 位于 `LocalViewModelStoreOwner` 下。�
 本 Navigation Host 实现组合时才产生动效；旧版或自定义 Renderer 可以把 Marker 视为无效。
 跨 Window、跨 Activity、跨 Process、Live Content、Shape Morph 与任意 Surface-backed Capture
 在本 Alpha 中有意不支持，并回退到普通 Destination Motion。
+
+本 Alpha 在 `presentationRetentionPolicy` 前插入 `sceneStrategies`；该位置的位置调用须迁移为
+命名参数。重组时应保持 Strategy 实例稳定。

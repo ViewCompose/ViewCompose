@@ -23,6 +23,7 @@ sample_ids:
   - module.navigation-core-stacks
   - module.navigation-core-deep-link
   - module.navigation-core-scene-projection
+  - module.navigation-core-scene-strategy
   - module.navigation-core-execution-plan
 coordinate: com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03
 minimal_usage_sample_id: module.navigation-core-dependency
@@ -32,8 +33,8 @@ minimal_usage_sample_id: module.navigation-core-dependency
 
 `viewcompose-navigation-core` is ViewCompose's platform-neutral navigation state machine. It owns
 immutable routes and graph declarations, strict deep-link resolution, single- and multi-stack
-snapshots, rollback-safe two-phase transactions, page-lifecycle planning, and adaptive pane-scene
-selection.
+snapshots, rollback-safe two-phase transactions, page-lifecycle planning, and validated content,
+adaptive-pane, and overlay-scene selection.
 
 The module contains no Android or AndroidX types. `Activity`, predictive Back, `LifecycleOwner`,
 `SavedStateRegistryOwner`, View mounting, transitions, and process-death adapters live in
@@ -317,7 +318,7 @@ check(plan.transitions.first().entryId == list.id)
 
 ## Unified execution reducer
 
-`NavExecutionReducer` is the single policy boundary above stack transactions, pane scenes, and
+`NavExecutionReducer` is the single policy boundary above stack transactions, scene layouts, and
 lifecycle projection. Its `settled`, `transition`, and `predictivePreview` entry points make each
 event's preconditions explicit, then delegate to one implementation and return the same immutable
 `NavExecutionPlan`. `reconcile` retains the plan's stack and scene decision while recalculating
@@ -338,11 +339,11 @@ val plan = NavExecutionReducer.transition(
         before.top.id to NavEntryLifecycleState.Resumed,
     ),
     transaction = transaction,
-    beforePaneScene = NavPaneScene(
-        listOf(NavPane(NavPaneRole.Primary, before.top.id)),
+    beforeSceneLayout = NavSceneLayout(
+        NavPaneScene(listOf(NavPane(NavPaneRole.Primary, before.top.id))),
     ),
-    afterPaneScene = NavPaneScene(
-        listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id)),
+    afterSceneLayout = NavSceneLayout(
+        NavPaneScene(listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id))),
     ),
     hostState = NavHostLifecycleState.Resumed,
     presentedEntryIds = listOf(before.top.id),
@@ -361,7 +362,30 @@ and presentations. `null` is the explicit unbounded hidden-presentation limit; n
 are deterministic oldest-first bounds. The API is Alpha and intentionally has no legacy dual-plan
 bridge.
 
-## Adaptive panes
+## Scene strategies and adaptive panes
+
+`NavSceneLayout` combines non-empty content panes with a bottom-to-top overlay suffix, preserving one
+stack order for z-order, Back, results, and restoration.
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-scene-strategy" sample_id="module.navigation-core-scene-strategy" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val overlayStrategy = NavSceneStrategies.trailingOverlays { entry ->
+    entry.route.name.endsWith("-dialog")
+}
+val layout = resolveNavSceneLayout(
+    snapshot = snapshot,
+    maxPaneCount = 1,
+    sceneStrategies = listOf(overlayStrategy),
+)
+
+check(layout.contentPaneScene.visibleEntryIds == setOf(home.id))
+check(layout.overlayEntryIds == listOf(dialog.id))
+check(layout.interactiveEntryIds == setOf(dialog.id))
+```
+
+`resolveNavSceneLayout` selects the first non-null strategy. Its bounded `projectContent` applies
+validated pane policy to a stack prefix; `trailingOverlays` classifies consecutive top entries.
+Strategies must be deterministic and side-effect free.
 
 `NavPaneStrategy` converts the active stack into one to three logical panes. `Single` exposes only
 the top destination. `BackStack` places the newest retained destinations into contiguous primary,
@@ -395,11 +419,13 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The scene-projection API is an Alpha hard cut. Replace both `NavLifecyclePlanner.plan` overloads
+The scene-projection API is an Alpha hard cut. `NavExecutionReducer` now accepts
+`beforeSceneLayout`/`afterSceneLayout` instead of pane-only fields. Replace both
+`NavLifecyclePlanner.plan` overloads
 that accepted `retainedEntryIds`, `visibleEntryIds`, and `interactiveEntryId(s)` with the single
 `entries` plus `scene` overload. No deprecated bridge or dual planner exists.
 
 The `0.1.0-alpha03` line establishes immutable snapshots, single-pending two-phase transactions,
 independent retained stacks, strict URI matching, graph-hierarchy validation, lifecycle planning,
-and three logical pane roles. Persist only committed snapshots. Do not persist controllers,
-transactions, strategies, factories, or host lifecycle plans.
+scene strategies, overlay suffixes, and three logical pane roles. Persist only committed snapshots;
+recompute layouts from current strategies after restore.

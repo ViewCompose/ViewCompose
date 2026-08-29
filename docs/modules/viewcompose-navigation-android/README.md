@@ -24,6 +24,7 @@ sample_ids:
   - module.navigation-android-deep-link
   - module.navigation-android-host
   - module.navigation-android-host-construction
+  - module.navigation-android-overlay-scene
   - module.navigation-android-presentation-retention
   - module.navigation-android-results
   - module.navigation-android-typed-route
@@ -36,7 +37,7 @@ minimal_usage_sample_id: module.navigation-android-dependency
 `viewcompose-navigation-android` mounts `viewcompose-navigation-core` state as native Android View pages. It
 owns destination and graph lifecycle boundaries, scoped ViewModel owner leases, SavedStateRegistry
 namespaces, policy-bound child render sessions, transactional failure recovery, Android system and
-predictive Back, adaptive pane layout, and command-aware View motion.
+predictive Back, adaptive content panes, modal overlay scenes, and command-aware View motion.
 
 The application still uses an Activity or Window as its outer Android host, but individual pages do
 not require an Activity or Fragment. The platform-neutral back stack remains in
@@ -153,6 +154,33 @@ for the retained entry and stops updating after permanent removal. AndroidX Life
 resource threshold; presentation state is only for coarse visibility, pane, and transition UI.
 Nested hosts provide the nearest context, and there is no global current-page lookup.
 
+## Modal navigation scenes
+
+Pass stable, ordered `sceneStrategies` to project trailing destinations above normal content panes;
+the first strategy that returns a layout wins:
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-overlay-scene" sample_id="module.navigation-android-overlay-scene" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+val ModalDestinationStrategy = NavSceneStrategies.trailingOverlays { entry ->
+    entry.route.name.endsWith("-dialog")
+}
+
+fun UiTreeBuilder.overlaySceneNavHostSample(controller: NavHostController) {
+    NavHost(
+        controller = controller,
+        sceneStrategies = listOf(ModalDestinationStrategy),
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+```
+
+Covered layers remain visible at `STARTED`; only the top overlay owns input, accessibility, and
+`RESUMED`. Its transparent full-host container blocks pointer, generic-motion, and key fallthrough;
+destination content draws the surface and scrim. Overlays reuse content ownership, result, restore,
+Back, and cleanup paths. Modal motion moves only the overlay and forbids cross-layer shared matching.
+Layouts must retain content and classify an exact trailing stack suffix.
+
 ## Return a result to the previous page
 
 {/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-results" sample_id="module.navigation-android-results" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
@@ -179,7 +207,7 @@ child `RenderSession` and View tree is disposed while its entry owner remains at
 `RetainAll` is an explicit unbounded opt-in for surfaces whose measured rebuild cost justifies the
 memory, effect, focus, accessibility, and native-resource cost. `Bounded` retains a positive maximum
 of hidden presentations and evicts the least-recently-hidden presentation deterministically.
-Visible panes and ordinary or predictive transition participants do not count against that bound.
+Visible scene entries and ordinary or predictive transition participants do not count against that bound.
 
 {/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-presentation-retention" sample_id="module.navigation-android-presentation-retention" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
 ```kotlin
@@ -198,7 +226,7 @@ fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
 Changing the policy on an existing host does not recreate the host or any entry owner. Tightening
 the bound disposes excess hidden presentations immediately. Relaxing it affects presentations that
 are created or hidden later; it does not eagerly build pages that are not visible. On initial,
-configuration-restored, or process-restored attachment, only the current visible pane set is
+configuration-restored, or process-restored attachment, only the current scene layout is
 materialized even under `RetainAll`.
 
 Retention trade-offs and interpreted evidence are maintained by the
@@ -242,8 +270,8 @@ owners.
 `CreationExtras`; low-level `renderInto` callers provide it explicitly. A persisted host-scope ID
 allows configuration recreation to lease the same entry and graph stores, while permanent removal
 clears them. Use `ProvideNavGraphOwner(route)` within destination content to select an active graph
-scope. General overlay-navigation lifecycle remains unsupported; overlay transport alone does not
-create such a scene.
+scope. Content panes and modal overlays use these same owners and lifecycle thresholds; the
+separate UI overlay transport is only the mechanism used for transient motion snapshots.
 
 ## Failure and rollback
 
@@ -257,7 +285,7 @@ commit, the host keeps committed state and reports the effect failure rather tha
 the previous stack is still authoritative.
 
 A retained-page render that fails before reveal is reported as `DestinationRefresh` with
-`stackCommitted = false`. The previous stack, pane scene, visible Views, owners, and sessions remain
+`stackCommitted = false`. The previous stack, scene layout, visible Views, owners, and sessions remain
 authoritative; predictive previews and pane expansion are not published.
 
 Pass `onFailure` to `NavHost` for application logging, fallback, or tests. An unhandled failure is
@@ -267,7 +295,8 @@ surfaced as `NavHostException` with the original cause, failed entry, and render
 
 The saveable registry persists stacks, history, entry/graph IDs and routes, owner bundles, and
 saveable values—not pending work, Views, sessions, Lifecycle objects, or ViewModel contents.
-Restored attachment materializes only visible panes. Invalid versions, shapes, limits,
+Restored attachment materializes only the current content-and-overlay scene. Scene strategies are
+reapplied to the restored stack and current width. Invalid versions, shapes, limits,
 configurations, or graph hierarchies fail closed to initial state; the preceding version-4 format
 is accepted with a fresh host-scope identity.
 
@@ -293,7 +322,8 @@ work, and redirects from current visual properties without changing stack or own
 destination pair. Invalid, detached, surface-backed, or over-budget endpoints fall back per key
 without affecting navigation. The one-window implementation animates bounded snapshots in a
 non-interactive overlay, preserves incoming input/accessibility ownership, cleans up exactly once,
-and lets predictive Back drive the same visuals without gaining commit authority.
+and lets predictive Back drive the same visuals without gaining commit authority. Modal
+transitions skip shared matching so snapshots cannot cross the overlay boundary.
 
 ## Adaptive panes
 
@@ -302,8 +332,10 @@ three newest entries when each pane can retain the configured minimum width. `pa
 deducted before deciding how many panes fit.
 
 Width changes reuse the committed back stack, destination sessions, and owners. They refresh only
-retained entries newly admitted to the pane scene before recalculating native child bounds. Layout
-direction maps primary-to-tertiary roles to the correct physical order for LTR and RTL.
+retained entries newly admitted to the content scene before recalculating native child bounds.
+Scene strategies run before pane selection, so overlay classification is stable across widths and
+only the content prefix is reflowed. Layout direction maps primary-to-tertiary roles to the correct
+physical order for LTR and RTL.
 
 ## Deep links and retained stacks
 
@@ -358,3 +390,6 @@ publishes the stable endpoint tag and this navigation-host implementation to pro
 or custom renderers may treat the marker as inert. Cross-window, cross-Activity, cross-process,
 live-content, shape-morphing, and arbitrary surface-backed capture are intentionally unsupported in
 this alpha and use ordinary destination motion.
+
+This Alpha inserts `sceneStrategies` before `presentationRetentionPolicy`; positional calls at that
+point must migrate to named arguments. Keep strategy instances stable across recomposition.

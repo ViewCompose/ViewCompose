@@ -30,7 +30,7 @@ internal class NavHostView(
                 requestLayout()
             }
         }
-    private val paneLayouts = IdentityHashMap<View, NavPaneLayout>()
+    private val destinationLayouts = IdentityHashMap<View, NavDestinationLayout>()
 
     init {
         layoutParams = LayoutParams(
@@ -41,12 +41,12 @@ internal class NavHostView(
         clipToPadding = true
     }
 
-    internal fun updatePaneLayouts(layouts: Map<View, NavPaneLayout>) {
+    internal fun updateDestinationLayouts(layouts: Map<View, NavDestinationLayout>) {
         check(layouts.keys.all { child -> child.parent === this }) {
-            "Every pane layout must reference a child of this navigation host."
+            "Every destination layout must reference a child of this navigation host."
         }
-        paneLayouts.clear()
-        paneLayouts.putAll(layouts)
+        destinationLayouts.clear()
+        destinationLayouts.putAll(layouts)
         requestLayout()
     }
 
@@ -64,12 +64,10 @@ internal class NavHostView(
             if (child.visibility == View.GONE) {
                 continue
             }
-            val paneLayout = paneLayouts[child] ?: NavPaneLayout.Single
-            val bounds = resolvePaneHorizontalBounds(
+            val bounds = resolveDestinationHorizontalBounds(
                 availableWidth = availableWidth,
-                paneLayout = paneLayout,
-                paneSpacingPixels = paneSpacingPixels,
-                layoutDirection = layoutDirection,
+                destinationLayout = destinationLayouts[child]
+                    ?: NavDestinationLayout.Content(NavPaneLayout.Single),
             )
             child.measure(
                 MeasureSpec.makeMeasureSpec(bounds.width, MeasureSpec.EXACTLY),
@@ -91,12 +89,10 @@ internal class NavHostView(
             if (child.visibility == View.GONE) {
                 continue
             }
-            val paneLayout = paneLayouts[child] ?: NavPaneLayout.Single
-            val bounds = resolvePaneHorizontalBounds(
+            val bounds = resolveDestinationHorizontalBounds(
                 availableWidth = availableWidth,
-                paneLayout = paneLayout,
-                paneSpacingPixels = paneSpacingPixels,
-                layoutDirection = layoutDirection,
+                destinationLayout = destinationLayouts[child]
+                    ?: NavDestinationLayout.Content(NavPaneLayout.Single),
             )
             val childLeft = paddingLeft + bounds.left
             child.layout(
@@ -117,6 +113,21 @@ internal class NavHostView(
         super.onSizeChanged(width, height, oldWidth, oldHeight)
         if (width != oldWidth) {
             runtime?.onHostWidthChanged(width)
+        }
+    }
+
+    private fun resolveDestinationHorizontalBounds(
+        availableWidth: Int,
+        destinationLayout: NavDestinationLayout,
+    ): NavPaneHorizontalBounds {
+        return when (destinationLayout) {
+            is NavDestinationLayout.Content -> resolvePaneHorizontalBounds(
+                availableWidth = availableWidth,
+                paneLayout = destinationLayout.pane,
+                paneSpacingPixels = paneSpacingPixels,
+                layoutDirection = layoutDirection,
+            )
+            NavDestinationLayout.Overlay -> NavPaneHorizontalBounds(0, availableWidth)
         }
     }
 
@@ -195,6 +206,17 @@ internal data class NavPaneLayout(
     }
 }
 
+/** Native bounds and surface role for one visible navigation destination. */
+internal sealed interface NavDestinationLayout {
+    /** Opaque content destination constrained to one logical pane. */
+    data class Content(
+        val pane: NavPaneLayout,
+    ) : NavDestinationLayout
+
+    /** Transparent modal destination filling the complete host content area. */
+    data object Overlay : NavDestinationLayout
+}
+
 /**
  * Destination surface that enforces the execution plan's input-ownership decision.
  *
@@ -204,19 +226,38 @@ internal data class NavPaneLayout(
  */
 internal class NavDestinationContainer(
     context: Context,
+    private val contentSurfaceBackground: Drawable?,
 ) : FrameLayout(context) {
     internal var acceptsNavigationInput: Boolean = true
+    private var blocksSiblingInput: Boolean = false
+
+    internal fun applyDestinationLayout(layout: NavDestinationLayout) {
+        blocksSiblingInput = layout == NavDestinationLayout.Overlay
+        background = if (blocksSiblingInput) null else contentSurfaceBackground
+    }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        return if (acceptsNavigationInput) super.dispatchTouchEvent(event) else true
+        return if (acceptsNavigationInput) {
+            super.dispatchTouchEvent(event) || blocksSiblingInput
+        } else {
+            true
+        }
     }
 
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        return if (acceptsNavigationInput) super.dispatchGenericMotionEvent(event) else true
+        return if (acceptsNavigationInput) {
+            super.dispatchGenericMotionEvent(event) || blocksSiblingInput
+        } else {
+            true
+        }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        return if (acceptsNavigationInput) super.dispatchKeyEvent(event) else true
+        return if (acceptsNavigationInput) {
+            super.dispatchKeyEvent(event) || blocksSiblingInput
+        } else {
+            true
+        }
     }
 }
 
@@ -224,14 +265,17 @@ internal class NavDestinationContainer(
  * Creates a destination root container and inherits the host theme background as its surface.
  */
 internal fun destinationContainer(context: Context): NavDestinationContainer {
-    return NavDestinationContainer(context).apply {
+    return NavDestinationContainer(
+        context = context,
+        contentSurfaceBackground = resolveDestinationSurfaceBackground(context),
+    ).apply {
         layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT,
         )
         clipChildren = true
         clipToPadding = true
-        background = resolveDestinationSurfaceBackground(context)
+        applyDestinationLayout(NavDestinationLayout.Content(NavPaneLayout.Single))
     }
 }
 

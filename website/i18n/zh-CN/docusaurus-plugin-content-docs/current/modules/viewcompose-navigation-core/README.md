@@ -1,14 +1,14 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 3401c6cccff58743bc0aeda602518eaab0659b0adeb20b1e36f7d5676b5e7b30
+translation_source_hash: 721c0307d3f6e7476c94883134f86747bf0d30a0c02317004de35b6854193bcf
 translation_status: current
 ---
 
 # Navigation Core 模块
 
 `viewcompose-navigation-core` 是 ViewCompose 的平台无关导航状态机。它负责不可变路由与导航图、
-严格深链解析、单栈和多栈快照、可安全回滚的两阶段事务、页面生命周期规划，以及自适应 pane
-场景选择。
+严格深链解析、单栈和多栈快照、可安全回滚的两阶段事务、页面生命周期规划，以及经过验证的内容、
+自适应 Pane 与 Overlay Scene 选择。
 
 该模块不包含 Android 或 AndroidX 类型。`Activity`、预测性返回、`LifecycleOwner`、
 `SavedStateRegistryOwner`、View 挂载、转场和进程死亡适配器均位于 `viewcompose-navigation-android`。
@@ -276,7 +276,7 @@ check(plan.transitions.first().entryId == list.id)
 
 ## 统一执行 Reducer
 
-`NavExecutionReducer` 是 Stack Transaction、Pane Scene 与 Lifecycle Projection 之上的唯一策略
+`NavExecutionReducer` 是 Stack Transaction、Scene Layout 与 Lifecycle Projection 之上的唯一策略
 边界。`settled`、`transition` 和 `predictivePreview` 分别表达三类事件的前置条件，但统一委托给
 同一实现并返回相同的不可变 `NavExecutionPlan`。`reconcile` 保留原计划的 Stack 和 Scene 决策，
 只重新计算外层 Host Lifecycle、Presentation Inventory、Retention 或 Back Ownership。
@@ -295,11 +295,11 @@ val plan = NavExecutionReducer.transition(
         before.top.id to NavEntryLifecycleState.Resumed,
     ),
     transaction = transaction,
-    beforePaneScene = NavPaneScene(
-        listOf(NavPane(NavPaneRole.Primary, before.top.id)),
+    beforeSceneLayout = NavSceneLayout(
+        NavPaneScene(listOf(NavPane(NavPaneRole.Primary, before.top.id))),
     ),
-    afterPaneScene = NavPaneScene(
-        listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id)),
+    afterSceneLayout = NavSceneLayout(
+        NavPaneScene(listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id))),
     ),
     hostState = NavHostLifecycleState.Resumed,
     presentedEntryIds = listOf(before.top.id),
@@ -317,7 +317,29 @@ check(plan.lifecycle.targetStates.values.none(NavEntryLifecycleState.Resumed::eq
 Presentation 数量线性相关。`null` 明确表示 Hidden Presentation 无上限，非负值表示确定性的
 Oldest-first 上限。该 API 仍为 Alpha，刻意不提供旧新双计划兼容桥。
 
-## 自适应 pane
+## Scene Strategy 与自适应 Pane
+
+`NavSceneLayout` 组合非空 Content Pane 与自底向上的 Overlay 后缀，使 Z-order、Back、Result
+与 Restore 服从同一 Stack 顺序。
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-scene-strategy" sample_id="module.navigation-core-scene-strategy" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val overlayStrategy = NavSceneStrategies.trailingOverlays { entry ->
+    entry.route.name.endsWith("-dialog")
+}
+val layout = resolveNavSceneLayout(
+    snapshot = snapshot,
+    maxPaneCount = 1,
+    sceneStrategies = listOf(overlayStrategy),
+)
+
+check(layout.contentPaneScene.visibleEntryIds == setOf(home.id))
+check(layout.overlayEntryIds == listOf(dialog.id))
+check(layout.interactiveEntryIds == setOf(dialog.id))
+```
+
+`resolveNavSceneLayout` 选择首个非空 Strategy。受限 `projectContent` 对 Stack Prefix 应用经验证的
+Pane Policy；`trailingOverlays` 分类连续栈顶 Entry。Strategy 必须确定且无副作用。
 
 `NavPaneStrategy` 把活跃 stack 转换为一至三个逻辑 pane。`Single` 只显示栈顶目的地；
 `BackStack` 把最新保留的目的地依次放入 primary、secondary 和 tertiary pane。
@@ -347,10 +369,12 @@ entry，并要求栈顶始终可见。`NavPaneScene` 默认把所有可见 Pane 
 
 ## 兼容性说明
 
-Scene Projection API 是 Alpha 硬切。原先接收 `retainedEntryIds`、`visibleEntryIds` 与
+Scene Projection API 是 Alpha 硬切。`NavExecutionReducer` 现改为接收
+`beforeSceneLayout`/`afterSceneLayout`，不再接收仅含 Pane 的字段。原先接收
+`retainedEntryIds`、`visibleEntryIds` 与
 `interactiveEntryId(s)` 的两个 `NavLifecyclePlanner.plan` Overload，必须迁移到唯一的
 `entries` 加 `scene` Overload；不存在 Deprecated Bridge 或双 Planner。
 
 `0.1.0-alpha03` 确立了不可变快照、单一待处理的两阶段事务、独立保留栈、严格 URI 匹配、图层级
-验证、生命周期规划和三个逻辑 pane 角色。只能持久化已提交快照，不要持久化 controller、事务、
-策略、工厂或宿主生命周期计划。
+验证、生命周期规划、Scene Strategy、Overlay 后缀和三个逻辑 Pane 角色。只能持久化已提交快照；
+恢复后必须用当前 Strategy 重新计算 Layout。

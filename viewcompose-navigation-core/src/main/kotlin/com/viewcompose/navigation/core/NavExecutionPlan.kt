@@ -43,10 +43,10 @@ class NavExecutionPlan internal constructor(
     val after: NavBackStackSnapshot,
     /** Complete retained-entry delta for a committed transition, otherwise `null`. */
     val mutation: NavStackMutation?,
-    /** Pane projection before this decision. */
-    val beforePaneScene: NavPaneScene,
-    /** Pane projection after this decision. */
-    val afterPaneScene: NavPaneScene,
+    /** Complete content-and-overlay projection before this decision. */
+    val beforeSceneLayout: NavSceneLayout,
+    /** Complete content-and-overlay projection after this decision. */
+    val afterSceneLayout: NavSceneLayout,
     retainedEntries: List<NavEntry>,
     /** Exact semantic scene consumed by destination context and lifecycle execution. */
     val scene: NavScene,
@@ -150,8 +150,8 @@ object NavExecutionReducer {
      *
      * @param currentLifecycleStates host-applied destination and graph-owner states
      * @param stackState complete committed retained-stack state
-     * @param paneScene validated active-stack pane projection
-     * @param previousPaneScene prior pane projection when a settled host changes layout
+     * @param sceneLayout validated active-stack content-and-overlay projection
+     * @param previousSceneLayout prior projection when a settled host changes layout
      * @param hostState outer host lifecycle cap
      * @param presentedEntryIds current presentation identities in creation order
      * @param hiddenPresentationRecency hidden presentation identities, oldest first
@@ -163,8 +163,8 @@ object NavExecutionReducer {
     fun settled(
         currentLifecycleStates: Map<NavEntryId, NavEntryLifecycleState>,
         stackState: NavStackSetSnapshot,
-        paneScene: NavPaneScene,
-        previousPaneScene: NavPaneScene = paneScene,
+        sceneLayout: NavSceneLayout,
+        previousSceneLayout: NavSceneLayout = sceneLayout,
         hostState: NavHostLifecycleState,
         presentedEntryIds: List<NavEntryId> = emptyList(),
         hiddenPresentationRecency: List<NavEntryId> = emptyList(),
@@ -179,8 +179,8 @@ object NavExecutionReducer {
             mutation = null,
             committedEntries = stackState.allEntries,
             currentLifecycleStates = currentLifecycleStates,
-            beforePaneScene = previousPaneScene,
-            afterPaneScene = paneScene,
+            beforeSceneLayout = previousSceneLayout,
+            afterSceneLayout = sceneLayout,
             hostState = hostState,
             presentedEntryIds = presentedEntryIds,
             hiddenPresentationRecency = hiddenPresentationRecency,
@@ -199,8 +199,8 @@ object NavExecutionReducer {
      *
      * @param currentLifecycleStates host-applied destination and graph-owner states
      * @param transaction prepared Core transaction whose candidate state supplies the stack delta
-     * @param beforePaneScene validated pane projection for the transaction's current active stack
-     * @param afterPaneScene validated pane projection for the transaction's candidate active stack
+     * @param beforeSceneLayout validated projection for the transaction's current active stack
+     * @param afterSceneLayout validated projection for the transaction's candidate active stack
      * @param hostState outer host lifecycle cap
      * @param presentedEntryIds current presentation identities in creation order
      * @param hiddenPresentationRecency hidden presentation identities, oldest first
@@ -212,8 +212,8 @@ object NavExecutionReducer {
     fun transition(
         currentLifecycleStates: Map<NavEntryId, NavEntryLifecycleState>,
         transaction: NavTransaction,
-        beforePaneScene: NavPaneScene,
-        afterPaneScene: NavPaneScene,
+        beforeSceneLayout: NavSceneLayout,
+        afterSceneLayout: NavSceneLayout,
         hostState: NavHostLifecycleState,
         presentedEntryIds: List<NavEntryId> = emptyList(),
         hiddenPresentationRecency: List<NavEntryId> = emptyList(),
@@ -229,8 +229,8 @@ object NavExecutionReducer {
             mutation = transaction.mutation,
             committedEntries = transaction.afterState.allEntries,
             currentLifecycleStates = currentLifecycleStates,
-            beforePaneScene = beforePaneScene,
-            afterPaneScene = afterPaneScene,
+            beforeSceneLayout = beforeSceneLayout,
+            afterSceneLayout = afterSceneLayout,
             hostState = hostState,
             presentedEntryIds = presentedEntryIds,
             hiddenPresentationRecency = hiddenPresentationRecency,
@@ -256,8 +256,8 @@ object NavExecutionReducer {
      * @param currentLifecycleStates host-applied destination and graph-owner states
      * @param stackState authoritative committed retained-stack state
      * @param prospectiveActiveStack uncommitted active stack shown at full preview progress
-     * @param beforePaneScene validated pane projection for the committed active stack
-     * @param afterPaneScene validated pane projection for the prospective active stack
+     * @param beforeSceneLayout validated projection for the committed active stack
+     * @param afterSceneLayout validated projection for the prospective active stack
      * @param hostState outer host lifecycle cap
      * @param presentedEntryIds current presentation identities in creation order
      * @param hiddenPresentationRecency hidden presentation identities, oldest first
@@ -271,8 +271,8 @@ object NavExecutionReducer {
         currentLifecycleStates: Map<NavEntryId, NavEntryLifecycleState>,
         stackState: NavStackSetSnapshot,
         prospectiveActiveStack: NavBackStackSnapshot,
-        beforePaneScene: NavPaneScene,
-        afterPaneScene: NavPaneScene,
+        beforeSceneLayout: NavSceneLayout,
+        afterSceneLayout: NavSceneLayout,
         hostState: NavHostLifecycleState,
         presentedEntryIds: List<NavEntryId> = emptyList(),
         hiddenPresentationRecency: List<NavEntryId> = emptyList(),
@@ -324,8 +324,8 @@ object NavExecutionReducer {
             mutation = null,
             committedEntries = stackState.allEntries,
             currentLifecycleStates = currentLifecycleStates,
-            beforePaneScene = beforePaneScene,
-            afterPaneScene = afterPaneScene,
+            beforeSceneLayout = beforeSceneLayout,
+            afterSceneLayout = afterSceneLayout,
             hostState = hostState,
             presentedEntryIds = presentedEntryIds,
             hiddenPresentationRecency = hiddenPresentationRecency,
@@ -378,8 +378,8 @@ object NavExecutionReducer {
             mutation = plan.mutation,
             committedEntries = committedEntries,
             currentLifecycleStates = currentLifecycleStates,
-            beforePaneScene = plan.beforePaneScene,
-            afterPaneScene = plan.afterPaneScene,
+            beforeSceneLayout = plan.beforeSceneLayout,
+            afterSceneLayout = plan.afterSceneLayout,
             hostState = hostState,
             presentedEntryIds = presentedEntryIds,
             hiddenPresentationRecency = hiddenPresentationRecency,
@@ -396,8 +396,8 @@ object NavExecutionReducer {
         mutation: NavStackMutation?,
         committedEntries: List<NavEntry>,
         currentLifecycleStates: Map<NavEntryId, NavEntryLifecycleState>,
-        beforePaneScene: NavPaneScene,
-        afterPaneScene: NavPaneScene,
+        beforeSceneLayout: NavSceneLayout,
+        afterSceneLayout: NavSceneLayout,
         hostState: NavHostLifecycleState,
         presentedEntryIds: List<NavEntryId>,
         hiddenPresentationRecency: List<NavEntryId>,
@@ -405,8 +405,8 @@ object NavExecutionReducer {
         systemBackCommand: NavCommand?,
         resultDelivery: NavResultDelivery?,
     ): NavExecutionPlan {
-        validatePaneScene(before, beforePaneScene, "before")
-        validatePaneScene(after, afterPaneScene, "after")
+        validateNavSceneLayout(before, beforeSceneLayout, label = "before")
+        validateNavSceneLayout(after, afterSceneLayout, label = "after")
         require(presentedEntryIds.distinct().size == presentedEntryIds.size) {
             "Presented navigation identities must be unique."
         }
@@ -433,8 +433,8 @@ object NavExecutionReducer {
             activeStack = if (phase == NavExecutionPhase.PredictivePreview) before else after,
         )
 
-        val beforeVisible = beforePaneScene.visibleEntryIds
-        val afterVisible = afterPaneScene.visibleEntryIds
+        val beforeVisible = beforeSceneLayout.visibleEntryIds
+        val afterVisible = afterSceneLayout.visibleEntryIds
         val visibleEntryIds = when (phase) {
             NavExecutionPhase.Settled -> afterVisible
             NavExecutionPhase.Transition,
@@ -469,9 +469,31 @@ object NavExecutionReducer {
         }
 
         val paneRoles = LinkedHashMap<NavEntryId, NavPaneRole>().apply {
-            beforePaneScene.panes.forEach { pane -> put(pane.entryId, pane.role) }
-            afterPaneScene.panes.forEach { pane -> put(pane.entryId, pane.role) }
+            beforeSceneLayout.contentPaneScene.panes.forEach { pane ->
+                put(pane.entryId, pane.role)
+            }
+            afterSceneLayout.contentPaneScene.panes.forEach { pane ->
+                put(pane.entryId, pane.role)
+            }
         }
+        val overlayEntryIds = when (phase) {
+            NavExecutionPhase.Settled -> LinkedHashSet(afterSceneLayout.overlayEntryIds)
+            NavExecutionPhase.Transition,
+            NavExecutionPhase.PredictivePreview,
+            -> LinkedHashSet<NavEntryId>().apply {
+                addAll(beforeSceneLayout.overlayEntryIds)
+                addAll(afterSceneLayout.overlayEntryIds)
+            }
+        }
+        val orderedVisibleOverlayEntryIds = LinkedHashSet<NavEntryId>().apply {
+            beforeSceneLayout.overlayEntryIds.forEach { entryId ->
+                if (entryId in visibleEntryIds) add(entryId)
+            }
+            afterSceneLayout.overlayEntryIds.forEach { entryId ->
+                if (entryId in visibleEntryIds) add(entryId)
+            }
+        }
+        val topVisibleOverlayEntryId = orderedVisibleOverlayEntryIds.lastOrNull()
         val transitionPhases = when (phase) {
             NavExecutionPhase.Settled -> emptyMap()
             NavExecutionPhase.PredictivePreview -> visibleEntryIds.associateWith {
@@ -487,13 +509,24 @@ object NavExecutionReducer {
             }
         }
         val interactiveEntryIds = if (phase == NavExecutionPhase.Settled) {
-            afterPaneScene.interactiveEntryIds
+            afterSceneLayout.interactiveEntryIds
         } else {
             emptySet()
         }
+        val orderedSceneEntries = buildList {
+            retainedEntries.filterTo(this) { entry -> entry.id !in overlayEntryIds }
+            orderedVisibleOverlayEntryIds.forEach { entryId ->
+                add(retainedEntries.first { entry -> entry.id == entryId })
+            }
+        }
         val scene = NavScene(
-            retainedEntries.map { entry ->
+            orderedSceneEntries.map { entry ->
                 val visible = entry.id in visibleEntryIds
+                val layerRole = if (entry.id in overlayEntryIds) {
+                    NavSceneLayerRole.Overlay
+                } else {
+                    NavSceneLayerRole.Content
+                }
                 NavSceneEntry(
                     entryId = entry.id,
                     presence = if (entry.id in exitingEntryIds) {
@@ -501,10 +534,11 @@ object NavExecutionReducer {
                     } else {
                         NavEntryPresence.Retained
                     },
-                    visibility = if (visible) {
-                        NavSceneVisibility.Visible
-                    } else {
-                        NavSceneVisibility.Hidden
+                    visibility = when {
+                        !visible -> NavSceneVisibility.Hidden
+                        topVisibleOverlayEntryId != null &&
+                            entry.id != topVisibleOverlayEntryId -> NavSceneVisibility.Covered
+                        else -> NavSceneVisibility.Visible
                     },
                     interaction = if (entry.id in interactiveEntryIds) {
                         NavSceneInteraction.Interactive
@@ -513,7 +547,12 @@ object NavExecutionReducer {
                     },
                     transitionPhase = transitionPhases[entry.id]
                         ?: NavSceneTransitionPhase.Settled,
-                    paneRole = if (visible) checkNotNull(paneRoles[entry.id]) else null,
+                    paneRole = if (visible && layerRole == NavSceneLayerRole.Content) {
+                        checkNotNull(paneRoles[entry.id])
+                    } else {
+                        null
+                    },
+                    layerRole = layerRole,
                 )
             },
         )
@@ -524,7 +563,7 @@ object NavExecutionReducer {
             hostState = hostState,
         )
 
-        val layerOrder = retainedEntries.map(NavEntry::id)
+        val layerOrder = orderedSceneEntries.map(NavEntry::id)
         val disposeBeforeSceneEntryIds = mutation
             ?.removed
             .orEmpty()
@@ -565,8 +604,8 @@ object NavExecutionReducer {
         val accessibilityEntryIds = when (phase) {
             NavExecutionPhase.Settled,
             NavExecutionPhase.Transition,
-            -> afterVisible
-            NavExecutionPhase.PredictivePreview -> beforeVisible
+            -> afterSceneLayout.interactiveEntryIds
+            NavExecutionPhase.PredictivePreview -> beforeSceneLayout.interactiveEntryIds
         }
         val rollbackOwnerEntryIds = mutation
             ?.added
@@ -583,8 +622,8 @@ object NavExecutionReducer {
             before = before,
             after = after,
             mutation = mutation,
-            beforePaneScene = beforePaneScene,
-            afterPaneScene = afterPaneScene,
+            beforeSceneLayout = beforeSceneLayout,
+            afterSceneLayout = afterSceneLayout,
             retainedEntries = retainedEntries,
             scene = scene,
             lifecycle = lifecycle,
@@ -603,20 +642,6 @@ object NavExecutionReducer {
             rollbackOwnerEntryIds = rollbackOwnerEntryIds,
             terminalCleanupEntryIds = terminalCleanupEntryIds,
         )
-    }
-
-    private fun validatePaneScene(
-        snapshot: NavBackStackSnapshot,
-        scene: NavPaneScene,
-        label: String,
-    ) {
-        val stackEntryIds = snapshot.entries.mapTo(hashSetOf(), NavEntry::id)
-        require(scene.visibleEntryIds.all(stackEntryIds::contains)) {
-            "The $label pane scene references a destination outside its active stack."
-        }
-        require(snapshot.top.id in scene.visibleEntryIds) {
-            "The $label pane scene must contain its active stack top."
-        }
     }
 
     private fun validateSystemBackCommand(

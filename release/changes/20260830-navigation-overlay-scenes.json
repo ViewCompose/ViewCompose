@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add validated trailing-overlay scene strategies and execute modal destination layering, lifecycle, input, results, restoration, and Back through one navigation plan.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-core", "impact": "breaking" },
+    { "artifact": "viewcompose-navigation-android", "impact": "breaking" }
+  ],
+  "ignored": [],
+  "shared": []
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lifecycle-and-saved-state.md
-translation_source_hash: 14aac3157260ee52e4f86f231ed9fc01009da2d13a08d9304948d955f889f734
+translation_source_hash: d8f86723558b725c4d2663db1c6dc29cda85d8b9d49f22fb0c8c317364dd5fb7
 translation_status: current
 ---
 
@@ -118,6 +118,10 @@ Navigation Entry 或 Graph 的页面 Owner 由四项协同契约组成：受限�
 `SavedStateRegistryOwner`、`ViewModelStoreOwner`，以及默认 Factory/`CreationExtras` 支持。
 页面生命周期同时受宿主生命周期与导航可见性约束；仅有 View Attached 永远不会把隐藏内容提升到
 `RESUMED`。
+
+导航会投影内容 Pane 与末尾模态后缀。Covered Layer 保持可见且处于 `STARTED`，只有顶部 Overlay
+可达到 `RESUMED`；Motion 在稳定前把所有可见参与者限制为 `STARTED`。内容与 Overlay 暴露同一个
+最近 AndroidX `LocalLifecycleOwner`，无需导航专用 Lifecycle 或全局 Current-page API。
 
 配置重建会保留 Navigation Host Scope Identity，并从 `ViewModelScopeProvider` 租用相同 Child
 Store。永久 Pop 或 Graph Removal 会发送显式终止信号并只清理 Store 一次，继而交付 AndroidX

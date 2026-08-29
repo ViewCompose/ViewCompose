@@ -34,6 +34,9 @@ import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavRouteSpec
 import com.viewcompose.navigation.core.NavResultKey
+import com.viewcompose.navigation.core.NavSceneLayerRole
+import com.viewcompose.navigation.core.NavSceneStrategies
+import com.viewcompose.navigation.core.NavSceneStrategy
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.navigation.core.NavSceneVisibility
 import com.viewcompose.navigation.core.NavStackConfiguration
@@ -193,6 +196,80 @@ class NavHostPublicApiTest {
         fixture.session.render()
         assertEquals(listOf("primary"), received)
         fixture.session.dispose()
+    }
+
+    @Test
+    fun `public host projects a trailing destination as an observable modal scene`() {
+        val contexts = mutableMapOf<String, NavDestinationContext>()
+        val fixture = renderPublicHost(
+            sceneStrategies = listOf(
+                NavSceneStrategies.trailingOverlays { entry ->
+                    entry.route.name == "details"
+                },
+            ),
+        ) { entry ->
+            contexts[entry.route.name] = checkNotNull(LocalNavDestinationContext.current)
+            Text(entry.route.name)
+        }
+
+        fixture.controller.navigate(NavRoute("details"))
+
+        assertEquals(
+            NavSceneVisibility.Covered,
+            contexts.getValue("home").presentation.value.visibility,
+        )
+        assertEquals(
+            NavSceneLayerRole.Overlay,
+            contexts.getValue("details").presentation.value.layerRole,
+        )
+        assertEquals(
+            NavSceneVisibility.Visible,
+            contexts.getValue("details").presentation.value.visibility,
+        )
+        assertEquals(2, fixture.navHostView.childCount)
+        assertNull(fixture.navHostView.getChildAt(1).background)
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `restored stack reprojects its trailing overlay without persisted platform state`() {
+        val strategies = listOf(
+            NavSceneStrategies.trailingOverlays { entry ->
+                entry.route.name == "details"
+            },
+        )
+        val controller = deterministicController()
+        val first = renderPublicHost(
+            controller = controller,
+            sceneStrategies = strategies,
+        )
+        controller.navigate(NavRoute("details"))
+        val encoded = encodeNavHostState(controller.stateForSave())
+        first.session.dispose()
+
+        val restoredController = checkNotNull(
+            navHostControllerSaver(NavRoute("home")).restore(encoded),
+        )
+        val contexts = mutableMapOf<String, NavDestinationContext>()
+        val restored = renderPublicHost(
+            controller = restoredController,
+            sceneStrategies = strategies,
+        ) { entry ->
+            contexts[entry.route.name] = checkNotNull(LocalNavDestinationContext.current)
+            Text(entry.route.name)
+        }
+
+        assertEquals(listOf("home", "details"), restoredController.routeNames())
+        assertEquals(2, restored.navHostView.childCount)
+        assertEquals(
+            NavSceneVisibility.Covered,
+            contexts.getValue("home").presentation.value.visibility,
+        )
+        assertEquals(
+            NavSceneLayerRole.Overlay,
+            contexts.getValue("details").presentation.value.layerRole,
+        )
+        restored.session.dispose()
     }
 
     @Test
@@ -1320,6 +1397,7 @@ class NavHostPublicApiTest {
         controller: NavHostController = deterministicController(),
         onFailure: ((NavFailure) -> Unit)? = null,
         contentKey: () -> Any? = { Unit },
+        sceneStrategies: List<NavSceneStrategy> = emptyList(),
         presentationRetentionPolicy: NavPresentationRetentionPolicy =
             NavPresentationRetentionPolicy.RetainAll,
         parentViewModelStoreOwner: ViewModelStoreOwner =
@@ -1339,6 +1417,7 @@ class NavHostPublicApiTest {
                     NavHost(
                         controller = controller,
                         transitionSpec = NavTransitionSpec.None,
+                        sceneStrategies = sceneStrategies,
                         presentationRetentionPolicy = presentationRetentionPolicy,
                         overlayHostFactory = { OverlayHostDefaults.noOp },
                         onFailure = onFailure,

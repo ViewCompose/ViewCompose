@@ -31,6 +31,14 @@ internal class NavDestinationSession(
         return lastFrameReport
     }
 
+    /** Renders once from the latest committed environment without replacing either input. */
+    fun renderCurrent(): RenderFrameReport {
+        renderSession.render()
+        return checkNotNull(lastFrameReport) {
+            "A synchronous destination render must publish a frame report."
+        }
+    }
+
     fun updateEnvironment(
         localSnapshot: UiLocalSnapshot,
         content: NavDestinationContent,

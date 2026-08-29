@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 5f5fef08510ded88ca7d36f463db9a56cad269eb5042b6d923caa0b834f8f512
+translation_source_hash: d793912eefb94a1a6f85b3cdd078f53d506fbbcdac28c2099b7854666acb1707
 translation_status: current
 ---
 
@@ -62,11 +62,18 @@ Controller、Factory、调试身份或 Host `key` 改变会重建原生 Host。
 其 Entry 跨隐藏展示释放存活；永久移除会停止更新并销毁 Lifecycle。活动资源仍遵循 AndroidX
 Lifecycle，因为该 Context 只表达粗粒度 Role，不含逐帧 Progress。
 
+## 添加模态 Destination，而不建立第二套 Lifecycle 模型
+
+向 `NavHost` 传入稳定的
+[`NavSceneStrategies.trailingOverlays`](../modules/viewcompose-navigation-android/README.md#模态导航-scene)。
+Predicate 只选择 Stack 末尾后缀，Pane Policy 布局其前缀。Destination 内容绘制 Surface/Scrim，
+Host 负责模态输入与 Lifecycle。继续使用普通 Back、Result、Restore 与 Predictive API。
+
 ## 明确选择展示保留策略
 
 除非针对具体 Destination 的真机证据表明其原生 View Tree 重建成本不可接受，否则保持默认
 `DisposeWhenHidden`。它释放隐藏原生展示但保留 Owner State。需要时使用经测量的 `Bounded(n)`；
-`RetainAll` 无界。策略变化保留 Owner，首次或恢复连接只物化可见 Pane。
+`RetainAll` 无界。策略变化保留 Owner，首次或恢复连接只物化当前 Scene Layout。
 
 ## 自定义集成只保留一个策略来源
 
