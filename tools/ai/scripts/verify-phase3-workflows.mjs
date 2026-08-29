@@ -16,5 +16,5 @@ if (result.exactMatchRatio < metric.threshold) {
 }
 console.log(
   `Verified client-neutral consumer workflows: ${result.exactMatches}/${result.workflows} exact ` +
-    'contracts, 5 valid skills, and 0 provider-specific adapters.',
+    'contracts, 6 valid skills, and 0 provider-specific adapters.',
 );

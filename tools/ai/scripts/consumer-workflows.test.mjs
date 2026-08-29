@@ -8,8 +8,8 @@ import {
 
 test('accepts the complete checked-in client-neutral consumer workflow set', async () => {
   const result = await verifyConsumerWorkflows();
-  assert.equal(result.workflows, 5);
-  assert.equal(result.exactMatches, 5);
+  assert.equal(result.workflows, 6);
+  assert.equal(result.exactMatches, 6);
   assert.equal(result.exactMatchRatio, 1);
 });
 

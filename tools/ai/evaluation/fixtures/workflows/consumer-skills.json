@@ -42,6 +42,23 @@
       "mutationPolicy": "user-requested-project-writes"
     },
     {
+      "id": "viewcompose-convert-xml",
+      "requiredTools": [
+        "convert_xml_to_viewcompose",
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "analyze_project",
+        "get_component_reference",
+        "get_sample",
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "minimumEvidence": "compiled",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "user-requested-project-writes"
+    },
+    {
       "id": "viewcompose-review",
       "requiredTools": [
         "get_api_reference",

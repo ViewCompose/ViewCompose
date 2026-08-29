@@ -53,6 +53,7 @@ const sourcePaths = Object.freeze([
   'scripts/xml-to-design-ir.mjs',
   'skills/manifest.json',
   'skills/viewcompose-api-reference/SKILL.md',
+  'skills/viewcompose-convert-xml/SKILL.md',
   'skills/viewcompose-create-screen/SKILL.md',
   'skills/viewcompose-debug-layout/SKILL.md',
   'skills/viewcompose-review/SKILL.md',

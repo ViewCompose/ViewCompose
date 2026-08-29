@@ -204,10 +204,11 @@ boundary.
 
 ## Consumer Agent workflows
 
-Five client-neutral consumer skills live below `skills/`:
+Six client-neutral consumer skills live below `skills/`:
 
 - `viewcompose-api-reference` retrieves exact APIs and compiled samples without writing files.
 - `viewcompose-create-screen` retrieves before implementation and requires compile-backed delivery.
+- `viewcompose-convert-xml` preserves migration boundaries and requires compile-backed integration.
 - `viewcompose-review` keeps review read-only unless the caller also asks for a fix.
 - `viewcompose-debug-layout` uses only allowlisted Preview and structured layout evidence.
 - `viewcompose-validate` requires hermetic compilation and renders only covered allowlisted targets.
@@ -226,7 +227,7 @@ npm --prefix tools/ai run verify:phase3-workflows
 ./gradlew verifyAiConsumerWorkflows
 ```
 
-The gate checks the frozen five-workflow denominator, known tool names, evidence ordering, stable
+The gate checks the frozen six-workflow denominator, known tool names, evidence ordering, stable
 skill paths and frontmatter, safety boundaries, path containment, provider neutrality, and a 16 KiB
 entrypoint limit.
 
@@ -240,7 +241,7 @@ npm --prefix tools/ai run package:distribution
 
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
 exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the nine-tool CLI/MCP core,
-five consumer skills, the immutable Knowledge Bundle, an SPDX 2.3 package record, the MIT license,
+six consumer skills, the immutable Knowledge Bundle, an SPDX 2.3 package record, the MIT license,
 and a reviewed empty runtime-dependency license inventory. It intentionally contains no
 `node_modules`, Gradle project, Android SDK, JDK, provider adapter, network listener, or model.
 
