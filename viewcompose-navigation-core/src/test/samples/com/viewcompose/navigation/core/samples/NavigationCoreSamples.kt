@@ -166,12 +166,10 @@ fun navigationResultTransactionSample() {
 
     // DOCS_REGION_START(navigation-core-results)
 val selectedItem = NavResultKey.text("catalog.selection")
-val preparation = controller.prepare(
+val preparedResultPop = controller.prepare(
     NavCommand.PopWithResult(selectedItem.encode("item-42")),
 )
-val transaction = (preparation as NavPreparation.Ready).transaction
-check(transaction.after.top.route.name == "home")
-transaction.commit()
+check(preparedResultPop is NavPreparation.Ready)
     // DOCS_REGION_END(navigation-core-results)
 }
 

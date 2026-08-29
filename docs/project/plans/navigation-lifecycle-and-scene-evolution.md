@@ -898,6 +898,33 @@ name addressing, arbitrary cross-stack delivery, live object persistence, or ove
 failure diagnostics. Repeated values for one key retain FIFO order rather than SavedStateHandle's
 last-write-wins behavior. Typed-route serialization remains a separate compatibility decision.
 
+Acceptance evidence:
+
+- Fresh Navigation Core passed 80/80 tests versus the 76-test slice-7.1 baseline, an absolute gain
+  of four (+5.3%). Navigation Android passed 172/172 versus 166, a gain of six (+3.6%). The added
+  reducer, saved FIFO, restore, replay-suppression, and resumed-effect cases make result-contract
+  coverage **improved**; line and branch coverage remain **inconclusive** because this repository
+  has no accepted navigation coverage report.
+- One focused instrumentation case passed 1/1 on the physical Pixel 4 XL/API 33. Immediately after
+  result pop, the previous page was `STARTED`, its inbox held one value, and its callback had not
+  run. After settlement it was `RESUMED`, consumed exactly once while observing `RESUMED`, and did
+  not replay across stop/resume. Device confidence is **improved**, but OEM/API breadth and a real
+  process-kill journey remain **inconclusive**; saved-state restoration is covered deterministically.
+- Q3 Core and Android samples compiled. Core API documentation passed strictly; Android API
+  inspection remains **inconclusive** because the pre-existing Dokka `androidJvm`/`release`
+  source-root overlap fails before declaration inspection. The next action is to repair that shared
+  convention and rerun without weakening source layout or documentation policy.
+- `qaQuick` passed in 2m11s and `qaPreview` in 21s. Documentation structure, all 77 script tests,
+  126 current Chinese mirrors, release intent, DSL API contracts, and development-tooling isolation
+  passed. This is **improved** integration confidence and **no material change** in Preview output;
+  cache state and wall time are context, not performance evidence.
+- The first complete site build produced 49,233,399 non-API bytes, 55,185 bytes above the unchanged
+  46.9 MiB ceiling. Consolidating duplicated phase evidence and sample exposition corrected the
+  representation without raising the budget: the evidence-bearing rebuild reduced 82,155 bytes
+  (0.17%) to 49,151,244 and left 26,970 bytes headroom. Site-size confidence is **improved**. Leak,
+  memory, representative workload, and runtime performance remain **inconclusive**. Next:
+  disposition typed-route serialization, then run the broader matrix.
+
 ### Phase 8: document, release, and archive
 
 1. Move durable generic lifecycle conclusions to `docs/architecture/lifecycle-and-saved-state.md`

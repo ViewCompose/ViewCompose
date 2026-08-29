@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 531e61630698a7427f255bef78aa361fb0dc2df9610ab6362546008fba10f397
+translation_source_hash: f3f8e428e28cae970bb2915033174396d47255ff7a88897c570acdef7934022a
 translation_status: current
 ---
 
@@ -87,18 +87,14 @@ when (val preparation = controller.prepare(NavCommand.Push(NavRoute("details")))
 {/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-results" sample_id="module.navigation-core-results" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val selectedItem = NavResultKey.text("catalog.selection")
-val preparation = controller.prepare(
+val preparedResultPop = controller.prepare(
     NavCommand.PopWithResult(selectedItem.encode("item-42")),
 )
-val transaction = (preparation as NavPreparation.Ready).transaction
-check(transaction.after.top.route.name == "home")
-transaction.commit()
+check(preparedResultPop is NavPreparation.Ready)
 ```
 
-`PopWithResult` 在同一事务中移除活动栈顶并携带一个封闭 `NavValue` Payload。Reducer 把结果定向
-到仍存活的 `after.top` Entry；根节点无变化、回滚、稳定态协调和 Predictive Preview 都不会产生
-交付。`NavResultKey` 以稳定名称、类型身份和显式编码绑定契约；Core 不持有 Callback、Lifecycle
-或全局结果总线。
+`PopWithResult` 在移除活动栈顶时携带一个类型化 `NavValue`。只有已提交事务才向 `after.top`
+交付；Core 不持有 Callback 或 Lifecycle。
 
 ## 独立保留栈
 

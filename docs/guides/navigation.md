@@ -79,13 +79,9 @@ transaction boundary. Predictive Back previews the previous destination without 
 candidate stack; cancellation restores the committed scene, while completion commits through the
 same path as a programmatic pop.
 
-For a page-owned selection or edit result, declare one stable `NavResultKey`, call
-`popBackStack(key, value)` from the top page, and observe it with `NavResultEffect` in the previous
-page. Delivery is part of the successful pop transaction, persists in the target entry's saved
-state, follows FIFO order, and waits for the target destination Lifecycle to reach `RESUMED`.
-The effect consumes before invoking the callback for at-most-once behavior. Use
-`LocalNavDestinationContext.current.results.peek/consume` instead when application-level retry is
-required. Do not use results as a global event bus or for arbitrary cross-stack addressing.
+Declare a stable `NavResultKey`, pop with its value, and observe it with `NavResultEffect` in the
+previous page. Delivery is saved, FIFO, and deferred until that page is `RESUMED`; use the
+destination context inbox when explicit acknowledgement or retry is required.
 
 ## Keep route rendering exhaustive
 

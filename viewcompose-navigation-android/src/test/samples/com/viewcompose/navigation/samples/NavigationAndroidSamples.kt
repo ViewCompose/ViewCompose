@@ -76,24 +76,12 @@ fun UiTreeBuilder.rememberedNavHostSample() {
 // DOCS_REGION_START(navigation-android-results)
 val SelectedItemResult = NavResultKey.text("catalog.selection")
 
-fun UiTreeBuilder.navigationResultSample(
-    controller: NavHostController,
-    onSelected: (String) -> Unit,
-) {
-    NavHost(controller = controller) { entry ->
-        when (entry.route.name) {
-            "home" -> {
-                NavResultEffect(SelectedItemResult, onSelected)
-                Text("Home")
-            }
-            "details" -> Text("Details")
-        }
-    }
+fun UiTreeBuilder.observeSelectedItem(onSelected: (String) -> Unit) {
+    NavResultEffect(SelectedItemResult, onSelected)
 }
 
-fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult {
-    return controller.popBackStack(SelectedItemResult, itemId)
-}
+fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult =
+    controller.popBackStack(SelectedItemResult, itemId)
 // DOCS_REGION_END(navigation-android-results)
 
 // DOCS_REGION_START(navigation-android-host-construction)

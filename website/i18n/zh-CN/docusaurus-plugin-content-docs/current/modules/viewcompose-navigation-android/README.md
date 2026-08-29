@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 54592a96ed605ab1314d7c83d79740b2556dafab1d5e36d53c464808c34942c8
+translation_source_hash: 2f928fc4ad1981bcc88c03f965e5180eae72112237d4575e2b5739ec305b31c8
 translation_status: current
 ---
 
@@ -125,32 +125,17 @@ Role 或 Transition Role 等粗粒度 UI 决策才使用 Destination Presentatio
 ```kotlin
 val SelectedItemResult = NavResultKey.text("catalog.selection")
 
-fun UiTreeBuilder.navigationResultSample(
-    controller: NavHostController,
-    onSelected: (String) -> Unit,
-) {
-    NavHost(controller = controller) { entry ->
-        when (entry.route.name) {
-            "home" -> {
-                NavResultEffect(SelectedItemResult, onSelected)
-                Text("Home")
-            }
-            "details" -> Text("Details")
-        }
-    }
+fun UiTreeBuilder.observeSelectedItem(onSelected: (String) -> Unit) {
+    NavResultEffect(SelectedItemResult, onSelected)
 }
 
-fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult {
-    return controller.popBackStack(SelectedItemResult, itemId)
-}
+fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult =
+    controller.popBackStack(SelectedItemResult, itemId)
 ```
 
-带结果 Pop 会先提交栈，再把 Payload 放入仍存活 Entry 的队列。每个保留 Entry 持有一份由
-Saved State 支撑的 FIFO Inbox，并通过 `NavDestinationContext.results` 提供显式 `peek`/`consume`
-控制。`NavResultEffect` 使用 DSL 中同一个最近 Destination `LocalLifecycleOwner`；只有 Owner 到达
-`RESUMED` 且一次成功渲染进入 Side-effect 阶段后，才消费一个匹配值。消费语义是 At-most-once；
-若业务 Callback 失败后必须重试，应直接使用 Inbox API。Result Key 是局部 Entry 契约，不存在
-进程全局总线、跨栈寻址或 Predictive Back 带结果 Pop。
+已提交 Pop 会把值写入仍存活 Entry 的可保存 FIFO Inbox。`NavResultEffect` 在 Destination 到达
+`RESUMED` 后至多消费一次；显式确认或重试应使用 `NavDestinationContext.results`。Key 仅属于
+本地 Entry，不是全局或跨栈总线。
 
 ## 展示保留策略
 
@@ -179,14 +164,7 @@ fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
 策略只影响之后创建或隐藏的展示，不会急切构建当前不可见页面。首次连接、配置恢复连接和进程恢复
 连接都只物化当前可见 Pane 集合，即使选择 `RetainAll` 也是如此。
 
-Phase 4 的真机对比使用一台运行 API 33 的 Pixel 4 XL 和合成的重型 13 层栈。
-`DisposeWhenHidden` 保留 1 个 Presentation，进程 PSS 为 185,510 KiB；`RetainAll` 保留 13 个，
-PSS 为 191,953 KiB。即 Presentation 少 12 个（92.3%），进程 PSS 少 6,443 KiB（3.4%）。同步
-Pop 并重建的中位耗时从 13,318 us 增至 49,573 us，即增加 272.2%。另一轮带动画对比为每个策略
-在 90 Hz 下采集 252 帧；两者 P95 均为 9 ms，超过 32 ms 的帧均为 0。结论为 **mixed**：有界
-默认策略改善空闲资源所有权，并在本次稳定帧样本中为 **no material change**；实测重建昂贵的页面
-可以选择 `Bounded` 或 `RetainAll`。这不是通用 Benchmark：它只使用一台设备、合成内容、进程级
-PSS 与短时运行。下一步由 Phase 7 继续验证更广设备、泄漏和代表性负载。
+Retention 权衡与证据解释由[导航架构](../../architecture/navigation.md)维护。
 
 ## 命令结果与重入
 

@@ -116,19 +116,14 @@ No-change outcomes are explicit:
 {/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-results" sample_id="module.navigation-core-results" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val selectedItem = NavResultKey.text("catalog.selection")
-val preparation = controller.prepare(
+val preparedResultPop = controller.prepare(
     NavCommand.PopWithResult(selectedItem.encode("item-42")),
 )
-val transaction = (preparation as NavPreparation.Ready).transaction
-check(transaction.after.top.route.name == "home")
-transaction.commit()
+check(preparedResultPop is NavPreparation.Ready)
 ```
 
-`PopWithResult` removes the active top and carries one closed `NavValue` payload in the same
-transaction. The reducer targets the surviving `after.top` entry and emits no delivery for a root
-no-change, rollback, settled reconciliation, or predictive preview. `NavResultKey` couples a stable
-name and type identity with explicit encoding; Core never owns callbacks, Lifecycle, or a global
-result bus.
+`PopWithResult` carries one typed `NavValue` while removing the active top. Only a committed
+transaction delivers to `after.top`; Core owns neither callbacks nor Lifecycle.
 
 ## Independent retained stacks
 
