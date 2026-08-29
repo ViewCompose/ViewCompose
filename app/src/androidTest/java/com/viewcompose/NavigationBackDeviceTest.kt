@@ -2,8 +2,8 @@ package com.viewcompose
 
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
-import android.os.Debug
 import android.os.Build
+import android.os.Debug
 import android.os.SystemClock
 import android.util.Log
 import android.util.SparseIntArray
@@ -945,10 +945,91 @@ class NavigationBackDeviceTest {
     }
 
     @Test
+    fun poppedDestinationPresentationOwnerAndViewModelBecomeUnreachable() {
+        lateinit var probe: NavigationBackTestActivity.DestinationReachabilityProbe
+        launchHost(
+            retentionPolicy = NavigationBackTestActivity.PRESENTATION_RETENTION_RETAIN_ALL,
+            disableTransitions = true,
+        ).use { scenario ->
+            scenario.onActivity { activity ->
+                assertTrue(activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is NavResult.Committed)
+                probe = activity.captureDestinationReachability(
+                    NavigationBackTestActivity.DETAILS_ROUTE,
+                )
+                activity.releaseDestinationReachabilityTracking(
+                    NavigationBackTestActivity.DETAILS_ROUTE,
+                )
+                assertTrue(activity.navController.popBackStack() is NavResult.Committed)
+                activity.releaseDestinationReachabilityTracking(
+                    NavigationBackTestActivity.DETAILS_ROUTE,
+                )
+                assertEquals(Lifecycle.State.DESTROYED, probe.ownerLifecycleState)
+            }
+            waitForUiIdle()
+
+            awaitReachability(
+                context = "terminal pop",
+                probe = probe,
+            ) {
+                !probe.presentationReachable &&
+                    !probe.ownerReachable &&
+                    !probe.viewModelReachable
+            }
+        }
+    }
+
+    @Test
+    fun boundedEvictionReleasesPresentationButRetainsLogicalOwnerAndViewModel() {
+        lateinit var probe: NavigationBackTestActivity.DestinationReachabilityProbe
+        launchHost(
+            retentionPolicy = NavigationBackTestActivity.PRESENTATION_RETENTION_BOUNDED,
+            maxHiddenPresentations = BOUNDED_HIDDEN_PRESENTATIONS,
+            disableTransitions = true,
+        ).use { scenario ->
+            scenario.onActivity { activity ->
+                probe = activity.captureDestinationReachability(
+                    NavigationBackTestActivity.HOME_ROUTE,
+                )
+                activity.releaseDestinationReachabilityTracking(
+                    NavigationBackTestActivity.HOME_ROUTE,
+                )
+                listOf(
+                    NavigationBackTestActivity.DETAILS_ROUTE,
+                    NavigationBackTestActivity.CONFIRMATION_ROUTE,
+                    "bounded-eviction-third",
+                ).forEach { route ->
+                    assertTrue(activity.push(route) is NavResult.Committed)
+                }
+                activity.releaseDestinationReachabilityTracking(
+                    NavigationBackTestActivity.HOME_ROUTE,
+                )
+                assertTrue(!activity.hasDestinationPresentation(NavigationBackTestActivity.HOME_ROUTE))
+                assertEquals(BOUNDED_HIDDEN_PRESENTATIONS + 1, activity.destinationPresentationCount())
+                assertEquals(Lifecycle.State.CREATED, probe.ownerLifecycleState)
+            }
+            waitForUiIdle()
+
+            awaitReachability(
+                context = "bounded presentation eviction",
+                probe = probe,
+            ) {
+                !probe.presentationReachable
+            }
+            assertTrue("bounded owner was released: $probe", probe.ownerReachable)
+            assertTrue("bounded ViewModel was released: $probe", probe.viewModelReachable)
+            assertEquals(Lifecycle.State.CREATED, probe.ownerLifecycleState)
+        }
+    }
+
+    @Test
     fun presentationRetentionReportsDeviceResourceAndRebuildEvidence() {
         val disposeWhenHidden = measureRetentionEvidence(
             policy = NavigationBackTestActivity.PRESENTATION_RETENTION_DISPOSE,
             expectedPresentationCount = 1,
+        )
+        val bounded = measureRetentionEvidence(
+            policy = NavigationBackTestActivity.PRESENTATION_RETENTION_BOUNDED,
+            expectedPresentationCount = BOUNDED_HIDDEN_PRESENTATIONS + 1,
         )
         val retainAll = measureRetentionEvidence(
             policy = NavigationBackTestActivity.PRESENTATION_RETENTION_RETAIN_ALL,
@@ -956,11 +1037,16 @@ class NavigationBackDeviceTest {
         )
 
         Log.i(RETENTION_EVIDENCE_LOG_TAG, disposeWhenHidden.description)
+        Log.i(RETENTION_EVIDENCE_LOG_TAG, bounded.description)
         Log.i(RETENTION_EVIDENCE_LOG_TAG, retainAll.description)
         assertEquals(1, disposeWhenHidden.presentationCount)
+        assertEquals(BOUNDED_HIDDEN_PRESENTATIONS + 1, bounded.presentationCount)
         assertEquals(RETENTION_EVIDENCE_STACK_DEPTH, retainAll.presentationCount)
+        assertTrue(bounded.presentationCount > disposeWhenHidden.presentationCount)
+        assertTrue(retainAll.presentationCount > bounded.presentationCount)
         assertTrue(retainAll.presentationCount > disposeWhenHidden.presentationCount)
         assertTrue(disposeWhenHidden.medianPopMicros >= 0L)
+        assertTrue(bounded.medianPopMicros >= 0L)
         assertTrue(retainAll.medianPopMicros >= 0L)
     }
 
@@ -1068,6 +1154,9 @@ class NavigationBackDeviceTest {
             SystemClock.sleep(RETENTION_EVIDENCE_GC_SETTLE_MILLIS)
             scenario.onActivity { activity ->
                 val presentationCount = activity.destinationPresentationCount()
+                val runtime = Runtime.getRuntime()
+                val javaHeapKb = (runtime.totalMemory() - runtime.freeMemory()) / 1_024L
+                val nativeHeapKb = Debug.getNativeHeapAllocatedSize() / 1_024L
                 val pssKb = Debug.getPss()
                 val popMicros = buildList {
                     repeat(RETENTION_EVIDENCE_POP_COUNT) {
@@ -1080,6 +1169,8 @@ class NavigationBackDeviceTest {
                     policy = policy,
                     stackDepth = RETENTION_EVIDENCE_STACK_DEPTH,
                     presentationCount = presentationCount,
+                    javaHeapKb = javaHeapKb,
+                    nativeHeapKb = nativeHeapKb,
                     pssKb = pssKb,
                     medianPopMicros = popMicros.sorted()[popMicros.size / 2],
                 )
@@ -1087,6 +1178,29 @@ class NavigationBackDeviceTest {
             }
         }
         return checkNotNull(evidence)
+    }
+
+    private fun awaitReachability(
+        context: String,
+        probe: NavigationBackTestActivity.DestinationReachabilityProbe,
+        predicate: () -> Boolean,
+    ) {
+        val deadline = SystemClock.uptimeMillis() + REACHABILITY_TIMEOUT_MILLIS
+        while (SystemClock.uptimeMillis() < deadline) {
+            Runtime.getRuntime().gc()
+            System.runFinalization()
+            allocateGcPressure()
+            if (predicate()) return
+            SystemClock.sleep(REACHABILITY_POLL_MILLIS)
+        }
+        assertTrue("$context remained reachable after bounded polling: $probe", predicate())
+    }
+
+    private fun allocateGcPressure() {
+        val pressure = Array(REACHABILITY_PRESSURE_CHUNKS) {
+            ByteArray(REACHABILITY_PRESSURE_CHUNK_BYTES)
+        }
+        pressure.forEachIndexed { index, bytes -> bytes[0] = index.toByte() }
     }
 
     /**
@@ -1394,12 +1508,15 @@ class NavigationBackDeviceTest {
         val policy: String,
         val stackDepth: Int,
         val presentationCount: Int,
+        val javaHeapKb: Long,
+        val nativeHeapKb: Long,
         val pssKb: Long,
         val medianPopMicros: Long,
     ) {
         val description: String
             get() = "presentation-retention policy=$policy, stackDepth=$stackDepth, " +
-                "presentations=$presentationCount, pss=${pssKb}KiB, " +
+                "presentations=$presentationCount, javaHeap=${javaHeapKb}KiB, " +
+                "nativeHeap=${nativeHeapKb}KiB, pss=${pssKb}KiB, " +
                 "medianPop=${medianPopMicros}us"
     }
 
@@ -1411,6 +1528,10 @@ class NavigationBackDeviceTest {
         private const val RETENTION_EVIDENCE_POP_COUNT = 6
         private const val RETENTION_EVIDENCE_GC_SETTLE_MILLIS = 120L
         private const val RETENTION_EVIDENCE_LOG_TAG = "ViewComposeNavRetention"
+        private const val REACHABILITY_TIMEOUT_MILLIS = 5_000L
+        private const val REACHABILITY_POLL_MILLIS = 100L
+        private const val REACHABILITY_PRESSURE_CHUNKS = 4
+        private const val REACHABILITY_PRESSURE_CHUNK_BYTES = 256 * 1_024
         private const val RETENTION_FRAME_TIMING_ITERATIONS = 3
         private const val STRESS_ITERATIONS = 30
         private const val FRAME_TIMING_ITERATIONS = 6
