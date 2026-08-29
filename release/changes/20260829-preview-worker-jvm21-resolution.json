@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Align Preview worker-host dependency resolution with the documented JDK 21 process boundary and Paparazzi's Layoutlib release so render and refresh tasks can execute the published worker artifact.",
+  "changes": [
+    {
+      "artifact": "viewcompose-preview-gradle-plugin",
+      "impact": "fix"
+    }
+  ]
+}

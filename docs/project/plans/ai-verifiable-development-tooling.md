@@ -37,7 +37,8 @@ completion:
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
 next_action: Complete Phase 2 with pinned tool-owned compilation, Preview evidence adaptation, cancellation/cache adversarial coverage, and deeper project findings without exposing a protocol surface yet.
-maven_release_changesets: []
+maven_release_changesets:
+  - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
 
 # AI-Verifiable Development Tooling Plan
@@ -56,15 +57,15 @@ exposure.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260829-preview-worker-jvm21-resolution.json`
 
 ## Release intent rationale
 
-This initial slice changes repository planning and current roadmap ownership only. It does not
-change a published artifact's production source, publication inputs, or compiled API samples, so no
-immutable Maven release Changeset is required. Later phases must add one Changeset per affected
-published artifact, or record an explicit ignored disposition with a concrete reason, in the same
-slice that introduces publication-relevant implementation.
+The initial planning, contracts, Knowledge Bundle, validator, and analyzer slices do not change a
+published artifact. Phase 2 Preview acceptance exposed and fixes one production
+configuration mismatch in `viewcompose-preview-gradle-plugin`; its immutable Changeset classifies
+that artifact as a fix. Later publication-relevant slices must add one Changeset per affected
+published artifact, or record an explicit ignored disposition with a concrete reason.
 
 ## Objective
 
