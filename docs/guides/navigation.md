@@ -14,6 +14,8 @@ capability_ids:
   - navigation.result-consumption
   - navigation.results
   - navigation.scene-projection
+  - navigation.typed-route-host
+  - navigation.typed-routes
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
@@ -29,6 +31,7 @@ success_checks:
   - Failed destination preparation preserves the previously visible destination.
   - Hidden presentation resources follow one explicit bounded retention policy without clearing entry state.
   - Destination content observes the nearest stable entry context without treating transition progress as lifecycle.
+  - One typed route declaration is reused for graph registration, controller commands, and entry decoding.
 failure_checks:
   - A controller is attached to more than one active NavHost or receives commands while detached.
   - NavHost is mounted without a LocalViewModelStoreOwner boundary.
@@ -36,6 +39,7 @@ failure_checks:
   - A queued command is treated as committed completion.
   - RetainAll is selected without application-specific memory and rebuild evidence.
   - Resource work is started from destination presentation state instead of AndroidX Lifecycle.
+  - Typed codecs retain page objects or depend on mutable process-only registration state.
 ---
 
 # Configure a production navigation host
@@ -61,6 +65,12 @@ provide both explicitly; `NavHost` intentionally refuses to create a private fal
 Use a stable `NavGraph` when routes need typed arguments, nested ownership, or deep links. Restore
 fails closed when the current graph no longer accepts the saved route hierarchy. Treat that as a
 safe restart at the configured start destination, not as a partially restored stack.
+
+Declare one stable `NavRouteSpec<T>` per application route and reuse it in `destination`,
+`navigation`, controller typed commands, and `NavEntry.toRoute`. Encode only durable identifiers
+and small primitive values; load domain objects from the destination ViewModel. Keep the explicit
+route name and argument schema compatible across releases. A codec exception is a caller error and
+occurs before the Android host begins a navigation transaction.
 
 Model external navigation with `NavDeepLinkRequest`. A declaration may constrain URI, action,
 MIME type, or all three; every declared constraint must match. The Android `Intent` overload maps

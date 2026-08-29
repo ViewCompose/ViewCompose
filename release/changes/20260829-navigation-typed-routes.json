@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add one explicit typed-route declaration shared by graph registration, host commands, and entry decoding without changing the persisted route model.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-core", "impact": "feature" },
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

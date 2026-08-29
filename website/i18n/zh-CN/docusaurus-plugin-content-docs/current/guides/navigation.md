@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: d0d878f01a8ff4d55addb2b33532a8508afd49941ccbb236d763bbc6caebd22f
+translation_source_hash: 82c01c12f77c5fd4cf8b3560e9c1ec2787e4394b68d1d6e613ee23b50a5d9775
 translation_status: current
 ---
 
@@ -26,6 +26,11 @@ Destination 自有 SavedState。
 当 Route 需要类型化参数、嵌套所有权或深链时，请使用稳定的 `NavGraph`。如果当前 Graph 已不
 接受保存的 Route 层级，恢复会失败关闭。应把结果视为安全回到配置的起始目标页，不得拼接出
 部分恢复的栈。
+
+为每个应用 Route 声明一个稳定 `NavRouteSpec<T>`，并在 `destination`、`navigation`、Controller
+类型化命令与 `NavEntry.toRoute` 中复用。只编码可持久化标识符和少量基础值，领域对象应由目标页
+ViewModel 加载。跨版本保持显式 Route Name 与参数 Schema 兼容。Codec 异常属于调用方错误，且会
+在 Android Host 启动导航事务前发生。
 
 使用 `NavDeepLinkRequest` 表达外部导航。声明可以约束 URI、action、MIME type 或三者组合，且
 每个声明约束都必须匹配。Android `Intent` 重载只把 `data`、`action` 与 `type` 映射到同一份 Core

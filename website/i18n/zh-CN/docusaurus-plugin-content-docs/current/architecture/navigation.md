@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: 6dba7c88621877a974e8bded2874b534216a46ed8e7b04d9a4d573fb0d70f0fd
+translation_source_hash: e8b26e506e54ea02d84bef57b3b220fadb2f0d3446ab73780e3c78351881b39c
 translation_status: current
 ---
 
@@ -19,6 +19,11 @@ ViewCompose 导航使用 Activity 或 Window 作为最外层 Android Host，但 
 
 这一分层让状态机不依赖 Android 所有权，同时让原生 Host 在唯一位置协调栈状态、渲染、
 Lifecycle 和 View 层级变化。
+
+`NavRouteSpec<T>` 是位于 Core 边界的应用自有 Adapter，而不是第二套导航模型。稳定名称用于
+Graph 声明，Encoder 生成封闭的 `NavValue` 参数，Decoder 从 Entry 重建应用值。Android 类型化
+命令会在进入 Host 事务前编码。Graph 不保留 Codec Callback，Snapshot 不保留应用对象，String
+Route 仍是互操作和恢复边界。
 
 ## 2. 事务边界
 

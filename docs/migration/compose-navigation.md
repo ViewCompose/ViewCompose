@@ -14,6 +14,8 @@ capability_ids:
   - navigation.result-consumption
   - navigation.results
   - navigation.scene-projection
+  - navigation.typed-route-host
+  - navigation.typed-routes
 artifact_ids:
   - viewcompose-navigation-core
   - viewcompose-navigation-android
@@ -50,6 +52,8 @@ The upstream side is a semantic review of official stable documentation and rele
 - [Navigation 2 multiple back stacks](https://developer.android.com/guide/navigation/backstack/multi-back-stacks)
 - [`NavBackStackEntry`](https://developer.android.com/reference/androidx/navigation/NavBackStackEntry)
 - [Navigation 2 deep links](https://developer.android.com/guide/navigation/design/deep-link)
+- [Navigation 2 type-safe design](https://developer.android.com/guide/navigation/design/type-safety)
+- [Navigation 2 type-safe destinations](https://developer.android.com/guide/navigation/type-safe-destinations)
 - [Navigation 2 programmatic navigation and results](https://developer.android.com/guide/navigation/use-graph/programmatic)
 - [Navigation 2 release notes](https://developer.android.com/jetpack/androidx/releases/navigation)
 - [Navigation 3 overview](https://developer.android.com/guide/navigation/navigation-3)
@@ -150,7 +154,7 @@ and **Unsupported**.
 | --- | --- | --- | --- | --- |
 | Navigation ownership | Navigation 2 centers on a library-owned `NavController`. Navigation 3 normally exposes an application-owned back-stack collection to `NavDisplay`. | A `NavBackStackController` owns immutable single- or multi-stack snapshots and exposes prepared transitions to the Android host. | Intentionally different | [`NavBackStackController.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt) and [`NavHostRuntime.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostRuntime.kt). It combines controller ownership similar to Navigation 2 with explicit snapshot and pane concepts closer to Navigation 3. |
 | Host and destination type | Navigation 2 supports Compose, Fragment, Activity, and custom destinations. Navigation 3 renders entry content through `NavDisplay`. | `NavHost` renders framework-managed native View sessions. An Activity or Fragment is a host owner, not a destination type. | Intentionally different | [`NavHostDsl.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostDsl.kt) and [`NavDestinationSessionStore.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationSessionStore.kt). Direct Fragment or Activity destinations are not implemented. |
-| Graphs and typed routes | Navigation 2 supports graphs and typed or serializable routes. Navigation 3 keys are application-defined and normally saveable; 1.1.5 gives an instance-key `entry` registration precedence over a class-key registration. | Graph and destination identities are explicit, but route arguments use the closed `NavValue` set: null, string, int, long, boolean, float, and double. | Partially supported | [`NavigationModel.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavigationModel.kt), graph tests in [`NavBackStackControllerTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt), and public graph coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). There is no compiler-generated route serialization or Navigation3 instance/class registration precedence to preserve. |
+| Graphs and typed routes | Navigation 2 type-safe routes use serializable route types across graph declaration, navigation, and entry decoding. Navigation 3 keys are application-defined and normally saveable; 1.1.5 gives an instance-key `entry` registration precedence over a class-key registration. | One `NavRouteSpec<T>` supplies a stable graph name plus explicit encoder and decoder callbacks. Graph DSL, Android commands, and `NavEntry.toRoute` reuse it, while the stored model remains closed `NavRoute`/`NavValue`. | Partially supported | [`NavRouteSpec.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavRouteSpec.kt), [`NavRouteSpecTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavRouteSpecTest.kt), and typed command coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). The compile-time use path is closed, but compiler-generated Kotlin serialization, custom `NavType`, polymorphic keys, and Navigation3 instance/class registration precedence remain absent. |
 | Back-stack operations | Navigation 2 supplies `navigate`, `popBackStack`, `popUpTo`, and `NavOptions`; Navigation 3 represents stack changes through application collection updates. | Push, pop, replace, reset, stack selection, and deep-link commands are prepared, rendered, and then committed or rolled back as one transaction. | Partially supported | [`NavBackStackController.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt), [`NavBackStackControllerTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt), and [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). The two-phase transaction is stronger than an API-name mapping but is not the full Navigation 2 `NavOptions` surface. |
 | Scene execution plan | Navigation 3 derives scenes from application back-stack state and composes entry content through decorators; Navigation 2 keeps most execution policy inside the controller and navigator implementations. | `NavExecutionReducer` is a public, pure Q3 boundary. Settled, transition, and predictive-preview inputs produce one immutable plan for stack, scene, lifecycle, presentation, interaction, Back, rollback, and cleanup; the Android host performs typed effects from that plan. | Intentionally different | [`NavExecutionPlan.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt), its compiled sample, reducer model tests, and Android coordinator tests. This is stronger inspectability for custom executors, not parity with Navigation 3's open scene/decorator ecosystem. |
 | Entry and graph owners | `NavBackStackEntry` owns lifecycle, ViewModel, and saved state. Lifecycle 2.11 adds Navigation3 ViewModel decorators that inherit parent factories and `CreationExtras`. | Each destination and graph gets its own lifecycle, saved-state owner, ViewCompose saveable-state registry, and leased ViewModelStore. Owners inherit the required host parent's default Factory and starting extras, then replace their child ownership and route defaults. | Supported | [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), [`NavGraphOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt), [`NavEntryOwnerEnvironment.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt), and Factory, extras, SavedStateHandle, destination, and graph coverage in [`NavEntryOwnerTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt) and [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
@@ -208,10 +212,11 @@ before publishing that scene.
 
 ## Graphs, routes, and arguments
 
-ViewCompose graph, destination, entry, and stack identities are explicit. Route arguments are
-limited to the `NavValue` primitive set. This keeps controller snapshots deterministic and
-saveable, but it is narrower than Navigation 2 typed serialization and arbitrary Navigation 3
-application keys.
+ViewCompose graph, destination, entry, and stack identities are explicit. `NavRouteSpec<T>` closes
+the application use path around one declaration: register the spec in the graph, navigate with a
+typed value, and decode the entry with that same spec. Its callbacks still encode into the
+`NavValue` primitive set, which keeps snapshots deterministic and saveable but remains narrower
+than Navigation 2 compiler-generated serialization and arbitrary Navigation 3 application keys.
 
 Prefer stable identifiers and primitive route values. Load complex domain objects from a
 repository or ViewModel after navigation instead of serializing them into a route. A migration
@@ -401,7 +406,9 @@ carried as existing repository evidence rather than a fresh result.
 ## Migration risks and unsupported behavior
 
 - Activity and Fragment destinations are unsupported; only their role as Android hosts remains.
-- Arbitrary serializable route objects and compiler-generated typed-route parity are unsupported.
+- Compiler-generated route serialization, arbitrary serializable route objects, and polymorphic
+  Navigation3 key registration remain unsupported; use an explicit `NavRouteSpec<T>` or wait for
+  the optional serialization adapter.
 - Direct NavigationEvent dispatcher-owner, callback, forward-event, testing, and Preview APIs are
   unsupported.
 - General Navigation3 scene strategies and metadata are unsupported; the pane policy is narrower.

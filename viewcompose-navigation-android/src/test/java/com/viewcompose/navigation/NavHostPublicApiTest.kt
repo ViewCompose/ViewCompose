@@ -32,6 +32,7 @@ import com.viewcompose.navigation.core.NavDeepLink
 import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
 import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavRouteSpec
 import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.navigation.core.NavSceneVisibility
@@ -41,6 +42,7 @@ import com.viewcompose.navigation.core.NavStackSelectionMode
 import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
+import com.viewcompose.navigation.core.toRoute
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.OverlayHostDefaults
@@ -66,6 +68,107 @@ import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class NavHostPublicApiTest {
+    @Test
+    fun `typed navigate uses the same spec to encode and decode the destination`() {
+        val profile = profileSpec()
+        val controller = deterministicController()
+        val fixture = renderPublicHost(controller)
+
+        val result = controller.navigate(
+            route = profile,
+            value = ProfileRoute(userId = 42L, editable = true),
+        )
+
+        assertTrue(result is NavResult.Committed)
+        assertEquals("profile", controller.snapshot.top.route.name)
+        assertEquals(
+            ProfileRoute(userId = 42L, editable = true),
+            controller.snapshot.top.toRoute(profile),
+        )
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `typed replace and reset retain ordinary command semantics`() {
+        val profile = profileSpec()
+        val controller = deterministicController()
+        val fixture = renderPublicHost(controller)
+
+        val replaced = controller.replaceTop(
+            route = profile,
+            value = ProfileRoute(userId = 7L, editable = false),
+        )
+        val reset = controller.reset(
+            route = profile,
+            value = ProfileRoute(userId = 9L, editable = true),
+        )
+
+        assertTrue(replaced is NavResult.Committed)
+        assertTrue(reset is NavResult.Committed)
+        assertEquals(listOf("profile"), controller.routeNames())
+        assertEquals(
+            ProfileRoute(userId = 9L, editable = true),
+            controller.snapshot.top.toRoute(profile),
+        )
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `typed command encoding failures leave committed host state unchanged`() {
+        val broken = NavRouteSpec<ProfileRoute>(
+            name = "profile",
+            encodeArguments = { error("route encoding failed") },
+            decodeArguments = { error("not reached") },
+        )
+        val controller = deterministicController()
+        val fixture = renderPublicHost(controller)
+        val before = controller.stackState
+
+        assertThrows<IllegalStateException> {
+            controller.navigate(broken, ProfileRoute(1L, editable = false))
+        }
+        assertThrows<IllegalStateException> {
+            controller.replaceTop(broken, ProfileRoute(2L, editable = false))
+        }
+        assertThrows<IllegalStateException> {
+            controller.reset(broken, ProfileRoute(3L, editable = true))
+        }
+
+        assertEquals(before, controller.stackState)
+        assertEquals(listOf("home"), controller.routeNames())
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `typed commands reject a background thread before invoking the encoder`() {
+        var encodeCalls = 0
+        val route = NavRouteSpec(
+            name = "details",
+            encodeArguments = { _: Unit ->
+                encodeCalls += 1
+                emptyMap()
+            },
+            decodeArguments = { Unit },
+        )
+        val controller = deterministicController()
+        val fixture = renderPublicHost(controller)
+        var failure: Throwable? = null
+        val worker = Thread {
+            failure = runCatching {
+                controller.navigate(route, Unit)
+            }.exceptionOrNull()
+        }
+
+        worker.start()
+        worker.join()
+
+        assertTrue(failure is IllegalStateException)
+        assertTrue(failure?.message.orEmpty().contains("main thread"))
+        assertEquals(0, encodeCalls)
+        assertEquals(listOf("home"), controller.routeNames())
+        fixture.session.dispose()
+    }
+
     @Test
     fun `result pop resumes previous destination and consumes its FIFO inbox once`() {
         val resultKey = NavResultKey.text("selection")
@@ -1273,6 +1376,25 @@ class NavHostPublicApiTest {
         )
     }
 
+    private fun profileSpec(): NavRouteSpec<ProfileRoute> {
+        return NavRouteSpec(
+            name = "profile",
+            encodeArguments = { profile ->
+                mapOf(
+                    "userId" to NavValue.LongValue(profile.userId),
+                    "editable" to NavValue.BooleanValue(profile.editable),
+                )
+            },
+            decodeArguments = { arguments ->
+                ProfileRoute(
+                    userId = (arguments.getValue("userId") as NavValue.LongValue).value,
+                    editable =
+                        (arguments.getValue("editable") as NavValue.BooleanValue).value,
+                )
+            },
+        )
+    }
+
     private fun renderRememberedHost(
         registry: SaveableStateRegistry,
     ): RememberedHostFixture {
@@ -1393,6 +1515,11 @@ class NavHostPublicApiTest {
         val MultiHomeStack = NavStackId("multi-home")
         val MultiSearchStack = NavStackId("multi-search")
     }
+
+    private data class ProfileRoute(
+        val userId: Long,
+        val editable: Boolean,
+    )
 }
 
 private class RememberedHostFixture(

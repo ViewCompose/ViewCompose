@@ -379,6 +379,25 @@ class NavGraphBuilder internal constructor(
     }
 
     /**
+     * Adds the leaf destination identified by typed [route].
+     *
+     * The graph retains only [NavRouteSpec.name]. Encoding and decoding remain application-owned
+     * operations on the same spec, so the graph never retains callbacks or route values.
+     *
+     * @param route typed route declaration whose stable name is unique in the eventual root graph
+     * @param deepLinks deep-link patterns registered on this destination
+     */
+    fun destination(
+        route: NavRouteSpec<*>,
+        deepLinks: List<NavDeepLink> = emptyList(),
+    ) {
+        destination(
+            route = route.name,
+            deepLinks = deepLinks,
+        )
+    }
+
+    /**
      * Adds a nested navigation graph.
      *
      * @param route non-blank nested graph route unique within the eventual root graph
@@ -397,6 +416,28 @@ class NavGraphBuilder internal constructor(
             startDestination = startDestination,
             deepLinks = deepLinks,
         ).apply(builder).build()
+    }
+
+    /**
+     * Adds the nested graph identified by typed [route].
+     *
+     * @param route typed graph-route declaration whose stable name is unique in the root graph
+     * @param startDestination route of a direct child declared by [builder]
+     * @param deepLinks deep-link patterns that enter the nested graph
+     * @param builder nested graph declarations
+     */
+    fun navigation(
+        route: NavRouteSpec<*>,
+        startDestination: NavRoute,
+        deepLinks: List<NavDeepLink> = emptyList(),
+        builder: NavGraphBuilder.() -> Unit,
+    ) {
+        navigation(
+            route = route.name,
+            startDestination = startDestination,
+            deepLinks = deepLinks,
+            builder = builder,
+        )
     }
 
     internal fun build(): NavGraph {

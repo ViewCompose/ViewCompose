@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 2f928fc4ad1981bcc88c03f965e5180eae72112237d4575e2b5739ec305b31c8
+translation_source_hash: e6325de31dea0aab7ffebc29008a7f19bebf5ec8ef32582f33f0956beb521b05
 translation_status: current
 ---
 
@@ -72,24 +72,30 @@ fun UiTreeBuilder.customOverlayNavHostSample(
 一个 `NavHostController` 同时只能连接一个活跃 `NavHost`。导航命令必须在主线程调用且要求宿主
 已连接，确保 core 事务、目的地渲染、owner 生命周期和原生 View 层级共用同一个提交边界。
 
-`NavHost` 为每个目的地保留一条逻辑 owner 记录，并仅在策略和可见性要求原生展示时创建子渲染
-会话。隐藏 entry 始终保留 Lifecycle、ViewModel、Saved-state、Saveable-state、Route 和 Graph
-Identity。没有展示实例的目的地通过 Pop、Stack 选择或历史、预测性返回、自适应 Pane 扩展而进入
-可见集合前，会先使用最新捕获环境重建展示。重建失败会释放所有候选展示，并保留此前的 Stack 与
-Scene。
+### 类型化命令
 
-每个目的地 Session 都会获得 `NavigationDestination` 诊断角色，以及随 `NavHost` Local 快照
-捕获的父 Session ID。保留期间逻辑身份不变；失败候选会发出自己的终止序列，重建目的地则获得
-新的 ID。恢复目的地 Local 时不能覆盖子 Session 所有者。
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-typed-route" sample_id="module.navigation-android-typed-route" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+data class ArticleRoute(val articleId: Long)
 
-目的地闭包依赖不可观察值时应修改 `contentKey`。可观察状态会直接使所属目的地会话失效。
-`key`、Controller Identity、Lifecycle Owner 或调试 Identity 的变化会重建原生 Host，因为这些
-输入改变的是 Ownership，而非普通内容。`overlayHostFactory` 会在 Host 创建时捕获；Lambda
-Identity 跨 Render Pass 并不稳定，因此刻意不参与 Identity Equality。需要安装不同 Factory 时，
-应同时修改 `key`。
+fun typedRouteNavigationSample(
+    controller: NavHostController,
+    destination: NavRouteSpec<ArticleRoute>,
+): ArticleRoute {
+    controller.navigate(destination, ArticleRoute(articleId = 42L))
+    return controller.snapshot.top.toRoute(destination)
+}
+```
 
-默认嵌套 Overlay Factory 显式构造 `viewcompose-overlay-android`，不会按 Classpath 顺序发现
-Material Backend。具名设计集成在目的地 Surface 需要额外 Presenter 时可以传入显式 Factory。
+Graph 声明、`navigate`、`replaceTop`、`reset` 与 `NavEntry.toRoute` 共用同一个
+`NavRouteSpec<T>`。编码会在主线程且 Host 事务开始前完成，因此 Encoder 异常不会改变 Stack、
+Render Tree、Owner Lifecycle 或 Result Inbox。Controller 和 Saved-state Adapter 仍只接收
+`NavRoute`，不会保留存活 Route 对象或 Callback。
+
+`NavHost` 分离保留逻辑 Owner 与原生 Presentation。Scene 发布前，会用最新环境重建缺失的可见
+Presentation；失败则释放候选并保留已提交 Stack。不可观察内容输入变化时修改 `contentKey`；
+Ownership 输入或 Overlay Factory 变化时修改 Host `key`。默认 Overlay Factory 显式使用
+`viewcompose-overlay-android`，不会依赖 Classpath 发现。
 
 ## Destination Context 上下文
 
@@ -109,15 +115,10 @@ fun UiTreeBuilder.destinationContextSample(controller: NavHostController) {
 }
 ```
 
-后续回调需要 Destination 身份时，应在 DSL 声明阶段捕获 Context Holder，不要在 Effect 回调内读取
-Local。同一个 Retained Entry 的 Holder 可跨隐藏 Presentation 的释放与重建保持稳定。Entry 永久
-移除后它不再接收 Presentation 更新；Entry 的 AndroidX Lifecycle 会到达 `DESTROYED`，并继续作为
-资源终止的权威信号。
-
-数据收集、相机、传感器或播放器等资源阈值应使用 AndroidX Lifecycle API；Visible/Covered、Pane
-Role 或 Transition Role 等粗粒度 UI 决策才使用 Destination Presentation。普通与 Predictive
-动画进度被刻意排除，因此反复的逐帧 Progress 不会使普通 Destination 内容失效。嵌套 Host 会提供
-各自最近的 Context；框架不存在全局 Current Page 查询。
+后续回调需要 Destination 身份时，应在 DSL 声明阶段捕获 Context。同一 Retained Entry 释放
+Presentation 后仍保留它，永久移除后则停止更新。资源阈值使用 AndroidX Lifecycle；Presentation
+仅用于粗粒度可见性、Pane 与 Transition UI。嵌套 Host 提供最近 Context，不存在全局 Current Page
+查询。
 
 ## 向上一页返回结果
 
@@ -184,69 +185,22 @@ Controller 提供即时不可变 `snapshot` 和 `stackState`，以及可观察 `
 
 ## 类型化 Plan 执行
 
-Host Coordinator 不再独立计算 Lifecycle、Retention、Focus、Accessibility 或 Back 策略。
-Navigation Core 的 `NavExecutionReducer` 通过稳定态、Transition 与 Predictive Preview 三个入口
-提供同一种 `NavExecutionPlan`，这些入口共用同一 Reducer。内部
-`AndroidNavExecutionPlanExecutor` 只执行类型化平台 Effect。
-
-Preparation 与 Refresh 发生在不可逆 Stack 边界之前。Commit 后，Executor 发布 Plan 中精确的
-Scene 与 Layer Order，应用 Input 和 Accessibility Ownership，以 Child-down/Parent-up 顺序更新
-Destination Context 与 Lifecycle，暂停 Outgoing Render，并且只淘汰 Plan 选中的隐藏
-Presentation。终态清理会先释放永久移除的 Presentation，再销毁 Owner。Rollback 同样读取 Plan
-中明确的 Candidate ID，而不是检查当时恰好 Attached 的 View。
-
-Motion 期间，不在 `inputEntryIds` 中的 Destination Container 会消费 Touch、Generic Motion 和
-Key Event，并阻止后代获得 Focus。不在 `accessibilityEntryIds` 中的 Entry 会独立隐藏其无障碍
-后代。稳定后，Plan 会把这些权限恢复给可交互 Pane 集合。`NavHost` 的系统 Back 注册也读取同一
-Plan 的 Ownership 结果。应用通常无需直接调用 Core Reducer；它是面向测试和自定义平台 Executor
-的 Q3 集成边界。
+Navigation Core Reducer 是 Lifecycle、Retention、Input、Accessibility 与 Back 策略的唯一来源。
+Android Executor 在 Commit 前准备 Presentation，随后发布 Plan 指定的 Scene 与有序 Effect；
+Rollback 和终态清理使用 Plan ID，而不检查 View。应用通常只使用 `NavHost`；Reducer 是测试和
+自定义 Executor 的 Q3 边界。
 
 ## 目的地与图 Ownership
 
-每个目的地 entry 都拥有独立 Android owner，其中包括：
+每个 Destination Entry 独立拥有 Lifecycle、ViewModelStore、SavedStateRegistry、
+SavedStateHandle 默认参数和 Saveable State；Graph 实例为其后代持有同类 Scope。隐藏保留会维持
+这些身份并限制 Lifecycle。Transition 参与者最高为 `STARTED`，已 Pop Entry 在 Presentation
+释放前为 `CREATED`，只有永久移除才进入 `DESTROYED`；重复 Route 仍创建不同 Owner。
 
-- 受宿主和语义 Scene 限制的 Lifecycle，其中包括 Visibility、Interaction、Transition 与保留
-  Entry Presence；
-- 从共享 Lifecycle 2.11 Scoped-owner Provider 租用、仅在 Entry 离开所有保留状态后清理的
-  ViewModelStore；
-- 从 `NavRoute` 派生默认 SavedStateHandle 参数的 SavedStateRegistry；
-- 页面独享的 ViewCompose saveable-state registry 命名空间。
-
-Destination 内容会把该对象安装到 `LocalLifecycleOwner`、`LocalSavedStateRegistryOwner`、
-`LocalViewModelStoreOwner` 与 ViewCompose Saveable-state Local。Graph 内容也通过相同四个边界
-安装选中的 Graph Owner。Retained Hidden Destination 保留 Owner Identity 与持久数据，但获得受限
-Lifecycle，因此 `LifecycleAndroidViewAdapter` 无需依赖物理移除就能让原生 View 进入非活跃状态。
-
-普通或 Predictive 转场会为所有 Owner 协调冻结一份语义 Scene。可见参与者在终态稳定前不高于
-`STARTED`。已 Pop 的离场 Entry 在退出 View 仍展示时限制为 `CREATED`，随后先释放 Session，
-再让 Owner 到达 `DESTROYED`。Predictive 取消会恢复此前稳定的 Owner 状态；提交则进入同一套受限
-Pop 转场。稳定的自适应 Pane 可以分别处于 `RESUMED`，但 Scene 变化期间所有可见 Pane 都限制为
-`STARTED`。
-
-Navigation Core 定义了 Overlay Layer Role，但本 Android Host 尚未公开通用 Overlay 导航 Scene。
-独立 Overlay Host Transport 不能被解释为导航 Overlay 的 Lifecycle 集成。
-
-同一个 route 连续 push 两次会创建两个 owner，不会共享页面状态。
-
-`NavHost` 要求最近的 `LocalViewModelStoreOwner`，不会创建私有兜底 Store。标准 Activity 和
-Fragment `setUiContent` Host 会安装该 Owner；使用底层 `renderInto` 时则必须显式调用
-`ProvideViewModelStoreOwner`。若父 Owner 实现 `HasDefaultViewModelProviderFactory`，子 Owner
-会继承其默认 Factory 和初始 `CreationExtras`，再只替换 ViewModelStore Owner、Saved-state
-Owner 以及 Route 或 Graph 默认参数，保留无关的 Application 与 DI Extra。父 Owner 身份变化会
-重建原生 Host，因此保留栈不会混用两套父级 Provider 契约。
-
-Controller 会把私有 Host Scope 身份与栈状态一并保存。在同一个保留式父 Store 下，以恢复后的
-Controller 身份重建 Host 时，会重建 Destination Lifecycle 与 Saved-state Owner，但重新租用
-相同 Entry/Graph ViewModelStore。正常移除 Host、永久 Pop、移除 Graph 或替换 Controller 都会
-发出终态清理信号。这样 Android 展示生命周期与逻辑页面状态生命周期得以分离，也不再需要导航
-专用 Store Allocator。
-
-嵌套图实例拥有 `NavGraphOwner`。同一个图实例内的目的地共享 Lifecycle、ViewModelStore 和
-SavedStateRegistry，直到最后一个后代离栈。之后再次进入同名图 route 会创建新 owner。
-
-`LocalNavGraphOwnerScope.current` 暴露从根到叶的活跃 owner 链。需要以图而不是叶子目的地解析
-生命周期、ViewModel 和 Saved State 时，使用 `ProvideNavGraphOwner(route)` 包裹子树。在目的地
-内容之外调用或指定非活跃图会失败。
+`NavHost` 要求最近的 `LocalViewModelStoreOwner` 并继承默认 Factory 与 `CreationExtras`；底层
+`renderInto` 调用者必须显式提供。持久化 Host-scope ID 允许配置重建继续租用相同 Entry/Graph
+Store，永久移除则清理它们。在 Destination 内容内使用 `ProvideNavGraphOwner(route)` 选择活跃
+Graph Scope。通用 Overlay 导航生命周期尚不支持，Overlay Transport 本身不会创建该 Scene。
 
 ## 失败与回滚
 
@@ -265,65 +219,30 @@ Android 宿主保持 navigation core 的两阶段保证：先准备新目的地�
 
 ## 保存、恢复与进程死亡
 
-`rememberNavHostController` 使用当前 ViewCompose saveable-state registry，保存：
-
-- 所有保留 stack、活跃 stack 和选择历史；
-- 目的地及图实例 ID 与 route 参数；
-- 目的地和图的 SavedStateRegistry Bundle；
-- 每个页面或图拥有的 ViewCompose saveable 值。
-
-待处理事务、运行动画、View、会话、LifecycleRegistry 实例和 ViewModelStore 内容不会序列化。
-首次连接和恢复连接只物化可见 Pane 集合；保留的隐藏 Owner 会重建，但不会急切执行目的地内容。
-配置重建可以通过父 Store 保留活跃 ViewModel；进程重建则会根据恢复后的状态输入创建新实例。
-
-恢复采用防御式策略。未知版本、错误集合类型、过多 entry、配置不匹配或图层级变化都会丢弃不兼容
-状态并重建初始状态，避免应用升级后把旧 Saved State 命名空间挂到另一个页面 owner。
-
-当前格式还接受紧邻的 Version 4 快照：保留合法栈和 Destination 状态，同时分配新的 Host Scope
-身份。进程或应用代码重启不会保留活跃父 Store，因此该迁移不会错误复用旧实例。
+Saveable Registry 会持久化 Stack、历史、Entry/Graph ID 与 Route、Owner Bundle 和 Saveable
+值，不会序列化待处理工作、View、Session、Lifecycle 对象或 ViewModel 内容。恢复连接只物化可见
+Pane。版本、结构、上限、配置或 Graph 层级无效时会 Fail Closed 到初始状态；相邻 Version 4 格式
+会以新的 Host-scope ID 恢复。
 
 ## Android 系统返回与预测性返回
 
-`systemBackEnabled = true` 时，`NavHost` 仅在 controller 能消费返回时注册到最近的 AndroidX
-Back dispatcher。活跃栈到根后遵循保留栈历史配置，否则继续向外层宿主或 Activity 分发。
-
-支持预测性返回的平台上，手势进度会展示上一目的地，但不提交 core 栈。取消时通过弹簧回到已提交
-状态；完成手势时使用与程序化 `popBackStack` 相同的事务和 owner 边界。程序化命令可以重定向
-活跃 preview，并保留当前视觉 transform，从而连续衔接。
-两个 Preview 页面都限制为 `STARTED`；提交后，已 Pop 页面在退出展示移除前限制为 `CREATED`，
-只有稳定后才会 Resume 进入页面。
-
-View detach、关闭系统返回或销毁宿主时会主动取消未完成 preview，因为 dispatcher 可能不再发送
-终止回调。
+`NavHost` 仅在能消费 Back 时向最近的 AndroidX Dispatcher 注册，并在活跃根使用保留 Stack 历史。
+Predictive Preview 不提交 Stack：取消恢复稳定 Scene，完成进入普通 Pop 事务，命令重定向从当前
+视觉状态继续。Preview Owner 最高为 `STARTED`；Detach、关闭或销毁会取消未完成 Preview。
 
 ## Motion 动效
 
-`NavTransitionSpec` 只是视觉策略，不会改变导航状态或 ownership。它分别配置 push、pop、replace、
-reset、stack selection、deep link 和 predictive Back motion。
-
-`NavDestinationTransform` 组合 pane 比例位移、dp 位移、alpha 和 scale。几何与进入/离开 alpha
-可拥有独立 duration、delay 和 `NavMotionEasing`。默认 push/pop 几何和 emphasized easing 对齐
-当前 Android Activity motion；预测性返回对齐当前 WM Shell 跨 Activity 几何。测试或应用需要
-禁用 motion 时使用 `NavTransitionSpec.None`。
-
-View driver 会先绘制完整起始布局，再开始 motion；只变化 transform/alpha 时会临时把昂贵页面
-层级提升到硬件 layer。被重定向的 motion 会保留当前视觉属性，后续命令不会跳回 identity 帧。
+`NavTransitionSpec` 是覆盖所有命令和 Predictive Back 的纯视觉策略。
+`NavDestinationTransform` 组合 Pane/dp 位移、Alpha、Scale、Timing 与 Easing；`None` 禁用 Motion。
+Driver 会先布局端点、为 Transform 临时使用硬件 Layer，并从当前视觉属性重定向，不改变 Stack 或
+Owner 语义。
 
 ## 共享内容动效
 
-`Modifier.sharedElement(SharedContentKey(...))` 与 `Modifier.sharedBounds(...)` 是由 `NavHost`
-自动消费的 Q3 端点标记，不需要 `SharedTransitionLayout` 或动画 Scope。Key 只在一对
-Outgoing/Incoming Destination 内有效；两棵树都必须对同一 Key 和 Mode 各声明一次才能配对。
-缺失、重复、Mode 不匹配、Detach、零尺寸、Surface-backed 或超过预算的端点会按 Key 回退到普通
-Destination Motion，绝不改变导航事务。
-
-首版仅支持单 Window Snapshot Motion。`sharedElement` 把 Source Snapshot 移动到 Target Bounds；
-`sharedBounds` 沿同一路径移动 Bounds，并交叉淡化 Source/Target Snapshot。Snapshot 按 Outgoing
-Tree 的稳定顺序绘制在不可交互的 Host Overlay 中，单次转场最多使用两个 Host Area 的像素。
-Incoming Destination 始终拥有 Input 与 Accessibility。成功 Commit 时，已聚焦 Source 可把焦点
-转给可聚焦 Target；取消则恢复 Source。完成、取消、重定向、Host 销毁、捕获失败与 Session 释放
-都会且只会清除一次 Snapshot 并恢复端点状态。Predictive Back 让同一 Overlay 跟随手势进度，
-Commit 时从该 Fraction 继续，但 Overlay 不获得 Stack Commit 权限。
+`sharedElement` 与 `sharedBounds` 是在单个 Destination Pair 内按 Key 与 Mode 唯一匹配的 Q3 标记。
+无效、Detach、Surface-backed 或超预算端点按 Key 回退，不影响导航。单 Window 实现会在不可交互
+Overlay 中执行有界 Snapshot 动画，保持 Incoming Input/Accessibility Ownership，且只清理一次；
+Predictive Back 驱动同一视觉层，但不会获得 Commit 权限。
 
 ## 自适应 pane
 
@@ -354,18 +273,9 @@ fun navigateSharedImageIntent(
 }
 ```
 
-平台无关 `NavDeepLinkRequest`、String URI、Android `Uri` 与 Android `Intent` 入口都使用同一个
-严格 Core 解析器。Intent 适配器只映射 `data`、`action` 与 `type`；extras 和 categories 不会进入
-Route 参数或匹配策略。URI-only 声明继续接受 `ACTION_VIEW` Intent，action-only、MIME-only 与
-组合声明则支持分享等显式集成，同时避免在 Navigation Core 中引入 Android 类型。
-
-匹配结果会转换为原子命令，同时更新和选中声明的目标 stack。
-`NavDeepLinkResult.Navigated` 仍包含 `NavResult`，因此请求匹配成功不会与渲染或提交成功混淆。
-没有 data、action 或 MIME type 的 Intent 返回 `NoMatch`；已提供但格式错误的字段返回 Core
-解析器的结构化拒绝结果。
-
-多个 Tab 应声明一份 `NavStackConfiguration`，并与共享 graph 一起 remember。不要为每个 Tab 创建
-一个 controller，也不要在应用字段中镜像活跃 stack；controller 已负责保留每个 stack 和选择历史。
+Request、URI 与 Intent 入口共用严格 Core Resolver；Intent 只映射 `data`、`action` 和 `type`。
+Match 会原子更新并选中目标 Stack，嵌套 `NavResult` 仍保留 Render/Commit 失败。多 Tab 应共享一个
+Remembered Controller 和 `NavStackConfiguration`，不要镜像 Active-stack State。
 
 ## 相关文档
 

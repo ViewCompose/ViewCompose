@@ -11,12 +11,14 @@ capability_ids:
   - navigation.host
   - navigation.results
   - navigation.scene-projection
+  - navigation.typed-routes
 artifact_ids:
   - viewcompose-navigation-core
 sample_ids:
   - module.navigation-core-dependency
   - module.navigation-core-graph
   - module.navigation-core-transaction
+  - module.navigation-core-typed-route
   - module.navigation-core-results
   - module.navigation-core-stacks
   - module.navigation-core-deep-link
@@ -82,6 +84,43 @@ different request.
 their owners are retained and must be persisted with navigation snapshots. Graph owners allow an
 Android host to share lifecycle, saved state, and ViewModels across destinations inside one graph
 instance without putting Android concepts in this module.
+
+### Typed route contract
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-typed-route" sample_id="module.navigation-core-typed-route" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+data class ProfileRoute(val userId: Long)
+
+val ProfileDestination = NavRouteSpec(
+    name = "profile",
+    encodeArguments = { profile: ProfileRoute ->
+        mapOf("userId" to NavValue.LongValue(profile.userId))
+    },
+    decodeArguments = { arguments ->
+        ProfileRoute((arguments.getValue("userId") as NavValue.LongValue).value)
+    },
+)
+
+fun typedRouteSample() {
+    val graph = navGraph(
+        route = "root",
+        startDestination = NavRoute("home"),
+    ) {
+        destination("home")
+        destination(ProfileDestination)
+    }
+    val route = ProfileDestination.encode(ProfileRoute(userId = 42L))
+    val entry = NavEntry(NavEntryId("profile-42"), graph.resolve(route).destination)
+
+    check(entry.toRoute(ProfileDestination).userId == 42L)
+}
+```
+
+`NavRouteSpec<T>` is the single application declaration for graph identity, typed encoding, and
+entry decoding. It always produces the existing immutable `NavRoute`; the graph retains only the
+stable name, while snapshots and restore continue to persist only closed `NavValue` arguments.
+Keep the name and schema compatible across process recreation. Decoder failures are explicit, and
+route-name mismatch is rejected before the application decoder runs.
 
 ## Two-phase transactions
 

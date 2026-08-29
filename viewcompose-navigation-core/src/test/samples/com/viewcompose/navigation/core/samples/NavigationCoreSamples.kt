@@ -18,6 +18,7 @@ import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavPaneScene
 import com.viewcompose.navigation.core.NavPreparation
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavRouteSpec
 import com.viewcompose.navigation.core.NavRootBackBehavior
 import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavScene
@@ -30,6 +31,35 @@ import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
+import com.viewcompose.navigation.core.toRoute
+
+// DOCS_REGION_START(navigation-core-typed-route)
+data class ProfileRoute(val userId: Long)
+
+val ProfileDestination = NavRouteSpec(
+    name = "profile",
+    encodeArguments = { profile: ProfileRoute ->
+        mapOf("userId" to NavValue.LongValue(profile.userId))
+    },
+    decodeArguments = { arguments ->
+        ProfileRoute((arguments.getValue("userId") as NavValue.LongValue).value)
+    },
+)
+
+fun typedRouteSample() {
+    val graph = navGraph(
+        route = "root",
+        startDestination = NavRoute("home"),
+    ) {
+        destination("home")
+        destination(ProfileDestination)
+    }
+    val route = ProfileDestination.encode(ProfileRoute(userId = 42L))
+    val entry = NavEntry(NavEntryId("profile-42"), graph.resolve(route).destination)
+
+    check(entry.toRoute(ProfileDestination).userId == 42L)
+}
+// DOCS_REGION_END(navigation-core-typed-route)
 
 fun navigationGraphSample() {
     // DOCS_REGION_START(navigation-core-graph)
