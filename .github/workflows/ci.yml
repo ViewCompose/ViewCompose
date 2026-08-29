@@ -143,6 +143,14 @@ jobs:
           qaQuick
           --stacktrace
 
+      - name: Verify pinned AI compiler corpus
+        if: >-
+          !cancelled() &&
+          (steps.affected.outcome == 'success' || steps.complete.outcome == 'success')
+        run: |
+          ./gradlew :tools:ai-compiler-harness:prepareAiCompilerLane
+          npm --prefix tools/ai run verify:phase2-compile
+
       - name: Report qaQuick execution mode
         if: always()
         env:

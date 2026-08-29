@@ -1,7 +1,9 @@
 import {readFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const aiRoot = fileURLToPath(new URL('../', import.meta.url));
+const repository = resolve(aiRoot, '../..');
 const manifestPath = fileURLToPath(
   new URL('../generated/current-source/manifest.json', import.meta.url),
 );
@@ -15,6 +17,10 @@ export function loadKnowledgeManifest() {
 
 export function aiToolingRoot() {
   return aiRoot;
+}
+
+export function repositoryRoot() {
+  return repository;
 }
 
 export function diagnostic({

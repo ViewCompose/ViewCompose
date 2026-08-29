@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Complete Phase 2 with pinned tool-owned compilation, Preview evidence adaptation, cancellation/cache adversarial coverage, and deeper project findings without exposing a protocol surface yet.
+next_action: Complete Phase 2 with the Preview evidence adapter, one internal CLI, expanded read-only project findings, and end-to-end acceptance without exposing MCP yet.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -47,13 +47,13 @@ maven_release_changesets:
 
 Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 canonical knowledge
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
-validation, compilation, Preview evidence, and project-analysis foundations are active.
+validation and pinned compilation foundations are complete; Preview evidence adaptation, the
+internal CLI, and deeper project findings remain active.
 
 Last verified: 2026-08-29.
 
-Next action: complete Phase 2 with a pinned tool-owned compiler harness, the existing Preview
-protocol, cancellation/cache adversarial coverage, and deeper read-only findings before CLI or MCP
-exposure.
+Next action: complete Phase 2 with an adapter over the existing Preview protocol, one internal CLI,
+expanded read-only findings, and end-to-end acceptance before MCP exposure.
 
 ## Maven release changesets
 
@@ -61,8 +61,8 @@ exposure.
 
 ## Release intent rationale
 
-The initial planning, contracts, Knowledge Bundle, validator, and analyzer slices do not change a
-published artifact. Phase 2 Preview acceptance exposed and fixes one production
+The planning, contracts, Knowledge Bundle, validator, analyzer, and compiler-harness slices do not
+change a published artifact. Phase 2 Preview acceptance exposed and fixes one production
 configuration mismatch in `viewcompose-preview-gradle-plugin`; its immutable Changeset classifies
 that artifact as a fix. Later publication-relevant slices must add one Changeset per affected
 published artifact, or record an explicit ignored disposition with a concrete reason.
@@ -426,10 +426,46 @@ change**, because the implementation and gate remain downstream tooling.
 
 Limitations: the static slice is not a Kotlin type checker, its initial rule family is intentionally
 narrower than the complete deliverable list, and the project analyzer does not yet resolve
-dependencies or produce migration findings. Compilation, rendering, cancellation, cache behavior,
-and internal CLI evidence remain pending. The next action is the pinned compiler adapter and Preview
-evidence path, followed by expansion of static rules only when labeled positive and negative
-fixtures preserve the frozen false-positive budget.
+dependencies or produce migration findings. At this slice boundary, compilation, rendering,
+cancellation, cache behavior, and internal CLI evidence were pending; the compiler slice below now
+closes the applicable compilation, cancellation, and cache requirements. Static rules expand only
+when labeled positive and negative fixtures preserve the frozen false-positive budget.
+
+### Implementation evidence — pinned compiler slice
+
+The second Phase 2 slice adds a non-published `:tools:ai-compiler-harness` Android library and a
+provider-neutral adapter for the fixed
+`current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11` lane. Requests cannot select a
+Gradle task, project, script, dependency coordinate, repository, or output directory. The current
+allowlist contains only `viewcompose-ui-foundation`; Gradle runs offline with bounded heap, workers,
+time, and captured output after CI explicitly resolves that fixed classpath. Static validation must
+pass before the process starts, and only successful compilation with bounded, re-fingerprinted class
+files advances evidence from `static` to `compiled`.
+
+The content-addressed request key includes source, sorted artifacts, compiler lane, and the accepted
+Knowledge Bundle fingerprint. Inputs are create-once, concurrent identical requests use one lock,
+and a cache hit is accepted only when its record and current class-file fingerprint agree. Stable
+outcomes cover invalid selections, lane mismatch, compiler diagnostics, timeout, cancellation,
+captured-output limits, missing/unsafe output, start failure, concurrent work, and poisoned inputs or
+caches without exposing the tool-owned absolute request path.
+
+The canonical compiled sample contains test-source helpers that intentionally rely on module friend
+paths, so the compile corpus uses a consumer-form extraction of its `ProfileSummary` example instead
+of weakening the harness into a test-module compiler. A cold accepted run completed in 11,775 ms and
+produced two class files totaling 3,575 bytes with fingerprint
+`9877c5a41372f6a77423071dc79cad680daa6febb3f7621cf2b1d755d9481acb`; an integrity-checked repeat
+returned the same fingerprint in 5--12 ms. Node 25.6.0 passed 29/29 tooling tests, including real
+child-process output, timeout, and cancellation enforcement plus selection, traversal, symbolic-link
+output, cache tampering, concurrent-request, and normalized-diagnostic cases. The independent
+compiler corpus passed 1/1. This is **improved** executable type-resolution evidence with **no
+material runtime change** because the harness is non-published, downstream tooling and is absent
+from application dependency graphs.
+
+Limitations: this slice compiles one Kotlin file against UI Foundation and does not yet support
+Android resource fixtures or the remaining artifact combinations. A cold result is local macOS/JBR
+21 evidence rather than a cross-host latency distribution. The next action is to adapt the existing
+Layoutlib Preview protocol, validate render output containment and integrity, then expose both paths
+through one internal CLI before widening compiler lanes.
 
 ### Acceptance gate
 

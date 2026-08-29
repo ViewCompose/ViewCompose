@@ -18,6 +18,9 @@ The implementation order is fixed by
 6. `scripts/static-validator.mjs` derives its symbol index from that generated bundle and emits the
    frozen result envelope; `scripts/project-analyzer.mjs` owns bounded read-only inventory without
    executing an inspected project's Gradle build.
+7. `scripts/compiler-adapter.mjs` compiles accepted source in the fixed
+   `:tools:ai-compiler-harness` lane and labels a result `compiled` only after bounded class output
+   passes content-addressed integrity checks.
 
 Run the Phase 0 gate with:
 
@@ -51,6 +54,22 @@ The static validator reports only facts it can establish from the generated gove
 Supporting public types that are referenced by capability signatures but do not have their own
 governed entry are not declared nonexistent merely because they are absent from `symbols.jsonl`.
 Static success is evidence level `static`, never `compiled`.
+
+Run the pinned Phase 2 compiler corpus with JDK 21:
+
+```bash
+./gradlew :tools:ai-compiler-harness:prepareAiCompilerLane
+npm --prefix tools/ai run verify:phase2-compile
+```
+
+The preparation task resolves only the harness's fixed classpath. The compiler request itself runs
+Gradle offline with a fixed task, Android 36/JVM 11 lane, one GiB heap, two workers, and no daemon,
+build cache, or configuration cache. Requests may select only generated stable IDs and the current
+`viewcompose-ui-foundation` artifact allowlist; they cannot supply a dependency coordinate, Gradle
+task, project path, output path, or build script. Content-addressed inputs are immutable, cached
+class output is re-fingerprinted before reuse, and timeouts, cancellation, output limits, compiler
+diagnostics, and cache poisoning use stable result codes. Android resource fixtures and additional
+artifact lanes remain unsupported in this slice.
 
 Project analysis accepts one absolute root, rejects path escape and all requested build execution,
 never follows symbolic links, excludes common build output and secret-bearing files, and enforces

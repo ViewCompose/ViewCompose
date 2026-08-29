@@ -86,7 +86,7 @@
       "category": "compilation",
       "input": {
         "kind": "fixture",
-        "fixture": "../../../viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt"
+        "fixture": "fixtures/kotlin/foundation-profile-summary-valid.kt"
       },
       "expected": {
         "outcome": "pass",
