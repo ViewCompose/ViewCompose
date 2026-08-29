@@ -808,6 +808,17 @@ line/branch coverage, representative leaks, memory, performance, general overlay
 typed-route serialization, direct NavigationEvent integration, navigation results, diagnostics,
 and testing utilities remain **inconclusive** and explicitly advance to Phase 7.
 
+Repository acceptance passed `qaQuick` across all 2,268 actionable tasks: 1,944 executed and 324
+were up to date. `qaPreview` passed all 1,209 actionable tasks: 141 executed and 1,068 were up to
+date, including both Paparazzi-backed Preview hosts. Documentation governance reported zero issues
+against `cab55049`, all 77 documentation-script tests passed, all 126 required Chinese mirrors were
+current, development-tooling isolation passed, and release intent resolved exactly the Core feature
+plus Android fix in one Changeset. This is **improved** repository integration confidence and **no
+material change** in Preview behavior; mixed cache state is execution context, not performance
+evidence. Current Core and Android Dokka generation passed, while one complete historical API-doc
+retry was **inconclusive** after an external package-list download timed out in an old revision; CI
+remains the retry boundary for that network-dependent publication check.
+
 ### Phase 7: close mature-navigation gaps and evidence
 
 1. Re-audit typed route serialization, action/MIME deep links, general scene strategies, direct
