@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.navigation-android-results",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "navigation.result-consumption",
+  "document_ids": ["module.viewcompose-navigation-android"],
+  "version_lane": "released",
+  "source": "viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt",
+  "region": "navigation-android-results",
+  "build_target": ":viewcompose-navigation-android:compileDebugUnitTestKotlin"
+}

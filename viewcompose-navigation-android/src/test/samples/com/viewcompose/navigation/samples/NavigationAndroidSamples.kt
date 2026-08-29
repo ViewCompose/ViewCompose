@@ -14,10 +14,12 @@ import com.viewcompose.navigation.NavMotionEasing
 import com.viewcompose.navigation.NavMotionTiming
 import com.viewcompose.navigation.NavPresentationRetentionPolicy
 import com.viewcompose.navigation.NavResult
+import com.viewcompose.navigation.NavResultEffect
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavDeepLinkRequest
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.Text
@@ -70,6 +72,17 @@ fun UiTreeBuilder.rememberedNavHostSample() {
         }
     }
 }
+
+// DOCS_REGION_START(navigation-android-results)
+val SelectedItemResult = NavResultKey.text("catalog.selection")
+
+fun UiTreeBuilder.observeSelectedItem(onSelected: (String) -> Unit) {
+    NavResultEffect(SelectedItemResult, onSelected)
+}
+
+fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult =
+    controller.popBackStack(SelectedItemResult, itemId)
+// DOCS_REGION_END(navigation-android-results)
 
 // DOCS_REGION_START(navigation-android-host-construction)
 fun UiTreeBuilder.customOverlayNavHostSample(

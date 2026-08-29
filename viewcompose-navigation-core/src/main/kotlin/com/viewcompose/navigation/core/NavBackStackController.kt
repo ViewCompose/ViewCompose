@@ -23,6 +23,18 @@ sealed interface NavCommand {
     data object Pop : NavCommand
 
     /**
+     * Removes the active top and atomically returns [result] to the surviving entry below it.
+     *
+     * The host delivers the payload only after the stack transaction commits. A root Pop produces
+     * `CannotPopRoot` and no delivery.
+     *
+     * @property result encoded application value for the previous entry
+     */
+    data class PopWithResult(
+        val result: NavResultPayload,
+    ) : NavCommand
+
+    /**
      * Replaces the active top while retaining entries beneath it.
      *
      * @property route destination or graph route to resolve
@@ -329,7 +341,9 @@ class NavBackStackController private constructor(
                 )
             }
 
-            NavCommand.Pop -> {
+            NavCommand.Pop,
+            is NavCommand.PopWithResult,
+            -> {
                 if (before.entries.size == 1) {
                     return NavPreparation.NoChange(
                         reason = NavNoChangeReason.CannotPopRoot,

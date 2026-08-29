@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.result-consumption",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-android" },
+  "artifact": "viewcompose-navigation-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha02" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.navigation.NavResultInbox",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavResultInbox.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.NavResultEffect",
+      "kind": "function",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavResultEffect.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.NavDestinationContext.results",
+      "kind": "property",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationContext.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.NavHostController.popBackStack",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.navigation.result-consumption",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.navigation-android-results"
+  },
+  "document_owners": {
+    "guide": ["guide.navigation-production-host"],
+    "architecture": ["architecture.navigation-runtime"],
+    "module": ["module.viewcompose-navigation-android"],
+    "migration": ["migration.compose-navigation"]
+  }
+}

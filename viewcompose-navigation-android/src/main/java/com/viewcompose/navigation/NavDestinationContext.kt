@@ -42,10 +42,12 @@ typealias NavDestinationPresentation = NavSceneEntry
  *
  * @sample com.viewcompose.navigation.samples.destinationContextSample
  * @property entry stable logical destination entry owned by this context
+ * @property results stable result mailbox retained with this destination owner
  * @param initialPresentation initial prepared projection published before destination commit
  */
 class NavDestinationContext internal constructor(
     val entry: NavEntry,
+    val results: NavResultInbox,
     initialPresentation: NavDestinationPresentation,
 ) {
     private val mutablePresentation = mutableStateOf(initialPresentation)

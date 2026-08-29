@@ -21,6 +21,7 @@ import com.viewcompose.navigation.core.NavNoChangeReason
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavStackSelectionMode
 import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavStackMutation
@@ -239,6 +240,27 @@ class NavHostController internal constructor(
     /** Pops the active top, or returns `NoChange` when the stack is at its root. */
     @MainThread
     fun popBackStack(): NavResult = execute(NavCommand.Pop)
+
+    /**
+     * Pops the active top and returns [value] to the surviving destination as one transaction.
+     *
+     * Encoding completes before navigation begins. A root Pop returns `NoChange`; rendering,
+     * staging, or stack-commit failure publishes no result. The surviving destination reads the
+     * value from [NavDestinationContext.results] or consumes it with [NavResultEffect].
+     *
+     * @sample com.viewcompose.navigation.samples.navigationResultSample
+     * @param key stable typed mailbox key shared with the receiving destination
+     * @param value application value encoded by [key]
+     * @return synchronous command outcome; a queued command delivers only when it later commits
+     * @throws IllegalStateException when called off the main thread or without an attached host
+     */
+    @MainThread
+    fun <T> popBackStack(
+        key: NavResultKey<T>,
+        value: T,
+    ): NavResult {
+        return execute(NavCommand.PopWithResult(key.encode(value)))
+    }
 
     /** Atomically replaces the top destination on the active stack. */
     @MainThread

@@ -24,12 +24,14 @@ import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
 import com.viewcompose.navigation.NavPresentationRetentionPolicy
 import com.viewcompose.navigation.NavResult
+import com.viewcompose.navigation.NavResultEffect
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.ProvideNavGraphOwner
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavRootBackBehavior
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavSceneInteraction
 import com.viewcompose.navigation.core.NavSceneLayerRole
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
@@ -66,6 +68,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
     private val destinationRenderCounts = linkedMapOf<String, Int>()
     private val destinationContexts = linkedMapOf<String, NavDestinationContext>()
     private val destinationContextRenderCounts = linkedMapOf<String, Int>()
+    private val returnedPageResults = mutableListOf<String>()
+    private val resultDeliveryLifecycleStates = mutableListOf<Lifecycle.State>()
     private val processDeathRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     private val processDeathGraphRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     /**
@@ -199,6 +203,12 @@ class NavigationBackTestActivity : AppCompatActivity() {
                     "Navigation destination ${entry.route.name} has no LifecycleOwner."
                 }
                 destinationLifecycleOwners[entry.route.name] = destinationOwner
+                if (resultCertificationEnabled() && entry.route.name == HOME_ROUTE) {
+                    NavResultEffect(PAGE_RESULT_KEY) { value ->
+                        returnedPageResults += value
+                        resultDeliveryLifecycleStates += destinationOwner.lifecycle.currentState
+                    }
+                }
                 if (processDeathCertificationEnabled()) {
                     val saveableValue = rememberSaveable(
                         key = PROCESS_DEATH_SAVEABLE_KEY,
@@ -326,6 +336,24 @@ class NavigationBackTestActivity : AppCompatActivity() {
      */
     fun destinationLifecycleState(routeName: String): Lifecycle.State? {
         return destinationLifecycleOwners[routeName]?.lifecycle?.currentState
+    }
+
+    /** Pops the active page and returns one device-certification value to Home. */
+    fun popWithPageResult(value: String): NavResult {
+        return navController.popBackStack(PAGE_RESULT_KEY, value)
+    }
+
+    /** Returns page-result values observed by the Home destination in delivery order. */
+    fun receivedPageResults(): List<String> = returnedPageResults.toList()
+
+    /** Returns the exact destination Lifecycle state captured by each result callback. */
+    fun resultDeliveryLifecycleStates(): List<Lifecycle.State> {
+        return resultDeliveryLifecycleStates.toList()
+    }
+
+    /** Returns the number of result values still pending for one retained destination. */
+    fun pendingResultCount(routeName: String): Int {
+        return destinationContexts[routeName]?.results?.pendingCount ?: 0
     }
 
     /** Returns the stable context identity and current coarse presentation observed for a route. */
@@ -477,6 +505,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
 
     private fun destinationContextCertificationEnabled(): Boolean {
         return intent.getBooleanExtra(EXTRA_DESTINATION_CONTEXT_CERTIFICATION, false)
+    }
+
+    private fun resultCertificationEnabled(): Boolean {
+        return intent.getBooleanExtra(EXTRA_RESULT_CERTIFICATION, false)
     }
 
     private fun presentationRetentionPolicy(): NavPresentationRetentionPolicy {
@@ -689,6 +721,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
             "com.viewcompose.extra.DISABLE_TRANSITIONS"
         const val EXTRA_DESTINATION_CONTEXT_CERTIFICATION =
             "com.viewcompose.extra.DESTINATION_CONTEXT_CERTIFICATION"
+        const val EXTRA_RESULT_CERTIFICATION =
+            "com.viewcompose.extra.RESULT_CERTIFICATION"
         const val PRESENTATION_RETENTION_DISPOSE = "dispose"
         const val PRESENTATION_RETENTION_BOUNDED = "bounded"
         const val PRESENTATION_RETENTION_RETAIN_ALL = "retain-all"
@@ -727,6 +761,7 @@ class NavigationBackTestActivity : AppCompatActivity() {
         private const val RETENTION_MISSING_VALUE = -12
         private const val RETENTION_PAYLOAD_TEXT_COUNT = 40
         private const val DEFAULT_MAX_HIDDEN_PRESENTATIONS = 2
+        private val PAGE_RESULT_KEY = NavResultKey.text("device.page-result")
 
         fun destinationText(routeName: String): String {
             return "$DESTINATION_PREFIX$routeName"

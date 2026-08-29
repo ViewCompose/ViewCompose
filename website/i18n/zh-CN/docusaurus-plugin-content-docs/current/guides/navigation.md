@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: bdf8d8c3fdd02b7d6c70bc8fa9076ae667a4cfc10107cc4366fe1e7fdcdb2074
+translation_source_hash: d0d878f01a8ff4d55addb2b33532a8508afd49941ccbb236d763bbc6caebd22f
 translation_status: current
 ---
 
@@ -41,6 +41,9 @@ Destination 自有 SavedState。
 界面内返回按钮调用 `popBackStack`。系统返回和 Predictive Back 就会使用同一事务边界。
 Predictive Back 在不发布候选栈的前提下预览上一目标页；取消时恢复已提交 Scene，完成时则走
 与程序化 Pop 相同的路径提交。
+
+声明稳定的 `NavResultKey`，带值 Pop，并在上一页用 `NavResultEffect` 观察。交付可保存、遵循
+FIFO，且延迟至该页面 `RESUMED`；显式确认或重试应使用 Destination Context Inbox。
 
 ## 穷举处理 Route 渲染
 

@@ -15,6 +15,8 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
+  - navigation.results
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-lifecycle-androidx
@@ -25,8 +27,10 @@ sample_ids:
   - module.navigation-android-deep-link
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
+  - module.navigation-android-results
   - module.navigation-core-execution-plan
   - module.navigation-core-deep-link
+  - module.navigation-core-results
   - module.navigation-core-scene-projection
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
@@ -53,7 +57,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Continue Phase 7 with typed-route and navigation-result dispositions, then coverage, leak, memory, performance, and broader device evidence.
+next_action: Implement the frozen entry-targeted navigation-result mailbox, then disposition typed-route serialization before the broader evidence matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
@@ -75,8 +79,8 @@ structured deep-link slice is complete.
 
 Last verified: 2026-08-29.
 
-Next action: continue Phase 7 with typed-route and navigation-result dispositions, then coverage,
-leak, memory, performance, and broader device evidence.
+Next action: implement the frozen entry-targeted navigation-result mailbox, then disposition
+typed-route serialization before the broader evidence matrix.
 
 ## Maven release changesets
 
@@ -872,6 +876,54 @@ Acceptance evidence:
   full package rebuild cleared stale incremental output. Adapter confidence is **improved**; one
   device does not cover implicit/OEM delivery, coverage, leaks, memory, or performance, which remain
   **inconclusive**. Next: disposition typed routes and navigation results, then run that matrix.
+
+#### Capability slice 7.2: entry-targeted navigation results
+
+The audit distinguishes command outcome `NavResult` from business data returned by a popped page;
+the latter is currently absent. The accepted Q3 contract adds Core-owned `navigation.results` and
+Android-owned `navigation.result-consumption`: Core represents
+a typed key, closed `NavValue` payload, `PopWithResult`, and one delivery instruction targeting the
+surviving `after.top` entry. Delivery exists only on the committed transition plan, so render or
+stack failure cannot publish a result and predictive Back remains an ordinary result-free Pop.
+
+Android owns one FIFO inbox per retained entry. Pending values survive presentation disposal,
+configuration recreation, and process-state save; permanent entry removal destroys them. The
+existing `NavDestinationContext` exposes the inbox, while one `NavResultEffect` reads the nearest
+shared `LifecycleOwner` and consumes only after the destination is `RESUMED` and its frame commits.
+There are no Activity-, Fragment-, or navigation-specific Lifecycle copies. Explicit `peek` and
+`consume` remain available for callers that need manual acknowledgement or retry policy.
+
+The hard boundary is one active producer-to-previous-entry transaction: no global event bus, route
+name addressing, arbitrary cross-stack delivery, live object persistence, or overloading of command
+failure diagnostics. Repeated values for one key retain FIFO order rather than SavedStateHandle's
+last-write-wins behavior. Typed-route serialization remains a separate compatibility decision.
+
+Acceptance evidence:
+
+- Fresh Navigation Core passed 80/80 tests versus the 76-test slice-7.1 baseline, an absolute gain
+  of four (+5.3%). Navigation Android passed 172/172 versus 166, a gain of six (+3.6%). The added
+  reducer, saved FIFO, restore, replay-suppression, and resumed-effect cases make result-contract
+  coverage **improved**; line and branch coverage remain **inconclusive** because this repository
+  has no accepted navigation coverage report.
+- One focused instrumentation case passed 1/1 on the physical Pixel 4 XL/API 33. Immediately after
+  result pop, the previous page was `STARTED`, its inbox held one value, and its callback had not
+  run. After settlement it was `RESUMED`, consumed exactly once while observing `RESUMED`, and did
+  not replay across stop/resume. Device confidence is **improved**, but OEM/API breadth and a real
+  process-kill journey remain **inconclusive**; saved-state restoration is covered deterministically.
+- Q3 Core and Android samples compiled. Core API documentation passed strictly; Android API
+  inspection remains **inconclusive** because the pre-existing Dokka `androidJvm`/`release`
+  source-root overlap fails before declaration inspection. The next action is to repair that shared
+  convention and rerun without weakening source layout or documentation policy.
+- `qaQuick` passed in 2m11s and `qaPreview` in 21s. Documentation structure, all 77 script tests,
+  126 current Chinese mirrors, release intent, DSL API contracts, and development-tooling isolation
+  passed. This is **improved** integration confidence and **no material change** in Preview output;
+  cache state and wall time are context, not performance evidence.
+- The first complete site build produced 49,233,399 non-API bytes, 55,185 bytes above the unchanged
+  46.9 MiB ceiling. Consolidating duplicated phase evidence and sample exposition corrected the
+  representation without raising the budget: the evidence-bearing rebuild reduced 82,155 bytes
+  (0.17%) to 49,151,244 and left 26,970 bytes headroom. Site-size confidence is **improved**. Leak,
+  memory, representative workload, and runtime performance remain **inconclusive**. Next:
+  disposition typed-route serialization, then run the broader matrix.
 
 ### Phase 8: document, release, and archive
 

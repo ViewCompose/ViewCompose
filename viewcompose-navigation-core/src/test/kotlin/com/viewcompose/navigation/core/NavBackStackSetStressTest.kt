@@ -241,7 +241,9 @@ class NavBackStackSetStressTest {
                 }
             }
 
-            NavCommand.Pop -> {
+            NavCommand.Pop,
+            is NavCommand.PopWithResult,
+            -> {
                 if (activeStack.size == 1) {
                     noChange(NavNoChangeReason.CannotPopRoot)
                 } else {

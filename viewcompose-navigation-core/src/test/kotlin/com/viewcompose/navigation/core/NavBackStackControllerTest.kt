@@ -86,6 +86,26 @@ class NavBackStackControllerTest {
     }
 
     @Test
+    fun `result bearing pop prepares the same removal without publishing early`() {
+        val controller = controllerWithIds("root", "details")
+        controller.prepare(
+            NavCommand.Push(NavRoute("details")),
+        ).readyTransaction().commit()
+        val before = controller.snapshot()
+        val command = NavCommand.PopWithResult(
+            NavResultKey.text("selection").encode("primary"),
+        )
+
+        val transaction = controller.prepare(command).readyTransaction()
+
+        assertSame(before, controller.snapshot())
+        assertSame(command, transaction.command)
+        assertEquals(listOf("home"), transaction.after.routeNames())
+        assertEquals(listOf("details"), transaction.mutation.removed.map { it.route.name })
+        transaction.rollback()
+    }
+
+    @Test
     fun `single top no-change does not allocate an entry ID`() {
         val ids = ArrayDeque(listOf("root", "details"))
         val controller = NavBackStackController.create(

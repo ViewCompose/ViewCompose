@@ -11,6 +11,8 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
+  - navigation.results
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-android
@@ -21,6 +23,7 @@ sample_ids:
   - module.navigation-android-host
   - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
+  - module.navigation-android-results
 coordinate: com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02
 minimal_usage_sample_id: module.navigation-android-dependency
 ---
@@ -150,6 +153,24 @@ covered, pane role, or transition role. Predictive and ordinary animation progre
 absent, so repeated frame progress cannot invalidate ordinary destination content. Nested hosts
 provide their own nearest context; there is no global current-page lookup.
 
+## Return a result to the previous page
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-results" sample_id="module.navigation-android-results" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+val SelectedItemResult = NavResultKey.text("catalog.selection")
+
+fun UiTreeBuilder.observeSelectedItem(onSelected: (String) -> Unit) {
+    NavResultEffect(SelectedItemResult, onSelected)
+}
+
+fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult =
+    controller.popBackStack(SelectedItemResult, itemId)
+```
+
+The committed pop enqueues into the surviving entry's saved FIFO inbox. `NavResultEffect` consumes
+at most once after its destination is `RESUMED`; use `NavDestinationContext.results` for explicit
+acknowledgement or retry. Keys are entry-local, not a global or cross-stack bus.
+
 ## Presentation retention
 
 `NavPresentationRetentionPolicy` controls native presentation lifetime independently of entry
@@ -180,16 +201,8 @@ are created or hidden later; it does not eagerly build pages that are not visibl
 configuration-restored, or process-restored attachment, only the current visible pane set is
 materialized even under `RetainAll`.
 
-The Phase 4 device comparison used a physical Pixel 4 XL on API 33 and a synthetic heavy 13-entry
-stack. `DisposeWhenHidden` retained 1 presentation and reported 185,510 KiB PSS; `RetainAll`
-retained 13 and reported 191,953 KiB. That is 12 fewer presentations (92.3%) and 6,443 KiB lower
-process PSS (3.4%). Synchronous pop-and-rebuild median time increased from 13,318 us to 49,573 us,
-or 272.2%. A separate animated comparison captured 252 frames per policy at 90 Hz; both reported
-9 ms P95 and zero frames above 32 ms. The interpretation is **mixed**: the bounded default improves
-idle resource ownership and has **no material change** in this settled-frame sample, while measured
-expensive pages may prefer `Bounded` or `RetainAll`. This is not a universal benchmark: it uses one
-device, synthetic content, process-wide PSS, and a short run. Phase 7 keeps broader device, leak,
-and representative-workload validation as the next action.
+Retention trade-offs and interpreted evidence are maintained by the
+[navigation architecture](../../architecture/navigation.md).
 
 ## Command results and re-entrancy
 

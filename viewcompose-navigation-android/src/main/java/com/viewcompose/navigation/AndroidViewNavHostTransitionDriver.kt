@@ -1168,6 +1168,7 @@ internal fun navTransitionDirection(
     val layoutMultiplier = if (layoutDirection == View.LAYOUT_DIRECTION_RTL) -1f else 1f
     val commandMultiplier = when (command) {
         NavCommand.Pop,
+        is NavCommand.PopWithResult,
         NavCommand.PopStackHistory,
         -> -1f
 

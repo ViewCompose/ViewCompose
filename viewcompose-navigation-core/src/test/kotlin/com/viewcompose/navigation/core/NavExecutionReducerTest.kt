@@ -3,6 +3,7 @@ package com.viewcompose.navigation.core
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -92,6 +93,41 @@ class NavExecutionReducerTest {
         assertEquals(NavEntryLifecycleState.Created, plan.lifecycle.targetStates[before.top.id])
         assertEquals(listOf(before.top.id), plan.terminalCleanupEntryIds)
         assertTrue(plan.disposeBeforeSceneEntryIds.isEmpty())
+        transaction.rollback()
+    }
+
+    @Test
+    fun `result bearing pop emits one surviving entry delivery retained by reconciliation`() {
+        val controller = controller("home", "details")
+        controller.ready(NavCommand.Push(NavRoute("details"))).commit()
+        val before = controller.snapshot()
+        val payload = NavResultKey.int("selection").encode(4)
+        val transaction = controller.ready(NavCommand.PopWithResult(payload))
+        val plan = NavExecutionReducer.transition(
+            currentLifecycleStates = before.entries.associate { entry ->
+                entry.id to NavEntryLifecycleState.Created
+            },
+            transaction = transaction,
+            beforePaneScene = singlePane(before),
+            afterPaneScene = singlePane(transaction.after),
+            hostState = NavHostLifecycleState.Resumed,
+            presentedEntryIds = before.entries.map(NavEntry::id),
+        )
+
+        val delivery = checkNotNull(plan.resultDelivery)
+        assertEquals(transaction.after.top.id, delivery.targetEntryId)
+        assertEquals(payload, delivery.payload)
+        assertTrue(delivery.transactionId > 0L)
+
+        val reconciled = NavExecutionReducer.reconcile(
+            plan = plan,
+            currentLifecycleStates = plan.lifecycle.targetStates,
+            hostState = NavHostLifecycleState.Started,
+            presentedEntryIds = plan.layerOrder,
+            hiddenPresentationRecency = emptyList(),
+            maxRetainedHiddenPresentations = 0,
+        )
+        assertSame(delivery, reconciled.resultDelivery)
         transaction.rollback()
     }
 

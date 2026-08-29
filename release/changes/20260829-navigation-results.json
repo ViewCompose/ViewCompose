@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add atomic typed page-result pops with a saved FIFO entry inbox and lifecycle-aware Android DSL consumption.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-core", "impact": "feature" },
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

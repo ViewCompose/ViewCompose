@@ -11,17 +11,21 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
+  - navigation.results
   - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-android-results
   - module.navigation-core-execution-plan
   - tutorial.navigation
 task: Configure one production NavHost with restoration, system Back, and explicit failure handling.
 success_checks:
   - Destination state survives host recreation and valid process-state restoration.
   - Programmatic and system Back operations observe the same committed stack.
+  - A result pop reaches the surviving destination once and only after it resumes.
   - Failed destination preparation preserves the previously visible destination.
   - Hidden presentation resources follow one explicit bounded retention policy without clearing entry state.
   - Destination content observes the nearest stable entry context without treating transition progress as lifecycle.
@@ -74,6 +78,10 @@ Call `popBackStack` for an in-UI Back action. System Back and predictive Back th
 transaction boundary. Predictive Back previews the previous destination without publishing the
 candidate stack; cancellation restores the committed scene, while completion commits through the
 same path as a programmatic pop.
+
+Declare a stable `NavResultKey`, pop with its value, and observe it with `NavResultEffect` in the
+previous page. Delivery is saved, FIFO, and deferred until that page is `RESUMED`; use the
+destination context inbox when explicit acknowledgement or retry is required.
 
 ## Keep route rendering exhaustive
 

@@ -11,6 +11,8 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.result-consumption
+  - navigation.results
   - navigation.scene-projection
   - viewmodel.owner-boundaries
   - viewmodel.scoped-owners
@@ -20,6 +22,7 @@ artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-core-results
   - module.navigation-core-execution-plan
   - tutorial.navigation
 invariants:
@@ -27,6 +30,7 @@ invariants:
   - Each retained destination and graph instance keeps stable lifecycle, saved-state, and ViewModel ownership independently of optional presentation retention.
   - Navigation entry and graph stores are allocated only by the shared Lifecycle 2.11 scoped-owner provider.
   - Visual transitions and predictive Back never become a second source of navigation state.
+  - A returned page value is published only by its successful pop transaction to the surviving entry.
   - Restored state is accepted only when it remains compatible with the current graph and stack configuration.
 evidence:
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt
@@ -75,6 +79,10 @@ undo application state. Every terminal visual path settles on the committed targ
 post-commit effect is reported with `stackCommitted = true`; the host never pretends that the old
 stack is still authoritative.
 
+A page result belongs to its pop transaction. Core targets only the surviving `after.top`; Android
+publishes after commit into that entry's saved FIFO inbox, and the destination DSL consumes at
+`RESUMED`. No global bus, arbitrary entry address, or second page-lifecycle machine exists.
+
 ## 3. Unified execution plan
 
 Navigation Core reduces each settled reconciliation, committed transition, or predictive preview
@@ -115,15 +123,9 @@ candidate container, staged, and committed before the scene changes; failure dis
 candidates and keeps the previous stack and scene. Permanent removal always disposes presentation
 before owner destruction and ViewModel clear.
 
-The bounded default is evidence-selected. On a physical Pixel 4 XL at API 33, a synthetic heavy
-13-entry stack reduced retained presentations from 13 to 1 and process PSS from 191,953 KiB to
-185,510 KiB (92.3% fewer presentations and 3.4% lower PSS). Synchronous pop-and-rebuild median time
-rose from 13,318 us to 49,573 us (272.2%), while both policies captured 252 animated frames at
-90 Hz with 9 ms P95 and no frame above 32 ms. This is a **mixed** result: idle resource ownership
-improved and measured settled motion had **no material change**, but rebuild-sensitive surfaces may
-need an explicit bounded or retain-all policy. One device, synthetic content, process-wide PSS, and
-a short run limit the conclusion; broader device, leak, and representative-workload evidence stays
-open in the active navigation plan.
+An API-33 synthetic comparison selected the bounded default: native retention and PSS improved,
+synchronous rebuild regressed, and its short settled-frame sample had **no material change**. Exact
+results and limitations remain in the [active plan](../project/plans/navigation-lifecycle-and-scene-evolution.md).
 
 The entry owner also retains one `NavDestinationContext`. Destination DSL reads it from
 `LocalNavDestinationContext`; nested hosts replace the Local for their child entry and restore the
@@ -237,39 +239,16 @@ state.
 
 ## 8. Evidence and verification
 
-The invariant boundary is covered at three levels:
-
-- Navigation Core tests exercise two-phase transactions, deterministic retained stacks, graph
-  validation, strict URI/action/MIME deep links, lifecycle plans, and pane-scene validation.
-- Navigation Android tests exercise candidate rollback, retained owner identity, lifecycle order,
-  shared scoped-store recreation and terminal cleanup, SavedState compatibility, queued commands,
-  transition redirection, adaptive transition scenes, and predictive Back.
-- Android aggregate-host tests exercise Activity ViewTree owner discovery, nested explicit-owner
-  precedence, and Fragment owner retention across View recreation.
-- The debug navigation device host captures the exact nearest `LocalLifecycleOwner` seen by DSL
-  content while instrumentation checks real View motion and owner state on a physical device.
-- The compiled [navigation tutorial](../tutorials/navigation.md) and the
-  [production-host guide](../guides/navigation.md) provide the public first-success and manual
-  acceptance paths.
+Core tests cover transactions, stacks, graphs, deep links, lifecycle, and scenes. Android tests
+cover rollback, owner identity, SavedState, queued commands, transitions, and Back; aggregate-host
+and device tests add real Activity/Fragment ownership, View motion, and DSL Lifecycle observation.
+The compiled [tutorial](../tutorials/navigation.md) and [host guide](../guides/navigation.md) own
+the public usage and manual acceptance paths.
 
 Run `./gradlew :viewcompose-navigation-core:test :viewcompose-navigation-android:testDebugUnitTest`
 for the deterministic architecture suite. Device behavior is accepted only when the guide's real
 Back, recreation, predictive-Back, and failure journey also passes.
 
-The transition-lifecycle correction passed a fresh 151/151 Navigation Android suite. Its focused
-ordinary, predictive, redirect, host-cap, and adaptive matrix was 20/20. On a physical Pixel 4 XL
-running API 33, 2/2 selected instrumentation cases passed: one samples the Lifecycle owner captured
-inside destination DSL across push, preview, cancellation, commit, and settlement; the other
-rechecks predictive progress against real native Views. Compared with the previous suite that
-encoded premature incoming `RESUMED` and popped outgoing `STARTED`, the conclusion is
-**improved**. General navigation overlays, API-34 platform edge-gesture delivery, memory, leaks,
-and performance remain **inconclusive** and stay assigned to the active plan.
-
-The reducer/executor convergence passed fresh 71/71 Navigation Core and 165/165 Navigation Android
-suites, compared with Phase 5 baselines of 60 and 162 respectively. All 15 navigation Back cases
-then passed on the same physical API-33 Pixel 4 XL. The coordinator fell from 1,597 to 1,176 lines
-because scene, lifecycle, presentation, interaction, Back, rollback, and cleanup policy now comes
-from one Core plan. The conclusion is **improved**. The device run is limited to one API level and
-synthetic navigation host; line/branch coverage, representative leaks, memory, and performance,
-general overlays, typed routes, and direct NavigationEvent integration remain **inconclusive** and
-belong to Phase 7.
+Current test deltas, device results, limitations, and next actions are interpreted in the
+[active navigation plan](../project/plans/navigation-lifecycle-and-scene-evolution.md); raw test
+output alone does not change these contracts.

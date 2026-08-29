@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: 18ca5c395f8a5da63b739b97919752cc1a2827dabd0db4dd82567a26dde04826
+translation_source_hash: 6dba7c88621877a974e8bded2874b534216a46ed8e7b04d9a4d573fb0d70f0fd
 translation_status: current
 ---
 
@@ -33,6 +33,10 @@ Android Host 准备 Destination Owner 和子 RenderSession，在暂存原生容�
 栈提交后，视觉 Motion 可以完成、取消或重定向，但不能撤销应用状态。所有视觉终态都会收敛
 到已提交目标。提交后 Effect 失败会以 `stackCommitted = true` 上报；Host 不会假装旧栈仍是
 权威状态。
+
+页面结果属于其 Pop 事务。Core 只定向仍存活的 `after.top`；Android 在提交后写入该 Entry 的
+可保存 FIFO Inbox，Destination DSL 在 `RESUMED` 时消费。不存在全局总线、任意 Entry 寻址或
+第二套页面 Lifecycle 状态机。
 
 ## 3. 统一 Execution Plan
 
@@ -68,13 +72,8 @@ ViewCompose Saveable-state Namespace，以及一个 Keyed ViewModelStore Lease�
 候选容器中完成 Render、Stage 与 Commit，再改变 Scene；失败会释放所有候选并保留此前 Stack 与
 Scene。永久移除始终先释放展示，再销毁 Owner 并清理 ViewModel。
 
-该有界默认策略由证据选出。在运行 API 33 的 Pixel 4 XL 真机上，合成的重型 13 层栈把保留
-Presentation 从 13 个降至 1 个，进程 PSS 从 191,953 KiB 降至 185,510 KiB（Presentation 减少
-92.3%，PSS 减少 3.4%）。同步 Pop 并重建的中位耗时从 13,318 us 增至 49,573 us（272.2%）；
-两个策略都在 90 Hz 下采集 252 帧，P95 为 9 ms，且没有超过 32 ms 的帧。结论为 **mixed**：
-空闲资源所有权得到改善，实测稳定转场为 **no material change**，但对重建敏感的 Surface 可能
-需要显式 `Bounded` 或 `RetainAll`。单台设备、合成内容、进程级 PSS 与短时运行限制了结论；
-更广的设备、泄漏和代表性负载证据仍由有效导航计划继续推进。
+API 33 合成对比据此选择有界默认策略：原生保留量与 PSS 改善，同步重建回退，短时稳定帧样本为
+**no material change**。精确结果与局限保留在[活跃计划](../project/plans/navigation-lifecycle-and-scene-evolution.md)中。
 
 Entry Owner 还会保留一个 `NavDestinationContext`。Destination DSL 通过
 `LocalNavDestinationContext` 读取它；嵌套 Host 会为 Child Entry 覆盖该 Local，结束后恢复父级
@@ -172,34 +171,15 @@ Destination Root，不持有页面或 Session，也不能接收输入或无障�
 
 ## 8. 证据与验证
 
-不变量边界有三个层次的覆盖：
-
-- Navigation Core 测试覆盖两阶段事务、确定性保留栈、Graph 校验、严格 URI/action/MIME Deep Link、
-  Lifecycle Plan 和 Pane Scene 校验。
-- Navigation Android 测试覆盖候选回滚、保留 Owner 身份、Lifecycle 顺序、共享 Scoped Store
-  重建与终态清理、SavedState 兼容、队列命令、转场重定向、自适应转场 Scene 和 Predictive Back。
-- Android Aggregate Host 测试覆盖 Activity ViewTree Owner 发现、嵌套显式 Owner 优先级，以及
-  Fragment View 重建期间的 Owner 保留。
-- Debug 导航设备 Host 会捕获 DSL 内容实际看到的最近 `LocalLifecycleOwner`，Instrumentation 则在
-  真机上检查真实 View Motion 与 Owner 状态。
-- 可编译的[导航教程](../tutorials/navigation.md)和[可上线 Host 指南](../guides/navigation.md)
-  提供公开首个成功路径和人工验收路径。
+Core 测试覆盖事务、栈、Graph、深层链接、Lifecycle 与 Scene。Android 测试覆盖回滚、Owner Identity、
+SavedState、队列命令、转场与 Back；Aggregate Host 与真机测试补充真实 Activity/Fragment Ownership、
+View Motion 与 DSL Lifecycle 观察。可编译的[导航教程](../tutorials/navigation.md)和
+[可上线 Host 指南](../guides/navigation.md)负责公开用法与人工验收路径。
 
 运行 `./gradlew :viewcompose-navigation-core:test :viewcompose-navigation-android:testDebugUnitTest`
 执行确定性架构测试。只有指南中的真实返回、重建、Predictive Back 和失败路径也通过后，才能
 接受设备行为。
 
-转场 Lifecycle 修正通过了新鲜执行的 151/151 项 Navigation Android 测试，其中普通转场、
-Predictive、重定向、Host Cap 与自适应矩阵的定向子集为 20/20。API 33 的 Pixel 4 XL 真机上，
-2/2 项定向 Instrumentation 通过：一项从 Destination DSL 内捕获 Lifecycle Owner，覆盖 Push、
-Preview、取消、提交和稳定；另一项再次用真实原生 View 验证 Predictive Progress。相较原先把
-进入页面过早设为 `RESUMED`、把已 Pop 离场页面保留为 `STARTED` 的测试，结论为 **improved**。
-通用导航 Overlay、API 34 平台边缘手势分发、内存、泄漏和性能仍为 **inconclusive**，继续由活跃
-计划负责。
-
-Reducer/Executor 收敛的新鲜执行分别通过 71/71 项 Navigation Core 与 165/165 项 Navigation
-Android 测试，Phase 5 对应基线为 60 和 162。随后，同一台 API 33 Pixel 4 XL 上的全部 15 项导航
-Back 用例通过。由于 Scene、Lifecycle、Presentation、Interaction、Back、Rollback 与 Cleanup
-策略现在都来自一份 Core Plan，Coordinator 从 1,597 行降至 1,176 行。结论为 **improved**。
-真机执行仅覆盖一个 API Level 和合成导航 Host；行/分支覆盖率、代表性泄漏、内存与性能、通用
-Overlay、类型化 Route 以及直接 NavigationEvent 集成仍为 **inconclusive**，继续由 Phase 7 负责。
+当前测试增量、真机结果、局限与下一步均在
+[活跃导航计划](../project/plans/navigation-lifecycle-and-scene-evolution.md)中解释；
+原始测试输出本身不会改变这些契约。

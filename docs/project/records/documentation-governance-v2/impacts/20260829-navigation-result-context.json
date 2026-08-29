@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-result-context",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.NavDestinationContext",
+  "capability_id": "navigation.destination-context",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": { "status": "updated", "targets": ["com.viewcompose.navigation.NavDestinationContext"] },
+    "module": { "status": "updated", "targets": ["module.viewcompose-navigation-android"] },
+    "sample": { "status": "updated", "targets": ["module.navigation-android-results"] },
+    "reference": { "status": "updated", "targets": ["reference.navigation.destination-context"] },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The introductory navigation tutorial does not inspect destination-local return state."
+    },
+    "guide": { "status": "updated", "targets": ["guide.navigation-production-host"] },
+    "architecture": { "status": "updated", "targets": ["architecture.navigation-runtime"] },
+    "migration": { "status": "updated", "targets": ["migration.compose-navigation"] },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The additive property keeps the existing destination-context symbol and document route."
+    }
+  }
+}

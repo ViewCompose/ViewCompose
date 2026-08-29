@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 646621ef1173f055e23012e7badc4743fb681c13a3085b465fcf34f3d5c6cd36
+translation_source_hash: 2f928fc4ad1981bcc88c03f965e5180eae72112237d4575e2b5739ec305b31c8
 translation_status: current
 ---
 
@@ -119,6 +119,24 @@ Role 或 Transition Role 等粗粒度 UI 决策才使用 Destination Presentatio
 动画进度被刻意排除，因此反复的逐帧 Progress 不会使普通 Destination 内容失效。嵌套 Host 会提供
 各自最近的 Context；框架不存在全局 Current Page 查询。
 
+## 向上一页返回结果
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-results" sample_id="module.navigation-android-results" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+val SelectedItemResult = NavResultKey.text("catalog.selection")
+
+fun UiTreeBuilder.observeSelectedItem(onSelected: (String) -> Unit) {
+    NavResultEffect(SelectedItemResult, onSelected)
+}
+
+fun returnSelectedItem(controller: NavHostController, itemId: String): NavResult =
+    controller.popBackStack(SelectedItemResult, itemId)
+```
+
+已提交 Pop 会把值写入仍存活 Entry 的可保存 FIFO Inbox。`NavResultEffect` 在 Destination 到达
+`RESUMED` 后至多消费一次；显式确认或重试应使用 `NavDestinationContext.results`。Key 仅属于
+本地 Entry，不是全局或跨栈总线。
+
 ## 展示保留策略
 
 `NavPresentationRetentionPolicy` 独立于 Entry Ownership 控制原生展示生命周期。
@@ -146,14 +164,7 @@ fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
 策略只影响之后创建或隐藏的展示，不会急切构建当前不可见页面。首次连接、配置恢复连接和进程恢复
 连接都只物化当前可见 Pane 集合，即使选择 `RetainAll` 也是如此。
 
-Phase 4 的真机对比使用一台运行 API 33 的 Pixel 4 XL 和合成的重型 13 层栈。
-`DisposeWhenHidden` 保留 1 个 Presentation，进程 PSS 为 185,510 KiB；`RetainAll` 保留 13 个，
-PSS 为 191,953 KiB。即 Presentation 少 12 个（92.3%），进程 PSS 少 6,443 KiB（3.4%）。同步
-Pop 并重建的中位耗时从 13,318 us 增至 49,573 us，即增加 272.2%。另一轮带动画对比为每个策略
-在 90 Hz 下采集 252 帧；两者 P95 均为 9 ms，超过 32 ms 的帧均为 0。结论为 **mixed**：有界
-默认策略改善空闲资源所有权，并在本次稳定帧样本中为 **no material change**；实测重建昂贵的页面
-可以选择 `Bounded` 或 `RetainAll`。这不是通用 Benchmark：它只使用一台设备、合成内容、进程级
-PSS 与短时运行。下一步由 Phase 7 继续验证更广设备、泄漏和代表性负载。
+Retention 权衡与证据解释由[导航架构](../../architecture/navigation.md)维护。
 
 ## 命令结果与重入
 

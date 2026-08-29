@@ -853,6 +853,37 @@
       }
     },
     {
+      "capabilityId": "navigation.result-consumption",
+      "referenceId": "reference.navigation.result-consumption",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-android-results",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "navigation.results",
+      "referenceId": "reference.navigation.results",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "module.viewcompose-navigation-core",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-core-results",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "navigation.scene-projection",
       "referenceId": "reference.navigation.scene-projection",
       "relatedDocumentIds": [
@@ -4238,6 +4269,22 @@
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.result-consumption",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavResultEffect"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.result-consumption",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavResultInbox"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
           "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
@@ -4660,7 +4707,7 @@
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
-      "entryCount": 172,
+      "entryCount": 174,
       "groupId": "integrations"
     },
     {
@@ -6418,13 +6465,13 @@
       "component": 72,
       "dsl": 33,
       "host": 53,
-      "integration": 172,
+      "integration": 174,
       "modifier": 77,
       "tooling": 130
     },
-    "entryCount": 537,
+    "entryCount": 539,
     "groupCount": 15,
-    "ownedEntryCount": 537,
-    "sourceFingerprint": "807a106db7b6a457dba1a4ee11446afcc0a487b33a3d857e708d4ab2661b107e"
+    "ownedEntryCount": 539,
+    "sourceFingerprint": "32325354c6244a81bde6e23c503304e41b1940b09c571baf90200d16e206c173"
   }
 }

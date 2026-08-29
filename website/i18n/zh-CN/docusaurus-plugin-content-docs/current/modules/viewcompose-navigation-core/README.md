@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 3f84332a52a21d892a7d21a409dc5d84f8e19ad9a7a1623710647621f224f432
+translation_source_hash: f3f8e428e28cae970bb2915033174396d47255ff7a88897c570acdef7934022a
 translation_status: current
 ---
 
@@ -81,6 +81,20 @@ when (val preparation = controller.prepare(NavCommand.Push(NavRoute("details")))
 - 根 entry 不能继续 pop；
 - `SingleTop`、replace 或 reset 已经指向当前有效目的地；
 - 目标 stack 已按请求策略处于选中状态。
+
+## 原子返回结果
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-results" sample_id="module.navigation-core-results" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val selectedItem = NavResultKey.text("catalog.selection")
+val preparedResultPop = controller.prepare(
+    NavCommand.PopWithResult(selectedItem.encode("item-42")),
+)
+check(preparedResultPop is NavPreparation.Ready)
+```
+
+`PopWithResult` 在移除活动栈顶时携带一个类型化 `NavValue`。只有已提交事务才向 `after.top`
+交付；Core 不持有 Callback 或 Lifecycle。
 
 ## 独立保留栈
 

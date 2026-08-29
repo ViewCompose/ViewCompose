@@ -84,10 +84,7 @@ internal class NavEntryOwner(
     val compositionSaveableStateRegistry: ViewComposeSaveableStateRegistry
 
     /** Stable destination-local holder retained independently of the native presentation. */
-    val destinationContext = NavDestinationContext(
-        entry = entry,
-        initialPresentation = entry.preparedDestinationPresentation(),
-    )
+    val destinationContext: NavDestinationContext
 
     var entryLifecycleState: NavEntryLifecycleState = NavEntryLifecycleState.Initialized
         private set
@@ -96,6 +93,18 @@ internal class NavEntryOwner(
         savedStateController.performAttach()
         enableSavedStateHandles()
         savedStateController.performRestore(restoredState?.let(::Bundle))
+        val resultInbox = NavResultInbox(
+            savedStateRegistry.consumeRestoredStateForKey(RESULT_INBOX_SAVED_STATE_KEY),
+        )
+        savedStateRegistry.registerSavedStateProvider(
+            RESULT_INBOX_SAVED_STATE_KEY,
+            resultInbox::saveState,
+        )
+        destinationContext = NavDestinationContext(
+            entry = entry,
+            results = resultInbox,
+            initialPresentation = entry.preparedDestinationPresentation(),
+        )
         compositionSaveableStateRegistry = viewComposeSaveableStateRegistry(this)
     }
 
@@ -162,6 +171,8 @@ internal class NavEntryOwner(
         }
     }
 }
+
+private const val RESULT_INBOX_SAVED_STATE_KEY = "viewcompose.navigation.results"
 
 /**
  * Converts navigation arguments into an Android default-arguments Bundle.

@@ -261,6 +261,70 @@ class NavigationBackDeviceTest {
     }
 
     @Test
+    fun resultPopDeliversOnceAfterPreviousDestinationResumes() {
+        launchHost(resultCertification = true).use { scenario ->
+            scenario.onActivity { activity ->
+                assertTrue(
+                    activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is
+                        NavResult.Committed,
+                )
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.DETAILS_ROUTE),
+                )
+                assertTrue(activity.popWithPageResult(RETURNED_ITEM_ID) is NavResult.Committed)
+                assertEquals(
+                    listOf(NavigationBackTestActivity.HOME_ROUTE),
+                    activity.routeNames(),
+                )
+                assertEquals(
+                    Lifecycle.State.STARTED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertTrue(activity.receivedPageResults().isEmpty())
+                assertEquals(
+                    1,
+                    activity.pendingResultCount(NavigationBackTestActivity.HOME_ROUTE),
+                )
+            }
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    Lifecycle.State.RESUMED,
+                    activity.destinationLifecycleState(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(listOf(RETURNED_ITEM_ID), activity.receivedPageResults())
+                assertEquals(
+                    listOf(Lifecycle.State.RESUMED),
+                    activity.resultDeliveryLifecycleStates(),
+                )
+                assertEquals(
+                    0,
+                    activity.pendingResultCount(NavigationBackTestActivity.HOME_ROUTE),
+                )
+                assertEquals(0, activity.failureCount)
+            }
+
+            scenario.moveToState(Lifecycle.State.CREATED)
+            scenario.moveToState(Lifecycle.State.RESUMED)
+            waitForUiIdle()
+
+            scenario.onActivity { activity ->
+                assertEquals(listOf(RETURNED_ITEM_ID), activity.receivedPageResults())
+                assertEquals(
+                    listOf(Lifecycle.State.RESUMED),
+                    activity.resultDeliveryLifecycleStates(),
+                )
+            }
+        }
+    }
+
+    @Test
     fun destinationContextSurvivesRebuildAndIgnoresPredictiveFrameProgress() {
         launchHost(
             retentionPolicy = NavigationBackTestActivity.PRESENTATION_RETENTION_DISPOSE,
@@ -1034,6 +1098,7 @@ class NavigationBackDeviceTest {
         maxHiddenPresentations: Int = BOUNDED_HIDDEN_PRESENTATIONS,
         disableTransitions: Boolean = false,
         destinationContextCertification: Boolean = false,
+        resultCertification: Boolean = false,
     ): ActivityScenario<NavigationBackTestActivity> {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, NavigationBackTestActivity::class.java).apply {
@@ -1054,6 +1119,10 @@ class NavigationBackDeviceTest {
             putExtra(
                 NavigationBackTestActivity.EXTRA_DESTINATION_CONTEXT_CERTIFICATION,
                 destinationContextCertification,
+            )
+            putExtra(
+                NavigationBackTestActivity.EXTRA_RESULT_CERTIFICATION,
+                resultCertification,
             )
         }
         return ActivityScenario.launch<NavigationBackTestActivity>(intent).also { scenario ->
@@ -1335,6 +1404,7 @@ class NavigationBackDeviceTest {
     }
 
     companion object {
+        private const val RETURNED_ITEM_ID = "item-42"
         private const val RETENTION_STATE_VALUE = 73
         private const val BOUNDED_HIDDEN_PRESENTATIONS = 2
         private const val RETENTION_EVIDENCE_STACK_DEPTH = 13

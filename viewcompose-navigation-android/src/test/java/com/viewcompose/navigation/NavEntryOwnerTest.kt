@@ -26,6 +26,8 @@ import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavEntryPresence
 import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavResultDelivery
+import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavSceneEntry
 import com.viewcompose.navigation.core.NavSceneInteraction
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
@@ -338,6 +340,28 @@ class NavEntryOwnerTest {
         assertThrows<IllegalStateException> {
             owner.performSave()
         }
+    }
+
+    @Test
+    fun `result inbox survives owner saved-state recreation`() {
+        val entry = entry("root", "home")
+        val key = NavResultKey.text("selection")
+        val first = owner(entry)
+        first.destinationContext.results.deliver(
+            NavResultDelivery(
+                transactionId = 1L,
+                targetEntryId = entry.id,
+                payload = key.encode("primary"),
+            ),
+        )
+
+        val savedState = first.performSave()
+        first.moveTo(NavEntryLifecycleState.Destroyed)
+        val restored = owner(entry, savedState)
+
+        assertEquals("primary", restored.destinationContext.results.consume(key))
+        assertEquals(0, restored.destinationContext.results.pendingCount)
+        restored.moveTo(NavEntryLifecycleState.Destroyed)
     }
 
     private fun owner(
