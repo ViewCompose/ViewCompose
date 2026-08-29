@@ -202,6 +202,38 @@
       "metricIds": ["workflow.contract-completeness"]
     },
     {
+      "id": "distribution.local-offline-package",
+      "phase": 3,
+      "category": "packaging",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/distribution/package-contract.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "distribution.reproducible-package",
+        "distribution.offline-lifecycle",
+        "distribution.inventory-completeness"
+      ]
+    },
+    {
+      "id": "protocol.installed-client-matrix",
+      "phase": 3,
+      "category": "protocol",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/distribution/package-contract.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": ["protocol.installed-compatibility"]
+    },
+    {
       "id": "xml.supported-login-layout",
       "phase": 4,
       "category": "xml-migration",

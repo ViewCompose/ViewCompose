@@ -129,6 +129,42 @@
       "environment": "checked-in client-neutral skill manifest against the frozen workflow set"
     },
     {
+      "id": "distribution.reproducible-package",
+      "phase": 3,
+      "measure": "sha256_mismatch_count",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "archives",
+      "environment": "two clean local package builds from the same source tree and npm version"
+    },
+    {
+      "id": "distribution.offline-lifecycle",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "isolated prefix, local tarball, unreachable registry, npm offline mode"
+    },
+    {
+      "id": "distribution.inventory-completeness",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "archive manifest, SHA-256 sidecars, SPDX 2.3 package record, and MIT license inventory"
+    },
+    {
+      "id": "protocol.installed-compatibility",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "installed stdio package against every frozen modern and legacy MCP version"
+    },
+    {
       "id": "xml.supported-compile",
       "phase": 4,
       "measure": "success_ratio",

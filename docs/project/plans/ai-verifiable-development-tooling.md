@@ -593,6 +593,14 @@ conditional tools, minimum and maximum evidence, mutation authority, shared stop
 exact `current-source` selection form the denominator for `workflow.contract-completeness`, whose
 required exact-match ratio is 1.00.
 
+Before packaging, the corpus freezes one dependency-free local npm distribution with eight tools,
+five skills, two explicit executable modes, SHA-256 archive and file integrity, SPDX 2.3 and MIT
+license inventory, repeat-build identity, offline installation and uninstallation, and installed
+stdio checks for every supported modern and legacy MCP version. Compile and Preview execution must
+remain source-bound and require an explicit matching ViewCompose checkout; packaging cannot relabel
+their evidence as standalone. The four distribution metrics require zero archive mismatches and
+exact lifecycle, inventory, and protocol ratios of 1.00.
+
 ### Additional deliverables
 
 1. A local stdio MCP server with per-request version metadata, capability discovery, explicit

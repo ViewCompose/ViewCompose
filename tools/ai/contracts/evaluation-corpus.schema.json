@@ -30,6 +30,7 @@
               "project-analysis",
               "security",
               "protocol",
+              "packaging",
               "xml-migration",
               "compose-migration",
               "visual-generation"

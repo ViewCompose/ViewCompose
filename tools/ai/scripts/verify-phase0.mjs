@@ -231,6 +231,7 @@ async function verifyCorpus(schemas, metrics) {
     'project-analysis',
     'security',
     'protocol',
+    'packaging',
     'xml-migration',
     'compose-migration',
     'visual-generation',

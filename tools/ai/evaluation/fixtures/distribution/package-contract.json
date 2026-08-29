@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "package": {
+    "name": "@viewcompose/ai-tooling",
+    "version": "0.1.0",
+    "format": "npm-tgz",
+    "nodeEngine": ">=24.19.0",
+    "license": "MIT",
+    "runtimeDependencies": []
+  },
+  "contents": {
+    "tools": [
+      "get_api_reference",
+      "get_component_reference",
+      "search_component",
+      "get_sample",
+      "validate_code",
+      "render_preview",
+      "diagnose_layout",
+      "analyze_project"
+    ],
+    "skills": [
+      "viewcompose-api-reference",
+      "viewcompose-create-screen",
+      "viewcompose-debug-layout",
+      "viewcompose-review",
+      "viewcompose-validate"
+    ],
+    "executables": ["viewcompose-ai", "viewcompose-mcp"],
+    "requiredPaths": [
+      "LICENSE",
+      "README.md",
+      "distribution.json",
+      "package.json",
+      "sbom.spdx.json",
+      "third-party-licenses.json",
+      "contracts/mcp-protocol.json",
+      "contracts/tool-envelope.schema.json",
+      "generated/current-source/artifacts.json",
+      "generated/current-source/capabilities.json",
+      "generated/current-source/llms-full.txt",
+      "generated/current-source/llms.txt",
+      "generated/current-source/manifest.json",
+      "generated/current-source/rules.json",
+      "generated/current-source/samples.jsonl",
+      "generated/current-source/symbols.jsonl",
+      "scripts/ai-tool.mjs",
+      "scripts/bounded-process.mjs",
+      "scripts/compiler-adapter.mjs",
+      "scripts/knowledge-retriever.mjs",
+      "scripts/layout-diagnoser.mjs",
+      "scripts/mcp-server.mjs",
+      "scripts/preview-adapter.mjs",
+      "scripts/project-analyzer.mjs",
+      "scripts/schema-validator.mjs",
+      "scripts/static-validator.mjs",
+      "scripts/tool-catalog.mjs",
+      "scripts/tool-core.mjs",
+      "skills/manifest.json",
+      "skills/viewcompose-api-reference/SKILL.md",
+      "skills/viewcompose-create-screen/SKILL.md",
+      "skills/viewcompose-debug-layout/SKILL.md",
+      "skills/viewcompose-review/SKILL.md",
+      "skills/viewcompose-validate/SKILL.md"
+    ]
+  },
+  "integrity": {
+    "archiveAlgorithm": "SHA256",
+    "fileAlgorithm": "SHA256",
+    "repeatBuilds": 2,
+    "requiredSidecars": ["manifest.json", "SHA256SUMS"],
+    "sbom": {
+      "format": "SPDX-2.3",
+      "filesAnalyzed": false,
+      "packageCount": 1
+    },
+    "licenseInventory": {
+      "projectLicense": "MIT",
+      "runtimeDependencyCount": 0
+    }
+  },
+  "installation": {
+    "manager": "npm",
+    "source": "local-tarball",
+    "offline": true,
+    "isolatedPrefix": true,
+    "uninstall": true,
+    "networkRequestsAllowed": 0
+  },
+  "compatibility": {
+    "transport": "stdio",
+    "protocolVersions": ["2026-07-28", "2025-11-25"],
+    "standaloneModes": [
+      "get_api_reference",
+      "get_component_reference",
+      "search_component",
+      "get_sample",
+      "validate_code:static",
+      "analyze_project"
+    ],
+    "sourceBoundModes": [
+      "validate_code:compile",
+      "render_preview",
+      "diagnose_layout"
+    ],
+    "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
+    "implicitProtocolDowngrade": false
+  }
+}
