@@ -581,6 +581,12 @@ one knowledge source.
 deterministic tools, not opaque model calls inside the server. This keeps providers replaceable and
 makes every step inspectable. Conversion tools enter only with Phase 4 evidence.
 
+Before implementing `diagnose_layout`, the Phase 3 corpus freezes one accepted Preview protocol v1
+snapshot containing non-expected partial clipping and intentional text ellipsis. The associated
+`layout.diagnosis-exactness` metric requires an exact stable-code match ratio of 1.00. The tool may
+interpret renderer-produced facts, but it may not infer geometry from source or silently add
+model-derived findings to that denominator.
+
 ### Additional deliverables
 
 1. A local stdio MCP server with per-request version metadata, capability discovery, explicit

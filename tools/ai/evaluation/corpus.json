@@ -170,6 +170,24 @@
       "metricIds": ["protocol.cli-mcp-parity"]
     },
     {
+      "id": "layout.accepted-render-diagnostics",
+      "phase": 3,
+      "category": "render",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/render/layout-diagnostics.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": [
+          "VC-AI-LAYOUT-PARTIALLY-CLIPPED",
+          "VC-AI-LAYOUT-TEXT-ELLIPSIZED"
+        ]
+      },
+      "metricIds": ["layout.diagnosis-exactness"]
+    },
+    {
       "id": "xml.supported-login-layout",
       "phase": 4,
       "category": "xml-migration",

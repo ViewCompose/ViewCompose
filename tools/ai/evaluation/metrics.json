@@ -111,6 +111,15 @@
       "environment": "same core request and knowledge fingerprint"
     },
     {
+      "id": "layout.diagnosis-exactness",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "accepted Preview protocol v1 layout diagnostics with fixed code mapping"
+    },
+    {
       "id": "xml.supported-compile",
       "phase": 4,
       "measure": "success_ratio",
