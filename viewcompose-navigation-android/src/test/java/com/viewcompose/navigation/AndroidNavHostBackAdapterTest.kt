@@ -7,13 +7,15 @@ package com.viewcompose.navigation
 
 import android.view.View
 import android.widget.FrameLayout
-import androidx.activity.BackEventCompat
-import androidx.activity.ExperimentalActivityApi
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.setViewTreeOnBackPressedDispatcherOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
+import androidx.navigationevent.DirectNavigationEventInput
+import androidx.navigationevent.NavigationEvent
+import androidx.navigationevent.setViewTreeNavigationEventDispatcherOwner
+import androidx.navigationevent.testing.TestNavigationEventDispatcherOwner
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
@@ -33,27 +35,26 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-@OptIn(ExperimentalActivityApi::class)
 @RunWith(RobolectricTestRunner::class)
 class AndroidNavHostBackAdapterTest {
     @Test
     fun `platform back pops navigation then delegates at root`() {
         val fixture = renderHost()
 
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(1, fixture.navigationFallbackCount)
         assertEquals(listOf("home"), fixture.controller.routeNames())
 
         fixture.controller.navigate(NavRoute("details"))
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(1, fixture.navigationFallbackCount)
         assertEquals(listOf("home"), fixture.controller.routeNames())
 
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(2, fixture.owner.fallbackCount)
+        assertEquals(2, fixture.navigationFallbackCount)
         fixture.session.dispose()
     }
 
@@ -62,9 +63,9 @@ class AndroidNavHostBackAdapterTest {
         val fixture = renderHost(systemBackEnabled = false)
         fixture.controller.navigate(NavRoute("details"))
 
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(1, fixture.navigationFallbackCount)
         assertEquals(listOf("home", "details"), fixture.controller.routeNames())
         fixture.session.dispose()
     }
@@ -77,16 +78,16 @@ class AndroidNavHostBackAdapterTest {
 
         enabled.value = false
         fixture.session.render()
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(1, fixture.navigationFallbackCount)
         assertEquals(listOf("home", "details"), fixture.controller.routeNames())
 
         enabled.value = true
         fixture.session.render()
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(1, fixture.navigationFallbackCount)
         assertEquals(listOf("home"), fixture.controller.routeNames())
         fixture.session.dispose()
     }
@@ -103,8 +104,8 @@ class AndroidNavHostBackAdapterTest {
 
         val replacementHost = fixture.root.requireNavHostView()
         assertTrue(replacementHost !== originalHost)
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
-        assertEquals(0, fixture.owner.fallbackCount)
+        fixture.navigationEventInput.backCompleted()
+        assertEquals(0, fixture.navigationFallbackCount)
         assertEquals(listOf("home"), fixture.controller.routeNames())
         fixture.session.dispose()
     }
@@ -115,11 +116,78 @@ class AndroidNavHostBackAdapterTest {
         fixture.controller.navigate(NavRoute("details"))
         fixture.owner.moveTo(Lifecycle.State.CREATED)
 
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(1, fixture.navigationFallbackCount)
         assertEquals(listOf("home", "details"), fixture.controller.routeNames())
         fixture.session.dispose()
+    }
+
+    @Test
+    fun `lifecycle stop cancels direct preview and restart restores ownership`() {
+        val fixture = renderHost()
+        fixture.controller.navigate(NavRoute("details"))
+        fixture.navigationEventInput.backStarted(navigationEvent(progress = 0f))
+        fixture.navigationEventInput.backProgressed(navigationEvent(progress = 0.5f))
+        assertEquals(2, fixture.navHostView.visiblePageCount())
+
+        fixture.owner.moveTo(Lifecycle.State.CREATED)
+
+        assertEquals(listOf("home", "details"), fixture.controller.routeNames())
+        assertEquals(1, fixture.navHostView.visiblePageCount())
+        fixture.navigationEventInput.backCancelled()
+        fixture.navigationEventInput.backCompleted()
+        assertEquals(1, fixture.navigationFallbackCount)
+
+        fixture.owner.moveTo(Lifecycle.State.RESUMED)
+        fixture.navigationEventInput.backCompleted()
+
+        assertEquals(listOf("home"), fixture.controller.routeNames())
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `disabling system back cancels direct predictive preview`() {
+        val application = RuntimeEnvironment.getApplication()
+        val root = FrameLayout(application)
+        val hostView = NavHostView(application)
+        root.addView(hostView)
+        val owner = TestBackOwner().apply { moveTo(Lifecycle.State.RESUMED) }
+        val navigationEvents = navigationEventFixture()
+        root.setViewTreeNavigationEventDispatcherOwner(navigationEvents.owner)
+        var previewActive = false
+        var cancellations = 0
+        var ordinaryBacks = 0
+        val previewId = NavHostBackPreviewId(1L)
+        val adapter = AndroidNavHostBackAdapter(
+            hostView = hostView,
+            canHandleBack = { true },
+            isPreviewActive = { previewActive },
+            onBackPressed = { ordinaryBacks += 1 },
+            onBackStarted = {
+                previewActive = true
+                previewId
+            },
+            onBackProgressed = { _, _ -> },
+            onBackCancelled = {
+                previewActive = false
+                cancellations += 1
+            },
+            onBackCommitted = {},
+        )
+        adapter.attach(owner)
+        navigationEvents.input.backStarted(navigationEvent(progress = 0f))
+
+        adapter.updateEnabled(false)
+
+        assertEquals(1, cancellations)
+        assertTrue(!previewActive)
+        navigationEvents.input.backCompleted()
+        assertEquals(0, ordinaryBacks)
+        assertEquals(0, navigationEvents.owner.onBackCompletedFallbackInvocations)
+        navigationEvents.input.backCompleted()
+        assertEquals(1, navigationEvents.owner.onBackCompletedFallbackInvocations)
+        adapter.destroy()
     }
 
     @Test
@@ -127,13 +195,13 @@ class AndroidNavHostBackAdapterTest {
         val fixture = renderHost()
         fixture.controller.navigate(NavRoute("details"))
 
-        fixture.owner.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(progress = 0f))
-        fixture.owner.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(progress = 0.5f))
+        fixture.navigationEventInput.backStarted(navigationEvent(progress = 0f))
+        fixture.navigationEventInput.backProgressed(navigationEvent(progress = 0.5f))
 
         assertEquals(listOf("home", "details"), fixture.controller.routeNames())
         assertEquals(2, fixture.navHostView.visiblePageCount())
 
-        fixture.owner.onBackPressedDispatcher.dispatchOnBackCancelled()
+        fixture.navigationEventInput.backCancelled()
 
         assertEquals(listOf("home", "details"), fixture.controller.routeNames())
         assertEquals(1, fixture.navHostView.visiblePageCount())
@@ -146,17 +214,17 @@ class AndroidNavHostBackAdapterTest {
         val fixture = renderHost()
         fixture.controller.navigate(NavRoute("details"))
 
-        fixture.owner.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(progress = 0f))
-        fixture.owner.onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(progress = 0.7f))
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backStarted(navigationEvent(progress = 0f))
+        fixture.navigationEventInput.backProgressed(navigationEvent(progress = 0.7f))
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(0, fixture.owner.fallbackCount)
+        assertEquals(0, fixture.navigationFallbackCount)
         assertEquals(listOf("home"), fixture.controller.routeNames())
         assertEquals(1, fixture.navHostView.childCount)
 
-        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        fixture.navigationEventInput.backCompleted()
 
-        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(1, fixture.navigationFallbackCount)
         fixture.session.dispose()
     }
 
@@ -166,16 +234,70 @@ class AndroidNavHostBackAdapterTest {
         fixture.controller.navigate(NavRoute("details"))
 
         fixture.session.dispose()
+        fixture.navigationEventInput.backCompleted()
+
+        assertEquals(1, fixture.navigationFallbackCount)
+        assertTrue(!fixture.controller.isAttached)
+    }
+
+    @Test
+    fun `NavigationEvent owner takes precedence over legacy view tree owner`() {
+        val fixture = renderHost()
+        fixture.controller.navigate(NavRoute("details"))
+
         fixture.owner.onBackPressedDispatcher.onBackPressed()
 
         assertEquals(1, fixture.owner.fallbackCount)
-        assertTrue(!fixture.controller.isAttached)
+        assertEquals(listOf("home", "details"), fixture.controller.routeNames())
+
+        fixture.navigationEventInput.backCompleted()
+
+        assertEquals(listOf("home"), fixture.controller.routeNames())
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `explicit host replacement re-queries a changed NavigationEvent owner`() {
+        val hostKey = mutableStateOf("first")
+        val fixture = renderHost(hostKeyState = hostKey)
+        fixture.controller.navigate(NavRoute("details"))
+        val replacement = navigationEventFixture()
+        fixture.root.setViewTreeNavigationEventDispatcherOwner(replacement.owner)
+
+        hostKey.value = "second"
+        fixture.session.render()
+        fixture.navigationEventInput.backCompleted()
+
+        assertEquals(1, fixture.navigationFallbackCount)
+        assertEquals(listOf("home", "details"), fixture.controller.routeNames())
+
+        replacement.input.backCompleted()
+
+        assertEquals(listOf("home"), fixture.controller.routeNames())
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `legacy view tree owner remains a fallback without NavigationEvent ownership`() {
+        val fixture = renderHost(installNavigationEventOwner = false)
+        fixture.controller.navigate(NavRoute("details"))
+
+        fixture.owner.onBackPressedDispatcher.onBackPressed()
+
+        assertEquals(0, fixture.owner.fallbackCount)
+        assertEquals(listOf("home"), fixture.controller.routeNames())
+
+        fixture.owner.onBackPressedDispatcher.onBackPressed()
+
+        assertEquals(1, fixture.owner.fallbackCount)
+        fixture.session.dispose()
     }
 
     private fun renderHost(
         systemBackEnabled: Boolean = true,
         systemBackEnabledState: State<Boolean>? = null,
         hostKeyState: State<String>? = null,
+        installNavigationEventOwner: Boolean = true,
     ): BackHostFixture {
         val application = RuntimeEnvironment.getApplication()
         val root = FrameLayout(application)
@@ -183,6 +305,10 @@ class AndroidNavHostBackAdapterTest {
             moveTo(Lifecycle.State.RESUMED)
         }
         root.setViewTreeOnBackPressedDispatcherOwner(owner)
+        val navigationEventFixture = navigationEventFixture()
+        if (installNavigationEventOwner) {
+            root.setViewTreeNavigationEventDispatcherOwner(navigationEventFixture.owner)
+        }
         val entryIds = ArrayDeque(listOf("root", "details", "next"))
         val controller = createNavHostController(
             startDestination = NavRoute("home"),
@@ -209,20 +335,29 @@ class AndroidNavHostBackAdapterTest {
         return BackHostFixture(
             root = root,
             owner = owner,
+            navigationEventOwner = navigationEventFixture.owner,
+            navigationEventInput = navigationEventFixture.input,
             controller = controller,
             session = session,
             navHostView = root.requireNavHostView(),
         )
     }
 
-    private fun backEvent(progress: Float): BackEventCompat {
-        return BackEventCompat(
+    private fun navigationEvent(progress: Float): NavigationEvent {
+        return NavigationEvent(
             touchX = 10f,
             touchY = 20f,
             progress = progress,
-            swipeEdge = BackEventCompat.EDGE_LEFT,
+            swipeEdge = NavigationEvent.EDGE_LEFT,
             frameTimeMillis = 30L,
         )
+    }
+
+    private fun navigationEventFixture(): NavigationEventFixture {
+        val owner = TestNavigationEventDispatcherOwner()
+        val input = DirectNavigationEventInput()
+        owner.navigationEventDispatcher.addInput(input)
+        return NavigationEventFixture(owner, input)
     }
 
     private fun NavHostController.routeNames(): List<String> {
@@ -234,15 +369,26 @@ class AndroidNavHostBackAdapterTest {
             getChildAt(index).visibility == View.VISIBLE
         }
     }
+
 }
+
+private data class NavigationEventFixture(
+    val owner: TestNavigationEventDispatcherOwner,
+    val input: DirectNavigationEventInput,
+)
 
 private data class BackHostFixture(
     val root: FrameLayout,
     val owner: TestBackOwner,
+    val navigationEventOwner: TestNavigationEventDispatcherOwner,
+    val navigationEventInput: DirectNavigationEventInput,
     val controller: NavHostController,
     val session: RenderSession,
     val navHostView: NavHostView,
-)
+) {
+    val navigationFallbackCount: Int
+        get() = navigationEventOwner.onBackCompletedFallbackInvocations
+}
 
 private class TestBackOwner : OnBackPressedDispatcherOwner {
     private val registry = LifecycleRegistry(this)
