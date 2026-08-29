@@ -35,15 +35,12 @@ The production artifact is assembled in seven explicit stages:
    repository links.
 3. `verify:translations` validates required Chinese coverage, canonical source fingerprints,
    explicit stale status, and stale-warning markers.
-4. `verifyCompleteViewComposeApiDocs` groups the immutable release registry by source revision,
-   fingerprints the maintained generator inputs, and verifies a per-revision integrity record
-   containing the exact entry set plus every generated file's size and SHA-256 digest. A valid
-   restored revision group is reused; a missing, stale, malformed, extra, deleted, symlinked, or
-   digest-mismatched group is removed and regenerated in a temporary workspace before route,
-   alias, manifest, and pinned-source-link verification continues. Missing frozen commits are
-   fetched by exact full SHA; movable references are never substituted. Historical workspaces get
-   only the release records for their source-revision group, and revisions predating current build
-   contracts receive temporary configuration shims that never enter published output.
+4. `verifyCompleteViewComposeApiDocs` groups immutable releases by source revision and verifies the
+   exact entry set plus every generated file's size and SHA-256. A valid group is reused; any stale,
+   malformed, incomplete, extra, symlinked, or digest-mismatched group is rebuilt in a temporary
+   workspace before route, alias, manifest, and pinned-source verification. Missing revisions are
+   fetched only by full SHA. Historical workspaces receive only their group's release records and
+   non-published compatibility shims when their source predates current build contracts.
 5. the website generators read publishing metadata, the immutable release registry, and
    `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
    artifact/version from the same frozen Git revision; they do not maintain a second registry.
@@ -107,16 +104,11 @@ layout, source fingerprints, required-page tiers, and stale recovery are defined
 
 ## Search, redirects, and quality budgets
 
-The site builds a local full-text index for English and Simplified Chinese. Search needs no hosted
-service, credentials, analytics, or network request after deployment. Search UI messages are
-reviewed in the standard `zh-CN` message catalog, while the index is generated from the locale's
-rendered documents during every production build.
-
-Search keeps page summaries, headings, public contracts, and command guidance indexed. Exhaustive
-defect-evidence tables and dated measurement ledgers remain rendered and directly linkable, but use
-`search-partition-detail` so repeated historical detail does not dominate the local index. Every
-excluded block must retain an adjacent searchable heading and summary; API contracts, command
-references, and reader-facing guides must not use this partition.
+Each locale builds a credential-free local search index from rendered documents. It keeps page
+summaries, headings, public contracts, and command guidance. Exhaustive evidence tables and dated
+ledgers may use `search-partition-detail` when an adjacent searchable heading and summary remain;
+API contracts, command references, and reader-facing guides may not use that partition. Search UI
+messages remain reviewed in the standard `zh-CN` catalog.
 
 Exceptionally large temporary execution plans remain repository-only production drafts when the
 active-plan index retains a searchable purpose and scope summary and every durable public contract
@@ -146,44 +138,28 @@ archive, including their locale-prefixed forms. Add a redirect only for an inten
 or campaign route; canonical document paths remain the source of truth.
 
 The versioned thresholds live in `website/site-budgets.json`. Immutable Dokka output is canonical
-at `/api/**`; after Docusaurus finishes its locale builds, the supported build entry point removes
-locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to the canonical API
-tree, so those copies add storage but no localized content or supported route. The shared social
-card likewise uses one absolute root URL, and the supported build removes its locale copy.
+at `/api/**`; the supported build removes locale-prefixed API copies and the redundant locale social
+card because localized pages use the canonical API tree and one absolute social-card URL.
 
-Immutable module-manual snapshots are read-only static HTML. The supported build preserves their
-original localized routes, complete server-rendered content, styles, links, and inline color-mode
-bootstrap, but removes their external Docusaurus hydration scripts and one generated route chunk
-per locale. Current manuals remain fully hydrated. Locale-aware links from the API and capability
-catalogs force document navigation into these static snapshots, and the versioned-documentation
-gate rejects a snapshot that lacks the static marker or retains an external script. The same
-post-build boundary removes only generated leading indentation from Dokka HTML while preserving
-`pre`, `script`, `style`, and `textarea` bodies byte for byte. Immutable source manifests and cache
-integrity remain upstream of this deploy-only representation compaction.
+Immutable module-manual snapshots retain localized routes, server-rendered content, styles, links,
+and color-mode bootstrap as read-only static HTML, but not redundant hydration scripts or route
+chunks. Current manuals remain hydrated. The gate enforces full-page navigation, the static marker,
+and script removal. Post-build Dokka compaction removes generated indentation while preserving
+literal element bodies byte for byte; immutable source manifests and cache integrity remain
+upstream.
 
 The budget model separates expected release-history growth from regressions. Current ceilings are
 46.9 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
 overhead, 8 MiB total and 768 KiB largest-file JavaScript, 128 KiB CSS, 6.25 MiB per locale search
 index, and 120 seconds for the Docusaurus build. Locale-prefixed API copies remain forbidden.
 
-The ceiling rose from 41 MiB to 46.9 MiB only after paired attribution and consolidation. In the
-2026-08-26 Governance V2 gate change, one same-corpus build reached 49,185,235 B, 7,020.6 B
-(+0.0143%) over the limit. Consolidating repeated prose while retaining the then-active ratchet contract
-and pruning the unused locale social-card copy reduced it by 769,236 B (-1.5640%) to 48,415,999 B,
-leaving 762,215.4 B (1.5499%) headroom: the result is `improved`. The measurement covers one local
-production build; the stop condition remains unchanged: do not raise the threshold, and make the
-next failure consolidate representation again. Current public contracts and valid immutable API
-history must not be deleted merely to recover budget.
-
-The front-matter transform is a representation boundary, not a weaker metadata contract. It keeps
-`title`, `slug`, sidebar, draft, and other Docusaurus presentation fields while excluding only
-machine-governance and translation-review fields that no rendered page reads. A focused regression
-test protects that boundary. When the ADR-0014 through ADR-0018 slice first exceeded the unchanged
-limit by 4,104.6 B, applying this boundary reduced the same generated output from 49,182,319 B to
-49,073,870 B, a 108,449-byte (`0.2205%`) reduction, and left 104,344.4 B of headroom. The conclusion
-is `improved`; route, page, search, language, translation, and public Reference behavior remained
-unchanged. The measurement is one local production build and makes no claim about hosted duration,
-deployment, or runtime application performance.
+The ceiling moved from 41 MiB to 46.9 MiB only after paired attribution and consolidation. The
+ratchet now requires structural recovery rather than another increase: remove redundant deployed
+representations, never current contracts or valid release history. Existing guarded transforms
+remove unused locale copies, machine-only governance/translation front matter, immutable-manual
+hydration, and generated indentation without changing routes or readable content. Historical
+same-corpus measurements and limitations remain in source below rather than being repeated in the
+public operating contract.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -302,25 +278,25 @@ identity token.
 
 ## Last verified
 
-The current production contract serves 133 immutable API versions, 133 immutable module manuals,
-and 133 Chinese fallback routes. The coordinated-release closeout audited 522 site pages at
-468.9 MiB total and 46.7/46.9 MiB non-API output; the next two exact-cache-hit pull requests reused
-all `6/6` API groups and completed their site wrappers in `47.3 s` and `43.0 s`. These observations
-are **no material change** for cache correctness and site latency, with expanded immutable coverage
-classified as **mixed** because it narrows size headroom. The comparison uses heterogeneous hosted
-runners and rounded size totals, so it is not a steady-state benchmark. Detailed phase evidence is
-retained in the [pull-request gate plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/pull-request-gate-scaling-and-build-logic-modularization.md)
-and the [Governance V2 archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/documentation-system-governance-v2.md); future additions
-must keep the unchanged budgets and recover headroom structurally when needed.
+The current production contract serves 133 immutable API versions, module manuals, and Chinese
+fallback routes. The coordinated-release closeout audited 522 pages at 468.9 MiB total and
+46.7/46.9 MiB non-API; two exact-cache-hit runs reused `6/6` groups and took `47.3 s` and `43.0 s`.
+Cache correctness and latency are **no material change**, while added history and narrower headroom
+are **mixed**. A later same-corpus consolidation reduced non-API output from `49,208,553` to
+`49,086,492` bytes (`-122,061`, `-0.248%`), an **improved** representation with 524 accessible
+pages. These heterogeneous local/hosted observations are not a steady-state benchmark; the local
+cache also lacked six groups. Full-cache CI remains the version-route acceptance gate. Detailed
+evidence remains in the [pull-request gate plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/pull-request-gate-scaling-and-build-logic-modularization.md)
+and [Governance V2 archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/documentation-system-governance-v2.md).
 
-The 2026-08-29 retained-owner ADR candidate first failed the hosted non-API ceiling. On the same
-local 133-version corpus, replacing superseded public measurement detail with interpreted summaries
-reduced non-API output from `49,208,553` to `49,086,492` bytes: `-122,061` bytes (`-0.248%`), leaving
-`91,722` bytes below the unchanged limit. The final representation is **improved** and preserves
-current conclusions, absolute comparison values, limitations, next actions, and links to immutable
-detail; 524 site pages, both localized shells, and accessibility passed. The local immutable API
-cache lacked six complete groups, so this comparison validates non-API representation only; the
-hosted full-cache build remains the acceptance gate for version routing and total output.
+On 2026-08-29, a dedicated bilingual XML-migration route produced 49,373,569 non-API bytes,
+195,354.6 bytes above the unchanged ceiling. Removing that duplicate of the linked local tooling
+contract and consolidating this operating page reduced the same corpus to 49,171,339 bytes:
+`-202,230` bytes (`-0.4096%`) from the rejected candidate and `-24,110` bytes (`-0.0490%`) from the
+49,195,449-byte route-free attempt. An accepted run left 6,875.4 bytes headroom and audited 526
+pages; accepted warm retries completed in `34.2–59.8 s`. The representation is **improved**
+with **no material change** to routes, search contracts, or tooling behavior. This is local warm
+build evidence; a future dedicated route must recover its measured capacity first.
 
 {/* Historical measurement ledger retained in source; the compact summary above is the public representation.
 

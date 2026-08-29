@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Expose the accepted XML migration core through one CLI/MCP tool and the offline distribution without weakening its fail-closed contract.
+next_action: Freeze the next XML migration increment for Android resource/style resolution and read-only call-site dependency inventory before widening the accepted element subset.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -49,19 +49,22 @@ Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 can
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
 static validation, pinned compilation, Preview evidence, read-only project findings, and internal
 CLI foundations are complete. Phase 3 deterministic Knowledge Bundle retrieval, its CLI surface,
-dual-era stdio MCP, deterministic Preview layout diagnosis, and five client-neutral consumer Agent
+dual-era stdio MCP, deterministic Preview layout diagnosis, and five foundational client-neutral Agent
 workflows are complete. The reproducible local distribution, offline lifecycle, SPDX/license
 inventory, installed compile example, and protocol compatibility gates complete the Phase 3
 foundation.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
-IR-to-Kotlin generator now produces the exact login golden and passes the hermetic compiler.
+IR-to-Kotlin generator now produces the exact login golden and passes the hermetic compiler. The
+accepted converter is the ninth shared CLI/MCP tool, works in standalone generation and explicit
+source-bound compile modes, ships in the reproducible offline package, and is orchestrated by the
+sixth client-neutral consumer workflow.
 
 Last verified: 2026-08-29.
 
-Next action: expose the accepted XML migration core through one CLI/MCP tool and the offline
-distribution without weakening its fail-closed contract.
+Next action: freeze the next XML migration increment for Android resource/style resolution and
+read-only call-site dependency inventory before widening the accepted element subset.
 
 ## Maven release changesets
 
@@ -906,8 +909,54 @@ Limitations: the generated function deliberately accepts resolved strings instea
 calling Android `stringResource`; the migration report makes that host-boundary work explicit.
 Compilation proves API and type correctness in the frozen artifact lane, not runtime rendering,
 resource resolution, call-site completeness, visual parity, or behavior. The accepted core is not
-yet exposed through CLI/MCP or included in the installable distribution; that protocol and
-packaging slice is next.
+an application rewrite and does not remove XML or modify call sites.
+
+### Implementation evidence — CLI, MCP, distribution, and migration workflow
+
+The accepted converter now enters the same immutable request/result envelope as every other AI
+tool. `convert_xml_to_viewcompose` requires callers to choose `generate` or `compile`: generation
+remains dependency-free and standalone, while compilation requires the exact source checkout and
+the existing hermetic compiler. CLI and MCP share one dispatcher and catalog. The installed modern
+MCP lane executes the frozen conversion rather than merely listing its schema; legacy discovery
+still returns the same ordered nine-tool catalog without implicit downgrade.
+
+The source-identity gate rejects a mismatched checkout before Gradle. The accepted offline
+lifecycle then uses the matching checkout to compile the generated login function and returns class
+fingerprint `f46767ea9e87195cc74237a2cac1b230dbe76fa94cc9107caf134dcedc9518cd`.
+The `viewcompose-convert-xml` consumer workflow requires generation review, compile evidence, final
+code validation after integration, and explicit ownership of resources, state, listeners,
+ViewBinding, and imperative call sites. It raises no automatic-conversion claim for unsupported
+source.
+
+On 2026-08-29, Node 25.6.0 passed 91/91 AI-tooling tests in 1.37 seconds and the client-neutral
+workflow gate matched 6/6 exact contracts. Two clean package builds produced the same 39-file,
+249,646-byte archive with SHA-256
+`7b7c8c9f6a108effd992e30cb4ede0b256f0a84ea62663fb2f568cf00d6ea57b`. The offline
+install/uninstall lifecycle, SPDX/license inventory, modern and legacy MCP versions, standalone XML
+generation, mismatched-checkout rejection, and real XML compilation each met their complete frozen
+denominator.
+
+Compared with the source-only generator, the result is **improved** consumer interoperability and
+compile-backed migration evidence with **no material runtime change** because the converter,
+protocol adapters, skills, and distribution remain downstream development tooling. The evidence is
+still limited to one supported four-node layout, three unsupported fixture classes, macOS, and the
+local unpublished npm artifact. It does not prove application call-site completeness, resource
+resolution, runtime behavior, rendering, visual parity, accessibility, Windows installation, or a
+public-registry lifecycle. The current user-facing boundary and accepted evidence are documented in
+[`tools/ai/README.md`](../../../tools/ai/README.md), which is already linked from the canonical
+documentation index.
+
+A candidate dedicated bilingual migration route passed generation, version-history routes, site
+shell, and the 528-page accessibility audit but produced 49,373,569 non-API bytes, 195,354.6 bytes
+above the unchanged 49,178,214.4-byte ceiling. The candidate was rejected instead of raising the
+budget or duplicating the local tooling contract. This is **no material change** to public site
+behavior and preserves the existing capacity ratchet; a future dedicated route must first recover
+at least that measured headroom structurally. Consolidating the owning site-operations contract
+then reduced the route-free 49,195,449-byte attempt by 24,110 bytes to 49,171,339, leaving 6,875.4
+bytes under the unchanged ceiling. The 526-page bilingual build, accessibility audit, 133 immutable
+API/manual routes, both search indexes, and all site budgets passed; accepted warm retries took
+34.2–59.8 seconds. The accepted
+representation is **improved** while XML-tool behavior remains **no material change**.
 
 ### Phase 4A: Design IR and code generation
 
