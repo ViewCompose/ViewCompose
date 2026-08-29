@@ -745,63 +745,62 @@ function diagnosticsForUnsupported(unsupported, source, path) {
   });
 }
 
+export function parseBoundedAndroidLayoutXml({
+  source,
+  path = 'layout.xml',
+  limits,
+} = {}) {
+  if (typeof source !== 'string' || source.length === 0) {
+    return failure('invalid', 'VC-AI-XML-MALFORMED',
+      'XML source must be a non-empty string.', String(source ?? ''), String(path ?? 'layout.xml'), 0);
+  }
+  const normalizedPath = logicalPath(path);
+  if (!normalizedPath) {
+    return failure('invalid', 'VC-AI-XML-VALUE-UNSUPPORTED',
+      'The XML source identity must be a bounded repository-relative logical path.', source, 'layout.xml', 0);
+  }
+  const acceptedLimits = normalizedLimits(limits);
+  if (!acceptedLimits) {
+    return failure('invalid', 'VC-AI-XML-LIMIT',
+      'Requested XML limits must be positive integers within the frozen ceilings.', source, normalizedPath, 0);
+  }
+  if (utf8Bytes(source) > acceptedLimits.maxInputBytes) {
+    return failure('limited', 'VC-AI-XML-LIMIT',
+      'XML source exceeds maxInputBytes.', source, normalizedPath, 0);
+  }
+  const invalidCharacter = invalidXmlCharacterOffset(source);
+  if (invalidCharacter >= 0) {
+    return failure('invalid', 'VC-AI-XML-MALFORMED',
+      'XML source contains a character forbidden by XML 1.0.', source, normalizedPath, invalidCharacter);
+  }
+  const parsed = parseXml(source, normalizedPath, acceptedLimits);
+  if (parsed.status !== 'success') return parsed;
+  const rootNamespace = attributeMap(parsed.root).get('xmlns:android');
+  if (rootNamespace?.value !== ANDROID_XML_NAMESPACE) {
+    return failure('unsupported', 'VC-AI-XML-NAMESPACE-UNSUPPORTED',
+      `The root must declare xmlns:android="${ANDROID_XML_NAMESPACE}".`,
+      source, normalizedPath, parsed.root.start);
+  }
+  return {
+    status: 'success',
+    root: parsed.root,
+    normalizedPath,
+    limits: acceptedLimits,
+  };
+}
+
 export async function convertXmlToDesignIr({
   source,
   path = 'layout.xml',
   limits,
 } = {}) {
   const started = performance.now();
-  if (typeof source !== 'string' || source.length === 0) {
-    return {
-      ...failure('invalid', 'VC-AI-XML-MALFORMED',
-        'XML source must be a non-empty string.', String(source ?? ''), String(path ?? 'layout.xml'), 0),
-      elapsedMs: performance.now() - started,
-    };
-  }
-  const normalizedPath = logicalPath(path);
-  if (!normalizedPath) {
-    return {
-      ...failure('invalid', 'VC-AI-XML-VALUE-UNSUPPORTED',
-        'The XML source identity must be a bounded repository-relative logical path.', source, 'layout.xml', 0),
-      elapsedMs: performance.now() - started,
-    };
-  }
-  const acceptedLimits = normalizedLimits(limits);
-  if (!acceptedLimits) {
-    return {
-      ...failure('invalid', 'VC-AI-XML-LIMIT',
-        'Requested XML limits must be positive integers within the frozen ceilings.', source, normalizedPath, 0),
-      elapsedMs: performance.now() - started,
-    };
-  }
-  if (utf8Bytes(source) > acceptedLimits.maxInputBytes) {
-    return {
-      ...failure('limited', 'VC-AI-XML-LIMIT',
-        'XML source exceeds maxInputBytes.', source, normalizedPath, 0),
-      elapsedMs: performance.now() - started,
-    };
-  }
-  const invalidCharacter = invalidXmlCharacterOffset(source);
-  if (invalidCharacter >= 0) {
-    return {
-      ...failure('invalid', 'VC-AI-XML-MALFORMED',
-        'XML source contains a character forbidden by XML 1.0.', source, normalizedPath, invalidCharacter),
-      elapsedMs: performance.now() - started,
-    };
-  }
-  const parsed = parseXml(source, normalizedPath, acceptedLimits);
+  const parsed = parseBoundedAndroidLayoutXml({source, path, limits});
   if (parsed.status !== 'success') {
     return {...parsed, elapsedMs: performance.now() - started};
   }
-  const rootNamespace = attributeMap(parsed.root).get('xmlns:android');
-  if (rootNamespace?.value !== ANDROID_XML_NAMESPACE) {
-    return {
-      ...failure('unsupported', 'VC-AI-XML-NAMESPACE-UNSUPPORTED',
-        `The root must declare xmlns:android="${ANDROID_XML_NAMESPACE}".`,
-        source, normalizedPath, parsed.root.start),
-      elapsedMs: performance.now() - started,
-    };
-  }
+  const normalizedPath = parsed.normalizedPath;
+  const acceptedLimits = parsed.limits;
   const state = {
     ids: new Set(),
     unsupported: [],

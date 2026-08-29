@@ -30,6 +30,7 @@ internal fun Project.registerLifecycleQualityTasks(extension: ViewComposeQuality
         dependsOn("verifyAiConsumerWorkflows")
         dependsOn("verifyAiDistribution")
         dependsOn("verifyAiDesignIr")
+        dependsOn("verifyAiXmlProjectContext")
         dependsOn("verifyAiXmlMigration")
         dependsOn("verifyDocumentationStructure")
         dependsOn("verifyDslApiContracts")

@@ -653,6 +653,29 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiXmlProjectContext") {
+            group = "verification"
+            description =
+                "Verifies bounded Android XML resource, style, and call-site project context."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-project-context")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/xml-project-context.schema.json",
+                        "evaluation/fixtures/xml/project-context/**",
+                        "evaluation/fixtures/xml/project-context-contract.json",
+                        "evaluation/metrics.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-project-context.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-project-context.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("verifyAiXmlMigration") {
             group = "verification"
             description =

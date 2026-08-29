@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement the frozen Android XML project-context resolver and bounded call-site inventory without executing inspected-project build logic or widening the accepted element subset.
+next_action: Integrate the accepted Android XML project context into an explicit project-aware convert_xml_to_viewcompose mode, preserve standalone source mode, and require the generated styled fixture to compile.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -61,12 +61,14 @@ accepted converter is the ninth shared CLI/MCP tool, works in standalone generat
 source-bound compile modes, ships in the reproducible offline package, and is orchestrated by the
 sixth client-neutral consumer workflow. The next increment is now frozen as Android XML project
 context v1: explicit-root resource and style resolution plus a read-only, bounded lexical call-site
-inventory whose completeness is never claimed.
+inventory whose completeness is never claimed. The isolated resolver now meets that frozen golden
+and fail-closed denominator without widening the shared CLI/MCP tool yet.
 
 Last verified: 2026-08-29.
 
-Next action: implement the frozen Android XML project-context resolver and bounded call-site
-inventory without executing inspected-project build logic or widening the accepted element subset.
+Next action: integrate the accepted Android XML project context into an explicit project-aware
+`convert_xml_to_viewcompose` mode, preserve standalone source mode, and require the generated styled
+fixture to compile.
 
 ## Maven release changesets
 
@@ -902,6 +904,39 @@ declared file bytes. The installed offline lifecycle, both MCP eras, the indepen
 example, and the already accepted XML conversion still pass. This is **improved** distributable
 contract visibility with **no material behavior change**; the archive remains local, unsigned, and
 unpublished, and the new schema does not imply an implemented resolver.
+
+### Implementation evidence — isolated Android XML project context
+
+The accepted resolver canonicalizes one absolute project root and only normalized project-relative
+layout, resource-root, and source-root paths. It rejects missing paths, root escape, symbolic links,
+unsafe resource XML, style cycles, theme attributes, duplicate same-precedence resources, and
+qualified-only resources before returning context. Traversal, file bytes, definitions, style depth,
+call sites, and elapsed time all use frozen ceilings. Resource and source discovery is deterministic;
+the context fingerprint covers every scanned layout, values file, and Kotlin or Java file in path
+order. No project build, plugin, generated source, network client, or Android resource merger runs.
+
+The resolver parses default string and dimension evidence, resolves explicit style-parent chains,
+applies inline-over-style precedence, and rewrites only an internal XML copy. Removing the `style`
+attribute uses whitespace preservation, inherited attributes are inserted without adding lines, and
+dimension references become their bounded literal values; source-node line provenance therefore
+remains stable. String references remain resources. The resolved styled-login source then passed the
+existing XML-to-Design-IR converter as a vertical `Column`, retained its title string resource, and
+introduced no new element mapping.
+
+The read-only source inventory reports exact `R.layout`, `R.id`, and resource references separately
+from candidate ViewBinding, listener, and mutation ownership. Each result records path, one-based
+position, evidence kind, confidence, migration action, and a hash of the trimmed source line; raw
+source is excluded from the context. Dynamic, reflective, generated, excluded, or semantically
+related references remain unproven by design.
+
+On 2026-08-29, Node 25.6.0 passed 96/96 AI-tooling tests. The dedicated project-context gate matched
+1/1 deterministic golden with four resources, two styles, and seven call sites, plus 2/2
+fail-closed unsupported projects. The compiled quality-build suite and new root lifecycle task
+passed 18 actionable tasks (6 executed and 12 up-to-date) in 46 seconds. Compared with the frozen
+contract, this is **improved** executable project evidence with **no material runtime or supported
+CLI/MCP behavior change**. The result still does not reproduce AGP variant merging, resolve themes,
+prove call-site completeness, modify application files, compile the styled conversion, or expose
+project-aware conversion through the installed package; those remain the next integration boundary.
 
 ### Implementation evidence — bounded XML to Design IR
 

@@ -20,6 +20,7 @@
     "verify:phase3-mcp": "node scripts/verify-phase3-mcp.mjs",
     "verify:phase3-distribution": "node scripts/verify-phase3-distribution.mjs",
     "verify:phase4-design-ir": "node scripts/verify-phase4-design-ir.mjs",
+    "verify:phase4-project-context": "node scripts/verify-phase4-project-context.mjs",
     "verify:phase4-xml": "node scripts/verify-phase4-xml.mjs"
   }
 }
