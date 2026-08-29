@@ -18,6 +18,32 @@ private val LocalNavGraphOwnerScopeValue = uiLocalOf<NavGraphOwnerScope?>(
     },
 ) { null }
 
+private val LocalNavDestinationContextValue = uiLocalOf<NavDestinationContext?>(
+    debugName = "NavDestinationContext",
+    debugValueFormatter = { context -> context?.entry?.id?.value ?: "none" },
+) { null }
+
+/**
+ * Accesses the stable context of the nearest destination currently being declared.
+ *
+ * Resolution is thread-scoped to the active ViewCompose local environment. Nested navigation
+ * hosts override the value only for their destination subtree. Capture the returned holder during
+ * declaration for later callbacks; effect callbacks must not read this Local directly. The holder
+ * observes coarse semantic scene changes, not animation-frame progress.
+ *
+ * @sample com.viewcompose.navigation.samples.destinationContextSample
+ */
+object LocalNavDestinationContext {
+    /**
+     * Returns the nearest stable holder, or `null` outside [NavHost] destination content.
+     *
+     * Repeated reads within one destination return the same retained-entry holder even when its
+     * optional native presentation is later disposed and recreated.
+     */
+    val current: NavDestinationContext?
+        get() = UiLocals.current(LocalNavDestinationContextValue)
+}
+
 /** Accesses the graph-owner hierarchy of the destination currently being rendered. */
 object LocalNavGraphOwnerScope {
     /** Current hierarchy, or `null` outside [NavHost] destination content. */
@@ -30,11 +56,13 @@ internal fun UiTreeBuilder.ProvideNavEntryOwner(
     owner: NavEntryOwner,
     content: UiTreeBuilder.() -> Unit,
 ) {
-    ProvideLifecycleOwner(owner) {
-        ProvideSavedStateRegistryOwner(owner) {
-            ProvideViewModelStoreOwner(owner) {
-                ProvideSaveableStateRegistry(owner.compositionSaveableStateRegistry) {
-                    content()
+    ProvideLocal(LocalNavDestinationContextValue, owner.destinationContext) {
+        ProvideLifecycleOwner(owner) {
+            ProvideSavedStateRegistryOwner(owner) {
+                ProvideViewModelStoreOwner(owner) {
+                    ProvideSaveableStateRegistry(owner.compositionSaveableStateRegistry) {
+                        content()
+                    }
                 }
             }
         }

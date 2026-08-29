@@ -1,0 +1,44 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.destination-context",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-android" },
+  "artifact": "viewcompose-navigation-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha02" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.navigation.LocalNavDestinationContext",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.NavDestinationContext",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationContext.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.navigation.NavDestinationPresentation",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationContext.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.navigation.destination-context",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.navigation-android-destination-context"
+  },
+  "document_owners": {
+    "guide": ["guide.navigation-production-host"],
+    "architecture": [
+      "architecture.navigation-runtime",
+      "architecture.scene-derived-navigation-lifecycle-presentation-ownership"
+    ],
+    "module": ["module.viewcompose-navigation-android"],
+    "migration": ["migration.compose-navigation"]
+  }
+}

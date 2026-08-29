@@ -7,6 +7,7 @@ owner:
   id: navigation.host
 version_lane: released
 capability_ids:
+  - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
 artifact_ids:
@@ -20,12 +21,14 @@ success_checks:
   - Programmatic and system Back operations observe the same committed stack.
   - Failed destination preparation preserves the previously visible destination.
   - Hidden presentation resources follow one explicit bounded retention policy without clearing entry state.
+  - Destination content observes the nearest stable entry context without treating transition progress as lifecycle.
 failure_checks:
   - A controller is attached to more than one active NavHost or receives commands while detached.
   - NavHost is mounted without a LocalViewModelStoreOwner boundary.
   - Route or graph changes silently reuse incompatible restored ownership state.
   - A queued command is treated as committed completion.
   - RetainAll is selected without application-specific memory and rebuild evidence.
+  - Resource work is started from destination presentation state instead of AndroidX Lifecycle.
 ---
 
 # Configure a production navigation host
@@ -79,6 +82,23 @@ Change `contentKey` only when destination content closes over a non-observable p
 Observable ViewCompose state invalidates the owning destination session directly. Changing the
 controller, lifecycle owner, parent ViewModelStore owner, overlay factory, debug identity, or host
 `key` changes ownership and therefore recreates the native host.
+
+## Observe destination presentation without duplicating Lifecycle
+
+Read `LocalNavDestinationContext.current` during destination DSL declaration when content needs to
+distinguish hidden, visible, covered, interactive, transitioning, pane, or overlay roles. Capture
+the returned context holder for a later callback; do not perform a global current-page lookup and
+do not read the Local from an effect callback. A nested `NavHost` supplies its own nearest holder.
+
+The holder's `entry` is stable for its retained lifetime. Its `presentation.value` may change when
+the semantic scene changes and may therefore invalidate content that reads it. The holder remains
+the same when `DisposeWhenHidden` releases and later rebuilds the native presentation. Permanent
+removal stops presentation updates and drives the standard destination Lifecycle to `DESTROYED`.
+
+Keep resource thresholds on standard AndroidX Lifecycle: use lifecycle effects or lifecycle-aware
+Flow collection for cameras, sensors, players, network collection, and other active work. Use the
+destination context for coarse presentation decisions only. It deliberately excludes per-frame
+ordinary-transition and predictive-Back progress.
 
 ## Choose presentation retention deliberately
 

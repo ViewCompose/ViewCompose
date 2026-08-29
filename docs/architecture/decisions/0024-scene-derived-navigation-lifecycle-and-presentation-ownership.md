@@ -11,6 +11,7 @@ capability_ids:
   - lifecycle.effects
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
+  - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
   - navigation.scene-projection
@@ -33,6 +34,7 @@ evidence:
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt
   - app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt
 ---
 
@@ -135,6 +137,12 @@ destinations at once.
 Coarse presentation changes may invalidate destination content. Frame-rate transition or
 predictive progress is deliberately excluded. Content that needs continuous motion uses a separate
 opt-in motion API, so ordinary pages cannot accidentally recompose on every animation frame.
+
+Phase 5 implements this boundary as a holder owned by `NavEntryOwner`. Its Android-facing
+`NavDestinationPresentation` name is a source alias for the exact Core `NavSceneEntry`; owner
+reconciliation publishes that same immutable instance. Unit coverage proves delayed Local
+capture, presentation disposal/recreation, nested-host override, pane and overlay roles, permanent
+removal, and the absence of updates for repeated predictive progress.
 
 ### Entry lifetime and presentation lifetime are independent
 

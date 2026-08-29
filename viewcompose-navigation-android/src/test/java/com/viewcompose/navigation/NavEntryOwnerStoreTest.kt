@@ -17,6 +17,7 @@ import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavScene
 import com.viewcompose.navigation.core.NavSceneEntry
 import com.viewcompose.navigation.core.NavSceneInteraction
+import com.viewcompose.navigation.core.NavSceneLayerRole
 import com.viewcompose.navigation.core.NavSceneTransitionPhase
 import com.viewcompose.navigation.core.NavSceneVisibility
 import org.junit.Assert.assertEquals
@@ -31,6 +32,82 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class NavEntryOwnerStoreTest {
+    @Test
+    fun `owner contexts publish the exact multi-pane and overlay scene projections`() {
+        val primary = entry("primary", "list")
+        val secondary = entry("secondary", "details")
+        val overlay = entry("overlay", "dialog")
+        val sceneEntries = listOf(
+            NavSceneEntry(
+                entryId = primary.id,
+                presence = NavEntryPresence.Retained,
+                visibility = NavSceneVisibility.Covered,
+                interaction = NavSceneInteraction.NonInteractive,
+                transitionPhase = NavSceneTransitionPhase.Settled,
+                paneRole = NavPaneRole.Primary,
+            ),
+            NavSceneEntry(
+                entryId = secondary.id,
+                presence = NavEntryPresence.Retained,
+                visibility = NavSceneVisibility.Covered,
+                interaction = NavSceneInteraction.NonInteractive,
+                transitionPhase = NavSceneTransitionPhase.Settled,
+                paneRole = NavPaneRole.Secondary,
+            ),
+            NavSceneEntry(
+                entryId = overlay.id,
+                presence = NavEntryPresence.Retained,
+                visibility = NavSceneVisibility.Visible,
+                interaction = NavSceneInteraction.Interactive,
+                transitionPhase = NavSceneTransitionPhase.Settled,
+                paneRole = null,
+                layerRole = NavSceneLayerRole.Overlay,
+            ),
+        )
+        val store = store()
+
+        store.reconcile(
+            retainedEntries = listOf(primary, secondary, overlay),
+            scene = NavScene(sceneEntries),
+            hostState = NavHostLifecycleState.Resumed,
+        )
+
+        sceneEntries.forEach { expected ->
+            assertSame(
+                expected,
+                checkNotNull(store.ownerOrNull(expected.entryId))
+                    .destinationContext.presentation.value,
+            )
+        }
+    }
+
+    @Test
+    fun `permanent removal destroys owner and freezes captured destination context`() {
+        val root = entry("root", "home")
+        val details = entry("details", "details")
+        val store = store()
+        store.reconcile(
+            retainedEntries = listOf(root, details),
+            visibleEntryIds = setOf(details.id),
+            interactiveEntryIds = setOf(details.id),
+            hostState = NavHostLifecycleState.Resumed,
+        )
+        val detailsOwner = checkNotNull(store.ownerOrNull(details.id))
+        val capturedContext = detailsOwner.destinationContext
+        val lastPresentation = capturedContext.presentation.value
+
+        store.reconcile(
+            retainedEntries = listOf(root),
+            visibleEntryIds = setOf(root.id),
+            interactiveEntryIds = setOf(root.id),
+            hostState = NavHostLifecycleState.Resumed,
+        )
+
+        assertNull(store.ownerOrNull(details.id))
+        assertEquals(NavEntryLifecycleState.Destroyed, detailsOwner.entryLifecycleState)
+        assertSame(lastPresentation, capturedContext.presentation.value)
+    }
+
     @Test
     fun `hidden entry keeps owner and ViewModel until permanently removed`() {
         val root = entry("root", "home")

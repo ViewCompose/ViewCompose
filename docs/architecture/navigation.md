@@ -7,6 +7,7 @@ owner:
   id: navigation.host
 version_lane: released
 capability_ids:
+  - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
   - navigation.scene-projection
@@ -29,6 +30,7 @@ evidence:
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostSavedStateTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostTransitionCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/AdaptiveNavHostCoordinatorTest.kt
@@ -96,6 +98,20 @@ improved and measured settled motion had **no material change**, but rebuild-sen
 need an explicit bounded or retain-all policy. One device, synthetic content, process-wide PSS, and
 a short run limit the conclusion; broader device, leak, and representative-workload evidence stays
 open in the active navigation plan.
+
+The entry owner also retains one `NavDestinationContext`. Destination DSL reads it from
+`LocalNavDestinationContext`; nested hosts replace the Local for their child entry and restore the
+parent holder afterward. Its observable `NavDestinationPresentation` is the exact Core
+`NavSceneEntry` used by lifecycle planning, not an Android reconstruction. A captured Local keeps
+the holder, so later coarse visibility, interaction, transition, pane, or layer changes remain
+observable across native presentation disposal and recreation. Permanent removal stops updates
+and destroys the entry Lifecycle; no process-global current-page registry exists.
+
+Presentation observation and resource activation are deliberately separate. AndroidX Lifecycle
+is the only resource-threshold API. The destination context supports coarse layout and behavior
+decisions, while continuous ordinary-transition and predictive-Back progress stays on motion
+executors and never enters its observable state. This bounds ordinary content invalidation to
+semantic scene changes rather than animation frames.
 
 Nested graph instances have independent `NavGraphOwner` identities. Descendants in one graph
 instance share its lifecycle, saved state, and ViewModels until the last retained descendant is

@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 9ac959fef393c377b3e23ce4845cdaa5a86380296caa89d3e03361a164da2cd4
+translation_source_hash: 91ba6bea3c3b1c4c35407edec1c3b66ebef8b511198a1d3d3cbf341a322713ec
 translation_status: current
 ---
 
@@ -52,6 +52,22 @@ Destination 与 Graph ViewModelStore 来自同一个共享 Lifecycle 2.11 Scoped
 状态会直接使所属 Destination Session 失效。Controller、Lifecycle Owner、父级
 ViewModelStore Owner、Overlay Factory、调试身份或 Host `key` 的变化属于所有权变化，因此会
 重建原生 Host。
+
+## 观察 Destination Presentation，而不复制 Lifecycle
+
+当内容需要区分 Hidden、Visible、Covered、Interactive、Transition、Pane 或 Overlay Role 时，
+应在 Destination DSL 声明阶段读取 `LocalNavDestinationContext.current`。后续回调应捕获返回的
+Context Holder；不要查询全局 Current Page，也不要在 Effect 回调内读取 Local。嵌套 `NavHost`
+会提供自己的最近 Holder。
+
+Holder 的 `entry` 在 Retained 生命周期内保持稳定。语义 Scene 改变时，
+`presentation.value` 可能变化，并使读取它的内容失效。即使 `DisposeWhenHidden` 释放并随后重建
+原生 Presentation，Holder 仍是同一个。永久移除会停止 Presentation 更新，并把标准 Destination
+Lifecycle 驱动到 `DESTROYED`。
+
+资源阈值继续使用标准 AndroidX Lifecycle：相机、传感器、播放器、网络收集和其他活动工作应使用
+Lifecycle Effect 或 Lifecycle-aware Flow 收集。Destination Context 只用于粗粒度 Presentation
+决策；普通转场和 Predictive Back 的逐帧 Progress 被刻意排除。
 
 ## 明确选择展示保留策略
 

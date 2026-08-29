@@ -131,6 +131,14 @@ internal class NavEntryOwnerStore(
             scene = scene,
             hostState = hostState,
         )
+        retainedEntries.forEach { entry ->
+            val presentation = checkNotNull(scene[entry.id]) {
+                "Navigation scene omitted retained destination ${entry.id}."
+            }
+            checkNotNull(owners[entry.id]) {
+                "Navigation scene referenced unknown destination ${entry.id}."
+            }.destinationContext.updatePresentation(presentation)
+        }
         val orderedTransitions = plan.transitions
             .partition { transition -> transition.isDownward() }
             .let { (downward, upward) ->

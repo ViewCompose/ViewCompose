@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: 499e282e7e070db2e3c41c9d9d87433b9eb006ee723e2ea8c6e3af937aaf3b06
+translation_source_hash: ad3b2a2d2b4aa38d1890d760efca59b1054be0174fdec09bcfc3abe52d2ad634
 translation_status: current
 ---
 
@@ -54,6 +54,17 @@ Presentation 从 13 个降至 1 个，进程 PSS 从 191,953 KiB 降至 185,510 
 空闲资源所有权得到改善，实测稳定转场为 **no material change**，但对重建敏感的 Surface 可能
 需要显式 `Bounded` 或 `RetainAll`。单台设备、合成内容、进程级 PSS 与短时运行限制了结论；
 更广的设备、泄漏和代表性负载证据仍由有效导航计划继续推进。
+
+Entry Owner 还会保留一个 `NavDestinationContext`。Destination DSL 通过
+`LocalNavDestinationContext` 读取它；嵌套 Host 会为 Child Entry 覆盖该 Local，结束后恢复父级
+Holder。其可观察 `NavDestinationPresentation` 就是 Lifecycle 规划使用的 Core
+`NavSceneEntry`，不是 Android 层重建的数据。捕获 Local 得到的是 Holder，因此粗粒度
+Visibility、Interaction、Transition、Pane 或 Layer 变化在原生 Presentation 被释放、重建后仍可
+观察。永久移除会停止更新并销毁 Entry Lifecycle；不存在进程级 Current Page Registry。
+
+Presentation 观察与资源激活被刻意拆开。AndroidX Lifecycle 是唯一的资源阈值 API。Destination
+Context 用于粗粒度布局和行为决策，普通转场与 Predictive Back 的连续 Progress 只留在 Motion
+Executor 中，不进入该可观察状态。因此普通内容只会因语义 Scene 变化失效，不会因动画每一帧失效。
 
 每个嵌套 Graph 实例都有独立 `NavGraphOwner` 身份。同一 Graph 实例的后代共享 Lifecycle、
 SavedState 和 ViewModel，直到最后一个保留后代被移除。以后再次进入同名 Graph Route 会创建

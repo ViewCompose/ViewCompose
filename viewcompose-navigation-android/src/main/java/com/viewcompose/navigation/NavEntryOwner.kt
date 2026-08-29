@@ -83,6 +83,12 @@ internal class NavEntryOwner(
 
     val compositionSaveableStateRegistry: ViewComposeSaveableStateRegistry
 
+    /** Stable destination-local holder retained independently of the native presentation. */
+    val destinationContext = NavDestinationContext(
+        entry = entry,
+        initialPresentation = entry.preparedDestinationPresentation(),
+    )
+
     var entryLifecycleState: NavEntryLifecycleState = NavEntryLifecycleState.Initialized
         private set
 
