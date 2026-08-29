@@ -829,7 +829,7 @@ private fun UiTreeBuilder.systemNavigationDeepLinkText(
         is SystemNavigationDeepLinkOutcome.Navigated -> stringResource(
             R.string.demo_system_nav_deep_link_navigated,
             source,
-            outcome.uriPattern,
+            outcome.matcher,
             outcome.route,
             systemNavigationResultText(outcome.result),
         )
