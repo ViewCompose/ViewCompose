@@ -51,6 +51,7 @@ import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.viewmodel.viewModel
+import java.lang.ref.WeakReference
 
 /**
  * 孵化中的系统导航栈在真机上的 debug-only 宿主。
@@ -405,6 +406,32 @@ class NavigationBackTestActivity : AppCompatActivity() {
         )
     }
 
+    /** Captures weak-only evidence for one destination before eviction or terminal removal. */
+    fun captureDestinationReachability(routeName: String): DestinationReachabilityProbe {
+        val record = checkNotNull(destinationRetentionRecords[routeName]) {
+            "Destination '$routeName' has no retention record."
+        }
+        val presentation = checkNotNull(destinationContainerOrNull(routeName)) {
+            "Destination '$routeName' has no live presentation."
+        }
+        return DestinationReachabilityProbe(
+            presentation = presentation,
+            owner = record.owner,
+            viewModel = record.viewModel,
+        )
+    }
+
+    /**
+     * Drops debug-observer references so reachability reflects production ownership only.
+     * Logical navigation state and the mounted presentation are not mutated.
+     */
+    fun releaseDestinationReachabilityTracking(routeName: String) {
+        destinationLifecycleOwners.remove(routeName)
+        destinationRetentionRecords.remove(routeName)
+        destinationContexts.remove(routeName)
+        destinationContextRenderCounts.remove(routeName)
+    }
+
     /** Returns whether [routeName] currently owns a live native destination presentation. */
     fun hasDestinationPresentation(routeName: String): Boolean {
         return findTextViewByText(
@@ -669,6 +696,34 @@ class NavigationBackTestActivity : AppCompatActivity() {
         val renderCount: Int,
         val lifecycleState: Lifecycle.State,
     )
+
+    /** Weak-only terminal-reachability probe retained by instrumentation. */
+    class DestinationReachabilityProbe internal constructor(
+        presentation: View,
+        owner: LifecycleOwner,
+        viewModel: ViewModel,
+    ) {
+        private val presentationReference = WeakReference(presentation)
+        private val ownerReference = WeakReference(owner)
+        private val viewModelReference = WeakReference(viewModel)
+
+        val presentationReachable: Boolean
+            get() = presentationReference.get() != null
+
+        val ownerReachable: Boolean
+            get() = ownerReference.get() != null
+
+        val viewModelReachable: Boolean
+            get() = viewModelReference.get() != null
+
+        val ownerLifecycleState: Lifecycle.State?
+            get() = ownerReference.get()?.lifecycle?.currentState
+
+        override fun toString(): String {
+            return "presentation=$presentationReachable, owner=$ownerReachable, " +
+                "viewModel=$viewModelReachable, lifecycle=$ownerLifecycleState"
+        }
+    }
 
     /** Device-observable stable holder identity and immutable coarse scene projection. */
     data class DestinationContextSnapshot(

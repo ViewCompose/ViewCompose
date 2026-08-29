@@ -63,8 +63,8 @@ completion:
   - Retained entry state survives optional View-tree disposal and recreation, and every retention policy has bounded cleanup, restoration, and memory evidence.
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
-last_verified: 2026-08-29
-next_action: Execute the Phase 7 coverage, leak, memory, and representative performance matrix after the accepted NavigationEvent slice 7.5.
+last_verified: 2026-08-30
+next_action: Implement the next Phase 7 slice for general overlay-scene semantics and forward history while keeping Android Studio Preview input explicit.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-event-host.json
@@ -88,12 +88,14 @@ Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination c
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
 structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
 Serialization adapter slices are complete. The remaining-gap audit and capability slice 7.5 direct
-NavigationEvent host integration are complete. Phase 7 continues with its coverage, leak, memory,
-and representative performance matrix.
+NavigationEvent host integration and capability slice 7.6's coverage, reachability, memory, and
+representative performance closure are complete. Phase 7 continues with the remaining scene and
+history gaps.
 
-Last verified: 2026-08-29.
+Last verified: 2026-08-30.
 
-Next action: execute the Phase 7 coverage, leak, memory, and representative performance matrix.
+Next action: implement general overlay-scene semantics and forward history while keeping Android
+Studio Preview input explicit.
 
 ## Maven release changesets
 
@@ -1195,6 +1197,119 @@ Acceptance evidence:
   run, not performance evidence. Leak, memory, representative navigation performance, Android
   Studio Preview input, forward history, and general overlay scenes remain **inconclusive** and are
   the next Phase 7 matrix or explicitly deferred capabilities.
+
+#### Capability slice 7.6: coverage and resource evidence closure
+
+This slice adds evidence infrastructure and tests only. Navigation Core and Navigation Android
+production declarations, runtime behavior, dependency metadata, publication inputs, and artifacts
+remain unchanged; therefore no capability-impact record, public API documentation change, or Maven
+Changeset is admitted. The unpublished quality build, debug host, Android tests, existing benchmark
+module, active plan, and capability-verification workflow own the work.
+
+The accepted matrix is:
+
+1. The compiled quality plugin owns one `navigationCoverageReport` and one
+   `verifyNavigationCoverage` entry point. They run the existing Core JVM and Android Robolectric
+   suites with JaCoCo, emit XML and HTML under the root quality-report directory, and fail when a
+   report or required class bundle is missing. `qaQuick` consumes the verification task.
+2. The Core bundle covers scene/lifecycle projection and `NavExecutionReducer`; its initial floor is
+   80% line and 70% branch. The Android bundle covers the plan executor/coordinator, entry and graph
+   owner stores, destination session/retention policy, Back adapter, runtime, and public `NavHost`
+   execution path; its floor is 70% line and 60% branch. JaCoCo compiler-generated classes are
+   excluded explicitly, while real uncovered production branches remain visible. Floors may rise
+   after the first accepted baseline but cannot be lowered to make a change pass.
+3. A real-device reachability test captures weak references before a terminal pop and proves the
+   destination View, owner, and ViewModel become unreachable after settled cleanup. Bounded-LRU
+   eviction separately proves the native presentation becomes unreachable while its logical owner
+   and ViewModel remain alive. The harness uses bounded polling and allocation pressure; a timeout
+   fails instead of being reported as a leak measurement.
+4. The existing depth-13 retention measurement expands from `DisposeWhenHidden` and `RetainAll` to
+   all three policies, including `Bounded(2)`. Each sample records live presentation count, Java
+   allocated heap, native allocated heap, total PSS, and median synchronous pop time after the same
+   warmup/GC procedure. Structural presentation bounds are gates; heap/PSS and timing are evidence,
+   not absolute cross-device thresholds.
+5. The existing release/R8 Macrobenchmarks remain the representative workload. On one explicitly
+   selected physical device, profile-guided ViewCompose push/pop and Activity enter/exit references
+   run from one installed benchmark pair. Frame P50/P95, heap/RSS, trace sections, device/build
+   context, absolute results, normalized comparisons, limitations, and conclusion are recorded;
+   debug frame tests do not substitute for this evidence.
+6. The complete `NavigationBackDeviceTest` reruns on the Pixel 4 XL/API 33, and the reachability plus
+   retention evidence also runs on the connected Xiaomi MI 6/API 28 when supported. A skipped case,
+   unsupported collector, missing benchmark metric, or single-device result is reported exactly and
+   cannot be generalized to the full API 24/current-target matrix.
+
+The implementation is complete only when coverage floors, unit suites, device reachability,
+three-policy resource evidence, selected release benchmarks, repository QA, documentation
+governance, and interpreted evidence pass. Any production defect exposed by the matrix is fixed in
+a separate capability slice with its own release and documentation disposition.
+
+Acceptance evidence:
+
+- The compiled quality plugin now owns `navigationCoverageReport` and
+  `verifyNavigationCoverage`, and `qaQuick` consumes the latter. The selected Core bundle covered
+  237/265 lines (`89.43%`) and 165/223 branches (`73.99%`), above its `80%`/`70%` floors. The
+  Android bundle covered 1,763/2,146 lines (`82.15%`) and 615/1,022 branches (`60.18%`), above its
+  `70%`/`60%` floors. Core passed 85/85 tests; Android passed 182/182, one more than slice 7.5
+  (`+0.55%`) because edge-progress normalization now covers non-finite, clamped, right-edge, and
+  unknown-edge branches. The previous repository had no accepted coverage gate, so a normalized
+  coverage delta is not meaningful. The absolute baseline is **improved** and fails closed on
+  missing execution data, class bundles, or either floor.
+- The physical Pixel 4 XL/API 33 passed the complete `NavigationBackDeviceTest` class 18/18 with
+  zero failures, errors, or skips in `51.420 s`, two more cases than slice 7.5's 16 (`+12.5%`). The
+  Xiaomi MI 6/API 28 passed the three required reachability/resource cases 3/3 in `9.874 s`; this is
+  its first such baseline, so no percentage delta is defined. Terminal pop made the presentation,
+  LifecycleOwner, and ViewModel unreachable. `Bounded(2)` eviction made the home presentation
+  unreachable while its owner and ViewModel remained reachable at `CREATED`. This is **improved**
+  release and retention confidence across two API/OEM tiers, not proof for API 24 or every current
+  target implementation.
+- At depth 13, the Pixel recorded `DisposeWhenHidden` as 1 presentation / 5,659 KiB Java /
+  12,031 KiB native / 200,769 KiB PSS / 46,550 us median pop; `Bounded(2)` as 3 / 6,181 /
+  11,537 / 200,901 / 50,466; and `RetainAll` as 13 / 10,249 / 12,673 / 204,821 / 10,901. Relative
+  to dispose, bounded changed Java by `+9.2%`, native by `-4.1%`, PSS by `+0.07%`, and pop by
+  `+8.4%`; retain-all changed them by `+81.1%`, `+5.3%`, `+2.0%`, and `-76.6%`.
+- The MI 6 recorded dispose as 1 / 4,037 / 20,964 / 153,437 / 62,343; bounded as 3 / 4,843 /
+  22,198 / 155,945 / 56,635; and retain-all as 13 / 8,885 / 24,061 / 161,894 / 8,130, in the same
+  units and order. Relative to dispose, bounded changed Java/native/PSS/pop by `+20.0%`, `+5.9%`,
+  `+1.6%`, and `-9.2%`; retain-all changed them by `+120.1%`, `+14.8%`, `+5.5%`, and `-87.0%`.
+  The conclusion is **mixed**: retaining all presentations buys much faster synchronous pop at a
+  repeatable Java/native/PSS cost, while bounded retention enforces the intended three-presentation
+  structural cap with a much smaller resource delta but no universal latency win. Samples are
+  sequential single-process observations after bounded GC settling, so allocator history, shared
+  pages, OEM accounting, and one run per policy prevent absolute thresholds or cross-device
+  ranking. Keep bounded retention as the balanced default and rerun repeated samples if that
+  default or the depth contract changes.
+- On the Pixel 4 XL/API 33, release/R8 profile-guided Macrobenchmarks used three warmups, five
+  measured iterations, and zero thermal-throttle sleep. Activity enter/exit CPU-frame P50/P95 were
+  `4.160/15.147 ms` and `2.484/15.728 ms`; ViewCompose push/pop were `2.849/5.784 ms` and
+  `2.477/12.095 ms`. Relative P50/P95 were `-31.5%/-61.8%` and `-0.3%/-23.1%`. Overrun P95 changed
+  from `7.689/4.950 ms` to `-7.019/-4.218 ms`, absolute improvements of `14.708/9.168 ms`. Per-frame
+  headroom is **improved**, not end-to-end superiority: the four animated transitions per
+  ViewCompose iteration normalized to `47/46.25` frames each versus Activity's `30/22`
+  (`+56.7%/+110.2%`).
+- Push/pop peak heap medians were `18,940/24,471 KiB` (`+29.2%`) and RSS-anon medians were
+  `71,260/78,036 KiB` (`+9.5%`). Heap coefficients of variation were `36.8%/34.6%`, so memory is
+  **inconclusive**. Per transition, stack-command preparation was `0.284/0.102 ms` and presentation
+  preparation was `1.394/1.373 ms`; push/pop also reported `14/12` frame-render sections,
+  `3.758/3.852 ms` maximum render-tree medians, and `0.331/0.304 ms` maximum motion-frame medians.
+  The collector's obsolete `VC.Nav.PrepareDestination` query had silently returned zero; it now
+  collects `VC.Nav.PrepareCommand` and `VC.Nav.PreparePresentations`, and
+  `verifyNavigationBenchmarkTraceContracts` rejects future drift. A push run with an unclosed
+  Perfetto process was rejected; its clean rerun passed. Pop consistently produced five sampled
+  runs and traces but only three scalar aggregates. The conclusion is **mixed**: frame headroom
+  improved and preparation is bounded, but no Activity memory baseline or isomorphic-duration
+  workload exists. Rerun this single-device baseline when runtime, animation duration, target API,
+  or benchmark-library behavior changes.
+- `qaQuick` passed all 2,281 tasks in `5m59s` (604 executed and 1,677 up to date), including the new
+  coverage gate, unit/Robolectric suites, R8, Paparazzi hosts, release/Javadoc publication, and
+  compiled samples. Release intent resolved zero changed artifacts, zero ignored artifacts, and
+  zero shared classifications against `2198d156`; development-tooling isolation passed. This is
+  **improved** repository confidence and confirms the slice remains test/tooling-only; cache mix and
+  wall time are execution context rather than performance evidence.
+- The complete bilingual site passed 528-page accessibility, 30 redirects, 133 immutable API and
+  module-manual versions, and all unchanged budgets in `46.9 s`. The accepted output contained
+  `49,176,782` non-API bytes, `11,615` bytes (`+0.024%`) above slice 7.5 and `1,432` bytes below the
+  ceiling. This is **no material change** with critically narrow headroom; the next documentation
+  slice must reduce output before adding material prose rather than raising the budget.
 
 ### Phase 8: document, release, and archive
 

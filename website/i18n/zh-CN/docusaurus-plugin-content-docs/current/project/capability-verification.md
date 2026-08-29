@@ -1,6 +1,6 @@
 ---
 translation_source: project/capability-verification.md
-translation_source_hash: 271d85d2c86324c9d0e11a36470afa208f05c83f22c05100cf0e7527a02b8182
+translation_source_hash: 184ae158ecb15aab88421f0be3131717525d69ced1dc00d09609435918119660
 translation_status: current
 ---
 
@@ -32,6 +32,25 @@ translation_status: current
    候选的 `onCommit`。
 
 debug-only 测试 Activity 使用 `showWhenLocked` 与 `turnScreenOn`，不会关闭或改变设备 keyguard。
+
+## 导航生命周期与资源证据收口
+
+运行 `./gradlew verifyNavigationCoverage` 验证选定关键路径。门禁拒绝缺失的执行数据或 class
+bundle，并要求 Core 行/分支覆盖率不低于 `80%`/`70%`、Android 不低于 `70%`/`60%`；XML
+与 HTML 位于 `build/reports/viewcompose-quality/navigation-coverage/`。这些比例只描述归属明确的
+reducer、生命周期/scene、executor、owner/session、保留策略、Back、runtime 与 host 路径，
+并非两个模块的所有 class。
+
+运行 `./gradlew verifyNavigationBenchmarkTraceContracts`，拒绝 runtime 导航/帧 trace section 与
+release benchmark collector/label 之间的漂移。`qaQuick` 会执行两项导航验证任务。
+
+使用明确的 `ANDROID_SERIAL` 运行 `NavigationBackDeviceTest`。当前 target 设备必须运行完整
+测试类；API 28–30 设备还必须运行终态 pop 可达性、bounded 淘汰可达性和深度 13 保留证据。
+终态 pop 必须释放 presentation、LifecycleOwner 与 ViewModel；`Bounded(2)` 必须释放被淘汰的
+presentation，同时保留逻辑 owner 与 ViewModel。资源样本在相同预热与 GC 流程下记录活跃
+presentation 数、Java/native 已分配 heap、PSS 与同步 pop 中位耗时；只有结构性的
+presentation 数是硬阈值。接受的绝对值、归一化比较、设备/构建上下文、局限与下一步记录在
+主动导航演进计划中。
 
 ## 必需设备矩阵
 
@@ -68,29 +87,19 @@ debug-only 测试 Activity 使用 `showWhenLocked` 与 `turnScreenOn`，不会�
 | 默认参考 | 英语 | 浅色 | LTR | `1.0` | `1.0` |
 | 压力参考 | 简体中文 | 深色 | RTL | `1.3` | `1.25` |
 
-2026-08-22 接受的运行使用 API 28 的 Xiaomi MI 6。3 个 instrumentation 方法全部通过，
-耗时 `71.693 s`，覆盖 12 个场景 ID，生成 32 张截图与 32 份元数据。自动断言和人工目检
-均接受全部 32 帧：包括 Popup 锚定、圆角几何、四边阴影采样与外部触摸关闭；等宽主题色块；
-精确三列 Grid 状态及分别覆盖首行/末行的裁剪证据；分段选择和内边距；标准与 One UI 导航
-的按下/释放反馈；双向嵌套列表边界交接；以及 LazyColumn、LazyVerticalGrid、
-ScrollableColumn、VerticalPager 和 PullToRefresh 所有者在 IME 上方完整展示焦点编辑器。
+2026-08-22 接受的 Xiaomi MI 6/API 28 运行在 `71.693 s` 内通过 3/3 个方法；覆盖 12 个场景的
+32 张截图与元数据全部通过自动断言和人工目检。证据包括 Popup/阴影几何与关闭、精确三列
+Grid 边界、分段控件内边距、标准与 One UI 导航按下/释放态、双向嵌套列表交接，以及五种
+滚动 owner 的焦点编辑器在 IME 上方完整展示。
 
-首次截图因 MIUI 启动确认与窗口过渡污染多帧而被拒绝；当时 Grid 只断言“状态发生变化”，
-没有精确断言三列，导航也只捕获释放态。加固后的运行把聚焦证据从 26 帧增加到 32 帧
-（`+6`、`+23.1%`）：新增 4 个按下态帧，并把 Grid 顶部与底部覆盖拆开。结论：`improved`。
-这代表覆盖改进，不是性能比较。
+更早的 26 帧运行因 MIUI/窗口污染、弱 Grid 断言和仅释放态导航证据而被拒绝。加固增加 6 帧
+（`+23.1%`），结论为覆盖 `improved`，并非速度提升。完整 Demo APK 随后在 135/137 暴露
+Activity 触摸坐标与 Collections 标签耦合；硬切两项契约并在设备级点击前关闭 IME 后，
+`742.903 s` 内通过 137/137。这是行为/隔离证据，不是性能基线。
 
-清理验收还使用同一组重新构建的应用 APK，运行了完整 Demo instrumentation APK。首次运行
-通过 135/137 项，并暴露两个可稳定复现的测试基础设施缺陷：经 Activity 分发的触摸错误地
-使用屏幕坐标而非窗口坐标；Collections 的一个场景角色仍依赖细粒度字符串标签。硬切修正
-了手势坐标契约，让设计系统压力路径在设备级点击导航和分段控件前先关闭 IME，并把
-Collections 迁移到其拥有的 Android 资源 ID，不保留别名。最终运行在 `742.903 s` 内通过
-全部 137 项。这是行为与隔离证据，不是性能基线。
-
-局限：该结果只覆盖一台 API 28 设备和成对压力矩阵，并非完整笛卡尔积，也没有覆盖全部必需
-平台层级。截图只证明几何与可见状态；同一套测试仍保留原生触摸、Popup 关闭、嵌套滚动
-所有权、焦点、IME 与重置断言作为行为证据。任一被覆盖系统变化时都应重跑本矩阵；受影响
-版本需要完整平台矩阵时，再加入 API 24 与当前 target API 设备。
+局限：一台 API 28 设备与成对矩阵不能覆盖完整笛卡尔积和全部平台层级。截图证明可见几何；
+原生触摸、关闭、嵌套滚动、焦点、IME 与重置断言证明行为。受影响系统变化时应重跑；要求
+完整矩阵的版本还需加入 API 24 与当前 target。
 
 ## 失败排查
 

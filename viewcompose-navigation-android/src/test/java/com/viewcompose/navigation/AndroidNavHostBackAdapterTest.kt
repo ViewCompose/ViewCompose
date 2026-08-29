@@ -191,6 +191,56 @@ class AndroidNavHostBackAdapterTest {
     }
 
     @Test
+    fun `direct input normalizes progress and swipe edge before preview callbacks`() {
+        val application = RuntimeEnvironment.getApplication()
+        val root = FrameLayout(application)
+        val hostView = NavHostView(application)
+        root.addView(hostView)
+        val owner = TestBackOwner().apply { moveTo(Lifecycle.State.RESUMED) }
+        val navigationEvents = navigationEventFixture()
+        root.setViewTreeNavigationEventDispatcherOwner(navigationEvents.owner)
+        val startedEvents = mutableListOf<NavHostBackEvent>()
+        val progressedEvents = mutableListOf<NavHostBackEvent>()
+        var previewActive = false
+        val previewId = NavHostBackPreviewId(1L)
+        val adapter = AndroidNavHostBackAdapter(
+            hostView = hostView,
+            canHandleBack = { true },
+            isPreviewActive = { previewActive },
+            onBackPressed = {},
+            onBackStarted = { event ->
+                startedEvents += event
+                previewActive = true
+                previewId
+            },
+            onBackProgressed = { _, event -> progressedEvents += event },
+            onBackCancelled = { previewActive = false },
+            onBackCommitted = {},
+        )
+        adapter.attach(owner)
+
+        navigationEvents.input.backStarted(
+            navigationEvent(
+                progress = Float.NaN,
+                swipeEdge = NavigationEvent.EDGE_RIGHT,
+            ),
+        )
+        navigationEvents.input.backProgressed(
+            navigationEvent(
+                progress = 2f,
+                swipeEdge = Int.MIN_VALUE,
+            ),
+        )
+
+        assertEquals(0f, startedEvents.single().progress, 0f)
+        assertEquals(NavHostBackSwipeEdge.Right, startedEvents.single().swipeEdge)
+        assertEquals(1f, progressedEvents.single().progress, 0f)
+        assertEquals(NavHostBackSwipeEdge.None, progressedEvents.single().swipeEdge)
+        navigationEvents.input.backCancelled()
+        adapter.destroy()
+    }
+
+    @Test
     fun `predictive back cancellation keeps stack and restores settled visibility`() {
         val fixture = renderHost()
         fixture.controller.navigate(NavRoute("details"))
@@ -343,12 +393,15 @@ class AndroidNavHostBackAdapterTest {
         )
     }
 
-    private fun navigationEvent(progress: Float): NavigationEvent {
+    private fun navigationEvent(
+        progress: Float,
+        swipeEdge: Int = NavigationEvent.EDGE_LEFT,
+    ): NavigationEvent {
         return NavigationEvent(
             touchX = 10f,
             touchY = 20f,
             progress = progress,
-            swipeEdge = NavigationEvent.EDGE_LEFT,
+            swipeEdge = swipeEdge,
             frameTimeMillis = 30L,
         )
     }
