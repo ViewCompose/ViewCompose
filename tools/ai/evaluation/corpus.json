@@ -847,7 +847,10 @@
         "outcome": "pass",
         "evidenceLevel": "static"
       },
-      "metricIds": ["visual.screenshot-render-binding-exactness"]
+      "metricIds": [
+        "visual.screenshot-render-binding-exactness",
+        "visual.screenshot-render-success"
+      ]
     },
     {
       "id": "visual.screenshot-render-callback-source-denied",

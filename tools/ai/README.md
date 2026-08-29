@@ -293,17 +293,18 @@ requires the resolved ascending traversal to equal generated hierarchy order ins
 an API. The exact wireframe Kotlin golden compiles in the pinned JDK 21/Kotlin UI Foundation lane.
 `generate` mode returns deterministic static source and its complete mapping report; `compile` mode
 passes only that source and the fixed artifact/capability selection to the hermetic compiler.
-Rendering and visual parity remain explicit non-claims until a later gate.
+`render` mode requires the exact explicit Preview bindings and enters the fixed source-bound
+Layoutlib harness. Visual parity remains an explicit non-claim until comparison is accepted.
 
-The screenshot generated-Preview contract now freezes that next boundary without advertising a
-public render mode. Its request identifies `sourceKind: "screenshot"`, uses the dedicated
+The screenshot generated-Preview implementation identifies `sourceKind: "screenshot"`, uses the dedicated
 `GeneratedScreenshotPreview` target and `AI/Screenshot` group, and requires the exact state/event
 parameter order reported by the screenshot generator. `TextFieldState` receives only explicit
 initial text; `() -> Unit` and `(Boolean) -> Unit` receive fixed no-op callbacks; and
 `(TextFieldImeAction) -> Boolean` receives one explicit Boolean return. No binding accepts lambda
 source or project code. Missing, reordered, source-mismatched, type-mismatched, or source-bearing
-callbacks fail before the fixed Preview harness can run. The contract-only gate validates the
-deterministic wrapper but makes no compilation, render, comparison, or pixel-parity claim.
+callbacks fail before the fixed Preview harness can run. Successful rendering returns exact
+generated-source, wrapper, PNG, render-tree, and aggregate output fingerprints at `rendered`
+evidence. It does not yet claim semantic, geometry, accessibility-runtime, or pixel parity.
 
 Run the local MCP server and its protocol/parity gate with:
 
@@ -384,7 +385,7 @@ npm --prefix tools/ai run package:distribution
 ```
 
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
-exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the nine-tool CLI/MCP core,
+exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the thirteen-tool CLI/MCP core,
 six consumer skills, the immutable Knowledge Bundle, an SPDX 2.3 package record, the MIT license,
 and a reviewed empty runtime-dependency license inventory. It intentionally contains no
 `node_modules`, Gradle project, Android SDK, JDK, provider adapter, network listener, or model.
@@ -409,10 +410,11 @@ npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
 
 `get_api_reference`, `get_component_reference`, `search_component`, `get_sample`, static
 `validate_code`, `analyze_project`, and both source and explicit-project generate modes of
-`convert_xml_to_viewcompose` need no ViewCompose source checkout. Project generation reads only the
-caller-supplied bounded project roots. Compile-mode `validate_code`, compile-mode
-and render-mode `convert_xml_to_viewcompose`, `render_preview`, and `diagnose_layout` remain
-source-bound: set
+`convert_xml_to_viewcompose` plus generate-mode `generate_screenshot_viewcompose` need no
+ViewCompose source checkout. Project generation reads only the caller-supplied bounded project
+roots. Compile-mode `validate_code`, compile/render modes of `convert_xml_to_viewcompose`,
+compile/render modes of `generate_screenshot_viewcompose`, `render_preview`, and `diagnose_layout`
+remain source-bound: set
 `VIEWCOMPOSE_SOURCE_ROOT` to the absolute root of the matching ViewCompose checkout and provide the
 pinned JDK/Android/Gradle offline lane. The adapter requires the exact Knowledge Bundle source
 revision to be present in that checkout's Git ancestry and rejects missing wrapper/settings files,

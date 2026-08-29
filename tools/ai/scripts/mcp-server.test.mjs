@@ -38,6 +38,14 @@ const generationRequestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json',
   import.meta.url,
 );
+const renderGenerationRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-render/wireframe.generation-request.json',
+  import.meta.url,
+);
+const screenshotPreviewRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json',
+  import.meta.url,
+);
 const protocolVersionKey = 'io.modelcontextprotocol/protocolVersion';
 const clientInfoKey = 'io.modelcontextprotocol/clientInfo';
 const clientCapabilitiesKey = 'io.modelcontextprotocol/clientCapabilities';
@@ -220,6 +228,56 @@ test('returns the same generated screenshot Kotlin through CLI and MCP', async (
   assert.equal(
     response.result.structuredContent.data.kotlinFingerprint,
     '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9',
+  );
+  assert.equal(response.result.isError, false);
+});
+
+test('returns the same screenshot rendered evidence through CLI and MCP', async () => {
+  const [resolutionResult, generationRequest, previewRequest] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(renderGenerationRequestPath, 'utf8').then(JSON.parse),
+    readFile(screenshotPreviewRequestPath, 'utf8').then(JSON.parse),
+  ]);
+  const arguments_ = {
+    resolutionResult,
+    generationRequest,
+    previewBindings: previewRequest.bindings,
+  };
+  const renderGenerated = async (value) => toolResult({
+    requestId: value.requestId,
+    tool: 'render_preview',
+    status: 'success',
+    level: 'rendered',
+    diagnostics: [],
+    data: {targetId: 'tools.ai.GeneratedScreenshotPreview'},
+    compilerLane: 'preview-compiler',
+    renderLane: 'preview-renderer',
+    outputFingerprint: 'a'.repeat(64),
+  });
+  const id = 'screenshot-render-parity';
+  const direct = await dispatchToolRequest(await createToolRequest({
+    tool: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+    requestId: mcpToolRequestId(id),
+  }), {renderGenerated});
+  const session = new ViewComposeMcpSession({
+    dispatch: (toolRequest, {signal}) => dispatchToolRequest(toolRequest, {
+      signal,
+      renderGenerated,
+    }),
+  });
+  const response = await session.receive(request(id, 'tools/call', {
+    name: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+  }));
+  assert.deepEqual(
+    semanticToolResult(response.result.structuredContent),
+    semanticToolResult(direct),
+  );
+  assert.equal(response.result.structuredContent.evidence.level, 'rendered');
+  assert.equal(
+    response.result.structuredContent.data.preview.targetId,
+    'tools.ai.GeneratedScreenshotPreview',
   );
   assert.equal(response.result.isError, false);
 });

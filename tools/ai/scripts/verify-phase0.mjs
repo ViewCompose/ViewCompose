@@ -2190,7 +2190,7 @@ export async function verifyPhase0() {
   );
   const screenshotInferenceResolution = await verifyPhase5ScreenshotResolution();
   const screenshotKotlinGeneration = await verifyPhase5ScreenshotGeneration({compileGolden: false});
-  const screenshotGeneratedPreview = await verifyPhase5ScreenshotRender();
+  const screenshotGeneratedPreview = await verifyPhase5ScreenshotRender({renderGolden: false});
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {

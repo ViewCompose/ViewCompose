@@ -8,17 +8,19 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-frozen",
-    "publicRenderMode": false,
-    "implementation": false,
-    "evidence": "static-golden"
+    "status": "implemented",
+    "publicRenderMode": true,
+    "implementation": true,
+    "evidence": "rendered-golden"
   },
   "lineage": {
     "acceptedSourceKind": "screenshot",
     "resolutionResultFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
     "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
-    "generationRequestFingerprint": "176fd47687381494a4cb9331d5ae682d7a52b4483641ac3930621afbf29c4551",
-    "generationReportFingerprint": "51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d",
+    "sourceGenerationRequestFingerprint": "176fd47687381494a4cb9331d5ae682d7a52b4483641ac3930621afbf29c4551",
+    "sourceGenerationReportFingerprint": "51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d",
+    "renderGenerationRequestFingerprint": "17a785a25672a8a2a2998618dab80015081347e29c601201638666bf8ec4f068",
+    "renderGenerationReportFingerprint": "c62b30e811ad8c68f7ef454f441bd52744ea49b9238c49816513787294ed16ea",
     "generatedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
     "previewRequestFingerprint": "3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c",
     "previewWrapperFingerprint": "7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b"
@@ -69,8 +71,8 @@
   "claims": {
     "deterministicWrapper": true,
     "safeBindingContract": true,
-    "wrapperCompilation": false,
-    "runtimeRendering": false,
+    "wrapperCompilation": true,
+    "runtimeRendering": true,
     "semanticComparison": false,
     "visualParity": false
   },
@@ -86,15 +88,38 @@
   ],
   "supportedFixtures": [
     {
-      "status": "contract-frozen",
+      "status": "implemented",
       "resolutionResult": "screenshot-resolution/wireframe.result.json",
       "generationRequest": "screenshot-generation/wireframe.request.json",
+      "renderGenerationRequest": "screenshot-render/wireframe.generation-request.json",
       "generatedKotlin": "screenshot-generation/wireframe.generated.kt",
       "generationReport": "screenshot-generation/wireframe.report.json",
       "previewRequest": "screenshot-render/wireframe.preview-request.json",
       "previewWrapper": "screenshot-render/wireframe.preview-wrapper.kt",
       "expectedBindings": 3,
-      "expectedCallbackBindings": 2
+      "expectedCallbackBindings": 2,
+      "expectedBuildFingerprint": "2a92748798bad30d22e6a1a2160f7bebccfe58f9dcf19b4b9f7be6c90b471512",
+      "expectedOutputFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
+      "expectedPreviewId": "generatedpreviewkt-generatedscreenshotpreview-d8ad310b820d",
+      "expectedVariantId": "generated-screenshot-screenshotwireframeview-abee9c74",
+      "expectedSourceLine": 22,
+      "expectedCapabilityIds": ["foundation.components", "modifier.layout"],
+      "expectedImage": {
+        "widthPx": 1079,
+        "heightPx": 2339,
+        "bytes": 30984,
+        "sha256": "072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd"
+      },
+      "expectedRenderTree": {
+        "bytes": 203290,
+        "sha256": "5228e401662349d9142cf695c42e21805c7c332ac36bc09334a32251d2f27000",
+        "vnodeCount": 5,
+        "mountedNodeCount": 5,
+        "maxVNodeDepth": 3,
+        "maxMountedDepth": 3,
+        "texts": ["Welcome", "Continue"],
+        "contentDescriptions": []
+      }
     }
   ],
   "unsupportedFixtures": [

@@ -50,6 +50,14 @@ const generationRequestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json',
   import.meta.url,
 );
+const renderGenerationRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-render/wireframe.generation-request.json',
+  import.meta.url,
+);
+const screenshotPreviewRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json',
+  import.meta.url,
+);
 
 async function request(tool, arguments_, overrides = {}) {
   const manifest = await loadKnowledgeManifest();
@@ -346,6 +354,50 @@ test('dispatches deterministic screenshot Kotlin generation through the shared e
   );
   assert.equal(result.data.generationReport.bindings.states.length, 1);
   assert.equal(result.data.generationReport.bindings.events.length, 2);
+});
+
+test('dispatches screenshot render mode only with explicit source-free Preview bindings', async () => {
+  const [resolutionResult, generationRequest, previewRequest] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(renderGenerationRequestPath, 'utf8').then(JSON.parse),
+    readFile(screenshotPreviewRequestPath, 'utf8').then(JSON.parse),
+  ]);
+  let invocation;
+  const result = await dispatchToolRequest(await request(
+    'generate_screenshot_viewcompose',
+    {resolutionResult, generationRequest, previewBindings: previewRequest.bindings},
+    {requestId: 'screenshot-render-dispatch', limits: {
+      maxInputBytes: 2_000_000,
+      maxOutputBytes: 2_000_000,
+    }},
+  ), {
+    renderGenerated: async (value) => {
+      invocation = value;
+      return toolResult({
+        requestId: value.requestId,
+        tool: 'render_preview',
+        status: 'success',
+        level: 'rendered',
+        diagnostics: [],
+        data: {targetId: 'tools.ai.GeneratedScreenshotPreview'},
+        compilerLane: 'preview-compiler',
+        renderLane: 'preview-renderer',
+        outputFingerprint: 'a'.repeat(64),
+      });
+    },
+  });
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.data.preview.targetId, 'tools.ai.GeneratedScreenshotPreview');
+  assert.equal(invocation.generationReport.target.functionName, 'ScreenshotWireframeView');
+  assert.deepEqual(invocation.previewBindings, previewRequest.bindings);
+
+  const missing = await dispatchToolRequest(await request(
+    'generate_screenshot_viewcompose',
+    {resolutionResult, generationRequest},
+  ));
+  assert.equal(missing.status, 'invalid');
+  assert.equal(missing.diagnostics[0].code, 'VC-AI-SCREENSHOT-GENERATION-INPUT-INVALID');
 });
 
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {

@@ -1,13 +1,15 @@
 import {compileKotlin} from './compiler-adapter.mjs';
+import {renderGeneratedPreview} from './generated-preview-adapter.mjs';
 import {generateScreenshotKotlin} from './screenshot-design-ir-to-kotlin.mjs';
 import {diagnostic, toolResult} from './tool-core.mjs';
 
-function generatedData(generated, compilation) {
+function generatedData(generated, compilation, preview) {
   return Object.fromEntries(Object.entries({
     kotlin: generated?.kotlin,
     generationReport: generated?.report,
     kotlinFingerprint: generated?.outputFingerprint,
     compilation,
+    preview,
   }).filter(([, value]) => value !== undefined));
 }
 
@@ -16,6 +18,7 @@ export async function generateScreenshotViewCompose(arguments_, {
   limits,
   signal,
   compile = compileKotlin,
+  render = renderGeneratedPreview,
 } = {}) {
   const started = performance.now();
   if (signal?.aborted) {
@@ -55,6 +58,33 @@ export async function generateScreenshotViewCompose(arguments_, {
       data: generatedData(generated),
       elapsedMs: performance.now() - started,
       outputFingerprint: generated.outputFingerprint,
+    });
+  }
+  if (arguments_.generationRequest.mode === 'render') {
+    const preview = await render({
+      generatedKotlin: generated.kotlin,
+      generationReport: generated.report,
+      previewBindings: arguments_.previewBindings,
+      requestId,
+      limits: {
+        timeoutMs: limits?.timeoutMs,
+        maxOutputBytes: limits?.maxOutputBytes,
+      },
+      signal,
+    });
+    return toolResult({
+      requestId,
+      tool: 'generate_screenshot_viewcompose',
+      status: preview.status,
+      level: preview.evidence.level,
+      diagnostics: preview.diagnostics,
+      data: generatedData(generated, undefined, preview.data),
+      elapsedMs: performance.now() - started,
+      cache: preview.evidence.cache,
+      compilerLane: preview.evidence.compilerLane,
+      renderLane: preview.evidence.renderLane,
+      outputFingerprint: preview.evidence.outputFingerprint,
+      truncated: preview.truncated,
     });
   }
   const compilation = await compile({

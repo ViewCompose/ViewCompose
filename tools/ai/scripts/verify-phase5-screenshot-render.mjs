@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 import {createHash} from 'node:crypto';
-import {readFile} from 'node:fs/promises';
+import {lstat, readFile} from 'node:fs/promises';
+import {isAbsolute, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {generateScreenshotViewCompose} from './screenshot-generation-adapter.mjs';
+import {SCREENSHOT_GENERATION_REQUEST_SCHEMA} from './screenshot-generation-contract.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {canonicalJson} from './screenshot-contract.mjs';
+import {repositoryRoot as resolveRepositoryRoot} from './tool-core.mjs';
 
 const fixtureRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = `${fixtureRoot}screenshot-generated-preview-contract.json`;
@@ -46,10 +50,10 @@ function assertContract(contract) {
       'generated-preview-request-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-frozen' ||
-    contract.activation?.publicRenderMode !== false ||
-    contract.activation?.implementation !== false ||
-    contract.activation?.evidence !== 'static-golden'
+    contract.activation?.status !== 'implemented' ||
+    contract.activation?.publicRenderMode !== true ||
+    contract.activation?.implementation !== true ||
+    contract.activation?.evidence !== 'rendered-golden'
   ) {
     throw new Error('Screenshot generated Preview activation boundary changed');
   }
@@ -78,12 +82,18 @@ function assertContract(contract) {
     throw new Error('Screenshot generated Preview safe-binding contract changed');
   }
   if (
-    Object.values(contract.execution ?? {}).some((value, index) =>
-      index === 0 ? value !== true : value !== false) ||
+    contract.execution?.fixedPreviewHarness !== true ||
+    contract.execution?.projectBuildExecution !== false ||
+    contract.execution?.networkAccess !== false ||
+    contract.execution?.providerExecution !== false ||
+    contract.execution?.callerSourceExecution !== false ||
+    contract.execution?.callerTaskSelection !== false ||
+    contract.execution?.callerDependencySelection !== false ||
+    contract.execution?.callerOutputPathSelection !== false ||
     contract.claims?.deterministicWrapper !== true ||
     contract.claims?.safeBindingContract !== true ||
-    contract.claims?.wrapperCompilation !== false ||
-    contract.claims?.runtimeRendering !== false ||
+    contract.claims?.wrapperCompilation !== true ||
+    contract.claims?.runtimeRendering !== true ||
     contract.claims?.semanticComparison !== false ||
     contract.claims?.visualParity !== false ||
     contract.limits?.maxBindings !== 64 ||
@@ -142,38 +152,188 @@ function inferDiagnostic(request, schema) {
   return null;
 }
 
-export async function verifyPhase5ScreenshotRender() {
+function containedRelativePath(path, repository) {
+  if (typeof path !== 'string' || path.length === 0 || isAbsolute(path)) return false;
+  const normalized = relative(repository, resolve(repository, path));
+  return normalized !== '..' && !normalized.startsWith(`..${sep}`) && !isAbsolute(normalized);
+}
+
+async function inspectArtifacts(preview, fixture, repository = resolveRepositoryRoot()) {
+  if (
+    !containedRelativePath(preview.image?.path, repository) ||
+    !containedRelativePath(preview.renderTree?.path, repository)
+  ) {
+    throw new Error('Screenshot Preview exposed an unsafe rendered artifact path');
+  }
+  const imagePath = resolve(repository, preview.image.path);
+  const treePath = resolve(repository, preview.renderTree.path);
+  const [imageMetadata, treeMetadata, image, treeBytes] = await Promise.all([
+    lstat(imagePath),
+    lstat(treePath),
+    readFile(imagePath),
+    readFile(treePath),
+  ]);
+  if (
+    !imageMetadata.isFile() || imageMetadata.isSymbolicLink() ||
+    !treeMetadata.isFile() || treeMetadata.isSymbolicLink() ||
+    image.length !== fixture.expectedImage.bytes ||
+    sha256(image) !== fixture.expectedImage.sha256 ||
+    treeBytes.length !== fixture.expectedRenderTree.bytes ||
+    sha256(treeBytes) !== fixture.expectedRenderTree.sha256
+  ) {
+    throw new Error('Screenshot Preview artifacts differ from accepted immutable evidence');
+  }
+  if (
+    image.length < 24 ||
+    image.subarray(1, 4).toString('ascii') !== 'PNG' ||
+    image.readUInt32BE(16) !== fixture.expectedImage.widthPx ||
+    image.readUInt32BE(20) !== fixture.expectedImage.heightPx
+  ) {
+    throw new Error('Screenshot Preview PNG header or dimensions changed');
+  }
+  const tree = JSON.parse(treeBytes.toString('utf8'));
+  const treeText = treeBytes.toString('utf8');
+  const texts = [...new Set([...treeText.matchAll(/"text":\s*"([^"]+)"/gu)]
+    .map((match) => match[1]))];
+  const contentDescriptions = [...new Set([
+    ...treeText.matchAll(/"contentDescription":\s*"([^"]+)"/gu),
+  ].map((match) => match[1]))];
+  if (
+    JSON.stringify(tree.structure) !== JSON.stringify({
+      vnodeCount: fixture.expectedRenderTree.vnodeCount,
+      mountedNodeCount: fixture.expectedRenderTree.mountedNodeCount,
+      maxVNodeDepth: fixture.expectedRenderTree.maxVNodeDepth,
+      maxMountedDepth: fixture.expectedRenderTree.maxMountedDepth,
+    }) ||
+    JSON.stringify(texts) !== JSON.stringify(fixture.expectedRenderTree.texts) ||
+    JSON.stringify(contentDescriptions) !==
+      JSON.stringify(fixture.expectedRenderTree.contentDescriptions) ||
+    tree.warnings?.length !== 0 ||
+    tree.layoutDiagnostics?.length !== 0
+  ) {
+    throw new Error('Screenshot Preview render-tree semantics or diagnostics changed');
+  }
+  return {texts, contentDescriptions, structure: tree.structure};
+}
+
+function assertRendered(result, fixture, requiredCache) {
+  const preview = result.data?.preview;
+  if (
+    result.status !== 'success' ||
+    result.evidence?.level !== 'rendered' ||
+    (requiredCache && result.evidence.cache !== requiredCache) ||
+    result.evidence?.compilerLane !==
+      'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11' ||
+    result.evidence?.renderLane !==
+      'current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1' ||
+    result.evidence?.outputFingerprint !== fixture.expectedOutputFingerprint ||
+    result.diagnostics?.length !== 0 ||
+    result.data?.kotlinFingerprint !==
+      '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
+    result.data?.generationReport?.requestFingerprint !==
+      '17a785a25672a8a2a2998618dab80015081347e29c601201638666bf8ec4f068' ||
+    result.data?.generationReport?.reportFingerprint !==
+      'c62b30e811ad8c68f7ef454f441bd52744ea49b9238c49816513787294ed16ea' ||
+    preview?.targetId !== 'tools.ai.GeneratedScreenshotPreview' ||
+    preview?.modulePath !== ':tools:ai-preview-harness' ||
+    preview?.buildVariant !== 'debug' ||
+    preview?.buildFingerprint !== fixture.expectedBuildFingerprint ||
+    preview?.previewId !== fixture.expectedPreviewId ||
+    preview?.variantId !== fixture.expectedVariantId ||
+    JSON.stringify(preview?.configuration) !== JSON.stringify({
+      widthDp: 411,
+      heightDp: -1,
+      density: 2.625,
+      fontScale: 1,
+      localeTags: ['en-US'],
+      layoutDirection: 'Ltr',
+      theme: 'Light',
+    }) ||
+    JSON.stringify(preview?.capabilityIds) !== JSON.stringify(fixture.expectedCapabilityIds) ||
+    preview?.source?.path !==
+      `build/ai/preview/requests/${
+        '3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c'
+      }/input/GeneratedPreview.kt` ||
+    preview?.source?.line !== fixture.expectedSourceLine ||
+    preview?.source?.column !== 1 ||
+    preview?.image?.mediaType !== 'image/png' ||
+    preview?.image?.widthPx !== fixture.expectedImage.widthPx ||
+    preview?.image?.heightPx !== fixture.expectedImage.heightPx ||
+    preview?.image?.bytes !== fixture.expectedImage.bytes ||
+    preview?.image?.sha256 !== fixture.expectedImage.sha256 ||
+    preview?.renderTree?.bytes !== fixture.expectedRenderTree.bytes ||
+    preview?.renderTree?.sha256 !== fixture.expectedRenderTree.sha256 ||
+    preview?.generatedPreview?.sourceKind !== 'screenshot' ||
+    preview?.generatedPreview?.targetId !== 'tools.ai.GeneratedScreenshotPreview' ||
+    preview?.generatedPreview?.requestFingerprint !==
+      '3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c' ||
+    preview?.generatedPreview?.generatedKotlinFingerprint !==
+      '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
+    preview?.generatedPreview?.wrapperFingerprint !==
+      '7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b' ||
+    preview?.generatedPreview?.pngSha256 !== fixture.expectedImage.sha256 ||
+    preview?.generatedPreview?.renderTreeSha256 !== fixture.expectedRenderTree.sha256 ||
+    preview?.generatedPreview?.assets?.length !== 0
+  ) {
+    const codes = result.diagnostics?.map((item) => item.code).join(', ') ?? 'none';
+    throw new Error(`Screenshot generated Preview evidence changed (${codes})`);
+  }
+  return preview;
+}
+
+export async function verifyPhase5ScreenshotRender({
+  renderGolden = true,
+  generate = generateScreenshotViewCompose,
+  inspect = inspectArtifacts,
+} = {}) {
   const [contract, schema] = await Promise.all([
     readJson(contractPath),
     readJson(requestSchemaPath),
   ]);
   assertContract(contract);
   const fixture = contract.supportedFixtures[0];
-  const [resolution, generationRequest, generatedKotlin, generationReport, request, wrapper] =
+  const [
+    resolution,
+    generationRequest,
+    renderGenerationRequest,
+    generatedKotlin,
+    generationReport,
+    request,
+    wrapper,
+  ] =
     await Promise.all([
       readJson(`${fixtureRoot}${fixture.resolutionResult}`),
       readJson(`${fixtureRoot}${fixture.generationRequest}`),
+      readJson(`${fixtureRoot}${fixture.renderGenerationRequest}`),
       readFile(`${fixtureRoot}${fixture.generatedKotlin}`, 'utf8'),
       readJson(`${fixtureRoot}${fixture.generationReport}`),
       readJson(`${fixtureRoot}${fixture.previewRequest}`),
       readFile(`${fixtureRoot}${fixture.previewWrapper}`, 'utf8'),
     ]);
   const violations = validateSchemaValue(request, schema);
-  if (violations.length > 0) {
-    throw new Error(`Screenshot generated Preview request violates schema: ${violations[0]}`);
+  const generationViolations = [generationRequest, renderGenerationRequest].flatMap((value) =>
+    validateSchemaValue(value, SCREENSHOT_GENERATION_REQUEST_SCHEMA));
+  if (violations.length > 0 || generationViolations.length > 0) {
+    throw new Error(
+      `Screenshot generated Preview request violates schema: ${
+        [...violations, ...generationViolations][0]
+      }`,
+    );
   }
   const declared = request.generatedSource.declaredBindings;
   const supplied = request.bindings;
   if (
-    fixture.status !== 'contract-frozen' ||
+    fixture.status !== 'implemented' ||
     request.generatedSource.sourceKind !== 'screenshot' ||
     request.generatedSource.functionName !== generationReport.target.functionName ||
     request.generatedSource.kotlinFingerprint !== sha256(generatedKotlin) ||
     request.generatedSource.kotlinFingerprint !== contract.lineage.generatedKotlinFingerprint ||
     resolution.resultFingerprint !== contract.lineage.resolutionResultFingerprint ||
     resolution.designIrFingerprint !== contract.lineage.resolvedDesignIrFingerprint ||
-    generationReport.requestFingerprint !== contract.lineage.generationRequestFingerprint ||
-    generationReport.reportFingerprint !== contract.lineage.generationReportFingerprint ||
+    generationReport.requestFingerprint !==
+      contract.lineage.sourceGenerationRequestFingerprint ||
+    generationReport.reportFingerprint !==
+      contract.lineage.sourceGenerationReportFingerprint ||
     declared.length !== fixture.expectedBindings ||
     supplied.length !== fixture.expectedBindings ||
     supplied.filter((binding) => binding.kind.endsWith('-callback')).length !==
@@ -185,6 +345,7 @@ export async function verifyPhase5ScreenshotRender() {
     throw new Error('Screenshot generated Preview lineage or exact binding mapping changed');
   }
   const generationRequestFingerprint = sha256(canonicalJson(generationRequest));
+  const renderGenerationRequestFingerprint = sha256(canonicalJson(renderGenerationRequest));
   const previewRequestFingerprint = sha256(JSON.stringify(request));
   const previewWrapperFingerprint = sha256(wrapper);
   const requiredWrapper = [
@@ -196,7 +357,9 @@ export async function verifyPhase5ScreenshotRender() {
     'onContinue = { }',
   ];
   if (
-    generationRequestFingerprint !== contract.lineage.generationRequestFingerprint ||
+    generationRequestFingerprint !== contract.lineage.sourceGenerationRequestFingerprint ||
+    renderGenerationRequestFingerprint !==
+      contract.lineage.renderGenerationRequestFingerprint ||
     previewRequestFingerprint !== contract.lineage.previewRequestFingerprint ||
     previewWrapperFingerprint !== contract.lineage.previewWrapperFingerprint ||
     Buffer.byteLength(generatedKotlin) > contract.limits.maxGeneratedKotlinBytes ||
@@ -221,11 +384,53 @@ export async function verifyPhase5ScreenshotRender() {
     }
     blocked += 1;
   }
+  let rendered = 0;
+  let cacheHits = 0;
+  if (renderGolden) {
+    const input = {
+      resolutionResult: resolution,
+      generationRequest: renderGenerationRequest,
+      previewBindings: request.bindings,
+    };
+    const first = await generate(input, {
+      requestId: 'screenshot-wireframe-render',
+      limits: {
+        maxSourceBytes: 2_000_000,
+        timeoutMs: 120_000,
+        maxOutputBytes: 2_000_000,
+      },
+    });
+    const firstPreview = assertRendered(first, fixture);
+    if (
+      first.data.generationReport.reportFingerprint !==
+      contract.lineage.renderGenerationReportFingerprint
+    ) {
+      throw new Error('Screenshot render-mode generation report lineage changed');
+    }
+    await inspect(firstPreview, fixture);
+    rendered += 1;
+
+    const second = await generate(input, {
+      requestId: 'screenshot-wireframe-render-cache',
+      limits: {
+        maxSourceBytes: 2_000_000,
+        timeoutMs: 120_000,
+        maxOutputBytes: 2_000_000,
+      },
+    });
+    assertRendered(second, fixture, 'hit');
+    cacheHits += 1;
+  }
   return {
     supportedGoldens: 1,
     failClosedDenominators: blocked,
+    rendered,
+    cacheHits,
     requestFingerprint: previewRequestFingerprint,
     wrapperFingerprint: previewWrapperFingerprint,
+    outputFingerprint: fixture.expectedOutputFingerprint,
+    imageFingerprint: fixture.expectedImage.sha256,
+    renderTreeFingerprint: fixture.expectedRenderTree.sha256,
   };
 }
 
@@ -233,9 +438,12 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   verifyPhase5ScreenshotRender()
     .then((result) => {
       process.stdout.write(
-        `Verified Phase 5 screenshot Preview contract: ${result.supportedGoldens}/1 wrapper, ` +
+        `Verified Phase 5 screenshot Preview: ${result.rendered}/1 exact render, ` +
+          `${result.cacheHits}/1 stable cache hit, ` +
           `${result.failClosedDenominators}/3 unsafe bindings blocked, request ` +
-          `${result.requestFingerprint}, wrapper ${result.wrapperFingerprint}.\n`,
+          `${result.requestFingerprint}, wrapper ${result.wrapperFingerprint}, output ` +
+          `${result.outputFingerprint}, PNG ${result.imageFingerprint}, tree ` +
+          `${result.renderTreeFingerprint}.\n`,
       );
     })
     .catch((error) => {

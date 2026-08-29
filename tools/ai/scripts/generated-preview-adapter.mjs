@@ -16,8 +16,22 @@ import {
 } from './tool-core.mjs';
 
 const schemaPath = new URL('../contracts/generated-preview-request.schema.json', import.meta.url);
-const GENERATED_TARGET_ID = 'tools.ai.GeneratedXmlPreview';
-const GENERATED_PREVIEW_FUNCTION = 'GeneratedXmlPreview';
+const PREVIEW_PROFILES = Object.freeze({
+  'android-xml': Object.freeze({
+    sourceKind: 'android-xml',
+    targetId: 'tools.ai.GeneratedXmlPreview',
+    functionName: 'GeneratedXmlPreview',
+    annotationPrefix: 'Generated XML · ',
+    annotationGroup: 'AI/XML',
+  }),
+  screenshot: Object.freeze({
+    sourceKind: 'screenshot',
+    targetId: 'tools.ai.GeneratedScreenshotPreview',
+    functionName: 'GeneratedScreenshotPreview',
+    annotationPrefix: 'Generated Screenshot · ',
+    annotationGroup: 'AI/Screenshot',
+  }),
+});
 const MAX_GENERATED_KOTLIN_BYTES = 1024 * 1024;
 const MAX_WRAPPER_BYTES = 256 * 1024;
 const MAX_BINDINGS = 64;
@@ -33,6 +47,9 @@ const bindingKindByType = Object.freeze({
   String: 'string',
   TextFieldState: 'text-field-state',
   ImageSource: 'image-source',
+  '() -> Unit': 'unit-callback',
+  '(Boolean) -> Unit': 'boolean-callback',
+  '(TextFieldImeAction) -> Boolean': 'ime-action-callback',
 });
 
 export const GENERATED_PREVIEW_CONFIGURATION = Object.freeze({
@@ -102,6 +119,21 @@ function canonicalBinding(binding) {
           },
         }),
       };
+    case 'unit-callback':
+    case 'boolean-callback':
+      return {
+        kind: binding.kind,
+        parameter: binding.parameter,
+        source: binding.source,
+        behavior: binding.behavior,
+      };
+    case 'ime-action-callback':
+      return {
+        kind: 'ime-action-callback',
+        parameter: binding.parameter,
+        source: binding.source,
+        returnValue: binding.returnValue,
+      };
     default:
       return binding;
   }
@@ -110,11 +142,48 @@ function canonicalBinding(binding) {
 function reportBindings(report) {
   const resources = Array.isArray(report?.bindings?.resources) ? report.bindings.resources : [];
   const states = Array.isArray(report?.bindings?.states) ? report.bindings.states : [];
-  return [...resources, ...states].map((binding) => ({
+  const events = Array.isArray(report?.bindings?.events) ? report.bindings.events : [];
+  return [...resources, ...states, ...events].map((binding) => ({
     parameter: binding.parameter,
     source: binding.source,
     type: binding.type,
   }));
+}
+
+function sourceKindForReport(report) {
+  if (
+    report?.kind === 'report' &&
+    SHA256.test(report?.input?.resolutionResultFingerprint ?? '') &&
+    SHA256.test(report?.input?.resolvedDesignIrFingerprint ?? '') &&
+    Array.isArray(report?.bindings?.events)
+  ) {
+    return 'screenshot';
+  }
+  if (
+    report?.target?.packageName === 'generated.viewcompose' &&
+    Array.isArray(report?.bindings?.resources) &&
+    Array.isArray(report?.bindings?.states)
+  ) {
+    return 'android-xml';
+  }
+  return null;
+}
+
+function previewProfile(request) {
+  return PREVIEW_PROFILES[request.generatedSource.sourceKind ?? 'android-xml'];
+}
+
+function rawCallbackBindingIssue(bindings) {
+  const allowed = {
+    'unit-callback': new Set(['kind', 'parameter', 'source', 'behavior']),
+    'boolean-callback': new Set(['kind', 'parameter', 'source', 'behavior']),
+    'ime-action-callback': new Set(['kind', 'parameter', 'source', 'returnValue']),
+  };
+  for (const binding of bindings) {
+    const keys = allowed[binding?.kind];
+    if (keys && Object.keys(binding).some((key) => !keys.has(key))) return binding.parameter;
+  }
+  return null;
 }
 
 function hasDuplicates(values) {
@@ -258,6 +327,7 @@ export async function validateGeneratedPreviewRequest(request) {
 }
 
 export function generatePreviewWrapper(request) {
+  const profile = previewProfile(request);
   const imports = [
     'com.viewcompose.preview.tooling.PreviewLayoutDirection',
     'com.viewcompose.preview.tooling.PreviewTheme',
@@ -281,6 +351,12 @@ export function generatePreviewWrapper(request) {
         : `TextFieldState().apply { setTextAndPlaceCursorAtEnd(${kotlinString(binding.initialText)}) }`;
     } else if (binding.kind === 'image-source') {
       expression = `ImageSource.Resource(R.drawable.vc_ai_${binding.asset.sha256})`;
+    } else if (binding.kind === 'unit-callback') {
+      expression = '{ }';
+    } else if (binding.kind === 'boolean-callback') {
+      expression = '{ _ -> }';
+    } else if (binding.kind === 'ime-action-callback') {
+      expression = `{ _ -> ${binding.returnValue} }`;
     } else {
       throw new Error(`Unsupported generated Preview binding kind: ${binding.kind}`);
     }
@@ -293,8 +369,8 @@ export function generatePreviewWrapper(request) {
     ...imports.sort().map((name) => `import ${name}`),
     '',
     '@ViewComposePreview(',
-    `    name = "Generated XML · ${request.generatedSource.functionName}",`,
-    '    group = "AI/XML",',
+    `    name = "${profile.annotationPrefix}${request.generatedSource.functionName}",`,
+    `    group = "${profile.annotationGroup}",`,
     `    widthDp = ${configuration.widthDp},`,
     `    heightDp = ${configuration.heightDp},`,
     `    density = ${configuration.density}f,`,
@@ -304,7 +380,7 @@ export function generatePreviewWrapper(request) {
     `    theme = PreviewTheme.${configuration.theme},`,
     `    apiLevel = ${configuration.apiLevel ?? -1},`,
     ')',
-    `fun UiTreeBuilder.${GENERATED_PREVIEW_FUNCTION}() {`,
+    `fun UiTreeBuilder.${profile.functionName}() {`,
     `    ${request.generatedSource.functionName}(`,
     ...arguments_,
     '    )',
@@ -318,6 +394,7 @@ export async function createGeneratedPreviewPlan({
   generationReport,
   previewBindings,
 } = {}) {
+  const sourceKind = sourceKindForReport(generationReport);
   if (
     typeof generatedKotlin !== 'string' ||
     generatedKotlin.length === 0 ||
@@ -327,14 +404,15 @@ export async function createGeneratedPreviewPlan({
     !/^[A-Z][A-Za-z0-9]{0,127}$/u.test(generationReport?.target?.functionName ?? '') ||
     JSON.stringify(generationReport?.target?.artifactIds) !==
       JSON.stringify(['viewcompose-ui-foundation']) ||
+    !PREVIEW_PROFILES[sourceKind] ||
     !generatedKotlin.includes(
       `fun UiTreeBuilder.${generationReport?.target?.functionName ?? '<missing>'}(`,
     )
   ) {
     return planIssue(
       'VC-AI-PREVIEW-GENERATED-SOURCE-MISMATCH',
-      'Generated Preview accepts only bounded Kotlin and the exact report from the same XML generator.',
-      'Regenerate the XML migration and pass its unchanged Kotlin and report to render mode.',
+      'Generated Preview accepts only bounded Kotlin and the exact report from one supported generator.',
+      'Regenerate the source and pass its unchanged Kotlin and report to render mode.',
       'unsupported',
     );
   }
@@ -343,6 +421,14 @@ export async function createGeneratedPreviewPlan({
       'VC-AI-PREVIEW-BINDING-VALUE-INVALID',
       `Generated Preview bindings must be an array with at most ${MAX_BINDINGS} entries.`,
       'Provide one bounded explicit value for every generated function parameter.',
+    );
+  }
+  const unsafeCallback = rawCallbackBindingIssue(previewBindings);
+  if (unsafeCallback !== null) {
+    return planIssue(
+      'VC-AI-PREVIEW-BINDING-VALUE-INVALID',
+      `Generated Preview callback ${unsafeCallback} contains an unsupported source or value field.`,
+      'Use only the fixed no-op behavior or one explicit Boolean return declared by the binding schema.',
     );
   }
   const manifest = await loadKnowledgeManifest();
@@ -357,6 +443,7 @@ export async function createGeneratedPreviewPlan({
     },
     generatedSource: {
       packageName: 'generated.viewcompose',
+      ...(sourceKind === 'screenshot' ? {sourceKind} : {}),
       functionName: generationReport.target.functionName,
       kotlinFingerprint: sha256(generatedKotlin),
       artifactIds: [...generationReport.target.artifactIds],
@@ -487,6 +574,7 @@ export async function createGeneratedPreviewPlan({
     wrapper,
     wrapperFingerprint: sha256(wrapper),
     assets,
+    profile: previewProfile(request),
   };
 }
 
@@ -644,9 +732,9 @@ export async function renderGeneratedPreview({
     buildVariant: 'debug',
     discoveryTask: ':tools:ai-preview-harness:discoverDebugViewComposePreviews',
     renderTask: ':tools:ai-preview-harness:renderDebugViewComposePreview',
-    displayName: GENERATED_PREVIEW_FUNCTION,
+    displayName: plan.profile.functionName,
     ownerClassName: 'generated.viewcompose.GeneratedPreviewKt',
-    methodName: GENERATED_PREVIEW_FUNCTION,
+    methodName: plan.profile.functionName,
     capabilityIds: Object.freeze(capabilityIds),
     configuration: Object.freeze({
       widthDp: GENERATED_PREVIEW_CONFIGURATION.widthDp,
@@ -662,14 +750,14 @@ export async function renderGeneratedPreview({
     ]),
   });
   const rendered = await serialized(() => render({
-    targetId: GENERATED_TARGET_ID,
+    targetId: plan.profile.targetId,
     capabilityIds,
     requestId,
     limits,
     signal,
   }, {
     repository,
-    targets: {[GENERATED_TARGET_ID]: target},
+    targets: {[plan.profile.targetId]: target},
   }));
   if (rendered.status !== 'success') return rendered;
   if (
@@ -700,6 +788,9 @@ export async function renderGeneratedPreview({
     data: {
       ...rendered.data,
       generatedPreview: {
+        ...(plan.profile.sourceKind === 'screenshot'
+          ? {sourceKind: plan.profile.sourceKind, targetId: plan.profile.targetId}
+          : {}),
         requestFingerprint: plan.requestFingerprint,
         generatedKotlinFingerprint: plan.generatedKotlinFingerprint,
         wrapperFingerprint: plan.wrapperFingerprint,

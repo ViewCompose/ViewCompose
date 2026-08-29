@@ -623,6 +623,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                         "contracts/tool-envelope.schema.json",
                         "evaluation/fixtures/distribution/package-contract.json",
                         "evaluation/fixtures/kotlin/foundation-profile-summary-valid.kt",
+                        "evaluation/fixtures/visual/**",
                         "generated/current-source/**",
                         "scripts/*.mjs",
                         "skills/**",

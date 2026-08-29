@@ -305,7 +305,7 @@ const executableDefinitions = {
   generate_screenshot_viewcompose: {
     title: 'Generate ViewCompose from Resolved Screenshot Design IR',
     description:
-      'Generate or hermetically compile deterministic ViewCompose Kotlin from one exact resolved screenshot result without provider, network, callback-source, or project-build execution.',
+      'Generate, hermetically compile, or source-bind and render deterministic ViewCompose Kotlin from one exact resolved screenshot result without provider, network, callback-source, or inspected-project build execution.',
     inputSchema: SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA,
     defaultLimits: {
       timeoutMs: 120000,

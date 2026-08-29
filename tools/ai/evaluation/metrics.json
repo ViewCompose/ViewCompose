@@ -444,6 +444,15 @@
       "environment": "screenshot generator-reported state and event parameter, source, type, and order mapped to explicit bounded Preview bindings"
     },
     {
+      "id": "visual.screenshot-render-success",
+      "phase": 5,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact screenshot-generated Kotlin and no-source Preview wrapper compiled and rendered in the pinned tool-owned JDK 21, AGP, Android 37, Paparazzi, and Layoutlib lane"
+    },
+    {
       "id": "visual.screenshot-render-binding-safety",
       "phase": 5,
       "measure": "blocked_ratio",

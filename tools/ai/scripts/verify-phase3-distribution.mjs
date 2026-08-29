@@ -48,6 +48,15 @@ const resolutionRequestPath = fileURLToPath(
 const screenshotGenerationRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json', import.meta.url),
 );
+const screenshotRenderGenerationRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-render/wireframe.generation-request.json', import.meta.url),
+);
+const screenshotRenderPreviewRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json', import.meta.url),
+);
+const screenshotGeneratedPreviewContractPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-generated-preview-contract.json', import.meta.url),
+);
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
@@ -137,7 +146,9 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
     tool,
     framework: knowledge.framework,
     limits: {
-      timeoutMs: tool === 'validate_code' || ['compile', 'render'].includes(arguments_.mode)
+      timeoutMs: tool === 'validate_code' ||
+        ['compile', 'render'].includes(arguments_.mode) ||
+        ['compile', 'render'].includes(arguments_.generationRequest?.mode)
         ? 120_000
         : 10_000,
       maxInputBytes: 4 * 1024 * 1024,
@@ -275,6 +286,7 @@ async function verifyCliFlow(
   installedPackageRoot,
   generatedPreviewContract,
   layoutComparisonContract,
+  screenshotGeneratedPreviewContract,
 ) {
   const [screenshotRequest, screenshotExpected] = await Promise.all([
     readJson(screenshotRequestPath),
@@ -377,6 +389,54 @@ async function verifyCliFlow(
       '51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d'
   ) {
     throw new Error('Installed CLI did not compile the frozen screenshot Kotlin golden.');
+  }
+  const [renderGenerationRequest, screenshotPreviewRequest] = await Promise.all([
+    readJson(screenshotRenderGenerationRequestPath),
+    readJson(screenshotRenderPreviewRequestPath),
+  ]);
+  const renderedScreenshot = await runCli(
+    cli,
+    knowledge,
+    'generate_screenshot_viewcompose',
+    {
+      resolutionResult: resolvedInference.data,
+      generationRequest: renderGenerationRequest,
+      previewBindings: screenshotPreviewRequest.bindings,
+    },
+    'distribution-screenshot-render',
+    {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot},
+  );
+  const expectedScreenshotPreview = screenshotGeneratedPreviewContract.supportedFixtures[0];
+  if (
+    renderedScreenshot.status !== 'success' ||
+    renderedScreenshot.evidence.level !== 'rendered' ||
+    renderedScreenshot.evidence.outputFingerprint !==
+      expectedScreenshotPreview.expectedOutputFingerprint ||
+    renderedScreenshot.data?.generationReport?.reportFingerprint !==
+      screenshotGeneratedPreviewContract.lineage.renderGenerationReportFingerprint ||
+    renderedScreenshot.data?.preview?.targetId !==
+      screenshotGeneratedPreviewContract.profile.targetId ||
+    renderedScreenshot.data?.preview?.generatedPreview?.requestFingerprint !==
+      screenshotGeneratedPreviewContract.lineage.previewRequestFingerprint ||
+    renderedScreenshot.data?.preview?.image?.sha256 !==
+      expectedScreenshotPreview.expectedImage.sha256 ||
+    renderedScreenshot.data?.preview?.renderTree?.sha256 !==
+      expectedScreenshotPreview.expectedRenderTree.sha256
+  ) {
+    throw new Error(
+      'Installed CLI did not render the frozen screenshot-generated Preview: ' +
+      JSON.stringify({
+        status: renderedScreenshot.status,
+        evidence: renderedScreenshot.evidence,
+        diagnosticCodes: renderedScreenshot.diagnostics?.map((item) => item.code),
+        reportFingerprint: renderedScreenshot.data?.generationReport?.reportFingerprint,
+        targetId: renderedScreenshot.data?.preview?.targetId,
+        requestFingerprint:
+          renderedScreenshot.data?.preview?.generatedPreview?.requestFingerprint,
+        imageFingerprint: renderedScreenshot.data?.preview?.image?.sha256,
+        renderTreeFingerprint: renderedScreenshot.data?.preview?.renderTree?.sha256,
+      }),
+    );
   }
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
@@ -586,6 +646,7 @@ async function verifyCliFlow(
     screenshotResolution: resolvedInference.evidence.outputFingerprint,
     screenshotGeneration: compiledScreenshot.evidence.outputFingerprint,
     screenshotKotlin: generatedScreenshot.evidence.outputFingerprint,
+    screenshotPreview: renderedScreenshot.evidence.outputFingerprint,
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlPreview: renderedXml.evidence.outputFingerprint,
@@ -804,11 +865,18 @@ async function verifyMcpMatrix(mcp, contract) {
 }
 
 async function main() {
-  const [contract, knowledge, generatedPreviewContract, layoutComparisonContract] = await Promise.all([
+  const [
+    contract,
+    knowledge,
+    generatedPreviewContract,
+    layoutComparisonContract,
+    screenshotGeneratedPreviewContract,
+  ] = await Promise.all([
     readJson(contractPath),
     readJson(knowledgePath),
     readJson(generatedPreviewContractPath),
     readJson(layoutComparisonContractPath),
+    readJson(screenshotGeneratedPreviewContractPath),
   ]);
   const temporaryRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-distribution-'));
   const comparisonRoot = resolve(temporaryRoot, 'comparison');
@@ -865,6 +933,7 @@ async function main() {
       packageRoot,
       generatedPreviewContract,
       layoutComparisonContract,
+      screenshotGeneratedPreviewContract,
     );
     await verifyMcpMatrix(mcp, contract);
 
@@ -898,6 +967,7 @@ async function main() {
       `resolved screenshot inference ${compileFingerprints.screenshotResolution}, ` +
       `generated screenshot Kotlin ${compileFingerprints.screenshotKotlin}, ` +
       `compiled screenshot Kotlin ${compileFingerprints.screenshotGeneration}, ` +
+      `rendered screenshot Preview ${compileFingerprints.screenshotPreview}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +

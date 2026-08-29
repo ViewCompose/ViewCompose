@@ -5,6 +5,9 @@ import {DESIGN_IR_SCHEMA, SCREENSHOT_RESOLUTION_RESULT_SCHEMA} from './screensho
 const generationSchemaPath = fileURLToPath(
   new URL('../contracts/screenshot-kotlin-generation.schema.json', import.meta.url),
 );
+const generatedPreviewSchemaPath = fileURLToPath(
+  new URL('../contracts/generated-preview-request.schema.json', import.meta.url),
+);
 
 export const SCREENSHOT_GENERATION_SCHEMA = Object.freeze(
   JSON.parse(await readFile(generationSchemaPath, 'utf8')),
@@ -17,6 +20,7 @@ export const SCREENSHOT_GENERATION_REPORT_SCHEMA = Object.freeze({
   ...structuredClone(SCREENSHOT_GENERATION_SCHEMA.$defs.report),
   $defs: structuredClone(SCREENSHOT_GENERATION_SCHEMA.$defs),
 });
+const GENERATED_PREVIEW_SCHEMA = JSON.parse(await readFile(generatedPreviewSchemaPath, 'utf8'));
 
 function namespaceSchema(value, prefix) {
   if (Array.isArray(value)) return value.map((item) => namespaceSchema(item, prefix));
@@ -39,16 +43,55 @@ function namespacedDefinitions(definitions, prefix) {
 }
 
 const generationPrefix = 'generation_';
+const previewPrefix = 'preview_';
+const generationRequestForModes = (modes) => {
+  const request = namespaceSchema(
+    structuredClone(SCREENSHOT_GENERATION_SCHEMA.$defs.request),
+    generationPrefix,
+  );
+  request.properties.mode = modes.length === 1 ? {const: modes[0]} : {enum: modes};
+  return request;
+};
+const commonArgumentProperties = Object.freeze({
+  resolutionResult: {type: 'object'},
+});
 export const SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA = Object.freeze({
   type: 'object',
-  additionalProperties: false,
-  required: ['resolutionResult', 'generationRequest'],
-  properties: {
-    resolutionResult: {type: 'object'},
-    generationRequest: {$ref: `#/$defs/${generationPrefix}request`},
-  },
+  oneOf: [
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['resolutionResult', 'generationRequest'],
+      properties: {
+        ...commonArgumentProperties,
+        generationRequest: generationRequestForModes(['generate', 'compile']),
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['resolutionResult', 'generationRequest', 'previewBindings'],
+      properties: {
+        ...commonArgumentProperties,
+        generationRequest: generationRequestForModes(['render']),
+        previewBindings: {
+          type: 'array',
+          maxItems: 64,
+          items: {
+            oneOf: [
+              {$ref: `#/$defs/${previewPrefix}textFieldStateBinding`},
+              {$ref: `#/$defs/${previewPrefix}unitCallbackBinding`},
+              {$ref: `#/$defs/${previewPrefix}booleanCallbackBinding`},
+              {$ref: `#/$defs/${previewPrefix}imeActionCallbackBinding`},
+            ],
+          },
+        },
+      },
+    },
+  ],
   $defs: {
     ...namespacedDefinitions(SCREENSHOT_GENERATION_SCHEMA.$defs, generationPrefix),
+    ...namespacedDefinitions(GENERATED_PREVIEW_SCHEMA.$defs, previewPrefix),
   },
 });
 

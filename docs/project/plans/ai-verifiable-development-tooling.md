@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen screenshot-generated Preview contract in render mode, accept exact PNG/render-tree evidence, then compare its semantic tree before any pixel-parity claim.
+next_action: Freeze and implement the semantic and geometry comparison contract for the accepted screenshot render tree before any pixel-parity claim.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -101,14 +101,14 @@ typed state and event bindings to real public APIs, preserves every accessibilit
 machine-checked report, and passes the hermetic compiler. The thirteenth shared CLI/MCP tool now
 reproduces that source and report in generate mode and returns hermetic compiled evidence in compile
 mode, including from the installed package. Provider selection remains a separate, explicitly
-authorized decision. The source-bound screenshot generated-Preview contract is now frozen with
-explicit state and fixed no-source callback bindings; it is not yet exposed as render mode.
+authorized decision. The source-bound screenshot generated-Preview contract is now implemented with
+explicit state and fixed no-source callback bindings, exact rendered evidence, CLI/MCP parity, and
+installed-package verification.
 
 Last verified: 2026-08-30.
 
-Next action: implement the frozen screenshot-generated Preview contract in render mode, accept its
-exact PNG and render-tree evidence, then compare that semantic tree before any pixel-parity claim
-or provider-backed adapter.
+Next action: freeze and implement semantic and geometry comparison against the accepted screenshot
+render tree before any pixel-parity claim or provider-backed adapter.
 
 ## Maven release changesets
 
@@ -1911,6 +1911,61 @@ behavior change**. The wrapper has not yet been compiled or rendered, so the con
 render-tree, semantic, geometry, or pixel claim. The next action is to implement this frozen profile
 in `generate_screenshot_viewcompose` render mode, reproduce exact rendered evidence through the
 installed package, and only then bind the result to semantic comparison.
+
+### Implementation evidence — source-bound screenshot generated Preview
+
+`generate_screenshot_viewcompose` now exposes `render` beside `generate` and `compile`. Render mode
+requires the exact resolved result, a render-specific generation request, and explicit bounded
+Preview bindings. It regenerates Kotlin and its report first, then passes only those tool-owned
+bytes and values into the existing content-addressed `:tools:ai-preview-harness`. The shared Preview
+adapter recognizes the screenshot report separately from XML, preserves every existing XML request
+and wrapper fingerprint, and selects only `tools.ai.GeneratedScreenshotPreview`. The public tool
+schema requires `previewBindings` only for render mode; CLI and MCP return the same result shape.
+
+The callback implementation is deliberately non-executable input. `() -> Unit` becomes `{ }`,
+`(Boolean) -> Unit` becomes `{ _ -> }`, and `(TextFieldImeAction) -> Boolean` becomes a lambda with
+one explicit Boolean result. An extra callback source/value field, a missing callback, or a wrong
+callback kind fails before Gradle. The adapter still accepts no inspected-project task, dependency,
+build script, project path, output path, provider, credential, or network operation. Render mode's
+generation request and report fingerprints are
+`17a785a25672a8a2a2998618dab80015081347e29c601201638666bf8ec4f068` and
+`c62b30e811ad8c68f7ef454f441bd52744ea49b9238c49816513787294ed16ea`.
+
+Under the fixed 411 dp, density 2.625, `en-US`, LTR, light configuration, the generated wireframe
+compiled and rendered into a 1,079 by 2,339 px, 30,984-byte PNG. Visual inspection showed the
+expected `Welcome` title, `Email address` field placeholder, and `Continue` button without clipping
+or corruption. The 203,290-byte render tree contains five virtual and five mounted nodes at depth
+three, the expected observable title/action text, and zero warnings or layout diagnostics. Exact
+evidence is:
+
+- build: `2a92748798bad30d22e6a1a2160f7bebccfe58f9dcf19b4b9f7be6c90b471512`;
+- aggregate render: `ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076`;
+- PNG: `072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd`;
+- render tree: `5228e401662349d9142cf695c42e21805c7c332ac36bc09334a32251d2f27000`.
+
+The dedicated gate reproduces 1/1 exact render, 1/1 stable cache hit, and 3/3 fail-closed unsafe
+bindings. Node 25.6.0 passes 180/180 AI-tooling tests. Phase 0 verifies 13 schemas, 54 metrics, 57
+cases, 54 fixture-backed cases, and four screenshot-Preview fixtures. The installed CLI reproduces
+the exact rendered fingerprint, while shared CLI/MCP render requests retain transport parity.
+
+The 60-file offline package has 1,761,601 declared bytes and a 314,713-byte archive, SHA-256
+`555f3faae7561d953896a729380bb0978a111a31e9a0d2559a9074f546d3c602`. Relative to the
+contract-only package, declared bytes increase by 7,168 (+0.41%) and archive bytes by 1,510 (+0.48%)
+with no runtime dependency added. The distribution gate passes 2/2 reproducible builds, offline
+install/uninstall, SPDX/license inventory, two MCP protocol eras, all installed compile lanes, the
+new installed screenshot render, and both prior XML comparisons.
+The quality-build plugin suite passes. The combined screenshot-Preview, distribution,
+documentation-structure, development-tooling-isolation, and release-intent gate passes 23
+actionable tasks, with 9 executed and 14 up-to-date. No published artifact or public/protected API
+changed, so the contract slice's no-Maven-changeset and no-module-manual disposition remains valid.
+
+This is **improved** source-bound render evidence, callback safety, cache determinism, and installed
+transport coverage with **no material Android runtime behavior change**. Limitations remain
+explicit: this acceptance covers one configuration and confirms render integrity plus a human
+sanity inspection; it does not yet prove semantic/geometry agreement with Design IR, accessibility
+runtime behavior, interaction, responsive variants, or pixel similarity to the input screenshot.
+The next action is to bind this accepted tree to an exact semantic and geometry comparison before
+adding any pixel metric or repair loop.
 
 ### Implementation evidence — bounded XML to Design IR
 

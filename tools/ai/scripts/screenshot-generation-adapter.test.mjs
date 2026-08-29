@@ -11,6 +11,10 @@ const requestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json',
   import.meta.url,
 );
+const previewRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json',
+  import.meta.url,
+);
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
@@ -86,6 +90,43 @@ test('retains generated evidence when hermetic compilation fails', async () => {
   assert.equal(result.evidence.level, 'compiled');
   assert.ok(result.data.kotlin.includes('ScreenshotWireframeView'));
   assert.equal(result.diagnostics[0].code, 'VC-AI-COMPILER-ERROR');
+});
+
+test('source-binds generated screenshot Kotlin before returning rendered evidence', async () => {
+  const input = await arguments_('render');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  let invocation;
+  const result = await generateScreenshotViewCompose(input, {
+    requestId: 'screenshot-render',
+    limits: {timeoutMs: 120000, maxOutputBytes: 1048576},
+    render: async (value) => {
+      invocation = value;
+      return {
+        status: 'success',
+        evidence: {
+          level: 'rendered',
+          cache: 'miss',
+          compilerLane: 'preview-compiler',
+          renderLane: 'preview-renderer',
+          outputFingerprint: 'd'.repeat(64),
+        },
+        diagnostics: [],
+        data: {
+          targetId: 'tools.ai.GeneratedScreenshotPreview',
+          generatedPreview: {requestFingerprint: 'e'.repeat(64)},
+        },
+        truncated: false,
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.renderLane, 'preview-renderer');
+  assert.equal(result.data.preview.targetId, 'tools.ai.GeneratedScreenshotPreview');
+  assert.equal(invocation.generationReport.target.functionName, 'ScreenshotWireframeView');
+  assert.deepEqual(invocation.previewBindings, input.previewBindings);
+  assert.match(invocation.generatedKotlin, /onKeyboardAction = onEmailSubmit/u);
 });
 
 test('honors cancellation before screenshot generation', async () => {

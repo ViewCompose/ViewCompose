@@ -141,7 +141,8 @@
       "diagnose_layout",
       "convert_xml_to_viewcompose:compile",
       "convert_xml_to_viewcompose:render",
-      "generate_screenshot_viewcompose:compile"
+      "generate_screenshot_viewcompose:compile",
+      "generate_screenshot_viewcompose:render"
     ],
     "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
     "implicitProtocolDowngrade": false

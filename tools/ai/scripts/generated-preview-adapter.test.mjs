@@ -12,9 +12,14 @@ import {
 import {PREVIEW_COMPILER_LANE, RENDER_LANE} from './preview-adapter.mjs';
 
 const fixtureRoot = new URL('../evaluation/fixtures/xml/', import.meta.url);
+const visualFixtureRoot = new URL('../evaluation/fixtures/visual/', import.meta.url);
 
 async function fixture(path) {
   return readFile(new URL(path, fixtureRoot), 'utf8');
+}
+
+async function visualFixture(path) {
+  return readFile(new URL(path, visualFixtureRoot), 'utf8');
 }
 
 function loginReport() {
@@ -111,6 +116,93 @@ test('builds the exact frozen embedded PNG request, wrapper, and resource plan',
     plan.assets[0].resourceName,
     'vc_ai_4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5',
   );
+});
+
+test('builds the exact screenshot Preview profile and fixed callback values', async () => {
+  const expectedRequest = JSON.parse(
+    await visualFixture('screenshot-render/wireframe.preview-request.json'),
+  );
+  const plan = await createGeneratedPreviewPlan({
+    generatedKotlin: await visualFixture('screenshot-generation/wireframe.generated.kt'),
+    generationReport: JSON.parse(
+      await visualFixture('screenshot-generation/wireframe.report.json'),
+    ),
+    previewBindings: expectedRequest.bindings,
+  });
+
+  assert.equal(plan.status, 'success');
+  assert.deepEqual(plan.request, expectedRequest);
+  assert.equal(
+    plan.wrapper,
+    await visualFixture('screenshot-render/wireframe.preview-wrapper.kt'),
+  );
+  assert.equal(
+    plan.requestFingerprint,
+    '3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c',
+  );
+  assert.equal(
+    plan.wrapperFingerprint,
+    '7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b',
+  );
+  assert.equal(plan.profile.targetId, 'tools.ai.GeneratedScreenshotPreview');
+});
+
+test('emits a source-free Boolean no-op and rejects callback source fields', async () => {
+  const generatedKotlin = [
+    'package generated.viewcompose',
+    '',
+    'import com.viewcompose.ui.foundation.UiTreeBuilder',
+    '',
+    'fun UiTreeBuilder.FocusView(',
+    '    onFocus: (Boolean) -> Unit,',
+    ') {',
+    '}',
+    '',
+  ].join('\n');
+  const generationReport = {
+    schemaVersion: 1,
+    kind: 'report',
+    input: {
+      resolutionResultFingerprint: '1'.repeat(64),
+      resolvedDesignIrFingerprint: '2'.repeat(64),
+    },
+    target: {
+      language: 'kotlin',
+      packageName: 'generated.viewcompose',
+      functionName: 'FocusView',
+      artifactIds: ['viewcompose-ui-foundation'],
+      capabilityIds: ['foundation.components'],
+    },
+    bindings: {
+      states: [],
+      events: [{
+        parameter: 'onFocus',
+        source: 'onFocus',
+        type: '(Boolean) -> Unit',
+      }],
+    },
+  };
+  const binding = {
+    kind: 'boolean-callback',
+    parameter: 'onFocus',
+    source: 'onFocus',
+    behavior: 'no-op',
+  };
+  const accepted = await createGeneratedPreviewPlan({
+    generatedKotlin,
+    generationReport,
+    previewBindings: [binding],
+  });
+  assert.equal(accepted.status, 'success');
+  assert.match(accepted.wrapper, /onFocus = \{ _ -> \}/u);
+
+  const rejected = await createGeneratedPreviewPlan({
+    generatedKotlin,
+    generationReport,
+    previewBindings: [{...binding, value: '{ mutateProject() }'}],
+  });
+  assert.equal(rejected.status, 'invalid');
+  assert.equal(rejected.diagnostic.code, 'VC-AI-PREVIEW-BINDING-VALUE-INVALID');
 });
 
 test('fails closed on missing and unsupported image bindings before rendering', async () => {

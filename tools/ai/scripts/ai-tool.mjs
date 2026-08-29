@@ -182,7 +182,7 @@ export async function dispatchToolRequest(request, {
                 : request.tool === 'resolve_screenshot_inference'
                   ? 'Use the unchanged validated import and exact human-resolution request.'
                   : request.tool === 'generate_screenshot_viewcompose'
-                    ? 'Use one exact resolved result and the frozen generate or compile request.'
+                    ? 'Use one exact resolved result and the frozen generate, compile, or render request with explicit Preview bindings.'
           : 'Use the exact arguments declared by the current tool catalog.',
       level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
     });
@@ -334,6 +334,7 @@ export async function dispatchToolRequest(request, {
           },
           signal: controller.signal,
           compile,
+          render: renderGenerated,
         });
         break;
       default:
