@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: d764e6853047a95320eec829587935dea8cc4c97d7546ffc71e77562f530f6fa
+translation_source_hash: 3de7ed385b33aeb70e43b6266dae56b6159f912aa2726bf388429b58ec9e5b34
 translation_status: current
 ---
 
@@ -76,7 +76,7 @@ ViewCompose Saveable-state Namespace，以及一个 Keyed ViewModelStore Lease�
 
 `NavPresentationRetentionPolicy` 只控制展示资源。默认 `DisposeWhenHidden` 会在转场稳定后释放
 所有完全隐藏的展示；`RetainAll` 是显式的无界选择；`Bounded` 以正数上限保留确定性的“最久未
-隐藏”集合。可见 Pane 和转场参与者永远不会成为淘汰候选。新可见 Entry 若没有展示，会先在隐藏
+隐藏”集合。可见 Scene Entry 和转场参与者永远不会成为淘汰候选。新可见 Entry 若没有展示，会先在隐藏
 候选容器中完成 Render、Stage 与 Commit，再改变 Scene；失败会释放所有候选并保留此前 Stack 与
 Scene。永久移除始终先释放展示，再销毁 Owner 并清理 ViewModel。
 
@@ -131,6 +131,7 @@ effective destination lifecycle = min(host cap, scene cap, entry cap)
 | 角色 | 目标状态 |
 | --- | --- |
 | 可交互的稳定 Destination 及其 Graph 路径 | `RESUMED` |
+| 被覆盖的内容 Pane 或下层模态 Overlay | `STARTED` |
 | 可见的转场参与者 | `STARTED` |
 | 仍保留退出展示的已 Pop Destination | `CREATED` |
 | 隐藏的保留 Destination 或 Graph | `CREATED` |
@@ -149,16 +150,19 @@ Android Coordinator 会在普通转场或 Predictive 转场开始时冻结恰好
 普通 Pop 转场，直到终态稳定后才把进入 Entry 提升到 `RESUMED`。自适应 Pane 使用同一规则，
 因此 Scene 变化期间不会有 Pane 提前 Resume。
 
-Core 可以表达 Content 与 Overlay Layer，但当前 Android 导航 Host 尚无通用 Overlay 导航 Surface。
-因此 Overlay Lifecycle 执行仍不作支持声明，也不能从 Core Model 或独立 UI Overlay Transport 推断。
+`NavSceneLayout` 把 Stack 划分为内容 Pane 与末尾 Overlay 后缀。Covered Layer 保持可见且处于
+`STARTED`；只有顶部 Overlay 拥有 Input、Accessibility 与 `RESUMED`。Android 使用一个全宿主模态
+边界，并复用 Session、Owner、Result、Restore、Back 与 Cleanup。模态 Motion 只移动 Overlay，
+且禁止跨 Layer Shared Matching。
 
 ## 6. 恢复边界
 
 remember 的 Controller 会持久化已提交栈、Route 参数、Destination 与 Graph 身份、选择历史、
 私有 Host Scope 身份、Destination 与 Graph 的 SavedStateRegistry Bundle，以及 ViewCompose
 Saveable 值。它不会序列化 View、RenderSession、LifecycleRegistry 实例、ViewModelStore 内容、
-待处理事务或运行中动画。首次连接和恢复连接会为所有保留 Entry 创建 Owner，但只物化当前可见
-Pane 集合；隐藏目的地内容不会急切执行。配置重建可以通过父 Store 保留活跃 ViewModel；进程重建
+待处理事务或运行中动画。首次连接和恢复连接会为所有保留 Entry 创建 Owner，但只物化当前
+Content-and-overlay Scene Layout；隐藏目的地内容不会急切执行。Scene Strategy 会根据恢复后的
+Stack 和当前宽度重新计算。配置重建可以通过父 Store 保留活跃 ViewModel；进程重建
 则会根据恢复的 Owner 状态创建新实例。
 
 恢复会校验格式限制、栈配置、Route 是否存在、叶子解析和 Graph 层级。不兼容或格式错误的

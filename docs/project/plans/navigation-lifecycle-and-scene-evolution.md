@@ -64,7 +64,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement capability slice 7.7's unified content-and-overlay scene layout, while explicitly deferring synthetic forward history and Android Studio Preview input.
+next_action: Merge the accepted capability slice 7.7, then execute Phase 8 documentation ownership, release readiness, and archival; forward history and Android Studio Preview input remain explicitly deferred.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-event-host.json
@@ -76,6 +76,7 @@ maven_release_changesets:
   - release/changes/20260829-navigation-transition-lifecycle.json
   - release/changes/20260829-navigation-typed-routes.json
   - release/changes/20260829-navigation-kotlinx-serialization.json
+  - release/changes/20260830-navigation-overlay-scenes.json
 ---
 
 # Navigation Lifecycle and Scene Evolution Plan
@@ -85,17 +86,17 @@ maven_release_changesets:
 Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
-complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
+complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7's
 structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
-Serialization adapter slices are complete. The remaining-gap audit and capability slice 7.5 direct
-NavigationEvent host integration and capability slice 7.6's coverage, reachability, memory, and
-representative performance closure are complete. Phase 7 continues with capability slice 7.7's
-unified content-and-overlay scene execution.
+Serialization adapter slices are complete. The remaining-gap audit, capability slice 7.5 direct
+NavigationEvent host integration, capability slice 7.6 coverage/resource evidence, and capability
+slice 7.7 unified content-and-overlay scene execution are complete. Phase 8 remains.
 
 Last verified: 2026-08-30.
 
-Next action: implement the frozen slice 7.7 scene-layout contract. Synthetic forward history and
-Android Studio Preview input remain explicitly deferred.
+Next action: merge accepted slice 7.7, then complete Phase 8 documentation ownership, release
+readiness, and archival. Synthetic forward history and Android Studio Preview input remain
+explicitly deferred.
 
 ## Maven release changesets
 
@@ -109,6 +110,7 @@ Android Studio Preview input remain explicitly deferred.
 - `release/changes/20260829-navigation-transition-lifecycle.json`
 - `release/changes/20260829-navigation-typed-routes.json`
 - `release/changes/20260829-navigation-kotlinx-serialization.json`
+- `release/changes/20260830-navigation-overlay-scenes.json`
 
 ## Release intent rationale
 
@@ -1381,6 +1383,43 @@ and `navigation.host`; bilingual module, architecture, guide, and Compose-migrat
 immutable release Changeset per changed artifact classification; coverage floors; complete repository
 QA; and Pixel plus Xiaomi device evidence where their platform APIs support the case. Evidence must
 be interpreted here and in the owning durable document before the slice is complete.
+
+Acceptance evidence:
+
+- Core passed 93/93 JVM tests and Navigation Android passed 188/188 JVM/Robolectric tests with no
+  failures, errors, or skips. Against slice 7.6's 85/182 baseline, this adds 8 Core cases (`+9.41%`)
+  and 6 Android cases (`+3.30%`) for strategy validation, nested overlays, lifecycle/input ownership,
+  motion, restoration, cleanup, and a result-consumption ordering regression. The coverage gate
+  passed at Core 310/349 lines (`88.83%`) and 207/279 branches (`74.19%`), and Android 1,811/2,204
+  lines (`82.17%`) and 636/1,058 branches (`60.11%`), above unchanged `80%/70%` and `70%/60%`
+  floors. Relative to slice 7.6, line coverage changed `-0.60/+0.02` percentage points and branch
+  coverage `+0.20/-0.07`; the result is **no material coverage change** while executable behavior
+  and fail-closed state-machine breadth are **improved**.
+- Initial Xiaomi execution exposed a real ordering defect: a covered result target could re-render
+  while still `STARTED`, then miss the same settlement's `RESUMED` invalidation. Settlement now
+  performs one deterministic render of the result consumer after lifecycle promotion. The
+  controlled regression and both physical devices consume the result once, so correctness is
+  **improved** rather than treating a device failure as flaky infrastructure.
+- Pixel 4 XL/API 33 passed the complete `NavigationBackDeviceTest` 19/19 in `53.167 s`, one case more
+  than slice 7.6's 18 (`+5.56%`). Xiaomi MI 6/API 28 passed the new modal scene case 1/1 in `4.641 s`.
+  The case covers content `Covered/STARTED`, top overlay `Visible/RESUMED`, transparent full-host
+  layout, z-order, accessibility, modal touch isolation, overlay-only predictive motion and cancel,
+  result delivery, Activity recreation/restoration, terminal pop, destruction, and cleanup. This
+  is **improved** cross-OEM functional confidence, not a complete API 24/current-target matrix;
+  Xiaomi reran the changed case rather than the other 18 previously accepted cases.
+- `qaQuick` passed all 2,281 tasks in `1m39s` (206 executed and 2,075 up to date), including coverage,
+  R8, Lint Vital, Paparazzi, compiled Q3 samples, strict documentation, Javadoc publication, signing,
+  and local Maven consumption. Release intent classified two changed artifacts with zero ignored or
+  shared paths against `0a0c7263`. This is **improved** repository confidence; task duration and
+  cache mix are execution context, not performance evidence.
+- The complete bilingual site passed 528-page accessibility, 30 redirects, 133 immutable API and
+  module-manual versions, 127 current Chinese mirrors, and every unchanged budget in `30.4 s`.
+  Non-API output is `49,151,957` bytes, `24,825` bytes (`-0.0505%`) below slice 7.6 and about
+  `26,257` bytes below the ceiling after consolidating duplicated migration prose while preserving
+  compiled samples and contracts. Documentation size is **improved**. Overlay runtime performance,
+  power, and memory deltas remain **inconclusive** because this capability does not add an isomorphic
+  overlay benchmark; arbitrary scenes, separate windows, forward history, and Preview input remain
+  unsupported or explicitly deferred. Merge this slice, then execute Phase 8 release/archive work.
 
 ### Phase 8: document, release, and archive
 

@@ -167,6 +167,11 @@ contracts: capped `LifecycleOwner`, `SavedStateRegistryOwner`, `ViewModelStoreOw
 Factory/`CreationExtras` support. The page lifecycle is derived from both the host lifecycle and
 navigation visibility; View attachment alone never promotes hidden content to `RESUMED`.
 
+Navigation projects content panes plus a trailing modal suffix. Covered layers stay visible at
+`STARTED`; only the top overlay may reach `RESUMED`. Motion caps all visible participants at
+`STARTED` until settlement. Content and overlays expose the same nearest AndroidX
+`LocalLifecycleOwner`, so no navigation-specific lifecycle or global current-page API is needed.
+
 Configuration recreation preserves the navigation host-scope identity and leases the same child
 stores from `ViewModelScopeProvider`. Permanent pop or graph removal sends the explicit terminal
 signal and clears the store exactly once, which in turn delivers AndroidX `ViewModel.onCleared()`.
