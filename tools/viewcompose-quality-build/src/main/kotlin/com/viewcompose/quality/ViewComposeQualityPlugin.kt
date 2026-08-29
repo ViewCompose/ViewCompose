@@ -978,7 +978,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
         project.tasks.register<Exec>("verifyAiScreenshotRepair") {
             group = "verification"
             description =
-                "Verifies bounded screenshot repair ordering, convergence, and fail-closed contracts."
+                "Verifies bounded screenshot repair ordering, convergence, and fail-closed behavior."
             workingDir(project.rootDir.resolve("tools/ai"))
             commandLine("npm", "run", "verify:phase5-screenshot-repair")
             inputs.files(
@@ -988,6 +988,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                         "evaluation/fixtures/visual/screenshot-repair-contract.json",
                         "evaluation/fixtures/visual/screenshot-repair/**",
                         "evaluation/fixtures/visual/screenshot-pixel/render-one-channel.mutation.json",
+                        "scripts/repair-orchestrator.mjs",
                         "scripts/schema-validator.mjs",
                         "scripts/verify-phase5-screenshot-repair.mjs",
                     )

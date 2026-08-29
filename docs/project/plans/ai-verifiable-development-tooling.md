@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen provider-offline bounded repair orchestrator over typed Design IR candidates before exposing any public repair mode.
+next_action: Integrate the internal bounded repair orchestrator with a deterministic typed Design IR patch applier and the existing compile/render/comparison lanes before exposing any public repair mode.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -113,8 +113,9 @@ whose dimensions, density, font scale, locale, layout direction, color space, al
 orientation, system bars, and accepted semantic evidence exactly match the render. The original
 16×24 inference wireframe is therefore not assigned a pixel score.
 
-The bounded deterministic repair contract is also frozen, but automatic repair is not yet a public
-tool mode. Next action: implement its provider-offline orchestrator without claiming perceptual or
+The bounded deterministic repair contract and its provider-offline internal orchestrator are now
+implemented, but automatic repair is not yet a public tool mode. Next action: integrate typed patch
+application with the existing compile/render/comparison lanes without claiming perceptual or
 cross-device equivalence.
 
 ## Maven release changesets
@@ -2235,6 +2236,52 @@ Android runtime behavior change**. Automatic repair, arbitrary source mutation, 
 completeness, perceptual similarity, interaction, animation, design intent, and universal
 convergence remain unclaimed. The next action is to implement the frozen deterministic orchestrator
 and reproduce all contract outcomes before considering a public tool mode.
+
+### Implementation evidence — bounded screenshot repair orchestrator
+
+The packaged provider-offline repair core now executes the frozen state machine without exposing a
+new CLI or MCP mode. It accepts one schema-valid initial candidate, a typed patch producer, and a
+deterministic candidate evaluator. Patch input is limited to `replace-field`,
+`replace-modifier-argument`, `replace-node-kind`, and `reorder-children` operations over stable node
+IDs. It rejects expression values, unknown or duplicate operation targets, more than 64 operations,
+more than 262,144 encoded patch or candidate bytes, more than 10,000 non-pixel checks, and any
+changed or malformed patch/evaluation fingerprint before accepting evidence.
+
+The orchestrator short-circuits an initial safety failure and then owns a maximum of five attempts.
+It propagates cancellation before and after both injected boundaries; records each accepted or
+rejected attempt; rejects repeated change, candidate, or Design IR fingerprints as oscillation;
+rejects any regression of a previously passed gate; and accepts a candidate only when it strictly
+improves the first failing gate. For exact pixels, strict improvement means equal compared-pixel
+denominator, fewer mismatched pixels, and no larger maximum channel delta. A non-improving candidate
+is retained only as rejected evidence and returns `incomplete`; the prior accepted candidate remains
+the final result.
+
+The implementation reproduces the exact zero-iteration golden fingerprint
+`b20ce414923dee7d9953b6d79e3e093778d1be17d41adffcdeb7da94a9cac18d` and all five frozen
+fail-closed outcomes. Additional tests cover one-iteration exact convergence, a valid but
+non-improving candidate, executable and duplicate patch rejection, cancellation, and a schema-valid
+blocked result for invalid initial evidence. Proposal and evaluation are deliberately still
+internal injected boundaries: the current public tool cannot trigger them, and no provider,
+credential, network client, arbitrary Kotlin source, project source mutation, or inspected-project
+build selection was added.
+
+The dependency-free offline package now contains 64 files and 1,816,541 declared bytes; its
+325,028-byte archive has SHA-256
+`499415ece0b68487f78b58b17f91154ef59b817e923d4ae11f3e397274d72fb5`. Relative to the frozen
+repair-contract package, the internal orchestrator and its packaged documentation add one file,
+18,093 declared bytes (+1.01%), and 3,773 archive bytes (+1.17%). It adds no runtime dependency or
+provider boundary. Node 25.6.0 passes 206/206 AI-tooling tests. The combined repair, Phase 0,
+reproducible distribution, documentation, development-tooling-isolation, and release-intent gate
+passes 24 actionable tasks, with 12 executed and 12 up-to-date.
+
+No published ViewCompose artifact, public/protected API, Android runtime, or application process
+changes, so this implementation slice needs no Maven changeset or module-manual update. This is
+**improved** deterministic repair control, evidence retention, cancellation, and safety with **no
+material Android runtime behavior change**. A real Design IR patch applier, compile/render evaluator,
+repair policy that can derive an eligible patch from structured findings, public repair mode,
+perceptual comparison, and accessibility/interaction completeness remain unclaimed. The next action
+is to connect the internal orchestrator to a deterministic typed patch applier and existing
+source-bound evidence lanes before any public activation.
 
 ### Implementation evidence — bounded XML to Design IR
 

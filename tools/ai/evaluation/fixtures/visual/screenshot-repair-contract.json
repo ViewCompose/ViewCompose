@@ -8,9 +8,9 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-only",
+    "status": "implemented-internal",
     "publicRepairMode": false,
-    "implementation": false,
+    "implementation": true,
     "successEvidence": "compared",
     "incompleteEvidence": "rendered"
   },
@@ -30,6 +30,7 @@
     "passedGateRegression": "reject candidate and stop",
     "duplicateCandidateOrChange": "reject as oscillation and stop",
     "acceptedCandidate": "must strictly improve the first previously failing gate",
+    "candidateWithoutStrictImprovement": "reject and stop as no eligible change",
     "pixelComparison": "zero-tolerance exact RGBA with separate metrics",
     "aggregateScore": false,
     "automaticThresholdRelaxation": false,
@@ -53,7 +54,7 @@
       "pixel evidence cannot override safety, compilation, semantic, or structural failure"
     ],
     "notClaimed": [
-      "automatic repair implementation",
+      "public automatic repair mode",
       "arbitrary Kotlin or project source repair",
       "perceptual similarity or an aggregate visual score",
       "accessibility completeness beyond the accepted semantic comparator",

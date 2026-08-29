@@ -58,6 +58,7 @@ const sourcePaths = Object.freeze([
   'scripts/mcp-server.mjs',
   'scripts/preview-adapter.mjs',
   'scripts/project-analyzer.mjs',
+  'scripts/repair-orchestrator.mjs',
   'scripts/schema-validator.mjs',
   'scripts/screenshot-contract.mjs',
   'scripts/screenshot-inference-contract.mjs',

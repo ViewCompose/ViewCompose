@@ -184,7 +184,14 @@
         "changeFingerprint": {"$ref": "#/$defs/sha256"},
         "beforeCandidateFingerprint": {"$ref": "#/$defs/sha256"},
         "candidate": {"$ref": "#/$defs/candidateEvaluation"},
-        "disposition": {"enum": ["accepted", "rejected-regression", "rejected-oscillation"]}
+        "disposition": {
+          "enum": [
+            "accepted",
+            "rejected-regression",
+            "rejected-oscillation",
+            "rejected-no-improvement"
+          ]
+        }
       }
     },
     "termination": {
@@ -201,6 +208,7 @@
             "regression",
             "oscillation",
             "safety-failure",
+            "input-invalid",
             "cancelled"
           ]
         },

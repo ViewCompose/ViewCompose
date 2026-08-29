@@ -4,6 +4,11 @@ import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {validateSchemaValue} from './schema-validator.mjs';
+import {
+  orchestrateScreenshotRepair,
+  sealRepairEvaluation,
+  sealRepairPatch,
+} from './repair-orchestrator.mjs';
 
 const visualRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = resolve(visualRoot, 'screenshot-repair-contract.json');
@@ -28,6 +33,10 @@ function fingerprintWithout(value, key) {
   const copy = structuredClone(value);
   delete copy[key];
   return createHash('sha256').update(JSON.stringify(copy)).digest('hex');
+}
+
+function hash(value) {
+  return createHash('sha256').update(String(value)).digest('hex');
 }
 
 function assertUnique(values, label) {
@@ -119,9 +128,9 @@ function assertContract(contract, schema) {
       'screenshot-repair-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-only' ||
+    contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
-    contract.activation?.implementation !== false
+    contract.activation?.implementation !== true
   ) {
     throw new Error('Screenshot repair activation boundary changed');
   }
@@ -145,6 +154,8 @@ function assertContract(contract, schema) {
     contract.policy?.duplicateCandidateOrChange !== 'reject as oscillation and stop' ||
     contract.policy?.acceptedCandidate !==
       'must strictly improve the first previously failing gate' ||
+    contract.policy?.candidateWithoutStrictImprovement !==
+      'reject and stop as no eligible change' ||
     contract.policy?.aggregateScore !== false ||
     contract.policy?.automaticThresholdRelaxation !== false ||
     contract.policy?.automaticReferenceMutation !== false
@@ -185,11 +196,124 @@ function assertContract(contract, schema) {
     !contract.claims?.checked?.includes(
       'pixel evidence cannot override safety, compilation, semantic, or structural failure',
     ) ||
-    !contract.claims?.notClaimed?.includes('automatic repair implementation') ||
+    !contract.claims?.notClaimed?.includes('public automatic repair mode') ||
     !contract.claims?.notClaimed?.includes('perceptual similarity or an aggregate visual score')
   ) {
     throw new Error('Screenshot repair claim boundary changed');
   }
+}
+
+function baseGate(name, status = 'passed', passedChecks = 1, totalChecks = 1, seed = name) {
+  return {name, status, passedChecks, totalChecks, evidenceFingerprint: hash(seed)};
+}
+
+function pixelGate(mismatchedPixels, seed) {
+  return {
+    name: 'exact-pixels',
+    status: mismatchedPixels === 0 ? 'passed' : 'failed',
+    comparedPixels: 100,
+    mismatchedPixels,
+    maxChannelDelta: mismatchedPixels === 0 ? 0 : mismatchedPixels,
+    evidenceFingerprint: hash(seed),
+  };
+}
+
+function evaluation(seed, mismatchedPixels, overrides = {}) {
+  const gates = [
+    baseGate('safety', 'passed', 1, 1, `${seed}-safety`),
+    baseGate('compilation', 'passed', 1, 1, `${seed}-compilation`),
+    baseGate('semantics', 'passed', 14, 14, `${seed}-semantics`),
+    baseGate('structure', 'passed', 13, 13, `${seed}-structure`),
+    pixelGate(mismatchedPixels, `${seed}-pixels`),
+  ];
+  for (const [name, gate] of Object.entries(overrides)) {
+    gates[GATE_ORDER.indexOf(name)] = gate;
+  }
+  return sealRepairEvaluation({
+    candidateFingerprint: hash(`${seed}-candidate`),
+    designIrFingerprint: hash(`${seed}-design-ir`),
+    gates,
+  });
+}
+
+function patch(seed) {
+  return sealRepairPatch([{
+    op: 'replace-field',
+    nodeId: 'wireframe-title',
+    collection: 'properties',
+    name: 'text',
+    value: {kind: 'literal', value: seed},
+  }]);
+}
+
+async function reproduceMutation(mutation) {
+  if (mutation.operation === 'xor-render-channel') {
+    return orchestrateScreenshotRepair({
+      initial: evaluation('one-channel', mutation.expectedMetrics.mismatchedPixels),
+      proposePatch: async () => null,
+      evaluatePatch: async () => { throw new Error('must not evaluate'); },
+    });
+  }
+  if (mutation.operation === 'regress-passed-gate') {
+    return orchestrateScreenshotRepair({
+      initial: evaluation('regression-initial', 2),
+      proposePatch: async () => patch('regression'),
+      evaluatePatch: async () => evaluation('regression-candidate', 0, {
+        semantics: baseGate('semantics', 'failed', 13, 14, 'regression-semantics'),
+        structure: baseGate('structure', 'not-run', 0, 0, 'regression-structure'),
+        'exact-pixels': {
+          name: 'exact-pixels',
+          status: 'not-run',
+          comparedPixels: 0,
+          mismatchedPixels: 0,
+          maxChannelDelta: 0,
+          evidenceFingerprint: hash('regression-pixels'),
+        },
+      }),
+    });
+  }
+  if (mutation.operation === 'repeat-candidate') {
+    const initial = evaluation('repeat-candidate', 2);
+    return orchestrateScreenshotRepair({
+      initial,
+      proposePatch: async () => patch('repeat-candidate'),
+      evaluatePatch: async () => structuredClone(initial),
+    });
+  }
+  if (mutation.operation === 'exhaust-iterations') {
+    return orchestrateScreenshotRepair({
+      initial: evaluation('iteration-limit-initial', 6),
+      proposePatch: async ({iteration}) => patch(`iteration-limit-${iteration}`),
+      evaluatePatch: async ({iteration}) =>
+        evaluation(`iteration-limit-${iteration}`, 6 - iteration),
+    });
+  }
+  if (mutation.operation === 'fail-safety-gate') {
+    const notRun = (name) => baseGate(name, 'not-run', 0, 0, `${name}-not-run`);
+    return orchestrateScreenshotRepair({
+      initial: sealRepairEvaluation({
+        candidateFingerprint: hash('safety-candidate'),
+        designIrFingerprint: hash('safety-design-ir'),
+        gates: [
+          baseGate('safety', 'failed', 0, 1, 'safety-failed'),
+          notRun('compilation'),
+          notRun('semantics'),
+          notRun('structure'),
+          {
+            name: 'exact-pixels',
+            status: 'not-run',
+            comparedPixels: 0,
+            mismatchedPixels: 0,
+            maxChannelDelta: 0,
+            evidenceFingerprint: hash('safety-pixels'),
+          },
+        ],
+      }),
+      proposePatch: async () => { throw new Error('must not propose'); },
+      evaluatePatch: async () => { throw new Error('must not evaluate'); },
+    });
+  }
+  throw new Error(`${mutation.operation}: unknown screenshot repair mutation`);
 }
 
 function assertMutation(mutation, expected) {
@@ -245,9 +369,23 @@ export async function verifyPhase5ScreenshotRepair() {
   const supported = contract.supportedFixtures[0];
   const golden = await readJson(resolve(visualRoot, supported.result));
   assertResult(golden, schema, supported);
+  const reproducedGolden = await orchestrateScreenshotRepair({initial: golden.initial});
+  if (!same(reproducedGolden, golden)) {
+    throw new Error('Screenshot repair zero-iteration implementation does not reproduce its golden');
+  }
   for (const fixture of contract.failClosedFixtures) {
     const mutation = await readJson(resolve(visualRoot, fixture.mutation));
     assertMutation(mutation, fixture);
+    const result = await reproduceMutation(mutation);
+    if (
+      result.status !== fixture.expectedStatus ||
+      result.termination.reason !== fixture.expectedTermination ||
+      !same(result.findings.map((finding) => finding.code), fixture.diagnosticCodes) ||
+      validateSchemaValue(result, schema).length > 0 ||
+      fingerprintWithout(result, 'repairFingerprint') !== result.repairFingerprint
+    ) {
+      throw new Error(`${mutation.operation}: repair implementation outcome changed`);
+    }
   }
   return {
     supportedGoldens: contract.supportedFixtures.length,
@@ -260,7 +398,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   verifyPhase5ScreenshotRepair()
     .then((summary) => {
       console.log(
-        `Verified bounded screenshot repair contract: ${summary.supportedGoldens}/` +
+        `Verified bounded screenshot repair implementation: ${summary.supportedGoldens}/` +
           `${summary.supportedGoldens} zero-iteration convergence and ` +
           `${summary.failClosedDenominators}/${summary.failClosedDenominators} ` +
           `fail-closed denominators; repair fingerprint ${summary.repairFingerprint}.`,
