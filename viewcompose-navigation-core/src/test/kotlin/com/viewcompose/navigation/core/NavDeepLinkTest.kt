@@ -129,6 +129,10 @@ class NavDeepLinkTest {
             (invalidArgument as NavDeepLinkResolution.Rejected).rejection.reason,
         )
         assertEquals("userId", invalidArgument.rejection.argumentName)
+        assertEquals(
+            "https://example.com/users/{userId}",
+            invalidArgument.rejection.candidates.single().uriPattern,
+        )
     }
 
     @Test

@@ -188,12 +188,17 @@ data class NavDeepLinkMatch(
     val route: NavRoute,
 )
 
-/** Diagnostic reason why a deep link was rejected instead of reported as no match. */
+/** Classifies why supplied deep-link input was rejected instead of reported as no match. */
 enum class NavDeepLinkRejectionReason {
+    /** The supplied URI is not a safe absolute hierarchical URI. */
     MalformedUri,
+    /** The supplied action is blank or contains control characters. */
     MalformedAction,
+    /** The supplied MIME value is not a valid `type/subtype` pair. */
     MalformedMimeType,
+    /** A URI placeholder value cannot be decoded as its declared argument type. */
     InvalidArgument,
+    /** Multiple declarations share the highest complete-match specificity. */
     AmbiguousMatch,
 }
 
@@ -341,6 +346,9 @@ internal fun resolveDeepLinkTargets(
                 NavDeepLinkRejection(
                     reason = NavDeepLinkRejectionReason.InvalidArgument,
                     argumentName = invalid.name,
+                    candidates = invalidArguments
+                        .filter { candidate -> candidate.score == invalid.score }
+                        .map(InvalidDeepLinkArgument::deepLink),
                 ),
             )
         }
@@ -400,7 +408,10 @@ private fun NavDeepLink.match(
     if (compiledMimeType != null && mimeSpecificity < 0) {
         return CompiledMatch.NoMatch
     }
-    val constraintCount = listOf(uriPattern, action, mimeType).count { value -> value != null }
+    val constraintCount =
+        (if (uriPattern == null) 0 else 1) +
+            (if (action == null) 0 else 1) +
+            (if (mimeType == null) 0 else 1)
     val actionSpecificity = if (action == null) 0 else 1
     val uriMatch = when (val compiled = compiledUri) {
         null -> CompiledUriMatch.Matched(arguments = emptyMap(), score = 0)
@@ -624,14 +635,11 @@ internal data class NavDeepLinkSpecificity(
     val mimeScore: Int,
 ) : Comparable<NavDeepLinkSpecificity> {
     override fun compareTo(other: NavDeepLinkSpecificity): Int {
-        return compareValuesBy(
-            this,
-            other,
-            NavDeepLinkSpecificity::constraintCount,
-            NavDeepLinkSpecificity::uriScore,
-            NavDeepLinkSpecificity::actionScore,
-            NavDeepLinkSpecificity::mimeScore,
-        )
+        var result = constraintCount.compareTo(other.constraintCount)
+        if (result == 0) result = uriScore.compareTo(other.uriScore)
+        if (result == 0) result = actionScore.compareTo(other.actionScore)
+        if (result == 0) result = mimeScore.compareTo(other.mimeScore)
+        return result
     }
 }
 
