@@ -158,6 +158,10 @@ class ViewComposeQualityRootPluginTest {
         )
         assertTrue(project.tasks.getByName("navigationCoverageReport") is JacocoReport)
         assertEquals("verification", project.tasks.getByName("verifyNavigationCoverage").group)
+        assertTrue(
+            project.tasks.getByName("verifyNavigationBenchmarkTraceContracts") is
+                VerifyNavigationBenchmarkTraceContractsTask,
+        )
         listOf(
             "benchmarkComparisonReport",
             "testBenchmarkComparisonTool",

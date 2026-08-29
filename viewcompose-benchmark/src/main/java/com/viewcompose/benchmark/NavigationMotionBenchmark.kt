@@ -167,9 +167,16 @@ class NavigationMotionBenchmark {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return@buildList
             add(
                 TraceSectionMetric(
-                    sectionName = "VC.Nav.PrepareDestination",
+                    sectionName = "VC.Nav.PrepareCommand",
                     mode = TraceSectionMetric.Mode.Sum,
-                    label = "navPrepare",
+                    label = "navPrepareCommand",
+                ),
+            )
+            add(
+                TraceSectionMetric(
+                    sectionName = "VC.Nav.PreparePresentations",
+                    mode = TraceSectionMetric.Mode.Sum,
+                    label = "navPreparePresentations",
                 ),
             )
             add(
