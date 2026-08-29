@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Separate retained navigation entry ownership from optional native presentation lifetime, add explicit retention policies, and make hidden-presentation disposal the bounded default.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-android", "impact": "breaking" }
+  ],
+  "ignored": [],
+  "shared": []
+}

@@ -54,6 +54,7 @@ class NavDestinationSessionStoreTest {
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,
+            initialPresentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
         )
     }
 
@@ -415,6 +416,153 @@ class NavDestinationSessionStoreTest {
         assertNull(sessionStore.sessionOrNull(details.id))
         assertNull(ownerStore.ownerOrNull(details.id))
         assertSame(rootSession, sessionStore.sessionOrNull(root.id))
+    }
+
+    @Test
+    fun `dispose when hidden releases presentation but preserves owner for transactional rebuild`() {
+        val root = entry("root", "home")
+        val details = entry("details", "details")
+        prepareAndCommit(root, "Home")
+        val rootOwner = checkNotNull(ownerStore.ownerOrNull(root.id))
+        prepareAndCommit(details, "Details")
+        sessionStore.present(
+            layerOrder = listOf(root.id, details.id),
+            visibleEntryIds = setOf(details.id),
+        )
+
+        sessionStore.updatePresentationRetentionPolicy(
+            NavPresentationRetentionPolicy.DisposeWhenHidden,
+        )
+
+        assertNull(sessionStore.sessionOrNull(root.id))
+        assertSame(rootOwner, ownerStore.ownerOrNull(root.id))
+        assertEquals(Lifecycle.State.CREATED, rootOwner.lifecycle.currentState)
+
+        val rebuilt = sessionStore.prepare(
+            entry = root,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            Text("Rebuilt home")
+        }.readyCandidate()
+        rebuilt.stage()
+        val rebuiltSession = rebuilt.commit()
+        sessionStore.present(
+            layerOrder = listOf(root.id, details.id),
+            visibleEntryIds = setOf(root.id),
+        )
+
+        assertSame(rootOwner, rebuiltSession.owner)
+        assertSame(rebuiltSession, sessionStore.sessionOrNull(root.id))
+        assertNull(sessionStore.sessionOrNull(details.id))
+        assertSame(rootOwner, ownerStore.ownerOrNull(root.id))
+    }
+
+    @Test
+    fun `failed hidden presentation rebuild preserves logical owner and permits retry`() {
+        val root = entry("root", "home")
+        val details = entry("details", "details")
+        prepareAndCommit(root, "Home")
+        val rootOwner = checkNotNull(ownerStore.ownerOrNull(root.id))
+        prepareAndCommit(details, "Details")
+        sessionStore.present(
+            layerOrder = listOf(root.id, details.id),
+            visibleEntryIds = setOf(details.id),
+        )
+        sessionStore.updatePresentationRetentionPolicy(
+            NavPresentationRetentionPolicy.DisposeWhenHidden,
+        )
+
+        val failed = sessionStore.prepare(
+            entry = root,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            error("rebuild failed")
+        }
+
+        assertTrue(failed is NavDestinationPreparation.Failed)
+        assertNull(sessionStore.sessionOrNull(root.id))
+        assertSame(rootOwner, ownerStore.ownerOrNull(root.id))
+        val retry = sessionStore.prepare(
+            entry = root,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            Text("Recovered")
+        }.readyCandidate()
+        retry.rollback()
+        assertSame(rootOwner, ownerStore.ownerOrNull(root.id))
+    }
+
+    @Test
+    fun `bounded policy evicts least recently hidden presentation exactly`() {
+        sessionStore.updatePresentationRetentionPolicy(
+            NavPresentationRetentionPolicy.Bounded(maxHiddenPresentations = 2),
+        )
+        val root = entry("root", "root")
+        val first = entry("first", "first")
+        val second = entry("second", "second")
+        val third = entry("third", "third")
+        val fourth = entry("fourth", "fourth")
+        val order = listOf(root.id, first.id, second.id, third.id, fourth.id)
+
+        prepareAndCommit(root, "Root")
+        sessionStore.present(order.take(1), setOf(root.id))
+        prepareAndCommit(first, "First")
+        sessionStore.present(order.take(2), setOf(first.id))
+        prepareAndCommit(second, "Second")
+        sessionStore.present(order.take(3), setOf(second.id))
+        prepareAndCommit(third, "Third")
+        sessionStore.present(order.take(4), setOf(third.id))
+
+        assertNull(sessionStore.sessionOrNull(root.id))
+        assertTrue(sessionStore.sessionOrNull(first.id) != null)
+        assertTrue(sessionStore.sessionOrNull(second.id) != null)
+        assertTrue(sessionStore.sessionOrNull(third.id) != null)
+        assertSame(ownerStore.ownerOrNull(root.id), ownerStore.ownerFor(root))
+
+        sessionStore.present(order.take(4), setOf(first.id))
+
+        assertTrue(sessionStore.sessionOrNull(first.id) != null)
+        assertTrue(sessionStore.sessionOrNull(second.id) != null)
+        assertTrue(sessionStore.sessionOrNull(third.id) != null)
+        prepareAndCommit(fourth, "Fourth")
+        sessionStore.present(order, setOf(fourth.id))
+
+        assertNull(sessionStore.sessionOrNull(second.id))
+        assertTrue(sessionStore.sessionOrNull(first.id) != null)
+        assertTrue(sessionStore.sessionOrNull(third.id) != null)
+        assertTrue(sessionStore.sessionOrNull(fourth.id) != null)
+        assertSame(ownerStore.ownerOrNull(second.id), ownerStore.ownerFor(second))
+    }
+
+    @Test
+    fun `permanent removal destroys owner even after presentation was disposed`() {
+        val root = entry("root", "home")
+        val details = entry("details", "details")
+        prepareAndCommit(root, "Home")
+        val rootOwner = checkNotNull(ownerStore.ownerOrNull(root.id))
+        prepareAndCommit(details, "Details")
+        sessionStore.present(
+            layerOrder = listOf(root.id, details.id),
+            visibleEntryIds = setOf(details.id),
+        )
+        sessionStore.updatePresentationRetentionPolicy(
+            NavPresentationRetentionPolicy.DisposeWhenHidden,
+        )
+
+        sessionStore.remove(root.id)
+
+        assertNull(ownerStore.ownerOrNull(root.id))
+        assertEquals(Lifecycle.State.DESTROYED, rootOwner.lifecycle.currentState)
+    }
+
+    @Test
+    fun `bounded policy rejects a non-positive hidden presentation limit`() {
+        assertThrows<IllegalArgumentException> {
+            NavPresentationRetentionPolicy.Bounded(maxHiddenPresentations = 0)
+        }
     }
 
     @Test

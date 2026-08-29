@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: aa05206ce0f653b0f603d10199d0264250cb42fd0d5a3869e763428e798fdcce
+translation_source_hash: 499e282e7e070db2e3c41c9d9d87433b9eb006ee723e2ea8c6e3af937aaf3b06
 translation_status: current
 ---
 
@@ -35,11 +35,25 @@ Android Host 准备 Destination Owner 和子 RenderSession，在暂存原生容�
 
 ## 3. Destination 与 Graph 身份
 
-每个 Destination Entry 都持有稳定的子 RenderSession、Lifecycle、SavedStateRegistry
-Namespace、ViewCompose Saveable-state Namespace，以及一个 Keyed ViewModelStore Lease。
-Store 由共享 Lifecycle 2.11 `ViewModelScopeProvider` 分配，而不是导航专用 Map。连续两次 Push
-相同 Route 会产生两个 Entry 身份。隐藏的保留 Entry 继续保持身份和状态，但帧驱动工作受
-Lifecycle 限制，页面重新可见前才恢复渲染。
+每个 Destination Entry 都持有稳定的 Route Identity、Lifecycle、SavedStateRegistry Namespace、
+ViewCompose Saveable-state Namespace，以及一个 Keyed ViewModelStore Lease。其子 RenderSession
+和原生 View Tree 是可选展示，而不是逻辑 Owner 的组成部分。Store 由共享 Lifecycle 2.11
+`ViewModelScopeProvider` 分配，而不是导航专用 Map。连续两次 Push 相同 Route 会产生两个 Entry
+身份。隐藏的保留 Entry 即使没有展示，也会继续保持身份和状态。
+
+`NavPresentationRetentionPolicy` 只控制展示资源。默认 `DisposeWhenHidden` 会在转场稳定后释放
+所有完全隐藏的展示；`RetainAll` 是显式的无界选择；`Bounded` 以正数上限保留确定性的“最久未
+隐藏”集合。可见 Pane 和转场参与者永远不会成为淘汰候选。新可见 Entry 若没有展示，会先在隐藏
+候选容器中完成 Render、Stage 与 Commit，再改变 Scene；失败会释放所有候选并保留此前 Stack 与
+Scene。永久移除始终先释放展示，再销毁 Owner 并清理 ViewModel。
+
+该有界默认策略由证据选出。在运行 API 33 的 Pixel 4 XL 真机上，合成的重型 13 层栈把保留
+Presentation 从 13 个降至 1 个，进程 PSS 从 191,953 KiB 降至 185,510 KiB（Presentation 减少
+92.3%，PSS 减少 3.4%）。同步 Pop 并重建的中位耗时从 13,318 us 增至 49,573 us（272.2%）；
+两个策略都在 90 Hz 下采集 252 帧，P95 为 9 ms，且没有超过 32 ms 的帧。结论为 **mixed**：
+空闲资源所有权得到改善，实测稳定转场为 **no material change**，但对重建敏感的 Surface 可能
+需要显式 `Bounded` 或 `RetainAll`。单台设备、合成内容、进程级 PSS 与短时运行限制了结论；
+更广的设备、泄漏和代表性负载证据仍由有效导航计划继续推进。
 
 每个嵌套 Graph 实例都有独立 `NavGraphOwner` 身份。同一 Graph 实例的后代共享 Lifecycle、
 SavedState 和 ViewModel，直到最后一个保留后代被移除。以后再次进入同名 Graph Route 会创建
@@ -104,8 +118,9 @@ Core 可以表达 Content 与 Overlay Layer，但当前 Android 导航 Host 尚�
 remember 的 Controller 会持久化已提交栈、Route 参数、Destination 与 Graph 身份、选择历史、
 私有 Host Scope 身份、Destination 与 Graph 的 SavedStateRegistry Bundle，以及 ViewCompose
 Saveable 值。它不会序列化 View、RenderSession、LifecycleRegistry 实例、ViewModelStore 内容、
-待处理事务或运行中动画。配置重建可以通过父 Store 保留活跃 ViewModel；进程重建则会根据恢复的
-Owner 状态创建新实例。
+待处理事务或运行中动画。首次连接和恢复连接会为所有保留 Entry 创建 Owner，但只物化当前可见
+Pane 集合；隐藏目的地内容不会急切执行。配置重建可以通过父 Store 保留活跃 ViewModel；进程重建
+则会根据恢复的 Owner 状态创建新实例。
 
 恢复会校验格式限制、栈配置、Route 是否存在、叶子解析和 Graph 层级。不兼容或格式错误的
 状态会被丢弃，改用配置的初始状态。紧邻的 Version 4 格式会通过分配新 Host Scope 身份完成迁移；

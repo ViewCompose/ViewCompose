@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-presentation-retention-policy",
+  "change": "added",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.NavPresentationRetentionPolicy",
+  "capability_id": "navigation.presentation-retention",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.navigation.NavPresentationRetentionPolicy"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-navigation-android"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.navigation-android-presentation-retention"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.navigation.presentation-retention"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The minimal navigation tutorial uses the safe default and does not need to teach an optional resource policy."
+    },
+    "guide": {
+      "status": "updated",
+      "targets": ["guide.navigation-production-host"]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.navigation-runtime",
+        "architecture.scene-derived-navigation-lifecycle-presentation-ownership"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": ["migration.compose-navigation"]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "The capability adds a new policy type without moving an existing public symbol or documentation route."
+    }
+  }
+}

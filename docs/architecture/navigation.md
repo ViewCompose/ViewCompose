@@ -8,6 +8,7 @@ owner:
 version_lane: released
 capability_ids:
   - navigation.host
+  - navigation.presentation-retention
   - navigation.scene-projection
   - viewmodel.owner-boundaries
   - viewmodel.scoped-owners
@@ -20,7 +21,7 @@ sample_ids:
   - tutorial.navigation
 invariants:
   - Navigation state commits only after required destination sessions and owners are prepared successfully.
-  - Each retained destination and graph instance keeps stable lifecycle, saved-state, ViewModel, and render-session ownership.
+  - Each retained destination and graph instance keeps stable lifecycle, saved-state, and ViewModel ownership independently of optional presentation retention.
   - Navigation entry and graph stores are allocated only by the shared Lifecycle 2.11 scoped-owner provider.
   - Visual transitions and predictive Back never become a second source of navigation state.
   - Restored state is accepted only when it remains compatible with the current graph and stack configuration.
@@ -70,12 +71,31 @@ stack is still authoritative.
 
 ## 3. Destination and graph identity
 
-Every destination entry owns a stable child render session, Lifecycle, SavedStateRegistry
-namespace, ViewCompose saveable-state namespace, and lease on a keyed ViewModelStore. The store is
-allocated by the shared Lifecycle 2.11 `ViewModelScopeProvider`, not by a navigation-specific map.
-Pushing the same route twice creates two entry identities. Hidden retained entries keep their
-identity and stored state, but frame-driven work is capped by lifecycle and rendering resumes
-before the page becomes visible again.
+Every destination entry owns stable route identity, Lifecycle, SavedStateRegistry namespace,
+ViewCompose saveable-state namespace, and a lease on a keyed ViewModelStore. Its child render
+session and native View tree are an optional presentation rather than part of that logical owner.
+The store is allocated by the shared Lifecycle 2.11 `ViewModelScopeProvider`, not by a
+navigation-specific map. Pushing the same route twice creates two entry identities. Hidden retained
+entries keep their identity and stored state even when no presentation exists.
+
+`NavPresentationRetentionPolicy` controls presentation resources only. The default
+`DisposeWhenHidden` removes every fully hidden presentation after transition settlement.
+`RetainAll` is an explicit unbounded opt-in, and `Bounded` keeps a deterministic
+least-recently-hidden set with a positive maximum. Visible panes and transition participants are
+never eviction candidates. A newly visible entry without a presentation is rendered into a hidden
+candidate container, staged, and committed before the scene changes; failure disposes all
+candidates and keeps the previous stack and scene. Permanent removal always disposes presentation
+before owner destruction and ViewModel clear.
+
+The bounded default is evidence-selected. On a physical Pixel 4 XL at API 33, a synthetic heavy
+13-entry stack reduced retained presentations from 13 to 1 and process PSS from 191,953 KiB to
+185,510 KiB (92.3% fewer presentations and 3.4% lower PSS). Synchronous pop-and-rebuild median time
+rose from 13,318 us to 49,573 us (272.2%), while both policies captured 252 animated frames at
+90 Hz with 9 ms P95 and no frame above 32 ms. This is a **mixed** result: idle resource ownership
+improved and measured settled motion had **no material change**, but rebuild-sensitive surfaces may
+need an explicit bounded or retain-all policy. One device, synthetic content, process-wide PSS, and
+a short run limit the conclusion; broader device, leak, and representative-workload evidence stays
+open in the active navigation plan.
 
 Nested graph instances have independent `NavGraphOwner` identities. Descendants in one graph
 instance share its lifecycle, saved state, and ViewModels until the last retained descendant is
@@ -147,9 +167,11 @@ being inferred from the model or the separate UI overlay transport.
 Remembered controllers persist committed stacks, route arguments, destination and graph identities,
 selection history, a private host-scope identity, destination and graph SavedStateRegistry bundles,
 and ViewCompose saveable values. They do not serialize Views, render sessions, LifecycleRegistry
-instances, ViewModelStore contents, pending transactions, or running animations. Configuration
-recreation can retain live ViewModels through the parent store; process recreation creates new
-instances from restored owner state.
+instances, ViewModelStore contents, pending transactions, or running animations. Initial and
+restored attachment creates owners for every retained entry but materializes only the current
+visible pane set; hidden destination content is not executed eagerly. Configuration recreation can
+retain live ViewModels through the parent store; process recreation creates new instances from
+restored owner state.
 
 Restore validates format limits, stack configuration, route existence, leaf resolution, and graph
 hierarchy. Incompatible or malformed state is discarded and the configured initial state is used.

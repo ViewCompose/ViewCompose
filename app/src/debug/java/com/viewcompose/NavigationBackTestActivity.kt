@@ -19,6 +19,7 @@ import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
+import com.viewcompose.navigation.NavPresentationRetentionPolicy
 import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.LocalNavGraphOwnerScope
@@ -37,6 +38,7 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.viewmodel.viewModel
@@ -53,6 +55,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
     private val systemBackEnabledState = mutableStateOf(true)
     private val failures = mutableListOf<NavFailure>()
     private val destinationLifecycleOwners = linkedMapOf<String, LifecycleOwner>()
+    private val destinationRetentionRecords = linkedMapOf<String, DestinationRetentionRecord>()
+    private val destinationRenderCounts = linkedMapOf<String, Int>()
     private val processDeathRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     private val processDeathGraphRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     /**
@@ -159,16 +163,24 @@ class NavigationBackTestActivity : AppCompatActivity() {
             navController = controller
             NavHost(
                 controller = controller,
-                transitionSpec = NavTransitionSpec.Default,
+                transitionSpec = if (
+                    intent.getBooleanExtra(EXTRA_DISABLE_TRANSITIONS, false)
+                ) {
+                    NavTransitionSpec.None
+                } else {
+                    NavTransitionSpec.Default
+                },
+                presentationRetentionPolicy = presentationRetentionPolicy(),
                 systemBackEnabled = systemBackEnabledState.value,
                 overlayHostFactory = { OverlayHostDefaults.noOp },
                 onFailure = failures::add,
             ) { entry ->
-                destinationLifecycleOwners[entry.route.name] = checkNotNull(
+                val destinationOwner = checkNotNull(
                     LocalLifecycleOwner.current,
                 ) {
                     "Navigation destination ${entry.route.name} has no LifecycleOwner."
                 }
+                destinationLifecycleOwners[entry.route.name] = destinationOwner
                 if (processDeathCertificationEnabled()) {
                     val saveableValue = rememberSaveable(
                         key = PROCESS_DEATH_SAVEABLE_KEY,
@@ -217,10 +229,39 @@ class NavigationBackTestActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    Text(
-                        text = destinationText(entry.route.name),
-                        modifier = Modifier.testTag(destinationTag(entry.route.name)),
+                    val saveableValue = rememberSaveable(
+                        key = RETENTION_SAVEABLE_KEY,
+                    ) {
+                        mutableStateOf(RETENTION_UNSEEDED_VALUE)
+                    }
+                    val model = viewModel<PresentationRetentionViewModel>(
+                        key = RETENTION_VIEW_MODEL_KEY,
+                    ) {
+                        PresentationRetentionViewModel(createSavedStateHandle())
+                    }
+                    destinationRetentionRecords[entry.route.name] = DestinationRetentionRecord(
+                        owner = destinationOwner,
+                        saveableValue = saveableValue,
+                        viewModel = model,
                     )
+                    destinationRenderCounts[entry.route.name] =
+                        destinationRenderCounts.getOrDefault(entry.route.name, 0) + 1
+                    if (retentionCertificationEnabled()) {
+                        Column {
+                            Text(
+                                text = destinationText(entry.route.name),
+                                modifier = Modifier.testTag(destinationTag(entry.route.name)),
+                            )
+                            repeat(RETENTION_PAYLOAD_TEXT_COUNT) { index ->
+                                Text("${entry.route.name}:payload:$index")
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = destinationText(entry.route.name),
+                            modifier = Modifier.testTag(destinationTag(entry.route.name)),
+                        )
+                    }
                 }
             }
         }
@@ -267,6 +308,51 @@ class NavigationBackTestActivity : AppCompatActivity() {
      */
     fun destinationLifecycleState(routeName: String): Lifecycle.State? {
         return destinationLifecycleOwners[routeName]?.lifecycle?.currentState
+    }
+
+    /**
+     * 为展示保留策略真机验证写入页面级可保存状态和 ViewModel SavedStateHandle。
+     * Seeds page saveable state and its ViewModel SavedStateHandle for retention-policy validation.
+     */
+    fun seedDestinationRetentionState(
+        routeName: String,
+        value: Int,
+    ) {
+        val record = checkNotNull(destinationRetentionRecords[routeName]) {
+            "Destination '$routeName' has no active presentation record."
+        }
+        record.saveableValue.value = value
+        record.viewModel.handle[RETENTION_HANDLE_VALUE_KEY] = value
+    }
+
+    /**
+     * 返回页面逻辑身份、状态和展示重建次数的稳定快照。
+     * Returns a stable snapshot of logical page identity, state, and presentation rebuild count.
+     */
+    fun destinationRetentionSnapshot(routeName: String): DestinationRetentionSnapshot? {
+        val record = destinationRetentionRecords[routeName] ?: return null
+        return DestinationRetentionSnapshot(
+            ownerIdentity = System.identityHashCode(record.owner),
+            viewModelIdentity = System.identityHashCode(record.viewModel),
+            saveableValue = record.saveableValue.value,
+            handleValue = record.viewModel.handle[RETENTION_HANDLE_VALUE_KEY]
+                ?: RETENTION_MISSING_VALUE,
+            renderCount = destinationRenderCounts.getOrDefault(routeName, 0),
+            lifecycleState = record.owner.lifecycle.currentState,
+        )
+    }
+
+    /** Returns whether [routeName] currently owns a live native destination presentation. */
+    fun hasDestinationPresentation(routeName: String): Boolean {
+        return findTextViewByText(
+            root = findViewById(android.R.id.content),
+            text = destinationText(routeName),
+        ) != null
+    }
+
+    /** Returns the number of live destination presentations in the native View hierarchy. */
+    fun destinationPresentationCount(): Int {
+        return countDestinationPresentationMarkers(findViewById(android.R.id.content))
     }
 
     /**
@@ -330,8 +416,51 @@ class NavigationBackTestActivity : AppCompatActivity() {
         return null
     }
 
+    private fun countDestinationPresentationMarkers(root: View): Int {
+        var count = if (
+            root is TextView && root.text?.toString()?.startsWith(DESTINATION_PREFIX) == true
+        ) {
+            1
+        } else {
+            0
+        }
+        if (root is ViewGroup) {
+            for (index in 0 until root.childCount) {
+                count += countDestinationPresentationMarkers(root.getChildAt(index))
+            }
+        }
+        return count
+    }
+
     private fun processDeathCertificationEnabled(): Boolean {
         return intent.getBooleanExtra(EXTRA_PROCESS_DEATH_CERTIFICATION, false)
+    }
+
+    private fun retentionCertificationEnabled(): Boolean {
+        return intent.hasExtra(EXTRA_PRESENTATION_RETENTION_POLICY)
+    }
+
+    private fun presentationRetentionPolicy(): NavPresentationRetentionPolicy {
+        return when (intent.getStringExtra(EXTRA_PRESENTATION_RETENTION_POLICY)) {
+            PRESENTATION_RETENTION_DISPOSE -> {
+                NavPresentationRetentionPolicy.DisposeWhenHidden
+            }
+
+            PRESENTATION_RETENTION_BOUNDED -> {
+                NavPresentationRetentionPolicy.Bounded(
+                    maxHiddenPresentations = intent.getIntExtra(
+                        EXTRA_MAX_HIDDEN_PRESENTATIONS,
+                        DEFAULT_MAX_HIDDEN_PRESENTATIONS,
+                    ),
+                )
+            }
+
+            PRESENTATION_RETENTION_RETAIN_ALL,
+            null,
+            -> NavPresentationRetentionPolicy.RetainAll
+
+            else -> error("Unknown navigation presentation-retention policy extra.")
+        }
     }
 
     /**
@@ -460,6 +589,26 @@ class NavigationBackTestActivity : AppCompatActivity() {
         val detailsScaleX: Float,
     )
 
+    /** Device-observable logical identity and state for one destination. */
+    data class DestinationRetentionSnapshot(
+        val ownerIdentity: Int,
+        val viewModelIdentity: Int,
+        val saveableValue: Int,
+        val handleValue: Int,
+        val renderCount: Int,
+        val lifecycleState: Lifecycle.State,
+    )
+
+    private data class DestinationRetentionRecord(
+        val owner: LifecycleOwner,
+        val saveableValue: MutableState<Int>,
+        val viewModel: PresentationRetentionViewModel,
+    )
+
+    private class PresentationRetentionViewModel(
+        val handle: SavedStateHandle,
+    ) : ViewModel()
+
     /**
      * 进程重建认证中绑定到 entry 或 graph owner 的保存状态句柄。
      * Saved-state handles bound to an entry or graph owner during process-recreation certification.
@@ -480,6 +629,15 @@ class NavigationBackTestActivity : AppCompatActivity() {
         const val TRANSITION_DURATION_MILLIS = 450L
         const val EXTRA_PROCESS_DEATH_CERTIFICATION =
             "com.viewcompose.extra.PROCESS_DEATH_CERTIFICATION"
+        const val EXTRA_PRESENTATION_RETENTION_POLICY =
+            "com.viewcompose.extra.PRESENTATION_RETENTION_POLICY"
+        const val EXTRA_MAX_HIDDEN_PRESENTATIONS =
+            "com.viewcompose.extra.MAX_HIDDEN_PRESENTATIONS"
+        const val EXTRA_DISABLE_TRANSITIONS =
+            "com.viewcompose.extra.DISABLE_TRANSITIONS"
+        const val PRESENTATION_RETENTION_DISPOSE = "dispose"
+        const val PRESENTATION_RETENTION_BOUNDED = "bounded"
+        const val PRESENTATION_RETENTION_RETAIN_ALL = "retain-all"
         const val PROCESS_DEATH_STATUS_PREFIX = "PROCESS_DEATH|"
         const val PROCESS_DEATH_HOME_SAVEABLE_VALUE = 11
         const val PROCESS_DEATH_HOME_HANDLE_VALUE = 101
@@ -508,6 +666,13 @@ class NavigationBackTestActivity : AppCompatActivity() {
         private const val PROCESS_DEATH_GRAPH_ARGUMENT_KEY = "userId"
         private const val PROCESS_DEATH_UNSEEDED_VALUE = -1
         private const val PROCESS_DEATH_MISSING_VALUE = -2
+        private const val RETENTION_SAVEABLE_KEY = "presentation-retention-saveable"
+        private const val RETENTION_VIEW_MODEL_KEY = "presentation-retention-view-model"
+        private const val RETENTION_HANDLE_VALUE_KEY = "presentation-retention-handle"
+        private const val RETENTION_UNSEEDED_VALUE = -11
+        private const val RETENTION_MISSING_VALUE = -12
+        private const val RETENTION_PAYLOAD_TEXT_COUNT = 40
+        private const val DEFAULT_MAX_HIDDEN_PRESENTATIONS = 2
 
         fun destinationText(routeName: String): String {
             return "$DESTINATION_PREFIX$routeName"

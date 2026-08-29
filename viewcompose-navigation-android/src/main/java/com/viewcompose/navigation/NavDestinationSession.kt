@@ -78,6 +78,7 @@ internal class NavDestinationCandidate internal constructor(
     private val store: NavDestinationSessionStore,
     internal val destinationSession: NavDestinationSession,
     internal val newGraphOwnerIds: Set<NavEntryId>,
+    internal val removeOwnerOnRollback: Boolean,
 ) : AutoCloseable {
     var status: NavDestinationCandidateStatus = NavDestinationCandidateStatus.Prepared
         private set

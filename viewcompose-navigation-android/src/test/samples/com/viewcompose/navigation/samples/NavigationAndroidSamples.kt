@@ -8,6 +8,7 @@ import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
 import com.viewcompose.navigation.NavMotionEasing
 import com.viewcompose.navigation.NavMotionTiming
+import com.viewcompose.navigation.NavPresentationRetentionPolicy
 import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
@@ -60,6 +61,19 @@ fun UiTreeBuilder.AppNavigation() {
     }
 }
 // DOCS_REGION_END(navigation-android-host)
+
+// DOCS_REGION_START(navigation-android-presentation-retention)
+fun UiTreeBuilder.BoundedPresentationNavigation(controller: NavHostController) {
+    NavHost(
+        controller = controller,
+        presentationRetentionPolicy = NavPresentationRetentionPolicy.Bounded(
+            maxHiddenPresentations = 2,
+        ),
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+// DOCS_REGION_END(navigation-android-presentation-retention)
 
 private fun UiTreeBuilder.HomePage(controller: NavHostController) {
     Text("Home: ${controller.snapshot.top.route.name}")

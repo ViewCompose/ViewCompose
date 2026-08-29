@@ -100,21 +100,23 @@ internal class TransactionalNavHostCoordinator(
         // Track sessions created during this attach so failure rolls back only this attempt.
         val attachedEntryIds = mutableListOf<NavEntryId>()
         var result: NavHostAttachmentResult
+        val retainedEntries = controller.retainedEntries()
         try {
             val currentSnapshot = controller.snapshot()
+            val visibleEntryIds = calculatePaneScene(currentSnapshot).visibleEntryIds
             result = attachEntries(
-                entries = controller.retainedEntries(),
+                entries = retainedEntries.filter { entry -> entry.id in visibleEntryIds },
                 attachedEntryIds = attachedEntryIds,
             )
             if (result is NavHostAttachmentResult.Attached) {
                 applySettledState(currentSnapshot)
                 state = NavHostCoordinatorState.Attached
             } else {
-                removeSessions(attachedEntryIds)
+                rollbackAttachment(retainedEntries, attachedEntryIds)
                 state = NavHostCoordinatorState.Detached
             }
         } catch (throwable: Throwable) {
-            removeSessions(attachedEntryIds)
+            rollbackAttachment(retainedEntries, attachedEntryIds)
             state = NavHostCoordinatorState.Detached
             val entry = controller.snapshot().top
             result = NavHostAttachmentResult.Failed(
@@ -202,6 +204,7 @@ internal class TransactionalNavHostCoordinator(
         val previousMaxPaneCount = this.maxPaneCount
         val previousScene = calculatePaneScene(snapshot)
         var destinationRefreshFailure: NavHostDestinationRefreshFailure? = null
+        val createdPresentationIds = mutableListOf<NavEntryId>()
         val result = try {
             redirectActiveBackPreview(preserveVisualState = false)
             redirectActiveTransition(preserveVisualState = false)
@@ -209,6 +212,7 @@ internal class TransactionalNavHostCoordinator(
                 beforeScene = previousScene,
                 afterScene = scene,
                 retainedEntries = controller.retainedEntries(),
+                createdPresentationIds = createdPresentationIds,
             )
             if (failure == null) {
                 paneStrategy = strategy
@@ -222,6 +226,8 @@ internal class TransactionalNavHostCoordinator(
                 previousScene
             }
         } catch (throwable: Throwable) {
+            disposeCreatedPresentations(createdPresentationIds)
+                .forEach(throwable::addSuppressed)
             paneStrategy = previousStrategy
             this.maxPaneCount = previousMaxPaneCount
             runCatching { applySettledState(controller.snapshot()) }
@@ -269,6 +275,7 @@ internal class TransactionalNavHostCoordinator(
         }
         executing = true
         var destinationRefreshFailure: NavHostDestinationRefreshFailure? = null
+        val createdPresentationIds = mutableListOf<NavEntryId>()
         val result = try {
             redirectActiveBackPreview(preserveVisualState = false)
             redirectActiveTransition(preserveVisualState = false)
@@ -319,6 +326,7 @@ internal class TransactionalNavHostCoordinator(
                 beforeScene = beforeScene,
                 afterScene = afterScene,
                 retainedEntries = retainedEntries,
+                createdPresentationIds = createdPresentationIds,
             )
             if (failure != null) {
                 destinationRefreshFailure = failure
@@ -362,6 +370,8 @@ internal class TransactionalNavHostCoordinator(
                         runCatching { active.handle?.dispose() }
                             .exceptionOrNull()
                             ?.let(throwable::addSuppressed)
+                        disposeCreatedPresentations(createdPresentationIds)
+                            .forEach(throwable::addSuppressed)
                         runCatching { applySettledState(currentSnapshot) }
                             .exceptionOrNull()
                             ?.let(throwable::addSuppressed)
@@ -505,6 +515,18 @@ internal class TransactionalNavHostCoordinator(
         this.localSnapshot = localSnapshot
         destinationContent = content
         sessionStore.updateRenderEnvironment(localSnapshot, content)
+    }
+
+    @MainThread
+    fun updatePresentationRetentionPolicy(policy: NavPresentationRetentionPolicy) {
+        requireMainThread()
+        check(state != NavHostCoordinatorState.Destroyed) {
+            "A destroyed navigation host cannot change presentation retention."
+        }
+        check(!executing) {
+            "Navigation presentation retention cannot change during another host operation."
+        }
+        sessionStore.updatePresentationRetentionPolicy(policy)
     }
 
     @MainThread
@@ -765,18 +787,15 @@ internal class TransactionalNavHostCoordinator(
                     candidate = preparation.candidate
                 }
             }
-        } else {
-            val revealedEntry = transaction.after.top
-            checkNotNull(sessionStore.sessionOrNull(revealedEntry.id)) {
-                "Revealed destination ${revealedEntry.id} has no retained page session."
-            }
         }
 
+        val createdPresentationIds = mutableListOf<NavEntryId>()
         val destinationRefreshFailure = refreshNewlyVisibleDestinations(
             beforeScene = calculatePaneScene(transaction.before),
             afterScene = calculatePaneScene(transaction.after),
             retainedEntries = controller.retainedEntries(),
             excludedEntryIds = addedEntry?.let { setOf(it.id) }.orEmpty(),
+            createdPresentationIds = createdPresentationIds,
         )
         if (destinationRefreshFailure != null) {
             candidate?.let(::rollbackCandidate)
@@ -792,6 +811,8 @@ internal class TransactionalNavHostCoordinator(
                 }
             } catch (throwable: Throwable) {
                 rollbackCandidate(candidate)
+                disposeCreatedPresentations(createdPresentationIds)
+                    .forEach(throwable::addSuppressed)
                 rollback(transaction)
                 return failedBeforeCommit(
                     transaction = transaction,
@@ -809,6 +830,8 @@ internal class TransactionalNavHostCoordinator(
                 transaction.commit()
             }
         } catch (throwable: Throwable) {
+            disposeCreatedPresentations(createdPresentationIds)
+                .forEach(throwable::addSuppressed)
             addedEntry?.let { entry ->
                 runCatching { sessionStore.remove(entry.id) }
             }
@@ -1280,6 +1303,7 @@ internal class TransactionalNavHostCoordinator(
         afterScene: NavPaneScene,
         retainedEntries: List<NavEntry>,
         excludedEntryIds: Set<NavEntryId> = emptySet(),
+        createdPresentationIds: MutableList<NavEntryId> = mutableListOf(),
     ): NavHostDestinationRefreshFailure? {
         val newlyVisibleEntryIds = afterScene.visibleEntryIds - beforeScene.visibleEntryIds -
             excludedEntryIds
@@ -1295,39 +1319,122 @@ internal class TransactionalNavHostCoordinator(
                 return@forEach
             }
             val entry = entriesById[entryId]
-                ?: return destinationRefreshFailure(
+                ?: return destinationRefreshFailureAndDisposeCreatedPresentations(
                     failedEntry = null,
                     cause = IllegalStateException(
                         "Newly visible destination $entryId is not retained.",
                     ),
+                    createdPresentationIds = createdPresentationIds,
                 )
-            val session = sessionStore.sessionOrNull(entryId)
-                ?: return destinationRefreshFailure(
-                    failedEntry = entry,
-                    cause = IllegalStateException(
-                        "Newly visible destination $entryId has no retained page session.",
-                    ),
-                )
-            val report = runCatching {
-                traceSection("VC.Nav.RefreshDestination") {
-                    session.render(currentLocalSnapshot, currentContent)
+            var session = sessionStore.sessionOrNull(entryId)
+            if (session == null) {
+                when (
+                    val preparation = sessionStore.prepare(
+                        entry = entry,
+                        localSnapshot = currentLocalSnapshot,
+                        hostLifecycleState = hostLifecycleState,
+                        content = currentContent,
+                    )
+                ) {
+                    is NavDestinationPreparation.Failed -> {
+                        return destinationRefreshFailureAndDisposeCreatedPresentations(
+                            failedEntry = entry,
+                            frameReport = preparation.frameReport,
+                            cause = preparation.cause,
+                            createdPresentationIds = createdPresentationIds,
+                        )
+                    }
+
+                    is NavDestinationPreparation.Ready -> {
+                        val candidate = preparation.candidate
+                        try {
+                            candidate.stage()
+                            session = candidate.commit()
+                            createdPresentationIds += entryId
+                        } catch (throwable: Throwable) {
+                            rollbackCandidatePresentation(candidate)
+                                ?.let(throwable::addSuppressed)
+                            return destinationRefreshFailureAndDisposeCreatedPresentations(
+                                failedEntry = entry,
+                                frameReport = candidate.destinationSession.lastFrameReport,
+                                cause = throwable,
+                                createdPresentationIds = createdPresentationIds,
+                            )
+                        }
+                    }
                 }
-            }.getOrElse { throwable ->
-                return destinationRefreshFailure(
-                    failedEntry = entry,
-                    frameReport = session.lastFrameReport,
-                    cause = throwable,
-                )
-            }
-            if (report?.status != RenderFrameStatus.Committed) {
-                return destinationRefreshFailure(
-                    failedEntry = entry,
-                    frameReport = report,
-                    cause = report?.failures?.firstOrNull()?.cause,
-                )
+            } else {
+                val report = runCatching {
+                    traceSection("VC.Nav.RefreshDestination") {
+                        checkNotNull(session).render(currentLocalSnapshot, currentContent)
+                    }
+                }.getOrElse { throwable ->
+                    return destinationRefreshFailureAndDisposeCreatedPresentations(
+                        failedEntry = entry,
+                        frameReport = session?.lastFrameReport,
+                        cause = throwable,
+                        createdPresentationIds = createdPresentationIds,
+                    )
+                }
+                if (report?.status != RenderFrameStatus.Committed) {
+                    return destinationRefreshFailureAndDisposeCreatedPresentations(
+                        failedEntry = entry,
+                        frameReport = report,
+                        cause = report?.failures?.firstOrNull()?.cause,
+                        createdPresentationIds = createdPresentationIds,
+                    )
+                }
             }
         }
         return null
+    }
+
+    private fun destinationRefreshFailureAndDisposeCreatedPresentations(
+        failedEntry: NavEntry?,
+        frameReport: RenderFrameReport? = null,
+        cause: Throwable?,
+        createdPresentationIds: MutableList<NavEntryId>,
+    ): NavHostDestinationRefreshFailure {
+        val failures = disposeCreatedPresentations(createdPresentationIds)
+        val effectiveCause = cause ?: failures.firstOrNull()
+        if (effectiveCause != null) {
+            failures.filterNot { failure -> failure === effectiveCause }
+                .forEach(effectiveCause::addSuppressed)
+        }
+        return destinationRefreshFailure(
+            failedEntry = failedEntry,
+            frameReport = frameReport,
+            cause = effectiveCause,
+        )
+    }
+
+    private fun disposeCreatedPresentations(
+        createdPresentationIds: MutableList<NavEntryId>,
+    ): List<Throwable> {
+        val failures = mutableListOf<Throwable>()
+        createdPresentationIds.asReversed().forEach { entryId ->
+            runCatching {
+                sessionStore.disposePresentation(entryId)
+            }.exceptionOrNull()?.let(failures::add)
+        }
+        createdPresentationIds.clear()
+        return failures
+    }
+
+    private fun rollbackCandidatePresentation(candidate: NavDestinationCandidate): Throwable? {
+        return when (candidate.status) {
+            NavDestinationCandidateStatus.Prepared,
+            NavDestinationCandidateStatus.Staged,
+            -> runCatching(candidate::rollback).exceptionOrNull()
+
+            NavDestinationCandidateStatus.Committed -> {
+                runCatching {
+                    sessionStore.disposePresentation(candidate.entry.id)
+                }.exceptionOrNull()
+            }
+
+            NavDestinationCandidateStatus.RolledBack -> null
+        }
     }
 
     private fun destinationRefreshFailure(
@@ -1383,6 +1490,36 @@ internal class TransactionalNavHostCoordinator(
                 sessionStore.remove(entryId)
             }.exceptionOrNull()?.let(failures::add)
         }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
+        }
+    }
+
+    private fun rollbackAttachment(
+        retainedEntries: List<NavEntry>,
+        attachedEntryIds: List<NavEntryId>,
+    ) {
+        val failures = mutableListOf<Throwable>()
+        attachedEntryIds.asReversed().forEach { entryId ->
+            runCatching {
+                sessionStore.remove(entryId)
+            }.exceptionOrNull()?.let(failures::add)
+        }
+        retainedEntries.asReversed().forEach { entry ->
+            runCatching {
+                ownerStore.remove(entry.id)
+            }.exceptionOrNull()?.let(failures::add)
+        }
+        retainedEntries
+            .flatMap { entry -> entry.graphEntries.withIndex() }
+            .distinctBy { indexed -> indexed.value.id }
+            .sortedByDescending { indexed -> indexed.index }
+            .forEach { indexed ->
+                runCatching {
+                    ownerStore.removeGraphOwner(indexed.value.id)
+                }.exceptionOrNull()?.let(failures::add)
+            }
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first

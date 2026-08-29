@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.presentation-retention",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-android" },
+  "artifact": "viewcompose-navigation-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha02" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.navigation.NavPresentationRetentionPolicy",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavPresentationRetentionPolicy.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.navigation.presentation-retention",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.navigation-android-presentation-retention"
+  },
+  "document_owners": {
+    "guide": ["guide.navigation-production-host"],
+    "architecture": [
+      "architecture.navigation-runtime",
+      "architecture.scene-derived-navigation-lifecycle-presentation-ownership"
+    ],
+    "module": ["module.viewcompose-navigation-android"],
+    "migration": ["migration.compose-navigation"]
+  }
+}

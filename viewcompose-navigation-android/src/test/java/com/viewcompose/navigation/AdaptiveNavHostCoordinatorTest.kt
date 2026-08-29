@@ -64,6 +64,7 @@ class AdaptiveNavHostCoordinatorTest {
         sessionStore = NavDestinationSessionStore(
             hostView = NavHostView(application),
             ownerStore = ownerStore,
+            initialPresentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
         )
         transitionDriver = ControlledTransitionDriver()
         coordinator = TransactionalNavHostCoordinator(

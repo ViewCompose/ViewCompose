@@ -12,6 +12,7 @@ capability_ids:
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
   - navigation.host
+  - navigation.presentation-retention
   - navigation.scene-projection
   - viewmodel.scoped-owners
 artifact_ids:
@@ -30,7 +31,9 @@ evidence:
   - docs/architecture/decisions/0023-retained-viewmodel-scope-ownership.md
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavLifecyclePlannerTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
+  - app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt
 ---
 
 # ADR-0024: Scene-derived navigation lifecycle and presentation ownership
@@ -147,10 +150,19 @@ The public `NavPresentationRetentionPolicy` family supports three explicit behav
 - retain presentations explicitly for application-proven expensive surfaces; and
 - retain a bounded least-recently-used set with a positive maximum and deterministic eviction.
 
-The safe default is not selected by preference. Phase 4 selects it from accepted device memory,
-recreation-time, and settled-frame evidence. No default may be unbounded. Permanent entry removal
-disposes its presentation before owner destruction and terminal ViewModel clear. Configuration or
-process restoration recreates no live View, effect, animation, or candidate transaction.
+`DisposeWhenHidden` is the bounded default selected by Phase 4 evidence. On a physical Pixel 4 XL
+running API 33, a synthetic heavy 13-entry stack retained 1 rather than 13 presentations and
+reported 185,510 KiB rather than 191,953 KiB process PSS: 12 fewer presentations (92.3%) and 6,443
+KiB lower PSS (3.4%). Its synchronous pop-and-rebuild median was 49,573 us rather than 13,318 us,
+a 36,255 us or 272.2% increase, but both policies produced 252 measured transition frames at 90 Hz
+with 9 ms P95 and zero frames above 32 ms. The result is **mixed**: bounded idle resources improve
+and measured settled motion shows **no material change**, while expensive pages may justify an
+explicit `Bounded` or `RetainAll` override. The single device, synthetic content, process-wide PSS,
+and short run limit generalization; Phase 7 retains broader device, leak, and workload evidence.
+
+No default may be unbounded. Permanent entry removal disposes its presentation before owner
+destruction and terminal ViewModel clear. Configuration or process restoration recreates no live
+View, effect, animation, or candidate transaction.
 
 ### One reducer owns navigation decisions
 
@@ -260,8 +272,9 @@ coupling it to entry ownership.
    then removes visible/interactive-only planning in the same breaking slice.
 3. Phase 3 applies the accepted transition, overlay, pane, host-cap, graph-order, focus, and terminal
    lifecycle matrix on Android.
-4. Phase 4 separates presentations, implements all three policy modes, and selects the default only
-   after device memory, restoration, recreation, leak, and frame evidence is interpreted.
+4. Phase 4 separates presentations, implements all three policy modes, and selects
+   `DisposeWhenHidden` from interpreted device memory, restoration, recreation, and frame evidence;
+   broader leak and workload matrices remain in Phase 7.
 5. Phase 5 publishes destination context with compiled Q3 samples and proves stable holder identity,
    delayed capture, presentation recreation, nested hosts, panes, overlays, and removal.
 6. Phase 6 converges reducer and executors and deletes superseded command sequencing.

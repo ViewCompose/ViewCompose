@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 35ba553f80780162206ec94ce1042e52079236f6434bf987a7a235e0f54beafe
+translation_source_hash: 9ac959fef393c377b3e23ce4845cdaa5a86380296caa89d3e03361a164da2cd4
 translation_status: current
 ---
 
@@ -53,6 +53,23 @@ Destination 与 Graph ViewModelStore 来自同一个共享 Lifecycle 2.11 Scoped
 ViewModelStore Owner、Overlay Factory、调试身份或 Host `key` 的变化属于所有权变化，因此会
 重建原生 Host。
 
+## 明确选择展示保留策略
+
+除非针对具体 Destination 的真机证据表明其原生 View Tree 重建成本不可接受，否则保持默认
+`NavPresentationRetentionPolicy.DisposeWhenHidden`。默认策略会在转场稳定后释放完全隐藏页面的
+`RenderSession`、View Tree、Effect、Focus、Accessibility State 和原生资源，同时保留 Destination
+Owner、ViewModel、SavedStateRegistry、`rememberSaveable` 值、Route 参数与 Graph Identity。
+再次展示时，会先事务性重建 Presentation，再发布新 Scene。
+
+应用需要缓存最近若干隐藏 Surface 时，使用
+`NavPresentationRetentionPolicy.Bounded(maxHiddenPresentations = n)`。正数上限只计算隐藏展示；
+可见 Pane 和转场参与者不在上限内。仅把 `RetainAll` 用作显式且有测量依据的选择；它会跨深栈和
+多栈无界增长，因此不适合作为通用默认值。
+
+修改策略不会重建 `NavHost` 或 Entry Owner。收紧策略会立即淘汰超限隐藏展示；放宽策略只影响
+后续展示，不会急切组合隐藏 Stack。首次连接、配置恢复连接和进程恢复连接都只物化可见 Pane
+集合。
+
 ## 处理命令结果
 
 每个 Controller 命令都返回 `NavResult`：
@@ -86,9 +103,12 @@ ViewModelStore Owner、Overlay Factory、调试身份或 Host `key` 的变化属
    Pop 一次。
 5. 通过应用测试接缝注入 Destination 渲染失败。当 `stackCommitted` 为 false 时，前一页必须
    保持可见，且 `onFailure` 必须收到准确阶段。
+6. 在所选展示策略下构建深栈，校验原生展示数量；随后展示已淘汰页面，并确认 Owner、ViewModel
+   与 Saveable-state Identity 保持稳定。
 
-只有五项检查全部通过，任务才算完成。Detached 命令异常、普通 Activity 重建后 Entry 身份
-变化、重复 Pop、失败渲染后候选页可见、ViewModel 提前清理，或把 `Queued` 当成完成，都属于配置失败。
+只有六项检查全部通过，任务才算完成。Detached 命令异常、普通 Activity 重建后 Entry 身份
+变化、重复 Pop、失败渲染后候选页可见、ViewModel 提前清理、没有显式策略却保留无界隐藏 View，
+或把 `Queued` 当成完成，都属于配置失败。
 
 ## 选择下一项聚焦任务
 

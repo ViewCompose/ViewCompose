@@ -1,6 +1,8 @@
 package com.viewcompose
 
+import android.content.Intent
 import android.graphics.drawable.ColorDrawable
+import android.os.Debug
 import android.os.Build
 import android.os.SystemClock
 import android.util.Log
@@ -665,12 +667,285 @@ class NavigationBackDeviceTest {
         }
     }
 
+    @Test
+    fun disposedPresentationRebuildsWithStableOwnerViewModelAndSaveableState() {
+        launchHost(
+            retentionPolicy = NavigationBackTestActivity.PRESENTATION_RETENTION_DISPOSE,
+            disableTransitions = true,
+        ).use { scenario ->
+            lateinit var originalHome: NavigationBackTestActivity.DestinationRetentionSnapshot
+            scenario.onActivity { activity ->
+                activity.seedDestinationRetentionState(
+                    routeName = NavigationBackTestActivity.HOME_ROUTE,
+                    value = RETENTION_STATE_VALUE,
+                )
+                originalHome = checkNotNull(
+                    activity.destinationRetentionSnapshot(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                    ),
+                )
+                assertTrue(activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is NavResult.Committed)
+
+                assertEquals(1, activity.destinationPresentationCount())
+                assertTrue(
+                    !activity.hasDestinationPresentation(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                    ),
+                )
+                val hiddenHome = checkNotNull(
+                    activity.destinationRetentionSnapshot(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                    ),
+                )
+                assertEquals(originalHome.ownerIdentity, hiddenHome.ownerIdentity)
+                assertEquals(originalHome.viewModelIdentity, hiddenHome.viewModelIdentity)
+                assertEquals(Lifecycle.State.CREATED, hiddenHome.lifecycleState)
+                assertEquals(RETENTION_STATE_VALUE, hiddenHome.saveableValue)
+                assertEquals(RETENTION_STATE_VALUE, hiddenHome.handleValue)
+
+                assertTrue(activity.navController.popBackStack() is NavResult.Committed)
+            }
+            waitForUiIdle()
+
+            scenario.onActivity { activity ->
+                val rebuiltHome = checkNotNull(
+                    activity.destinationRetentionSnapshot(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                    ),
+                )
+                assertEquals(originalHome.ownerIdentity, rebuiltHome.ownerIdentity)
+                assertEquals(originalHome.viewModelIdentity, rebuiltHome.viewModelIdentity)
+                assertEquals(RETENTION_STATE_VALUE, rebuiltHome.saveableValue)
+                assertEquals(RETENTION_STATE_VALUE, rebuiltHome.handleValue)
+                assertEquals(2, rebuiltHome.renderCount)
+                assertEquals(Lifecycle.State.RESUMED, rebuiltHome.lifecycleState)
+                assertEquals(
+                    Lifecycle.State.DESTROYED,
+                    activity.destinationLifecycleState(
+                        NavigationBackTestActivity.DETAILS_ROUTE,
+                    ),
+                )
+                assertEquals(1, activity.destinationPresentationCount())
+                assertEquals(0, activity.failureCount)
+            }
+        }
+    }
+
+    @Test
+    fun boundedPresentationRetentionUsesExactLeastRecentlyHiddenLimit() {
+        launchHost(
+            retentionPolicy = NavigationBackTestActivity.PRESENTATION_RETENTION_BOUNDED,
+            maxHiddenPresentations = BOUNDED_HIDDEN_PRESENTATIONS,
+            disableTransitions = true,
+        ).use { scenario ->
+            val routes = listOf(
+                NavigationBackTestActivity.DETAILS_ROUTE,
+                NavigationBackTestActivity.CONFIRMATION_ROUTE,
+                "bounded-three",
+                "bounded-four",
+                "bounded-five",
+            )
+            scenario.onActivity { activity ->
+                routes.forEach { route ->
+                    assertTrue(activity.push(route) is NavResult.Committed)
+                    assertTrue(
+                        "route=$route presentations=${activity.destinationPresentationCount()}",
+                        activity.destinationPresentationCount() <=
+                            BOUNDED_HIDDEN_PRESENTATIONS + 1,
+                    )
+                }
+
+                assertEquals(
+                    BOUNDED_HIDDEN_PRESENTATIONS + 1,
+                    activity.destinationPresentationCount(),
+                )
+                assertTrue(!activity.hasDestinationPresentation(NavigationBackTestActivity.HOME_ROUTE))
+                assertTrue(!activity.hasDestinationPresentation(NavigationBackTestActivity.DETAILS_ROUTE))
+                assertTrue(
+                    !activity.hasDestinationPresentation(
+                        NavigationBackTestActivity.CONFIRMATION_ROUTE,
+                    ),
+                )
+                assertTrue(activity.hasDestinationPresentation("bounded-three"))
+                assertTrue(activity.hasDestinationPresentation("bounded-four"))
+                assertTrue(activity.hasDestinationPresentation("bounded-five"))
+                assertEquals(0, activity.failureCount)
+            }
+        }
+    }
+
+    @Test
+    fun presentationRetentionReportsDeviceResourceAndRebuildEvidence() {
+        val disposeWhenHidden = measureRetentionEvidence(
+            policy = NavigationBackTestActivity.PRESENTATION_RETENTION_DISPOSE,
+            expectedPresentationCount = 1,
+        )
+        val retainAll = measureRetentionEvidence(
+            policy = NavigationBackTestActivity.PRESENTATION_RETENTION_RETAIN_ALL,
+            expectedPresentationCount = RETENTION_EVIDENCE_STACK_DEPTH,
+        )
+
+        Log.i(RETENTION_EVIDENCE_LOG_TAG, disposeWhenHidden.description)
+        Log.i(RETENTION_EVIDENCE_LOG_TAG, retainAll.description)
+        assertEquals(1, disposeWhenHidden.presentationCount)
+        assertEquals(RETENTION_EVIDENCE_STACK_DEPTH, retainAll.presentationCount)
+        assertTrue(retainAll.presentationCount > disposeWhenHidden.presentationCount)
+        assertTrue(disposeWhenHidden.medianPopMicros >= 0L)
+        assertTrue(retainAll.medianPopMicros >= 0L)
+    }
+
+    @SdkSuppress(minSdkVersion = 24)
+    @Test
+    fun presentationRetentionRebuildFrameTimingStaysWithinDeviceBudget() {
+        val disposeWhenHidden = measureRetentionFrameEvidence(
+            policy = NavigationBackTestActivity.PRESENTATION_RETENTION_DISPOSE,
+        )
+        val retainAll = measureRetentionFrameEvidence(
+            policy = NavigationBackTestActivity.PRESENTATION_RETENTION_RETAIN_ALL,
+        )
+
+        Log.i(RETENTION_EVIDENCE_LOG_TAG, disposeWhenHidden.description)
+        Log.i(RETENTION_EVIDENCE_LOG_TAG, retainAll.description)
+        assertRetentionFrameBudget(disposeWhenHidden)
+        assertRetentionFrameBudget(retainAll)
+    }
+
+    private fun measureRetentionFrameEvidence(
+        policy: String,
+    ): FrameTimingSummary {
+        var summary: FrameTimingSummary? = null
+        launchHost(retentionPolicy = policy).use { scenario ->
+            scenario.onActivity { activity ->
+                assertTrue(activity.push("retention-frame-warmup") is NavResult.Committed)
+            }
+            awaitTransition()
+            scenario.onActivity { activity ->
+                assertTrue(activity.navController.popBackStack() is NavResult.Committed)
+            }
+            awaitTransition()
+
+            val aggregator = FrameMetricsAggregator(FrameMetricsAggregator.TOTAL_DURATION)
+            var refreshRateHz = 60f
+            scenario.onActivity { activity ->
+                @Suppress("DEPRECATION")
+                val display = activity.windowManager.defaultDisplay
+                refreshRateHz = display.refreshRate.takeIf { rate -> rate > 0f } ?: 60f
+                aggregator.add(activity)
+            }
+
+            repeat(RETENTION_FRAME_TIMING_ITERATIONS) { index ->
+                scenario.onActivity { activity ->
+                    assertTrue(
+                        activity.push("retention-frame-$index") is NavResult.Committed,
+                    )
+                }
+                awaitTransition()
+                scenario.onActivity { activity ->
+                    assertTrue(activity.navController.popBackStack() is NavResult.Committed)
+                }
+                awaitTransition()
+            }
+
+            var metrics: Array<SparseIntArray>? = null
+            scenario.onActivity { activity ->
+                metrics = aggregator.remove(activity)
+                assertEquals(0, activity.failureCount)
+            }
+            summary = checkNotNull(metrics)
+                .getOrNull(FrameMetricsAggregator.TOTAL_INDEX)
+                .toFrameTimingSummary(
+                    refreshRateHz = refreshRateHz,
+                    context = "presentation-retention policy=$policy",
+                )
+        }
+        return checkNotNull(summary)
+    }
+
+    private fun assertRetentionFrameBudget(summary: FrameTimingSummary) {
+        assertTrue(
+            "${summary.description}; expected at least $MIN_MEASURED_FRAMES frames",
+            summary.frameCount >= MIN_MEASURED_FRAMES,
+        )
+        if (!isEmulator()) {
+            assertTrue(
+                "${summary.description}; P95 exceeded ${summary.maxP95Millis}ms",
+                summary.p95Millis <= summary.maxP95Millis,
+            )
+            assertTrue(
+                "${summary.description}; severe-frame ratio exceeded $MAX_SEVERE_FRAME_RATIO",
+                summary.severeFrameRatio <= MAX_SEVERE_FRAME_RATIO,
+            )
+        }
+    }
+
+    private fun measureRetentionEvidence(
+        policy: String,
+        expectedPresentationCount: Int,
+    ): RetentionEvidence {
+        var evidence: RetentionEvidence? = null
+        launchHost(
+            retentionPolicy = policy,
+            disableTransitions = true,
+        ).use { scenario ->
+            scenario.onActivity { activity ->
+                repeat(RETENTION_EVIDENCE_STACK_DEPTH - 1) { index ->
+                    assertTrue(activity.push("retention-evidence-$index") is NavResult.Committed)
+                }
+                assertEquals(expectedPresentationCount, activity.destinationPresentationCount())
+            }
+            Runtime.getRuntime().gc()
+            System.runFinalization()
+            SystemClock.sleep(RETENTION_EVIDENCE_GC_SETTLE_MILLIS)
+            scenario.onActivity { activity ->
+                val presentationCount = activity.destinationPresentationCount()
+                val pssKb = Debug.getPss()
+                val popMicros = buildList {
+                    repeat(RETENTION_EVIDENCE_POP_COUNT) {
+                        val startedNanos = SystemClock.elapsedRealtimeNanos()
+                        assertTrue(activity.navController.popBackStack() is NavResult.Committed)
+                        add((SystemClock.elapsedRealtimeNanos() - startedNanos) / 1_000L)
+                    }
+                }
+                evidence = RetentionEvidence(
+                    policy = policy,
+                    stackDepth = RETENTION_EVIDENCE_STACK_DEPTH,
+                    presentationCount = presentationCount,
+                    pssKb = pssKb,
+                    medianPopMicros = popMicros.sorted()[popMicros.size / 2],
+                )
+                assertEquals(0, activity.failureCount)
+            }
+        }
+        return checkNotNull(evidence)
+    }
+
     /**
      * 启动导航 Back 测试宿主并等待首帧稳定。
      * Launches the navigation Back test host and waits for the first stable frame.
      */
-    private fun launchHost(): ActivityScenario<NavigationBackTestActivity> {
-        return ActivityScenario.launch(NavigationBackTestActivity::class.java).also { scenario ->
+    private fun launchHost(
+        retentionPolicy: String? = null,
+        maxHiddenPresentations: Int = BOUNDED_HIDDEN_PRESENTATIONS,
+        disableTransitions: Boolean = false,
+    ): ActivityScenario<NavigationBackTestActivity> {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, NavigationBackTestActivity::class.java).apply {
+            if (retentionPolicy != null) {
+                putExtra(
+                    NavigationBackTestActivity.EXTRA_PRESENTATION_RETENTION_POLICY,
+                    retentionPolicy,
+                )
+                putExtra(
+                    NavigationBackTestActivity.EXTRA_MAX_HIDDEN_PRESENTATIONS,
+                    maxHiddenPresentations,
+                )
+            }
+            putExtra(
+                NavigationBackTestActivity.EXTRA_DISABLE_TRANSITIONS,
+                disableTransitions,
+            )
+        }
+        return ActivityScenario.launch<NavigationBackTestActivity>(intent).also { scenario ->
             scenario.moveToState(Lifecycle.State.RESUMED)
             waitForUiIdle()
         }
@@ -875,6 +1150,7 @@ class NavigationBackDeviceTest {
      */
     private fun SparseIntArray?.toFrameTimingSummary(
         refreshRateHz: Float,
+        context: String = "predictive-back",
     ): FrameTimingSummary {
         requireNotNull(this) {
             "FrameMetricsAggregator did not return total-duration metrics."
@@ -902,6 +1178,7 @@ class NavigationBackDeviceTest {
             if (keyAt(index) > severeFrameThresholdMillis) valueAt(index) else 0
         }
         return FrameTimingSummary(
+            context = context,
             refreshRateHz = refreshRateHz,
             frameCount = frameCount,
             p95Millis = p95Millis,
@@ -915,6 +1192,7 @@ class NavigationBackDeviceTest {
     }
 
     private data class FrameTimingSummary(
+        val context: String,
         val refreshRateHz: Float,
         val frameCount: Int,
         val p95Millis: Int,
@@ -926,13 +1204,33 @@ class NavigationBackDeviceTest {
             get() = severeFrameCount.toFloat() / frameCount
 
         val description: String
-            get() = "predictive-back frame timing: refreshRate=${refreshRateHz}Hz, " +
+            get() = "$context frame timing: refreshRate=${refreshRateHz}Hz, " +
                 "frames=$frameCount, p95=${p95Millis}ms, " +
                 "severe(>${severeFrameThresholdMillis}ms)=" +
                 "$severeFrameCount (${severeFrameRatio * 100f}%)"
     }
 
+    private data class RetentionEvidence(
+        val policy: String,
+        val stackDepth: Int,
+        val presentationCount: Int,
+        val pssKb: Long,
+        val medianPopMicros: Long,
+    ) {
+        val description: String
+            get() = "presentation-retention policy=$policy, stackDepth=$stackDepth, " +
+                "presentations=$presentationCount, pss=${pssKb}KiB, " +
+                "medianPop=${medianPopMicros}us"
+    }
+
     companion object {
+        private const val RETENTION_STATE_VALUE = 73
+        private const val BOUNDED_HIDDEN_PRESENTATIONS = 2
+        private const val RETENTION_EVIDENCE_STACK_DEPTH = 13
+        private const val RETENTION_EVIDENCE_POP_COUNT = 6
+        private const val RETENTION_EVIDENCE_GC_SETTLE_MILLIS = 120L
+        private const val RETENTION_EVIDENCE_LOG_TAG = "ViewComposeNavRetention"
+        private const val RETENTION_FRAME_TIMING_ITERATIONS = 3
         private const val STRESS_ITERATIONS = 30
         private const val FRAME_TIMING_ITERATIONS = 6
         private const val MIN_MEASURED_FRAMES = 30
