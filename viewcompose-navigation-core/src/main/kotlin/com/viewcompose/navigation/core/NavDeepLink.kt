@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets
 import java.util.ArrayList
 import java.util.Collections
 import java.util.LinkedHashMap
+import java.util.Locale
 
 /** Target type used to decode one deep-link placeholder. */
 enum class NavDeepLinkArgumentType {
@@ -28,50 +29,139 @@ enum class NavDeepLinkLaunchMode {
 }
 
 /**
- * Allowlisted absolute URI pattern registered on one graph node.
+ * Immutable external-navigation request matched by a [NavGraph].
  *
- * Placeholders must occupy a complete path segment or query value, for example
- * `https://example.com/users/{userId}?source={source}`. Placeholder names are unique and default to
- * [NavDeepLinkArgumentType.Text]. Schemes and hosts compare case-insensitively; decoded path and
- * query values compare exactly. Input query parameters not declared by the pattern are ignored:
- * they never become route arguments, affect match specificity, select a stack, or choose a launch
- * mode. Fragments, user info, malformed percent encoding, duplicate query names, and
- * non-hierarchical URIs are rejected at construction.
+ * At least one URI, action, or MIME type must be present. The request stores no Android type and
+ * may therefore be created in shared code; Android hosts map `Intent.data`, `Intent.action`, and
+ * `Intent.type` into the same model. Validation is performed by `resolveDeepLink` so untrusted
+ * malformed values produce structured [NavDeepLinkResolution.Rejected] results instead of partial
+ * matches.
  *
  * @sample com.viewcompose.navigation.core.samples.deepLinkResolutionSample
- * @property uriPattern validated absolute hierarchical URI pattern
- * @param argumentTypes optional declared-placeholder type overrides
+ * @property uri optional absolute hierarchical URI input
+ * @property action optional case-sensitive external action
+ * @param mimeType optional case-insensitive `type/subtype` input
+ * @throws IllegalArgumentException if all request dimensions are absent
+ */
+class NavDeepLinkRequest(
+    val uri: String? = null,
+    val action: String? = null,
+    mimeType: String? = null,
+) {
+    /** Optional MIME input normalized with locale-independent lowercase comparison. */
+    val mimeType: String? = mimeType?.lowercase(Locale.ROOT)
+
+    init {
+        require(uri != null || action != null || mimeType != null) {
+            "Navigation deep-link request must contain a URI, action, or MIME type."
+        }
+    }
+
+    /** Compares every normalized request dimension structurally. */
+    override fun equals(other: Any?): Boolean {
+        return other is NavDeepLinkRequest &&
+            uri == other.uri &&
+            action == other.action &&
+            mimeType == other.mimeType
+    }
+
+    /** Returns the structural hash of every normalized request dimension. */
+    override fun hashCode(): Int {
+        var result = uri?.hashCode() ?: 0
+        result = 31 * result + (action?.hashCode() ?: 0)
+        result = 31 * result + (mimeType?.hashCode() ?: 0)
+        return result
+    }
+
+    /** Returns a diagnostic representation without Android objects or mutable state. */
+    override fun toString(): String {
+        return "NavDeepLinkRequest(uri=$uri, action=$action, mimeType=$mimeType)"
+    }
+}
+
+/**
+ * Allowlists one URI, action, MIME type, or combined external-navigation declaration on a graph node.
+ *
+ * URI placeholders must occupy a complete path segment or query value, for example
+ * `https://example.com/users/{userId}?source={source}`. Placeholder names are unique and default to
+ * [NavDeepLinkArgumentType.Text]. Schemes, hosts, and MIME values compare case-insensitively;
+ * actions and decoded URI values compare exactly. Every non-null declaration field is a required
+ * constraint, while extra request fields are inert. More constrained declarations rank first,
+ * followed by URI and MIME specificity; equally specific winners are rejected as ambiguous.
+ *
+ * Input query parameters not declared by [uriPattern] never become route arguments, affect match
+ * specificity, select a stack, or choose a launch mode. Fragments, user info, malformed percent
+ * encoding, duplicate query names, and non-hierarchical URI patterns are rejected at construction.
+ *
+ * @sample com.viewcompose.navigation.core.samples.deepLinkResolutionSample
+ * @property uriPattern optional validated absolute hierarchical URI pattern
+ * @param argumentTypes optional declared URI-placeholder type overrides
  * @property targetStackId optional retained stack selected after a match
- * @throws IllegalArgumentException if the pattern or type declarations are invalid
+ * @property action optional non-blank case-sensitive action constraint
+ * @param mimeType optional `type/subtype` constraint; either component may be `*`
+ * @throws IllegalArgumentException if no constraint exists or a declaration is invalid
  */
 class NavDeepLink(
-    val uriPattern: String,
+    val uriPattern: String? = null,
     argumentTypes: Map<String, NavDeepLinkArgumentType> = emptyMap(),
     val targetStackId: NavStackId? = null,
+    val action: String? = null,
+    mimeType: String? = null,
 ) {
     /** Immutable type map for explicitly typed placeholders. */
     val argumentTypes: Map<String, NavDeepLinkArgumentType> = Collections.unmodifiableMap(
         LinkedHashMap(argumentTypes),
     )
 
-    internal val compiled: CompiledNavDeepLink = compileDeepLink(
-        uriPattern = uriPattern,
-        argumentTypes = this.argumentTypes,
-    )
+    /** Optional MIME constraint normalized with locale-independent lowercase comparison. */
+    val mimeType: String? = mimeType?.lowercase(Locale.ROOT)
 
-    /** Compares pattern, argument types, and target stack structurally. */
+    internal val matchIdentity = NavDeepLinkMatchIdentity(
+        uriPattern = uriPattern,
+        action = action,
+        mimeType = this.mimeType,
+    )
+    internal val compiledUri: CompiledNavDeepLink? = uriPattern?.let { pattern ->
+        compileDeepLink(
+            uriPattern = pattern,
+            argumentTypes = this.argumentTypes,
+        )
+    }
+    internal val compiledMimeType: NavMimeType? = this.mimeType?.let { value ->
+        requireNotNull(parseMimeType(value)) {
+            "Navigation deep-link MIME type must use valid 'type/subtype' syntax: '$value'."
+        }
+    }
+
+    init {
+        require(uriPattern != null || action != null || mimeType != null) {
+            "Navigation deep-link declaration must contain a URI pattern, action, or MIME type."
+        }
+        require(action == null || isValidAction(action)) {
+            "Navigation deep-link action must be non-blank and contain no control characters."
+        }
+        require(uriPattern != null || argumentTypes.isEmpty()) {
+            "Navigation deep-link argument types require a URI pattern."
+        }
+    }
+
+    /** Compares every constraint, argument type, and target stack structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavDeepLink &&
             uriPattern == other.uriPattern &&
             argumentTypes == other.argumentTypes &&
-            targetStackId == other.targetStackId
+            targetStackId == other.targetStackId &&
+            action == other.action &&
+            mimeType == other.mimeType
     }
 
     /** Returns the structural hash of the public declaration. */
     override fun hashCode(): Int {
-        var result = uriPattern.hashCode()
+        var result = uriPattern?.hashCode() ?: 0
         result = 31 * result + argumentTypes.hashCode()
         result = 31 * result + (targetStackId?.hashCode() ?: 0)
+        result = 31 * result + (action?.hashCode() ?: 0)
+        result = 31 * result + (mimeType?.hashCode() ?: 0)
         return result
     }
 
@@ -79,6 +169,8 @@ class NavDeepLink(
     override fun toString(): String {
         return "NavDeepLink(" +
             "uriPattern=$uriPattern, " +
+            "action=$action, " +
+            "mimeType=$mimeType, " +
             "argumentTypes=$argumentTypes, " +
             "targetStackId=$targetStackId" +
             ")"
@@ -99,6 +191,8 @@ data class NavDeepLinkMatch(
 /** Diagnostic reason why a deep link was rejected instead of reported as no match. */
 enum class NavDeepLinkRejectionReason {
     MalformedUri,
+    MalformedAction,
+    MalformedMimeType,
     InvalidArgument,
     AmbiguousMatch,
 }
@@ -106,21 +200,22 @@ enum class NavDeepLinkRejectionReason {
 /**
  * Diagnostic details for a rejected deep-link input.
  *
- * [argumentName] is populated for typed decoding failures. [matchingPatterns] identifies equally
- * specific candidates for ambiguity, or the most-specific candidates involved in a type failure.
+ * [argumentName] is populated for typed decoding failures. [candidates] identifies equally
+ * specific declarations for ambiguity, or the most-specific declarations involved in a type
+ * failure.
  *
  * @property reason rejection category
  * @property argumentName failed placeholder name, when applicable
- * @param matchingPatterns copied conflicting or relevant URI patterns
+ * @param candidates copied conflicting or relevant declarations
  */
 class NavDeepLinkRejection(
     val reason: NavDeepLinkRejectionReason,
     val argumentName: String? = null,
-    matchingPatterns: List<String> = emptyList(),
+    candidates: List<NavDeepLink> = emptyList(),
 ) {
-    /** Immutable relevant pattern list in resolver order. */
-    val matchingPatterns: List<String> = Collections.unmodifiableList(
-        ArrayList(matchingPatterns),
+    /** Immutable relevant declaration list in resolver order. */
+    val candidates: List<NavDeepLink> = Collections.unmodifiableList(
+        ArrayList(candidates),
     )
 
     /** Compares all diagnostic fields structurally. */
@@ -128,14 +223,14 @@ class NavDeepLinkRejection(
         return other is NavDeepLinkRejection &&
             reason == other.reason &&
             argumentName == other.argumentName &&
-            matchingPatterns == other.matchingPatterns
+            candidates == other.candidates
     }
 
     /** Returns the structural hash of all diagnostic fields. */
     override fun hashCode(): Int {
         var result = reason.hashCode()
         result = 31 * result + (argumentName?.hashCode() ?: 0)
-        result = 31 * result + matchingPatterns.hashCode()
+        result = 31 * result + candidates.hashCode()
         return result
     }
 
@@ -144,12 +239,12 @@ class NavDeepLinkRejection(
         return "NavDeepLinkRejection(" +
             "reason=$reason, " +
             "argumentName=$argumentName, " +
-            "matchingPatterns=$matchingPatterns" +
+            "candidates=$candidates" +
             ")"
     }
 }
 
-/** Exhaustive result of resolving one input URI. */
+/** Exhaustive result of resolving one external-navigation request. */
 sealed interface NavDeepLinkResolution {
     /**
      * One uniquely most-specific pattern matched.
@@ -182,17 +277,36 @@ internal data class NavDeepLinkTarget(
 )
 
 internal fun resolveDeepLinkTargets(
-    uri: String,
+    request: NavDeepLinkRequest,
     targets: List<NavDeepLinkTarget>,
 ): NavDeepLinkResolution {
-    val input = parseInputUri(uri)
-        ?: return NavDeepLinkResolution.Rejected(
+    if (request.action != null && !isValidAction(request.action)) {
+        return NavDeepLinkResolution.Rejected(
+            NavDeepLinkRejection(NavDeepLinkRejectionReason.MalformedAction),
+        )
+    }
+    val inputMimeType = request.mimeType?.let { mimeType ->
+        parseMimeType(mimeType)
+            ?: return NavDeepLinkResolution.Rejected(
+                NavDeepLinkRejection(NavDeepLinkRejectionReason.MalformedMimeType),
+            )
+    }
+    val inputUri = request.uri?.let { uri ->
+        parseInputUri(uri)
+            ?: return NavDeepLinkResolution.Rejected(
             NavDeepLinkRejection(NavDeepLinkRejectionReason.MalformedUri),
         )
+    }
     val matches = mutableListOf<RankedDeepLinkMatch>()
     val invalidArguments = mutableListOf<InvalidDeepLinkArgument>()
     targets.forEach { target ->
-        when (val candidate = target.deepLink.compiled.match(input)) {
+        when (
+            val candidate = target.deepLink.match(
+                request = request,
+                inputUri = inputUri,
+                inputMimeType = inputMimeType,
+            )
+        ) {
             is CompiledMatch.Matched -> {
                 matches += RankedDeepLinkMatch(
                     match = NavDeepLinkMatch(
@@ -210,7 +324,7 @@ internal fun resolveDeepLinkTargets(
                 invalidArguments += InvalidDeepLinkArgument(
                     name = candidate.name,
                     score = candidate.score,
-                    pattern = target.deepLink.uriPattern,
+                    deepLink = target.deepLink,
                 )
             }
 
@@ -242,9 +356,9 @@ internal fun resolveDeepLinkTargets(
             NavDeepLinkRejection(
                 reason = NavDeepLinkRejectionReason.InvalidArgument,
                 argumentName = invalid.name,
-                matchingPatterns = invalidArguments
+                candidates = invalidArguments
                     .filter { candidate -> candidate.score == highestInvalidScore }
-                    .map(InvalidDeepLinkArgument::pattern),
+                    .map(InvalidDeepLinkArgument::deepLink),
             ),
         )
     }
@@ -254,13 +368,70 @@ internal fun resolveDeepLinkTargets(
         return NavDeepLinkResolution.Rejected(
             NavDeepLinkRejection(
                 reason = NavDeepLinkRejectionReason.AmbiguousMatch,
-                matchingPatterns = bestMatches.map { match ->
-                    match.match.deepLink.uriPattern
+                candidates = bestMatches.map { match ->
+                    match.match.deepLink
                 },
             ),
         )
     }
     return NavDeepLinkResolution.Matched(bestMatches.single().match)
+}
+
+internal fun resolveDeepLinkTargets(
+    uri: String,
+    targets: List<NavDeepLinkTarget>,
+): NavDeepLinkResolution {
+    return resolveDeepLinkTargets(
+        request = NavDeepLinkRequest(uri = uri),
+        targets = targets,
+    )
+}
+
+private fun NavDeepLink.match(
+    request: NavDeepLinkRequest,
+    inputUri: ParsedInputUri?,
+    inputMimeType: NavMimeType?,
+): CompiledMatch {
+    if (action != null && action != request.action) {
+        return CompiledMatch.NoMatch
+    }
+    val mimeSpecificity = compiledMimeType?.matchSpecificity(inputMimeType)
+        ?: if (compiledMimeType == null) 0 else return CompiledMatch.NoMatch
+    if (compiledMimeType != null && mimeSpecificity < 0) {
+        return CompiledMatch.NoMatch
+    }
+    val constraintCount = listOf(uriPattern, action, mimeType).count { value -> value != null }
+    val actionSpecificity = if (action == null) 0 else 1
+    val uriMatch = when (val compiled = compiledUri) {
+        null -> CompiledUriMatch.Matched(arguments = emptyMap(), score = 0)
+        else -> {
+            val uri = inputUri ?: return CompiledMatch.NoMatch
+            compiled.match(uri)
+        }
+    }
+    return when (uriMatch) {
+        is CompiledUriMatch.Matched -> CompiledMatch.Matched(
+            arguments = uriMatch.arguments,
+            score = NavDeepLinkSpecificity(
+                constraintCount = constraintCount,
+                uriScore = if (compiledUri == null) 0 else uriMatch.score + 1,
+                actionScore = actionSpecificity,
+                mimeScore = mimeSpecificity,
+            ),
+        )
+
+        is CompiledUriMatch.InvalidArgument -> CompiledMatch.InvalidArgument(
+            name = uriMatch.name,
+            score = NavDeepLinkSpecificity(
+                constraintCount = constraintCount,
+                uriScore = uriMatch.score + 1,
+                actionScore = actionSpecificity,
+                mimeScore = mimeSpecificity,
+            ),
+        )
+
+        CompiledUriMatch.NoMatch -> CompiledMatch.NoMatch
+    }
 }
 
 /** Compiled deep-link pattern used by the internal resolver. */
@@ -272,15 +443,15 @@ internal class CompiledNavDeepLink(
     private val query: Map<String, ComponentPattern>,
     private val argumentTypes: Map<String, NavDeepLinkArgumentType>,
 ) {
-    fun match(input: ParsedInputUri): CompiledMatch {
+    fun match(input: ParsedInputUri): CompiledUriMatch {
         if (!scheme.equals(input.scheme, ignoreCase = true)) {
-            return CompiledMatch.NoMatch
+            return CompiledUriMatch.NoMatch
         }
         if (!hostsMatch(host, input.host) || port != input.port) {
-            return CompiledMatch.NoMatch
+            return CompiledUriMatch.NoMatch
         }
         if (path.size != input.path.size) {
-            return CompiledMatch.NoMatch
+            return CompiledUriMatch.NoMatch
         }
         val arguments = linkedMapOf<String, NavValue>()
         path.forEachIndexed { index, pattern ->
@@ -292,20 +463,20 @@ internal class CompiledNavDeepLink(
             ) {
                 is ComponentMatch.Argument -> arguments[result.name] = result.value
                 is ComponentMatch.InvalidArgument -> {
-                    return CompiledMatch.InvalidArgument(
+                    return CompiledUriMatch.InvalidArgument(
                         name = result.name,
                         score = specificityScore(),
                     )
                 }
 
-                ComponentMatch.NoMatch -> return CompiledMatch.NoMatch
+                ComponentMatch.NoMatch -> return CompiledUriMatch.NoMatch
                 ComponentMatch.Static -> Unit
             }
         }
         query.forEach { (name, pattern) ->
-            val values = input.query[name] ?: return CompiledMatch.NoMatch
+            val values = input.query[name] ?: return CompiledUriMatch.NoMatch
             if (values.size != 1) {
-                return CompiledMatch.InvalidArgument(
+                return CompiledUriMatch.InvalidArgument(
                     name = (pattern as? ComponentPattern.Argument)?.name ?: name,
                     score = specificityScore(),
                 )
@@ -318,17 +489,17 @@ internal class CompiledNavDeepLink(
             ) {
                 is ComponentMatch.Argument -> arguments[result.name] = result.value
                 is ComponentMatch.InvalidArgument -> {
-                    return CompiledMatch.InvalidArgument(
+                    return CompiledUriMatch.InvalidArgument(
                         name = result.name,
                         score = specificityScore(),
                     )
                 }
 
-                ComponentMatch.NoMatch -> return CompiledMatch.NoMatch
+                ComponentMatch.NoMatch -> return CompiledUriMatch.NoMatch
                 ComponentMatch.Static -> Unit
             }
         }
-        return CompiledMatch.Matched(
+        return CompiledUriMatch.Matched(
             arguments = arguments,
             score = specificityScore(),
         )
@@ -393,15 +564,29 @@ internal sealed interface ComponentMatch {
     data object NoMatch : ComponentMatch
 }
 
-internal sealed interface CompiledMatch {
+internal sealed interface CompiledUriMatch {
     data class Matched(
         val arguments: Map<String, NavValue>,
         val score: Int,
-    ) : CompiledMatch
+    ) : CompiledUriMatch
 
     data class InvalidArgument(
         val name: String,
         val score: Int,
+    ) : CompiledUriMatch
+
+    data object NoMatch : CompiledUriMatch
+}
+
+internal sealed interface CompiledMatch {
+    data class Matched(
+        val arguments: Map<String, NavValue>,
+        val score: NavDeepLinkSpecificity,
+    ) : CompiledMatch
+
+    data class InvalidArgument(
+        val name: String,
+        val score: NavDeepLinkSpecificity,
     ) : CompiledMatch
 
     data object NoMatch : CompiledMatch
@@ -417,14 +602,54 @@ internal data class ParsedInputUri(
 
 private data class RankedDeepLinkMatch(
     val match: NavDeepLinkMatch,
-    val score: Int,
+    val score: NavDeepLinkSpecificity,
 )
 
 private data class InvalidDeepLinkArgument(
     val name: String,
-    val score: Int,
-    val pattern: String,
+    val score: NavDeepLinkSpecificity,
+    val deepLink: NavDeepLink,
 )
+
+internal data class NavDeepLinkMatchIdentity(
+    val uriPattern: String?,
+    val action: String?,
+    val mimeType: String?,
+)
+
+internal data class NavDeepLinkSpecificity(
+    val constraintCount: Int,
+    val uriScore: Int,
+    val actionScore: Int,
+    val mimeScore: Int,
+) : Comparable<NavDeepLinkSpecificity> {
+    override fun compareTo(other: NavDeepLinkSpecificity): Int {
+        return compareValuesBy(
+            this,
+            other,
+            NavDeepLinkSpecificity::constraintCount,
+            NavDeepLinkSpecificity::uriScore,
+            NavDeepLinkSpecificity::actionScore,
+            NavDeepLinkSpecificity::mimeScore,
+        )
+    }
+}
+
+internal data class NavMimeType(
+    val type: String,
+    val subtype: String,
+) {
+    fun matchSpecificity(request: NavMimeType?): Int {
+        request ?: return -1
+        if (type != "*" && type != request.type) {
+            return -1
+        }
+        if (subtype != "*" && subtype != request.subtype) {
+            return -1
+        }
+        return (if (type == "*") 0 else 1) + (if (subtype == "*") 0 else 1)
+    }
+}
 
 private fun compileDeepLink(
     uriPattern: String,
@@ -672,6 +897,27 @@ private fun hostsMatch(expected: String?, actual: String?): Boolean {
     }
 }
 
+private fun isValidAction(action: String): Boolean {
+    return action.isNotBlank() && action.none(Char::isISOControl)
+}
+
+private fun parseMimeType(value: String): NavMimeType? {
+    if (value.isBlank() || value.any(Char::isWhitespace)) {
+        return null
+    }
+    val separatorIndex = value.indexOf('/')
+    if (separatorIndex <= 0 || separatorIndex != value.lastIndexOf('/') || separatorIndex == value.lastIndex) {
+        return null
+    }
+    val type = value.substring(0, separatorIndex).lowercase(Locale.ROOT)
+    val subtype = value.substring(separatorIndex + 1).lowercase(Locale.ROOT)
+    if (!MimeTokenRegex.matches(type) || !MimeTokenRegex.matches(subtype)) {
+        return null
+    }
+    return NavMimeType(type = type, subtype = subtype)
+}
+
 private fun placeholderToken(index: Int): String = "__vc_deep_link_argument_${index}__"
 
 private val PlaceholderRegex = Regex("\\{([A-Za-z][A-Za-z0-9_]*)\\}")
+private val MimeTokenRegex = Regex("(?:[A-Za-z0-9!#$%&'*+.^_`|~-]+|\\*)")

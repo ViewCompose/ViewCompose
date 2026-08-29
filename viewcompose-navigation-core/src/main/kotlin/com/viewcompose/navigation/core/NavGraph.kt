@@ -60,9 +60,9 @@ class NavDestination internal constructor(
 /**
  * Immutable navigation graph that resolves routes, expands nested starts, and matches deep links.
  *
- * Route names and deep-link URI patterns must be unique across the complete graph. A nested graph's
- * start destination must be its direct child. Resolving a graph route recursively enters start
- * destinations while preserving graph-owner paths and inherited arguments.
+ * Route names and deep-link matcher triples must be unique across the complete graph. A nested
+ * graph's start destination must be its direct child. Resolving a graph route recursively enters
+ * start destinations while preserving graph-owner paths and inherited arguments.
  *
  * @sample com.viewcompose.navigation.core.samples.navigationGraphSample
  * @property route non-blank route name of this graph node
@@ -103,12 +103,12 @@ class NavGraph internal constructor(
             ancestorGraphRoutes = emptyList(),
         )
         routeIndex = Collections.unmodifiableMap(mutableIndex)
-        val registeredPatterns = mutableSetOf<String>()
+        val registeredMatchers = mutableSetOf<NavDeepLinkMatchIdentity>()
         deepLinkTargets = Collections.unmodifiableList(
             mutableIndex.values.flatMap { indexed ->
                 indexed.node.deepLinks.map { deepLink ->
-                    check(registeredPatterns.add(deepLink.uriPattern)) {
-                        "Navigation deep-link pattern '${deepLink.uriPattern}' is registered " +
+                    check(registeredMatchers.add(deepLink.matchIdentity)) {
+                        "Navigation deep-link matcher '${deepLink.matchIdentity}' is registered " +
                             "more than once."
                     }
                     NavDeepLinkTarget(
@@ -155,14 +155,30 @@ class NavGraph internal constructor(
     fun contains(routeName: String): Boolean = routeName in routeIndex
 
     /**
-     * Resolves [uri] against all deep links registered in this graph.
+     * Resolves one URI-only request against all deep links registered in this graph.
      *
-     * The result distinguishes no match from malformed input, typed-argument failures, and equally
-     * specific ambiguous patterns.
+     * @param uri untrusted absolute hierarchical URI input
+     * @return a match, no-match result, or structured rejection
      */
     fun resolveDeepLink(uri: String): NavDeepLinkResolution {
         return resolveDeepLinkTargets(
             uri = uri,
+            targets = deepLinkTargets,
+        )
+    }
+
+    /**
+     * Resolves a structured URI, action, and MIME [request] against every registered deep link.
+     *
+     * Malformed request fields and tied most-specific declarations are rejected before a route is
+     * returned. Resolution is immutable, side-effect free, and safe to call from any thread.
+     *
+     * @param request platform-neutral untrusted external-navigation input
+     * @return a match, no-match result, or structured rejection
+     */
+    fun resolveDeepLink(request: NavDeepLinkRequest): NavDeepLinkResolution {
+        return resolveDeepLinkTargets(
+            request = request,
             targets = deepLinkTargets,
         )
     }
