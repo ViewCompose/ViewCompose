@@ -61,7 +61,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement the frozen typed-route contract, then publish its optional Kotlinx Serialization adapter before the broader evidence matrix.
+next_action: Publish the optional Kotlinx Serialization adapter over the completed typed-route contract before the broader evidence matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
@@ -81,12 +81,12 @@ Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecy
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
-structured deep-link and entry-targeted result slices are complete.
+structured deep-link, entry-targeted result, and typed-route contract slices are complete.
 
 Last verified: 2026-08-29.
 
-Next action: implement the frozen typed-route contract, then publish its optional Kotlinx
-Serialization adapter before the broader evidence matrix.
+Next action: publish the optional Kotlinx Serialization adapter over the completed typed-route
+contract before the broader evidence matrix.
 
 ## Maven release changesets
 
@@ -137,6 +137,15 @@ Android host fix clarifies `NavHost` construction identity in public KDoc and th
 `navigation.host` impact plus a compiled custom-overlay construction sample. The capability
 inventory, canonical KDoc, compiled samples, handwritten owners, generated Reference, impact, and
 Changeset provide the structured disposition without claiming `No documentation impact`.
+
+Slice 7.3 classifies both Navigation Core and Navigation Android as features. Core publishes the
+Q3 `NavRouteSpec<T>` identity/codec contract plus graph and entry access, while Android adds typed
+controller commands over that same storage model. Governance V2 detects no application-entry
+change because these Core model members and controller overloads are outside its DSL/host/tooling
+scanner; its one-impact-per-detected-change rule therefore admits no immutable impact record. The
+two capability records, canonical KDoc, compiled samples, module/architecture/migration owners,
+generated Reference, translations, and one two-artifact Changeset provide the structured
+dispositions without claiming `No documentation impact`.
 
 ## Objective
 
@@ -965,6 +974,39 @@ arbitrary live-object persistence, and a mandatory serialization dependency in N
 Slice 7.4 will publish a separate optional Kotlinx Serialization adapter over `NavRouteSpec<T>`;
 custom codecs remain the escape hatch for unsupported schemas. This split is dependency isolation,
 not two routing implementations.
+
+Acceptance evidence:
+
+- The implementation follows the frozen boundary: one final Core spec drives graph registration,
+  immutable `NavRoute` encoding, entry matching/decoding, and Android `navigate`, `replaceTop`, and
+  `reset`. Encoding and main-thread validation precede host mutation, and no registry, decoded
+  object, or second stack model is retained. This is **improved** compile-time route safety with
+  **no material change** to lifecycle, presentation, restoration, deep-link, or transaction policy.
+- Fresh Navigation Core passed 85/85 tests versus the 80-test slice-7.2 baseline, an absolute gain
+  of five (+6.25%). Navigation Android passed 176/176 versus 172, a gain of four (+2.33%). There
+  were no failures, errors, or skips. Round-trip immutability, name mismatch before decode,
+  graph/deep-link coexistence, typed command semantics, encoder atomicity, and main-thread ordering
+  make contract confidence **improved**; accepted line/branch coverage remains **inconclusive**.
+- Both Q3 samples compile. The strict Core API-documentation audit passed. Android API inspection
+  remains **inconclusive** because the pre-existing Dokka `androidJvm`/`release` shared source-root
+  overlap fails before declaration inspection; repair the common Android Dokka convention and
+  rerun without weakening source layout or policy.
+- `qaQuick` passed all 2,268 actionable tasks in 1m43s (206 executed, 2,062 up to date), and
+  `qaPreview` passed all 1,209 in 19s (140/1,069). Documentation structure, 77 script tests, 126
+  current Chinese mirrors, exact two-feature release intent, and development-tooling isolation
+  passed. Repository confidence is **improved** and Preview behavior has **no material change**;
+  cache ratios and wall time are execution context, not performance evidence.
+- The first complete site build measured 49,242,078 non-API bytes, 63,864 bytes above the unchanged
+  46.9 MiB limit. Consolidating repeated manual prose and defining the codec once in Core reduced
+  the same output by 182,637 bytes (0.37%) to 49,059,441, leaving 118,773 bytes headroom. The full
+  bilingual build verified 526 pages, 133 API versions, accessibility, version routes, search, and
+  all site budgets. Documentation size confidence is **improved** without raising a limit.
+- A physical-device run is deliberately not repeated for this pure adapter slice: it changes no
+  Activity, View, Lifecycle, rendering, saved-state transport, or platform callback behavior, and
+  deterministic JVM/Robolectric tests uniquely exercise the new branches. Platform confidence is
+  **no material change**, not a device-pass claim. Serialization-backed schema convenience,
+  coverage, leaks, memory, and representative performance remain **inconclusive**. Next: publish
+  the optional Kotlinx Serialization adapter as slice 7.4.
 
 ### Phase 8: document, release, and archive
 

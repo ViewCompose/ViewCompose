@@ -34,24 +34,15 @@ import com.viewcompose.navigation.core.navGraph
 import com.viewcompose.navigation.core.toRoute
 
 // DOCS_REGION_START(navigation-core-typed-route)
-data class ProfileRoute(
-    val userId: Long,
-    val editable: Boolean,
-)
+data class ProfileRoute(val userId: Long)
 
 val ProfileDestination = NavRouteSpec(
     name = "profile",
     encodeArguments = { profile: ProfileRoute ->
-        mapOf(
-            "userId" to NavValue.LongValue(profile.userId),
-            "editable" to NavValue.BooleanValue(profile.editable),
-        )
+        mapOf("userId" to NavValue.LongValue(profile.userId))
     },
     decodeArguments = { arguments ->
-        ProfileRoute(
-            userId = (arguments.getValue("userId") as NavValue.LongValue).value,
-            editable = (arguments.getValue("editable") as NavValue.BooleanValue).value,
-        )
+        ProfileRoute((arguments.getValue("userId") as NavValue.LongValue).value)
     },
 )
 
@@ -63,7 +54,7 @@ fun typedRouteSample() {
         destination("home")
         destination(ProfileDestination)
     }
-    val route = ProfileDestination.encode(ProfileRoute(userId = 42L, editable = true))
+    val route = ProfileDestination.encode(ProfileRoute(userId = 42L))
     val entry = NavEntry(NavEntryId("profile-42"), graph.resolve(route).destination)
 
     check(entry.toRoute(ProfileDestination).userId == 42L)

@@ -109,21 +109,12 @@ lifecycle, and native View hierarchy share one commit boundary.
 ```kotlin
 data class ArticleRoute(val articleId: Long)
 
-val ArticleDestination = NavRouteSpec(
-    name = "article",
-    encodeArguments = { article: ArticleRoute ->
-        mapOf("articleId" to NavValue.LongValue(article.articleId))
-    },
-    decodeArguments = { arguments ->
-        ArticleRoute(
-            articleId = (arguments.getValue("articleId") as NavValue.LongValue).value,
-        )
-    },
-)
-
-fun typedRouteNavigationSample(controller: NavHostController): ArticleRoute {
-    controller.navigate(ArticleDestination, ArticleRoute(articleId = 42L))
-    return controller.snapshot.top.toRoute(ArticleDestination)
+fun typedRouteNavigationSample(
+    controller: NavHostController,
+    destination: NavRouteSpec<ArticleRoute>,
+): ArticleRoute {
+    controller.navigate(destination, ArticleRoute(articleId = 42L))
+    return controller.snapshot.top.toRoute(destination)
 }
 ```
 
@@ -133,28 +124,11 @@ encoder exception cannot mutate the stack, render tree, owner lifecycle, or resu
 controller and saved-state adapter still receive only `NavRoute`; no live route object or callback
 is retained.
 
-`NavHost` retains one logical owner record per destination and creates a child render session only
-when policy and visibility require a native presentation. Hidden entries always retain lifecycle,
-ViewModel, saved-state, saveable-state, route, and graph identity. A missing presentation is rebuilt
-against the latest captured environment before pop, stack selection/history, predictive Back, or
-adaptive-pane expansion can publish the entry as visible. Failed rebuilds dispose every candidate
-presentation and preserve the previous stack and scene.
-
-Each destination session receives the `NavigationDestination` diagnostics role and the parent
-session ID captured with the `NavHost` Local snapshot. Retention preserves that logical identity;
-failed candidates emit their own terminal sequence, while recreated destinations receive a fresh
-ID. Restoring destination Locals cannot overwrite the child session owner.
-
-Change `contentKey` when destination content closes over non-observable values. Observable state
-invalidates its owning destination session directly. Changing `key`, controller identity, lifecycle
-owner, or debug identity recreates the native host because those inputs change ownership rather
-than content. `overlayHostFactory` is captured when that host is created and is deliberately absent
-from identity equality because lambda identity is not stable across render passes; change `key`
-when installing a different factory.
-
-The default nested overlay factory explicitly constructs `viewcompose-overlay-android`; it never
-discovers a Material backend from classpath order. A named design integration may pass an explicit
-factory when its destination surfaces require additional presenters.
+`NavHost` retains logical owners independently from native presentations. Missing visible
+presentations are rebuilt against the latest environment before a scene is published; failure
+disposes candidates and preserves the committed stack. Change `contentKey` for non-observable
+content inputs, and change the host `key` when an ownership input or overlay factory changes. The
+default overlay factory explicitly uses `viewcompose-overlay-android`, never classpath discovery.
 
 ## Destination context
 
@@ -174,17 +148,10 @@ fun UiTreeBuilder.destinationContextSample(controller: NavHostController) {
 }
 ```
 
-Capture the context holder during DSL declaration when a later callback needs destination
-identity; do not read the Local from an effect callback. The holder survives hidden-presentation
-disposal and recreation for the same retained entry. After permanent removal it receives no more
-presentation updates, while the entry's AndroidX Lifecycle reaches `DESTROYED` and remains the
-terminal resource signal.
-
-Use AndroidX Lifecycle APIs for resource thresholds such as collection, camera, sensor, or player
-activation. Use destination presentation only for coarse UI decisions such as visible versus
-covered, pane role, or transition role. Predictive and ordinary animation progress is deliberately
-absent, so repeated frame progress cannot invalidate ordinary destination content. Nested hosts
-provide their own nearest context; there is no global current-page lookup.
+Capture the context during DSL declaration for later callbacks. It survives presentation disposal
+for the retained entry and stops updating after permanent removal. AndroidX Lifecycle remains the
+resource threshold; presentation state is only for coarse visibility, pane, and transition UI.
+Nested hosts provide the nearest context, and there is no global current-page lookup.
 
 ## Return a result to the previous page
 
@@ -257,79 +224,26 @@ maintaining a second source of truth.
 
 ## Typed plan execution
 
-The host coordinator does not independently calculate lifecycle, retention, focus, accessibility,
-or Back policy. Navigation Core's `NavExecutionReducer` supplies one `NavExecutionPlan` through
-separate settled, transition, and predictive-preview entry points backed by the same reducer. The
-internal `AndroidNavExecutionPlanExecutor` then performs only typed platform effects.
-
-Preparation and refresh happen before the irreversible stack boundary. After commit, the executor
-publishes the exact planned scene and layer order, applies input and accessibility ownership,
-updates destination context and lifecycle in child-down/parent-up order, suspends outgoing render
-work, and evicts only plan-selected hidden presentations. Terminal cleanup disposes a permanently
-removed presentation before destroying its owner. Rollback similarly consumes explicit candidate
-IDs from the plan rather than inspecting whichever Views happen to be attached.
-
-During motion, destination containers outside `inputEntryIds` consume touch, generic-motion, and
-key events and block descendant focus. Entries outside `accessibilityEntryIds` hide descendants
-from accessibility independently. At settlement, the plan restores those rights to the interactive
-pane set. `NavHost` system-Back registration reads the same plan's ownership result. Applications
-normally do not invoke the Core reducer directly; it is a Q3 integration boundary for tests and
-custom platform executors.
+Navigation Core's reducer is the sole lifecycle, retention, input, accessibility, and Back policy
+source. The Android executor prepares presentations before commit, then publishes the planned scene
+and ordered effects; rollback and terminal cleanup consume plan IDs instead of inspecting Views.
+Applications normally use `NavHost`; the reducer is a Q3 boundary for tests and custom executors.
 
 ## Destination and graph ownership
 
-Every destination entry receives an independent Android owner containing:
+Each destination entry owns independent Lifecycle, ViewModelStore, SavedStateRegistry,
+SavedStateHandle defaults, and saveable state; graph instances own the same scope set for their
+descendants. Hidden retention preserves those identities while capping Lifecycle. Transition
+participants stay at most `STARTED`, exiting popped entries stay `CREATED` until presentation
+disposal, and only permanent removal reaches `DESTROYED`. Duplicate routes still create distinct
+owners.
 
-- a Lifecycle capped by the host and semantic scene, including visibility, interaction, transition,
-  and retained-entry presence;
-- a ViewModelStore leased from the shared Lifecycle 2.11 scoped-owner provider and cleared only
-  after the entry leaves all retained state;
-- a SavedStateRegistry and default SavedStateHandle arguments derived from `NavRoute`;
-- a ViewCompose saveable-state registry namespace.
-
-Destination content installs that object into `LocalLifecycleOwner`,
-`LocalSavedStateRegistryOwner`, `LocalViewModelStoreOwner`, and the ViewCompose saveable-state local.
-Graph content installs the selected graph owner through the same four boundaries. A retained hidden
-destination keeps its owner identity and persisted data but receives a capped lifecycle, so a
-`LifecycleAndroidViewAdapter` drives its native View inactive without relying on physical removal.
-
-An ordinary or predictive transition freezes one semantic scene for all owner reconciliation.
-Visible participants remain no higher than `STARTED` until terminal settlement. A popped outgoing
-entry is capped at `CREATED` while its exit View is still presented, then its session is disposed
-before the owner reaches `DESTROYED`. Predictive cancellation restores the previous settled owner
-states; commit flows through the same capped pop transition. Settled adaptive panes may each be
-`RESUMED`, but all visible panes are capped at `STARTED` while their scene changes.
-
-Navigation Core defines overlay layer roles, but this Android host does not yet expose a general
-overlay-navigation scene. The separate overlay host transport must not be interpreted as lifecycle
-integration for navigation overlays.
-
-Pushing the same route twice creates two owners and does not share page state.
-
-`NavHost` requires the nearest `LocalViewModelStoreOwner`; there is no private fallback store.
-Standard Activity and Fragment `setUiContent` hosts install it, while callers of low-level
-`renderInto` must use `ProvideViewModelStoreOwner` explicitly. If the parent implements
-`HasDefaultViewModelProviderFactory`, its default Factory and starting `CreationExtras` are
-inherited. Each child owner then replaces only the ViewModelStore owner, saved-state owner, and
-route or graph default arguments, preserving unrelated Application and DI extras. A different
-parent-owner identity recreates the native host; retained stacks therefore never mix provider
-contracts from two parents.
-
-The controller persists a private host-scope identity beside its stack state. Recreating a host
-under the same retained parent store and restored controller identity rebuilds destination
-Lifecycle and saved-state owners while leasing the same entry and graph ViewModelStores. Normal
-host removal, permanent pop, graph removal, or controller replacement sends terminal clear. This
-separates Android presentation lifetime from logical page-state lifetime without a navigation-only
-store allocator.
-
-Nested graph instances receive `NavGraphOwner` boundaries. Destinations in one graph instance share
-its Lifecycle, ViewModelStore, and SavedStateRegistry until the last descendant leaves the stack.
-Entering the same graph route again later creates a new owner.
-
-`LocalNavGraphOwnerScope.current` exposes the active root-to-leaf owner chain. Use
-`ProvideNavGraphOwner(route)` around a subtree that should resolve lifecycle, ViewModels, and saved
-state against a graph rather than the leaf destination. It fails when called outside destination
-content or for an inactive graph route.
+`NavHost` requires the nearest `LocalViewModelStoreOwner` and inherits its default Factory and
+`CreationExtras`; low-level `renderInto` callers provide it explicitly. A persisted host-scope ID
+allows configuration recreation to lease the same entry and graph stores, while permanent removal
+clears them. Use `ProvideNavGraphOwner(route)` within destination content to select an active graph
+scope. General overlay-navigation lifecycle remains unsupported; overlay transport alone does not
+create such a scene.
 
 ## Failure and rollback
 
@@ -351,79 +265,34 @@ surfaced as `NavHostException` with the original cause, failed entry, and render
 
 ## Save, restore, and process death
 
-`rememberNavHostController` uses the current ViewCompose saveable-state registry. It persists:
-
-- every retained stack, active stack, and selection history;
-- destination and graph instance IDs and route arguments;
-- destination and graph SavedStateRegistry bundles;
-- ViewCompose saveable values owned by each page or graph.
-
-Pending transactions, running animations, Views, sessions, LifecycleRegistry instances, and
-ViewModelStore contents are not serialized. Initial and restored attachment materialize only the
-visible pane set; retained hidden owners are recreated without executing destination content.
-Configuration recreation may retain live ViewModels through the parent store; process recreation
-restores their saved-state inputs into newly created instances.
-
-Restore is defensive. Unknown versions, malformed collection types, excessive entry counts,
-configuration mismatch, or graph hierarchy changes discard incompatible saved state and create the
-configured initial state. This fail-closed behavior avoids attaching an old saved-state namespace to
-a different page owner after an application upgrade.
-
-The current format also accepts the immediately preceding version-4 snapshot. It assigns a fresh
-host-scope identity while preserving valid stacks and destination state, because no live parent
-store can cross a process or application-code restart.
+The saveable registry persists stacks, history, entry/graph IDs and routes, owner bundles, and
+saveable values—not pending work, Views, sessions, Lifecycle objects, or ViewModel contents.
+Restored attachment materializes only visible panes. Invalid versions, shapes, limits,
+configurations, or graph hierarchies fail closed to initial state; the preceding version-4 format
+is accepted with a fresh host-scope identity.
 
 ## Android system and predictive Back
 
-With `systemBackEnabled = true`, `NavHost` registers against the nearest AndroidX Back dispatcher
-only while the controller can consume Back. At the active root it follows the configured retained
-stack history; otherwise dispatch continues to an enclosing host or Activity.
-
-On predictive-Back platforms, gesture progress reveals the previous destination without committing
-the core stack. Cancellation springs both pages back to committed state. Gesture completion uses the
-same transaction and owner boundary as programmatic `popBackStack`. A programmatic command can
-redirect an active preview while preserving its current visual transform for a continuous handoff.
-Both preview pages are capped at `STARTED`; after commit the popped page is capped at `CREATED`
-until its exit presentation is removed, and only settlement resumes the incoming page.
-
-Detaching the View, disabling system Back, or destroying the host actively cancels an unfinished
-preview because the dispatcher may no longer send a terminal callback.
+`NavHost` registers with the nearest AndroidX Back dispatcher only while it can consume Back, using
+retained-stack history at an active root. Predictive preview does not commit the stack: cancel
+restores the settled scene, completion uses the ordinary pop transaction, and command redirection
+continues from current visuals. Preview owners stay at most `STARTED`; detach, disable, or destroy
+cancels an unfinished preview.
 
 ## Motion
 
-`NavTransitionSpec` is visual policy only; changing it never mutates navigation state or ownership.
-It independently configures push, pop, replace, reset, stack selection, deep-link, and predictive-
-Back motion.
-
-`NavDestinationTransform` combines pane-relative travel, dp travel, alpha, and scale. Geometry and
-incoming/outgoing alpha can use independent durations, delays, and `NavMotionEasing` curves. The
-default push/pop geometry and emphasized easing are aligned with current Android activity motion;
-predictive Back follows current WM Shell cross-activity geometry. Use `NavTransitionSpec.None` when
-the application or test must disable all motion.
-
-The View driver renders complete starting layouts before starting motion and temporarily promotes
-expensive destination hierarchies to hardware layers while only transform/alpha changes. Redirected
-motion retains current visual properties so a subsequent command does not jump back to an identity
-frame.
+`NavTransitionSpec` is visual-only policy for every command and predictive Back.
+`NavDestinationTransform` combines pane/dp travel, alpha, scale, timing, and easing; `None` disables
+motion. The driver lays out endpoints before motion, uses temporary hardware layers for transform
+work, and redirects from current visual properties without changing stack or owner semantics.
 
 ## Shared content motion
 
-`Modifier.sharedElement(SharedContentKey(...))` and `Modifier.sharedBounds(...)` are Q3 endpoint
-markers consumed automatically by `NavHost`; no `SharedTransitionLayout` or animation scope is
-required. Keys are local to one outgoing/incoming destination pair. A pair exists only when each
-tree declares the same key and mode exactly once. Missing, duplicate, mismatched, detached,
-zero-sized, surface-backed, or over-budget endpoints fall back per key to ordinary destination
-motion and never change the navigation transaction.
-
-The first release is one-window snapshot motion. `sharedElement` moves the source snapshot to the
-target bounds. `sharedBounds` uses the same bounds path while crossfading source and target
-snapshots. Snapshots draw in stable outgoing-tree order in a non-interactive host overlay and are
-bounded to at most two host areas of pixels for one transition. The incoming destination remains
-the input and accessibility owner. Successful commit may transfer focus from a focused source to a
-focusable target; cancellation restores the source. Completion, cancellation, redirect, host
-destruction, capture failure, and session release all remove snapshots and restore endpoint state
-exactly once. Predictive Back drives the same overlay from gesture progress and continues from that
-fraction on commit; it does not acquire stack commit authority.
+`sharedElement` and `sharedBounds` are Q3 markers matched once per key and mode within one
+destination pair. Invalid, detached, surface-backed, or over-budget endpoints fall back per key
+without affecting navigation. The one-window implementation animates bounded snapshots in a
+non-interactive overlay, preserves incoming input/accessibility ownership, cleans up exactly once,
+and lets predictive Back drive the same visuals without gaining commit authority.
 
 ## Adaptive panes
 
@@ -456,20 +325,10 @@ fun navigateSharedImageIntent(
 }
 ```
 
-The platform-neutral `NavDeepLinkRequest`, string URI, Android `Uri`, and Android `Intent` entry
-points all use the same strict Core resolver. The Intent adapter maps only `data`, `action`, and
-`type`; extras and categories never enter route arguments or matching policy. URI-only declarations
-continue to accept `ACTION_VIEW` Intents, while action-only, MIME-only, and combined declarations
-support shares and other explicit integrations without Android types in Navigation Core.
-
-A match is converted to one atomic command that updates the declared target stack and selects it.
-`NavDeepLinkResult.Navigated` still contains a `NavResult`, so rendering or commit failure is not
-confused with request matching success. An Intent without data, action, or MIME type returns
-`NoMatch`; malformed supplied fields return the Core resolver's structured rejection.
-
-For multiple tabs, declare one `NavStackConfiguration` and remember it with the shared graph. Do not
-create one controller per tab or mirror active-stack state in application fields; the controller
-already retains each stack and owns selection history.
+Request, URI, and Intent entry points share the strict Core resolver; Intent maps only `data`,
+`action`, and `type`. A match atomically updates and selects its target stack, while the nested
+`NavResult` preserves render/commit failure. Multiple tabs use one remembered controller and
+`NavStackConfiguration`, without mirrored active-stack state.
 
 ## Related documentation
 

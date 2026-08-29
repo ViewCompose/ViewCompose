@@ -89,24 +89,15 @@ instance without putting Android concepts in this module.
 
 {/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-typed-route" sample_id="module.navigation-core-typed-route" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
-data class ProfileRoute(
-    val userId: Long,
-    val editable: Boolean,
-)
+data class ProfileRoute(val userId: Long)
 
 val ProfileDestination = NavRouteSpec(
     name = "profile",
     encodeArguments = { profile: ProfileRoute ->
-        mapOf(
-            "userId" to NavValue.LongValue(profile.userId),
-            "editable" to NavValue.BooleanValue(profile.editable),
-        )
+        mapOf("userId" to NavValue.LongValue(profile.userId))
     },
     decodeArguments = { arguments ->
-        ProfileRoute(
-            userId = (arguments.getValue("userId") as NavValue.LongValue).value,
-            editable = (arguments.getValue("editable") as NavValue.BooleanValue).value,
-        )
+        ProfileRoute((arguments.getValue("userId") as NavValue.LongValue).value)
     },
 )
 
@@ -118,7 +109,7 @@ fun typedRouteSample() {
         destination("home")
         destination(ProfileDestination)
     }
-    val route = ProfileDestination.encode(ProfileRoute(userId = 42L, editable = true))
+    val route = ProfileDestination.encode(ProfileRoute(userId = 42L))
     val entry = NavEntry(NavEntryId("profile-42"), graph.resolve(route).destination)
 
     check(entry.toRoute(ProfileDestination).userId == 42L)
