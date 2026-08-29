@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "framework": {
+    "versionLane": "current-source",
+    "identity": "7af858dca1aacf1241106db46021c65fcffa3715",
+    "bundleFingerprint": "ee1765176164201252fe4f3c0b9839a26ee1d87def028255ae2fc435c6594ec1"
+  },
+  "generatedSource": {
+    "packageName": "generated.viewcompose",
+    "sourceKind": "screenshot",
+    "functionName": "ScreenshotWireframeView",
+    "kotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
+    "artifactIds": ["viewcompose-ui-foundation"],
+    "declaredBindings": [
+      {
+        "parameter": "emailState",
+        "source": "emailState",
+        "type": "TextFieldState"
+      },
+      {
+        "parameter": "onEmailSubmit",
+        "source": "onEmailSubmit",
+        "type": "(TextFieldImeAction) -> Boolean"
+      },
+      {
+        "parameter": "onContinue",
+        "source": "onContinue",
+        "type": "() -> Unit"
+      }
+    ]
+  },
+  "bindings": [
+    {
+      "kind": "text-field-state",
+      "parameter": "emailState",
+      "source": "emailState",
+      "initialText": ""
+    },
+    {
+      "kind": "ime-action-callback",
+      "parameter": "onEmailSubmit",
+      "source": "onEmailSubmit",
+      "returnValue": false
+    },
+    {
+      "kind": "unit-callback",
+      "parameter": "onContinue",
+      "source": "onContinue",
+      "behavior": "no-op"
+    }
+  ],
+  "configuration": {
+    "widthDp": 411,
+    "heightDp": -1,
+    "density": 2.625,
+    "fontScale": 1,
+    "localeTag": "en-US",
+    "layoutDirection": "Ltr",
+    "theme": "Light",
+    "apiLevel": null
+  },
+  "lanes": {
+    "compiler": "current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11",
+    "render": "current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1"
+  }
+}

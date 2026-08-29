@@ -890,6 +890,28 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotRender") {
+            group = "verification"
+            description =
+                "Verifies screenshot-generated Preview lineage and safe callback binding contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-render")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/generated-preview-request.schema.json",
+                        "evaluation/fixtures/visual/screenshot-generated-preview-contract.json",
+                        "evaluation/fixtures/visual/screenshot-generation/wireframe.*",
+                        "evaluation/fixtures/visual/screenshot-render/**",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/verify-phase5-screenshot-render.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

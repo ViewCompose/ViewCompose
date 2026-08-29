@@ -8,6 +8,7 @@ import {canonicalJson} from './screenshot-contract.mjs';
 import {TOOL_DEFINITIONS, TOOL_NAMES} from './tool-catalog.mjs';
 import {verifyPhase5ScreenshotResolution} from './verify-phase5-screenshot-resolution.mjs';
 import {verifyPhase5ScreenshotGeneration} from './verify-phase5-screenshot-generation.mjs';
+import {verifyPhase5ScreenshotRender} from './verify-phase5-screenshot-render.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -2189,6 +2190,7 @@ export async function verifyPhase0() {
   );
   const screenshotInferenceResolution = await verifyPhase5ScreenshotResolution();
   const screenshotKotlinGeneration = await verifyPhase5ScreenshotGeneration({compileGolden: false});
+  const screenshotGeneratedPreview = await verifyPhase5ScreenshotRender();
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -2220,6 +2222,9 @@ export async function verifyPhase0() {
     screenshotKotlinGenerationFixtures:
       screenshotKotlinGeneration.supportedGoldens +
         screenshotKotlinGeneration.failClosedDenominators,
+    screenshotGeneratedPreviewFixtures:
+      screenshotGeneratedPreview.supportedGoldens +
+        screenshotGeneratedPreview.failClosedDenominators,
   };
 }
 
@@ -2239,7 +2244,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.screenshotPreprocessingFixtures} frozen screenshot-preprocessing fixtures and ` +
           `${summary.screenshotDesignInferenceFixtures} frozen screenshot-inference fixtures and ` +
           `${summary.screenshotInferenceResolutionFixtures} frozen screenshot-resolution fixtures and ` +
-          `${summary.screenshotKotlinGenerationFixtures} frozen screenshot-generation fixtures.`,
+          `${summary.screenshotKotlinGenerationFixtures} frozen screenshot-generation fixtures and ` +
+          `${summary.screenshotGeneratedPreviewFixtures} frozen screenshot-Preview fixtures.`,
       );
     })
     .catch((error) => {

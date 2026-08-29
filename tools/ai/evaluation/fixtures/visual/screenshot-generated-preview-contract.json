@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-generated-preview-v1",
+  "requiresContracts": [
+    "viewcompose-screenshot-kotlin-generation-v1",
+    "viewcompose-generated-preview-v1",
+    "generated-preview-request-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "contract-frozen",
+    "publicRenderMode": false,
+    "implementation": false,
+    "evidence": "static-golden"
+  },
+  "lineage": {
+    "acceptedSourceKind": "screenshot",
+    "resolutionResultFingerprint": "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
+    "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "generationRequestFingerprint": "176fd47687381494a4cb9331d5ae682d7a52b4483641ac3930621afbf29c4551",
+    "generationReportFingerprint": "51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d",
+    "generatedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
+    "previewRequestFingerprint": "3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c",
+    "previewWrapperFingerprint": "7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b"
+  },
+  "profile": {
+    "sourceKind": "screenshot",
+    "targetId": "tools.ai.GeneratedScreenshotPreview",
+    "functionName": "GeneratedScreenshotPreview",
+    "annotationNamePrefix": "Generated Screenshot · ",
+    "annotationGroup": "AI/Screenshot",
+    "ownerClassName": "generated.viewcompose.GeneratedPreviewKt"
+  },
+  "bindings": {
+    "exactOrderRequired": true,
+    "exactParameterRequired": true,
+    "exactSourceRequired": true,
+    "exactTypeRequired": true,
+    "callbackSourceAllowed": false,
+    "allowed": {
+      "TextFieldState": {
+        "kind": "text-field-state",
+        "value": "explicit-initial-text"
+      },
+      "() -> Unit": {
+        "kind": "unit-callback",
+        "value": "fixed-no-op"
+      },
+      "(Boolean) -> Unit": {
+        "kind": "boolean-callback",
+        "value": "fixed-no-op"
+      },
+      "(TextFieldImeAction) -> Boolean": {
+        "kind": "ime-action-callback",
+        "value": "explicit-boolean-return"
+      }
+    }
+  },
+  "execution": {
+    "fixedPreviewHarness": true,
+    "projectBuildExecution": false,
+    "networkAccess": false,
+    "providerExecution": false,
+    "callerSourceExecution": false,
+    "callerTaskSelection": false,
+    "callerDependencySelection": false,
+    "callerOutputPathSelection": false
+  },
+  "claims": {
+    "deterministicWrapper": true,
+    "safeBindingContract": true,
+    "wrapperCompilation": false,
+    "runtimeRendering": false,
+    "semanticComparison": false,
+    "visualParity": false
+  },
+  "limits": {
+    "maxBindings": 64,
+    "maxGeneratedKotlinBytes": 1048576,
+    "maxWrapperBytes": 262144
+  },
+  "diagnosticCodes": [
+    "VC-AI-PREVIEW-BINDING-MISSING",
+    "VC-AI-PREVIEW-BINDING-VALUE-INVALID",
+    "VC-AI-PREVIEW-GENERATED-SOURCE-MISMATCH"
+  ],
+  "supportedFixtures": [
+    {
+      "status": "contract-frozen",
+      "resolutionResult": "screenshot-resolution/wireframe.result.json",
+      "generationRequest": "screenshot-generation/wireframe.request.json",
+      "generatedKotlin": "screenshot-generation/wireframe.generated.kt",
+      "generationReport": "screenshot-generation/wireframe.report.json",
+      "previewRequest": "screenshot-render/wireframe.preview-request.json",
+      "previewWrapper": "screenshot-render/wireframe.preview-wrapper.kt",
+      "expectedBindings": 3,
+      "expectedCallbackBindings": 2
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "mutation": "screenshot-render/callback-source.mutation.json",
+      "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-VALUE-INVALID"]
+    },
+    {
+      "mutation": "screenshot-render/missing-callback.mutation.json",
+      "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-MISSING"]
+    },
+    {
+      "mutation": "screenshot-render/wrong-callback-kind.mutation.json",
+      "diagnosticCodes": ["VC-AI-PREVIEW-GENERATED-SOURCE-MISMATCH"]
+    }
+  ]
+}

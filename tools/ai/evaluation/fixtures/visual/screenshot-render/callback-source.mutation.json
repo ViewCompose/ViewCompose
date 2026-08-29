@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-render/wireframe.preview-request.json",
+  "operation": "add-callback-source",
+  "parameter": "onContinue",
+  "value": "{ navigate() }",
+  "expectedDiagnostic": "VC-AI-PREVIEW-BINDING-VALUE-INVALID"
+}

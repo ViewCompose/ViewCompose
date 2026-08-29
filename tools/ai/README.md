@@ -295,6 +295,16 @@ an API. The exact wireframe Kotlin golden compiles in the pinned JDK 21/Kotlin U
 passes only that source and the fixed artifact/capability selection to the hermetic compiler.
 Rendering and visual parity remain explicit non-claims until a later gate.
 
+The screenshot generated-Preview contract now freezes that next boundary without advertising a
+public render mode. Its request identifies `sourceKind: "screenshot"`, uses the dedicated
+`GeneratedScreenshotPreview` target and `AI/Screenshot` group, and requires the exact state/event
+parameter order reported by the screenshot generator. `TextFieldState` receives only explicit
+initial text; `() -> Unit` and `(Boolean) -> Unit` receive fixed no-op callbacks; and
+`(TextFieldImeAction) -> Boolean` receives one explicit Boolean return. No binding accepts lambda
+source or project code. Missing, reordered, source-mismatched, type-mismatched, or source-bearing
+callbacks fail before the fixed Preview harness can run. The contract-only gate validates the
+deterministic wrapper but makes no compilation, render, comparison, or pixel-parity claim.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -304,11 +314,13 @@ npm --prefix tools/ai run verify:phase5-screenshot
 npm --prefix tools/ai run verify:phase5-screenshot-inference
 npm --prefix tools/ai run verify:phase5-screenshot-resolution
 npm --prefix tools/ai run verify:phase5-screenshot-generation
+npm --prefix tools/ai run verify:phase5-screenshot-render
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
 ./gradlew verifyAiScreenshotResolution
 ./gradlew verifyAiScreenshotGeneration
+./gradlew verifyAiScreenshotRender
 ```
 
 The preferred protocol follows the

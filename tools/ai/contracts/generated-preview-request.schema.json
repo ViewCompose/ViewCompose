@@ -36,6 +36,7 @@
       ],
       "properties": {
         "packageName": { "const": "generated.viewcompose" },
+        "sourceKind": { "enum": ["android-xml", "screenshot"] },
         "functionName": { "$ref": "#/$defs/kotlinIdentifier" },
         "kotlinFingerprint": { "$ref": "#/$defs/sha256" },
         "artifactIds": {
@@ -59,7 +60,10 @@
         "oneOf": [
           { "$ref": "#/$defs/stringBinding" },
           { "$ref": "#/$defs/textFieldStateBinding" },
-          { "$ref": "#/$defs/imageSourceBinding" }
+          { "$ref": "#/$defs/imageSourceBinding" },
+          { "$ref": "#/$defs/unitCallbackBinding" },
+          { "$ref": "#/$defs/booleanCallbackBinding" },
+          { "$ref": "#/$defs/imeActionCallbackBinding" }
         ]
       }
     },
@@ -106,7 +110,16 @@
       "properties": {
         "parameter": { "$ref": "#/$defs/bindingParameter" },
         "source": { "$ref": "#/$defs/bindingSource" },
-        "type": { "enum": ["String", "TextFieldState", "ImageSource"] }
+        "type": {
+          "enum": [
+            "String",
+            "TextFieldState",
+            "ImageSource",
+            "() -> Unit",
+            "(Boolean) -> Unit",
+            "(TextFieldImeAction) -> Boolean"
+          ]
+        }
       }
     },
     "stringBinding": {
@@ -143,6 +156,39 @@
           "pattern": "^@drawable/[a-z][a-z0-9_]*$"
         },
         "asset": { "$ref": "#/$defs/embeddedPngAsset" }
+      }
+    },
+    "unitCallbackBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "behavior"],
+      "properties": {
+        "kind": { "const": "unit-callback" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "behavior": { "const": "no-op" }
+      }
+    },
+    "booleanCallbackBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "behavior"],
+      "properties": {
+        "kind": { "const": "boolean-callback" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "behavior": { "const": "no-op" }
+      }
+    },
+    "imeActionCallbackBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "returnValue"],
+      "properties": {
+        "kind": { "const": "ime-action-callback" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "returnValue": { "type": "boolean" }
       }
     },
     "embeddedPngAsset": {

@@ -834,6 +834,71 @@
         "diagnosticCodes": ["VC-AI-SCREENSHOT-GENERATION-UNSUPPORTED"]
       },
       "metricIds": ["visual.screenshot-generation-safety"]
+    },
+    {
+      "id": "visual.screenshot-render-wireframe-contract",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-render/wireframe.preview-request.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": ["visual.screenshot-render-binding-exactness"]
+    },
+    {
+      "id": "visual.screenshot-render-callback-source-denied",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-render/callback-source.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-VALUE-INVALID"]
+      },
+      "metricIds": ["visual.screenshot-render-binding-safety"]
+    },
+    {
+      "id": "visual.screenshot-render-missing-callback",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-render/missing-callback.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-MISSING"]
+      },
+      "metricIds": [
+        "visual.screenshot-render-binding-exactness",
+        "visual.screenshot-render-binding-safety"
+      ]
+    },
+    {
+      "id": "visual.screenshot-render-wrong-callback-kind",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-render/wrong-callback-kind.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-PREVIEW-GENERATED-SOURCE-MISMATCH"]
+      },
+      "metricIds": [
+        "visual.screenshot-render-binding-exactness",
+        "visual.screenshot-render-binding-safety"
+      ]
     }
   ]
 }

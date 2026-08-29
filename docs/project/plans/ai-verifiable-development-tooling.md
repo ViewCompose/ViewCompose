@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze explicit Preview bindings and a source-bound render contract for screenshot-generated Kotlin, then compare its semantic tree before any pixel-parity claim.
+next_action: Implement the frozen screenshot-generated Preview contract in render mode, accept exact PNG/render-tree evidence, then compare its semantic tree before any pixel-parity claim.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -101,13 +101,14 @@ typed state and event bindings to real public APIs, preserves every accessibilit
 machine-checked report, and passes the hermetic compiler. The thirteenth shared CLI/MCP tool now
 reproduces that source and report in generate mode and returns hermetic compiled evidence in compile
 mode, including from the installed package. Provider selection remains a separate, explicitly
-authorized decision.
+authorized decision. The source-bound screenshot generated-Preview contract is now frozen with
+explicit state and fixed no-source callback bindings; it is not yet exposed as render mode.
 
 Last verified: 2026-08-30.
 
-Next action: freeze explicit Preview bindings and a source-bound render contract for
-screenshot-generated Kotlin, then compare its semantic tree before any pixel-parity claim or
-provider-backed adapter.
+Next action: implement the frozen screenshot-generated Preview contract in render mode, accept its
+exact PNG and render-tree evidence, then compare that semantic tree before any pixel-parity claim
+or provider-backed adapter.
 
 ## Maven release changesets
 
@@ -1864,9 +1865,52 @@ executed and 14 up-to-date.
 This is **improved** deterministic source generation, typed behavior binding, accessibility
 disposition preservation, hermetic compile evidence, and installed transport parity with **no
 material Android runtime behavior change**. The result is compilable code, not a render or visual
-parity claim. The next action is to freeze explicit Preview values for caller state and callbacks,
-render the source through the existing isolated harness, and compare its semantic tree before
-introducing screenshot pixel metrics or a provider adapter.
+parity claim. The following contract freezes explicit Preview values for caller state and callbacks
+before the source enters the existing isolated harness.
+
+### Contract freeze — source-bound screenshot generated Preview
+
+Screenshot generated Preview v1 now freezes the next boundary after hermetic Kotlin compilation.
+The request carries `sourceKind: "screenshot"` plus the exact resolution result, resolved Design
+IR, generation request, generation report, generated Kotlin, framework bundle, configuration, and
+compiler/render lane lineage. It uses a dedicated `tools.ai.GeneratedScreenshotPreview` identity,
+`UiTreeBuilder.GeneratedScreenshotPreview()` wrapper, `Generated Screenshot ·` annotation prefix,
+and `AI/Screenshot` group so screenshot evidence cannot be mislabeled or cached as XML evidence.
+
+Every state and event parameter reported by the generator must have one binding in the same order
+with the same parameter, source, and type. `TextFieldState` accepts explicit initial text.
+`() -> Unit` and `(Boolean) -> Unit` map only to fixed no-op callbacks, while
+`(TextFieldImeAction) -> Boolean` maps to an explicit Boolean return. None accepts lambda source,
+expressions, project code, a build task, dependency, path, provider, or network selection. The
+four-node wireframe golden therefore produces `TextFieldState()`, `{ _ -> false }`, and `{ }`
+without executing caller content. Its request fingerprint is
+`3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c`; its 811-byte wrapper
+fingerprint is `7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b`.
+
+The contract gate passes 1/1 exact wrapper and 3/3 fail-closed callback-source, missing-callback,
+and wrong-callback-kind denominators. Phase 0 now verifies 13 schemas, 53 metrics, 57 cases, 54
+fixture-backed cases, and four screenshot-Preview fixtures. Node 25.6.0 passes 175/175 AI-tooling
+tests. The quality-build plugin suite passes, and `verifyAiScreenshotRender` is a `qaQuick`
+dependency even at this contract-only stage so future activation cannot bypass the aggregate.
+
+The schema update remains inside the existing 60-file offline package. Relative to screenshot
+generation implementation, declared bytes increase from 1,752,068 to 1,754,433 (+0.13%) and archive
+bytes from 312,952 to 313,203 (+0.08%); file count is unchanged. The archive SHA-256 is
+`8f9b8037d603e2c0aea533eb937a488bb24ddf0e2a31fb81e20832ab603dbdfa`.
+The distribution gate passes 2/2 reproducible builds, offline install/uninstall, SPDX/license
+inventory, both MCP protocol eras, all installed compile denominators, and both existing XML
+generated-layout comparisons. The combined screenshot-Preview, distribution, documentation,
+tooling-isolation, and release-intent gate passes 23 actionable tasks, with 9 executed and 14
+up-to-date.
+No published ViewCompose artifact, public/protected API, Android runtime, provider boundary, or
+application-process behavior changes, so this slice requires no Maven release changeset or module
+manual update. The changed active plan and tooling README own the documentation impact.
+
+This is **improved** render-contract precision and callback-source safety with **no material runtime
+behavior change**. The wrapper has not yet been compiled or rendered, so the contract makes no PNG,
+render-tree, semantic, geometry, or pixel claim. The next action is to implement this frozen profile
+in `generate_screenshot_viewcompose` render mode, reproduce exact rendered evidence through the
+installed package, and only then bind the result to semantic comparison.
 
 ### Implementation evidence — bounded XML to Design IR
 

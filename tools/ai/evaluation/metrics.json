@@ -435,6 +435,24 @@
       "environment": "ineligible resolution, changed lineage, unsupported events, expressions, resources, callback source, project build execution, and network access fail closed"
     },
     {
+      "id": "visual.screenshot-render-binding-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "screenshot generator-reported state and event parameter, source, type, and order mapped to explicit bounded Preview bindings"
+    },
+    {
+      "id": "visual.screenshot-render-binding-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "fixed no-op or explicit boolean callback behavior with no caller lambda source, project build, task, dependency, path, provider, or network selection"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",
