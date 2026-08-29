@@ -25,6 +25,11 @@ Detailed plan pages remain repository-only drafts linked from this index because
 temporary contributor execution state rather than user guidance. They do not enter the public
 site, search index, or sitemap.
 
+- [AI-verifiable development tooling](./ai-verifiable-development-tooling.md) —
+  make ViewCompose reliably usable by coding agents through a canonical versioned knowledge
+  bundle, isolated compile/render validation, local CLI/MCP/skills, a tooling-only Design IR, and
+  evidence-gated XML, Compose, screenshot, and Figma workflows; contract, evaluation, and security
+  foundations must close before protocol or converter implementation.
 - [Pull-request gate scaling and build-logic modularization](./pull-request-gate-scaling-and-build-logic-modularization.md) —
   split the 2,582-line root gate implementation into compiled, testable build logic, then add
   conservative pull-request impact selection, verified immutable-API caching, and affected-module
