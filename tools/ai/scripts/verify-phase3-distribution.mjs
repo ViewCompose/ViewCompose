@@ -24,6 +24,9 @@ const xmlFixturePath = fileURLToPath(
 const generatedPreviewContractPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview-contract.json', import.meta.url),
 );
+const layoutComparisonContractPath = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/layout-comparison-contract.json', import.meta.url),
+);
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
@@ -245,7 +248,13 @@ async function verifyInventory(packageRoot, contract) {
   }
 }
 
-async function verifyCliFlow(cli, knowledge, installedPackageRoot, generatedPreviewContract) {
+async function verifyCliFlow(
+  cli,
+  knowledge,
+  installedPackageRoot,
+  generatedPreviewContract,
+  layoutComparisonContract,
+) {
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
     name: 'Column',
@@ -352,10 +361,17 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot, generatedPrev
     previewBindings: previewRequest.bindings,
   }, 'distribution-xml-render', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
   const expectedPreview = generatedPreviewContract.supportedFixtures[0];
+  const expectedComparison = layoutComparisonContract.supportedFixtures.find(
+    (fixture) => fixture.source === 'login.xml',
+  );
   if (
     renderedXml.status !== 'success' ||
-    renderedXml.evidence.level !== 'rendered' ||
-    renderedXml.evidence.outputFingerprint !== expectedPreview.expectedOutputFingerprint ||
+    renderedXml.evidence.level !== 'compared' ||
+    renderedXml.evidence.outputFingerprint !== expectedComparison.expectedComparisonFingerprint ||
+    renderedXml.data?.comparison?.render?.outputFingerprint !==
+      expectedPreview.expectedOutputFingerprint ||
+    renderedXml.data?.comparison?.comparisonFingerprint !==
+      expectedComparison.expectedComparisonFingerprint ||
     renderedXml.data?.preview?.generatedPreview?.requestFingerprint !==
       expectedPreview.expectedRequestFingerprint ||
     renderedXml.data?.preview?.image?.sha256 !== expectedPreview.expectedImage.sha256 ||
@@ -373,10 +389,18 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot, generatedPrev
   const expectedImagePreview = generatedPreviewContract.supportedFixtures.find(
     (fixture) => fixture.expectedFunction === 'ProfileCardView',
   );
+  const expectedImageComparison = layoutComparisonContract.supportedFixtures.find(
+    (fixture) => fixture.source === 'profile-card.xml',
+  );
   if (
     renderedImageXml.status !== 'success' ||
-    renderedImageXml.evidence.level !== 'rendered' ||
-    renderedImageXml.evidence.outputFingerprint !== expectedImagePreview.expectedOutputFingerprint ||
+    renderedImageXml.evidence.level !== 'compared' ||
+    renderedImageXml.evidence.outputFingerprint !==
+      expectedImageComparison.expectedComparisonFingerprint ||
+    renderedImageXml.data?.comparison?.render?.outputFingerprint !==
+      expectedImagePreview.expectedOutputFingerprint ||
+    renderedImageXml.data?.comparison?.comparisonFingerprint !==
+      expectedImageComparison.expectedComparisonFingerprint ||
     renderedImageXml.data?.preview?.generatedPreview?.requestFingerprint !==
       expectedImagePreview.expectedRequestFingerprint ||
     renderedImageXml.data?.preview?.generatedPreview?.assets?.[0]?.sha256 !==
@@ -565,10 +589,11 @@ async function verifyMcpMatrix(mcp, contract) {
 }
 
 async function main() {
-  const [contract, knowledge, generatedPreviewContract] = await Promise.all([
+  const [contract, knowledge, generatedPreviewContract, layoutComparisonContract] = await Promise.all([
     readJson(contractPath),
     readJson(knowledgePath),
     readJson(generatedPreviewContractPath),
+    readJson(layoutComparisonContractPath),
   ]);
   const temporaryRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-distribution-'));
   const comparisonRoot = resolve(temporaryRoot, 'comparison');
@@ -624,6 +649,7 @@ async function main() {
       knowledge,
       packageRoot,
       generatedPreviewContract,
+      layoutComparisonContract,
     );
     await verifyMcpMatrix(mcp, contract);
 
@@ -654,8 +680,8 @@ async function main() {
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
-      `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview rendered as ` +
-      `${compileFingerprints.xmlPreview}, and generated XML image Preview rendered as ` +
+      `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +
+      `${compileFingerprints.xmlPreview}, and generated XML image Preview compared as ` +
       `${compileFingerprints.xmlImagePreview}.\n`,
     );
   } finally {

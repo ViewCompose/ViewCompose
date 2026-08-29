@@ -38,7 +38,7 @@ resource, state, and behavior decision.
    any integration edit, run `validate_code` in static and compile modes over the final bounded
    code. Converter compilation proves the isolated generated function, not an unvalidated call
    site.
-7. When the generated function has only supported `String` and `TextFieldState` parameters, call
+7. When the generated function has only supported Preview parameter types, call
    `convert_xml_to_viewcompose` in `render` mode with the same input and one explicit ordered
    `previewBindings` entry for every reported parameter. Never guess a resource value or initial
    state. Missing, extra, reordered, or mismatched bindings must remain blocked. An `ImageSource`
@@ -46,9 +46,11 @@ resource, state, and behavior decision.
    dimensions; never pass a path, URL, project resource ID, XML drawable, or invented substitute.
    Use the separate `render_preview` and `diagnose_layout` tools only for their own allowlisted
    repository Preview targets.
-8. Deliver the source and optional project-context fingerprints, generated-code fingerprint,
-   framework and compiler identity, preserved bindings, unsupported fragments, call-site inventory
-   and completeness, diagnostics, and maximum evidence actually achieved.
+8. Deliver the source and optional project-context fingerprints, generated-code, render-tree, and
+   comparison fingerprints, framework and compiler identity, preserved bindings, per-category
+   semantic and geometry checks, unsupported fragments, call-site inventory and completeness,
+   diagnostics, and maximum evidence actually achieved. Never collapse failed checks into one
+   similarity score or upgrade `rendered` to `compared` after a mismatch.
 
 ## Stop and authority
 

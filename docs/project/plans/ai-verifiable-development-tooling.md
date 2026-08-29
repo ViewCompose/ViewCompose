@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen generated-layout comparator, attach exact compared evidence to XML render mode, and add corruption and one-pixel drift denominators before screenshot or prompt generation begins.
+next_action: Freeze the provider-neutral screenshot-to-Design-IR request, preprocessing, privacy, and evaluation boundary while keeping model/provider execution outside the deterministic tooling core.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -78,13 +78,14 @@ stable cache proof, and installed-package render denominator now pass. Exact emb
 also become a tool-owned Android resource without any caller path, URL, inspected-project resource
 read, or network access; the accepted XML v2 profile-card fixture compiles and renders through that
 lane. The exact structured semantic and geometry comparison contract between the converter's Design
-IR expectations and accepted render-tree evidence is now frozen. Its comparator and public
-`compared` evidence remain the active foundational implementation gap.
+IR expectations and accepted render-tree evidence is now implemented. Both generated fixtures pass
+the public `compared` evidence gate through the installed package. The next foundational boundary is
+provider-neutral screenshot input and preprocessing before any model-backed generation begins.
 
 Last verified: 2026-08-30.
 
-Next action: implement the frozen generated-layout comparison against Design IR and the accepted
-render tree before adding screenshot, prompt, or repair adapters.
+Next action: freeze screenshot-to-Design-IR input, preprocessing, privacy, and evaluation contracts
+before adding any provider-backed generation or repair adapter.
 
 ## Maven release changesets
 
@@ -1405,6 +1406,58 @@ Android runtime or accepted render behavior change**. It does not yet emit a com
 upgrade the public conversion evidence. The next step is the bounded comparator, exact golden
 results for both screens, and corruption, ambiguity, semantic, structure, and one-pixel failure
 tests before any screenshot, prompt, or repair adapter is considered.
+
+### Implementation evidence — exact generated layout comparison
+
+The comparator now reopens the accepted render-tree artifact inside the configured ViewCompose
+source root, rejects absolute or escaping paths and every symbolic-link segment, and verifies the
+declared byte count and SHA-256 before parsing. It bounds Design IR, virtual, native, depth, check,
+finding, and artifact denominators. Virtual node IDs, authored keys, native node IDs, bounds,
+visibility, properties, and child arrays are validated before mapping; duplicate node identities,
+unknown kinds, extra authored keys, unsupported synthetic nodes, and ambiguous mappings fail
+closed.
+
+Every comparison result keeps four separate check categories. Design IR IDs normalize to exact
+authored keys, parent and child order are preserved, observable string resources resolve only from
+the matching explicit Preview binding, and roles and visibility remain exact. Geometry derives
+integer bounds from the accepted native tree, converts dp with the frozen density, accounts for
+parent padding in match-parent and containment checks, and never assigns a target size to
+wrap-content. The sole `TextField` wrapper exception requires one keyless semantic child and equal
+identity/semantic bounds. `GONE` geometry is non-applicable only after both zero bounds and absent or
+zero visible bounds are proven.
+
+On the real pinned Layoutlib lane, the login input Design IR fingerprint is
+`a938f6c0bd8333e195414353766d7e577bbcab0584c219cf4d123869192964d4`; all 4/4 nodes and
+32/32 required checks pass, producing comparison fingerprint
+`470b4e23384479ff29528fe311058618b6ace6536465aeaf08bb477a10cc737d`. The profile-card input
+Design IR fingerprint is `8a860b20a34b87d0eae3918f12d1968e3653e0fe46da0cceffa68f70e9c25b09`;
+all 3/3 nodes and 24/24 required checks pass, with one hidden-geometry non-applicable check,
+producing comparison fingerprint
+`6be3406d341e7e208501b95d1a42bfe15633f928c3b8cdc5cdc0d9ac6474752c`.
+Both repeated conversions hit the existing render cache without weakening comparison.
+
+Unit denominators independently fail a one-pixel exact-dp drift, changed text, authored child-order
+drift, duplicate key ambiguity, changed render-tree identity, and symbolic-link evidence. Existing
+missing binding, missing asset, and caller build-selection inputs remain 3/3 fail-closed before
+comparison. Node 25.6.0 passes 135/135 tooling tests, and Phase 0 continues to verify nine schemas,
+38 metrics, 37 cases, 34 fixture-backed cases, and two implemented comparison fixtures.
+
+The public CLI/MCP conversion now advances to `compared` only on a complete pass. A mismatch returns
+reason-coded findings while preserving the accepted render fingerprint and only `rendered`
+evidence; the comparison fingerprint becomes the outer result identity only after success. The
+installed-package lifecycle exercised both exact comparisons. Two clean builds produced the same
+47-file, 283,631-byte archive with 1,596,570 declared file bytes and SHA-256
+`b109ee20fbde9e2f891b1b414e15a63ae7a59d38f923a48633ba5dee90a90bcc`.
+The quality-build plugin suite passed, and the combined generated-comparison,
+documentation-structure, development-tooling-isolation, and release-intent root gate passed 22
+actionable tasks, with eight executed and 14 up-to-date.
+
+Compared with render-only evidence, this is **improved** semantic and geometry verification with
+**no material Android runtime behavior change**: the implementation is a downstream, read-only
+development tool over artifacts the Preview adapter already accepted. It does not establish
+placeholder rendering, state/event behavior, full accessibility, style, typography, pixels, touch
+targets, alternate configurations, or source-XML screenshot parity. Those limitations remain
+separate denominators rather than being hidden by the passing deterministic checks.
 
 ### Implementation evidence — bounded XML to Design IR
 

@@ -16,6 +16,53 @@ const loginExpected = Object.freeze({
   imageBytes: 38919,
   treeBytes: 202604,
   assets: [],
+  designIr: 'a938f6c0bd8333e195414353766d7e577bbcab0584c219cf4d123869192964d4',
+  comparison: '470b4e23384479ff29528fe311058618b6ace6536465aeaf08bb477a10cc737d',
+  comparisonSummary: {
+    designNodes: 4,
+    mappedNodes: 4,
+    requiredChecks: 32,
+    passedChecks: 32,
+    failedChecks: 0,
+    notApplicableChecks: 0,
+  },
+  comparisonNodes: [
+    {
+      id: 'xml:0', key: 'xml:0', kind: 'column', wrapperDepth: 0,
+      bounds: [0, 0, 1079, 2339],
+      checks: [
+        'identity.key', 'structure.parent', 'structure.children', 'semantic.kind',
+        'semantic.visibility', 'geometry.width.match-parent', 'geometry.height.match-parent',
+        'geometry.padding.all',
+      ],
+    },
+    {
+      id: 'id:title', key: 'title', kind: 'text', wrapperDepth: 0,
+      bounds: [42, 42, 568, 97],
+      checks: [
+        'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
+        'semantic.visibility', 'semantic.text', 'geometry.containment',
+      ],
+    },
+    {
+      id: 'id:email', key: 'email', kind: 'text-field', wrapperDepth: 1,
+      bounds: [42, 97, 1037, 244],
+      checks: [
+        'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
+        'semantic.role', 'semantic.visibility', 'geometry.width.match-parent',
+        'geometry.containment',
+      ],
+    },
+    {
+      id: 'id:submit', key: 'submit', kind: 'button', wrapperDepth: 0,
+      bounds: [42, 244, 1037, 370],
+      checks: [
+        'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
+        'semantic.role', 'semantic.visibility', 'semantic.text',
+        'geometry.width.match-parent', 'geometry.containment',
+      ],
+    },
+  ],
 });
 
 const profileExpected = Object.freeze({
@@ -43,17 +90,75 @@ const profileExpected = Object.freeze({
     widthPx: 1,
     heightPx: 1,
   }],
+  designIr: '8a860b20a34b87d0eae3918f12d1968e3653e0fe46da0cceffa68f70e9c25b09',
+  comparison: '6be3406d341e7e208501b95d1a42bfe15633f928c3b8cdc5cdc0d9ac6474752c',
+  comparisonSummary: {
+    designNodes: 3,
+    mappedNodes: 3,
+    requiredChecks: 24,
+    passedChecks: 24,
+    failedChecks: 0,
+    notApplicableChecks: 1,
+  },
+  comparisonNodes: [
+    {
+      id: 'id:profile_card', key: 'profile_card', kind: 'box', wrapperDepth: 0,
+      bounds: [0, 0, 1079, 420],
+      checks: [
+        'identity.key', 'structure.parent', 'structure.children', 'semantic.kind',
+        'semantic.visibility', 'geometry.width.match-parent', 'geometry.height.dp',
+        'geometry.padding.all',
+      ],
+    },
+    {
+      id: 'id:avatar', key: 'avatar', kind: 'image', wrapperDepth: 0,
+      bounds: [42, 42, 294, 294],
+      checks: [
+        'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
+        'semantic.role', 'semantic.visibility', 'semantic.content-description',
+        'geometry.width.dp', 'geometry.height.dp', 'geometry.containment',
+      ],
+    },
+    {
+      id: 'id:status', key: 'status', kind: 'text', wrapperDepth: 0,
+      bounds: [0, 0, 0, 0],
+      checks: [
+        'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
+        'semantic.visibility', 'semantic.text', 'geometry.hidden',
+      ],
+    },
+  ],
 });
 
 function rendered(expected, cache = 'miss') {
+  const comparisonNodes = expected.comparisonNodes.map((node, index) => ({
+    designNodeId: node.id,
+    designPath: [node.id],
+    identityKey: node.key,
+    identityRenderNodeId: `node-${index + 1}`,
+    semanticRenderNodeId: `node-${index + 1}`,
+    expectedKind: node.kind,
+    actualKind: node.kind,
+    wrapperDepth: node.wrapperDepth,
+    bounds: {
+      left: node.bounds[0], top: node.bounds[1], right: node.bounds[2], bottom: node.bounds[3],
+    },
+    checks: node.checks.map((id) => ({
+      id,
+      category: id.split('.')[0] === 'identity' ? 'identity' : id.split('.')[0],
+      status: id === 'geometry.hidden' ? 'not-applicable' : 'passed',
+      expected: 'expected',
+      actual: 'actual',
+    })),
+  }));
   return {
     status: 'success',
     evidence: {
-      level: 'rendered',
+      level: 'compared',
       cache,
       compilerLane: 'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11',
       renderLane: 'current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1',
-      outputFingerprint: expected.output,
+      outputFingerprint: expected.comparison,
     },
     diagnostics: [],
     data: {
@@ -95,6 +200,29 @@ function rendered(expected, cache = 'miss') {
           renderTreeSha256: expected.tree,
           assets: expected.assets,
         },
+      },
+      comparison: {
+        schemaVersion: 1,
+        status: 'passed',
+        designIr: {
+          documentId: 'fixture',
+          sourceFingerprint: 'a'.repeat(64),
+          irFingerprint: expected.designIr,
+        },
+        render: {
+          requestFingerprint: expected.request,
+          outputFingerprint: expected.output,
+          renderTreeFingerprint: expected.tree,
+          viewport: {widthPx: 1079, heightPx: 2339},
+          density: 2.625,
+          fontScale: 1,
+          localeTag: 'en-US',
+          layoutDirection: 'Ltr',
+        },
+        summary: expected.comparisonSummary,
+        nodes: comparisonNodes,
+        findings: [],
+        comparisonFingerprint: expected.comparison,
       },
     },
   };
@@ -141,8 +269,10 @@ test('requires exact render, artifact inspection, cache, and blocked isolation d
   assert.equal(summary.unsupported, 3);
   assert.deepEqual([...supportedCalls.values()], [2, 2]);
   assert.equal(inspected, 2);
-  assert.equal(summary.fingerprints[0].output, loginExpected.output);
-  assert.equal(summary.fingerprints[1].output, profileExpected.output);
+  assert.equal(summary.fingerprints[0].render, loginExpected.output);
+  assert.equal(summary.fingerprints[0].comparison, loginExpected.comparison);
+  assert.equal(summary.fingerprints[1].render, profileExpected.output);
+  assert.equal(summary.fingerprints[1].comparison, profileExpected.comparison);
 });
 
 test('rejects a rendered response whose exact output fingerprint drifts', async () => {

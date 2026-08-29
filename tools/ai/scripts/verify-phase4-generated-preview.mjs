@@ -83,16 +83,71 @@ async function inspectArtifacts(preview, fixture) {
   return {texts, contentDescriptions, structure: tree.structure};
 }
 
-function assertRendered(result, fixture, requiredCache) {
+function assertComparison(result, fixture, comparisonFixture) {
+  const comparison = result.data?.comparison;
+  const expectedNodes = comparisonFixture.expectedNodes;
+  const actualNodes = comparison?.nodes?.map((node) => ({
+    designNodeId: node.designNodeId,
+    identityKey: node.identityKey,
+    semanticRenderKind: node.actualKind,
+    wrapperDepth: node.wrapperDepth,
+    bounds: node.bounds === null
+      ? null
+      : [node.bounds.left, node.bounds.top, node.bounds.right, node.bounds.bottom],
+    checkIds: node.checks.map((item) => item.id),
+    statuses: node.checks.map((item) => item.status),
+  }));
+  if (
+    comparison?.schemaVersion !== 1 ||
+    comparison?.status !== 'passed' ||
+    comparison?.designIr?.documentId === undefined ||
+    comparison?.designIr?.sourceFingerprint === undefined ||
+    comparison?.designIr?.irFingerprint !== comparisonFixture.expectedComparedDesignIrFingerprint ||
+    comparison?.render?.requestFingerprint !== fixture.expectedRequestFingerprint ||
+    comparison?.render?.outputFingerprint !== fixture.expectedOutputFingerprint ||
+    comparison?.render?.renderTreeFingerprint !== fixture.expectedRenderTree.sha256 ||
+    JSON.stringify(comparison?.render?.viewport) !== JSON.stringify(comparisonFixture.viewport) ||
+    comparison?.render?.density !== 2.625 ||
+    comparison?.render?.fontScale !== 1 ||
+    comparison?.render?.localeTag !== 'en-US' ||
+    comparison?.render?.layoutDirection !== 'Ltr' ||
+    JSON.stringify(comparison?.summary) !== JSON.stringify(comparisonFixture.expectedSummary) ||
+    comparison?.findings?.length !== 0 ||
+    comparison?.comparisonFingerprint !== comparisonFixture.expectedComparisonFingerprint ||
+    actualNodes?.length !== expectedNodes.length
+  ) {
+    throw new Error(`${fixture.source}: generated layout comparison evidence changed`);
+  }
+  for (let index = 0; index < expectedNodes.length; index += 1) {
+    const expected = expectedNodes[index];
+    const actual = actualNodes[index];
+    const expectedStatuses = expected.checkIds.map((id) =>
+      id === 'geometry.hidden' ? 'not-applicable' : 'passed');
+    if (
+      actual.designNodeId !== expected.designNodeId ||
+      actual.identityKey !== expected.identityKey ||
+      actual.semanticRenderKind !== expected.semanticRenderKind ||
+      actual.wrapperDepth !== expected.wrapperDepth ||
+      JSON.stringify(actual.bounds) !== JSON.stringify(expected.bounds) ||
+      JSON.stringify(actual.checkIds) !== JSON.stringify(expected.checkIds) ||
+      JSON.stringify(actual.statuses) !== JSON.stringify(expectedStatuses)
+    ) {
+      throw new Error(`${fixture.source}: compared node ${expected.designNodeId} changed`);
+    }
+  }
+  return comparison;
+}
+
+function assertRendered(result, fixture, comparisonFixture, requiredCache) {
   const preview = result.data?.preview;
   if (
     result.status !== 'success' ||
-    result.evidence?.level !== 'rendered' ||
+    result.evidence?.level !== 'compared' ||
     (requiredCache && result.evidence.cache !== requiredCache) ||
     result.evidence?.compilerLane !== 'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11' ||
     result.evidence?.renderLane !==
       'current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1' ||
-    result.evidence?.outputFingerprint !== fixture.expectedOutputFingerprint ||
+    result.evidence?.outputFingerprint !== comparisonFixture.expectedComparisonFingerprint ||
     result.diagnostics?.length !== 0 ||
     preview?.targetId !== 'tools.ai.GeneratedXmlPreview' ||
     preview?.modulePath !== ':tools:ai-preview-harness' ||
@@ -140,6 +195,7 @@ function assertRendered(result, fixture, requiredCache) {
     const codes = result.diagnostics?.map((diagnostic) => diagnostic.code).join(', ') ?? 'none';
     throw new Error(`${fixture.source}: generated Preview evidence changed (${codes})`);
   }
+  assertComparison(result, fixture, comparisonFixture);
   return preview;
 }
 
@@ -148,8 +204,9 @@ export async function verifyPhase4GeneratedPreview({
   validateRequest = validateGeneratedPreviewRequest,
   inspect = inspectArtifacts,
 } = {}) {
-  const [contract, metrics] = await Promise.all([
+  const [contract, comparisonContract, metrics] = await Promise.all([
     readJson(resolve(fixtureRoot, 'generated-preview-contract.json')),
+    readJson(resolve(fixtureRoot, 'layout-comparison-contract.json')),
     readJson(resolve(aiRoot, 'evaluation/metrics.json')),
   ]);
   for (const metricId of [
@@ -157,6 +214,8 @@ export async function verifyPhase4GeneratedPreview({
     'xml.generated-preview-binding-exactness',
     'xml.generated-preview-asset-integrity',
     'xml.generated-preview-isolation',
+    'xml.generated-layout-semantic-exactness',
+    'xml.generated-layout-geometry-exactness',
   ]) {
     const metric = metrics.metrics.find((entry) => entry.id === metricId);
     if (!metric || metric.direction !== 'at_least' || metric.threshold !== 1) {
@@ -171,7 +230,14 @@ export async function verifyPhase4GeneratedPreview({
   const implementedFixtures = contract.supportedFixtures.filter(
     (fixture) => fixture.status === 'implemented',
   );
+  const comparisonBySource = new Map(comparisonContract.supportedFixtures
+    .filter((fixture) => fixture.status === 'implemented')
+    .map((fixture) => [fixture.source, fixture]));
   for (const fixture of implementedFixtures) {
+    const comparisonFixture = comparisonBySource.get(fixture.source);
+    if (!comparisonFixture) {
+      throw new Error(`${fixture.source}: implemented generated Preview lacks comparison evidence`);
+    }
     const [source, request] = await Promise.all([
       readFile(resolve(fixtureRoot, fixture.source), 'utf8'),
       readJson(resolve(fixtureRoot, fixture.request)),
@@ -188,17 +254,18 @@ export async function verifyPhase4GeneratedPreview({
       },
     };
     const first = await convert({...input, requestId: `xml-${fixture.expectedFunction}-render`});
-    const firstPreview = assertRendered(first, fixture);
+    const firstPreview = assertRendered(first, fixture, comparisonFixture);
     await inspect(firstPreview, fixture);
     rendered += 1;
 
     const second = await convert({...input, requestId: `xml-${fixture.expectedFunction}-cache`});
-    assertRendered(second, fixture, 'hit');
+    assertRendered(second, fixture, comparisonFixture, 'hit');
     cacheHits += 1;
     fingerprints.push({
       source: fixture.source,
       request: fixture.expectedRequestFingerprint,
-      output: fixture.expectedOutputFingerprint,
+      render: fixture.expectedOutputFingerprint,
+      comparison: comparisonFixture.expectedComparisonFingerprint,
       png: fixture.expectedImage.sha256,
       tree: fixture.expectedRenderTree.sha256,
     });
@@ -258,7 +325,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.cacheHits}/${summary.supported} stable cache hits, and ` +
           `${summary.blocked}/${summary.unsupported} fail-closed unsafe or unsupported requests. ` +
           `Fingerprints: ${summary.fingerprints.map((item) =>
-            `${item.source}=${item.request}/${item.output}/${item.png}/${item.tree}`).join(', ')}.`,
+            `${item.source}=${item.request}/${item.render}/${item.comparison}/${item.png}/${item.tree}`).join(', ')}.`,
       );
     })
     .catch((error) => {

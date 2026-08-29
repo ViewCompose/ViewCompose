@@ -65,6 +65,7 @@ export async function dispatchToolRequest(request, {
   getSample = retrieveSample,
   convertXml = convertXmlToViewCompose,
   renderGenerated,
+  compareGenerated,
   signal,
 } = {}) {
   const schema = await loadToolEnvelopeSchema();
@@ -224,6 +225,7 @@ export async function dispatchToolRequest(request, {
           signal: controller.signal,
           compile,
           render: renderGenerated,
+          compare: compareGenerated,
         });
         break;
       default:

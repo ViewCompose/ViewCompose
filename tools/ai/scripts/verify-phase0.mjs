@@ -1110,11 +1110,23 @@ async function verifyLayoutComparison(schemas) {
     const requestFingerprint = createHash('sha256')
       .update(JSON.stringify(previewRequest))
       .digest('hex');
+    const comparedDesignIr = {
+      ...designIr,
+      source: {...designIr.source, identity: fixture.comparisonPath},
+    };
+    visitDesignNodes(comparedDesignIr.roots, (node) => {
+      const separator = node.provenance.sourceSpan.lastIndexOf(':');
+      node.provenance.sourceSpan = `${fixture.comparisonPath}${node.provenance.sourceSpan.slice(separator)}`;
+    });
     if (
       !['contract-frozen', 'implemented'].includes(fixture.status) ||
       designFingerprint !== fixture.expectedDesignIrFingerprint ||
+      createHash('sha256').update(JSON.stringify(comparedDesignIr)).digest('hex') !==
+        fixture.expectedComparedDesignIrFingerprint ||
       requestFingerprint !== fixture.expectedRequestFingerprint ||
-      createHash('sha256').update(source).digest('hex') !== designIr.source.fingerprint
+      createHash('sha256').update(source).digest('hex') !== designIr.source.fingerprint ||
+      (fixture.status === 'implemented' &&
+        !/^[a-f0-9]{64}$/u.test(fixture.expectedComparisonFingerprint ?? ''))
     ) {
       throw new Error(`${fixture.source}: layout comparison input identity is stale`);
     }
@@ -1180,7 +1192,7 @@ async function verifyLayoutComparison(schemas) {
     ) {
       throw new Error(`${fixture.source}: comparison check denominator changed`);
     }
-    declaredInputs.add(`${fixture.designIr}\0${fixture.previewRequest}`);
+    declaredInputs.add(`${fixture.designIr}\0${fixture.comparisonPath}\0${fixture.previewRequest}`);
   }
   assertUnique([...declaredInputs], 'Layout comparison fixture inputs');
   assertUnique(

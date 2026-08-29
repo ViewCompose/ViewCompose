@@ -221,21 +221,22 @@ CRC values, then stages one immutable tool-owned `R.drawable` resource by full h
 asset path, URL, URI, project resource ID, XML/vector drawable, alternate media type, or network
 load. Missing, extra, duplicate, reordered, source-mismatched, type-mismatched, or asset-invalid
 bindings fail before Gradle. A successful render returns the request, generated-source, wrapper,
-asset, PNG, render-tree, and combined output fingerprints at `rendered` evidence. Custom Views,
-Data Binding, unknown attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities,
-malformed XML, duplicate IDs, and limit violations return localized diagnostics and no Kotlin.
+asset, PNG, render-tree, render-output, and layout-comparison fingerprints at `compared` evidence
+after every required comparison check passes. Custom Views, Data Binding, unknown
+attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities, malformed XML, duplicate
+IDs, and limit violations return localized diagnostics and no Kotlin.
 String resources remain explicit caller `String` bindings, drawable resources remain caller
 `ImageSource` bindings, and `TextFieldState` remains caller-owned; the tool does not invent
 listeners or rewrite ViewBinding/application call sites.
 
-Generated layout comparison v1 is contract-frozen but not yet active. It accepts only the exact
-Design IR and content-addressed render tree produced inside the same conversion request. The policy
-requires unique normalized node keys, exact observable structure and semantics, and zero-tolerance
-integer geometry for declared dp, match-parent, padding, containment, and column-order checks in the
-single frozen Preview configuration. It permits only the current one-child `TextField` wrapper and
-does not claim placeholder rendering, state/event behavior, traversal, style, typography, pixels,
-touch targets, or other device configurations. Until its implementation gate passes, successful
-render mode remains `rendered`, not `compared`.
+Generated layout comparison v1 accepts only the exact Design IR and content-addressed render tree
+produced inside the same conversion request. It reopens and hashes the render tree, requires unique
+normalized node keys, and checks observable structure and semantics plus zero-tolerance integer
+geometry for declared dp, match-parent, padding, containment, and column order in the single frozen
+Preview configuration. It permits only the current one-child `TextField` wrapper. A mismatch
+returns reason-coded findings and retains only `rendered` evidence. Placeholder rendering,
+state/event behavior, traversal, style, typography, pixels, touch targets, and other device
+configurations remain explicit non-claims.
 
 Run the local MCP server and its protocol/parity gate with:
 

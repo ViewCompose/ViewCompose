@@ -136,14 +136,17 @@
   ],
   "supportedFixtures": [
     {
-      "status": "contract-frozen",
+      "status": "implemented",
       "source": "login.xml",
       "designIr": "login.design-ir.json",
+      "comparisonPath": "res/layout/login.xml",
       "previewRequest": "generated-preview/login.preview-request.json",
       "expectedDesignIrFingerprint": "51b8a69a45b73e2ba0522a6ab2ebe7cbb13708dfd2caeb52391c00b90503b453",
+      "expectedComparedDesignIrFingerprint": "a938f6c0bd8333e195414353766d7e577bbcab0584c219cf4d123869192964d4",
       "expectedRequestFingerprint": "8b2d5460fea40ee539fc5aba01af5cac97d59002476c17b744fb7baa1144d063",
       "acceptedOutputFingerprint": "6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab",
       "acceptedRenderTreeFingerprint": "d0373c8499b9d46f9cafa98a04c6f30d41a8ec69743a5ada35496ba0e2e05e85",
+      "expectedComparisonFingerprint": "470b4e23384479ff29528fe311058618b6ace6536465aeaf08bb477a10cc737d",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "expectedSummary": {
         "designNodes": 4,
@@ -229,14 +232,17 @@
       ]
     },
     {
-      "status": "contract-frozen",
+      "status": "implemented",
       "source": "profile-card.xml",
       "designIr": "profile-card.design-ir.json",
+      "comparisonPath": "res/layout/profile-card.xml",
       "previewRequest": "generated-preview/image-binding.preview-request.json",
       "expectedDesignIrFingerprint": "385e442fe7919dd30363c3532a674f8307cda53ff2ad7227edaa6dffb32a33f3",
+      "expectedComparedDesignIrFingerprint": "8a860b20a34b87d0eae3918f12d1968e3653e0fe46da0cceffa68f70e9c25b09",
       "expectedRequestFingerprint": "1d81d2ed9db84ee022d806042cd883c426f4fe0061aa65c757ef0de3a91225f6",
       "acceptedOutputFingerprint": "31fb45a13a4d35badee2cf61ce7760a0540b60ed2e0def2d3e3910cfdb4268f5",
       "acceptedRenderTreeFingerprint": "58bbd8da9df6295da2419dc85bf4c7d4636419f8022237740b694966763b31e9",
+      "expectedComparisonFingerprint": "6be3406d341e7e208501b95d1a42bfe15633f928c3b8cdc5cdc0d9ac6474752c",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "expectedSummary": {
         "designNodes": 3,

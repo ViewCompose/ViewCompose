@@ -88,7 +88,7 @@ test('returns compiled conversion evidence through the same tool envelope', asyn
   assert.match(result.data.kotlinFingerprint, /^[a-f0-9]{64}$/u);
 });
 
-test('source-binds generated Kotlin and returns rendered Preview evidence', async () => {
+test('source-binds generated Kotlin and returns compared Preview evidence', async () => {
   const previewRequest = JSON.parse(
     await fixture('generated-preview/login.preview-request.json'),
   );
@@ -128,16 +128,72 @@ test('source-binds generated Kotlin and returns rendered Preview evidence', asyn
         truncated: false,
       };
     },
+    compare: async ({designIr, previewBindings, preview, previewEvidence}) => {
+      assert.equal(designIr.documentId, 'login');
+      assert.deepEqual(previewBindings, previewRequest.bindings);
+      assert.equal(preview.generatedPreview.requestFingerprint, 'a'.repeat(64));
+      assert.equal(previewEvidence.outputFingerprint, 'd'.repeat(64));
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {comparisonFingerprint: 'e'.repeat(64)},
+      };
+    },
   });
 
   assert.equal(compiled, 0);
   assert.equal(rendered, 1);
   assert.equal(result.status, 'success');
-  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.level, 'compared');
   assert.equal(result.evidence.compilerLane, 'test-preview-compiler-lane');
   assert.equal(result.evidence.renderLane, 'test-preview-render-lane');
-  assert.equal(result.evidence.outputFingerprint, 'd'.repeat(64));
+  assert.equal(result.evidence.outputFingerprint, 'e'.repeat(64));
   assert.equal(result.data.preview.generatedPreview.requestFingerprint, 'a'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'e'.repeat(64));
+});
+
+test('retains rendered identity when generated layout comparison fails', async () => {
+  const previewRequest = JSON.parse(
+    await fixture('generated-preview/login.preview-request.json'),
+  );
+  const result = await convertXmlToViewCompose({
+    source: await fixture('login.xml'),
+    path: 'res/layout/login.xml',
+    mode: 'render',
+    previewBindings: previewRequest.bindings,
+    requestId: 'xml-render-comparison-failure',
+    render: async () => ({
+      status: 'success',
+      evidence: {
+        level: 'rendered',
+        cache: 'hit',
+        compilerLane: 'test-preview-compiler-lane',
+        renderLane: 'test-preview-render-lane',
+        outputFingerprint: 'd'.repeat(64),
+      },
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'a'.repeat(64)}},
+      truncated: false,
+    }),
+    compare: async () => ({
+      status: 'failed',
+      evidenceLevel: 'rendered',
+      diagnostics: [{
+        code: 'VC-AI-COMPARE-GEOMETRY-MISMATCH',
+        severity: 'error',
+        message: 'One exact geometry check failed.',
+        nextAction: 'Repair the generated layout.',
+      }],
+      comparison: {comparisonFingerprint: 'e'.repeat(64)},
+    }),
+  });
+
+  assert.equal(result.status, 'failed');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.outputFingerprint, 'd'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'e'.repeat(64));
+  assert.equal(result.diagnostics[0].code, 'VC-AI-COMPARE-GEOMETRY-MISMATCH');
 });
 
 test('resolves project resources, styles, and call sites before generation', async () => {
@@ -193,11 +249,21 @@ test('preserves explicit project evidence through generated Preview render mode'
         truncated: false,
       };
     },
+    compare: async ({designIr, preview}) => {
+      assert.equal(designIr.documentId, 'styled_login');
+      assert.equal(preview.generatedPreview.requestFingerprint, 'f'.repeat(64));
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {comparisonFingerprint: 'a'.repeat(64)},
+      };
+    },
   });
 
   assert.equal(rendered, 1);
   assert.equal(result.status, 'success');
-  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.level, 'compared');
   assert.equal(result.data.projectContext.callSites.length, 7);
   assert.equal(result.data.migrationReport.projectEvidence.completeness, 'not-proven');
   assert.equal(result.data.preview.generatedPreview.requestFingerprint, 'f'.repeat(64));

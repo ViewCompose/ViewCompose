@@ -197,7 +197,7 @@ const executableDefinitions = {
   convert_xml_to_viewcompose: {
     title: 'Convert Android XML to ViewCompose',
     description:
-      'Generate, compile, or source-bind and render deterministic ViewCompose Kotlin from supported Android XML.',
+      'Generate, compile, or source-bind, render, and compare deterministic ViewCompose Kotlin from supported Android XML.',
     inputSchema: {
       type: 'object',
       oneOf: [

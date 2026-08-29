@@ -134,11 +134,22 @@ test('dispatches XML render mode with explicit generated Preview bindings', asyn
         data: {generatedPreview: {requestFingerprint: 'b'.repeat(64)}},
       });
     },
+    compareGenerated: async ({designIr, preview}) => {
+      assert.equal(designIr.documentId, 'login');
+      assert.equal(preview.generatedPreview.requestFingerprint, 'b'.repeat(64));
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {comparisonFingerprint: 'c'.repeat(64)},
+      };
+    },
   });
 
   assert.equal(rendered, 1);
   assert.equal(result.status, 'success');
-  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.level, 'compared');
+  assert.equal(result.evidence.outputFingerprint, 'c'.repeat(64));
   assert.equal(result.data.preview.generatedPreview.requestFingerprint, 'b'.repeat(64));
 });
 

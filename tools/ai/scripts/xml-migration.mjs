@@ -1,6 +1,7 @@
 import {compileKotlin} from './compiler-adapter.mjs';
 import {generateViewComposeKotlin} from './design-ir-to-kotlin.mjs';
 import {renderGeneratedPreview} from './generated-preview-adapter.mjs';
+import {compareGeneratedLayout} from './layout-comparator.mjs';
 import {toolResult} from './tool-core.mjs';
 import {resolveXmlLayoutDependencies} from './xml-layout-dependencies.mjs';
 import {resolveXmlProjectContext} from './xml-project-context.mjs';
@@ -49,6 +50,7 @@ export async function convertXmlToViewCompose({
   signal,
   compile = compileKotlin,
   render = renderGeneratedPreview,
+  compare = compareGeneratedLayout,
   resolveLayoutDependencies = resolveXmlLayoutDependencies,
   resolveProjectContext = resolveXmlProjectContext,
 } = {}) {
@@ -195,22 +197,50 @@ export async function convertXmlToViewCompose({
       },
       signal,
     });
+    if (preview.status !== 'success') {
+      return toolResult({
+        requestId,
+        tool: 'convert_xml_to_viewcompose',
+        status: preview.status,
+        level: preview.evidence.level,
+        diagnostics: preview.diagnostics,
+        data: {
+          ...resultData(converted, generated, projectContext, layoutDependencies),
+          preview: preview.data,
+        },
+        elapsedMs: performance.now() - started,
+        cache: preview.evidence.cache,
+        compilerLane: preview.evidence.compilerLane,
+        renderLane: preview.evidence.renderLane,
+        outputFingerprint: preview.evidence.outputFingerprint,
+        truncated: preview.truncated,
+      });
+    }
+    const compared = await compare({
+      designIr: converted.ir,
+      previewBindings,
+      preview: preview.data,
+      previewEvidence: preview.evidence,
+    });
     return toolResult({
       requestId,
       tool: 'convert_xml_to_viewcompose',
-      status: preview.status,
-      level: preview.evidence.level,
-      diagnostics: preview.diagnostics,
+      status: compared.status,
+      level: compared.evidenceLevel,
+      diagnostics: [...preview.diagnostics, ...compared.diagnostics],
       data: {
         ...resultData(converted, generated, projectContext, layoutDependencies),
         preview: preview.data,
+        comparison: compared.comparison,
       },
       elapsedMs: performance.now() - started,
       cache: preview.evidence.cache,
       compilerLane: preview.evidence.compilerLane,
       renderLane: preview.evidence.renderLane,
-      outputFingerprint: preview.evidence.outputFingerprint,
-      truncated: preview.truncated,
+      outputFingerprint: compared.status === 'success'
+        ? compared.comparison.comparisonFingerprint
+        : preview.evidence.outputFingerprint,
+      truncated: preview.truncated || compared.status === 'limited',
     });
   }
 
