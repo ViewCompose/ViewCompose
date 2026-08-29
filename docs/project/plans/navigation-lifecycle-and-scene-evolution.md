@@ -11,6 +11,7 @@ capability_ids:
   - lifecycle.effects
   - lifecycle.flow-collection
   - lifecycle.owner-boundaries
+  - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
   - navigation.scene-projection
@@ -19,6 +20,7 @@ artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-android-destination-context
   - module.navigation-android-presentation-retention
   - module.navigation-core-scene-projection
 status: active
@@ -46,8 +48,9 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 5 by publishing the stable per-entry destination presentation context without duplicating Lifecycle APIs or frame-rate state.
+next_action: Execute Phase 6 by converging stack, scene, lifecycle, presentation, focus, transition, rollback, and cleanup decisions on one reducer-produced plan with typed Android executors.
 maven_release_changesets:
+  - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-presentation-retention.json
   - release/changes/20260829-navigation-scene-projection.json
   - release/changes/20260829-navigation-transition-lifecycle.json
@@ -58,16 +61,19 @@ maven_release_changesets:
 ## Status
 
 Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
-stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction, and
-Phase 4 entry/presentation lifetime separation are complete.
+stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
+Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
+complete.
 
 Last verified: 2026-08-29.
 
-Next action: execute Phase 5 by publishing the stable per-entry destination presentation context
-without duplicating Lifecycle APIs or frame-rate state.
+Next action: execute Phase 6 by converging stack, scene, lifecycle, presentation, focus,
+transition, rollback, and cleanup decisions on one reducer-produced plan with typed Android
+executors.
 
 ## Maven release changesets
 
+- `release/changes/20260829-navigation-destination-context.json`
 - `release/changes/20260829-navigation-presentation-retention.json`
 - `release/changes/20260829-navigation-scene-projection.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
@@ -83,6 +89,11 @@ propagation.
 
 Phase 3 classifies Navigation Android as a fix because public declarations remain unchanged while
 ordinary and predictive destination-owner timing now follows the already-published scene contract.
+
+Phase 5 classifies Navigation Android as a feature because it adds the public
+`LocalNavDestinationContext`, `NavDestinationContext`, and `NavDestinationPresentation` names
+without changing an existing public signature. The Android presentation name is a source alias for
+the Core scene entry and therefore does not publish or duplicate a second artifact's value model.
 The app debug host and instrumentation are unpublished evidence. Governance V2 detects no changed
 application-facing declaration, so its one-impact-per-detected-change rule admits no public API
 impact record; the Changeset and owning architecture, module, migration, and plan documents record
@@ -702,6 +713,54 @@ Preview behavior; the mixed cache state is verification context rather than perf
    and permanent removal.
 4. Land canonical KDoc, compiled Q3 sample, module docs, guide or migration disposition, capability
    reference update, and locale mirrors in the same public API slice.
+
+#### Phase 5 acceptance
+
+Navigation Android now provides one `NavDestinationContext` from
+`LocalNavDestinationContext.current` while declaring destination content. The holder belongs to
+the stable `NavEntryOwner`, so local snapshots capture the holder and the same identity survives
+optional child `RenderSession` and native View disposal or recreation. Nested hosts override only
+their child destination subtree and restore the parent context. Permanent entry removal stops
+updates and destroys the standard AndroidX Lifecycle; no global current-page registry or
+navigation-specific Lifecycle callback family was added.
+
+The observable `NavDestinationPresentation` is a source alias for the exact Core `NavSceneEntry`
+published during owner reconciliation. It exposes presence, visibility, interaction, coarse
+transition phase, pane role, and content/overlay layer role without reconstructing a second Android
+enum model. Standard AndroidX Lifecycle remains the only resource-threshold API. Ordinary and
+predictive frame progress never enters the state, so only semantic scene changes can invalidate
+content that reads it.
+
+A fresh Navigation Android JVM/Robolectric run passed 162 of 162 tests with zero failures, errors,
+or skips, five more than the 157-test Phase 4 baseline (3.2%). New focused coverage proves the
+prepared local, delayed local capture with later state observation, exact multi-pane and overlay
+Core projections, permanent-removal freezing and owner destruction, holder identity across
+dispose/rebuild, nested-host override, and stable presentation identity across repeated predictive
+progress. The overlay case proves the context/executor vocabulary boundary; it does not claim the
+still-missing general Android overlay-navigation surface.
+
+One selected instrumentation case passed on the physical Pixel 4 XL running API 33. It observed
+the real destination DSL and View hierarchy through settled push, hidden-presentation disposal,
+predictive reveal/rebuild, three progress values, commit, and permanent removal. The home context
+and entry identities remained stable; both preview presentation objects and both DSL render counts
+remained unchanged across the three frame-progress updates; and the removed details Lifecycle
+reached `DESTROYED`. This is **improved** end-to-end confidence and **no material change** in
+frame-rate invalidation because the new state publishes no continuous progress. It is not a timing
+benchmark and remains limited to one API-33 device, single-pane content, and synthetic routes.
+
+The public Q3 slice includes canonical KDoc, a compiled sample, one capability record, three
+per-symbol impact records, the generated Reference input, module/architecture/guide/migration and
+ADR updates, reviewed Simplified Chinese mirrors, and one additive Navigation Android Changeset.
+The full `qaQuick` gate passed all 2,268 actionable tasks: 169 executed and 2,099 were up to date.
+Governance V2 reported zero issues against base `ef6be56e`, translation verification reported 126
+current and zero stale required Chinese pages, release-intent verification classified exactly one
+Navigation Android feature, and development-tooling isolation passed. `qaPreview` passed all 1,209
+actionable tasks: 140 executed and 1,069 were up to date, including Paparazzi and both Preview host
+suites. This is **improved** integration confidence and **no material change** in Preview behavior;
+the mixed cache state is verification context rather than performance evidence.
+
+Next action: execute Phase 6's single reducer plan and typed Android executors; general overlay
+navigation remains assigned to Phase 7 rather than being hidden behind the context vocabulary.
 
 ### Phase 6: converge reducer and executor
 
