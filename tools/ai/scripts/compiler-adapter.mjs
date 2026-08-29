@@ -1,4 +1,3 @@
-import {spawn, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {
   lstat,
@@ -11,7 +10,14 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
-import {diagnostic, repositoryRoot, toolResult, utf8Bytes} from './tool-core.mjs';
+import {executeBoundedProcess} from './bounded-process.mjs';
+import {
+  detectJavaFeature,
+  diagnostic,
+  repositoryRoot,
+  toolResult,
+  utf8Bytes,
+} from './tool-core.mjs';
 import {validateKotlin} from './static-validator.mjs';
 
 export const COMPILER_LANE =
@@ -78,20 +84,6 @@ async function compilerFailure({
     elapsedMs,
     truncated,
   });
-}
-
-export function detectJavaFeature(javaHome = process.env.JAVA_HOME) {
-  if (!javaHome) return null;
-  const executable = resolve(javaHome, 'bin/java');
-  const result = spawnSync(executable, ['-XshowSettings:properties', '-version'], {
-    encoding: 'utf8',
-  });
-  if (result.error || result.status !== 0) return null;
-  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-  const version = /\bjava\.version\s*=\s*([^\s]+)/u.exec(output)?.[1];
-  if (!version) return null;
-  const feature = Number.parseInt(version.startsWith('1.') ? version.split('.')[1] : version, 10);
-  return Number.isInteger(feature) ? feature : null;
 }
 
 export function compilerRequestKey({source, artifactIds, bundleFingerprint}) {
@@ -244,71 +236,7 @@ async function writeCacheRecord(plan, output) {
   await rename(temporaryPath, plan.cachePath);
 }
 
-export function executeCompilerProcess(plan, {timeoutMs, maxOutputBytes, signal}) {
-  return new Promise((resolvePromise) => {
-    const child = spawn(plan.executable, plan.args, {
-      cwd: plan.cwd,
-      env: process.env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    const chunks = [];
-    let capturedBytes = 0;
-    let truncated = false;
-    let timedOut = false;
-    let cancelled = false;
-    let spawnError = null;
-    let forceKillTimer = null;
-    const requestTermination = () => {
-      if (child.exitCode !== null || child.signalCode !== null) return;
-      child.kill('SIGTERM');
-      forceKillTimer ??= setTimeout(() => {
-        if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
-      }, 2_000);
-    };
-    const capture = (chunk) => {
-      if (truncated) return;
-      const remaining = maxOutputBytes - capturedBytes;
-      if (chunk.length > remaining) {
-        if (remaining > 0) chunks.push(chunk.subarray(0, remaining));
-        capturedBytes = maxOutputBytes;
-        truncated = true;
-        requestTermination();
-      } else {
-        chunks.push(chunk);
-        capturedBytes += chunk.length;
-      }
-    };
-    child.stdout.on('data', capture);
-    child.stderr.on('data', capture);
-    child.on('error', (error) => {
-      spawnError = error;
-    });
-    const timeout = setTimeout(() => {
-      timedOut = true;
-      requestTermination();
-    }, timeoutMs);
-    const cancellation = () => {
-      cancelled = true;
-      requestTermination();
-    };
-    signal?.addEventListener('abort', cancellation, {once: true});
-    if (signal?.aborted) cancellation();
-    child.on('close', (exitCode, childSignal) => {
-      clearTimeout(timeout);
-      if (forceKillTimer) clearTimeout(forceKillTimer);
-      signal?.removeEventListener('abort', cancellation);
-      resolvePromise({
-        exitCode,
-        signal: childSignal,
-        output: Buffer.concat(chunks).toString('utf8'),
-        truncated,
-        timedOut,
-        cancelled,
-        spawnError,
-      });
-    });
-  });
-}
+export const executeCompilerProcess = executeBoundedProcess;
 
 function parseCompilerDiagnostics(output, sourcePath, requestRoot) {
   const normalized = output.replaceAll(requestRoot, '<request>');

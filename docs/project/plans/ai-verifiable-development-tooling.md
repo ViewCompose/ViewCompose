@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Complete Phase 2 with the Preview evidence adapter, one internal CLI, expanded read-only project findings, and end-to-end acceptance without exposing MCP yet.
+next_action: Complete Phase 2 with one internal CLI, expanded read-only project findings, and end-to-end acceptance without exposing MCP yet.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -47,13 +47,13 @@ maven_release_changesets:
 
 Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 canonical knowledge
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
-validation and pinned compilation foundations are complete; Preview evidence adaptation, the
-internal CLI, and deeper project findings remain active.
+validation, pinned compilation, and Preview evidence foundations are complete; the internal CLI and
+deeper project findings remain active.
 
 Last verified: 2026-08-29.
 
-Next action: complete Phase 2 with an adapter over the existing Preview protocol, one internal CLI,
-expanded read-only findings, and end-to-end acceptance before MCP exposure.
+Next action: complete Phase 2 with one internal CLI, expanded read-only findings, and end-to-end
+acceptance before MCP exposure.
 
 ## Maven release changesets
 
@@ -463,9 +463,46 @@ from application dependency graphs.
 
 Limitations: this slice compiles one Kotlin file against UI Foundation and does not yet support
 Android resource fixtures or the remaining artifact combinations. A cold result is local macOS/JBR
-21 evidence rather than a cross-host latency distribution. The next action is to adapt the existing
-Layoutlib Preview protocol, validate render output containment and integrity, then expose both paths
-through one internal CLI before widening compiler lanes.
+21 evidence rather than a cross-host latency distribution. At this slice boundary, the next action
+was to adapt the existing Layoutlib Preview protocol; the Preview slice below now closes that work.
+Both paths still need one internal CLI before compiler lanes widen.
+
+### Implementation evidence — Preview adapter slice
+
+The third Phase 2 slice adapts the existing protocol instead of adding a second renderer. Its first
+fixed lane discovers the compiled `samples.counter.CounterPreview` target and selects only a variant
+whose declared theme, locale, viewport, density, font scale, and layout direction exactly match the
+bounded request. The request cannot choose a project, task, source path, worker class, dependency,
+repository, or output path. Both discovery and render use fixed offline Gradle plans on JDK 21; the
+result records the Preview compiler lane and
+`current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1` render lane.
+
+`rendered` evidence requires protocol, module, build fingerprint, entry point, source containment,
+response correlation, and exact descriptor/variant identity. Image and tree paths must remain in the
+canonical content-addressed directory with no symbolic-link segment. The adapter bounds catalog,
+response, PNG, tree, and process output independently; verifies PNG signature/chunk structure and
+dimensions; parses the render tree; hashes both artifacts into one output fingerprint; maps
+structured Preview diagnostics without absolute paths; and re-runs all artifact checks on a cache
+hit. Malformed or replaced cache output fails closed.
+
+The accepted current-source render produced the inspected 1,079 x 2,339 PNG of 25,755 bytes and a
+121,271-byte render tree with zero diagnostics. Its image/tree fingerprint is
+`bb7eba4f51d1aa4f788b0991b7c8635815d6943c374978b685f92619420841d0`; repeated integrity-checked
+corpus runs returned the same fingerprint in 9,809--11,481 ms including isolated Gradle discovery. The
+worker response itself reported 220 ms render duration after a 2,315 ms Layoutlib setup. Node 25.6.0
+passed 34/34 tooling tests, including target/configuration rejection, inherited-property selection,
+source escape, symbolic-link artifacts, cache replacement, timeout, cancellation, and structured
+worker-failure normalization. The render corpus passed 1/1. This is **improved** executable visual
+evidence. Full `qaPreview` passed 1,216 tasks (363 executed and 853 up-to-date), and documentation,
+translation, release-intent, and development-tooling-isolation gates passed. There is **no material
+application-runtime change** because the adapter remains downstream and the Preview process is
+activated only by an explicit tooling request.
+
+Limitations: the current allowlist contains one target with its light/dark variants and `en-US`
+configuration, not arbitrary application builds or a visual-comparison claim. The local macOS/JBR
+21 measurements are not a cross-host latency distribution, and a matching render does not prove
+interaction behavior. The next action is one internal CLI over the shared static, compile, render,
+and project-analysis core, followed by deeper bounded project findings and Phase 2 closeout.
 
 ### Acceptance gate
 

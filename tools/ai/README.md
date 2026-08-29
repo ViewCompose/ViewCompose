@@ -21,6 +21,9 @@ The implementation order is fixed by
 7. `scripts/compiler-adapter.mjs` compiles accepted source in the fixed
    `:tools:ai-compiler-harness` lane and labels a result `compiled` only after bounded class output
    passes content-addressed integrity checks.
+8. `scripts/preview-adapter.mjs` discovers and renders only allowlisted compiled targets through the
+   canonical Preview protocol, then labels a result `rendered` only after PNG and render-tree
+   containment, structure, size, and fingerprint checks pass.
 
 Run the Phase 0 gate with:
 
@@ -70,6 +73,22 @@ task, project path, output path, or build script. Content-addressed inputs are i
 class output is re-fingerprinted before reuse, and timeouts, cancellation, output limits, compiler
 diagnostics, and cache poisoning use stable result codes. Android resource fixtures and additional
 artifact lanes remain unsupported in this slice.
+
+After the repository Preview lane is prepared, run the Phase 2 render corpus with:
+
+```bash
+./gradlew qaPreview
+npm --prefix tools/ai run verify:phase2-render
+```
+
+The first render lane supports the compiled `samples.counter.CounterPreview` target, its declared
+light/dark variants, and the catalog's fixed viewport, density, font scale, locale, and layout
+direction. Requests cannot select a project, Gradle task, source path, worker class, dependency, or
+output path. Discovery and render use fixed offline Gradle plans on JDK 21. The adapter validates
+protocol identity, descriptor/variant identity, source containment, response correlation, exact
+artifact filenames, symbolic-link absence, PNG chunk structure and dimensions, render-tree JSON,
+hard byte limits, and a combined output fingerprint. Cached artifacts receive the same checks as a
+new render; poisoned cache entries fail closed.
 
 Project analysis accepts one absolute root, rejects path escape and all requested build execution,
 never follows symbolic links, excludes common build output and secret-bearing files, and enforces

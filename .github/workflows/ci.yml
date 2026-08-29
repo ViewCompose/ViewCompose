@@ -259,6 +259,9 @@ jobs:
       - name: Run qaPreview
         run: ./gradlew qaPreview --stacktrace
 
+      - name: Verify AI Preview render corpus
+        run: npm --prefix tools/ai run verify:phase2-render
+
       - name: Upload qaPreview failure reports
         if: failure()
         uses: actions/upload-artifact@v7

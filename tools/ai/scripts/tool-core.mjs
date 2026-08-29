@@ -1,3 +1,4 @@
+import {spawnSync} from 'node:child_process';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -21,6 +22,20 @@ export function aiToolingRoot() {
 
 export function repositoryRoot() {
   return repository;
+}
+
+export function detectJavaFeature(javaHome = process.env.JAVA_HOME) {
+  if (!javaHome) return null;
+  const executable = resolve(javaHome, 'bin/java');
+  const result = spawnSync(executable, ['-XshowSettings:properties', '-version'], {
+    encoding: 'utf8',
+  });
+  if (result.error || result.status !== 0) return null;
+  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+  const version = /\bjava\.version\s*=\s*([^\s]+)/u.exec(output)?.[1];
+  if (!version) return null;
+  const feature = Number.parseInt(version.startsWith('1.') ? version.split('.')[1] : version, 10);
+  return Number.isInteger(feature) ? feature : null;
 }
 
 export function diagnostic({
