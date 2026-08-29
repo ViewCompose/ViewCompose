@@ -8,5 +8,12 @@
   "expectedMetrics": {
     "mismatchedPixels": 1,
     "maxChannelDelta": 1
+  },
+  "expectedLocalization": {
+    "status": "mismatch",
+    "mismatchBounds": {"x": 0, "y": 0, "width": 1, "height": 1},
+    "designNodeId": "pixel-root",
+    "attributedMismatchedPixels": 1,
+    "unassignedMismatchedPixels": 0
   }
 }

@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement a bounded deterministic proposer that maps accepted structured candidate evidence to eligible typed Design IR patches without exposing a public repair mode.
+next_action: Implement exact pixel mismatch localization and Design IR node attribution before a bounded deterministic proposer consumes candidate evidence.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -117,8 +117,15 @@ The bounded deterministic repair contract and its provider-offline internal orch
 implemented, including typed Design IR patch application, source-bound candidate evaluation, and
 content-addressed structured candidate evidence, but automatic repair is not yet a public tool
 mode. The reproduced cross-build persistent Preview worker isolation gap is now closed by binding
-worker reuse to one exact build identity. Next action: implement a bounded deterministic proposer
-over accepted structured findings without claiming perceptual or cross-device equivalence.
+worker reuse to one exact build identity. Candidate evidence also proves that semantic layout
+comparison establishes conformance of generated code to its candidate IR; it cannot identify how
+that IR should change to match the reference image. Exact pixel findings currently retain only
+aggregate mismatch metrics. Therefore the next prerequisite is a separate localization result
+with bounded global mismatch bounds, deepest-containing Design IR node attribution, stable
+tie-breaking, and explicit unassigned pixels. The v1 contract is frozen, but implementation is not
+yet claimed. It deliberately does not infer repair values from pixel locations. Only after this
+evidence exists can a bounded deterministic proposer consume accepted findings without guessing or
+claiming perceptual or cross-device equivalence.
 
 ## Maven release changesets
 

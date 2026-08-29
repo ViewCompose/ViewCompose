@@ -951,6 +951,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.fileTree(project.rootDir.resolve("tools/ai")) {
                     include(
                         "contracts/screenshot-pixel-comparison.schema.json",
+                        "contracts/screenshot-pixel-localization.schema.json",
                         "contracts/screenshot-preprocessing.schema.json",
                         "contracts/screenshot-kotlin-generation.schema.json",
                         "evaluation/fixtures/visual/screenshot-layout-comparison-contract.json",

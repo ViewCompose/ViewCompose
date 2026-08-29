@@ -4,13 +4,15 @@
   "requiresContracts": [
     "screenshot-preprocessing-v1",
     "viewcompose-screenshot-layout-comparison-v1",
-    "screenshot-pixel-comparison-v1"
+    "screenshot-pixel-comparison-v1",
+    "screenshot-pixel-localization-v1"
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
     "status": "implemented",
     "publicPixelCompareMode": true,
     "implementation": true,
+    "localizationStatus": "contract-frozen",
     "successEvidence": "compared",
     "failureEvidence": "rendered"
   },
@@ -52,6 +54,13 @@
     "channelTolerance": 0,
     "aggregateScore": false
   },
+  "localizationPolicy": {
+    "ownership": "deepest-containing-design-node",
+    "bounds": "left-top-inclusive-right-bottom-exclusive",
+    "tieBreak": "deepest-path-then-design-node-id",
+    "unassigned": "retained-separately",
+    "aggregateScore": false
+  },
   "metrics": [
     "totalPixels",
     "comparedPixels",
@@ -65,7 +74,8 @@
     "checked": [
       "exact decoded RGBA equality after strict eligibility checks",
       "per-channel absolute and squared error over the full viewport",
-      "content-addressed reference and render PNG identity"
+      "content-addressed reference and render PNG identity",
+      "bounded mismatch bounds and deepest-node attribution without patch inference"
     ],
     "notClaimed": [
       "perceptual similarity",
@@ -73,6 +83,7 @@
       "animation, interaction, state transition, or motion behavior",
       "design intent or aesthetic quality",
       "automatic source repair",
+      "repair values inferred from mismatch location",
       "pixel parity for redacted or configuration-mismatched references"
     ]
   },
@@ -138,6 +149,13 @@
         "meanAbsoluteErrorRgba": 0,
         "rootMeanSquareErrorRgba": 0,
         "maxChannelDelta": 0
+      },
+      "expectedLocalization": {
+        "status": "exact",
+        "mismatchedPixels": 0,
+        "mismatchBounds": null,
+        "attributions": 0,
+        "unassignedMismatchedPixels": 0
       }
     }
   ],

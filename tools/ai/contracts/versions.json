@@ -13,6 +13,7 @@
     "screenshotInferenceResolution": 1,
     "screenshotKotlinGeneration": 1,
     "screenshotPixelComparison": 1,
+    "screenshotPixelLocalization": 1,
     "screenshotRepair": 2,
     "screenshotRepairCandidateEvidence": 1,
     "evaluationCorpus": 1,

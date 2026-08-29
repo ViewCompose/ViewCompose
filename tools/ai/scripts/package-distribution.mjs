@@ -33,6 +33,7 @@ const sourcePaths = Object.freeze([
   'contracts/screenshot-inference-resolution.schema.json',
   'contracts/screenshot-kotlin-generation.schema.json',
   'contracts/screenshot-pixel-comparison.schema.json',
+  'contracts/screenshot-pixel-localization.schema.json',
   'contracts/screenshot-preprocessing.schema.json',
   'contracts/screenshot-repair.schema.json',
   'contracts/screenshot-repair-candidate-evidence.schema.json',

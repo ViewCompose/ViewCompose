@@ -19,6 +19,9 @@ const contractPath = resolve(visualRoot, 'screenshot-pixel-comparison-contract.j
 const schemaPath = fileURLToPath(
   new URL('../contracts/screenshot-pixel-comparison.schema.json', import.meta.url),
 );
+const localizationSchemaPath = fileURLToPath(
+  new URL('../contracts/screenshot-pixel-localization.schema.json', import.meta.url),
+);
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
@@ -36,7 +39,7 @@ function same(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function assertContract(contract, schema) {
+function assertContract(contract, schema, localizationSchema) {
   if (
     contract.schemaVersion !== 1 ||
     contract.contractId !== 'viewcompose-screenshot-pixel-comparison-v1' ||
@@ -44,11 +47,13 @@ function assertContract(contract, schema) {
       'screenshot-preprocessing-v1',
       'viewcompose-screenshot-layout-comparison-v1',
       'screenshot-pixel-comparison-v1',
+      'screenshot-pixel-localization-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
     contract.activation?.status !== 'implemented' ||
     contract.activation?.publicPixelCompareMode !== true ||
     contract.activation?.implementation !== true ||
+    contract.activation?.localizationStatus !== 'contract-frozen' ||
     contract.activation?.successEvidence !== 'compared' ||
     contract.activation?.failureEvidence !== 'rendered'
   ) {
@@ -63,7 +68,14 @@ function assertContract(contract, schema) {
     contract.eligibility?.crop !== 'full rendered viewport' ||
     contract.eligibility?.dimensionTolerancePx !== 0 ||
     contract.policy?.channelTolerance !== 0 ||
-    contract.policy?.aggregateScore !== false
+    contract.policy?.aggregateScore !== false ||
+    !same(contract.localizationPolicy, {
+      ownership: 'deepest-containing-design-node',
+      bounds: 'left-top-inclusive-right-bottom-exclusive',
+      tieBreak: 'deepest-path-then-design-node-id',
+      unassigned: 'retained-separately',
+      aggregateScore: false,
+    })
   ) {
     throw new Error('Screenshot pixel comparison eligibility or exactness boundary changed');
   }
@@ -71,6 +83,10 @@ function assertContract(contract, schema) {
     !contract.claims?.checked?.includes('exact decoded RGBA equality after strict eligibility checks') ||
     !contract.claims?.notClaimed?.includes('perceptual similarity') ||
     !contract.claims?.notClaimed?.includes('automatic source repair') ||
+    !contract.claims?.checked?.includes(
+      'bounded mismatch bounds and deepest-node attribution without patch inference',
+    ) ||
+    !contract.claims?.notClaimed?.includes('repair values inferred from mismatch location') ||
     !contract.claims?.notClaimed?.includes(
       'pixel parity for redacted or configuration-mismatched references',
     )
@@ -110,6 +126,23 @@ function assertContract(contract, schema) {
     schema.properties?.policy?.properties?.channelTolerance?.const !== 0
   ) {
     throw new Error('Screenshot pixel comparison result schema boundary changed');
+  }
+  if (
+    localizationSchema.$id !==
+      'https://schemas.viewcompose.com/ai/screenshot-pixel-localization-v1.schema.json' ||
+    localizationSchema.properties?.schemaVersion?.const !== 1 ||
+    localizationSchema.properties?.policy?.properties?.ownership?.const !==
+      'deepest-containing-design-node' ||
+    localizationSchema.properties?.policy?.properties?.bounds?.const !==
+      'left-top-inclusive-right-bottom-exclusive' ||
+    localizationSchema.properties?.policy?.properties?.tieBreak?.const !==
+      'deepest-path-then-design-node-id' ||
+    localizationSchema.properties?.policy?.properties?.unassigned?.const !==
+      'retained-separately' ||
+    localizationSchema.properties?.policy?.properties?.aggregateScore?.const !== false ||
+    localizationSchema.properties?.attributions?.maxItems !== contract.limits.maxFindings
+  ) {
+    throw new Error('Screenshot pixel localization schema boundary changed');
   }
 }
 
@@ -168,13 +201,14 @@ function assertCodes(actual, expected, label) {
 }
 
 export async function verifyPhase5ScreenshotPixelComparison({compareGolden = true} = {}) {
-  const [contract, schema, layoutContract, previewRequest] = await Promise.all([
+  const [contract, schema, localizationSchema, layoutContract, previewRequest] = await Promise.all([
     readJson(contractPath),
     readJson(schemaPath),
+    readJson(localizationSchemaPath),
     readJson(resolve(visualRoot, 'screenshot-layout-comparison-contract.json')),
     readJson(resolve(visualRoot, 'screenshot-render/wireframe.preview-request.json')),
   ]);
-  assertContract(contract, schema);
+  assertContract(contract, schema, localizationSchema);
   const [referenceRequest, referenceResult] = await Promise.all([
     readJson(resolve(visualRoot, contract.lineage.referenceRequest)),
     readJson(resolve(visualRoot, contract.lineage.referenceResult)),
@@ -203,7 +237,14 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
     fixture.expectedMetrics.exactPixelRatio !== 1 ||
     fixture.expectedMetrics.meanAbsoluteErrorRgba !== 0 ||
     fixture.expectedMetrics.rootMeanSquareErrorRgba !== 0 ||
-    fixture.expectedMetrics.maxChannelDelta !== 0
+    fixture.expectedMetrics.maxChannelDelta !== 0 ||
+    !same(fixture.expectedLocalization, {
+      status: 'exact',
+      mismatchedPixels: 0,
+      mismatchBounds: null,
+      attributions: 0,
+      unassignedMismatchedPixels: 0,
+    })
   ) {
     throw new Error('Screenshot pixel reference lineage or exact denominator changed');
   }
@@ -243,7 +284,14 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
         mutation.channel !== 'red' ||
         mutation.value !== 1 ||
         mutation.expectedMetrics?.mismatchedPixels !== 1 ||
-        mutation.expectedMetrics?.maxChannelDelta !== 1
+        mutation.expectedMetrics?.maxChannelDelta !== 1 ||
+        !same(mutation.expectedLocalization, {
+          status: 'mismatch',
+          mismatchBounds: {x: 0, y: 0, width: 1, height: 1},
+          designNodeId: 'pixel-root',
+          attributedMismatchedPixels: 1,
+          unassignedMismatchedPixels: 0,
+        })
       ) {
         throw new Error('Screenshot pixel mismatch denominator changed');
       }
