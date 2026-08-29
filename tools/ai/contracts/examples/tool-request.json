@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "request",
+  "requestId": "request-1",
+  "tool": "get_api_reference",
+  "framework": {
+    "versionLane": "current-source",
+    "identity": "0123456789abcdef"
+  },
+  "limits": {
+    "timeoutMs": 10000,
+    "maxInputBytes": 262144,
+    "maxOutputBytes": 1048576
+  },
+  "arguments": {
+    "capabilityId": "modifier.layout"
+  }
+}

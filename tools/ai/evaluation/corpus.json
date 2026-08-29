@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "viewcompose-ai-foundation-v1",
+  "versionLane": "current-source",
+  "cases": [
+    {
+      "id": "knowledge.exact-column-symbol",
+      "phase": 1,
+      "category": "retrieval",
+      "input": {
+        "kind": "query",
+        "text": "com.viewcompose.foundation.layout.Column"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "knowledge",
+        "capabilityIds": ["foundation.components"],
+        "maxRank": 1
+      },
+      "metricIds": ["retrieval.exact-symbol-rank", "retrieval.top5-recall"]
+    },
+    {
+      "id": "knowledge.modifier-layout-intent",
+      "phase": 1,
+      "category": "retrieval",
+      "input": {
+        "kind": "query",
+        "text": "add padding and fill the available width"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "knowledge",
+        "capabilityIds": ["modifier.layout"],
+        "maxRank": 5
+      },
+      "metricIds": ["retrieval.top5-recall"]
+    },
+    {
+      "id": "knowledge.current-sample-lineage",
+      "phase": 1,
+      "category": "knowledge-freshness",
+      "input": {
+        "kind": "fixture",
+        "fixture": "../../../viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "knowledge",
+        "capabilityIds": ["foundation.components"]
+      },
+      "metricIds": ["knowledge.deterministic-output", "knowledge.capability-completeness"]
+    },
+    {
+      "id": "validation.fabricated-padding-api",
+      "phase": 2,
+      "category": "hallucination",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/kotlin/fabricated-padding.kt"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-UNKNOWN-SYMBOL"]
+      },
+      "metricIds": ["validation.fabricated-symbol-rejection", "validation.rule-recall"]
+    },
+    {
+      "id": "validation.accessibility-description",
+      "phase": 2,
+      "category": "static-validation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/kotlin/missing-content-description.kt"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-A11Y-IMAGE-DESCRIPTION"]
+      },
+      "metricIds": ["validation.rule-precision", "validation.rule-recall"]
+    },
+    {
+      "id": "compile.canonical-foundation-sample",
+      "phase": 2,
+      "category": "compilation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "../../../viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compiled",
+        "capabilityIds": ["foundation.components"]
+      },
+      "metricIds": ["compile.supported-success"]
+    },
+    {
+      "id": "render.counter-preview",
+      "phase": 2,
+      "category": "render",
+      "input": {
+        "kind": "fixture",
+        "fixture": "../../../samples/counter/src/debug/java/com/viewcompose/samples/counter/CounterPreview.kt"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "rendered",
+        "capabilityIds": ["preview.runner"]
+      },
+      "metricIds": ["render.supported-success"]
+    },
+    {
+      "id": "project.safe-read-only-inventory",
+      "phase": 2,
+      "category": "project-analysis",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/project/safe-project.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": ["security.fail-closed"]
+    },
+    {
+      "id": "security.path-traversal",
+      "phase": 2,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/security/path-traversal.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-PATH-ESCAPE"]
+      },
+      "metricIds": ["security.fail-closed"]
+    },
+    {
+      "id": "security.project-build-execution",
+      "phase": 2,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/security/build-execution.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-BUILD-EXECUTION-DENIED"]
+      },
+      "metricIds": ["security.fail-closed", "runtime.isolation"]
+    },
+    {
+      "id": "protocol.cli-mcp-equivalence",
+      "phase": 3,
+      "category": "protocol",
+      "input": {
+        "kind": "query",
+        "text": "get capability modifier.layout in current-source"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "knowledge",
+        "capabilityIds": ["modifier.layout"]
+      },
+      "metricIds": ["protocol.cli-mcp-parity"]
+    },
+    {
+      "id": "xml.supported-login-layout",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/login.xml"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compiled"
+      },
+      "metricIds": ["xml.supported-compile"]
+    },
+    {
+      "id": "compose.unsupported-custom-effect",
+      "phase": 4,
+      "category": "compose-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/compose/UnsupportedEffect.kt"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-COMPOSE-UNSUPPORTED-EFFECT"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
+      "id": "visual.semantic-login-tree",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/login-design-tree.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compared"
+      },
+      "metricIds": ["visual.semantic-preservation", "visual.geometry-pass", "visual.repair-bound"]
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-ai-metrics-v1",
+  "metrics": [
+    {
+      "id": "knowledge.deterministic-output",
+      "phase": 1,
+      "measure": "mismatch_count",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "files",
+      "environment": "same source revision and generator version"
+    },
+    {
+      "id": "knowledge.capability-completeness",
+      "phase": 1,
+      "measure": "resolved_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "current canonical capability inventory"
+    },
+    {
+      "id": "retrieval.top5-recall",
+      "phase": 1,
+      "measure": "top5_recall",
+      "direction": "at_least",
+      "threshold": 0.95,
+      "unit": "ratio",
+      "environment": "local index, cold process, current-source lane"
+    },
+    {
+      "id": "retrieval.exact-symbol-rank",
+      "phase": 1,
+      "measure": "reciprocal_rank",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact fully-qualified symbol query"
+    },
+    {
+      "id": "validation.fabricated-symbol-rejection",
+      "phase": 2,
+      "measure": "rejection_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "curated nonexistent and removed symbol corpus"
+    },
+    {
+      "id": "validation.rule-precision",
+      "phase": 2,
+      "measure": "precision",
+      "direction": "at_least",
+      "threshold": 0.95,
+      "unit": "ratio",
+      "environment": "per stable rule code on labeled fixtures"
+    },
+    {
+      "id": "validation.rule-recall",
+      "phase": 2,
+      "measure": "recall",
+      "direction": "at_least",
+      "threshold": 0.9,
+      "unit": "ratio",
+      "environment": "per stable rule code on labeled fixtures"
+    },
+    {
+      "id": "compile.supported-success",
+      "phase": 2,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "pinned JDK, Kotlin, AGP, Android SDK, artifacts, and supported fixtures"
+    },
+    {
+      "id": "render.supported-success",
+      "phase": 2,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "pinned Preview runner and declared configuration matrix"
+    },
+    {
+      "id": "security.fail-closed",
+      "phase": 2,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "adversarial path, build execution, secret, resource, timeout, cancellation, and cache fixtures"
+    },
+    {
+      "id": "runtime.isolation",
+      "phase": 2,
+      "measure": "release_runtime_occurrences",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "dependencies_or_operations",
+      "environment": "release dependency graph and inactive application process"
+    },
+    {
+      "id": "protocol.cli-mcp-parity",
+      "phase": 3,
+      "measure": "semantic_mismatch_count",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "cases",
+      "environment": "same core request and knowledge fingerprint"
+    },
+    {
+      "id": "xml.supported-compile",
+      "phase": 4,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "declared supported XML subset"
+    },
+    {
+      "id": "migration.unsupported-honesty",
+      "phase": 4,
+      "measure": "reported_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "labeled unsupported XML and Compose semantics"
+    },
+    {
+      "id": "visual.semantic-preservation",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "declared text, role, state, content-description, and traversal expectations"
+    },
+    {
+      "id": "visual.geometry-pass",
+      "phase": 5,
+      "measure": "nodes_within_tolerance_ratio",
+      "direction": "at_least",
+      "threshold": 0.98,
+      "unit": "ratio",
+      "environment": "same density, viewport, font, locale, and system-bar crop; tolerance max(2 px, 1 percent)"
+    },
+    {
+      "id": "visual.repair-bound",
+      "phase": 5,
+      "measure": "iterations",
+      "direction": "at_most",
+      "threshold": 5,
+      "unit": "iterations",
+      "environment": "no oscillation and no regression of passed deterministic gates"
+    }
+  ]
+}

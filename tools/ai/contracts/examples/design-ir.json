@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "documentId": "login-screen",
+  "source": {
+    "kind": "android-xml",
+    "identity": "evaluation/fixtures/xml/login.xml"
+  },
+  "roots": [
+    {
+      "id": "login-root",
+      "kind": "column",
+      "properties": {
+        "width": "match-parent",
+        "height": "match-parent"
+      },
+      "modifiers": [
+        {
+          "kind": "padding",
+          "arguments": { "all": "16dp" }
+        }
+      ],
+      "semantics": {},
+      "events": [],
+      "children": [
+        {
+          "id": "submit-button",
+          "kind": "button",
+          "properties": { "textResource": "login_action" },
+          "modifiers": [],
+          "semantics": { "role": "button" },
+          "events": [
+            {
+              "kind": "click",
+              "binding": "submit",
+              "status": "placeholder"
+            }
+          ],
+          "children": [],
+          "provenance": {
+            "sourceId": "@id/submit",
+            "sourceSpan": "login.xml:23",
+            "confidence": 1,
+            "decision": "Preserve the listener as an explicit call-site placeholder."
+          }
+        }
+      ],
+      "provenance": {
+        "sourceId": "LinearLayout[0]",
+        "sourceSpan": "login.xml:2",
+        "confidence": 1,
+        "decision": "Vertical LinearLayout maps to a column."
+      }
+    }
+  ],
+  "unsupported": []
+}

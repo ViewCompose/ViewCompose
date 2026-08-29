@@ -13,10 +13,10 @@ invariants:
   - 已接受决策保留原始理由；需要改变时以新的编号 ADR 明确取代，不通过重写隐藏历史取舍。
   - 改变当前行为的决策必须在同一变更中更新有效 Architecture 与 Module owner。
 evidence:
-  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md
+  - docs/architecture/decisions/0001-hosted-documentation-platform.md through docs/architecture/decisions/0025-ai-verifiable-development-tooling-boundary.md
   - ./gradlew verifyDocumentationStructure
 translation_source: architecture/decisions/README.md
-translation_source_hash: 962eaab8aac54d00d6e367382a246548d70275f4b966fae955dcddb754a62db0
+translation_source_hash: 36bb542453fbf0b03553d128c45871cb2ae0686f2085e63bbf86658ad536f79b
 translation_status: current
 ---
 
@@ -51,6 +51,7 @@ translation_status: current
 - [ADR-0022：开发工具内存安装](./0022-in-memory-development-tooling-installation.md)
 - [ADR-0023：保留式 ViewModel 作用域所有权](./0023-retained-viewmodel-scope-ownership.md)
 - [ADR-0024：由 Scene 推导导航生命周期与 Presentation 所有权](./0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md)
+- [ADR-0025：AI 可验证开发工具边界](./0025-ai-verifiable-development-tooling-boundary.md)
 
 ## 规则
 

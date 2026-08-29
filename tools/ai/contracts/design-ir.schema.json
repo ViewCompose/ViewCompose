@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/design-ir-v1.schema.json",
+  "title": "ViewCompose tooling Design IR v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "documentId", "source", "roots", "unsupported"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "documentId": { "$ref": "#/$defs/stableId" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identity"],
+      "properties": {
+        "kind": { "enum": ["prompt", "android-xml", "compose", "screenshot", "figma"] },
+        "identity": { "type": "string", "minLength": 1 },
+        "fingerprint": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "unsupported": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unsupported" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "properties", "modifiers", "semantics", "events", "children", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "kind": { "$ref": "#/$defs/stableId" },
+        "properties": { "type": "object" },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "arguments"],
+            "properties": {
+              "kind": { "$ref": "#/$defs/stableId" },
+              "arguments": { "type": "object" }
+            }
+          }
+        },
+        "semantics": { "type": "object" },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "binding", "status"],
+            "properties": {
+              "kind": { "$ref": "#/$defs/stableId" },
+              "binding": { "type": "string" },
+              "status": { "enum": ["resolved", "placeholder", "unsupported"] }
+            }
+          }
+        },
+        "state": { "type": "object" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" }
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "confidence"],
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1 },
+        "sourceSpan": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "decision": { "type": "string", "maxLength": 2048 }
+      }
+    },
+    "unsupported": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "code", "reason", "preservedSource"],
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1 },
+        "code": { "pattern": "^VC-AI-[A-Z0-9-]+$", "type": "string" },
+        "reason": { "type": "string", "minLength": 1 },
+        "preservedSource": { "type": "string" }
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

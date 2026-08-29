@@ -21,6 +21,7 @@ internal fun Project.registerLifecycleQualityTasks(extension: ViewComposeQuality
         dependsOn("verifyDemoLocalizedVisibleCopy")
         dependsOn("verifyDesignSystemIsolation")
         dependsOn("verifyUiFoundationPlatformBoundary")
+        dependsOn("verifyAiToolingContracts")
         dependsOn("verifyDocumentationStructure")
         dependsOn("verifyDslApiContracts")
         dependsOn("verifyMigrationPairedSamples")

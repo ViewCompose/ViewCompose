@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "contracts": {
+    "knowledgeBundleManifest": 1,
+    "toolEnvelope": 1,
+    "designIr": 1,
+    "evaluationCorpus": 1,
+    "metricContract": 1
+  },
+  "compatibility": {
+    "policy": "exact-major",
+    "unsupportedNewerMajor": "reject",
+    "implicitDowngrade": false,
+    "unknownFieldPolicy": "schema-defined"
+  },
+  "versionLanes": [
+    {
+      "id": "current-source",
+      "identity": "exact-git-revision",
+      "movableAlias": false
+    },
+    {
+      "id": "released",
+      "identity": "exact-artifact-version-and-coordinate",
+      "movableAlias": false
+    }
+  ],
+  "evidenceLevels": [
+    "knowledge",
+    "static",
+    "compiled",
+    "rendered",
+    "compared"
+  ],
+  "reservedCapabilities": [
+    {
+      "id": "tooling.ai-knowledge",
+      "activationPhase": 1,
+      "initialQLevel": "Q3",
+      "contractFields": ["version", "source-lineage", "freshness", "determinism", "dependencies", "limits"]
+    },
+    {
+      "id": "tooling.ai-validation",
+      "activationPhase": 2,
+      "initialQLevel": "Q3",
+      "contractFields": ["version", "threading", "execution", "security", "diagnostics", "limits", "performance"]
+    },
+    {
+      "id": "tooling.ai-protocol",
+      "activationPhase": 3,
+      "initialQLevel": "Q3",
+      "contractFields": ["version", "transport", "compatibility", "cancellation", "security", "limits", "errors"]
+    },
+    {
+      "id": "tooling.ai-migration",
+      "activationPhase": 4,
+      "initialQLevel": "Q3",
+      "contractFields": ["source-version", "target-version", "preservation", "unsupported-semantics", "provenance", "verification"]
+    },
+    {
+      "id": "tooling.ai-visual-generation",
+      "activationPhase": 5,
+      "initialQLevel": "Q2",
+      "contractFields": ["provider", "privacy", "assets", "configuration", "comparison", "repair", "limits"]
+    }
+  ]
+}

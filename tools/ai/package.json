@@ -1,0 +1,10 @@
+{
+  "name": "@viewcompose/ai-tooling-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test scripts/*.test.mjs",
+    "verify": "npm run test && node scripts/verify-phase0.mjs"
+  }
+}

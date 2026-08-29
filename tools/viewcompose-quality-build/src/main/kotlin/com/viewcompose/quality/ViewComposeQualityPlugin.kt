@@ -492,6 +492,19 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("website/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiToolingContracts") {
+            group = "verification"
+            description =
+                "Verifies provider-neutral AI tooling schemas, metrics, and evaluation fixtures."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include("**/*.json", "**/*.mjs", "**/*.kt", "**/*.xml", "**/*.md")
+                },
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+            )
+        }
         project.tasks.register<Exec>("verifyDocumentLanguages") {
             group = "verification"
             description =

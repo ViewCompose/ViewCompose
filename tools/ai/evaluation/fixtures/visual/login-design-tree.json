@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "viewport": {
+    "widthPx": 1080,
+    "heightPx": 1920,
+    "density": 3
+  },
+  "nodes": [
+    {
+      "id": "login-root",
+      "kind": "column",
+      "bounds": [48, 96, 1032, 1824],
+      "children": ["login-title", "email-field", "submit-button"]
+    },
+    {
+      "id": "login-title",
+      "kind": "text",
+      "text": "Sign in",
+      "role": "heading",
+      "bounds": [48, 96, 1032, 192]
+    },
+    {
+      "id": "email-field",
+      "kind": "text-field",
+      "label": "Email",
+      "bounds": [48, 240, 1032, 408]
+    },
+    {
+      "id": "submit-button",
+      "kind": "button",
+      "text": "Continue",
+      "role": "button",
+      "bounds": [48, 456, 1032, 600]
+    }
+  ]
+}

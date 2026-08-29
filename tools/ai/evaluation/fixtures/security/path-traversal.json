@@ -1,0 +1,5 @@
+{
+  "projectRoot": "/workspace/sample",
+  "requestedPath": "../../.ssh/id_ed25519",
+  "expectedDecision": "reject-before-read"
+}

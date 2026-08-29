@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Complete Phase 0 by accepting the AI-tooling ADR, threat model, evaluation corpus, metric thresholds, bundle schema, version-lane rules, and capability-impact dispositions before implementing llms.txt, MCP, or converters.
+next_action: Implement Phase 1 by generating the canonical versioned AI Knowledge Bundle and compact llms.txt from Governance V2, compiled samples, publication metadata, and exact source fingerprints.
 maven_release_changesets: []
 ---
 
@@ -44,14 +44,14 @@ maven_release_changesets: []
 
 ## Status
 
-Active. The repository and SceneView comparison audit is complete. No implementation phase has
-started. Phase 0 contract and evaluation freeze is the only open implementation entry point.
+Active. The repository and SceneView comparison audit and Phase 0 contract, threat-model,
+evaluation, version, and security freeze are complete. Phase 1 canonical knowledge generation is
+active.
 
 Last verified: 2026-08-29.
 
-Next action: accept the AI-tooling ADR, threat model, evaluation corpus, metric thresholds, bundle
-schema, version-lane rules, and capability-impact dispositions before implementing `llms.txt`, MCP,
-or converters.
+Next action: generate the canonical versioned AI Knowledge Bundle and compact `llms.txt` from
+Governance V2, compiled samples, publication metadata, and exact source fingerprints.
 
 ## Maven release changesets
 
@@ -259,6 +259,36 @@ independently versioned before an implementation makes accidental decisions perm
 - The threat model has automated negative-test owners and an explicit residual-risk decision.
 - Tool, bundle, IR, and framework versions can vary independently without an unspecified fallback.
 - No MCP or converter implementation begins until this phase is accepted.
+
+### Acceptance evidence (2026-08-29)
+
+Phase 0 is complete at source revision `1de3ceaa` plus this implementation slice. ADR-0025 accepts
+the canonical lineage, provider/runtime isolation, cumulative evidence, untrusted execution,
+Design IR, version, Q-level, metric, and threat-model contracts. `tools/ai/` contains five JSON
+Schemas, five reserved capability IDs, 17 metrics, 14 evaluation cases, and 11 fixture-backed cases.
+
+The following fresh commands passed on macOS using Android Studio JBR 21.0.10:
+
+```text
+npm --prefix tools/ai run verify
+./gradlew -p tools/viewcompose-quality-build test --console=plain
+./gradlew verifyAiToolingContracts verifyDocumentationStructure \
+  verifyDevelopmentToolingIsolation verifyViewComposeReleaseIntent --console=plain
+```
+
+The Node suite passed 4/4 tests. The compiled quality-build suite passed, proving
+`verifyAiToolingContracts` is registered and owned by `qaQuick`. The combined root gate passed 22
+tasks, verified 131 canonical English and 127 current Chinese documents, reported zero Governance
+V2 issues, zero release artifacts, and no development-tooling isolation violation.
+
+Comparison context: the baseline had no AI contract gate, schema, metric denominator, or adversarial
+corpus; the accepted slice adds all four without a production artifact or release-runtime change.
+Normalized runtime and accuracy change are not applicable because Phase 0 intentionally adds no
+query, compiler, renderer adapter, converter, or model execution. Conclusion: **improved** contract,
+security, and reproducibility readiness with **no material runtime change**. Limitations: the local
+Schema validator implements only the frozen subset used by these contracts, future-phase fixtures
+are contract denominators rather than passing implementation results, and no AI-facing product
+capability is claimed yet. Next action: Phase 1 canonical knowledge generation.
 
 ## Phase 1 — Canonical AI Knowledge and discovery
 
