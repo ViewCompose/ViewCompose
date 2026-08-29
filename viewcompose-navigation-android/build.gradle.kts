@@ -41,6 +41,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.savedstate)
+    implementation(libs.androidx.navigationevent)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.navigationevent.testing)
     testImplementation(libs.robolectric)
 }

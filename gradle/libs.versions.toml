@@ -23,6 +23,7 @@ kotlinxSerialization = "1.7.3"
 lifecycle = "2.11.0"
 composeUi = "1.7.8"
 navigation = "2.9.8"
+navigationEvent = "1.1.2"
 paparazzi = "2.0.0-alpha05"
 paparazziWorker = "2.0.0-alpha05"
 dynamicanimation = "1.0.0"
@@ -70,6 +71,8 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "composeUi" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "composeUi" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
+androidx-navigationevent = { group = "androidx.navigationevent", name = "navigationevent", version.ref = "navigationEvent" }
+androidx-navigationevent-testing = { group = "androidx.navigationevent", name = "navigationevent-testing", version.ref = "navigationEvent" }
 paparazzi = { group = "app.cash.paparazzi", name = "paparazzi", version.ref = "paparazzi" }
 paparazzi-worker = { group = "app.cash.paparazzi", name = "paparazzi", version.ref = "paparazziWorker" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
