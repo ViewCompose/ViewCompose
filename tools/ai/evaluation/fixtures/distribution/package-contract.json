@@ -54,6 +54,7 @@
       "scripts/bounded-process.mjs",
       "scripts/compiler-adapter.mjs",
       "scripts/design-ir-to-kotlin.mjs",
+      "scripts/generated-preview-adapter.mjs",
       "scripts/knowledge-retriever.mjs",
       "scripts/layout-diagnoser.mjs",
       "scripts/mcp-server.mjs",
@@ -115,7 +116,8 @@
       "validate_code:compile",
       "render_preview",
       "diagnose_layout",
-      "convert_xml_to_viewcompose:compile"
+      "convert_xml_to_viewcompose:compile",
+      "convert_xml_to_viewcompose:render"
     ],
     "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
     "implicitProtocolDowngrade": false

@@ -22,6 +22,7 @@
     "verify:phase4-design-ir": "node scripts/verify-phase4-design-ir.mjs",
     "verify:phase4-project-context": "node scripts/verify-phase4-project-context.mjs",
     "verify:phase4-layout-dependencies": "node scripts/verify-phase4-layout-dependencies.mjs",
+    "verify:phase4-generated-preview": "node scripts/verify-phase4-generated-preview.mjs",
     "verify:phase4-xml": "node scripts/verify-phase4-xml.mjs"
   }
 }

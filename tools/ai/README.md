@@ -118,8 +118,8 @@ npm --silent --prefix tools/ai run tool -- --pretty < request.json
 
 It currently dispatches `get_api_reference`, `get_component_reference`, `search_component`,
 `get_sample`, `validate_code` (`static` or `compile`), `render_preview`, `diagnose_layout`, and
-`analyze_project`, plus `convert_xml_to_viewcompose` (`generate` or `compile`). The request must name
-the exact `framework.versionLane` and
+`analyze_project`, plus `convert_xml_to_viewcompose` (`generate`, `compile`, or `render`). The
+request must name the exact `framework.versionLane` and
 `framework.identity` from `generated/current-source/manifest.json`; input, output, and timeout
 limits are mandatory and are propagated to the underlying adapter. Stdout contains only one JSON
 result. Operational errors use stderr and exit code 2. The CLI accepts no project-selected command,
@@ -164,17 +164,20 @@ npm --prefix tools/ai run verify:phase4-design-ir
 JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-project-context
 JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-layout-dependencies
 JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-xml
+JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-generated-preview
 ./gradlew verifyAiDesignIr verifyAiXmlProjectContext verifyAiXmlLayoutDependencies \
-  verifyAiXmlMigration
+  verifyAiXmlMigration verifyAiGeneratedPreview
 ```
 
 `convert_xml_to_viewcompose` accepts only the compatible frozen Android XML layout v1 and v2
 subsets documented by `evaluation/fixtures/xml/subset-contract.json` and
 `evaluation/fixtures/xml/subset-v2-contract.json`. Its arguments select exactly one input form:
 
-- Source form supplies `source`, optional logical `path`, and `mode`.
+- Source form supplies `source`, optional logical `path`, and `mode`; `render` also requires
+  `previewBindings`.
 - Project form supplies an absolute `projectRoot`, project-relative `layoutPath`, ordered
-  `resourceRoots`, optional ordered `sourceRoots`, and `mode`.
+  `resourceRoots`, optional ordered `sourceRoots`, and `mode`; `render` also requires
+  `previewBindings`.
 
 Project form implements only the additional subset frozen by
 `evaluation/fixtures/xml/project-context-contract.json`. It resolves default `string` and `dimen`
@@ -204,11 +207,23 @@ types remain unsupported.
 `generate` parses the selected source into typed Design IR and returns deterministic ViewCompose
 Kotlin plus resource/state bindings and a mandatory call-site review checklist. It never invokes
 Gradle. `compile` performs the same steps and then enters the fixed hermetic compiler; callers must
-select this deeper mode explicitly. Custom Views, Data Binding, unknown
-attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities, malformed XML, duplicate
-IDs, and limit violations return localized diagnostics and no Kotlin. String resources remain
-explicit caller `String` bindings, drawable resources remain caller `ImageSource` bindings, and
-`TextFieldState` remains caller-owned; the tool does not invent listeners or rewrite
+select this deeper mode explicitly. `render` accepts only Kotlin emitted by that same conversion,
+requires one explicit ordered value for every generator-reported parameter, creates a deterministic
+zero-argument Preview wrapper, and uses only `:tools:ai-preview-harness`. The request, generated
+Kotlin, wrapper, framework bundle, configuration, compiler lane, and render lane are
+content-addressed. The harness is offline and cannot select or execute the inspected project's
+build, task, dependencies, resources, scripts, or output paths.
+
+Generated Preview v1 supports exact `String` values and fresh `TextFieldState` values with explicit
+initial text. Missing, extra, duplicate, reordered, source-mismatched, or type-mismatched bindings
+fail before Gradle. `ImageSource` remains explicitly unsupported until an isolated asset-staging
+contract exists, so image layouts finish at compiled evidence instead of fabricating a resource or
+using the network. A successful render returns the request, generated-source, wrapper, PNG,
+render-tree, and combined output fingerprints at `rendered` evidence. Custom Views, Data Binding,
+unknown attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities, malformed XML,
+duplicate IDs, and limit violations return localized diagnostics and no Kotlin. String resources
+remain explicit caller `String` bindings, drawable resources remain caller `ImageSource` bindings,
+and `TextFieldState` remains caller-owned; the tool does not invent listeners or rewrite
 ViewBinding/application call sites.
 
 Run the local MCP server and its protocol/parity gate with:
@@ -245,7 +260,8 @@ Six client-neutral consumer skills live below `skills/`:
 - `viewcompose-api-reference` retrieves exact APIs and compiled samples without writing files.
 - `viewcompose-create-screen` retrieves before implementation and requires compile-backed delivery.
 - `viewcompose-convert-xml` prefers explicit project evidence when a layout lives in the scoped
-  project, preserves standalone pasted-source migration, and requires compile-backed integration.
+  project, preserves standalone pasted-source migration, requires compile-backed integration, and
+  uses generated render mode only with exact explicit bindings.
 - `viewcompose-review` keeps review read-only unless the caller also asks for a fix.
 - `viewcompose-debug-layout` uses only allowlisted Preview and structured layout evidence.
 - `viewcompose-validate` requires hermetic compilation and renders only covered allowlisted targets.
@@ -304,7 +320,8 @@ npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
 `validate_code`, `analyze_project`, and both source and explicit-project generate modes of
 `convert_xml_to_viewcompose` need no ViewCompose source checkout. Project generation reads only the
 caller-supplied bounded project roots. Compile-mode `validate_code`, compile-mode
-`convert_xml_to_viewcompose`, `render_preview`, and `diagnose_layout` remain source-bound: set
+and render-mode `convert_xml_to_viewcompose`, `render_preview`, and `diagnose_layout` remain
+source-bound: set
 `VIEWCOMPOSE_SOURCE_ROOT` to the absolute root of the matching ViewCompose checkout and provide the
 pinned JDK/Android/Gradle offline lane. The adapter requires the exact Knowledge Bundle source
 revision to be present in that checkout's Git ancestry and rejects missing wrapper/settings files,

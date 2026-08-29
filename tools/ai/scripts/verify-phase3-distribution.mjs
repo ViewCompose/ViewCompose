@@ -21,6 +21,12 @@ const compileFixturePath = fileURLToPath(
 const xmlFixturePath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/login.xml', import.meta.url),
 );
+const generatedPreviewContractPath = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/generated-preview-contract.json', import.meta.url),
+);
+const generatedPreviewRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
+);
 const xmlV2FixturePath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/profile-card.xml', import.meta.url),
 );
@@ -104,7 +110,9 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
     tool,
     framework: knowledge.framework,
     limits: {
-      timeoutMs: tool === 'validate_code' || arguments_.mode === 'compile' ? 120_000 : 10_000,
+      timeoutMs: tool === 'validate_code' || ['compile', 'render'].includes(arguments_.mode)
+        ? 120_000
+        : 10_000,
       maxInputBytes: 4 * 1024 * 1024,
       maxOutputBytes: 1024 * 1024,
     },
@@ -234,7 +242,7 @@ async function verifyInventory(packageRoot, contract) {
   }
 }
 
-async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
+async function verifyCliFlow(cli, knowledge, installedPackageRoot, generatedPreviewContract) {
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
     name: 'Column',
@@ -333,6 +341,25 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
   if (compiledXml.status !== 'success' || compiledXml.evidence.level !== 'compiled') {
     throw new Error('Installed CLI did not compile the frozen XML migration.');
   }
+  const previewRequest = await readJson(generatedPreviewRequestPath);
+  const renderedXml = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    source: xml,
+    path: 'res/layout/login.xml',
+    mode: 'render',
+    previewBindings: previewRequest.bindings,
+  }, 'distribution-xml-render', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  const expectedPreview = generatedPreviewContract.supportedFixtures[0];
+  if (
+    renderedXml.status !== 'success' ||
+    renderedXml.evidence.level !== 'rendered' ||
+    renderedXml.evidence.outputFingerprint !== expectedPreview.expectedOutputFingerprint ||
+    renderedXml.data?.preview?.generatedPreview?.requestFingerprint !==
+      expectedPreview.expectedRequestFingerprint ||
+    renderedXml.data?.preview?.image?.sha256 !== expectedPreview.expectedImage.sha256 ||
+    renderedXml.data?.preview?.renderTree?.sha256 !== expectedPreview.expectedRenderTree.sha256
+  ) {
+    throw new Error('Installed CLI did not render the frozen generated XML Preview.');
+  }
   const compiledXmlV2 = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
     source: xmlV2,
     path: 'res/layout/profile-card.xml',
@@ -382,6 +409,7 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
   return {
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
+    xmlPreview: renderedXml.evidence.outputFingerprint,
     xmlV2: compiledXmlV2.evidence.outputFingerprint,
     xmlLayoutDependencies: compiledXmlLayoutDependencies.evidence.outputFingerprint,
   };
@@ -509,8 +537,11 @@ async function verifyMcpMatrix(mcp, contract) {
 }
 
 async function main() {
-  const contract = await readJson(contractPath);
-  const knowledge = await readJson(knowledgePath);
+  const [contract, knowledge, generatedPreviewContract] = await Promise.all([
+    readJson(contractPath),
+    readJson(knowledgePath),
+    readJson(generatedPreviewContractPath),
+  ]);
   const temporaryRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-distribution-'));
   const comparisonRoot = resolve(temporaryRoot, 'comparison');
   const prefix = resolve(temporaryRoot, 'prefix');
@@ -560,7 +591,12 @@ async function main() {
     await Promise.all([access(cli), access(mcp), access(packageRoot)]);
     await verifyInstalledFiles(packageRoot, primary.manifest);
     await verifyInventory(packageRoot, contract);
-    const compileFingerprints = await verifyCliFlow(cli, knowledge, packageRoot);
+    const compileFingerprints = await verifyCliFlow(
+      cli,
+      knowledge,
+      packageRoot,
+      generatedPreviewContract,
+    );
     await verifyMcpMatrix(mcp, contract);
 
     await execFileAsync('npm', [
@@ -590,7 +626,8 @@ async function main() {
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
-      `${compileFingerprints.xmlLayoutDependencies}.\n`,
+      `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview rendered as ` +
+      `${compileFingerprints.xmlPreview}.\n`,
     );
   } finally {
     if (!uninstalled) {

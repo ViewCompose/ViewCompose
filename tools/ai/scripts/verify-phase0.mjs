@@ -808,7 +808,8 @@ async function verifyGeneratedPreview(schemas) {
   const manifest = await readJson(resolve(aiRoot, 'generated/current-source/manifest.json'));
   const declaredRequests = new Set();
   for (const fixture of contract.supportedFixtures) {
-    const [generatedKotlin, request, wrapper] = await Promise.all([
+    const [source, generatedKotlin, request, wrapper] = await Promise.all([
+      readFile(resolve(fixtureDirectory, fixture.source)),
       readFile(resolve(fixtureDirectory, fixture.generatedKotlin)),
       readJson(resolve(fixtureDirectory, fixture.request)),
       readFile(resolve(fixtureDirectory, fixture.wrapper)),
@@ -817,6 +818,7 @@ async function verifyGeneratedPreview(schemas) {
     if (
       request.generatedSource.kotlinFingerprint !==
         createHash('sha256').update(generatedKotlin).digest('hex') ||
+      source.byteLength === 0 ||
       request.generatedSource.functionName !== fixture.expectedFunction ||
       request.generatedSource.declaredBindings.length !== fixture.expectedBindings ||
       request.framework.identity !== manifest.framework.identity ||

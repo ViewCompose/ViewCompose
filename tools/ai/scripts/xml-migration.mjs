@@ -1,5 +1,6 @@
 import {compileKotlin} from './compiler-adapter.mjs';
 import {generateViewComposeKotlin} from './design-ir-to-kotlin.mjs';
+import {renderGeneratedPreview} from './generated-preview-adapter.mjs';
 import {toolResult} from './tool-core.mjs';
 import {resolveXmlLayoutDependencies} from './xml-layout-dependencies.mjs';
 import {resolveXmlProjectContext} from './xml-project-context.mjs';
@@ -42,10 +43,12 @@ export async function convertXmlToViewCompose({
   resourceRoots,
   sourceRoots,
   mode,
+  previewBindings,
   requestId,
   limits,
   signal,
   compile = compileKotlin,
+  render = renderGeneratedPreview,
   resolveLayoutDependencies = resolveXmlLayoutDependencies,
   resolveProjectContext = resolveXmlProjectContext,
 } = {}) {
@@ -177,6 +180,54 @@ export async function convertXmlToViewCompose({
       data: resultData(converted, generated, projectContext, layoutDependencies),
       elapsedMs: performance.now() - started,
       outputFingerprint: generated.outputFingerprint,
+    });
+  }
+
+  if (mode === 'render') {
+    const preview = await render({
+      generatedKotlin: generated.kotlin,
+      generationReport: generated.report,
+      previewBindings,
+      requestId,
+      limits: {
+        timeoutMs: limits?.timeoutMs,
+        maxOutputBytes: limits?.maxOutputBytes,
+      },
+      signal,
+    });
+    return toolResult({
+      requestId,
+      tool: 'convert_xml_to_viewcompose',
+      status: preview.status,
+      level: preview.evidence.level,
+      diagnostics: preview.diagnostics,
+      data: {
+        ...resultData(converted, generated, projectContext, layoutDependencies),
+        preview: preview.data,
+      },
+      elapsedMs: performance.now() - started,
+      cache: preview.evidence.cache,
+      compilerLane: preview.evidence.compilerLane,
+      renderLane: preview.evidence.renderLane,
+      outputFingerprint: preview.evidence.outputFingerprint,
+      truncated: preview.truncated,
+    });
+  }
+
+  if (mode !== 'compile') {
+    return toolResult({
+      requestId,
+      tool: 'convert_xml_to_viewcompose',
+      status: 'invalid',
+      level: 'static',
+      diagnostics: [{
+        code: 'VC-AI-XML-MODE-INVALID',
+        severity: 'error',
+        message: 'XML conversion mode must be generate, compile, or render.',
+        nextAction: 'Select one accepted evidence depth explicitly.',
+      }],
+      data: resultData(converted, generated, projectContext, layoutDependencies),
+      elapsedMs: performance.now() - started,
     });
   }
 

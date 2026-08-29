@@ -98,6 +98,50 @@ test('dispatches standalone XML migration through the frozen tool envelope', asy
   assert.equal(result.data.migrationReport.callSiteReview.required, true);
 });
 
+test('dispatches XML render mode with explicit generated Preview bindings', async () => {
+  const source = await readFile(
+    new URL('../evaluation/fixtures/xml/login.xml', import.meta.url),
+    'utf8',
+  );
+  const previewRequest = JSON.parse(await readFile(
+    new URL(
+      '../evaluation/fixtures/xml/generated-preview/login.preview-request.json',
+      import.meta.url,
+    ),
+    'utf8',
+  ));
+  let rendered = 0;
+  const result = await dispatchToolRequest(await request('convert_xml_to_viewcompose', {
+    source,
+    path: 'res/layout/login.xml',
+    mode: 'render',
+    previewBindings: previewRequest.bindings,
+  }), {
+    renderGenerated: async (arguments_) => {
+      rendered += 1;
+      assert.equal(arguments_.generationReport.target.functionName, 'LoginView');
+      assert.deepEqual(arguments_.previewBindings, previewRequest.bindings);
+      return toolResult({
+        requestId: arguments_.requestId,
+        tool: 'render_preview',
+        status: 'success',
+        level: 'rendered',
+        cache: 'miss',
+        compilerLane: 'test-preview-compiler-lane',
+        renderLane: 'test-preview-render-lane',
+        outputFingerprint: 'a'.repeat(64),
+        diagnostics: [],
+        data: {generatedPreview: {requestFingerprint: 'b'.repeat(64)}},
+      });
+    },
+  });
+
+  assert.equal(rendered, 1);
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.data.preview.generatedPreview.requestFingerprint, 'b'.repeat(64));
+});
+
 test('dispatches explicit-root XML project migration through the same envelope', async () => {
   const result = await dispatchToolRequest(await request('convert_xml_to_viewcompose', {
     projectRoot: projectContextRoot,

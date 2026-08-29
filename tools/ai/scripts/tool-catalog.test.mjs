@@ -59,6 +59,47 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
   }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
   assert.deepEqual(projectContext, []);
 
+  const renderedXml = validateSchemaValue({
+    source: '<TextView />',
+    mode: 'render',
+    previewBindings: [{
+      kind: 'string',
+      parameter: 'title',
+      source: '@string/title',
+      value: 'Title',
+    }],
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(renderedXml, []);
+
+  const missingPreviewBindings = validateSchemaValue({
+    source: '<TextView />',
+    mode: 'render',
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(missingPreviewBindings, ['$: expected exactly one oneOf match, found 0']);
+
+  const projectRenderedXml = validateSchemaValue({
+    projectRoot: '/workspace/sample',
+    layoutPath: 'app/src/main/res/layout/login.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
+    mode: 'render',
+    previewBindings: [{
+      kind: 'text-field-state',
+      parameter: 'emailState',
+      source: 'emailState',
+      initialText: '',
+    }],
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(projectRenderedXml, []);
+
+  const generatedBuildSelection = validateSchemaValue({
+    source: '<TextView />',
+    mode: 'render',
+    previewBindings: [],
+    gradleTask: ':app:assembleDebug',
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.deepEqual(generatedBuildSelection, ['$: expected exactly one oneOf match, found 0']);
+
   const ambiguousXmlInput = validateSchemaValue({
     source: '<TextView />',
     projectRoot: '/workspace/sample',

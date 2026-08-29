@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the tool-owned generated Preview harness and the source-bound convert_xml_to_viewcompose render mode against the frozen binding, identity, and isolation contract.
+next_action: Freeze an isolated offline asset-staging contract for ImageSource so XML v2 image layouts can enter the generated Preview lane without reading inspected-project resources or using the network.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -70,16 +70,18 @@ CLI/MCP generation, and hermetic compile gates now pass. The following explicit-
 dependency contract is also frozen: it bounds default-layout selection, `include`/`merge`
 expansion, dependency cycles, graph identity, and cross-file provenance before implementation. Its
 resolver, project-context composition, CLI/MCP distribution, and hermetic compile gate now pass.
-The generated-screen Preview contract is now also frozen: it binds generated Kotlin, explicit
-preview values, one fixed configuration, the current-source compiler and renderer lanes, and all
-accepted artifacts into a content-addressed request while denying inspected-project build
-execution. Implementation of that contract is the active increment.
+The generated-screen Preview contract is now also frozen and implemented: it binds generated
+Kotlin, explicit preview values, one fixed configuration, the current-source compiler and renderer
+lanes, and all accepted artifacts into a content-addressed request while denying inspected-project
+build execution. The tool-owned harness, source-bound CLI/MCP render mode, exact artifact gate,
+stable cache proof, and installed-package render denominator now pass. The next foundational gap
+is an equally isolated offline asset-staging contract for `ImageSource`, required before the
+accepted XML v2 image fixture can render.
 
 Last verified: 2026-08-30.
 
-Next action: implement the tool-owned generated Preview harness and the source-bound
-`convert_xml_to_viewcompose` render mode against the frozen binding, identity, and isolation
-contract.
+Next action: freeze bounded offline `ImageSource` asset staging for the tool-owned generated
+Preview harness without granting access to inspected-project resources, build logic, or network.
 
 ## Maven release changesets
 
@@ -1209,6 +1211,59 @@ runtime behavior change**: the schema and fixtures intentionally make no render 
 the harness produces accepted PNG/tree evidence. The next action is the fixed harness plus
 `convert_xml_to_viewcompose` render mode; no alternate module or inspected-project build may
 satisfy this contract.
+
+### Implementation evidence — source-bound generated XML Preview
+
+The accepted implementation adds one downstream Android application harness,
+`:tools:ai-preview-harness`. A generated-screen request is converted into two immutable Kotlin
+files under a content-addressed tool-owned directory: the converter's exact output and the
+deterministic zero-argument Preview wrapper. The harness validates the request key and exact file
+inventory before its debug source set is configured. The adapter alone selects the fixed discovery
+and render tasks, aggregate current-source framework dependency, Preview worker, target owner,
+method, configuration, and lanes; public CLI/MCP requests cannot select a task, dependency, build
+script, project output, or arbitrary Kotlin source.
+
+`convert_xml_to_viewcompose` now exposes `render` beside `generate` and `compile` for both standalone
+source and explicit-project inputs. It first runs the same parser and generator, then requires an
+ordered explicit binding for every generator-reported parameter. Exact `String` and fresh
+`TextFieldState` values enter the wrapper; missing, extra, duplicate, reordered, source-mismatched,
+type-mismatched, and image bindings fail before Gradle. The result keeps the migration IR, Kotlin,
+report, and provenance while upgrading evidence only when compilation, discovery, Layoutlib render,
+artifact reopening, and hash verification all succeed.
+
+On 2026-08-30, the login denominator compiled and rendered at 411 dp, density 2.625, `en-US`, LTR,
+and light theme into a 1,079 by 2,339 px, 38,919-byte PNG. Visual inspection showed the expected
+title, text field hint, and sign-in button without clipping or corruption. The 202,604-byte render
+tree reported five virtual and five mounted nodes, depth three, the expected title/action text, and
+no warnings or layout diagnostics. The exact evidence is:
+
+- request: `8b2d5460fea40ee539fc5aba01af5cac97d59002476c17b744fb7baa1144d063`;
+- generated Kotlin: `6c4f6dafef9e0b4808eefab440d14e331b1a3b55bc8becff7a05d3669cc73be1`;
+- wrapper: `8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821`;
+- PNG: `e1efebaffa1efc19052a3fb1be33a8aa3fd670073a6330e976cd1be4082bb7fe`;
+- render tree: `d0373c8499b9d46f9cafa98a04c6f30d41a8ec69743a5ada35496ba0e2e05e85`;
+- aggregate render output: `6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab`.
+
+The dedicated gate then reproduced 1/1 exact render, 1/1 second-request cache hit with the same
+output, and 3/3 fail-closed missing-binding, image-binding, and caller-build-selection inputs. Node
+25.6.0 passed 125/125 AI-tooling tests. The quality-build plugin suite passed, and root
+`verifyAiGeneratedPreview` passed 15 actionable tasks (1 executed and 14 up-to-date). The packaged
+CLI invoked the same render path from an offline isolated installation; two clean package builds
+were byte-identical. The 45-file archive is 273,531 bytes, contains 1,550,545 declared file bytes,
+and has SHA-256
+`47a711ae59e1cd4bc03e29a521884ad53262ec4227006ecb984a7c160efe7742`. Offline installation and
+uninstallation, SPDX/license inventory, both MCP protocol versions, four installed compile
+denominators, and the generated Preview render all passed. The final combined generated-Preview,
+documentation structure and translation, development-tooling isolation, and release-intent run
+passed 22 actionable tasks (8 executed and 14 up-to-date).
+
+Compared with compile-only XML migration, this is **improved** executable visual evidence with
+**no material Android runtime behavior change** because the harness, adapter, CLI/MCP path, and
+quality gate remain downstream development tooling. The result does not prove pixel parity against
+the original XML, interaction, state restoration, accessibility traversal, alternate
+configurations, or inspected-application integration. `ImageSource` is still deliberately blocked,
+so the next foundational increment is a bounded offline asset-staging contract followed by semantic
+and geometry comparison rather than a broader prompt or screenshot generator.
 
 ### Implementation evidence — bounded XML to Design IR
 

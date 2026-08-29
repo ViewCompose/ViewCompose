@@ -137,13 +137,37 @@
   ],
   "supportedFixtures": [
     {
+      "source": "login.xml",
       "generatedKotlin": "login.viewcompose.kt",
       "request": "generated-preview/login.preview-request.json",
       "wrapper": "generated-preview/login.preview-wrapper.kt",
       "expectedFunction": "LoginView",
       "expectedBindings": 4,
       "expectedRequestFingerprint": "8b2d5460fea40ee539fc5aba01af5cac97d59002476c17b744fb7baa1144d063",
-      "expectedWrapperFingerprint": "8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821"
+      "expectedGeneratedKotlinFingerprint": "6c4f6dafef9e0b4808eefab440d14e331b1a3b55bc8becff7a05d3669cc73be1",
+      "expectedWrapperFingerprint": "8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821",
+      "expectedBuildFingerprint": "77a71a6650ac829fdb7fa072860a817438ac045164b27431697a1358b16715df",
+      "expectedOutputFingerprint": "6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab",
+      "expectedPreviewId": "generatedpreviewkt-generatedxmlpreview-8ccd5bd7b4eb",
+      "expectedVariantId": "generated-xml-loginview-abee9c74",
+      "expectedImage": {
+        "widthPx": 1079,
+        "heightPx": 2339,
+        "bytes": 38919,
+        "sha256": "e1efebaffa1efc19052a3fb1be33a8aa3fd670073a6330e976cd1be4082bb7fe"
+      },
+      "expectedRenderTree": {
+        "bytes": 202604,
+        "sha256": "d0373c8499b9d46f9cafa98a04c6f30d41a8ec69743a5ada35496ba0e2e05e85",
+        "vnodeCount": 5,
+        "mountedNodeCount": 5,
+        "maxVNodeDepth": 3,
+        "maxMountedDepth": 3,
+        "texts": [
+          "Sign in to ViewCompose",
+          "Sign in"
+        ]
+      }
     }
   ],
   "unsupportedFixtures": [

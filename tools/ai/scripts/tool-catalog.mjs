@@ -47,6 +47,59 @@ const previewLimits = {
   maxInputBytes: 262144,
   maxOutputBytes: 1048576,
 };
+const xmlResourceRoots = {
+  type: 'array',
+  minItems: 1,
+  maxItems: 16,
+  uniqueItems: true,
+  items: {type: 'string', minLength: 1, maxLength: 4096},
+};
+const xmlSourceRoots = {
+  type: 'array',
+  maxItems: 16,
+  uniqueItems: true,
+  items: {type: 'string', minLength: 1, maxLength: 4096},
+};
+const generatedPreviewBindings = {
+  type: 'array',
+  maxItems: 64,
+  items: {
+    oneOf: [
+      {
+        type: 'object',
+        additionalProperties: false,
+        required: ['kind', 'parameter', 'source', 'value'],
+        properties: {
+          kind: {const: 'string'},
+          parameter: {type: 'string', pattern: '^[a-z][A-Za-z0-9]{0,127}$'},
+          source: {type: 'string', pattern: '^@string/[a-z][a-z0-9_]*$'},
+          value: {type: 'string', maxLength: 16384},
+        },
+      },
+      {
+        type: 'object',
+        additionalProperties: false,
+        required: ['kind', 'parameter', 'source', 'initialText'],
+        properties: {
+          kind: {const: 'text-field-state'},
+          parameter: {type: 'string', pattern: '^[a-z][A-Za-z0-9]{0,127}$'},
+          source: {type: 'string', pattern: '^[a-z][A-Za-z0-9]{0,127}$'},
+          initialText: {type: 'string', maxLength: 16384},
+        },
+      },
+      {
+        type: 'object',
+        additionalProperties: false,
+        required: ['kind', 'parameter', 'source'],
+        properties: {
+          kind: {const: 'image-source'},
+          parameter: {type: 'string', pattern: '^[a-z][A-Za-z0-9]{0,127}$'},
+          source: {type: 'string', pattern: '^@drawable/[a-z][a-z0-9_]*$'},
+        },
+      },
+    ],
+  },
+};
 
 const executableDefinitions = {
   validate_code: {
@@ -125,7 +178,7 @@ const executableDefinitions = {
   convert_xml_to_viewcompose: {
     title: 'Convert Android XML to ViewCompose',
     description:
-      'Convert source-only or explicit-root Android XML project context, including bounded layout dependencies, to deterministic ViewCompose Kotlin.',
+      'Generate, compile, or source-bind and render deterministic ViewCompose Kotlin from supported Android XML.',
     inputSchema: {
       type: 'object',
       oneOf: [
@@ -146,20 +199,39 @@ const executableDefinitions = {
           properties: {
             projectRoot: {type: 'string', minLength: 1, maxLength: 4096},
             layoutPath: {type: 'string', minLength: 1, maxLength: 4096},
-            resourceRoots: {
-              type: 'array',
-              minItems: 1,
-              maxItems: 16,
-              uniqueItems: true,
-              items: {type: 'string', minLength: 1, maxLength: 4096},
-            },
-            sourceRoots: {
-              type: 'array',
-              maxItems: 16,
-              uniqueItems: true,
-              items: {type: 'string', minLength: 1, maxLength: 4096},
-            },
+            resourceRoots: xmlResourceRoots,
+            sourceRoots: xmlSourceRoots,
             mode: {enum: ['generate', 'compile']},
+          },
+        },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['source', 'mode', 'previewBindings'],
+          properties: {
+            source: {type: 'string', minLength: 1, maxLength: 262144},
+            path: {type: 'string', minLength: 1, maxLength: 1024},
+            mode: {const: 'render'},
+            previewBindings: generatedPreviewBindings,
+          },
+        },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: [
+            'projectRoot',
+            'layoutPath',
+            'resourceRoots',
+            'mode',
+            'previewBindings',
+          ],
+          properties: {
+            projectRoot: {type: 'string', minLength: 1, maxLength: 4096},
+            layoutPath: {type: 'string', minLength: 1, maxLength: 4096},
+            resourceRoots: xmlResourceRoots,
+            sourceRoots: xmlSourceRoots,
+            mode: {const: 'render'},
+            previewBindings: generatedPreviewBindings,
           },
         },
       ],

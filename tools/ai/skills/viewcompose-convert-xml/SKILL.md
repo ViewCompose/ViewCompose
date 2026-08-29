@@ -38,9 +38,13 @@ resource, state, and behavior decision.
    any integration edit, run `validate_code` in static and compile modes over the final bounded
    code. Converter compilation proves the isolated generated function, not an unvalidated call
    site.
-7. Use `render_preview` and `diagnose_layout` only when an allowlisted Preview covers the migrated
-   code. Otherwise finish at compiled evidence and state that visual or behavioral parity remains
-   unproven.
+7. When the generated function has only supported `String` and `TextFieldState` parameters, call
+   `convert_xml_to_viewcompose` in `render` mode with the same input and one explicit ordered
+   `previewBindings` entry for every reported parameter. Never guess a resource value or initial
+   state. Missing, extra, reordered, or mismatched bindings must remain blocked. If any parameter
+   is `ImageSource`, finish at compiled evidence until the tool reports accepted asset staging.
+   Use the separate `render_preview` and `diagnose_layout` tools only for their own allowlisted
+   repository Preview targets.
 8. Deliver the source and optional project-context fingerprints, generated-code fingerprint,
    framework and compiler identity, preserved bindings, unsupported fragments, call-site inventory
    and completeness, diagnostics, and maximum evidence actually achieved.

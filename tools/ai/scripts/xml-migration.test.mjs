@@ -88,6 +88,58 @@ test('returns compiled conversion evidence through the same tool envelope', asyn
   assert.match(result.data.kotlinFingerprint, /^[a-f0-9]{64}$/u);
 });
 
+test('source-binds generated Kotlin and returns rendered Preview evidence', async () => {
+  const previewRequest = JSON.parse(
+    await fixture('generated-preview/login.preview-request.json'),
+  );
+  let compiled = 0;
+  let rendered = 0;
+  const result = await convertXmlToViewCompose({
+    source: await fixture('login.xml'),
+    path: 'res/layout/login.xml',
+    mode: 'render',
+    previewBindings: previewRequest.bindings,
+    requestId: 'xml-render',
+    compile: async () => {
+      compiled += 1;
+    },
+    render: async (request) => {
+      rendered += 1;
+      assert.ok(request.generatedKotlin.includes('fun UiTreeBuilder.LoginView('));
+      assert.equal(request.generationReport.target.functionName, 'LoginView');
+      assert.deepEqual(request.previewBindings, previewRequest.bindings);
+      return {
+        status: 'success',
+        evidence: {
+          level: 'rendered',
+          cache: 'miss',
+          compilerLane: 'test-preview-compiler-lane',
+          renderLane: 'test-preview-render-lane',
+          outputFingerprint: 'd'.repeat(64),
+        },
+        diagnostics: [],
+        data: {
+          generatedPreview: {
+            requestFingerprint: 'a'.repeat(64),
+            generatedKotlinFingerprint: 'b'.repeat(64),
+            wrapperFingerprint: 'c'.repeat(64),
+          },
+        },
+        truncated: false,
+      };
+    },
+  });
+
+  assert.equal(compiled, 0);
+  assert.equal(rendered, 1);
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.compilerLane, 'test-preview-compiler-lane');
+  assert.equal(result.evidence.renderLane, 'test-preview-render-lane');
+  assert.equal(result.evidence.outputFingerprint, 'd'.repeat(64));
+  assert.equal(result.data.preview.generatedPreview.requestFingerprint, 'a'.repeat(64));
+});
+
 test('resolves project resources, styles, and call sites before generation', async () => {
   const result = await convertXmlToViewCompose({
     projectRoot: projectContextRoot,
@@ -107,6 +159,48 @@ test('resolves project resources, styles, and call sites before generation', asy
   assert.equal(result.data.migrationReport.projectEvidence.completeness, 'not-proven');
   assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.StyledLoginView('));
   assert.ok(result.data.kotlin.includes('padding(16.dp)'));
+});
+
+test('preserves explicit project evidence through generated Preview render mode', async () => {
+  const previewRequest = JSON.parse(
+    await fixture('generated-preview/login.preview-request.json'),
+  );
+  let rendered = 0;
+  const result = await convertXmlToViewCompose({
+    projectRoot: projectContextRoot,
+    layoutPath: 'app/src/main/res/layout/styled_login.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: ['app/src/main/java'],
+    mode: 'render',
+    previewBindings: previewRequest.bindings,
+    requestId: 'xml-project-render',
+    limits: {maxSourceBytes: 4 * 1024 * 1024, timeoutMs: 120_000},
+    render: async (request) => {
+      rendered += 1;
+      assert.equal(request.generationReport.target.functionName, 'StyledLoginView');
+      assert.deepEqual(request.previewBindings, previewRequest.bindings);
+      return {
+        status: 'success',
+        evidence: {
+          level: 'rendered',
+          cache: 'miss',
+          compilerLane: 'test-project-preview-compiler-lane',
+          renderLane: 'test-project-preview-render-lane',
+          outputFingerprint: 'e'.repeat(64),
+        },
+        diagnostics: [],
+        data: {generatedPreview: {requestFingerprint: 'f'.repeat(64)}},
+        truncated: false,
+      };
+    },
+  });
+
+  assert.equal(rendered, 1);
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.data.projectContext.callSites.length, 7);
+  assert.equal(result.data.migrationReport.projectEvidence.completeness, 'not-proven');
+  assert.equal(result.data.preview.generatedPreview.requestFingerprint, 'f'.repeat(64));
 });
 
 test('composes explicit project context with the XML v2 image subset', async (context) => {

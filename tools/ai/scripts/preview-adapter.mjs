@@ -529,6 +529,24 @@ export async function renderPreview({
       elapsedMs: performance.now() - started,
     });
   }
+  const gradleArguments = target.gradleArguments ?? [];
+  if (
+    !Array.isArray(gradleArguments) ||
+    gradleArguments.length > 1 ||
+    gradleArguments.some((argument) =>
+      typeof argument !== 'string' ||
+      !/^-PviewComposeAiPreviewRequestKey=[a-f0-9]{64}$/u.test(argument))
+  ) {
+    return previewFailure({
+      requestId,
+      status: 'invalid',
+      level: 'static',
+      code: 'VC-AI-PREVIEW-SELECTION-INVALID',
+      message: 'The fixed Preview target contains an invalid tool-owned Gradle property.',
+      nextAction: 'Use a repository-owned target without caller-selected tasks or properties.',
+      elapsedMs: performance.now() - started,
+    });
+  }
   const configuration = normalizeConfiguration(requestedConfiguration, target.configuration);
   if (!configuration) {
     return previewFailure({
@@ -570,7 +588,7 @@ export async function renderPreview({
   const catalogPath = resolve(artifactRoot, 'descriptors.json');
   const remainingTimeout = () => limits.timeoutMs - Math.round(performance.now() - started);
   const discovery = await runProcess(
-    gradlePlan(repository, javaHome, [target.discoveryTask]),
+    gradlePlan(repository, javaHome, [target.discoveryTask, ...gradleArguments]),
     {...limits, timeoutMs: Math.max(1, remainingTimeout()), signal},
   );
   const discoveryFailure = processFailure(
@@ -697,6 +715,7 @@ export async function renderPreview({
   const render = await runProcess(
     gradlePlan(repository, javaHome, [
       target.renderTask,
+      ...gradleArguments,
       `-PviewComposePreviewId=${selection.descriptor.id}`,
       `-PviewComposePreviewVariantId=${selection.variant.id}`,
     ]),

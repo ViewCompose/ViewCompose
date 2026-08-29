@@ -735,6 +735,40 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai-compiler-harness/build.gradle.kts"),
             )
         }
+        project.tasks.register<Exec>("verifyAiGeneratedPreview") {
+            group = "verification"
+            description =
+                "Compiles and renders the frozen XML-generated ViewCompose Preview evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-generated-preview")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "contracts/tool-envelope.schema.json",
+                        "evaluation/fixtures/xml/generated-preview/**",
+                        "evaluation/fixtures/xml/generated-preview-contract.json",
+                        "evaluation/fixtures/xml/login.*",
+                        "evaluation/metrics.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/design-ir-to-kotlin.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/preview-adapter.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-migration.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-generated-preview.mjs",
+                    )
+                },
+                project.rootDir.resolve("settings.gradle.kts"),
+                project.rootDir.resolve("tools/ai/package.json"),
+                project.rootDir.resolve("tools/ai-preview-harness/build.gradle.kts"),
+                project.rootDir.resolve("tools/ai-preview-harness/src/main/AndroidManifest.xml"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

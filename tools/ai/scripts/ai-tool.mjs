@@ -64,6 +64,7 @@ export async function dispatchToolRequest(request, {
   searchComponent = searchComponents,
   getSample = retrieveSample,
   convertXml = convertXmlToViewCompose,
+  renderGenerated,
   signal,
 } = {}) {
   const schema = await loadToolEnvelopeSchema();
@@ -213,6 +214,7 @@ export async function dispatchToolRequest(request, {
           resourceRoots: request.arguments.resourceRoots,
           sourceRoots: request.arguments.sourceRoots,
           mode: request.arguments.mode,
+          previewBindings: request.arguments.previewBindings,
           requestId: request.requestId,
           limits: {
             maxSourceBytes: request.limits.maxInputBytes,
@@ -221,6 +223,7 @@ export async function dispatchToolRequest(request, {
           },
           signal: controller.signal,
           compile,
+          render: renderGenerated,
         });
         break;
       default:
