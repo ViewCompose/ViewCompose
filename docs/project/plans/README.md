@@ -26,10 +26,8 @@ temporary contributor execution state rather than user guidance. They do not ent
 site, search index, or sitemap.
 
 - [AI-verifiable development tooling](./ai-verifiable-development-tooling.md) —
-  make ViewCompose reliably usable by coding agents through a canonical versioned knowledge
-  bundle, isolated compile/render validation, local CLI/MCP/skills, a tooling-only Design IR, and
-  evidence-gated XML, Compose, screenshot, and Figma workflows; contract, evaluation, and security
-  foundations must close before protocol or converter implementation.
+  Phases 0--1 are complete; Phase 2 adds validation, isolated compile/Preview evidence, and bounded
+  project analysis before protocol or converter work.
 - [Pull-request gate scaling and build-logic modularization](./pull-request-gate-scaling-and-build-logic-modularization.md) —
   split the 2,582-line root gate implementation into compiled, testable build logic, then add
   conservative pull-request impact selection, verified immutable-API caching, and affected-module

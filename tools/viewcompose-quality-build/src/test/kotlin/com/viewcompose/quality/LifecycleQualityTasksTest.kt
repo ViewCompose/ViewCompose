@@ -68,6 +68,7 @@ class LifecycleQualityTasksTest {
                 "verifyDesignSystemIsolation",
                 "verifyUiFoundationPlatformBoundary",
                 "verifyAiToolingContracts",
+                "verifyAiKnowledgeBundle",
                 "verifyDocumentationStructure",
                 "verifyDslApiContracts",
                 "verifyMigrationPairedSamples",

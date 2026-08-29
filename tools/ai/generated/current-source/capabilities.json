@@ -1,0 +1,3618 @@
+{
+  "capabilities": [
+    {
+      "artifactId": "viewcompose-animation",
+      "capabilityId": "animation.composition-motion",
+      "kind": "dsl",
+      "referenceId": "reference.animation.composition-motion",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.animation-physics-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+        },
+        {
+          "documentId": "architecture.animation-value-velocity-domains",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.in-memory-development-tooling-installation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/in-memory-development-tooling-installation"
+        },
+        {
+          "documentId": "migration.compose-animation",
+          "documentType": "migration",
+          "path": "/migration/compose-animation"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
+        },
+        {
+          "documentId": "module.viewcompose-animation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-animation"
+        },
+        {
+          "documentId": "module.viewcompose-animation-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-animation-core"
+        },
+        {
+          "documentId": "tutorial.animation",
+          "documentType": "tutorial",
+          "path": "/tutorials/animation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.animation-visibility",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.animation.ColumnScope.AnimatedVisibility",
+        "com.viewcompose.animation.Modifier.animateBounds",
+        "com.viewcompose.animation.Modifier.animateContentSize",
+        "com.viewcompose.animation.RowScope.AnimatedVisibility",
+        "com.viewcompose.animation.UiTreeBuilder.AnimatedContent",
+        "com.viewcompose.animation.UiTreeBuilder.AnimatedVisibility",
+        "com.viewcompose.animation.UiTreeBuilder.Crossfade"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-camerax-androidx",
+      "capabilityId": "camerax.preview",
+      "kind": "integration",
+      "referenceId": "reference.camerax.preview",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-camerax-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-camerax-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.camerax-preview",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.camerax.CameraXLensFacing",
+        "com.viewcompose.camerax.CameraXPreviewBindingState",
+        "com.viewcompose.camerax.CameraXPreviewConfiguration",
+        "com.viewcompose.camerax.CameraXPreviewFailure",
+        "com.viewcompose.camerax.CameraXPreviewFailureReason",
+        "com.viewcompose.camerax.CameraXPreviewImplementationMode",
+        "com.viewcompose.camerax.CameraXPreviewRotation",
+        "com.viewcompose.camerax.CameraXPreviewScaleType",
+        "com.viewcompose.camerax.CameraXPreviewStreamState",
+        "com.viewcompose.camerax.UiTreeBuilder.CameraXPreviewView"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-constraintlayout-androidx",
+      "capabilityId": "constraintlayout.core",
+      "kind": "dsl",
+      "referenceId": "reference.constraintlayout.core",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.constraintlayout-graph-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/constraintlayout-graph-and-helper-ownership"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "architecture.typed-constraint-helper-expansion",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/typed-constraint-helper-expansion"
+        },
+        {
+          "documentId": "module.viewcompose-constraintlayout-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-constraintlayout-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.constraintlayout-inline",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.constraintlayout.ConstraintBaselineAnchorTarget",
+        "com.viewcompose.constraintlayout.ConstraintConstrainScope",
+        "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorReference",
+        "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorSide",
+        "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorTarget",
+        "com.viewcompose.constraintlayout.ConstraintLayoutReference",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRef",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRefs",
+        "com.viewcompose.constraintlayout.ConstraintParentReference",
+        "com.viewcompose.constraintlayout.ConstraintReference",
+        "com.viewcompose.constraintlayout.ConstraintSetBuilder",
+        "com.viewcompose.constraintlayout.ConstraintVerticalAnchorReference",
+        "com.viewcompose.constraintlayout.ConstraintVerticalAnchorSide",
+        "com.viewcompose.constraintlayout.ConstraintVerticalAnchorTarget",
+        "com.viewcompose.constraintlayout.Modifier.constrain",
+        "com.viewcompose.constraintlayout.Modifier.constrainAs",
+        "com.viewcompose.constraintlayout.UiTreeBuilder.ConstraintLayout",
+        "com.viewcompose.constraintlayout.constraintSet"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-constraintlayout-androidx",
+      "capabilityId": "constraintlayout.helpers",
+      "kind": "dsl",
+      "referenceId": "reference.constraintlayout.helpers",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.constraintlayout-graph-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/constraintlayout-graph-and-helper-ownership"
+        },
+        {
+          "documentId": "architecture.typed-constraint-helper-expansion",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/typed-constraint-helper-expansion"
+        },
+        {
+          "documentId": "module.viewcompose-constraintlayout-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-constraintlayout-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.constraintlayout-helpers",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.constraintlayout.ConstraintCircularFlowItem",
+        "com.viewcompose.constraintlayout.ConstraintGridSkip",
+        "com.viewcompose.constraintlayout.ConstraintGridSpan",
+        "com.viewcompose.constraintlayout.ConstraintHelperReference",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createBottomBarrier",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createCircularFlow",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createEndBarrier",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createFlow",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGrid",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGroup",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromBottom",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromEnd",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromLeft",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromRight",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromStart",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromTop",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createHorizontalChain",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createLayer",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createLeftBarrier",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createPlaceholder",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRightBarrier",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createStartBarrier",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createTopBarrier",
+        "com.viewcompose.constraintlayout.ConstraintLayoutScope.createVerticalChain"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "diagnostics.correlated-events",
+      "kind": "tooling",
+      "referenceId": "reference.diagnostics.correlated-events",
+      "relatedDocuments": [
+        {
+          "documentId": "adr.correlated-render-diagnostics",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
+        },
+        {
+          "documentId": "architecture.render-failures",
+          "documentType": "architecture",
+          "path": "/architecture/render-failures"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tooling.diagnostics",
+          "documentType": "tooling",
+          "path": "/tooling/diagnostics"
+        },
+        {
+          "documentId": "tutorial.render-diagnostics",
+          "documentType": "tutorial",
+          "path": "/tutorials/render-diagnostics"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tutorial.render-diagnostics",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.NodeTypeBindingStats",
+        "com.viewcompose.ui.foundation.RenderDiagnosticCollection",
+        "com.viewcompose.ui.foundation.RenderDiagnosticContext",
+        "com.viewcompose.ui.foundation.RenderDiagnosticEvent",
+        "com.viewcompose.ui.foundation.RenderDiagnostics",
+        "com.viewcompose.ui.foundation.RenderDiagnosticsSink",
+        "com.viewcompose.ui.foundation.RenderFailure",
+        "com.viewcompose.ui.foundation.RenderFailureObserved",
+        "com.viewcompose.ui.foundation.RenderFailureOperation",
+        "com.viewcompose.ui.foundation.RenderFailurePhase",
+        "com.viewcompose.ui.foundation.RenderFailureRecovery",
+        "com.viewcompose.ui.foundation.RenderFrameCompleted",
+        "com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel",
+        "com.viewcompose.ui.foundation.RenderFrameReport",
+        "com.viewcompose.ui.foundation.RenderFrameStatus",
+        "com.viewcompose.ui.foundation.RenderPatchOperation",
+        "com.viewcompose.ui.foundation.RenderPatchRecord",
+        "com.viewcompose.ui.foundation.RenderSessionActivityChanged",
+        "com.viewcompose.ui.foundation.RenderSessionEnded",
+        "com.viewcompose.ui.foundation.RenderSessionRole",
+        "com.viewcompose.ui.foundation.RenderSessionStarted",
+        "com.viewcompose.ui.foundation.RenderSessionTraceId",
+        "com.viewcompose.ui.foundation.RenderStats",
+        "com.viewcompose.ui.foundation.RenderStructureStats",
+        "com.viewcompose.ui.foundation.RenderTreeNode",
+        "com.viewcompose.ui.foundation.RenderTreeResult"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-diagnostics",
+      "capabilityId": "diagnostics.failure-aggregation",
+      "kind": "integration",
+      "referenceId": "reference.diagnostics.failure-aggregation",
+      "relatedDocuments": [
+        {
+          "documentId": "adr.correlated-render-diagnostics",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
+        },
+        {
+          "documentId": "architecture.render-failures",
+          "documentType": "architecture",
+          "path": "/architecture/render-failures"
+        },
+        {
+          "documentId": "module.viewcompose-diagnostics",
+          "documentType": "module",
+          "path": "/modules/viewcompose-diagnostics"
+        },
+        {
+          "documentId": "tooling.diagnostics",
+          "documentType": "tooling",
+          "path": "/tooling/diagnostics"
+        },
+        {
+          "documentId": "tutorial.render-diagnostics",
+          "documentType": "tutorial",
+          "path": "/tutorials/render-diagnostics"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.diagnostics-failure-aggregation",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.diagnostics.BoundedRenderFailureAggregator",
+        "com.viewcompose.diagnostics.RenderFailureAggregate",
+        "com.viewcompose.diagnostics.RenderFailureAggregationSnapshot",
+        "com.viewcompose.diagnostics.RenderFailureFingerprint",
+        "com.viewcompose.diagnostics.RenderFailureStackFrame"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "diagnostics.node-timing",
+      "kind": "tooling",
+      "referenceId": "reference.diagnostics.node-timing",
+      "relatedDocuments": [
+        {
+          "documentId": "adr.correlated-render-diagnostics",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tooling.diagnostics",
+          "documentType": "tooling",
+          "path": "/tooling/diagnostics"
+        },
+        {
+          "documentId": "tutorial.render-diagnostics",
+          "documentType": "tutorial",
+          "path": "/tutorials/render-diagnostics"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tooling.diagnostics-node-timing",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.RenderNodeTimingCapture",
+        "com.viewcompose.ui.foundation.RenderNodeTimingCaptureRequest",
+        "com.viewcompose.ui.foundation.RenderNodeTimingCaptureResult",
+        "com.viewcompose.ui.foundation.RenderNodeTimingCaptureStart",
+        "com.viewcompose.ui.foundation.RenderNodeTimingClock",
+        "com.viewcompose.ui.foundation.RenderNodeTimingEndReason",
+        "com.viewcompose.ui.foundation.RenderNodeTimingInclusion",
+        "com.viewcompose.ui.foundation.RenderNodeTimingPhase",
+        "com.viewcompose.ui.foundation.RenderNodeTimingRecord",
+        "com.viewcompose.ui.foundation.RenderNodeTimingStartStatus",
+        "com.viewcompose.ui.foundation.RenderNodeTimingUnsupportedDomain",
+        "com.viewcompose.ui.foundation.RenderSessionTimingInspection"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "diagnostics.session-inspection",
+      "kind": "tooling",
+      "referenceId": "reference.diagnostics.session-inspection",
+      "relatedDocuments": [
+        {
+          "documentId": "adr.correlated-render-diagnostics",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
+        },
+        {
+          "documentId": "architecture.development-tooling-isolation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/development-tooling-isolation"
+        },
+        {
+          "documentId": "architecture.in-memory-development-tooling-installation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/in-memory-development-tooling-installation"
+        },
+        {
+          "documentId": "migration.render-session-pre-frame-inspection",
+          "documentType": "migration",
+          "path": "/migration/render-session-pre-frame-inspection"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tooling.diagnostics",
+          "documentType": "tooling",
+          "path": "/tooling/diagnostics"
+        },
+        {
+          "documentId": "tutorial.render-diagnostics",
+          "documentType": "tutorial",
+          "path": "/tutorials/render-diagnostics"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tooling.diagnostics-session-inspection",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.RenderInspectedNode",
+        "com.viewcompose.ui.foundation.RenderInspectedNodeKind",
+        "com.viewcompose.ui.foundation.RenderNodeInspectionSnapshot",
+        "com.viewcompose.ui.foundation.RenderNodePlatformTarget",
+        "com.viewcompose.ui.foundation.RenderNodeToken",
+        "com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection",
+        "com.viewcompose.ui.foundation.RenderSessionDiagnosticSnapshot",
+        "com.viewcompose.ui.foundation.RenderSessionInspectedFailure",
+        "com.viewcompose.ui.foundation.RenderSessionInspectedFrame",
+        "com.viewcompose.ui.foundation.RenderSessionInspectionPolicy",
+        "com.viewcompose.ui.foundation.RenderSessionInspectionRegistration",
+        "com.viewcompose.ui.foundation.RenderSessionInspectionTooling",
+        "com.viewcompose.ui.foundation.RenderSessionNodeInspection",
+        "com.viewcompose.ui.foundation.RenderSessionPlatformDiagnostics"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-exoplayer2-android",
+      "capabilityId": "exoplayer2.player",
+      "kind": "integration",
+      "referenceId": "reference.exoplayer2.player",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-exoplayer2-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-exoplayer2-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.exoplayer2-player",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.exoplayer2.ExoPlayerArtworkDisplayMode",
+        "com.viewcompose.exoplayer2.ExoPlayerResizeMode",
+        "com.viewcompose.exoplayer2.ExoPlayerShowBuffering",
+        "com.viewcompose.exoplayer2.ExoPlayerSurfaceType",
+        "com.viewcompose.exoplayer2.ExoPlayerViewConfiguration",
+        "com.viewcompose.exoplayer2.UiTreeBuilder.ExoPlayerView"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "focus.input",
+      "kind": "modifier",
+      "referenceId": "reference.focus.input",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.focus-visibility-pager-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/focus-visibility-and-pager-selection-ownership"
+        },
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "guide.focus-and-key-input",
+          "documentType": "guide",
+          "path": "/guides/focus-and-input"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.focus-form",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.focusGroup",
+        "com.viewcompose.ui.modifier.Modifier.focusProperties",
+        "com.viewcompose.ui.modifier.Modifier.focusRequester",
+        "com.viewcompose.ui.modifier.Modifier.focusable",
+        "com.viewcompose.ui.modifier.Modifier.onFocusChanged",
+        "com.viewcompose.ui.modifier.Modifier.onKeyEvent",
+        "com.viewcompose.ui.modifier.Modifier.onPreviewKeyEvent"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "foundation.components",
+      "kind": "component",
+      "referenceId": "reference.foundation.components",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.component-appearance-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/component-appearance-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.renderer-neutral-interaction-indication",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/renderer-neutral-interaction-indication"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        },
+        {
+          "documentId": "tutorial.state-and-events",
+          "documentType": "tutorial",
+          "path": "/tutorials/state-and-events"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-foundation-profile-summary",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Badge",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.BadgedBox",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.BasicButton",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.BasicSurface",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.BottomAppBar",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Box",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Button",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Card",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Checkbox",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Chip",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.CircularProgressIndicator",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Column",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Divider",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ExtendedFloatingActionButton",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.FloatingActionButton",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.FlowColumn",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.FlowRow",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Icon",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.IconButton",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.LinearProgressIndicator",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ListItem",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.NavigationBar",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideBadgeOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideBottomAppBarOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideButtonOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideCheckboxOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideCircularProgressIndicatorOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideExtendedFloatingActionButtonOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideFloatingActionButtonOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideIconButtonOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLinearProgressIndicatorOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideNavigationBarOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideRadioButtonOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSegmentedControlOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSliderOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSwitchOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTextFieldOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTopAppBarOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.PullToRefresh",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.RadioButton",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.RichText",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Row",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Scaffold",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ScrollableColumn",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ScrollableRow",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.SegmentedControl",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Slider",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Spacer",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Surface",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Switch",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Text",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.TopAppBar"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "foundation.effects",
+      "kind": "dsl",
+      "referenceId": "reference.foundation.effects",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
+        },
+        {
+          "documentId": "migration.compose-state-recomposition-restoration",
+          "documentType": "migration",
+          "path": "/migration/compose-state-recomposition-and-restoration"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "architecture.effects-local-capture",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.CompositionEffectContext",
+        "com.viewcompose.ui.foundation.DisposableEffect",
+        "com.viewcompose.ui.foundation.DisposableEffectResult",
+        "com.viewcompose.ui.foundation.DisposableEffectScope",
+        "com.viewcompose.ui.foundation.LaunchedEffect",
+        "com.viewcompose.ui.foundation.ProduceStateScope",
+        "com.viewcompose.ui.foundation.SideEffect",
+        "com.viewcompose.ui.foundation.produceState",
+        "com.viewcompose.ui.foundation.rememberCoroutineScope",
+        "com.viewcompose.ui.foundation.rememberUpdatedState"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "foundation.environment",
+      "kind": "dsl",
+      "referenceId": "reference.foundation.environment",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.hierarchical-saveable-state-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/hierarchical-saveable-state-ownership"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-foundation-environment",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.DesignSystemAttributionProvider",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAnimationCoroutineContext",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocal",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocals",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideMonotonicFrameClock",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSaveableStateRegistry",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.UiEnvironment"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-gesture",
+      "capabilityId": "gesture.modifiers",
+      "kind": "modifier",
+      "referenceId": "reference.gesture.modifiers",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "module.viewcompose-gesture",
+          "documentType": "module",
+          "path": "/modules/viewcompose-gesture"
+        },
+        {
+          "documentId": "module.viewcompose-gesture-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-gesture-core"
+        },
+        {
+          "documentId": "tutorial.gestures",
+          "documentType": "tutorial",
+          "path": "/tutorials/gestures"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tutorial.gestures",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.gesture.Modifier.anchoredDraggable",
+        "com.viewcompose.gesture.Modifier.combinedClickable",
+        "com.viewcompose.gesture.Modifier.draggable",
+        "com.viewcompose.gesture.Modifier.gesturePriority",
+        "com.viewcompose.gesture.Modifier.pointerInput",
+        "com.viewcompose.gesture.Modifier.toggleDraggable",
+        "com.viewcompose.gesture.Modifier.transformable"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-graphics",
+      "capabilityId": "graphics.custom-drawing",
+      "kind": "dsl",
+      "referenceId": "reference.graphics.custom-drawing",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-graphics",
+          "documentType": "module",
+          "path": "/modules/viewcompose-graphics"
+        },
+        {
+          "documentId": "module.viewcompose-graphics-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-graphics-core"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.graphics-canvas",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.graphics.Modifier.draw",
+        "com.viewcompose.graphics.Modifier.drawBehind",
+        "com.viewcompose.graphics.Modifier.drawCache",
+        "com.viewcompose.graphics.Modifier.drawWithCache",
+        "com.viewcompose.graphics.Modifier.drawWithContent",
+        "com.viewcompose.graphics.UiTreeBuilder.Canvas"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-host-android",
+      "capabilityId": "host.android-animation",
+      "kind": "integration",
+      "referenceId": "reference.host.android-animation",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-host-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-host-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.host-android-animation",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.host.android.animation.AndroidAnimationInterop",
+        "com.viewcompose.host.android.animation.Modifier.androidAnimation",
+        "com.viewcompose.host.android.animation.UiTreeBuilder.MotionLayoutView"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-host-android",
+      "capabilityId": "host.android-container",
+      "kind": "host",
+      "referenceId": "reference.host.android-container",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.development-tooling-isolation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/development-tooling-isolation"
+        },
+        {
+          "documentId": "architecture.hierarchical-saveable-state-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/hierarchical-saveable-state-ownership"
+        },
+        {
+          "documentId": "architecture.in-memory-development-tooling-installation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/in-memory-development-tooling-installation"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-android"
+        },
+        {
+          "documentId": "module.viewcompose-host-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-host-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.host-android-render-into",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.host.android.RenderSession",
+        "com.viewcompose.host.android.UiHostAndroid",
+        "com.viewcompose.host.android.installRenderSessionInspectionTooling",
+        "com.viewcompose.host.android.renderInto",
+        "com.viewcompose.host.android.viewComposeSaveableStateRegistry"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-host-android",
+      "capabilityId": "host.android-graphics",
+      "kind": "integration",
+      "referenceId": "reference.host.android-graphics",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-host-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-host-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.host-android-graphics",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.host.android.graphics.AndroidGraphicsInterop",
+        "com.viewcompose.host.android.graphics.Modifier.androidGraphics"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-host-android",
+      "capabilityId": "host.android-resources",
+      "kind": "integration",
+      "referenceId": "reference.host.android-resources",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.android-resource-environment",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "module.viewcompose-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-android"
+        },
+        {
+          "documentId": "module.viewcompose-host-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-host-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.host-android-resources",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.host.android.environment.AndroidEnvironmentBridge",
+        "com.viewcompose.host.android.resources.AndroidResourceRefreshController",
+        "com.viewcompose.host.android.resources.LocalAndroidContext",
+        "com.viewcompose.host.android.resources.LocalAndroidResources",
+        "com.viewcompose.host.android.resources.UiTreeBuilder.AndroidResourceEnvironment",
+        "com.viewcompose.host.android.resources.booleanResource",
+        "com.viewcompose.host.android.resources.colorResource",
+        "com.viewcompose.host.android.resources.dimensionPixelSizeResource",
+        "com.viewcompose.host.android.resources.dimensionResource",
+        "com.viewcompose.host.android.resources.integerArrayResource",
+        "com.viewcompose.host.android.resources.integerResource",
+        "com.viewcompose.host.android.resources.pluralStringResource",
+        "com.viewcompose.host.android.resources.stringArrayResource",
+        "com.viewcompose.host.android.resources.stringResource"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-host-android",
+      "capabilityId": "host.android-view",
+      "kind": "integration",
+      "referenceId": "reference.host.android-view",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.lazy-collection-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/lazy-collection-logical-and-physical-ownership"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        },
+        {
+          "documentId": "migration.lazy-collection-revision-reuse",
+          "documentType": "migration",
+          "path": "/migration/lazy-collection-revision-and-reuse"
+        },
+        {
+          "documentId": "module.viewcompose-host-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-host-android"
+        },
+        {
+          "documentId": "tutorial.android-view",
+          "documentType": "tutorial",
+          "path": "/tutorials/android-view"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.host-android-view-adapter",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.host.android.AndroidViewAdapter",
+        "com.viewcompose.host.android.AndroidViewCommitScope",
+        "com.viewcompose.host.android.AndroidViewCreateScope",
+        "com.viewcompose.host.android.AndroidViewLifecycleMode",
+        "com.viewcompose.host.android.AndroidViewResetReason",
+        "com.viewcompose.host.android.AndroidViewResetScope",
+        "com.viewcompose.host.android.AndroidViewReusePolicy",
+        "com.viewcompose.host.android.AndroidViewUpdateScope",
+        "com.viewcompose.host.android.Modifier.nativeView",
+        "com.viewcompose.host.android.UiTreeBuilder.AndroidView"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-image-coil",
+      "capabilityId": "image.coil",
+      "kind": "integration",
+      "referenceId": "reference.image.coil",
+      "relatedDocuments": [
+        {
+          "documentId": "guide.image-loading",
+          "documentType": "guide",
+          "path": "/guides/image-loading"
+        },
+        {
+          "documentId": "migration.image-loading",
+          "documentType": "migration",
+          "path": "/migration/image-loading"
+        },
+        {
+          "documentId": "module.viewcompose-image-coil",
+          "documentType": "module",
+          "path": "/modules/viewcompose-image-coil"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.image-coil-uri",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.image.coil.CoilImageLoaderAdapter"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "image.foundation",
+      "kind": "component",
+      "referenceId": "reference.image.foundation",
+      "relatedDocuments": [
+        {
+          "documentId": "guide.image-loading",
+          "documentType": "guide",
+          "path": "/guides/image-loading"
+        },
+        {
+          "documentId": "migration.image-loading",
+          "documentType": "migration",
+          "path": "/migration/image-loading"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.image-loader-install",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Image",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideImageLoader"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-image-glide",
+      "capabilityId": "image.glide",
+      "kind": "integration",
+      "referenceId": "reference.image.glide",
+      "relatedDocuments": [
+        {
+          "documentId": "guide.image-loading",
+          "documentType": "guide",
+          "path": "/guides/image-loading"
+        },
+        {
+          "documentId": "module.viewcompose-image-glide",
+          "documentType": "module",
+          "path": "/modules/viewcompose-image-glide"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.image-glide-file",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.image.glide.GlideImageLoaderAdapter"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha02"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "lazy.collections",
+      "kind": "dsl",
+      "referenceId": "reference.lazy.collections",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
+        },
+        {
+          "documentId": "architecture.focus-visibility-pager-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/focus-visibility-and-pager-selection-ownership"
+        },
+        {
+          "documentId": "architecture.hierarchical-saveable-state-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/hierarchical-saveable-state-ownership"
+        },
+        {
+          "documentId": "architecture.lazy-collection-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/lazy-collection-logical-and-physical-ownership"
+        },
+        {
+          "documentId": "architecture.lazy-collections-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/lazy-collections"
+        },
+        {
+          "documentId": "architecture.prefetched-session-activation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/prefetched-session-activation-boundary"
+        },
+        {
+          "documentId": "architecture.state-snapshots",
+          "documentType": "architecture",
+          "path": "/architecture/state-snapshots"
+        },
+        {
+          "documentId": "guide.lazy-collections",
+          "documentType": "guide",
+          "path": "/guides/lazy-collections"
+        },
+        {
+          "documentId": "migration.lazy-collection-revision-reuse",
+          "documentType": "migration",
+          "path": "/migration/lazy-collection-revision-and-reuse"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tutorial.lazy-list-performance",
+          "documentType": "tutorial",
+          "path": "/tutorials/lazy-list-performance"
+        },
+        {
+          "documentId": "tutorial.lazy-lists",
+          "documentType": "tutorial",
+          "path": "/tutorials/lazy-lists"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.lazy-collections-state",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.HorizontalPager",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.LazyRow",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.LazyVerticalGrid",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTabRowOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.TabRow",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.VerticalPager",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.lazyItemContentFactory"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "lazy.item-session-reuse",
+      "kind": "integration",
+      "referenceId": "reference.lazy.item-session-reuse",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.lazy-collections-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/lazy-collections"
+        },
+        {
+          "documentId": "module.viewcompose-ui-contract",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-contract"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-contract-lazy-session-reuse",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.node.LazyListItemSessionStrategy.canReuseAcrossKeys"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-lifecycle-androidx",
+      "capabilityId": "lifecycle.android-view",
+      "kind": "integration",
+      "referenceId": "reference.lifecycle.android-view",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.lifecycle-saved-state",
+          "documentType": "architecture",
+          "path": "/architecture/lifecycle-and-saved-state"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-lifecycle-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-lifecycle-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.lifecycle-android-view-saved-state",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.lifecycle.AndroidViewCommitScope.bindAndroidViewSavedState",
+        "com.viewcompose.lifecycle.AndroidViewLifecycleEventScope",
+        "com.viewcompose.lifecycle.AndroidViewSaveStateScope",
+        "com.viewcompose.lifecycle.AndroidViewSavedStateBindResult",
+        "com.viewcompose.lifecycle.LifecycleAndroidViewAdapter",
+        "com.viewcompose.lifecycle.View.clearAndroidViewSavedStateBinding"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-lifecycle-androidx",
+      "capabilityId": "lifecycle.effects",
+      "kind": "integration",
+      "referenceId": "reference.lifecycle.effects",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
+        },
+        {
+          "documentId": "architecture.lifecycle-saved-state",
+          "documentType": "architecture",
+          "path": "/architecture/lifecycle-and-saved-state"
+        },
+        {
+          "documentId": "architecture.transactional-effect-lifecycle",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+        },
+        {
+          "documentId": "module.viewcompose-lifecycle-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-lifecycle-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.lifecycle-effects",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.lifecycle.Lifecycle.currentStateAsState",
+        "com.viewcompose.lifecycle.LifecyclePauseOrDisposeEffectResult",
+        "com.viewcompose.lifecycle.LifecycleResumeEffect",
+        "com.viewcompose.lifecycle.LifecycleResumePauseEffectScope",
+        "com.viewcompose.lifecycle.LifecycleStartEffect",
+        "com.viewcompose.lifecycle.LifecycleStartStopEffectScope",
+        "com.viewcompose.lifecycle.LifecycleStopOrDisposeEffectResult"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-lifecycle-androidx",
+      "capabilityId": "lifecycle.flow-collection",
+      "kind": "integration",
+      "referenceId": "reference.lifecycle.flow-collection",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.lifecycle-saved-state",
+          "documentType": "architecture",
+          "path": "/architecture/lifecycle-and-saved-state"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-lifecycle-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-lifecycle-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.lifecycle-flow-aware",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.lifecycle.Flow.collectAsState",
+        "com.viewcompose.lifecycle.Flow.collectAsStateWithLifecycle",
+        "com.viewcompose.lifecycle.StateFlow.collectAsState",
+        "com.viewcompose.lifecycle.StateFlow.collectAsStateWithLifecycle"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-lifecycle-androidx",
+      "capabilityId": "lifecycle.owner-boundaries",
+      "kind": "integration",
+      "referenceId": "reference.lifecycle.owner-boundaries",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.lifecycle-saved-state",
+          "documentType": "architecture",
+          "path": "/architecture/lifecycle-and-saved-state"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-android"
+        },
+        {
+          "documentId": "module.viewcompose-lifecycle-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-lifecycle-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.lifecycle-owner-boundary",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.lifecycle.LocalLifecycleOwner",
+        "com.viewcompose.lifecycle.LocalSavedStateRegistryOwner",
+        "com.viewcompose.lifecycle.UiTreeBuilder.ProvideLifecycleOwner",
+        "com.viewcompose.lifecycle.UiTreeBuilder.ProvideSavedStateRegistryOwner"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-google-maps-android",
+      "capabilityId": "maps.google.content",
+      "kind": "integration",
+      "referenceId": "reference.maps.google.content",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-google-maps-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-google-maps-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.google-map-content",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.maps.google.GoogleMapMarkerStyle",
+        "com.viewcompose.maps.google.GoogleMapPolylineStyle",
+        "com.viewcompose.maps.google.GoogleMapScope"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-google-maps-android",
+      "capabilityId": "maps.google.view",
+      "kind": "integration",
+      "referenceId": "reference.maps.google.view",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-google-maps-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-google-maps-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.google-map-view",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.maps.google.GoogleMapColorScheme",
+        "com.viewcompose.maps.google.GoogleMapPadding",
+        "com.viewcompose.maps.google.GoogleMapProperties",
+        "com.viewcompose.maps.google.GoogleMapType",
+        "com.viewcompose.maps.google.GoogleMapUiSettings",
+        "com.viewcompose.maps.google.GoogleMapViewOptions",
+        "com.viewcompose.maps.google.UiTreeBuilder.GoogleMapView"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-material3",
+      "capabilityId": "material3.components",
+      "kind": "component",
+      "referenceId": "reference.material3.components",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.component-appearance-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/component-appearance-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.renderer-neutral-interaction-indication",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/renderer-neutral-interaction-indication"
+        },
+        {
+          "documentId": "module.viewcompose-material3",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3"
+        },
+        {
+          "documentId": "module.viewcompose-material3-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.material3-components",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.material3.UiTreeBuilder.Material3Button",
+        "com.viewcompose.material3.UiTreeBuilder.Material3Card",
+        "com.viewcompose.material3.UiTreeBuilder.Material3NavigationBar",
+        "com.viewcompose.material3.UiTreeBuilder.Material3Surface",
+        "com.viewcompose.material3.UiTreeBuilder.Material3Switch",
+        "com.viewcompose.material3.UiTreeBuilder.Material3TextField"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-media3-androidx",
+      "capabilityId": "media3.player",
+      "kind": "integration",
+      "referenceId": "reference.media3.player",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-media3-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-media3-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.media3-player",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.media3.Media3ArtworkDisplayMode",
+        "com.viewcompose.media3.Media3PlayerViewConfiguration",
+        "com.viewcompose.media3.Media3ResizeMode",
+        "com.viewcompose.media3.Media3ShowBuffering",
+        "com.viewcompose.media3.Media3SurfaceType",
+        "com.viewcompose.media3.UiTreeBuilder.Media3PlayerView"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "modifier.appearance",
+      "kind": "modifier",
+      "referenceId": "reference.modifier.appearance",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "architecture.modifier-appearance",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.alpha",
+        "com.viewcompose.ui.modifier.Modifier.backgroundColor",
+        "com.viewcompose.ui.modifier.Modifier.backgroundDrawableRes",
+        "com.viewcompose.ui.modifier.Modifier.border",
+        "com.viewcompose.ui.modifier.Modifier.clip",
+        "com.viewcompose.ui.modifier.Modifier.cornerRadius",
+        "com.viewcompose.ui.modifier.Modifier.elevation",
+        "com.viewcompose.ui.modifier.Modifier.graphicsLayer",
+        "com.viewcompose.ui.modifier.Modifier.shape",
+        "com.viewcompose.ui.modifier.Modifier.zIndex"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "modifier.drawing",
+      "kind": "modifier",
+      "referenceId": "reference.modifier.drawing",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "architecture.modifier-drawing",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.draw",
+        "com.viewcompose.ui.modifier.Modifier.drawBehind",
+        "com.viewcompose.ui.modifier.Modifier.drawCache",
+        "com.viewcompose.ui.modifier.Modifier.drawWithCache",
+        "com.viewcompose.ui.modifier.Modifier.drawWithContent",
+        "com.viewcompose.ui.modifier.Modifier.visibility"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "modifier.interaction",
+      "kind": "modifier",
+      "referenceId": "reference.modifier.interaction",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "architecture.renderer-neutral-interaction-indication",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/renderer-neutral-interaction-indication"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "architecture.modifier-interaction",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.clickable",
+        "com.viewcompose.ui.modifier.Modifier.contentDescription",
+        "com.viewcompose.ui.modifier.Modifier.interactionIndication",
+        "com.viewcompose.ui.modifier.Modifier.testTag"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "modifier.layout",
+      "kind": "modifier",
+      "referenceId": "reference.modifier.layout",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        },
+        {
+          "documentId": "tutorial.layouts-and-modifiers",
+          "documentType": "tutorial",
+          "path": "/tutorials/layouts-and-modifiers"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tutorial.layouts-and-modifiers",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.aspectRatio",
+        "com.viewcompose.ui.modifier.Modifier.fillMaxHeight",
+        "com.viewcompose.ui.modifier.Modifier.fillMaxSize",
+        "com.viewcompose.ui.modifier.Modifier.fillMaxWidth",
+        "com.viewcompose.ui.modifier.Modifier.height",
+        "com.viewcompose.ui.modifier.Modifier.imeInsetsPadding",
+        "com.viewcompose.ui.modifier.Modifier.imeInsetsPaddingRelative",
+        "com.viewcompose.ui.modifier.Modifier.layoutId",
+        "com.viewcompose.ui.modifier.Modifier.margin",
+        "com.viewcompose.ui.modifier.Modifier.marginRelative",
+        "com.viewcompose.ui.modifier.Modifier.maxHeight",
+        "com.viewcompose.ui.modifier.Modifier.maxWidth",
+        "com.viewcompose.ui.modifier.Modifier.minHeight",
+        "com.viewcompose.ui.modifier.Modifier.minWidth",
+        "com.viewcompose.ui.modifier.Modifier.offset",
+        "com.viewcompose.ui.modifier.Modifier.offsetRelative",
+        "com.viewcompose.ui.modifier.Modifier.padding",
+        "com.viewcompose.ui.modifier.Modifier.paddingRelative",
+        "com.viewcompose.ui.modifier.Modifier.size",
+        "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPadding",
+        "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPaddingRelative",
+        "com.viewcompose.ui.modifier.Modifier.width"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "modifier.semantics",
+      "kind": "modifier",
+      "referenceId": "reference.modifier.semantics",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "architecture.modifier-semantics",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.semantics"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "modifier.shared-content",
+      "kind": "modifier",
+      "referenceId": "reference.modifier.shared-content",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "architecture.modifier-shared-content",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.sharedBounds",
+        "com.viewcompose.ui.modifier.Modifier.sharedElement"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-navigation-core",
+      "capabilityId": "navigation.deep-links",
+      "kind": "integration",
+      "referenceId": "reference.navigation.deep-links",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "guide.navigation-production-host",
+          "documentType": "guide",
+          "path": "/guides/navigation"
+        },
+        {
+          "documentId": "migration.compose-navigation",
+          "documentType": "migration",
+          "path": "/migration/compose-navigation"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-android"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-core"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-core-deep-link",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.navigation.core.NavBackStackController.resolveDeepLink",
+        "com.viewcompose.navigation.core.NavDeepLink",
+        "com.viewcompose.navigation.core.NavDeepLinkArgumentType",
+        "com.viewcompose.navigation.core.NavDeepLinkLaunchMode",
+        "com.viewcompose.navigation.core.NavDeepLinkMatch",
+        "com.viewcompose.navigation.core.NavDeepLinkRejection",
+        "com.viewcompose.navigation.core.NavDeepLinkRejectionReason",
+        "com.viewcompose.navigation.core.NavDeepLinkRequest",
+        "com.viewcompose.navigation.core.NavDeepLinkResolution",
+        "com.viewcompose.navigation.core.NavGraph.resolveDeepLink"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-navigation-android",
+      "capabilityId": "navigation.destination-context",
+      "kind": "integration",
+      "referenceId": "reference.navigation.destination-context",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "architecture.scene-derived-navigation-lifecycle-presentation-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/scene-derived-navigation-lifecycle-and-presentation-ownership"
+        },
+        {
+          "documentId": "guide.navigation-production-host",
+          "documentType": "guide",
+          "path": "/guides/navigation"
+        },
+        {
+          "documentId": "migration.compose-navigation",
+          "documentType": "migration",
+          "path": "/migration/compose-navigation"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-android-destination-context",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.navigation.LocalNavDestinationContext",
+        "com.viewcompose.navigation.NavDestinationContext",
+        "com.viewcompose.navigation.NavDestinationPresentation"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha02"
+      }
+    },
+    {
+      "artifactId": "viewcompose-navigation-android",
+      "capabilityId": "navigation.host",
+      "kind": "integration",
+      "referenceId": "reference.navigation.host",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
+        },
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "guide.navigation-production-host",
+          "documentType": "guide",
+          "path": "/guides/navigation"
+        },
+        {
+          "documentId": "migration.compose-navigation",
+          "documentType": "migration",
+          "path": "/migration/compose-navigation"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-android"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-core"
+        },
+        {
+          "documentId": "tutorial.navigation",
+          "documentType": "tutorial",
+          "path": "/tutorials/navigation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tutorial.navigation",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.navigation.LocalNavGraphOwnerScope",
+        "com.viewcompose.navigation.NavDeepLinkResult",
+        "com.viewcompose.navigation.NavDestinationMotionSpec",
+        "com.viewcompose.navigation.NavDestinationTransform",
+        "com.viewcompose.navigation.NavFailure",
+        "com.viewcompose.navigation.NavFailurePhase",
+        "com.viewcompose.navigation.NavGraphOwner",
+        "com.viewcompose.navigation.NavGraphOwnerScope",
+        "com.viewcompose.navigation.NavHostController",
+        "com.viewcompose.navigation.NavHostException",
+        "com.viewcompose.navigation.NavMotionEasing",
+        "com.viewcompose.navigation.NavMotionTiming",
+        "com.viewcompose.navigation.NavPanePolicy",
+        "com.viewcompose.navigation.NavPredictiveBackSpec",
+        "com.viewcompose.navigation.NavResult",
+        "com.viewcompose.navigation.NavSpringSpec",
+        "com.viewcompose.navigation.NavTransitionSpec",
+        "com.viewcompose.navigation.UiTreeBuilder.NavHost",
+        "com.viewcompose.navigation.UiTreeBuilder.ProvideNavGraphOwner",
+        "com.viewcompose.navigation.createNavHostController",
+        "com.viewcompose.navigation.rememberNavHostController"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-navigation-android",
+      "capabilityId": "navigation.presentation-retention",
+      "kind": "integration",
+      "referenceId": "reference.navigation.presentation-retention",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "architecture.scene-derived-navigation-lifecycle-presentation-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/scene-derived-navigation-lifecycle-and-presentation-ownership"
+        },
+        {
+          "documentId": "guide.navigation-production-host",
+          "documentType": "guide",
+          "path": "/guides/navigation"
+        },
+        {
+          "documentId": "migration.compose-navigation",
+          "documentType": "migration",
+          "path": "/migration/compose-navigation"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-android-presentation-retention",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.navigation.NavPresentationRetentionPolicy"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha02"
+      }
+    },
+    {
+      "artifactId": "viewcompose-navigation-core",
+      "capabilityId": "navigation.scene-projection",
+      "kind": "host",
+      "referenceId": "reference.navigation.scene-projection",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "architecture.scene-derived-navigation-lifecycle-presentation-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/scene-derived-navigation-lifecycle-and-presentation-ownership"
+        },
+        {
+          "documentId": "migration.compose-navigation",
+          "documentType": "migration",
+          "path": "/migration/compose-navigation"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-core"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-core-execution-plan",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.navigation.core.NavEntryLifecycleState",
+        "com.viewcompose.navigation.core.NavEntryPresence",
+        "com.viewcompose.navigation.core.NavExecutionPhase",
+        "com.viewcompose.navigation.core.NavExecutionPlan",
+        "com.viewcompose.navigation.core.NavExecutionReducer",
+        "com.viewcompose.navigation.core.NavExecutionReducer.predictivePreview",
+        "com.viewcompose.navigation.core.NavExecutionReducer.reconcile",
+        "com.viewcompose.navigation.core.NavExecutionReducer.settled",
+        "com.viewcompose.navigation.core.NavExecutionReducer.transition",
+        "com.viewcompose.navigation.core.NavHostLifecycleState",
+        "com.viewcompose.navigation.core.NavLifecyclePlan",
+        "com.viewcompose.navigation.core.NavLifecyclePlanner",
+        "com.viewcompose.navigation.core.NavLifecyclePlanner.plan",
+        "com.viewcompose.navigation.core.NavLifecycleTransition",
+        "com.viewcompose.navigation.core.NavScene",
+        "com.viewcompose.navigation.core.NavSceneEntry",
+        "com.viewcompose.navigation.core.NavSceneInteraction",
+        "com.viewcompose.navigation.core.NavSceneLayerRole",
+        "com.viewcompose.navigation.core.NavSceneTransitionPhase",
+        "com.viewcompose.navigation.core.NavSceneVisibility"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-gesture",
+      "capabilityId": "nested.scroll",
+      "kind": "modifier",
+      "referenceId": "reference.nested.scroll",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "guide.nested-scroll-coordination",
+          "documentType": "guide",
+          "path": "/guides/nested-scroll"
+        },
+        {
+          "documentId": "module.viewcompose-gesture",
+          "documentType": "module",
+          "path": "/modules/viewcompose-gesture"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.nested-scroll-toolbar",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.gesture.Modifier.nestedScroll"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "observed.value-mapping",
+      "kind": "dsl",
+      "referenceId": "reference.observed.value-mapping",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.lazy-collections-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/lazy-collections"
+        },
+        {
+          "documentId": "guide.lazy-collections",
+          "documentType": "guide",
+          "path": "/guides/lazy-collections"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tutorial.lazy-list-performance",
+          "documentType": "tutorial",
+          "path": "/tutorials/lazy-list-performance"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-foundation-observed-map",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.ObservedValue.map"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-oneui7",
+      "capabilityId": "oneui7.components",
+      "kind": "component",
+      "referenceId": "reference.oneui7.components",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.component-appearance-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/component-appearance-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.renderer-neutral-interaction-indication",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/renderer-neutral-interaction-indication"
+        },
+        {
+          "documentId": "module.viewcompose-oneui7",
+          "documentType": "module",
+          "path": "/modules/viewcompose-oneui7"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.oneui7-components",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Button",
+        "com.viewcompose.oneui7.UiTreeBuilder.OneUi7NavigationBar",
+        "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Surface",
+        "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Switch",
+        "com.viewcompose.oneui7.UiTreeBuilder.OneUi7TextField"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "overlay.anchor",
+      "kind": "modifier",
+      "referenceId": "reference.overlay.anchor",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.overlay-root-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "guide.overlay-presentation",
+          "documentType": "guide",
+          "path": "/guides/overlays"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.overlay-dropdown-menu",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.overlayAnchor"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-overlay-android",
+      "capabilityId": "overlay.android-transport",
+      "kind": "integration",
+      "referenceId": "reference.overlay.android-transport",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.overlay-root-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "guide.overlay-presentation",
+          "documentType": "guide",
+          "path": "/guides/overlays"
+        },
+        {
+          "documentId": "module.viewcompose-overlay-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-overlay-android"
+        },
+        {
+          "documentId": "tutorial.overlays",
+          "documentType": "tutorial",
+          "path": "/tutorials/overlays"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.overlay-android-dependency",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.overlay.android.AndroidOverlayHost",
+        "com.viewcompose.overlay.android.AndroidOverlayHostFactoryProvider",
+        "com.viewcompose.overlay.android.ViewGroup.asOverlayRenderContainerHandle"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "overlay.foundation",
+      "kind": "component",
+      "referenceId": "reference.overlay.foundation",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.component-appearance-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/component-appearance-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.hierarchical-saveable-state-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/hierarchical-saveable-state-ownership"
+        },
+        {
+          "documentId": "architecture.overlay-root-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "guide.overlay-presentation",
+          "documentType": "guide",
+          "path": "/guides/overlays"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tutorial.overlays",
+          "documentType": "tutorial",
+          "path": "/tutorials/overlays"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tutorial.overlays",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.AlertDialog",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Dialog",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenu",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenuItem",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ModalBottomSheet",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.PlainTooltip",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Popup",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAlertDialogOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideModalBottomSheetOverrides",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideOverlayHost",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Snackbar",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.Toast"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-host-android",
+      "capabilityId": "overlay.host-defaults",
+      "kind": "host",
+      "referenceId": "reference.overlay.host-defaults",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.overlay-root-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.overlay-android-dependency",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults",
+        "com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-overlay-material3-android",
+      "capabilityId": "overlay.material3",
+      "kind": "integration",
+      "referenceId": "reference.overlay.material3",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.component-appearance-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/component-appearance-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.overlay-root-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "architecture.public-package-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+        },
+        {
+          "documentId": "guide.overlay-presentation",
+          "documentType": "guide",
+          "path": "/guides/overlays"
+        },
+        {
+          "documentId": "module.viewcompose-overlay-material3-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-overlay-material3-android"
+        },
+        {
+          "documentId": "tutorial.overlays",
+          "documentType": "tutorial",
+          "path": "/tutorials/overlays"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.overlay-material3-dependency",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.overlay.material3.android.host.AndroidOverlayHost",
+        "com.viewcompose.overlay.material3.android.presenter.AndroidModalBottomSheetPresenter",
+        "com.viewcompose.overlay.material3.android.presenter.AndroidSnackbarOverlayPresenter"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-overlay-oneui7-android",
+      "capabilityId": "overlay.oneui7",
+      "kind": "integration",
+      "referenceId": "reference.overlay.oneui7",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.component-appearance-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/component-appearance-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.overlay-root-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+        },
+        {
+          "documentId": "guide.overlay-presentation",
+          "documentType": "guide",
+          "path": "/guides/overlays"
+        },
+        {
+          "documentId": "module.viewcompose-overlay-oneui7-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-overlay-oneui7-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.overlay-oneui7-dependency",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.overlay.oneui7.android.host.AndroidOverlayHost"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-paging-androidx",
+      "capabilityId": "paging.androidx",
+      "kind": "integration",
+      "referenceId": "reference.paging.androidx",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-paging-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-paging-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.paging-basic",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.paging.CombinedLoadStates.forLoadType",
+        "com.viewcompose.paging.Flow.collectAsViewComposePagingItems",
+        "com.viewcompose.paging.PagingContentState",
+        "com.viewcompose.paging.PagingLifecyclePolicy",
+        "com.viewcompose.paging.PagingLoadStateSnapshot",
+        "com.viewcompose.paging.UiTreeBuilder.PagingLazyColumn",
+        "com.viewcompose.paging.ViewComposePagingItems"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-preview-core",
+      "capabilityId": "preview.core.annotations",
+      "kind": "component",
+      "referenceId": "reference.preview.core.annotations",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-preview-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-preview-core"
+        },
+        {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tooling.preview-entry",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.preview.tooling.PreviewConfiguration",
+        "com.viewcompose.preview.tooling.PreviewConfigurationAxis",
+        "com.viewcompose.preview.tooling.PreviewConfigurationMatrix",
+        "com.viewcompose.preview.tooling.PreviewConfigurationOption",
+        "com.viewcompose.preview.tooling.PreviewConfigurationOverride",
+        "com.viewcompose.preview.tooling.PreviewConfigurationPresets",
+        "com.viewcompose.preview.tooling.PreviewDefaults",
+        "com.viewcompose.preview.tooling.PreviewFontScales",
+        "com.viewcompose.preview.tooling.PreviewLayoutDirection",
+        "com.viewcompose.preview.tooling.PreviewLightDark",
+        "com.viewcompose.preview.tooling.PreviewLtrRtl",
+        "com.viewcompose.preview.tooling.PreviewPhoneTablet",
+        "com.viewcompose.preview.tooling.PreviewTheme",
+        "com.viewcompose.preview.tooling.PreviewVariant",
+        "com.viewcompose.preview.tooling.ViewComposePreview",
+        "com.viewcompose.preview.tooling.ViewComposePreview.toPreviewConfiguration",
+        "com.viewcompose.preview.tooling.ViewComposePreviewThemeProvider",
+        "com.viewcompose.preview.tooling.ViewComposePreviews"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-preview-core",
+      "capabilityId": "preview.core.protocol",
+      "kind": "integration",
+      "referenceId": "reference.preview.core.protocol",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-preview-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-preview-core"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.preview-core-protocol",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.preview.tooling.PreviewArtifactLayout",
+        "com.viewcompose.preview.tooling.PreviewArtifacts",
+        "com.viewcompose.preview.tooling.PreviewBuildInput",
+        "com.viewcompose.preview.tooling.PreviewBuildInputKind",
+        "com.viewcompose.preview.tooling.PreviewBuildManifest",
+        "com.viewcompose.preview.tooling.PreviewClippingState",
+        "com.viewcompose.preview.tooling.PreviewCompositionLocal",
+        "com.viewcompose.preview.tooling.PreviewCompositionSnapshot",
+        "com.viewcompose.preview.tooling.PreviewDescriptor",
+        "com.viewcompose.preview.tooling.PreviewDescriptorCatalog",
+        "com.viewcompose.preview.tooling.PreviewDiagnostic",
+        "com.viewcompose.preview.tooling.PreviewDiagnosticSeverity",
+        "com.viewcompose.preview.tooling.PreviewJvmEntryPoint",
+        "com.viewcompose.preview.tooling.PreviewLayoutBounds",
+        "com.viewcompose.preview.tooling.PreviewLayoutDiagnostic",
+        "com.viewcompose.preview.tooling.PreviewLayoutDiagnosticKind",
+        "com.viewcompose.preview.tooling.PreviewNativeViewNode",
+        "com.viewcompose.preview.tooling.PreviewNodeBindingStats",
+        "com.viewcompose.preview.tooling.PreviewPatchRecord",
+        "com.viewcompose.preview.tooling.PreviewPhaseTiming",
+        "com.viewcompose.preview.tooling.PreviewProtocolJson",
+        "com.viewcompose.preview.tooling.PreviewRecomposeScope",
+        "com.viewcompose.preview.tooling.PreviewRenderRequest",
+        "com.viewcompose.preview.tooling.PreviewRenderResponse",
+        "com.viewcompose.preview.tooling.PreviewRenderSnapshot",
+        "com.viewcompose.preview.tooling.PreviewRenderStats",
+        "com.viewcompose.preview.tooling.PreviewRenderStatus",
+        "com.viewcompose.preview.tooling.PreviewRenderStructure",
+        "com.viewcompose.preview.tooling.PreviewRenderTreeNode",
+        "com.viewcompose.preview.tooling.PreviewSourceCallSite",
+        "com.viewcompose.preview.tooling.PreviewSourceLocation",
+        "com.viewcompose.preview.tooling.PreviewWorkerBatchCommand",
+        "com.viewcompose.preview.tooling.PreviewWorkerCommand",
+        "com.viewcompose.preview.tooling.ViewComposePreviewProtocol"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-preview-gradle-plugin",
+      "capabilityId": "preview.gradle",
+      "kind": "integration",
+      "referenceId": "reference.preview.gradle",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-preview-gradle-plugin",
+          "documentType": "module",
+          "path": "/modules/viewcompose-preview-gradle-plugin"
+        },
+        {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.preview-gradle-apply",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.preview.gradle.ViewComposePreviewGradlePlugin"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-preview",
+      "capabilityId": "preview.integration",
+      "kind": "integration",
+      "referenceId": "reference.preview.integration",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.development-tooling-isolation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/development-tooling-isolation"
+        },
+        {
+          "documentId": "architecture.in-memory-development-tooling-installation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/in-memory-development-tooling-installation"
+        },
+        {
+          "documentId": "module.viewcompose-preview",
+          "documentType": "module",
+          "path": "/modules/viewcompose-preview"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.preview-compose-bridge",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.preview.PreviewThemeProvider",
+        "com.viewcompose.preview.PreviewThemeResolution",
+        "com.viewcompose.preview.ViewComposePreview",
+        "com.viewcompose.preview.ViewComposePreviewOptions",
+        "com.viewcompose.preview.ViewComposePreviewWithRoot",
+        "com.viewcompose.preview.host.ViewComposePreviewHost"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-preview-runner",
+      "capabilityId": "preview.runner",
+      "kind": "host",
+      "referenceId": "reference.preview.runner",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-preview-runner",
+          "documentType": "module",
+          "path": "/modules/viewcompose-preview-runner"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.preview-runner-render",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.preview.runner.PreviewAndroidContextFactory",
+        "com.viewcompose.preview.runner.PreviewEntryResolutionResult",
+        "com.viewcompose.preview.runner.PreviewJvmEntryPointResolver"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-preview-worker-host",
+      "capabilityId": "preview.worker",
+      "kind": "host",
+      "referenceId": "reference.preview.worker",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-preview-worker-host",
+          "documentType": "module",
+          "path": "/modules/viewcompose-preview-worker-host"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.preview-worker-execute",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.preview.worker.PreviewWorkerHost"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-renderer-android",
+      "capabilityId": "renderer.decoration-backend",
+      "kind": "integration",
+      "referenceId": "reference.renderer.decoration-backend",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-renderer-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-renderer-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.renderer-decoration-backend",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.renderer.decoration.AndroidViewDecorationBackend",
+        "com.viewcompose.renderer.decoration.AndroidViewDecorationPresence",
+        "com.viewcompose.renderer.decoration.AndroidViewDecorationRequest",
+        "com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime",
+        "com.viewcompose.renderer.decoration.DecorationChildDrawingOrder",
+        "com.viewcompose.renderer.decoration.ViewDecorationHostLayout"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-renderer-android",
+      "capabilityId": "renderer.diagnostics",
+      "kind": "tooling",
+      "referenceId": "reference.renderer.diagnostics",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-renderer-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-renderer-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.renderer-timing",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.renderer.view.tree.LayoutPassEntry",
+        "com.viewcompose.renderer.view.tree.LayoutPassSnapshot",
+        "com.viewcompose.renderer.view.tree.LayoutPassTracker",
+        "com.viewcompose.renderer.view.tree.NodeTypeBindingStats",
+        "com.viewcompose.renderer.view.tree.RenderPatchOperation",
+        "com.viewcompose.renderer.view.tree.RenderPatchRecord",
+        "com.viewcompose.renderer.view.tree.RenderStats",
+        "com.viewcompose.renderer.view.tree.RenderStructureStats",
+        "com.viewcompose.renderer.view.tree.RenderTreeNode",
+        "com.viewcompose.renderer.view.tree.RenderTreeTimingCollector",
+        "com.viewcompose.renderer.view.tree.RenderTreeTimingPhase",
+        "com.viewcompose.renderer.view.tree.RenderTreeTimingSpan",
+        "com.viewcompose.renderer.view.tree.RenderTreeTimingSubject",
+        "com.viewcompose.renderer.view.tree.ReuseBindingResult",
+        "com.viewcompose.renderer.view.tree.ViewNodeToolingRegistry"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-renderer-android",
+      "capabilityId": "renderer.reconciliation",
+      "kind": "host",
+      "referenceId": "reference.renderer.reconciliation",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
+        },
+        {
+          "documentId": "architecture.lazy-collection-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/lazy-collection-logical-and-physical-ownership"
+        },
+        {
+          "documentId": "architecture.node-spec",
+          "documentType": "architecture",
+          "path": "/architecture/node-spec"
+        },
+        {
+          "documentId": "architecture.prefetched-session-activation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/prefetched-session-activation-boundary"
+        },
+        {
+          "documentId": "migration.lazy-collection-revision-reuse",
+          "documentType": "migration",
+          "path": "/migration/lazy-collection-revision-and-reuse"
+        },
+        {
+          "documentId": "module.viewcompose-renderer-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-renderer-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.renderer-reconciliation",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.renderer.reconcile.ChildReconciler",
+        "com.viewcompose.renderer.reconcile.InsertPatch",
+        "com.viewcompose.renderer.reconcile.LazyListChangePayload",
+        "com.viewcompose.renderer.reconcile.LazyListDiff",
+        "com.viewcompose.renderer.reconcile.LazyListDiffResult",
+        "com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis",
+        "com.viewcompose.renderer.reconcile.LazyListIdentityInspector",
+        "com.viewcompose.renderer.reconcile.LazyListUpdate",
+        "com.viewcompose.renderer.reconcile.ReconcileNode",
+        "com.viewcompose.renderer.reconcile.ReconcileResult",
+        "com.viewcompose.renderer.reconcile.RemovePatch",
+        "com.viewcompose.renderer.reconcile.RenderPatch",
+        "com.viewcompose.renderer.reconcile.ReusePatch"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-renderer-android",
+      "capabilityId": "renderer.tree-transactions",
+      "kind": "host",
+      "referenceId": "reference.renderer.tree-transactions",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.constraintlayout-graph-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/constraintlayout-graph-and-helper-ownership"
+        },
+        {
+          "documentId": "architecture.delayed-session-containers",
+          "documentType": "architecture",
+          "path": "/architecture/session-containers"
+        },
+        {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
+        },
+        {
+          "documentId": "architecture.lazy-collection-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/lazy-collection-logical-and-physical-ownership"
+        },
+        {
+          "documentId": "architecture.node-spec",
+          "documentType": "architecture",
+          "path": "/architecture/node-spec"
+        },
+        {
+          "documentId": "architecture.observed-property-transactions",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/observed-property-transactions"
+        },
+        {
+          "documentId": "architecture.prefetched-session-activation",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/prefetched-session-activation-boundary"
+        },
+        {
+          "documentId": "architecture.typed-constraint-helper-expansion",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/typed-constraint-helper-expansion"
+        },
+        {
+          "documentId": "module.viewcompose-renderer-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-renderer-android"
+        },
+        {
+          "documentId": "module.viewcompose-ui-contract",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-contract"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.renderer-tree-transaction",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.renderer.view.tree.MountedNode",
+        "com.viewcompose.renderer.view.tree.ObservedPropertyRenderResult",
+        "com.viewcompose.renderer.view.tree.RenderTreeCommitEffect",
+        "com.viewcompose.renderer.view.tree.RenderTreeCommitFailure",
+        "com.viewcompose.renderer.view.tree.RenderTreeResult",
+        "com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch",
+        "com.viewcompose.renderer.view.tree.ViewTreeRenderer"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-runtime",
+      "capabilityId": "runtime.reusable-content",
+      "kind": "integration",
+      "referenceId": "reference.runtime.reusable-content",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.lazy-collections-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/lazy-collections"
+        },
+        {
+          "documentId": "module.viewcompose-runtime",
+          "documentType": "module",
+          "path": "/modules/viewcompose-runtime"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.runtime-reusable-content",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.runtime.composition.ComposerLite.withReusableContent"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-runtime",
+      "capabilityId": "runtime.state",
+      "kind": "dsl",
+      "referenceId": "reference.runtime.state",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.effects",
+          "documentType": "architecture",
+          "path": "/architecture/effects"
+        },
+        {
+          "documentId": "architecture.state-snapshots",
+          "documentType": "architecture",
+          "path": "/architecture/state-snapshots"
+        },
+        {
+          "documentId": "migration.compose-state-recomposition-restoration",
+          "documentType": "migration",
+          "path": "/migration/compose-state-recomposition-and-restoration"
+        },
+        {
+          "documentId": "module.viewcompose-runtime",
+          "documentType": "module",
+          "path": "/modules/viewcompose-runtime"
+        },
+        {
+          "documentId": "tutorial.catalog",
+          "documentType": "tutorial",
+          "path": "/tutorials"
+        },
+        {
+          "documentId": "tutorial.getting-started",
+          "documentType": "tutorial",
+          "path": "/tutorials/getting-started"
+        },
+        {
+          "documentId": "tutorial.state-and-events",
+          "documentType": "tutorial",
+          "path": "/tutorials/state-and-events"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.runtime-state",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.runtime.Snapshot.withMutableSnapshot",
+        "com.viewcompose.runtime.derivedStateOf",
+        "com.viewcompose.runtime.mutableStateOf",
+        "com.viewcompose.runtime.snapshotFlow"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha03"
+      }
+    },
+    {
+      "artifactId": "viewcompose-shadow-android",
+      "capabilityId": "shadow.android-backend",
+      "kind": "integration",
+      "referenceId": "reference.shadow.android-backend",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "guide.advanced-shadows",
+          "documentType": "guide",
+          "path": "/guides/shadows"
+        },
+        {
+          "documentId": "module.viewcompose-shadow-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-shadow-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.shadow-backend-selection",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.shadow.android.InnerShadowBitmapRasterizer",
+        "com.viewcompose.shadow.android.InnerShadowSpecResolver",
+        "com.viewcompose.shadow.android.RasterizedInnerShadow",
+        "com.viewcompose.shadow.android.RasterizedShadow",
+        "com.viewcompose.shadow.android.ResolvedInnerShadowSpec",
+        "com.viewcompose.shadow.android.ResolvedShadowGroup",
+        "com.viewcompose.shadow.android.ResolvedShadowLayer",
+        "com.viewcompose.shadow.android.ResolvedShadowSpec",
+        "com.viewcompose.shadow.android.ShadowBitmapRasterizer",
+        "com.viewcompose.shadow.android.ShadowDecorationLayer",
+        "com.viewcompose.shadow.android.ShadowRasterCacheStats",
+        "com.viewcompose.shadow.android.ShadowRenderBackend",
+        "com.viewcompose.shadow.android.ShadowRenderBackendDecision",
+        "com.viewcompose.shadow.android.ShadowRenderBackendSelector",
+        "com.viewcompose.shadow.android.ShadowRenderBackendStats",
+        "com.viewcompose.shadow.android.ShadowRenderDecisionReason",
+        "com.viewcompose.shadow.android.ShadowRenderPolicy",
+        "com.viewcompose.shadow.android.ShadowSpecResolver",
+        "com.viewcompose.shadow.android.ShadowViewDecorationBackend"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "shadow.modifiers",
+      "kind": "modifier",
+      "referenceId": "reference.shadow.modifiers",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.modifier-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "guide.advanced-shadows",
+          "documentType": "guide",
+          "path": "/guides/shadows"
+        },
+        {
+          "documentId": "module.viewcompose-shadow-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-shadow-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.shadow-card",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.modifier.Modifier.dropShadow",
+        "com.viewcompose.ui.modifier.Modifier.dropShadows",
+        "com.viewcompose.ui.modifier.Modifier.innerShadow",
+        "com.viewcompose.ui.modifier.Modifier.innerShadows"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "text.input",
+      "kind": "dsl",
+      "referenceId": "reference.text.input",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.focus-visibility-pager-selection",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/focus-visibility-and-pager-selection-ownership"
+        },
+        {
+          "documentId": "architecture.text-input-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/text-input"
+        },
+        {
+          "documentId": "guide.text-input-editing",
+          "documentType": "guide",
+          "path": "/guides/text-input"
+        },
+        {
+          "documentId": "guide.text-input-rich-text",
+          "documentType": "guide",
+          "path": "/guides/text-input-rich-text"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
+        },
+        {
+          "documentId": "module.viewcompose-text-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-text-core"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "tutorial.text-input",
+          "documentType": "tutorial",
+          "path": "/tutorials/text-input"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.text-input-editing",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.BasicTextField",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.SearchBar",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.TextField"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "text.platform-font-family",
+      "kind": "integration",
+      "referenceId": "reference.text.platform-font-family",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-ui-contract",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-contract"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-contract-font-family",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.node.spec.GenericUiFontFamily",
+        "com.viewcompose.ui.node.spec.uiFontFamily"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "theme.foundation",
+      "kind": "dsl",
+      "referenceId": "reference.theme.foundation",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.component-appearance-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/component-appearance-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.theme-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/theming"
+        },
+        {
+          "documentId": "guide.theming-local-overrides",
+          "documentType": "guide",
+          "path": "/guides/theming-local-overrides"
+        },
+        {
+          "documentId": "module.viewcompose-ui-foundation",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-foundation"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "guide.theming-local-override",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.foundation.UiTreeBuilder.UiTheme",
+        "com.viewcompose.ui.foundation.UiTreeBuilder.UiThemeOverride"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-material3",
+      "capabilityId": "theme.material3",
+      "kind": "integration",
+      "referenceId": "reference.theme.material3",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "architecture.theme-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/theming"
+        },
+        {
+          "documentId": "guide.theming-dynamic-color",
+          "documentType": "guide",
+          "path": "/guides/theming-dynamic-color"
+        },
+        {
+          "documentId": "guide.theming-mode-switch",
+          "documentType": "guide",
+          "path": "/guides/theming"
+        },
+        {
+          "documentId": "module.viewcompose-material3",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3"
+        },
+        {
+          "documentId": "module.viewcompose-material3-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3-android"
+        },
+        {
+          "documentId": "tutorial.theming",
+          "documentType": "tutorial",
+          "path": "/tutorials/theming"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "tutorial.theming",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.material3.UiTreeBuilder.Material3Theme"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-oneui7",
+      "capabilityId": "theme.oneui7",
+      "kind": "integration",
+      "referenceId": "reference.theme.oneui7",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.design-system-host-backends",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+        },
+        {
+          "documentId": "architecture.design-system-integration",
+          "documentType": "architecture",
+          "path": "/architecture/design-systems"
+        },
+        {
+          "documentId": "architecture.design-system-resolution",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/design-system-resolution-boundary"
+        },
+        {
+          "documentId": "module.viewcompose-oneui7",
+          "documentType": "module",
+          "path": "/modules/viewcompose-oneui7"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.oneui7-theme",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Theme"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-viewmodel-androidx",
+      "capabilityId": "viewmodel.owner-boundaries",
+      "kind": "integration",
+      "referenceId": "reference.viewmodel.owner-boundaries",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-android"
+        },
+        {
+          "documentId": "module.viewcompose-viewmodel-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-viewmodel-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.viewmodel-owner-boundary",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.viewmodel.LocalViewModelStoreOwner",
+        "com.viewcompose.viewmodel.UiTreeBuilder.ProvideViewModelStoreOwner"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-viewmodel-androidx",
+      "capabilityId": "viewmodel.saved-state",
+      "kind": "integration",
+      "referenceId": "reference.viewmodel.saved-state",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-viewmodel-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-viewmodel-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.viewmodel-saved-state",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.viewmodel.SavedStateHandleHolderViewModel",
+        "com.viewcompose.viewmodel.savedStateHandle"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-viewmodel-androidx",
+      "capabilityId": "viewmodel.scoped-owners",
+      "kind": "integration",
+      "referenceId": "reference.viewmodel.scoped-owners",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.retained-viewmodel-scope-ownership",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/retained-viewmodel-scope-ownership"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-viewmodel-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-viewmodel-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.viewmodel-scoped-owners",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.viewmodel.ViewModelScopeProvider",
+        "com.viewcompose.viewmodel.ViewModelStoreOwnerLease",
+        "com.viewcompose.viewmodel.rememberViewModelScopeProvider",
+        "com.viewcompose.viewmodel.rememberViewModelStoreOwner"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-viewmodel-androidx",
+      "capabilityId": "viewmodel.store-resolution",
+      "kind": "integration",
+      "referenceId": "reference.viewmodel.store-resolution",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.navigation-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "migration.compose-host-lifecycle-android-interop",
+          "documentType": "migration",
+          "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "module.viewcompose-viewmodel-androidx",
+          "documentType": "module",
+          "path": "/modules/viewcompose-viewmodel-androidx"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.viewmodel-resolution",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.viewmodel.viewModel"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha01"
+      }
+    }
+  ],
+  "schemaVersion": 1
+}

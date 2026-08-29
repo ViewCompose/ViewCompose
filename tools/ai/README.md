@@ -11,8 +11,10 @@ The implementation order is fixed by
    implemented.
 3. `scripts/verify-phase0.mjs` rejects drift, duplicate IDs, unsafe fixture paths, incomplete metric
    coverage, and incompatible schema declarations.
-4. Later directories may implement the knowledge generator, validator, CLI, MCP, Design IR
-   conversion, and visual adapters only against these contracts.
+4. `knowledge/` owns reviewed provider-neutral rules, while `scripts/knowledge-generator.mjs`
+   combines those rules with Governance V2, canonical source declarations, and compiled samples.
+5. `generated/current-source/` contains the exact versioned Phase 1 bundle. Later validator, CLI,
+   MCP, Design IR conversion, and visual adapters may consume it only through the frozen contracts.
 
 Run the Phase 0 gate with:
 
@@ -23,6 +25,17 @@ npm --prefix tools/ai run verify
 The root `qaQuick` lifecycle also runs `verifyAiToolingContracts`. No command in this directory may
 execute an inspected project's build scripts, load a model provider, read credentials, or write
 outside a tool-owned output directory.
+
+Generate and freshness-check the Phase 1 bundle with:
+
+```bash
+npm --prefix tools/ai run generate:knowledge
+npm --prefix tools/ai run verify:knowledge
+```
+
+The compact generated discovery surface is also copied to `website/static/llms.txt`. Commit
+canonical inputs or generator changes first, then generate from that immutable revision and commit
+the outputs; never edit generated files manually.
 
 ## Version lanes
 

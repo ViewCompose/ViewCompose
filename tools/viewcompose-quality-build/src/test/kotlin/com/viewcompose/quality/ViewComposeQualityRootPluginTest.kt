@@ -125,6 +125,8 @@ class ViewComposeQualityRootPluginTest {
         )
         assertTrue(project.tasks.getByName("verifyDocumentationScripts") is Exec)
         assertTrue(project.tasks.getByName("verifyAiToolingContracts") is Exec)
+        assertTrue(project.tasks.getByName("generateAiKnowledgeBundle") is Exec)
+        assertTrue(project.tasks.getByName("verifyAiKnowledgeBundle") is Exec)
         assertTrue(project.tasks.getByName("verifyDocumentLanguages") is Exec)
         assertTrue(project.tasks.getByName("verifyDocumentationTranslations") is Exec)
         val documentationStructure = project.tasks.getByName("verifyDocumentationStructure")

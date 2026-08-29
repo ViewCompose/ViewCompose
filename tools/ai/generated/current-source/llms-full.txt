@@ -1,0 +1,1296 @@
+# ViewCompose
+
+> Declarative Kotlin UI for Android that renders native Views. Use exact published APIs and validate generated code before delivery.
+
+## Version and source
+
+- Lane: current-source
+- Source revision: 7af858dca1aacf1241106db46021c65fcffa3715
+- Capability fingerprint: 807a106db7b6a457dba1a4ee11446afcc0a487b33a3d857e708d4ab2661b107e
+- Entries: 537
+- Capabilities: 77
+- Artifacts: 30
+
+## Canonical references
+
+- Documentation: https://docs.viewcompose.com/documentation/
+- Capability Reference: https://docs.viewcompose.com/reference/
+- Versioned API/KDoc: https://docs.viewcompose.com/api/
+- Local structured bundle: tools/ai/generated/current-source/manifest.json
+- Full machine guide: tools/ai/generated/current-source/llms-full.txt
+
+## Evidence contract
+
+Knowledge, static, compiled, rendered, and compared are cumulative evidence levels. A symbol match is not compilation; compilation is not rendering; visual similarity cannot override semantics, accessibility, unsupported content, or security failure.
+
+## Core rules
+
+- VC-AI-A11Y-IMAGE-DESCRIPTION: A meaningful Image or Icon requires a content description. Null is reserved for content that is deliberately decorative.
+- VC-AI-A11Y-TOUCH-TARGET: Interactive output must preserve the design-system touch-target contract and cannot use visual bounds as the only interaction bound.
+- VC-AI-ANDROID-VIEW-COMMIT: Non-replayable native operations belong in AndroidView.onCommit or another documented commit boundary, not in replayable update work.
+- VC-AI-ARTIFACT-REQUIRED: Every generated symbol must resolve to the exact owning artifact and version lane; aggregate artifacts are not assumed.
+- VC-AI-EVIDENCE-DEPTH: Knowledge, static, compiled, rendered, and compared results are cumulative and cannot be promoted by inference.
+- VC-AI-LIFECYCLE-PAIRED-WORK: Use the lifecycle-aware Flow and paired effect APIs for threshold-bound work; do not branch once on a non-observable lifecycle snapshot.
+
+## Capability groups
+
+- layout: 31 entries
+- appearance: 24 entries
+- input: 21 entries
+- gesture: 8 entries
+- animation: 8 entries
+- content: 10 entries
+- actions: 15 entries
+- collections: 6 entries
+- feedback: 16 entries
+- navigation: 6 entries
+- design-systems: 8 entries
+- integrations: 172 entries
+- android-interop: 58 entries
+- tooling: 130 entries
+- general: 24 entries
+
+## Agent workflow
+
+Select an exact version lane, retrieve capability and sample IDs, generate only current symbols, run static validation, compile in the tool-owned harness, render supported UI through Preview, and return the deepest evidence that passed. MCP and converters are not part of Phase 1.
+
+# Capability details
+
+## animation.composition-motion
+
+- Kind: dsl
+- Artifact: viewcompose-animation@0.1.0-alpha04
+- Reference: reference.animation.composition-motion
+- Compiled sample: module.animation-visibility (:viewcompose-animation:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/0019-animation-physics-transition-and-inspection-ownership, /architecture/decisions/0020-separate-animation-value-and-velocity-domains, /architecture/decisions/design-system-resolution-boundary, /architecture/decisions/in-memory-development-tooling-installation, /migration/compose-animation, /migration/dsl-contract-convergence, /modules/viewcompose-animation, /modules/viewcompose-animation-core, /tutorials/animation
+
+- com.viewcompose.animation.ColumnScope.AnimatedVisibility — fun UiTreeBuilder.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandIn(), exit: ExitTransition = shrinkOut() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun UiTreeBuilder.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandIn(), exit: ExitTransition = shrinkOut() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun RowScope.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandHorizontally(), exit: ExitTransition = shrinkHorizontally() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun RowScope.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandHorizontally(), exit: ExitTransition = shrinkHorizontally() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun ColumnScope.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandVertically(), exit: ExitTransition = shrinkVertically() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun ColumnScope.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandVertically(), exit: ExitTransition = shrinkVertically() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, )
+- com.viewcompose.animation.Modifier.animateBounds — fun Modifier.animateBounds( animationSpec: FiniteAnimationSpec = spring(), ): Modifier
+- com.viewcompose.animation.Modifier.animateContentSize — fun Modifier.animateContentSize( animationSpec: FiniteAnimationSpec = spring(), ): Modifier
+- com.viewcompose.animation.RowScope.AnimatedVisibility — fun UiTreeBuilder.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandIn(), exit: ExitTransition = shrinkOut() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun UiTreeBuilder.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandIn(), exit: ExitTransition = shrinkOut() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun RowScope.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandHorizontally(), exit: ExitTransition = shrinkHorizontally() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun RowScope.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandHorizontally(), exit: ExitTransition = shrinkHorizontally() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun ColumnScope.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandVertically(), exit: ExitTransition = shrinkVertically() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun ColumnScope.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandVertically(), exit: ExitTransition = shrinkVertically() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, )
+- com.viewcompose.animation.UiTreeBuilder.AnimatedContent — fun <S> UiTreeBuilder.AnimatedContent( targetState: S, modifier: Modifier = Modifier, contentAlignment: BoxAlignment = BoxAlignment.TopStart, contentKey: (S) -> Any? = { it }, transitionSpec: AnimatedContentTransitionScope<S>.() -> ContentTransform = { fadeIn() togetherWith fadeOut() }, content: AnimatedContentScope<S>.(S) -> Unit, )
+- com.viewcompose.animation.UiTreeBuilder.AnimatedVisibility — fun UiTreeBuilder.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandIn(), exit: ExitTransition = shrinkOut() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun UiTreeBuilder.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandIn(), exit: ExitTransition = shrinkOut() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun RowScope.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandHorizontally(), exit: ExitTransition = shrinkHorizontally() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun RowScope.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandHorizontally(), exit: ExitTransition = shrinkHorizontally() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun ColumnScope.AnimatedVisibility( visible: Boolean, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandVertically(), exit: ExitTransition = shrinkVertically() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, ) | fun ColumnScope.AnimatedVisibility( visibleState: MutableTransitionState<Boolean>, modifier: Modifier = Modifier, enter: EnterTransition = fadeIn() + expandVertically(), exit: ExitTransition = shrinkVertically() + fadeOut(), content: AnimatedVisibilityScope.() -> Unit, )
+- com.viewcompose.animation.UiTreeBuilder.Crossfade — fun <T> UiTreeBuilder.Crossfade( targetState: T, modifier: Modifier = Modifier, animationSpec: FiniteAnimationSpec = tween(), content: BoxScope.(T) -> Unit, )
+
+## camerax.preview
+
+- Kind: integration
+- Artifact: viewcompose-camerax-androidx@0.1.0-alpha01
+- Reference: reference.camerax.preview
+- Compiled sample: module.camerax-preview (:viewcompose-camerax-androidx:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-camerax-androidx
+
+- com.viewcompose.camerax.CameraXLensFacing — enum class CameraXLensFacing
+- com.viewcompose.camerax.CameraXPreviewBindingState — enum class CameraXPreviewBindingState
+- com.viewcompose.camerax.CameraXPreviewConfiguration — data class CameraXPreviewConfiguration( val scaleType: CameraXPreviewScaleType = CameraXPreviewScaleType.FillCenter, val targetRotation: CameraXPreviewRotation = CameraXPreviewRotation.Display, val contentDescription: CharSequence? = null, )
+- com.viewcompose.camerax.CameraXPreviewFailure — class CameraXPreviewFailure internal constructor( val reason: CameraXPreviewFailureReason, val exception: Throwable, )
+- com.viewcompose.camerax.CameraXPreviewFailureReason — enum class CameraXPreviewFailureReason
+- com.viewcompose.camerax.CameraXPreviewImplementationMode — enum class CameraXPreviewImplementationMode
+- com.viewcompose.camerax.CameraXPreviewRotation — enum class CameraXPreviewRotation
+- com.viewcompose.camerax.CameraXPreviewScaleType — enum class CameraXPreviewScaleType
+- com.viewcompose.camerax.CameraXPreviewStreamState — enum class CameraXPreviewStreamState
+- com.viewcompose.camerax.UiTreeBuilder.CameraXPreviewView — fun UiTreeBuilder.CameraXPreviewView( cameraProvider: ProcessCameraProvider?, modifier: Modifier = Modifier, lensFacing: CameraXLensFacing = CameraXLensFacing.Back, implementationMode: CameraXPreviewImplementationMode = CameraXPreviewImplementationMode.Compatible, configuration: CameraXPreviewConfiguration = CameraXPreviewConfiguration.Default, onBindingStateChanged: ((CameraXPreviewBindingState) -> Unit)? = null, onCameraBound: ((Camera) -> Unit)? = null, onStreamStateChanged: ((CameraXPreviewStreamState) -> Unit)? = null, onFailure: ((CameraXPreviewFailure) -> Unit)? = null, key: Any? = null, )
+
+## constraintlayout.core
+
+- Kind: dsl
+- Artifact: viewcompose-constraintlayout-androidx@0.1.0-alpha01
+- Reference: reference.constraintlayout.core
+- Compiled sample: module.constraintlayout-inline (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/constraintlayout-graph-and-helper-ownership, /architecture/decisions/public-package-ownership-and-platform-handles, /architecture/decisions/typed-constraint-helper-expansion, /modules/viewcompose-constraintlayout-androidx
+
+- com.viewcompose.constraintlayout.ConstraintBaselineAnchorTarget — sealed interface ConstraintBaselineAnchorTarget
+- com.viewcompose.constraintlayout.ConstraintConstrainScope — class ConstraintConstrainScope internal constructor()
+- com.viewcompose.constraintlayout.ConstraintHorizontalAnchorReference — sealed interface ConstraintHorizontalAnchorReference : ConstraintLayoutReference, ConstraintHorizontalAnchorTarget
+- com.viewcompose.constraintlayout.ConstraintHorizontalAnchorSide — enum class ConstraintHorizontalAnchorSide
+- com.viewcompose.constraintlayout.ConstraintHorizontalAnchorTarget — sealed interface ConstraintHorizontalAnchorTarget
+- com.viewcompose.constraintlayout.ConstraintLayoutReference — sealed interface ConstraintLayoutReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope — class ConstraintLayoutScope internal constructor() : UiTreeBuilder()
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createRef — fun ConstraintLayoutScope.createRef(id: String): ConstraintReference | fun createRef(id: String): ConstraintReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createRefs — fun ConstraintLayoutScope.createRefs(vararg ids: String): Array<ConstraintReference> | fun createRefs(vararg ids: String): Array<ConstraintReference>
+- com.viewcompose.constraintlayout.ConstraintParentReference — data object ConstraintParentReference : ConstraintHorizontalAnchorTarget, ConstraintVerticalAnchorTarget
+- com.viewcompose.constraintlayout.ConstraintReference — data class ConstraintReference( override val id: String, ) : ConstraintLayoutReference, ConstraintHorizontalAnchorTarget, ConstraintVerticalAnchorTarget, ConstraintBaselineAnchorTarget
+- com.viewcompose.constraintlayout.constraintSet — fun constraintSet(content: ConstraintSetBuilder.() -> Unit): ConstraintSetSpec
+- com.viewcompose.constraintlayout.ConstraintSetBuilder — class ConstraintSetBuilder internal constructor()
+- com.viewcompose.constraintlayout.ConstraintVerticalAnchorReference — sealed interface ConstraintVerticalAnchorReference : ConstraintLayoutReference, ConstraintVerticalAnchorTarget
+- com.viewcompose.constraintlayout.ConstraintVerticalAnchorSide — enum class ConstraintVerticalAnchorSide
+- com.viewcompose.constraintlayout.ConstraintVerticalAnchorTarget — sealed interface ConstraintVerticalAnchorTarget
+- com.viewcompose.constraintlayout.Modifier.constrain — fun Modifier.constrain( id: String, content: ConstraintConstrainScope.() -> Unit, ): Modifier | fun constrain( ref: ConstraintReference, content: ConstraintConstrainScope.() -> Unit, )
+- com.viewcompose.constraintlayout.Modifier.constrainAs — fun Modifier.constrainAs( ref: ConstraintReference, content: ConstraintConstrainScope.() -> Unit, ): Modifier
+- com.viewcompose.constraintlayout.UiTreeBuilder.ConstraintLayout — fun UiTreeBuilder.ConstraintLayout( key: Any? = null, constraintSet: ConstraintSetSpec? = null, modifier: Modifier = Modifier, content: ConstraintLayoutScope.() -> Unit, )
+
+## constraintlayout.helpers
+
+- Kind: dsl
+- Artifact: viewcompose-constraintlayout-androidx@0.1.0-alpha01
+- Reference: reference.constraintlayout.helpers
+- Compiled sample: module.constraintlayout-helpers (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/constraintlayout-graph-and-helper-ownership, /architecture/decisions/typed-constraint-helper-expansion, /modules/viewcompose-constraintlayout-androidx
+
+- com.viewcompose.constraintlayout.ConstraintCircularFlowItem — data class ConstraintCircularFlowItem( val reference: ConstraintReference, val radius: UiDp, val angle: Float, )
+- com.viewcompose.constraintlayout.ConstraintGridSkip — data class ConstraintGridSkip( val index: Int, val rowSpan: Int = 1, val columnSpan: Int = 1, )
+- com.viewcompose.constraintlayout.ConstraintGridSpan — data class ConstraintGridSpan( val reference: ConstraintReference, val index: Int, val rowSpan: Int = 1, val columnSpan: Int = 1, )
+- com.viewcompose.constraintlayout.ConstraintHelperReference — sealed interface ConstraintHelperReference : ConstraintLayoutReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createBottomBarrier — fun ConstraintLayoutScope.createBottomBarrier( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("barrier-bottom"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintVerticalAnchorReference | fun createBottomBarrier( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("barrier-bottom"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintVerticalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createCircularFlow — fun ConstraintLayoutScope.createCircularFlow( center: ConstraintReference, vararg items: ConstraintCircularFlowItem, id: String = allocHelperId("circular-flow"), ): ConstraintHelperReference | fun createCircularFlow( center: ConstraintReference, vararg items: ConstraintCircularFlowItem, id: String = helpers.allocId("circular-flow"), ): ConstraintHelperReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createEndBarrier — fun ConstraintLayoutScope.createEndBarrier( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("barrier-end"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference | fun createEndBarrier( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("barrier-end"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createFlow — fun ConstraintLayoutScope.createFlow( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("flow"), orientation: ConstraintFlowOrientation = ConstraintFlowOrientation.Horizontal, wrapMode: ConstraintFlowWrapMode = ConstraintFlowWrapMode.None, horizontalGap: UiDp = UiDp.Zero, verticalGap: UiDp = UiDp.Zero, horizontalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread, verticalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread, firstHorizontalStyle: ConstraintChainStyle? = null, firstVerticalStyle: ConstraintChainStyle? = null, lastHorizontalStyle: ConstraintChainStyle? = null, lastVerticalStyle: ConstraintChainStyle? = null, horizontalBias: Float? = null, verticalBias: Float? = null, firstHorizontalBias: Float? = null, firstVerticalBias: Float? = null, lastHorizontalBias: Float? = null, lastVerticalBias: Float? = null, horizontalAlign: ConstraintFlowHorizontalAlign = ConstraintFlowHorizontalAlign.Center, verticalAlign: ConstraintFlowVerticalAlign = ConstraintFlowVerticalAlign.Center, maxElementsWrap: Int = -1, padding: UiDp = UiDp.Zero, paddingStart: UiDp = UiDp.Zero, paddingEnd: UiDp = UiDp.Zero, paddingTop: UiDp = UiDp.Zero, paddingBottom: UiDp = UiDp.Zero, ): ConstraintReference | fun createFlow( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("flow"), orientation: ConstraintFlowOrientation = ConstraintFlowOrientation.Horizontal, wrapMode: ConstraintFlowWrapMode = ConstraintFlowWrapMode.None, horizontalGap: UiDp = UiDp.Zero, verticalGap: UiDp = UiDp.Zero, horizontalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread, verticalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread, firstHorizontalStyle: ConstraintChainStyle? = null, firstVerticalStyle: ConstraintChainStyle? = null, lastHorizontalStyle: ConstraintChainStyle? = null, lastVerticalStyle: ConstraintChainStyle? = null, horizontalBias: Float? = null, verticalBias: Float? = null, firstHorizontalBias: Float? = null, firstVerticalBias: Float? = null, lastHorizontalBias: Float? = null, lastVerticalBias: Float? = null, horizontalAlign: ConstraintFlowHorizontalAlign = ConstraintFlowHorizontalAlign.Center, verticalAlign: ConstraintFlowVerticalAlign = ConstraintFlowVerticalAlign.Center, maxElementsWrap: Int = -1, padding: UiDp = UiDp.Zero, paddingStart: UiDp = UiDp.Zero, paddingEnd: UiDp = UiDp.Zero, paddingTop: UiDp = UiDp.Zero, paddingBottom: UiDp = UiDp.Zero, ): ConstraintReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGrid — fun ConstraintLayoutScope.createGrid( vararg refs: ConstraintReference, id: String = allocHelperId("grid"), rows: Int = 0, columns: Int = 0, orientation: ConstraintGridOrientation = ConstraintGridOrientation.Horizontal, rowWeights: List<Float> = emptyList(), columnWeights: List<Float> = emptyList(), horizontalGap: UiDp = UiDp.Zero, verticalGap: UiDp = UiDp.Zero, spans: List<ConstraintGridSpan> = emptyList(), skips: List<ConstraintGridSkip> = emptyList(), ): ConstraintHelperReference | fun createGrid( vararg refs: ConstraintReference, id: String = helpers.allocId("grid"), rows: Int = 0, columns: Int = 0, orientation: ConstraintGridOrientation = ConstraintGridOrientation.Horizontal, rowWeights: List<Float> = emptyList(), columnWeights: List<Float> = emptyList(), horizontalGap: UiDp = UiDp.Zero, verticalGap: UiDp = UiDp.Zero, spans: List<ConstraintGridSpan> = emptyList(), skips: List<ConstraintGridSkip> = emptyList(), ): ConstraintHelperReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGroup — fun ConstraintLayoutScope.createGroup( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("group"), visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible, elevation: UiDp = UiDp.Zero, ): ConstraintHelperReference | fun createGroup( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("group"), visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible, elevation: UiDp = UiDp.Zero, ): ConstraintHelperReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromBottom — fun ConstraintLayoutScope.createGuidelineFromBottom( offset: UiDp, id: String = allocHelperId("guideline-bottom"), ): ConstraintVerticalAnchorReference | fun ConstraintLayoutScope.createGuidelineFromBottom( fraction: Float, id: String = allocHelperId("guideline-bottom"), ): ConstraintVerticalAnchorReference | fun createGuidelineFromBottom( offset: UiDp, id: String = helpers.allocId("guideline-bottom"), ): ConstraintVerticalAnchorReference | fun createGuidelineFromBottom( fraction: Float, id: String = helpers.allocId("guideline-bottom"), ): ConstraintVerticalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromEnd — fun ConstraintLayoutScope.createGuidelineFromEnd( offset: UiDp, id: String = allocHelperId("guideline-end"), ): ConstraintHorizontalAnchorReference | fun ConstraintLayoutScope.createGuidelineFromEnd( fraction: Float, id: String = allocHelperId("guideline-end"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromEnd( offset: UiDp, id: String = helpers.allocId("guideline-end"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromEnd( fraction: Float, id: String = helpers.allocId("guideline-end"), ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromLeft — fun ConstraintLayoutScope.createGuidelineFromLeft( offset: UiDp, id: String = allocHelperId("guideline-left"), ): ConstraintHorizontalAnchorReference | fun ConstraintLayoutScope.createGuidelineFromLeft( fraction: Float, id: String = allocHelperId("guideline-left"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromLeft( offset: UiDp, id: String = helpers.allocId("guideline-left"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromLeft( fraction: Float, id: String = helpers.allocId("guideline-left"), ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromRight — fun ConstraintLayoutScope.createGuidelineFromRight( offset: UiDp, id: String = allocHelperId("guideline-right"), ): ConstraintHorizontalAnchorReference | fun ConstraintLayoutScope.createGuidelineFromRight( fraction: Float, id: String = allocHelperId("guideline-right"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromRight( offset: UiDp, id: String = helpers.allocId("guideline-right"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromRight( fraction: Float, id: String = helpers.allocId("guideline-right"), ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromStart — fun ConstraintLayoutScope.createGuidelineFromStart( offset: UiDp, id: String = allocHelperId("guideline-start"), ): ConstraintHorizontalAnchorReference | fun ConstraintLayoutScope.createGuidelineFromStart( fraction: Float, id: String = allocHelperId("guideline-start"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromStart( offset: UiDp, id: String = helpers.allocId("guideline-start"), ): ConstraintHorizontalAnchorReference | fun createGuidelineFromStart( fraction: Float, id: String = helpers.allocId("guideline-start"), ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromTop — fun ConstraintLayoutScope.createGuidelineFromTop( offset: UiDp, id: String = allocHelperId("guideline-top"), ): ConstraintVerticalAnchorReference | fun ConstraintLayoutScope.createGuidelineFromTop( fraction: Float, id: String = allocHelperId("guideline-top"), ): ConstraintVerticalAnchorReference | fun createGuidelineFromTop( offset: UiDp, id: String = helpers.allocId("guideline-top"), ): ConstraintVerticalAnchorReference | fun createGuidelineFromTop( fraction: Float, id: String = helpers.allocId("guideline-top"), ): ConstraintVerticalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createHorizontalChain — fun ConstraintLayoutScope.createHorizontalChain( vararg refs: ConstraintReference, weights: List<Float>? = null, style: ConstraintChainStyle = ConstraintChainStyle.Spread, bias: Float? = null, startTarget: ConstraintHorizontalAnchorTarget = parent, startTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.Start, startMargin: UiDp = UiDp.Zero, endTarget: ConstraintHorizontalAnchorTarget = parent, endTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.End, endMargin: UiDp = UiDp.Zero, ) | fun createHorizontalChain( vararg refs: ConstraintReference, weights: List<Float>? = null, style: ConstraintChainStyle = ConstraintChainStyle.Spread, bias: Float? = null, startTarget: ConstraintHorizontalAnchorTarget = parent, startTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.Start, startMargin: UiDp = UiDp.Zero, endTarget: ConstraintHorizontalAnchorTarget = parent, endTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.End, endMargin: UiDp = UiDp.Zero, )
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createLayer — fun ConstraintLayoutScope.createLayer( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("layer"), visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible, elevation: UiDp = UiDp.Zero, rotation: Float = 0f, scaleX: Float = 1f, scaleY: Float = 1f, translationX: UiDp = UiDp.Zero, translationY: UiDp = UiDp.Zero, pivotX: UiDp? = null, pivotY: UiDp? = null, ): ConstraintHelperReference | fun createLayer( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("layer"), visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible, elevation: UiDp = UiDp.Zero, rotation: Float = 0f, scaleX: Float = 1f, scaleY: Float = 1f, translationX: UiDp = UiDp.Zero, translationY: UiDp = UiDp.Zero, pivotX: UiDp? = null, pivotY: UiDp? = null, ): ConstraintHelperReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createLeftBarrier — fun ConstraintLayoutScope.createLeftBarrier( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("barrier-left"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference | fun createLeftBarrier( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("barrier-left"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createPlaceholder — fun ConstraintLayoutScope.createPlaceholder( content: ConstraintReference? = null, id: String = allocHelperId("placeholder"), emptyVisibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Invisible, ): ConstraintReference | fun createPlaceholder( content: ConstraintReference? = null, id: String = helpers.allocId("placeholder"), emptyVisibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Invisible, ): ConstraintReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createRightBarrier — fun ConstraintLayoutScope.createRightBarrier( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("barrier-right"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference | fun createRightBarrier( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("barrier-right"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createStartBarrier — fun ConstraintLayoutScope.createStartBarrier( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("barrier-start"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference | fun createStartBarrier( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("barrier-start"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintHorizontalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createTopBarrier — fun ConstraintLayoutScope.createTopBarrier( vararg refs: ConstraintLayoutReference, id: String = allocHelperId("barrier-top"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintVerticalAnchorReference | fun createTopBarrier( vararg refs: ConstraintLayoutReference, id: String = helpers.allocId("barrier-top"), margin: UiDp = UiDp.Zero, allowsGoneWidgets: Boolean = true, ): ConstraintVerticalAnchorReference
+- com.viewcompose.constraintlayout.ConstraintLayoutScope.createVerticalChain — fun ConstraintLayoutScope.createVerticalChain( vararg refs: ConstraintReference, weights: List<Float>? = null, style: ConstraintChainStyle = ConstraintChainStyle.Spread, bias: Float? = null, topTarget: ConstraintVerticalAnchorTarget = parent, topTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Top, topMargin: UiDp = UiDp.Zero, bottomTarget: ConstraintVerticalAnchorTarget = parent, bottomTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Bottom, bottomMargin: UiDp = UiDp.Zero, ) | fun createVerticalChain( vararg refs: ConstraintReference, weights: List<Float>? = null, style: ConstraintChainStyle = ConstraintChainStyle.Spread, bias: Float? = null, topTarget: ConstraintVerticalAnchorTarget = parent, topTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Top, topMargin: UiDp = UiDp.Zero, bottomTarget: ConstraintVerticalAnchorTarget = parent, bottomTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Bottom, bottomMargin: UiDp = UiDp.Zero, )
+
+## diagnostics.correlated-events
+
+- Kind: tooling
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.diagnostics.correlated-events
+- Compiled sample: tutorial.render-diagnostics (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/0021-correlated-render-diagnostics-ownership, /architecture/render-failures, /modules/viewcompose-ui-foundation, /tooling/diagnostics, /tutorials/render-diagnostics
+
+- com.viewcompose.ui.foundation.NodeTypeBindingStats — data class NodeTypeBindingStats( val rebound: Int = 0, val patched: Int = 0, val skipped: Int = 0, )
+- com.viewcompose.ui.foundation.RenderDiagnosticCollection — data class RenderDiagnosticCollection( val lifecycle: Boolean = true, val failures: Boolean = true, val frameLevel: RenderFrameDiagnosticLevel = RenderFrameDiagnosticLevel.None, )
+- com.viewcompose.ui.foundation.RenderDiagnosticContext — data class RenderDiagnosticContext( val sessionId: RenderSessionTraceId, val parentSessionId: RenderSessionTraceId?, val role: RenderSessionRole, val frameId: Long?, val eventSequence: Long, val monotonicTimestampNanos: Long, )
+- com.viewcompose.ui.foundation.RenderDiagnosticEvent — sealed interface RenderDiagnosticEvent
+- com.viewcompose.ui.foundation.RenderDiagnostics — class RenderDiagnostics( val collection: RenderDiagnosticCollection, val sink: RenderDiagnosticsSink, )
+- com.viewcompose.ui.foundation.RenderDiagnosticsSink — fun interface RenderDiagnosticsSink
+- com.viewcompose.ui.foundation.RenderFailure — data class RenderFailure( val frameId: Long?, val phase: RenderFailurePhase, val recovery: RenderFailureRecovery, val cause: Throwable, val operation: RenderFailureOperation? = null, val nodeKey: Any? = null, )
+- com.viewcompose.ui.foundation.RenderFailureObserved — data class RenderFailureObserved( override val context: RenderDiagnosticContext, val failure: RenderFailure, ) : RenderDiagnosticEvent
+- com.viewcompose.ui.foundation.RenderFailureOperation — enum class RenderFailureOperation
+- com.viewcompose.ui.foundation.RenderFailurePhase — enum class RenderFailurePhase
+- com.viewcompose.ui.foundation.RenderFailureRecovery — enum class RenderFailureRecovery
+- com.viewcompose.ui.foundation.RenderFrameCompleted — data class RenderFrameCompleted( override val context: RenderDiagnosticContext, val report: RenderFrameReport, val stats: RenderStats?, val tree: RenderTreeResult?, ) : RenderDiagnosticEvent
+- com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel — enum class RenderFrameDiagnosticLevel
+- com.viewcompose.ui.foundation.RenderFrameReport — data class RenderFrameReport( val frameId: Long, val status: RenderFrameStatus, val failures: List<RenderFailure> = emptyList(), )
+- com.viewcompose.ui.foundation.RenderFrameStatus — enum class RenderFrameStatus
+- com.viewcompose.ui.foundation.RenderPatchOperation — enum class RenderPatchOperation
+- com.viewcompose.ui.foundation.RenderPatchRecord — data class RenderPatchRecord( val operation: RenderPatchOperation, val type: NodeType, val key: Any?, val parentKey: Any?, val index: Int, val moved: Boolean = false, val detail: String? = null, val toolingMetadata: UiNodeToolingMetadata? = null, )
+- com.viewcompose.ui.foundation.RenderSessionActivityChanged — data class RenderSessionActivityChanged( override val context: RenderDiagnosticContext, val active: Boolean, ) : RenderDiagnosticEvent
+- com.viewcompose.ui.foundation.RenderSessionEnded — data class RenderSessionEnded( override val context: RenderDiagnosticContext, ) : RenderDiagnosticEvent
+- com.viewcompose.ui.foundation.RenderSessionRole — enum class RenderSessionRole
+- com.viewcompose.ui.foundation.RenderSessionStarted — data class RenderSessionStarted( override val context: RenderDiagnosticContext, ) : RenderDiagnosticEvent
+- com.viewcompose.ui.foundation.RenderSessionTraceId — value class RenderSessionTraceId internal constructor(val value: Long)
+- com.viewcompose.ui.foundation.RenderStats — data class RenderStats( val inserts: Int = 0, val reuses: Int = 0, val removals: Int = 0, val reboundNodes: Int = 0, val patchedNodes: Int = 0, val skippedBindings: Int = 0, val skippedSubtrees: Int = 0, val bindingsByType: Map<NodeType, NodeTypeBindingStats> = emptyMap(), )
+- com.viewcompose.ui.foundation.RenderStructureStats — data class RenderStructureStats( val vnodeCount: Int = 0, val mountedNodeCount: Int = 0, val maxVNodeDepth: Int = 0, val maxMountedDepth: Int = 0, )
+- com.viewcompose.ui.foundation.RenderTreeNode — data class RenderTreeNode( val type: NodeType, val key: Any?, val toolingMetadata: UiNodeToolingMetadata? = null, val children: List<RenderTreeNode> = emptyList(), )
+- com.viewcompose.ui.foundation.RenderTreeResult — data class RenderTreeResult( val stats: RenderStats = RenderStats(), val structure: RenderStructureStats = RenderStructureStats(), val warnings: List<String> = emptyList(), val tree: List<RenderTreeNode> = emptyList(), val patches: List<RenderPatchRecord> = emptyList(), val composition: CompositionDiagnostics = CompositionDiagnostics(), )
+
+## diagnostics.failure-aggregation
+
+- Kind: integration
+- Artifact: viewcompose-diagnostics@0.1.0-alpha01
+- Reference: reference.diagnostics.failure-aggregation
+- Compiled sample: module.diagnostics-failure-aggregation (:viewcompose-diagnostics:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/0021-correlated-render-diagnostics-ownership, /architecture/render-failures, /modules/viewcompose-diagnostics, /tooling/diagnostics, /tutorials/render-diagnostics
+
+- com.viewcompose.diagnostics.BoundedRenderFailureAggregator — class BoundedRenderFailureAggregator internal constructor( val capacity: Int, val windowDurationNanos: Long, private val monotonicTimeNanos: () -> Long, ) : RenderDiagnosticsSink
+- com.viewcompose.diagnostics.RenderFailureAggregate — data class RenderFailureAggregate internal constructor( val windowId: Long, val fingerprint: RenderFailureFingerprint, val count: Long, val firstObservedAtNanos: Long, val lastObservedAtNanos: Long, val latestContext: RenderDiagnosticContext, )
+- com.viewcompose.diagnostics.RenderFailureAggregationSnapshot — data class RenderFailureAggregationSnapshot internal constructor( val windowId: Long, val windowStartedAtNanos: Long, val capturedAtNanos: Long, val aggregates: List<RenderFailureAggregate>, val droppedFailureCount: Long, val evictedFingerprintCount: Long, )
+- com.viewcompose.diagnostics.RenderFailureFingerprint — data class RenderFailureFingerprint internal constructor( val phase: RenderFailurePhase, val recovery: RenderFailureRecovery, val operation: RenderFailureOperation?, val exceptionType: String, val frameworkFrames: List<RenderFailureStackFrame>, )
+- com.viewcompose.diagnostics.RenderFailureStackFrame — data class RenderFailureStackFrame internal constructor( val className: String, val methodName: String, )
+
+## diagnostics.node-timing
+
+- Kind: tooling
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.diagnostics.node-timing
+- Compiled sample: tooling.diagnostics-node-timing (:viewcompose-ui-foundation:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/0021-correlated-render-diagnostics-ownership, /modules/viewcompose-ui-foundation, /tooling/diagnostics, /tutorials/render-diagnostics
+
+- com.viewcompose.ui.foundation.RenderNodeTimingCapture — interface RenderNodeTimingCapture
+- com.viewcompose.ui.foundation.RenderNodeTimingCaptureRequest — class RenderNodeTimingCaptureRequest( phases: Set<RenderNodeTimingPhase> = RenderNodeTimingPhase.entries.toSet(), val maxFrames: Int = MAX_TIMING_FRAMES, val maxDurationNanos: Long = MAX_TIMING_DURATION_NANOS, )
+- com.viewcompose.ui.foundation.RenderNodeTimingCaptureResult — data class RenderNodeTimingCaptureResult( val context: RenderDiagnosticContext, val records: List<RenderNodeTimingRecord>, val completedFrames: Int, val startedAtNanos: Long, val endedAtNanos: Long?, val attemptedClockReads: Long, val retainedClockReads: Long, val emptyPairOverheadNanos: Long, val droppedTimedNodes: Int, val droppedRecords: Int, val droppedStrings: Int, val truncated: Boolean, val unsupportedDomains: Set<RenderNodeTimingUnsupportedDomain>, val complete: Boolean, val endReason: RenderNodeTimingEndReason?, )
+- com.viewcompose.ui.foundation.RenderNodeTimingCaptureStart — data class RenderNodeTimingCaptureStart( val status: RenderNodeTimingStartStatus, val capture: RenderNodeTimingCapture?, )
+- com.viewcompose.ui.foundation.RenderNodeTimingClock — enum class RenderNodeTimingClock
+- com.viewcompose.ui.foundation.RenderNodeTimingEndReason — enum class RenderNodeTimingEndReason
+- com.viewcompose.ui.foundation.RenderNodeTimingInclusion — enum class RenderNodeTimingInclusion
+- com.viewcompose.ui.foundation.RenderNodeTimingPhase — enum class RenderNodeTimingPhase
+- com.viewcompose.ui.foundation.RenderNodeTimingRecord — data class RenderNodeTimingRecord( val frameId: Long, val nodeToken: RenderNodeToken, val parentNodeToken: RenderNodeToken?, val nodeType: NodeType?, val depth: Int, val synthetic: Boolean, val sourceCallSites: List<UiSourceCallSite>, val phase: RenderNodeTimingPhase, val inclusion: RenderNodeTimingInclusion, val durationNanos: Long, val repetitions: Long, val truncated: Boolean, )
+- com.viewcompose.ui.foundation.RenderNodeTimingStartStatus — enum class RenderNodeTimingStartStatus
+- com.viewcompose.ui.foundation.RenderNodeTimingUnsupportedDomain — enum class RenderNodeTimingUnsupportedDomain
+- com.viewcompose.ui.foundation.RenderSessionTimingInspection — interface RenderSessionTimingInspection
+
+## diagnostics.session-inspection
+
+- Kind: tooling
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.diagnostics.session-inspection
+- Compiled sample: tooling.diagnostics-session-inspection (:viewcompose-ui-foundation:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/0021-correlated-render-diagnostics-ownership, /architecture/decisions/development-tooling-isolation, /architecture/decisions/in-memory-development-tooling-installation, /migration/render-session-pre-frame-inspection, /modules/viewcompose-ui-foundation, /tooling/diagnostics, /tutorials/render-diagnostics
+
+- com.viewcompose.ui.foundation.RenderInspectedNode — data class RenderInspectedNode( val token: RenderNodeToken, val parentToken: RenderNodeToken?, val type: NodeType, val depth: Int, val kind: RenderInspectedNodeKind, val sourceCallSites: List<UiSourceCallSite>, val platformTarget: RenderNodePlatformTarget, )
+- com.viewcompose.ui.foundation.RenderInspectedNodeKind — enum class RenderInspectedNodeKind
+- com.viewcompose.ui.foundation.RenderNodeInspectionSnapshot — data class RenderNodeInspectionSnapshot( val nodes: List<RenderInspectedNode>, val visitedNodes: Int, val droppedNodes: Int, val truncated: Boolean, val supported: Boolean, val ended: Boolean, )
+- com.viewcompose.ui.foundation.RenderNodePlatformTarget — fun interface RenderNodePlatformTarget
+- com.viewcompose.ui.foundation.RenderNodeToken — value class RenderNodeToken internal constructor(val value: Long)
+- com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection — interface RenderSessionDiagnosticInspection
+- com.viewcompose.ui.foundation.RenderSessionDiagnosticSnapshot — data class RenderSessionDiagnosticSnapshot( val sessionId: RenderSessionTraceId, val parentSessionId: RenderSessionTraceId?, val role: RenderSessionRole, val renderingActive: Boolean, val committedFrameId: Long?, val latestFrame: RenderSessionInspectedFrame?, val latestFailure: RenderSessionInspectedFailure?, val ended: Boolean, )
+- com.viewcompose.ui.foundation.RenderSessionInspectedFailure — data class RenderSessionInspectedFailure( val frameId: Long?, val phase: RenderFailurePhase, val recovery: RenderFailureRecovery, val operation: RenderFailureOperation?, val exceptionType: String, )
+- com.viewcompose.ui.foundation.RenderSessionInspectedFrame — data class RenderSessionInspectedFrame( val frameId: Long, val status: RenderFrameStatus, val failures: List<RenderSessionInspectedFailure>, val droppedFailures: Int, )
+- com.viewcompose.ui.foundation.RenderSessionInspectionPolicy — enum class RenderSessionInspectionPolicy
+- com.viewcompose.ui.foundation.RenderSessionInspectionRegistration — interface RenderSessionInspectionRegistration
+- com.viewcompose.ui.foundation.RenderSessionInspectionTooling — interface RenderSessionInspectionTooling
+- com.viewcompose.ui.foundation.RenderSessionNodeInspection — interface RenderSessionNodeInspection
+- com.viewcompose.ui.foundation.RenderSessionPlatformDiagnostics — interface RenderSessionPlatformDiagnostics
+
+## exoplayer2.player
+
+- Kind: integration
+- Artifact: viewcompose-exoplayer2-android@0.1.0-alpha01
+- Reference: reference.exoplayer2.player
+- Compiled sample: module.exoplayer2-player (:viewcompose-exoplayer2-android:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-exoplayer2-android
+
+- com.viewcompose.exoplayer2.ExoPlayerArtworkDisplayMode — enum class ExoPlayerArtworkDisplayMode
+- com.viewcompose.exoplayer2.ExoPlayerResizeMode — enum class ExoPlayerResizeMode
+- com.viewcompose.exoplayer2.ExoPlayerShowBuffering — enum class ExoPlayerShowBuffering
+- com.viewcompose.exoplayer2.ExoPlayerSurfaceType — enum class ExoPlayerSurfaceType
+- com.viewcompose.exoplayer2.ExoPlayerViewConfiguration — data class ExoPlayerViewConfiguration( val resizeMode: ExoPlayerResizeMode = ExoPlayerResizeMode.Fit, val useController: Boolean = true, val controllerShowTimeoutMillis: Int = 5_000, val controllerAutoShow: Boolean = true, val controllerHideOnTouch: Boolean = true, val controllerHideDuringAds: Boolean = true, val showBuffering: ExoPlayerShowBuffering = ExoPlayerShowBuffering.Never, val keepContentOnPlayerReset: Boolean = false, val artworkDisplayMode: ExoPlayerArtworkDisplayMode = ExoPlayerArtworkDisplayMode.Fit, val defaultArtwork: Drawable? = null, @ColorInt val shutterBackgroundColor: Int = Color.BLACK, val contentDescription: CharSequence? = null, val keepScreenOn: Boolean = false, val customErrorMessage: CharSequence? = null, )
+- com.viewcompose.exoplayer2.UiTreeBuilder.ExoPlayerView — fun UiTreeBuilder.ExoPlayerView( player: Player?, modifier: Modifier = Modifier, surfaceType: ExoPlayerSurfaceType = ExoPlayerSurfaceType.SurfaceView, configuration: ExoPlayerViewConfiguration = ExoPlayerViewConfiguration.Default, onRenderedFirstFrame: (() -> Unit)? = null, key: Any? = null, )
+
+## focus.input
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.focus.input
+- Compiled sample: guide.focus-form (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/focus-visibility-and-pager-selection-ownership, /architecture/modifier, /guides/focus-and-input
+
+- com.viewcompose.ui.modifier.Modifier.focusable — fun Modifier.focusable(enabled: Boolean = true): Modifier
+- com.viewcompose.ui.modifier.Modifier.focusGroup — fun Modifier.focusGroup(enabled: Boolean = true): Modifier
+- com.viewcompose.ui.modifier.Modifier.focusProperties — fun Modifier.focusProperties( properties: FocusPropertiesReceiver.() -> Unit, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.focusRequester — fun Modifier.focusRequester(requester: FocusRequester): Modifier
+- com.viewcompose.ui.modifier.Modifier.onFocusChanged — fun Modifier.onFocusChanged( onFocusChanged: (FocusState) -> Unit, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.onKeyEvent — fun Modifier.onKeyEvent( onKeyEvent: (KeyEvent) -> Boolean, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.onPreviewKeyEvent — fun Modifier.onPreviewKeyEvent( onPreviewKeyEvent: (KeyEvent) -> Boolean, ): Modifier
+
+## foundation.components
+
+- Kind: component
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.foundation.components
+- Compiled sample: module.ui-foundation-profile-summary (:viewcompose-ui-foundation:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/component-appearance-resolution-boundary, /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/design-system-resolution-boundary, /architecture/decisions/renderer-neutral-interaction-indication, /migration/compose-layout-modifier-and-environment, /migration/dsl-contract-convergence, /modules/viewcompose-ui-foundation, /tutorials/getting-started, /tutorials/state-and-events
+
+- com.viewcompose.ui.foundation.UiTreeBuilder.Badge — fun UiTreeBuilder.Badge( count: Int? = null, overrides: BadgeOverrides = BadgeOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.BadgedBox — fun UiTreeBuilder.BadgedBox( badge: UiTreeBuilder.() -> Unit, key: Any? = null, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.BasicButton — fun UiTreeBuilder.BasicButton( text: String, onClick: (() -> Unit)?, style: BasicButtonStyle, enabled: Boolean = true, leadingIcon: ImageSource? = null, trailingIcon: ImageSource? = null, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.BasicSurface — fun UiTreeBuilder.BasicSurface( style: BasicSurfaceStyle, contentColor: Int, enabled: Boolean = true, onClick: (() -> Unit)? = null, minimumWidth: UiDp = UiDp.Zero, minimumHeight: UiDp = UiDp.Zero, visualHeight: UiDp? = null, role: SemanticsRole? = null, key: Any? = null, contentAlignment: BoxAlignment = BoxAlignment.TopStart, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.BottomAppBar — fun UiTreeBuilder.BottomAppBar( overrides: BottomAppBarOverrides = BottomAppBarOverrides.None, key: Any? = null, modifier: Modifier = Modifier, content: RowScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Box — fun UiTreeBuilder.Box( key: Any? = null, contentAlignment: BoxAlignment = BoxAlignment.TopStart, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Button — fun UiTreeBuilder.Button( text: String, onClick: (() -> Unit)? = null, leadingIcon: ImageSource.Resource? = null, trailingIcon: ImageSource.Resource? = null, variant: ButtonVariant = ButtonVariant.Primary, size: ButtonSize = ButtonSize.Medium, enabled: Boolean = true, overrides: ButtonOverrides = ButtonOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Card — fun UiTreeBuilder.Card( onClick: (() -> Unit)? = null, variant: CardVariant = CardVariant.Filled, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Checkbox — fun UiTreeBuilder.Checkbox( text: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true, overrides: CheckboxOverrides = CheckboxOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Chip — fun UiTreeBuilder.Chip( label: String, onClick: () -> Unit, variant: ChipVariant = ChipVariant.Assist, selected: Boolean = false, leadingIcon: ImageSource? = null, onTrailingIconClick: (() -> Unit)? = null, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.CircularProgressIndicator — fun UiTreeBuilder.CircularProgressIndicator( progress: Float? = null, overrides: CircularProgressIndicatorOverrides = CircularProgressIndicatorOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Column — fun UiTreeBuilder.Column( key: Any? = null, spacing: UiDp = UiDp.Zero, arrangement: MainAxisArrangement = MainAxisArrangement.Start, horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start, modifier: Modifier = Modifier, content: ColumnScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Divider — fun UiTreeBuilder.Divider( color: Int = DividerDefaults.color(), thickness: UiDp = DividerDefaults.thickness(), key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ExtendedFloatingActionButton — fun UiTreeBuilder.ExtendedFloatingActionButton( text: String, onClick: () -> Unit, icon: ImageSource? = null, overrides: ExtendedFloatingActionButtonOverrides = ExtendedFloatingActionButtonOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.FloatingActionButton — fun UiTreeBuilder.FloatingActionButton( onClick: () -> Unit, size: FabSize = FabSize.Medium, overrides: FloatingActionButtonOverrides = FloatingActionButtonOverrides.None, key: Any? = null, modifier: Modifier = Modifier, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.FlowColumn — fun UiTreeBuilder.FlowColumn( key: Any? = null, horizontalSpacing: UiDp = UiDp.Zero, verticalSpacing: UiDp = UiDp.Zero, maxItemsInEachColumn: Int = Int.MAX_VALUE, modifier: Modifier = Modifier, content: LayoutScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.FlowRow — fun UiTreeBuilder.FlowRow( key: Any? = null, horizontalSpacing: UiDp = UiDp.Zero, verticalSpacing: UiDp = UiDp.Zero, maxItemsInEachRow: Int = Int.MAX_VALUE, modifier: Modifier = Modifier, content: LayoutScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Icon — fun UiTreeBuilder.Icon( source: ImageSource?, contentDescription: String? = null, tint: Int = IconDefaults.tint(), size: UiDp = IconDefaults.size(), requestOptions: UiImageRequestOptions = UiImageRequestOptions(), key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.IconButton — fun UiTreeBuilder.IconButton( icon: ImageSource?, contentDescription: String? = null, onClick: (() -> Unit)? = null, variant: ButtonVariant = ButtonVariant.Text, size: ButtonSize = ButtonSize.Medium, requestOptions: UiImageRequestOptions = UiImageRequestOptions(), enabled: Boolean = true, overrides: IconButtonOverrides = IconButtonOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.LinearProgressIndicator — fun UiTreeBuilder.LinearProgressIndicator( progress: Float? = null, overrides: LinearProgressIndicatorOverrides = LinearProgressIndicatorOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ListItem — fun UiTreeBuilder.ListItem( headlineText: String, supportingText: String? = null, overlineText: String? = null, leadingContent: (UiTreeBuilder.() -> Unit)? = null, trailingContent: (UiTreeBuilder.() -> Unit)? = null, onClick: (() -> Unit)? = null, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.NavigationBar — fun UiTreeBuilder.NavigationBar( selectedIndex: Int, onItemSelected: (Int) -> Unit, overrides: NavigationBarOverrides = NavigationBarOverrides.None, key: Any? = null, modifier: Modifier = Modifier, items: NavigationBarScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideBadgeOverrides — fun UiTreeBuilder.ProvideBadgeOverrides( overrides: BadgeOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideBottomAppBarOverrides — fun UiTreeBuilder.ProvideBottomAppBarOverrides( overrides: BottomAppBarOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideButtonOverrides — fun UiTreeBuilder.ProvideButtonOverrides( overrides: ButtonOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideCheckboxOverrides — fun UiTreeBuilder.ProvideCheckboxOverrides( overrides: CheckboxOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideCircularProgressIndicatorOverrides — fun UiTreeBuilder.ProvideCircularProgressIndicatorOverrides( overrides: CircularProgressIndicatorOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideExtendedFloatingActionButtonOverrides — fun UiTreeBuilder.ProvideExtendedFloatingActionButtonOverrides( overrides: ExtendedFloatingActionButtonOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideFloatingActionButtonOverrides — fun UiTreeBuilder.ProvideFloatingActionButtonOverrides( overrides: FloatingActionButtonOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideIconButtonOverrides — fun UiTreeBuilder.ProvideIconButtonOverrides( overrides: IconButtonOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLinearProgressIndicatorOverrides — fun UiTreeBuilder.ProvideLinearProgressIndicatorOverrides( overrides: LinearProgressIndicatorOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideNavigationBarOverrides — fun UiTreeBuilder.ProvideNavigationBarOverrides( overrides: NavigationBarOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideRadioButtonOverrides — fun UiTreeBuilder.ProvideRadioButtonOverrides( overrides: RadioButtonOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSegmentedControlOverrides — fun UiTreeBuilder.ProvideSegmentedControlOverrides( overrides: SegmentedControlOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSliderOverrides — fun UiTreeBuilder.ProvideSliderOverrides( overrides: SliderOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSwitchOverrides — fun UiTreeBuilder.ProvideSwitchOverrides( overrides: SwitchOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTextFieldOverrides — fun UiTreeBuilder.ProvideTextFieldOverrides( overrides: TextFieldOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTopAppBarOverrides — fun UiTreeBuilder.ProvideTopAppBarOverrides( overrides: TopAppBarOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.PullToRefresh — fun UiTreeBuilder.PullToRefresh( isRefreshing: Boolean, onRefresh: () -> Unit, enabled: Boolean = true, indicatorColor: Int = PullToRefreshDefaults.indicatorColor(), key: Any? = null, modifier: Modifier = Modifier, content: ScrollableScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.RadioButton — fun UiTreeBuilder.RadioButton( text: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true, overrides: RadioButtonOverrides = RadioButtonOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.RichText — fun UiTreeBuilder.RichText( document: TextDocument, style: UiTextStyle = TextDefaults.currentStyle(), color: Int = TextDefaults.primaryColor(), maxLines: Int = Int.MAX_VALUE, overflow: TextOverflow = TextOverflow.Clip, textAlign: TextAlign = TextAlign.Start, textDecoration: TextDecoration = style.textDecoration ?: TextDecoration.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Row — fun UiTreeBuilder.Row( key: Any? = null, spacing: UiDp = UiDp.Zero, arrangement: MainAxisArrangement = MainAxisArrangement.Start, verticalAlignment: VerticalAlignment = VerticalAlignment.Top, modifier: Modifier = Modifier, content: RowScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Scaffold — fun UiTreeBuilder.Scaffold( topBar: (UiTreeBuilder.() -> Unit)? = null, bottomBar: (UiTreeBuilder.() -> Unit)? = null, floatingActionButton: (UiTreeBuilder.() -> Unit)? = null, containerColor: Int = ScaffoldDefaults.containerColor(), contentColor: Int = ScaffoldDefaults.contentColor(), key: Any? = null, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ScrollableColumn — fun UiTreeBuilder.ScrollableColumn( key: Any? = null, spacing: UiDp = UiDp.Zero, arrangement: MainAxisArrangement = MainAxisArrangement.Start, horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start, state: ScrollState? = null, userScrollEnabled: Boolean = true, modifier: Modifier = Modifier, content: ColumnScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ScrollableRow — fun UiTreeBuilder.ScrollableRow( key: Any? = null, spacing: UiDp = UiDp.Zero, arrangement: MainAxisArrangement = MainAxisArrangement.Start, verticalAlignment: VerticalAlignment = VerticalAlignment.Top, state: ScrollState? = null, userScrollEnabled: Boolean = true, modifier: Modifier = Modifier, content: RowScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.SegmentedControl — fun UiTreeBuilder.SegmentedControl( items: List<SegmentedControlItem>, selectedIndex: Int, onSelectionChange: (Int) -> Unit, size: SegmentedControlSize = SegmentedControlSize.Medium, enabled: Boolean = true, overrides: SegmentedControlOverrides = SegmentedControlOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Slider — fun UiTreeBuilder.Slider( value: Int, onValueChange: (Int) -> Unit, min: Int = 0, max: Int = 100, step: Int = 1, onValueChangeStarted: (() -> Unit)? = null, onValueChangeFinished: (() -> Unit)? = null, enabled: Boolean = true, overrides: SliderOverrides = SliderOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Spacer — fun UiTreeBuilder.Spacer( key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Surface — fun UiTreeBuilder.Surface( key: Any? = null, variant: SurfaceVariant = SurfaceVariant.Default, enabled: Boolean = true, contentAlignment: BoxAlignment = BoxAlignment.TopStart, contentColor: Int = SurfaceDefaults.contentColor(variant), onClick: (() -> Unit)? = null, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Switch — fun UiTreeBuilder.Switch( text: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true, overrides: SwitchOverrides = SwitchOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Text — fun UiTreeBuilder.Text( text: String, style: UiTextStyle = TextDefaults.currentStyle(), color: Int = TextDefaults.primaryColor(), maxLines: Int = Int.MAX_VALUE, overflow: TextOverflow = TextOverflow.Clip, textAlign: TextAlign = TextAlign.Start, textDecoration: TextDecoration = style.textDecoration ?: TextDecoration.None, key: Any? = null, modifier: Modifier = Modifier, ) | fun UiTreeBuilder.Text( text: ObservedValue<String>, style: UiTextStyle = TextDefaults.currentStyle(), color: Int = TextDefaults.primaryColor(), maxLines: Int = Int.MAX_VALUE, overflow: TextOverflow = TextOverflow.Clip, textAlign: TextAlign = TextAlign.Start, textDecoration: TextDecoration = style.textDecoration ?: TextDecoration.None, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.TopAppBar — fun UiTreeBuilder.TopAppBar( title: String, navigationIcon: (UiTreeBuilder.() -> Unit)? = null, actions: (RowScope.() -> Unit)? = null, overrides: TopAppBarOverrides = TopAppBarOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+
+## foundation.effects
+
+- Kind: dsl
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.foundation.effects
+- Compiled sample: architecture.effects-local-capture (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/effects, /migration/compose-state-recomposition-and-restoration, /modules/viewcompose-ui-foundation
+
+
+
+## foundation.environment
+
+- Kind: dsl
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.foundation.environment
+- Compiled sample: module.ui-foundation-environment (:viewcompose-ui-foundation:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/hierarchical-saveable-state-ownership, /architecture/decisions/public-package-ownership-and-platform-handles, /migration/compose-layout-modifier-and-environment, /modules/viewcompose-ui-foundation
+
+- com.viewcompose.ui.foundation.UiTreeBuilder.DesignSystemAttributionProvider — fun UiTreeBuilder.DesignSystemAttributionProvider( attribution: UiDesignSystemAttribution, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAnimationCoroutineContext — fun UiTreeBuilder.ProvideAnimationCoroutineContext( context: CoroutineContext, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocal — fun <T> UiTreeBuilder.ProvideLocal( local: UiLocal<T>, value: T, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocals — fun UiTreeBuilder.ProvideLocals( vararg values: UiLocalProvider, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideMonotonicFrameClock — fun UiTreeBuilder.ProvideMonotonicFrameClock( clock: MonotonicFrameClock, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSaveableStateRegistry — fun UiTreeBuilder.ProvideSaveableStateRegistry( registry: SaveableStateRegistry, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.UiEnvironment — fun UiTreeBuilder.UiEnvironment( values: UiEnvironmentValues? = null, content: UiTreeBuilder.() -> Unit, )
+
+## gesture.modifiers
+
+- Kind: modifier
+- Artifact: viewcompose-gesture@0.1.0-alpha04
+- Reference: reference.gesture.modifiers
+- Compiled sample: tutorial.gestures (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier, /modules/viewcompose-gesture, /modules/viewcompose-gesture-core, /tutorials/gestures
+
+- com.viewcompose.gesture.Modifier.anchoredDraggable — fun <T> Modifier.anchoredDraggable( state: AnchoredDraggableState<T>, anchors: DraggableAnchors<T>, orientation: GestureOrientation = GestureOrientation.Horizontal, enabled: Boolean = true, onValueSettled: ((value: T) -> Unit)? = null, onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null, ): Modifier
+- com.viewcompose.gesture.Modifier.combinedClickable — fun Modifier.combinedClickable( enabled: Boolean = true, onClick: (() -> Unit)? = null, onDoubleClick: (() -> Unit)? = null, onLongClick: (() -> Unit)? = null, ): Modifier
+- com.viewcompose.gesture.Modifier.draggable — fun Modifier.draggable( state: DraggableState, orientation: GestureOrientation = GestureOrientation.Horizontal, enabled: Boolean = true, onDragStarted: (() -> Unit)? = null, onDragStopped: ((velocity: Float) -> Unit)? = null, onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null, ): Modifier
+- com.viewcompose.gesture.Modifier.gesturePriority — fun Modifier.gesturePriority( priority: GesturePriority = GesturePriority.Default, ): Modifier
+- com.viewcompose.gesture.Modifier.pointerInput — fun Modifier.pointerInput( key: Any = Unit, onEvent: (PointerEvent) -> PointerEventResult, ): Modifier
+- com.viewcompose.gesture.Modifier.toggleDraggable — fun Modifier.toggleDraggable( state: ToggleDragState, enabled: Boolean = true, ): Modifier
+- com.viewcompose.gesture.Modifier.transformable — fun Modifier.transformable( state: TransformableState, enabled: Boolean = true, onTransformStarted: (() -> Unit)? = null, onTransformStopped: (() -> Unit)? = null, onTransformCancelled: ((reason: GestureCancellationReason) -> Unit)? = null, ): Modifier
+
+## graphics.custom-drawing
+
+- Kind: dsl
+- Artifact: viewcompose-graphics@0.1.0-alpha04
+- Reference: reference.graphics.custom-drawing
+- Compiled sample: module.graphics-canvas (:viewcompose-graphics:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-graphics, /modules/viewcompose-graphics-core
+
+- com.viewcompose.graphics.Modifier.draw — fun Modifier.draw( key: Any = Unit, onDraw: DrawBlock, ): Modifier
+- com.viewcompose.graphics.Modifier.drawBehind — fun Modifier.drawBehind( key: Any = Unit, onDraw: DrawBlock, ): Modifier
+- com.viewcompose.graphics.Modifier.drawCache — fun Modifier.drawCache( key: Any = Unit, onBuildDrawCache: DrawCacheBuildBlock, ): Modifier
+- com.viewcompose.graphics.Modifier.drawWithCache — fun Modifier.drawWithCache( key: Any = Unit, onBuildDrawCache: DrawCacheBuildBlock, ): Modifier
+- com.viewcompose.graphics.Modifier.drawWithContent — fun Modifier.drawWithContent( key: Any = Unit, onDraw: DrawContentBlock, ): Modifier
+- com.viewcompose.graphics.UiTreeBuilder.Canvas — fun UiTreeBuilder.Canvas( key: Any? = null, modifier: Modifier = Modifier, onDraw: DrawBlock, )
+
+## host.android-animation
+
+- Kind: integration
+- Artifact: viewcompose-host-android@0.1.0-alpha04
+- Reference: reference.host.android-animation
+- Compiled sample: module.host-android-animation (:viewcompose-host-android:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-host-android
+
+- com.viewcompose.host.android.animation.AndroidAnimationInterop — object AndroidAnimationInterop
+- com.viewcompose.host.android.animation.Modifier.androidAnimation — fun Modifier.androidAnimation( key: Any = Unit, configure: (View) -> Unit, ): Modifier
+- com.viewcompose.host.android.animation.UiTreeBuilder.MotionLayoutView — fun UiTreeBuilder.MotionLayoutView( factory: (Context) -> MotionLayout, update: (MotionLayout) -> Unit = {}, key: Any? = null, modifier: Modifier = Modifier, )
+
+## host.android-container
+
+- Kind: host
+- Artifact: viewcompose-host-android@0.1.0-alpha04
+- Reference: reference.host.android-container
+- Compiled sample: module.host-android-render-into (:viewcompose-host-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/decisions/development-tooling-isolation, /architecture/decisions/hierarchical-saveable-state-ownership, /architecture/decisions/in-memory-development-tooling-installation, /architecture/decisions/public-package-ownership-and-platform-handles, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-android, /modules/viewcompose-host-android
+
+- com.viewcompose.host.android.installRenderSessionInspectionTooling — fun installRenderSessionInspectionTooling(tooling: RenderSessionInspectionTooling)
+- com.viewcompose.host.android.renderInto — fun renderInto( container: ViewGroup, debug: Boolean = false, debugTag: String = "ViewCompose", overlayHost: OverlayHost = OverlayHostDefaults.noOp, role: RenderSessionRole = RenderSessionRole.Host, diagnostics: RenderDiagnostics? = null, parentLocalSnapshot: UiLocalSnapshot? = null, content: UiTreeBuilder.() -> Unit, ): RenderSession
+- com.viewcompose.host.android.RenderSession — class RenderSession internal constructor( private val delegate: com.viewcompose.ui.foundation.RenderSession, )
+- com.viewcompose.host.android.UiHostAndroid — object UiHostAndroid
+- com.viewcompose.host.android.viewComposeSaveableStateRegistry — fun viewComposeSaveableStateRegistry( owner: SavedStateRegistryOwner, ): SaveableStateRegistry
+
+## host.android-graphics
+
+- Kind: integration
+- Artifact: viewcompose-host-android@0.1.0-alpha04
+- Reference: reference.host.android-graphics
+- Compiled sample: module.host-android-graphics (:viewcompose-host-android:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-host-android
+
+- com.viewcompose.host.android.graphics.AndroidGraphicsInterop — object AndroidGraphicsInterop
+- com.viewcompose.host.android.graphics.Modifier.androidGraphics — fun Modifier.androidGraphics( key: Any = Unit, configure: (View) -> Unit, ): Modifier
+
+## host.android-resources
+
+- Kind: integration
+- Artifact: viewcompose-host-android@0.1.0-alpha04
+- Reference: reference.host.android-resources
+- Compiled sample: module.host-android-resources (:viewcompose-host-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/0007-host-owned-android-resource-environment, /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/public-package-ownership-and-platform-handles, /modules/viewcompose-android, /modules/viewcompose-host-android
+
+- com.viewcompose.host.android.environment.AndroidEnvironmentBridge — object AndroidEnvironmentBridge
+- com.viewcompose.host.android.resources.AndroidResourceRefreshController — class AndroidResourceRefreshController
+- com.viewcompose.host.android.resources.booleanResource — fun booleanResource(id: Int): Boolean
+- com.viewcompose.host.android.resources.colorResource — fun colorResource(id: Int): Int
+- com.viewcompose.host.android.resources.dimensionPixelSizeResource — fun dimensionPixelSizeResource(id: Int): Int
+- com.viewcompose.host.android.resources.dimensionResource — fun dimensionResource(id: Int): UiDp
+- com.viewcompose.host.android.resources.integerArrayResource — fun integerArrayResource(id: Int): IntArray
+- com.viewcompose.host.android.resources.integerResource — fun integerResource(id: Int): Int
+- com.viewcompose.host.android.resources.LocalAndroidContext — object LocalAndroidContext
+- com.viewcompose.host.android.resources.LocalAndroidResources — object LocalAndroidResources
+- com.viewcompose.host.android.resources.pluralStringResource — fun pluralStringResource( id: Int, quantity: Int, vararg formatArgs: Any, ): String
+- com.viewcompose.host.android.resources.stringArrayResource — fun stringArrayResource(id: Int): List<String>
+- com.viewcompose.host.android.resources.stringResource — fun stringResource(id: Int): String | fun stringResource(id: Int, vararg formatArgs: Any): String
+- com.viewcompose.host.android.resources.UiTreeBuilder.AndroidResourceEnvironment — fun UiTreeBuilder.AndroidResourceEnvironment( context: Context, refreshController: AndroidResourceRefreshController? = null, environmentValues: UiEnvironmentValues? = null, observeConfigurationChanges: Boolean = true, onBeforeRefresh: (() -> Unit)? = null, content: UiTreeBuilder.() -> Unit, )
+
+## host.android-view
+
+- Kind: integration
+- Artifact: viewcompose-host-android@0.1.0-alpha04
+- Reference: reference.host.android-view
+- Compiled sample: module.host-android-view-adapter (:viewcompose-host-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/lazy-collection-logical-and-physical-ownership, /migration/compose-host-lifecycle-and-android-interop, /migration/compose-layout-modifier-and-environment, /migration/lazy-collection-revision-and-reuse, /modules/viewcompose-host-android, /tutorials/android-view
+
+- com.viewcompose.host.android.AndroidViewAdapter — interface AndroidViewAdapter<V : View, S>
+- com.viewcompose.host.android.AndroidViewCommitScope — class AndroidViewCommitScope<V : View> internal constructor( val view: V, val environment: UiEnvironmentValues, )
+- com.viewcompose.host.android.AndroidViewCreateScope — class AndroidViewCreateScope internal constructor( val context: Context, val environment: UiEnvironmentValues, )
+- com.viewcompose.host.android.AndroidViewLifecycleMode — enum class AndroidViewLifecycleMode
+- com.viewcompose.host.android.AndroidViewResetReason — enum class AndroidViewResetReason
+- com.viewcompose.host.android.AndroidViewResetScope — class AndroidViewResetScope<V : View> internal constructor( val view: V, val environment: UiEnvironmentValues, )
+- com.viewcompose.host.android.AndroidViewReusePolicy — enum class AndroidViewReusePolicy
+- com.viewcompose.host.android.AndroidViewUpdateScope — class AndroidViewUpdateScope<V : View> internal constructor( val view: V, val environment: UiEnvironmentValues, )
+- com.viewcompose.host.android.Modifier.nativeView — fun Modifier.nativeView( key: Any = Unit, configure: (View) -> Unit, ): Modifier
+- com.viewcompose.host.android.UiTreeBuilder.AndroidView — fun <V : View, S> UiTreeBuilder.AndroidView( adapter: AndroidViewAdapter<V, S>, state: S, key: Any? = null, constructionKey: Any? = Unit, modifier: Modifier = Modifier, ) | fun UiTreeBuilder.AndroidView( factory: (Context) -> View, update: (View) -> Unit = {}, key: Any? = null, modifier: Modifier = Modifier, onReset: ((View) -> Unit)? = null, onRelease: ((View) -> Unit)? = null, onCommit: ((View) -> Unit)? = null, constructionKey: Any? = Unit, )
+
+## image.coil
+
+- Kind: integration
+- Artifact: viewcompose-image-coil@0.1.0-alpha04
+- Reference: reference.image.coil
+- Compiled sample: guide.image-coil-uri (:samples:tutorials:compileDebugKotlin)
+- Related documents: /guides/image-loading, /migration/image-loading, /modules/viewcompose-image-coil
+
+- com.viewcompose.image.coil.CoilImageLoaderAdapter — class CoilImageLoaderAdapter( private val imageLoader: ImageLoader, ) : UiImageLoader
+
+## image.foundation
+
+- Kind: component
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.image.foundation
+- Compiled sample: guide.image-loader-install (:samples:tutorials:compileDebugKotlin)
+- Related documents: /guides/image-loading, /migration/image-loading, /modules/viewcompose-ui-foundation
+
+- com.viewcompose.ui.foundation.UiTreeBuilder.Image — fun UiTreeBuilder.Image( source: ImageSource?, contentDescription: String? = null, contentScale: ImageContentScale = ImageContentScale.Fit, tint: Int? = null, placeholder: ImageSource.Resource? = null, error: ImageSource.Resource? = placeholder, fallback: ImageSource.Resource? = placeholder, requestOptions: UiImageRequestOptions = UiImageRequestOptions(), key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideImageLoader — fun UiTreeBuilder.ProvideImageLoader( loader: UiImageLoader?, content: UiTreeBuilder.() -> Unit, )
+
+## image.glide
+
+- Kind: integration
+- Artifact: viewcompose-image-glide@0.1.0-alpha02
+- Reference: reference.image.glide
+- Compiled sample: guide.image-glide-file (:samples:tutorials:compileDebugKotlin)
+- Related documents: /guides/image-loading, /modules/viewcompose-image-glide
+
+- com.viewcompose.image.glide.GlideImageLoaderAdapter — class GlideImageLoaderAdapter : UiImageLoader
+
+## lazy.collections
+
+- Kind: dsl
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.lazy.collections
+- Compiled sample: guide.lazy-collections-state (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/session-containers, /architecture/decisions/focus-visibility-and-pager-selection-ownership, /architecture/decisions/hierarchical-saveable-state-ownership, /architecture/decisions/lazy-collection-logical-and-physical-ownership, /architecture/lazy-collections, /architecture/decisions/prefetched-session-activation-boundary, /architecture/state-snapshots, /guides/lazy-collections, /migration/lazy-collection-revision-and-reuse, /modules/viewcompose-ui-foundation, /tutorials/lazy-list-performance, /tutorials/lazy-lists
+
+- com.viewcompose.ui.foundation.UiTreeBuilder.HorizontalPager — fun UiTreeBuilder.HorizontalPager( currentPage: Int, onPageChanged: (Int) -> Unit, pagerState: PagerState? = null, offscreenPageLimit: Int = -1, userScrollEnabled: Boolean = true, reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), key: Any? = null, modifier: Modifier = Modifier, pages: HorizontalPagerScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn — fun <T> UiTreeBuilder.LazyColumn( items: List<T>, key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, contentPadding: UiDp = UiDp.Zero, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, ) | fun <T> UiTreeBuilder.LazyColumn( items: LazyItemsSnapshot<T>, key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, contentPadding: UiDp = UiDp.Zero, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, ) | fun <T> UiTreeBuilder.LazyColumn( items: ObservedValue<LazyItemsSnapshot<T>>, key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, contentPadding: UiDp = UiDp.Zero, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(itemKey: Any, item: ObservedValue<T>) -> Unit, ) | fun UiTreeBuilder.LazyColumn( contentPadding: LazyContentPadding = LazyContentPadding.None, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, content: LazyListScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.lazyItemContentFactory — fun <T> UiTreeBuilder.lazyItemContentFactory( retainedKeys: Set<Any>, itemContent: UiTreeBuilder.(T) -> Unit, ): LazyItemContentFactory<T>
+- com.viewcompose.ui.foundation.UiTreeBuilder.LazyRow — fun <T> UiTreeBuilder.LazyRow( items: List<T>, key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, contentPadding: UiDp = UiDp.Zero, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, ) | fun <T> UiTreeBuilder.LazyRow( items: LazyItemsSnapshot<T>, key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, contentPadding: UiDp = UiDp.Zero, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, ) | fun UiTreeBuilder.LazyRow( contentPadding: LazyContentPadding = LazyContentPadding.None, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, content: LazyListScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.LazyVerticalGrid — fun <T> UiTreeBuilder.LazyVerticalGrid( items: List<T>, cells: GridCells = GridCells.Fixed(2), key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, span: (T) -> GridItemSpan = { GridItemSpan.Single }, contentPadding: UiDp = UiDp.Zero, horizontalSpacing: UiDp = UiDp.Zero, verticalSpacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, ) | fun <T> UiTreeBuilder.LazyVerticalGrid( items: LazyItemsSnapshot<T>, cells: GridCells = GridCells.Fixed(2), key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, span: (T) -> GridItemSpan = { GridItemSpan.Single }, contentPadding: UiDp = UiDp.Zero, horizontalSpacing: UiDp = UiDp.Zero, verticalSpacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, ) | fun UiTreeBuilder.LazyVerticalGrid( cells: GridCells = GridCells.Fixed(2), contentPadding: LazyContentPadding = LazyContentPadding.None, horizontalSpacing: UiDp = UiDp.Zero, verticalSpacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, content: LazyGridScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTabRowOverrides — fun UiTreeBuilder.ProvideTabRowOverrides( overrides: TabRowOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.TabRow — fun UiTreeBuilder.TabRow( selectedIndex: Int, onTabSelected: (Int) -> Unit, pagerState: PagerState? = null, overrides: TabRowOverrides = TabRowOverrides.None, key: Any? = null, modifier: Modifier = Modifier, tabs: TabRowScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.VerticalPager — fun UiTreeBuilder.VerticalPager( currentPage: Int, onPageChanged: (Int) -> Unit, pagerState: PagerState? = null, offscreenPageLimit: Int = -1, userScrollEnabled: Boolean = true, reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), key: Any? = null, modifier: Modifier = Modifier, pages: HorizontalPagerScope.() -> Unit, )
+
+## lazy.item-session-reuse
+
+- Kind: integration
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.lazy.item-session-reuse
+- Compiled sample: module.ui-contract-lazy-session-reuse (:viewcompose-ui-contract:compileTestKotlin)
+- Related documents: /architecture/lazy-collections, /modules/viewcompose-ui-contract
+
+
+
+## lifecycle.android-view
+
+- Kind: integration
+- Artifact: viewcompose-lifecycle-androidx@0.1.0-alpha01
+- Reference: reference.lifecycle.android-view
+- Compiled sample: module.lifecycle-android-view-saved-state (:viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/lifecycle-and-saved-state, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-lifecycle-androidx
+
+- com.viewcompose.lifecycle.AndroidViewCommitScope.bindAndroidViewSavedState — fun <V : View> AndroidViewCommitScope<V>.bindAndroidViewSavedState( owner: SavedStateRegistryOwner, key: String, formatVersion: Int, saveState: AndroidViewSaveStateScope<V>.() -> Bundle, ): AndroidViewSavedStateBindResult
+- com.viewcompose.lifecycle.AndroidViewLifecycleEventScope — class AndroidViewLifecycleEventScope<V : View> internal constructor( val view: V, val environment: UiEnvironmentValues, val lifecycleOwner: LifecycleOwner, )
+- com.viewcompose.lifecycle.AndroidViewSavedStateBindResult — sealed interface AndroidViewSavedStateBindResult
+- com.viewcompose.lifecycle.AndroidViewSaveStateScope — class AndroidViewSaveStateScope<V : View> internal constructor( val view: V, )
+- com.viewcompose.lifecycle.LifecycleAndroidViewAdapter — abstract class LifecycleAndroidViewAdapter<V : View, S> : AndroidViewAdapter<V, S>
+- com.viewcompose.lifecycle.View.clearAndroidViewSavedStateBinding — fun View.clearAndroidViewSavedStateBinding()
+
+## lifecycle.effects
+
+- Kind: integration
+- Artifact: viewcompose-lifecycle-androidx@0.1.0-alpha01
+- Reference: reference.lifecycle.effects
+- Compiled sample: module.lifecycle-effects (:viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/effects, /architecture/lifecycle-and-saved-state, /architecture/decisions/0008-transactional-effect-lifecycle, /modules/viewcompose-lifecycle-androidx
+
+- com.viewcompose.lifecycle.Lifecycle.currentStateAsState — fun Lifecycle.currentStateAsState(): State<Lifecycle.State>
+- com.viewcompose.lifecycle.LifecyclePauseOrDisposeEffectResult — fun interface LifecyclePauseOrDisposeEffectResult
+- com.viewcompose.lifecycle.LifecycleResumeEffect — fun LifecycleResumeEffect( lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), effects: LifecycleResumePauseEffectScope.() -> LifecyclePauseOrDisposeEffectResult, ): Unit | fun LifecycleResumeEffect( key1: Any?, lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), effects: LifecycleResumePauseEffectScope.() -> LifecyclePauseOrDisposeEffectResult, ) | fun LifecycleResumeEffect( vararg keys: Any?, lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), effects: LifecycleResumePauseEffectScope.() -> LifecyclePauseOrDisposeEffectResult, )
+- com.viewcompose.lifecycle.LifecycleResumePauseEffectScope — class LifecycleResumePauseEffectScope internal constructor()
+- com.viewcompose.lifecycle.LifecycleStartEffect — fun LifecycleStartEffect( lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), effects: LifecycleStartStopEffectScope.() -> LifecycleStopOrDisposeEffectResult, ): Unit | fun LifecycleStartEffect( key1: Any?, lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), effects: LifecycleStartStopEffectScope.() -> LifecycleStopOrDisposeEffectResult, ) | fun LifecycleStartEffect( vararg keys: Any?, lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), effects: LifecycleStartStopEffectScope.() -> LifecycleStopOrDisposeEffectResult, )
+- com.viewcompose.lifecycle.LifecycleStartStopEffectScope — class LifecycleStartStopEffectScope internal constructor()
+- com.viewcompose.lifecycle.LifecycleStopOrDisposeEffectResult — fun interface LifecycleStopOrDisposeEffectResult
+
+## lifecycle.flow-collection
+
+- Kind: integration
+- Artifact: viewcompose-lifecycle-androidx@0.1.0-alpha01
+- Reference: reference.lifecycle.flow-collection
+- Compiled sample: module.lifecycle-flow-aware (:viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/lifecycle-and-saved-state, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-lifecycle-androidx
+
+- com.viewcompose.lifecycle.Flow.collectAsState — fun <T> StateFlow<T>.collectAsState( context: CoroutineContext = EmptyCoroutineContext, ): State<T> | fun <T> Flow<T>.collectAsState( initial: T, context: CoroutineContext = EmptyCoroutineContext, ): State<T>
+- com.viewcompose.lifecycle.Flow.collectAsStateWithLifecycle — fun <T> StateFlow<T>.collectAsStateWithLifecycle( lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), minActiveState: Lifecycle.State = Lifecycle.State.STARTED, context: CoroutineContext = EmptyCoroutineContext, ): State<T> | fun <T> Flow<T>.collectAsStateWithLifecycle( initial: T, lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), minActiveState: Lifecycle.State = Lifecycle.State.STARTED, context: CoroutineContext = EmptyCoroutineContext, ): State<T> | fun <T> Flow<T>.collectAsStateWithLifecycle( initial: T, lifecycle: Lifecycle, minActiveState: Lifecycle.State = Lifecycle.State.STARTED, context: CoroutineContext = EmptyCoroutineContext, ): State<T>
+- com.viewcompose.lifecycle.StateFlow.collectAsState — fun <T> StateFlow<T>.collectAsState( context: CoroutineContext = EmptyCoroutineContext, ): State<T> | fun <T> Flow<T>.collectAsState( initial: T, context: CoroutineContext = EmptyCoroutineContext, ): State<T>
+- com.viewcompose.lifecycle.StateFlow.collectAsStateWithLifecycle — fun <T> StateFlow<T>.collectAsStateWithLifecycle( lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), minActiveState: Lifecycle.State = Lifecycle.State.STARTED, context: CoroutineContext = EmptyCoroutineContext, ): State<T> | fun <T> Flow<T>.collectAsStateWithLifecycle( initial: T, lifecycleOwner: LifecycleOwner = currentLifecycleOwnerOrThrow(), minActiveState: Lifecycle.State = Lifecycle.State.STARTED, context: CoroutineContext = EmptyCoroutineContext, ): State<T> | fun <T> Flow<T>.collectAsStateWithLifecycle( initial: T, lifecycle: Lifecycle, minActiveState: Lifecycle.State = Lifecycle.State.STARTED, context: CoroutineContext = EmptyCoroutineContext, ): State<T>
+
+## lifecycle.owner-boundaries
+
+- Kind: integration
+- Artifact: viewcompose-lifecycle-androidx@0.1.0-alpha01
+- Reference: reference.lifecycle.owner-boundaries
+- Compiled sample: module.lifecycle-owner-boundary (:viewcompose-lifecycle-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/lifecycle-and-saved-state, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-android, /modules/viewcompose-lifecycle-androidx
+
+- com.viewcompose.lifecycle.LocalLifecycleOwner — object LocalLifecycleOwner
+- com.viewcompose.lifecycle.LocalSavedStateRegistryOwner — object LocalSavedStateRegistryOwner
+- com.viewcompose.lifecycle.UiTreeBuilder.ProvideLifecycleOwner — fun UiTreeBuilder.ProvideLifecycleOwner( owner: LifecycleOwner, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.lifecycle.UiTreeBuilder.ProvideSavedStateRegistryOwner — fun UiTreeBuilder.ProvideSavedStateRegistryOwner( owner: SavedStateRegistryOwner, content: UiTreeBuilder.() -> Unit, )
+
+## maps.google.content
+
+- Kind: integration
+- Artifact: viewcompose-google-maps-android@0.1.0-alpha01
+- Reference: reference.maps.google.content
+- Compiled sample: module.google-map-content (:viewcompose-google-maps-android:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-google-maps-android
+
+- com.viewcompose.maps.google.GoogleMapMarkerStyle — data class GoogleMapMarkerStyle( val title: String? = null, val snippet: String? = null, val contentDescription: String? = null, val icon: BitmapDescriptor? = null, val alpha: Float = 1f, val anchorU: Float = 0.5f, val anchorV: Float = 1f, val infoWindowAnchorU: Float = 0.5f, val infoWindowAnchorV: Float = 0f, val draggable: Boolean = false, val flat: Boolean = false, val visible: Boolean = true, val rotationDegrees: Float = 0f, val zIndex: Float = 0f, )
+- com.viewcompose.maps.google.GoogleMapPolylineStyle — data class GoogleMapPolylineStyle( val widthPixels: Float = 10f, @ColorInt val color: Int = Color.BLACK, val visible: Boolean = true, val geodesic: Boolean = false, val clickable: Boolean = false, val zIndex: Float = 0f, val startCap: Cap = RoundCap(), val endCap: Cap = RoundCap(), val jointType: Int = JointType.DEFAULT, val pattern: List<PatternItem>? = null, )
+- com.viewcompose.maps.google.GoogleMapScope — class GoogleMapScope internal constructor()
+
+## maps.google.view
+
+- Kind: integration
+- Artifact: viewcompose-google-maps-android@0.1.0-alpha01
+- Reference: reference.maps.google.view
+- Compiled sample: module.google-map-view (:viewcompose-google-maps-android:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-google-maps-android
+
+- com.viewcompose.maps.google.GoogleMapColorScheme — enum class GoogleMapColorScheme
+- com.viewcompose.maps.google.GoogleMapPadding — data class GoogleMapPadding( val left: Int = 0, val top: Int = 0, val right: Int = 0, val bottom: Int = 0, )
+- com.viewcompose.maps.google.GoogleMapProperties — data class GoogleMapProperties( val mapType: GoogleMapType = GoogleMapType.Normal, val colorScheme: GoogleMapColorScheme = GoogleMapColorScheme.Light, val trafficEnabled: Boolean = false, val transitEnabled: Boolean = false, val buildingsEnabled: Boolean = true, val indoorEnabled: Boolean = true, val minZoomPreference: Float? = null, val maxZoomPreference: Float? = null, val cameraTargetBounds: LatLngBounds? = null, val cameraPosition: CameraPosition? = null, val styleJson: String? = null, val contentDescription: String? = null, val padding: GoogleMapPadding = GoogleMapPadding.Zero, )
+- com.viewcompose.maps.google.GoogleMapType — enum class GoogleMapType
+- com.viewcompose.maps.google.GoogleMapUiSettings — data class GoogleMapUiSettings( val zoomControlsEnabled: Boolean = false, val compassEnabled: Boolean = true, val myLocationButtonEnabled: Boolean = true, val indoorLevelPickerEnabled: Boolean = true, val mapToolbarEnabled: Boolean = true, val scrollGesturesEnabled: Boolean = true, val zoomGesturesEnabled: Boolean = true, val tiltGesturesEnabled: Boolean = true, val rotateGesturesEnabled: Boolean = true, val scrollGesturesEnabledDuringRotateOrZoom: Boolean = true, )
+- com.viewcompose.maps.google.GoogleMapViewOptions — data class GoogleMapViewOptions( val mapId: String? = null, val liteMode: Boolean = false, val zOrderOnTop: Boolean = false, @ColorInt val backgroundColor: Int? = null, )
+- com.viewcompose.maps.google.UiTreeBuilder.GoogleMapView — fun UiTreeBuilder.GoogleMapView( modifier: Modifier = Modifier, options: GoogleMapViewOptions = GoogleMapViewOptions.Default, properties: GoogleMapProperties = GoogleMapProperties.Default, uiSettings: GoogleMapUiSettings = GoogleMapUiSettings.Default, saveableStateKey: String? = null, onMapReady: ((GoogleMap) -> Unit)? = null, onMapLoaded: (() -> Unit)? = null, onMapClick: ((LatLng) -> Unit)? = null, onCameraIdle: ((CameraPosition) -> Unit)? = null, onMapStyleApplied: ((Boolean) -> Unit)? = null, key: Any? = null, content: GoogleMapScope.() -> Unit = {}, )
+
+## material3.components
+
+- Kind: component
+- Artifact: viewcompose-material3@0.1.0-alpha01
+- Reference: reference.material3.components
+- Compiled sample: module.material3-components (:viewcompose-material3:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/component-appearance-resolution-boundary, /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/design-system-resolution-boundary, /architecture/decisions/renderer-neutral-interaction-indication, /modules/viewcompose-material3, /modules/viewcompose-material3-android
+
+- com.viewcompose.material3.UiTreeBuilder.Material3Button — fun UiTreeBuilder.Material3Button( text: String, onClick: (() -> Unit)?, variant: Material3ButtonVariant = Material3ButtonVariant.Filled, enabled: Boolean = true, leadingIcon: ImageSource? = null, trailingIcon: ImageSource? = null, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.material3.UiTreeBuilder.Material3Card — fun UiTreeBuilder.Material3Card( variant: Material3CardVariant = Material3CardVariant.Filled, onClick: (() -> Unit)? = null, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.material3.UiTreeBuilder.Material3NavigationBar — fun UiTreeBuilder.Material3NavigationBar( selectedIndex: Int, onItemSelected: (Int) -> Unit, key: Any? = null, modifier: Modifier = Modifier, items: NavigationBarScope.() -> Unit, )
+- com.viewcompose.material3.UiTreeBuilder.Material3Surface — fun UiTreeBuilder.Material3Surface( variant: Material3SurfaceVariant = Material3SurfaceVariant.Surface, onClick: (() -> Unit)? = null, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, content: BoxScope.() -> Unit, )
+- com.viewcompose.material3.UiTreeBuilder.Material3Switch — fun UiTreeBuilder.Material3Switch( text: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.material3.UiTreeBuilder.Material3TextField — fun UiTreeBuilder.Material3TextField( state: TextFieldState, label: String, placeholder: String = "", supportingText: String = "", variant: Material3TextFieldVariant = Material3TextFieldVariant.Filled, enabled: Boolean = true, isError: Boolean = false, autofillHints: Set<TextFieldAutofillHint> = emptySet(), key: Any? = null, modifier: Modifier = Modifier, )
+
+## media3.player
+
+- Kind: integration
+- Artifact: viewcompose-media3-androidx@0.1.0-alpha01
+- Reference: reference.media3.player
+- Compiled sample: module.media3-player (:viewcompose-media3-androidx:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-media3-androidx
+
+- com.viewcompose.media3.Media3ArtworkDisplayMode — enum class Media3ArtworkDisplayMode
+- com.viewcompose.media3.Media3PlayerViewConfiguration — data class Media3PlayerViewConfiguration( val resizeMode: Media3ResizeMode = Media3ResizeMode.Fit, val useController: Boolean = true, val controllerShowTimeoutMillis: Int = 5_000, val controllerAutoShow: Boolean = true, val controllerHideOnTouch: Boolean = true, val controllerHideDuringAds: Boolean = true, val controllerAnimationEnabled: Boolean = true, val showBuffering: Media3ShowBuffering = Media3ShowBuffering.Never, val keepContentOnPlayerReset: Boolean = false, val artworkDisplayMode: Media3ArtworkDisplayMode = Media3ArtworkDisplayMode.Fit, val defaultArtwork: Drawable? = null, @ColorInt val shutterBackgroundColor: Int = Color.BLACK, val contentDescription: CharSequence? = null, val keepScreenOn: Boolean = false, val customErrorMessage: CharSequence? = null, )
+- com.viewcompose.media3.Media3ResizeMode — enum class Media3ResizeMode
+- com.viewcompose.media3.Media3ShowBuffering — enum class Media3ShowBuffering
+- com.viewcompose.media3.Media3SurfaceType — enum class Media3SurfaceType
+- com.viewcompose.media3.UiTreeBuilder.Media3PlayerView — fun UiTreeBuilder.Media3PlayerView( player: Player?, modifier: Modifier = Modifier, surfaceType: Media3SurfaceType = Media3SurfaceType.SurfaceView, configuration: Media3PlayerViewConfiguration = Media3PlayerViewConfiguration.Default, onRenderedFirstFrame: (() -> Unit)? = null, key: Any? = null, )
+
+## modifier.appearance
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.modifier.appearance
+- Compiled sample: architecture.modifier-appearance (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier, /migration/compose-layout-modifier-and-environment
+
+- com.viewcompose.ui.modifier.Modifier.alpha — fun Modifier.alpha(alpha: Float): Modifier
+- com.viewcompose.ui.modifier.Modifier.backgroundColor — fun Modifier.backgroundColor(color: Int): Modifier
+- com.viewcompose.ui.modifier.Modifier.backgroundDrawableRes — fun Modifier.backgroundDrawableRes(resId: Int): Modifier
+- com.viewcompose.ui.modifier.Modifier.border — fun Modifier.border( width: UiDp, color: Int, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.clip — fun Modifier.clip(): Modifier
+- com.viewcompose.ui.modifier.Modifier.cornerRadius — fun Modifier.cornerRadius(radius: UiDp): Modifier | fun Modifier.cornerRadius( top: UiDp = UiDp.Zero, bottom: UiDp = UiDp.Zero, ): Modifier | fun Modifier.cornerRadius( topStart: UiDp = UiDp.Zero, topEnd: UiDp = UiDp.Zero, bottomEnd: UiDp = UiDp.Zero, bottomStart: UiDp = UiDp.Zero, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.elevation — fun Modifier.elevation(elevation: UiDp): Modifier
+- com.viewcompose.ui.modifier.Modifier.graphicsLayer — fun Modifier.graphicsLayer( scaleX: Float? = null, scaleY: Float? = null, rotationZ: Float? = null, rotationX: Float? = null, rotationY: Float? = null, translationX: Float? = null, translationY: Float? = null, alpha: Float? = null, transformOrigin: TransformOrigin? = null, clip: Boolean? = null, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.shape — fun Modifier.shape(shape: UiShape): Modifier
+- com.viewcompose.ui.modifier.Modifier.zIndex — fun Modifier.zIndex(zIndex: Float): Modifier
+
+## modifier.drawing
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.modifier.drawing
+- Compiled sample: architecture.modifier-drawing (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier
+
+- com.viewcompose.ui.modifier.Modifier.draw — fun Modifier.draw( key: Any = Unit, onDraw: DrawBlock, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.drawBehind — fun Modifier.drawBehind( key: Any = Unit, onDraw: DrawBlock, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.drawCache — fun Modifier.drawCache( key: Any = Unit, onBuildDrawCache: DrawCacheBuildBlock, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.drawWithCache — fun Modifier.drawWithCache( key: Any = Unit, onBuildDrawCache: DrawCacheBuildBlock, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.drawWithContent — fun Modifier.drawWithContent( key: Any = Unit, onDraw: DrawContentBlock, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.visibility — fun Modifier.visibility(visibility: Visibility): Modifier
+
+## modifier.interaction
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.modifier.interaction
+- Compiled sample: architecture.modifier-interaction (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier, /architecture/decisions/renderer-neutral-interaction-indication, /migration/compose-layout-modifier-and-environment, /migration/dsl-contract-convergence
+
+- com.viewcompose.ui.modifier.Modifier.clickable — fun Modifier.clickable(onClick: () -> Unit): Modifier
+- com.viewcompose.ui.modifier.Modifier.contentDescription — fun Modifier.contentDescription(description: String?): Modifier
+- com.viewcompose.ui.modifier.Modifier.interactionIndication — fun Modifier.interactionIndication( indication: UiInteractionIndication, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.testTag — fun Modifier.testTag(tag: String): Modifier
+
+## modifier.layout
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.modifier.layout
+- Compiled sample: tutorial.layouts-and-modifiers (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier, /migration/compose-layout-modifier-and-environment, /tutorials/layouts-and-modifiers
+
+- com.viewcompose.ui.modifier.Modifier.aspectRatio — fun Modifier.aspectRatio( ratio: Float, matchHeightConstraintsFirst: Boolean = false, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.fillMaxHeight — fun Modifier.fillMaxHeight(): Modifier
+- com.viewcompose.ui.modifier.Modifier.fillMaxSize — fun Modifier.fillMaxSize(): Modifier
+- com.viewcompose.ui.modifier.Modifier.fillMaxWidth — fun Modifier.fillMaxWidth(): Modifier
+- com.viewcompose.ui.modifier.Modifier.height — fun Modifier.height(height: UiDp): Modifier
+- com.viewcompose.ui.modifier.Modifier.imeInsetsPadding — fun Modifier.imeInsetsPadding( left: Boolean = false, top: Boolean = false, right: Boolean = false, bottom: Boolean = true, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.imeInsetsPaddingRelative — fun Modifier.imeInsetsPaddingRelative( start: Boolean = false, top: Boolean = false, end: Boolean = false, bottom: Boolean = true, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.layoutId — fun Modifier.layoutId(id: String): Modifier
+- com.viewcompose.ui.modifier.Modifier.margin — fun Modifier.margin(all: UiDp): Modifier | fun Modifier.margin( horizontal: UiDp = UiDp.Zero, vertical: UiDp = UiDp.Zero, ): Modifier | fun Modifier.margin( left: UiDp = UiDp.Zero, top: UiDp = UiDp.Zero, right: UiDp = UiDp.Zero, bottom: UiDp = UiDp.Zero, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.marginRelative — fun Modifier.marginRelative( start: UiDp = UiDp.Zero, top: UiDp = UiDp.Zero, end: UiDp = UiDp.Zero, bottom: UiDp = UiDp.Zero, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.maxHeight — fun Modifier.maxHeight(maxHeight: UiDp): Modifier
+- com.viewcompose.ui.modifier.Modifier.maxWidth — fun Modifier.maxWidth(maxWidth: UiDp): Modifier
+- com.viewcompose.ui.modifier.Modifier.minHeight — fun Modifier.minHeight(minHeight: UiDp): Modifier
+- com.viewcompose.ui.modifier.Modifier.minWidth — fun Modifier.minWidth(minWidth: UiDp): Modifier
+- com.viewcompose.ui.modifier.Modifier.offset — fun Modifier.offset( x: UiDp = UiDp.Zero, y: UiDp = UiDp.Zero, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.offsetRelative — fun Modifier.offsetRelative( horizontal: UiDp = UiDp.Zero, vertical: UiDp = UiDp.Zero, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.padding — fun Modifier.padding(all: UiDp): Modifier | fun Modifier.padding( horizontal: UiDp = UiDp.Zero, vertical: UiDp = UiDp.Zero, ): Modifier | fun Modifier.padding( left: UiDp = UiDp.Zero, top: UiDp = UiDp.Zero, right: UiDp = UiDp.Zero, bottom: UiDp = UiDp.Zero, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.paddingRelative — fun Modifier.paddingRelative( start: UiDp = UiDp.Zero, top: UiDp = UiDp.Zero, end: UiDp = UiDp.Zero, bottom: UiDp = UiDp.Zero, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.size — fun Modifier.size( width: UiDp, height: UiDp, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPadding — fun Modifier.systemBarsInsetsPadding( left: Boolean = true, top: Boolean = true, right: Boolean = true, bottom: Boolean = true, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPaddingRelative — fun Modifier.systemBarsInsetsPaddingRelative( start: Boolean = true, top: Boolean = true, end: Boolean = true, bottom: Boolean = true, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.width — fun Modifier.width(width: UiDp): Modifier
+
+## modifier.semantics
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.modifier.semantics
+- Compiled sample: architecture.modifier-semantics (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier
+
+- com.viewcompose.ui.modifier.Modifier.semantics — fun Modifier.semantics( mergeDescendants: Boolean = false, properties: SemanticsPropertyReceiver.() -> Unit, ): Modifier
+
+## modifier.shared-content
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.modifier.shared-content
+- Compiled sample: architecture.modifier-shared-content (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier
+
+- com.viewcompose.ui.modifier.Modifier.sharedBounds — fun Modifier.sharedBounds(key: SharedContentKey): Modifier
+- com.viewcompose.ui.modifier.Modifier.sharedElement — fun Modifier.sharedElement(key: SharedContentKey): Modifier
+
+## navigation.deep-links
+
+- Kind: integration
+- Artifact: viewcompose-navigation-core@0.1.0-alpha03
+- Reference: reference.navigation.deep-links
+- Compiled sample: module.navigation-core-deep-link (:viewcompose-navigation-core:compileTestKotlin)
+- Related documents: /architecture/navigation, /guides/navigation, /migration/compose-navigation, /modules/viewcompose-navigation-android, /modules/viewcompose-navigation-core
+
+
+
+## navigation.destination-context
+
+- Kind: integration
+- Artifact: viewcompose-navigation-android@0.1.0-alpha02
+- Reference: reference.navigation.destination-context
+- Compiled sample: module.navigation-android-destination-context (:viewcompose-navigation-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/navigation, /architecture/decisions/scene-derived-navigation-lifecycle-and-presentation-ownership, /guides/navigation, /migration/compose-navigation, /modules/viewcompose-navigation-android
+
+- com.viewcompose.navigation.LocalNavDestinationContext — object LocalNavDestinationContext
+- com.viewcompose.navigation.NavDestinationContext — class NavDestinationContext internal constructor( val entry: NavEntry, initialPresentation: NavDestinationPresentation, )
+- com.viewcompose.navigation.NavDestinationPresentation — typealias NavDestinationPresentation = NavSceneEntry
+
+## navigation.host
+
+- Kind: integration
+- Artifact: viewcompose-navigation-android@0.1.0-alpha01
+- Reference: reference.navigation.host
+- Compiled sample: tutorial.navigation (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/session-containers, /architecture/navigation, /guides/navigation, /migration/compose-navigation, /modules/viewcompose-navigation-android, /modules/viewcompose-navigation-core, /tutorials/navigation
+
+- com.viewcompose.navigation.createNavHostController — fun navigate(command: NavCommand): NavResult /** Reads the host's current restorable state. */ fun saveState(): NavHostRestorableState } /** Creates an unattached single-stack controller without graph resolution or deep links. */ fun createNavHostController( startDestination: NavRoute, ): NavHostController | fun saveState(): NavHostRestorableState } /** Creates an unattached single-stack controller without graph resolution or deep links. */ fun createNavHostController( startDestination: NavRoute, ): NavHostController | fun createNavHostController( startDestination: NavRoute, ): NavHostController | fun createNavHostController( graph: NavGraph, ): NavHostController | fun createNavHostController( stackConfiguration: NavStackConfiguration, ): NavHostController | fun createNavHostController( stackConfiguration: NavStackConfiguration, graph: NavGraph, ): NavHostController | fun createNavHostController( startDestination: NavRoute, entryIdFactory: NavEntryIdFactory, ): NavHostController | fun createNavHostController( graph: NavGraph, entryIdFactory: NavEntryIdFactory, ): NavHostController | fun createNavHostController( stackConfiguration: NavStackConfiguration, entryIdFactory: NavEntryIdFactory, ): NavHostController | fun createNavHostController( stackConfiguration: NavStackConfiguration, graph: NavGraph, entryIdFactory: NavEntryIdFactory, ): NavHostController
+- com.viewcompose.navigation.LocalNavGraphOwnerScope — object LocalNavGraphOwnerScope
+- com.viewcompose.navigation.NavDeepLinkResult — sealed interface NavDeepLinkResult
+- com.viewcompose.navigation.NavDestinationMotionSpec — data class NavDestinationMotionSpec( val durationMillis: Long, val incomingStart: NavDestinationTransform = NavDestinationTransform(), val outgoingEnd: NavDestinationTransform = NavDestinationTransform(), val easing: NavMotionEasing = NavMotionEasing.Standard, val incomingAlphaTiming: NavMotionTiming = NavMotionTiming( durationMillis = durationMillis, easing = easing, ), val outgoingAlphaTiming: NavMotionTiming = NavMotionTiming( durationMillis = durationMillis, easing = easing, ), )
+- com.viewcompose.navigation.NavDestinationTransform — data class NavDestinationTransform( val travelFraction: Float = 0f, val travelDp: Float = 0f, val alpha: Float = 1f, val scale: Float = 1f, )
+- com.viewcompose.navigation.NavFailure — data class NavFailure( val phase: NavFailurePhase, val failedEntry: NavEntry?, val frameReport: RenderFrameReport?, val cause: Throwable?, val stackCommitted: Boolean, )
+- com.viewcompose.navigation.NavFailurePhase — enum class NavFailurePhase
+- com.viewcompose.navigation.NavGraphOwner — class NavGraphOwner internal constructor( val entry: NavGraphEntry, internal val delegate: NavEntryOwner, ) : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner, HasDefaultViewModelProviderFactory
+- com.viewcompose.navigation.NavGraphOwnerScope — class NavGraphOwnerScope internal constructor( entries: List<NavGraphEntry>, owners: List<NavGraphOwner>, )
+- com.viewcompose.navigation.NavHostController — class NavHostController internal constructor( internal val backStackController: NavBackStackController, restoredDestinationState: Bundle? = null, internal val ownerScopeId: NavHostOwnerScopeId = NavHostOwnerScopeId.random(), )
+- com.viewcompose.navigation.NavHostException — class NavHostException( val failure: NavFailure, ) : IllegalStateException( buildString { append("NavHost failed during ") append(failure.phase) failure.failedEntry?.let { entry -> append(" for ") append(entry.route) append(" (") append(entry.id) append(')') } if (failure.stackCommitted) { append(" after the back stack committed") } append('.') }, failure.cause, )
+- com.viewcompose.navigation.NavMotionEasing — class NavMotionEasing private constructor( internal val segments: List<NavMotionPathSegment>, )
+- com.viewcompose.navigation.NavMotionTiming — data class NavMotionTiming( val durationMillis: Long, val startDelayMillis: Long = 0L, val easing: NavMotionEasing = NavMotionEasing.Linear, )
+- com.viewcompose.navigation.NavPanePolicy — data class NavPanePolicy( val strategy: NavPaneStrategy = NavPaneStrategies.BackStack, val minPaneWidthDp: Float = 320f, val maxPaneCount: Int = 3, val paneSpacingDp: Float = 0f, )
+- com.viewcompose.navigation.NavPredictiveBackSpec — data class NavPredictiveBackSpec( val incomingStart: NavDestinationTransform, val incomingEnd: NavDestinationTransform = NavDestinationTransform(), val outgoingEnd: NavDestinationTransform, val progressEasing: NavMotionEasing = NavMotionEasing.Linear, val commitMotion: NavDestinationMotionSpec = DefaultCommitMotion, val cancelSpring: NavSpringSpec = DefaultCancelSpring, val velocitySampleWindowMillis: Long = 100L, val maxProgressVelocity: Float = 4f, )
+- com.viewcompose.navigation.NavResult — sealed interface NavResult
+- com.viewcompose.navigation.NavSpringSpec — data class NavSpringSpec( val stiffness: Float, val dampingRatio: Float, val maxDurationMillis: Long = 500L, )
+- com.viewcompose.navigation.NavTransitionSpec — data class NavTransitionSpec( val push: NavDestinationMotionSpec = DefaultPush, val pop: NavDestinationMotionSpec = DefaultPop, val replace: NavDestinationMotionSpec = DefaultReplace, val reset: NavDestinationMotionSpec = DefaultReset, val stackSelection: NavDestinationMotionSpec = DefaultStackSelection, val deepLink: NavDestinationMotionSpec = DefaultDeepLink, val predictiveBack: NavPredictiveBackSpec = DefaultPredictiveBack, )
+- com.viewcompose.navigation.rememberNavHostController — fun rememberNavHostController( startDestination: NavRoute, ): NavHostController | fun rememberNavHostController( graph: NavGraph, ): NavHostController | fun rememberNavHostController( stackConfiguration: NavStackConfiguration, ): NavHostController | fun rememberNavHostController( stackConfiguration: NavStackConfiguration, graph: NavGraph, ): NavHostController
+- com.viewcompose.navigation.UiTreeBuilder.NavHost — fun UiTreeBuilder.NavHost( controller: NavHostController, modifier: Modifier = Modifier, transitionSpec: NavTransitionSpec = NavTransitionSpec.Default, panePolicy: NavPanePolicy = NavPanePolicy.Single, presentationRetentionPolicy: NavPresentationRetentionPolicy = NavPresentationRetentionPolicy.Default, systemBackEnabled: Boolean = true, contentKey: Any? = Unit, debug: Boolean = false, debugTag: String = "ViewComposeNavigation", overlayHostFactory: (ViewGroup) -> OverlayHost = defaultNavOverlayHostFactory, onFailure: ((NavFailure) -> Unit)? = null, key: Any? = null, content: UiTreeBuilder.(NavEntry) -> Unit, )
+- com.viewcompose.navigation.UiTreeBuilder.ProvideNavGraphOwner — fun UiTreeBuilder.ProvideNavGraphOwner( route: String, content: UiTreeBuilder.() -> Unit, )
+
+## navigation.presentation-retention
+
+- Kind: integration
+- Artifact: viewcompose-navigation-android@0.1.0-alpha02
+- Reference: reference.navigation.presentation-retention
+- Compiled sample: module.navigation-android-presentation-retention (:viewcompose-navigation-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/navigation, /architecture/decisions/scene-derived-navigation-lifecycle-and-presentation-ownership, /guides/navigation, /migration/compose-navigation, /modules/viewcompose-navigation-android
+
+- com.viewcompose.navigation.NavPresentationRetentionPolicy — sealed interface NavPresentationRetentionPolicy
+
+## navigation.scene-projection
+
+- Kind: host
+- Artifact: viewcompose-navigation-core@0.1.0-alpha03
+- Reference: reference.navigation.scene-projection
+- Compiled sample: module.navigation-core-execution-plan (:viewcompose-navigation-core:compileTestKotlin)
+- Related documents: /architecture/navigation, /architecture/decisions/scene-derived-navigation-lifecycle-and-presentation-ownership, /migration/compose-navigation, /modules/viewcompose-navigation-core
+
+
+
+## nested.scroll
+
+- Kind: modifier
+- Artifact: viewcompose-gesture@0.1.0-alpha04
+- Reference: reference.nested.scroll
+- Compiled sample: guide.nested-scroll-toolbar (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier, /guides/nested-scroll, /modules/viewcompose-gesture
+
+- com.viewcompose.gesture.Modifier.nestedScroll — fun Modifier.nestedScroll( connection: NestedScrollConnection, dispatcher: NestedScrollDispatcher? = null, ): Modifier
+
+## observed.value-mapping
+
+- Kind: dsl
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.observed.value-mapping
+- Compiled sample: module.ui-foundation-observed-map (:viewcompose-ui-foundation:compileDebugUnitTestKotlin)
+- Related documents: /architecture/lazy-collections, /guides/lazy-collections, /modules/viewcompose-ui-foundation, /tutorials/lazy-list-performance
+
+
+
+## oneui7.components
+
+- Kind: component
+- Artifact: viewcompose-oneui7@0.1.0-alpha01
+- Reference: reference.oneui7.components
+- Compiled sample: module.oneui7-components (:viewcompose-oneui7:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/component-appearance-resolution-boundary, /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/design-system-resolution-boundary, /architecture/decisions/renderer-neutral-interaction-indication, /modules/viewcompose-oneui7
+
+- com.viewcompose.oneui7.UiTreeBuilder.OneUi7Button — fun UiTreeBuilder.OneUi7Button( text: String, onClick: (() -> Unit)?, variant: OneUi7ButtonVariant = OneUi7ButtonVariant.Primary, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.oneui7.UiTreeBuilder.OneUi7NavigationBar — fun UiTreeBuilder.OneUi7NavigationBar( items: List<OneUi7NavigationItem>, selectedIndex: Int, onItemSelected: (Int) -> Unit, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.oneui7.UiTreeBuilder.OneUi7Surface — fun UiTreeBuilder.OneUi7Surface( onClick: (() -> Unit)? = null, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.oneui7.UiTreeBuilder.OneUi7Switch — fun UiTreeBuilder.OneUi7Switch( text: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.oneui7.UiTreeBuilder.OneUi7TextField — fun UiTreeBuilder.OneUi7TextField( state: TextFieldState, label: String, placeholder: String = "", supportingText: String = "", enabled: Boolean = true, isError: Boolean = false, autofillHints: Set<TextFieldAutofillHint> = emptySet(), key: Any? = null, modifier: Modifier = Modifier, )
+
+## overlay.anchor
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.overlay.anchor
+- Compiled sample: guide.overlay-dropdown-menu (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/0006-root-scoped-overlay-backend-selection, /guides/overlays
+
+- com.viewcompose.ui.modifier.Modifier.overlayAnchor — fun Modifier.overlayAnchor(anchorId: String): Modifier
+
+## overlay.android-transport
+
+- Kind: integration
+- Artifact: viewcompose-overlay-android@0.1.0-alpha04
+- Reference: reference.overlay.android-transport
+- Compiled sample: module.overlay-android-dependency (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/design-systems, /architecture/decisions/0006-root-scoped-overlay-backend-selection, /architecture/decisions/public-package-ownership-and-platform-handles, /guides/overlays, /modules/viewcompose-overlay-android, /tutorials/overlays
+
+- com.viewcompose.overlay.android.AndroidOverlayHost — class AndroidOverlayHost( rootView: View, dialogWindowInset: UiDp = UiDp.Zero, snackbarPresenter: SnackbarOverlayPresenter? = null, modalBottomSheetPresenter: ModalBottomSheetOverlayPresenter? = null, ) : OverlayHost
+- com.viewcompose.overlay.android.AndroidOverlayHostFactoryProvider — class AndroidOverlayHostFactoryProvider : AndroidOverlayHostFactoryContract
+- com.viewcompose.overlay.android.ViewGroup.asOverlayRenderContainerHandle — fun ViewGroup.asOverlayRenderContainerHandle(): RenderContainerHandle
+
+## overlay.foundation
+
+- Kind: component
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.overlay.foundation
+- Compiled sample: tutorial.overlays (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/component-appearance-resolution-boundary, /architecture/decisions/hierarchical-saveable-state-ownership, /architecture/decisions/0006-root-scoped-overlay-backend-selection, /guides/overlays, /modules/viewcompose-ui-foundation, /tutorials/overlays
+
+- com.viewcompose.ui.foundation.UiTreeBuilder.AlertDialog — fun UiTreeBuilder.AlertDialog( visible: Boolean, title: String, text: String, confirmButtonText: String, onConfirm: () -> Unit, dismissButtonText: String? = null, onDismiss: (() -> Unit)? = null, icon: ImageSource? = null, overrides: AlertDialogOverrides = AlertDialogOverrides.None, requestKey: String = "alert_dialog", dismissOnBackPress: Boolean = true, dismissOnClickOutside: Boolean = true, onDismissRequest: (() -> Unit)? = null, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Dialog — fun UiTreeBuilder.Dialog( visible: Boolean, requestKey: String = "dialog", dismissOnBackPress: Boolean = true, dismissOnClickOutside: Boolean = true, position: DialogPosition = DialogPosition.Center, scrimOpacity: Float = Theme.overlays.scrimOpacity, onDismissRequest: (() -> Unit)? = null, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenu — fun UiTreeBuilder.DropdownMenu( expanded: Boolean, anchorId: String, onDismissRequest: () -> Unit, alignment: PopupAlignment = PopupAlignment.BelowStart, overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp, windowMargin: UiDp = 8.dp, requestKey: String = "dropdown_menu", modifier: Modifier = Modifier, content: ColumnScope.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenuItem — fun UiTreeBuilder.DropdownMenuItem( text: String, onClick: () -> Unit, leadingIcon: ImageSource? = null, trailingText: String? = null, enabled: Boolean = true, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ModalBottomSheet — fun UiTreeBuilder.ModalBottomSheet( visible: Boolean, requestKey: String = "bottom_sheet", dismissOnBackPress: Boolean = true, dismissOnClickOutside: Boolean = true, skipPartiallyExpanded: Boolean = false, overrides: ModalBottomSheetOverrides = ModalBottomSheetOverrides.None, onDismissRequest: (() -> Unit)? = null, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.PlainTooltip — fun UiTreeBuilder.PlainTooltip( text: String, visible: Boolean, anchorId: String, alignment: PopupAlignment = PopupAlignment.BelowStart, overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp, windowMargin: UiDp = 8.dp, dismissOnClickOutside: Boolean = true, onDismissRequest: (() -> Unit)? = null, requestKey: String = "tooltip", )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Popup — fun UiTreeBuilder.Popup( visible: Boolean, anchorId: String, requestKey: String = "popup", alignment: PopupAlignment = PopupAlignment.BelowStart, overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp, windowMargin: UiDp = 8.dp, dismissOnClickOutside: Boolean = true, focusable: Boolean = true, offsetX: UiDp = UiDp.Zero, offsetY: UiDp = UiDp.Zero, onDismissRequest: (() -> Unit)? = null, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAlertDialogOverrides — fun UiTreeBuilder.ProvideAlertDialogOverrides( overrides: AlertDialogOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideModalBottomSheetOverrides — fun UiTreeBuilder.ProvideModalBottomSheetOverrides( overrides: ModalBottomSheetOverrides, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.ProvideOverlayHost — fun UiTreeBuilder.ProvideOverlayHost( host: OverlayHost, content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Snackbar — fun UiTreeBuilder.Snackbar( visible: Boolean, message: String, actionLabel: String? = null, duration: SnackbarDuration = SnackbarDuration.Short, queuePolicy: TransientFeedbackQueuePolicy = TransientFeedbackQueuePolicy.Enqueue, requestKey: String = "snackbar", onAction: (() -> Unit)? = null, onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.Toast — fun UiTreeBuilder.Toast( visible: Boolean, message: String, duration: ToastDuration = ToastDuration.Short, queuePolicy: TransientFeedbackQueuePolicy = TransientFeedbackQueuePolicy.Enqueue, requestKey: String = "toast", onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null, )
+
+## overlay.host-defaults
+
+- Kind: host
+- Artifact: viewcompose-host-android@0.1.0-alpha04
+- Reference: reference.overlay.host-defaults
+- Compiled sample: module.overlay-android-dependency (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/0006-root-scoped-overlay-backend-selection
+
+- com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults — object AndroidOverlayHostDefaults
+- com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider — fun interface AndroidOverlayHostFactoryProvider
+
+## overlay.material3
+
+- Kind: integration
+- Artifact: viewcompose-overlay-material3-android@0.1.0-alpha01
+- Reference: reference.overlay.material3
+- Compiled sample: module.overlay-material3-dependency (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/component-appearance-resolution-boundary, /architecture/design-systems, /architecture/decisions/0006-root-scoped-overlay-backend-selection, /architecture/decisions/public-package-ownership-and-platform-handles, /guides/overlays, /modules/viewcompose-overlay-material3-android, /tutorials/overlays
+
+- com.viewcompose.overlay.material3.android.host.AndroidOverlayHost — class AndroidOverlayHost( rootView: View, ) : OverlayHost
+- com.viewcompose.overlay.material3.android.presenter.AndroidModalBottomSheetPresenter — class AndroidModalBottomSheetPresenter( private val rootView: View, ) : ModalBottomSheetOverlayPresenter
+- com.viewcompose.overlay.material3.android.presenter.AndroidSnackbarOverlayPresenter — class AndroidSnackbarOverlayPresenter( private val anchorView: View, ) : SnackbarOverlayPresenter
+
+## overlay.oneui7
+
+- Kind: integration
+- Artifact: viewcompose-overlay-oneui7-android@0.1.0-alpha01
+- Reference: reference.overlay.oneui7
+- Compiled sample: module.overlay-oneui7-dependency (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/component-appearance-resolution-boundary, /architecture/design-systems, /architecture/decisions/0006-root-scoped-overlay-backend-selection, /guides/overlays, /modules/viewcompose-overlay-oneui7-android
+
+- com.viewcompose.overlay.oneui7.android.host.AndroidOverlayHost — class AndroidOverlayHost( rootView: View, tokens: UiThemeTokens = defaultOneUi7Tokens(rootView.context), ) : OverlayHost
+
+## paging.androidx
+
+- Kind: integration
+- Artifact: viewcompose-paging-androidx@0.1.0-alpha01
+- Reference: reference.paging.androidx
+- Compiled sample: module.paging-basic (:viewcompose-paging-androidx:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-paging-androidx
+
+- com.viewcompose.paging.CombinedLoadStates.forLoadType — fun CombinedLoadStates.forLoadType(loadType: LoadType): PagingLoadStateSnapshot
+- com.viewcompose.paging.Flow.collectAsViewComposePagingItems — fun <T : Any> Flow<PagingData<T>>.collectAsViewComposePagingItems( lifecyclePolicy: PagingLifecyclePolicy = PagingLifecyclePolicy.Visible, context: CoroutineContext = EmptyCoroutineContext, ): ViewComposePagingItems<T>
+- com.viewcompose.paging.PagingContentState — sealed interface PagingContentState
+- com.viewcompose.paging.PagingLifecyclePolicy — enum class PagingLifecyclePolicy
+- com.viewcompose.paging.PagingLoadStateSnapshot — data class PagingLoadStateSnapshot( val loadType: LoadType, val combined: LoadState, val source: LoadState, val mediator: LoadState?, )
+- com.viewcompose.paging.UiTreeBuilder.PagingLazyColumn — fun <T : Any> UiTreeBuilder.PagingLazyColumn( items: ViewComposePagingItems<T>, key: (T) -> Any, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, contentPadding: UiDp = UiDp.Zero, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, ) | fun <T : Any> UiTreeBuilder.PagingLazyColumn( items: ViewComposePagingItems<T>, key: (T) -> Any, placeholderContentRevision: Any, placeholderContent: UiTreeBuilder.(index: Int) -> Unit, contentType: (T) -> Any? = { null }, contentRevision: (T) -> Any? = { it }, placeholderContentType: Any? = null, contentPadding: UiDp = UiDp.Zero, spacing: UiDp = UiDp.Zero, state: LazyListState? = null, reverseLayout: Boolean = false, userScrollEnabled: Boolean = true, prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(), reusePolicy: CollectionReusePolicy = CollectionReusePolicy(), motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(), modifier: Modifier = Modifier, itemContent: UiTreeBuilder.(T) -> Unit, )
+- com.viewcompose.paging.ViewComposePagingItems — class ViewComposePagingItems<T : Any> internal constructor()
+
+## preview.core.annotations
+
+- Kind: component
+- Artifact: viewcompose-preview-core@0.1.0-alpha03
+- Reference: reference.preview.core.annotations
+- Compiled sample: tooling.preview-entry (:samples:counter:compileDebugKotlin)
+- Related documents: /modules/viewcompose-preview-core, /tutorials/getting-started
+
+- com.viewcompose.preview.tooling.PreviewConfiguration — data class PreviewConfiguration( val widthDp: Int = PreviewDefaults.WIDTH_DP, val heightDp: Int = PreviewDefaults.HEIGHT_DP, val density: Float = PreviewDefaults.DENSITY, val fontScale: Float = PreviewDefaults.FONT_SCALE, val localeTags: List<String> = listOf(PreviewDefaults.LOCALE_TAG), val layoutDirection: PreviewLayoutDirection = PreviewLayoutDirection.Ltr, val theme: PreviewTheme = PreviewTheme.Light, val apiLevel: Int? = null, )
+- com.viewcompose.preview.tooling.PreviewConfigurationAxis — data class PreviewConfigurationAxis( val id: String, val displayName: String, val options: List<PreviewConfigurationOption>, )
+- com.viewcompose.preview.tooling.PreviewConfigurationMatrix — data class PreviewConfigurationMatrix( val base: PreviewConfiguration = PreviewConfiguration(), val axes: List<PreviewConfigurationAxis>, )
+- com.viewcompose.preview.tooling.PreviewConfigurationOption — data class PreviewConfigurationOption( val id: String, val displayName: String, val override: PreviewConfigurationOverride, )
+- com.viewcompose.preview.tooling.PreviewConfigurationOverride — data class PreviewConfigurationOverride( val widthDp: Int? = null, val heightDp: Int? = null, val density: Float? = null, val fontScale: Float? = null, val localeTags: List<String>? = null, val layoutDirection: PreviewLayoutDirection? = null, val theme: PreviewTheme? = null, val apiLevel: Int? = null, )
+- com.viewcompose.preview.tooling.PreviewConfigurationPresets — object PreviewConfigurationPresets
+- com.viewcompose.preview.tooling.PreviewDefaults — object PreviewDefaults
+- com.viewcompose.preview.tooling.PreviewFontScales — annotation class PreviewFontScales
+- com.viewcompose.preview.tooling.PreviewLayoutDirection — enum class PreviewLayoutDirection
+- com.viewcompose.preview.tooling.PreviewLightDark — annotation class PreviewLightDark
+- com.viewcompose.preview.tooling.PreviewLtrRtl — annotation class PreviewLtrRtl
+- com.viewcompose.preview.tooling.PreviewPhoneTablet — annotation class PreviewPhoneTablet
+- com.viewcompose.preview.tooling.PreviewTheme — enum class PreviewTheme
+- com.viewcompose.preview.tooling.PreviewVariant — data class PreviewVariant( val id: String, val displayName: String, val configuration: PreviewConfiguration, )
+- com.viewcompose.preview.tooling.ViewComposePreview — annotation class ViewComposePreview( val name: String = "", val group: String = "", val widthDp: Int = PreviewDefaults.WIDTH_DP, val heightDp: Int = PreviewDefaults.HEIGHT_DP, val density: Float = PreviewDefaults.DENSITY, val fontScale: Float = PreviewDefaults.FONT_SCALE, val localeTag: String = PreviewDefaults.LOCALE_TAG, val layoutDirection: PreviewLayoutDirection = PreviewLayoutDirection.Ltr, val theme: PreviewTheme = PreviewTheme.Light, val apiLevel: Int = PreviewDefaults.UNSPECIFIED_API_LEVEL, )
+- com.viewcompose.preview.tooling.ViewComposePreview.toPreviewConfiguration — fun ViewComposePreview.toPreviewConfiguration(): PreviewConfiguration
+- com.viewcompose.preview.tooling.ViewComposePreviews — annotation class ViewComposePreviews( val value: Array<ViewComposePreview>, )
+- com.viewcompose.preview.tooling.ViewComposePreviewThemeProvider — annotation class ViewComposePreviewThemeProvider
+
+## preview.core.protocol
+
+- Kind: integration
+- Artifact: viewcompose-preview-core@0.1.0-alpha03
+- Reference: reference.preview.core.protocol
+- Compiled sample: module.preview-core-protocol (:viewcompose-preview-core:compileTestKotlin)
+- Related documents: /modules/viewcompose-preview-core
+
+- com.viewcompose.preview.tooling.PreviewArtifactLayout — object PreviewArtifactLayout
+- com.viewcompose.preview.tooling.PreviewArtifacts — data class PreviewArtifacts( val imagePath: String? = null, val renderTreePath: String? = null, val diagnosticsPath: String? = null, )
+- com.viewcompose.preview.tooling.PreviewBuildInput — data class PreviewBuildInput( val kind: PreviewBuildInputKind, val paths: List<String>, )
+- com.viewcompose.preview.tooling.PreviewBuildInputKind — enum class PreviewBuildInputKind
+- com.viewcompose.preview.tooling.PreviewBuildManifest — data class PreviewBuildManifest( val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION, val modulePath: String, val buildVariant: String, val namespace: String, val androidGradlePluginVersion: String, val minSdk: Int, val targetSdk: Int, val compileSdk: Int, val sdkDirectory: String, val mergedManifestPath: String, val artifactRootDirectory: String, val resourcePackageNames: List<String>, val inputs: List<PreviewBuildInput>, val inputFingerprint: String, /** Inputs retained by a warm Layoutlib process; project bytecode is intentionally excluded. */ val layoutlibCompatibilityFingerprint: String = inputFingerprint, )
+- com.viewcompose.preview.tooling.PreviewClippingState — enum class PreviewClippingState
+- com.viewcompose.preview.tooling.PreviewCompositionLocal — data class PreviewCompositionLocal( val name: String, val value: String, )
+- com.viewcompose.preview.tooling.PreviewCompositionSnapshot — data class PreviewCompositionSnapshot( val invalidatedScopeCount: Int = 0, val recomposedScopeCount: Int = 0, val skippedScopeCount: Int = 0, val scopes: List<PreviewRecomposeScope> = emptyList(), )
+- com.viewcompose.preview.tooling.PreviewDescriptor — data class PreviewDescriptor( val id: String, val displayName: String, val group: String = "", val entryPoint: PreviewJvmEntryPoint, val variants: List<PreviewVariant>, val sourceLocation: PreviewSourceLocation? = null, val themeProviderClassName: String? = null, )
+- com.viewcompose.preview.tooling.PreviewDescriptorCatalog — data class PreviewDescriptorCatalog( val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION, val modulePath: String, val buildVariant: String, val buildFingerprint: String, val descriptors: List<PreviewDescriptor>, val diagnostics: List<PreviewDiagnostic> = emptyList(), )
+- com.viewcompose.preview.tooling.PreviewDiagnostic — data class PreviewDiagnostic( val severity: PreviewDiagnosticSeverity, val message: String, val phase: String, val sourceLocation: PreviewSourceLocation? = null, val details: String? = null, )
+- com.viewcompose.preview.tooling.PreviewDiagnosticSeverity — enum class PreviewDiagnosticSeverity
+- com.viewcompose.preview.tooling.PreviewJvmEntryPoint — data class PreviewJvmEntryPoint( val ownerClassName: String, val methodName: String, val methodDescriptor: String? = null, )
+- com.viewcompose.preview.tooling.PreviewLayoutBounds — data class PreviewLayoutBounds( val left: Int, val top: Int, val right: Int, val bottom: Int, )
+- com.viewcompose.preview.tooling.PreviewLayoutDiagnostic — data class PreviewLayoutDiagnostic( val kind: PreviewLayoutDiagnosticKind, val severity: PreviewDiagnosticSeverity, val className: String, val bounds: PreviewLayoutBounds, val visibleBounds: PreviewLayoutBounds? = null, val clippingAncestorClassName: String? = null, val clippingAncestorNodeId: String? = null, val clippingExpected: Boolean = false, val metrics: Map<String, Int> = emptyMap(), val nodeId: String? = null, val sourceCallSites: List<PreviewSourceCallSite> = emptyList(), val synthetic: Boolean = false, )
+- com.viewcompose.preview.tooling.PreviewLayoutDiagnosticKind — enum class PreviewLayoutDiagnosticKind
+- com.viewcompose.preview.tooling.PreviewNativeViewNode — data class PreviewNativeViewNode( val className: String, val bounds: PreviewLayoutBounds, val measuredWidth: Int, val measuredHeight: Int, val visibility: String, val visibleBounds: PreviewLayoutBounds? = null, val clippingState: PreviewClippingState = PreviewClippingState.NotClipped, val clippingAncestorClassName: String? = null, val clippingAncestorNodeId: String? = null, val clippingExpected: Boolean = false, val properties: Map<String, String> = emptyMap(), val nodeId: String? = null, val sourceCallSites: List<PreviewSourceCallSite> = emptyList(), val synthetic: Boolean = false, val children: List<PreviewNativeViewNode> = emptyList(), )
+- com.viewcompose.preview.tooling.PreviewNodeBindingStats — data class PreviewNodeBindingStats( val rebound: Int = 0, val patched: Int = 0, val skipped: Int = 0, )
+- com.viewcompose.preview.tooling.PreviewPatchRecord — data class PreviewPatchRecord( val operation: String, val type: String, val key: String? = null, val parentKey: String? = null, val index: Int, val moved: Boolean = false, val detail: String? = null, val nodeId: String? = null, val sourceCallSites: List<PreviewSourceCallSite> = emptyList(), val synthetic: Boolean = false, )
+- com.viewcompose.preview.tooling.PreviewPhaseTiming — data class PreviewPhaseTiming( val phase: String, val durationMillis: Long, )
+- com.viewcompose.preview.tooling.PreviewProtocolJson — object PreviewProtocolJson
+- com.viewcompose.preview.tooling.PreviewRecomposeScope — data class PreviewRecomposeScope( val path: String, val signature: String, val depth: Int, val reasons: List<String> = emptyList(), val recomposed: Boolean, val skipped: Boolean, val locals: List<PreviewCompositionLocal> = emptyList(), val sourceCallSites: List<PreviewSourceCallSite> = emptyList(), )
+- com.viewcompose.preview.tooling.PreviewRenderRequest — data class PreviewRenderRequest( val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION, val requestId: String, val descriptor: PreviewDescriptor, val variantId: String, val modulePath: String, val buildVariant: String, val buildFingerprint: String, val outputDirectory: String, )
+- com.viewcompose.preview.tooling.PreviewRenderResponse — data class PreviewRenderResponse( val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION, val requestId: String, val previewId: String, val variantId: String, val status: PreviewRenderStatus, val artifacts: PreviewArtifacts? = null, val diagnostics: List<PreviewDiagnostic> = emptyList(), val durationMillis: Long? = null, val phaseTimings: List<PreviewPhaseTiming> = emptyList(), )
+- com.viewcompose.preview.tooling.PreviewRenderSnapshot — data class PreviewRenderSnapshot( val stats: PreviewRenderStats = PreviewRenderStats(), val structure: PreviewRenderStructure = PreviewRenderStructure(), val warnings: List<String> = emptyList(), val tree: List<PreviewRenderTreeNode> = emptyList(), val nativeViewTree: List<PreviewNativeViewNode> = emptyList(), val layoutDiagnostics: List<PreviewLayoutDiagnostic> = emptyList(), val patches: List<PreviewPatchRecord> = emptyList(), val composition: PreviewCompositionSnapshot = PreviewCompositionSnapshot(), )
+- com.viewcompose.preview.tooling.PreviewRenderStats — data class PreviewRenderStats( val inserts: Int = 0, val reuses: Int = 0, val removals: Int = 0, val reboundNodes: Int = 0, val patchedNodes: Int = 0, val skippedBindings: Int = 0, val skippedSubtrees: Int = 0, val bindingsByType: Map<String, PreviewNodeBindingStats> = emptyMap(), )
+- com.viewcompose.preview.tooling.PreviewRenderStatus — enum class PreviewRenderStatus
+- com.viewcompose.preview.tooling.PreviewRenderStructure — data class PreviewRenderStructure( val vnodeCount: Int = 0, val mountedNodeCount: Int = 0, val maxVNodeDepth: Int = 0, val maxMountedDepth: Int = 0, )
+- com.viewcompose.preview.tooling.PreviewRenderTreeNode — data class PreviewRenderTreeNode( val type: String, val key: String? = null, val nodeId: String? = null, val sourceCallSites: List<PreviewSourceCallSite> = emptyList(), val synthetic: Boolean = false, val children: List<PreviewRenderTreeNode> = emptyList(), )
+- com.viewcompose.preview.tooling.PreviewSourceCallSite — data class PreviewSourceCallSite( val className: String, val methodName: String, val fileName: String, val lineNumber: Int, )
+- com.viewcompose.preview.tooling.PreviewSourceLocation — data class PreviewSourceLocation( val filePath: String, val line: Int, val column: Int = 1, val symbolName: String? = null, )
+- com.viewcompose.preview.tooling.PreviewWorkerBatchCommand — data class PreviewWorkerBatchCommand( val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION, val commands: List<PreviewWorkerCommand>, )
+- com.viewcompose.preview.tooling.PreviewWorkerCommand — data class PreviewWorkerCommand( val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION, val buildManifestPath: String, val renderRequestPath: String, val renderResponsePath: String, val layoutlibRuntimeRoot: String, val layoutlibResourcesRoot: String, /** * Reloadable project bytecode. The host keeps these paths out of its process classpath and * creates a fresh child loader for every command. */ val renderClasspath: List<String> = emptyList(), )
+- com.viewcompose.preview.tooling.ViewComposePreviewProtocol — object ViewComposePreviewProtocol
+
+## preview.gradle
+
+- Kind: integration
+- Artifact: viewcompose-preview-gradle-plugin@0.1.0-alpha03
+- Reference: reference.preview.gradle
+- Compiled sample: module.preview-gradle-apply (:viewcompose-preview-gradle-plugin:compileTestKotlin)
+- Related documents: /modules/viewcompose-preview-gradle-plugin, /tutorials/getting-started
+
+- com.viewcompose.preview.gradle.ViewComposePreviewGradlePlugin — class ViewComposePreviewGradlePlugin : Plugin<Project>
+
+## preview.integration
+
+- Kind: integration
+- Artifact: viewcompose-preview@0.1.0-alpha04
+- Reference: reference.preview.integration
+- Compiled sample: module.preview-compose-bridge (:viewcompose-preview:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/development-tooling-isolation, /architecture/decisions/in-memory-development-tooling-installation, /modules/viewcompose-preview
+
+- com.viewcompose.preview.host.ViewComposePreviewHost — fun ViewComposePreviewHost( modifier: Modifier = Modifier, themeMode: PreviewTheme = PreviewTheme.Light, debug: Boolean = false, debugTag: String = "ViewComposePreview", overlayHost: OverlayHost = OverlayHostDefaults.noOp, diagnostics: RenderDiagnostics? = null, content: UiTreeBuilder.(ViewGroup) -> Unit, )
+- com.viewcompose.preview.PreviewThemeProvider — fun interface PreviewThemeProvider
+- com.viewcompose.preview.PreviewThemeResolution — data class PreviewThemeResolution( val context: Context, val tokens: UiThemeTokens, )
+- com.viewcompose.preview.ViewComposePreview — fun ViewComposePreview( modifier: Modifier = Modifier, options: ViewComposePreviewOptions = ViewComposePreviewOptions(), content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.preview.ViewComposePreviewOptions — data class ViewComposePreviewOptions( val theme: PreviewTheme = PreviewTheme.Light, val debug: Boolean = false, val debugTag: String = "ViewComposePreview", val diagnostics: RenderDiagnostics? = null, )
+- com.viewcompose.preview.ViewComposePreviewWithRoot — fun ViewComposePreviewWithRoot( modifier: Modifier = Modifier, options: ViewComposePreviewOptions = ViewComposePreviewOptions(), content: UiTreeBuilder.(ViewGroup) -> Unit, )
+
+## preview.runner
+
+- Kind: host
+- Artifact: viewcompose-preview-runner@0.1.0-alpha04
+- Reference: reference.preview.runner
+- Compiled sample: module.preview-runner-render (:viewcompose-preview-runner:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-preview-runner
+
+- com.viewcompose.preview.runner.PreviewAndroidContextFactory — object PreviewAndroidContextFactory
+- com.viewcompose.preview.runner.PreviewEntryResolutionResult — sealed interface PreviewEntryResolutionResult
+- com.viewcompose.preview.runner.PreviewJvmEntryPointResolver — object PreviewJvmEntryPointResolver
+
+## preview.worker
+
+- Kind: host
+- Artifact: viewcompose-preview-worker-host@0.1.0-alpha03
+- Reference: reference.preview.worker
+- Compiled sample: module.preview-worker-execute (:viewcompose-preview-worker-host:compileTestKotlin)
+- Related documents: /modules/viewcompose-preview-worker-host
+
+- com.viewcompose.preview.worker.PreviewWorkerHost — object PreviewWorkerHost
+
+## renderer.decoration-backend
+
+- Kind: integration
+- Artifact: viewcompose-renderer-android@0.1.0-alpha01
+- Reference: reference.renderer.decoration-backend
+- Compiled sample: module.renderer-decoration-backend (:viewcompose-renderer-android:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-renderer-android
+
+- com.viewcompose.renderer.decoration.AndroidViewDecorationBackend — interface AndroidViewDecorationBackend
+- com.viewcompose.renderer.decoration.AndroidViewDecorationPresence — data class AndroidViewDecorationPresence( val behindChild: Boolean, val overChild: Boolean, )
+- com.viewcompose.renderer.decoration.AndroidViewDecorationRequest — data class AndroidViewDecorationRequest( val dropShadows: List<DropShadowModifierElement>, val innerShadows: List<InnerShadowModifierElement>, val defaultShape: UiShape?, val density: UiDensity, )
+- com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime — object AndroidViewDecorationRuntime
+- com.viewcompose.renderer.decoration.DecorationChildDrawingOrder — object DecorationChildDrawingOrder
+- com.viewcompose.renderer.decoration.ViewDecorationHostLayout — open class ViewDecorationHostLayout @JvmOverloads constructor( context: Context, attrs: AttributeSet? = null, ) : FrameLayout(context, attrs)
+
+## renderer.diagnostics
+
+- Kind: tooling
+- Artifact: viewcompose-renderer-android@0.1.0-alpha01
+- Reference: reference.renderer.diagnostics
+- Compiled sample: module.renderer-timing (:viewcompose-renderer-android:compileDebugUnitTestKotlin)
+- Related documents: /modules/viewcompose-renderer-android
+
+- com.viewcompose.renderer.view.tree.LayoutPassEntry — data class LayoutPassEntry( val viewName: String, val measureCount: Int, val layoutCount: Int, val totalMeasureNs: Long, val totalLayoutNs: Long, )
+- com.viewcompose.renderer.view.tree.LayoutPassSnapshot — data class LayoutPassSnapshot( val totalMeasureCount: Int = 0, val totalLayoutCount: Int = 0, val totalMeasureNs: Long = 0L, val totalLayoutNs: Long = 0L, val entries: List<LayoutPassEntry> = emptyList(), )
+- com.viewcompose.renderer.view.tree.LayoutPassTracker — object LayoutPassTracker
+- com.viewcompose.renderer.view.tree.NodeTypeBindingStats — data class NodeTypeBindingStats( val rebound: Int = 0, val patched: Int = 0, val skipped: Int = 0, )
+- com.viewcompose.renderer.view.tree.RenderPatchOperation — enum class RenderPatchOperation
+- com.viewcompose.renderer.view.tree.RenderPatchRecord — data class RenderPatchRecord( val operation: RenderPatchOperation, val type: NodeType, val key: Any?, val parentKey: Any?, val index: Int, val moved: Boolean = false, val detail: String? = null, val toolingMetadata: UiNodeToolingMetadata? = null, )
+- com.viewcompose.renderer.view.tree.RenderStats — data class RenderStats( val inserts: Int = 0, val reuses: Int = 0, val removals: Int = 0, val reboundNodes: Int = 0, val patchedNodes: Int = 0, val skippedBindings: Int = 0, val skippedSubtrees: Int = 0, val bindingsByType: Map<NodeType, NodeTypeBindingStats> = emptyMap(), )
+- com.viewcompose.renderer.view.tree.RenderStructureStats — data class RenderStructureStats( val vnodeCount: Int = 0, val mountedNodeCount: Int = 0, val maxVNodeDepth: Int = 0, val maxMountedDepth: Int = 0, )
+- com.viewcompose.renderer.view.tree.RenderTreeNode — data class RenderTreeNode( val type: NodeType, val key: Any?, val toolingMetadata: UiNodeToolingMetadata? = null, val children: List<RenderTreeNode> = emptyList(), )
+- com.viewcompose.renderer.view.tree.RenderTreeTimingCollector — fun interface RenderTreeTimingCollector
+- com.viewcompose.renderer.view.tree.RenderTreeTimingPhase — enum class RenderTreeTimingPhase
+- com.viewcompose.renderer.view.tree.RenderTreeTimingSpan — fun interface RenderTreeTimingSpan
+- com.viewcompose.renderer.view.tree.RenderTreeTimingSubject — data class RenderTreeTimingSubject( val nodeIdentity: Long?, val nodeType: NodeType?, val depth: Int, val synthetic: Boolean, )
+- com.viewcompose.renderer.view.tree.ReuseBindingResult — enum class ReuseBindingResult
+- com.viewcompose.renderer.view.tree.ViewNodeToolingRegistry — object ViewNodeToolingRegistry
+
+## renderer.reconciliation
+
+- Kind: host
+- Artifact: viewcompose-renderer-android@0.1.0-alpha01
+- Reference: reference.renderer.reconciliation
+- Compiled sample: module.renderer-reconciliation (:viewcompose-renderer-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/session-containers, /architecture/decisions/lazy-collection-logical-and-physical-ownership, /architecture/node-spec, /architecture/decisions/prefetched-session-activation-boundary, /migration/lazy-collection-revision-and-reuse, /modules/viewcompose-renderer-android
+
+- com.viewcompose.renderer.reconcile.ChildReconciler — object ChildReconciler
+- com.viewcompose.renderer.reconcile.InsertPatch — data class InsertPatch<T>( override val targetIndex: Int, val nextVNode: VNode, ) : RenderPatch<T>
+- com.viewcompose.renderer.reconcile.LazyListChangePayload — sealed interface LazyListChangePayload
+- com.viewcompose.renderer.reconcile.LazyListDiff — object LazyListDiff
+- com.viewcompose.renderer.reconcile.LazyListDiffResult — data class LazyListDiffResult( val updates: List<LazyListUpdate>, val items: List<LazyListItem>, val diffResult: DiffUtil.DiffResult? = null, )
+- com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis — data class LazyListIdentityAnalysis( val duplicateKeys: List<Any>, )
+- com.viewcompose.renderer.reconcile.LazyListIdentityInspector — object LazyListIdentityInspector
+- com.viewcompose.renderer.reconcile.LazyListUpdate — sealed interface LazyListUpdate
+- com.viewcompose.renderer.reconcile.ReconcileNode — data class ReconcileNode<T>( val vnode: VNode, val payload: T, )
+- com.viewcompose.renderer.reconcile.ReconcileResult — data class ReconcileResult<T>( val patches: List<RenderPatch<T>>, val removals: List<RemovePatch<T>>, )
+- com.viewcompose.renderer.reconcile.RemovePatch — data class RemovePatch<T>( val previousIndex: Int, val payload: T, )
+- com.viewcompose.renderer.reconcile.RenderPatch — sealed interface RenderPatch<T>
+- com.viewcompose.renderer.reconcile.ReusePatch — data class ReusePatch<T>( override val targetIndex: Int, val previousIndex: Int, val payload: T, val nextVNode: VNode, ) : RenderPatch<T>
+
+## renderer.tree-transactions
+
+- Kind: host
+- Artifact: viewcompose-renderer-android@0.1.0-alpha01
+- Reference: reference.renderer.tree-transactions
+- Compiled sample: module.renderer-tree-transaction (:viewcompose-renderer-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/constraintlayout-graph-and-helper-ownership, /architecture/session-containers, /architecture/effects, /architecture/decisions/lazy-collection-logical-and-physical-ownership, /architecture/node-spec, /architecture/decisions/observed-property-transactions, /architecture/decisions/prefetched-session-activation-boundary, /architecture/decisions/typed-constraint-helper-expansion, /modules/viewcompose-renderer-android, /modules/viewcompose-ui-contract
+
+- com.viewcompose.renderer.view.tree.MountedNode — class MountedNode( var vnode: VNode, val view: View, var children: List<MountedNode> = emptyList(), )
+- com.viewcompose.renderer.view.tree.ObservedPropertyRenderResult — data class ObservedPropertyRenderResult( val stats: RenderStats, val patches: List<RenderPatchRecord> = emptyList(), val commitEffects: List<RenderTreeCommitEffect> = emptyList(), val commitFailures: List<RenderTreeCommitFailure> = emptyList(), )
+- com.viewcompose.renderer.view.tree.RenderTreeCommitEffect — data class RenderTreeCommitEffect( val operation: AndroidViewOperation, val nodeKey: Any?, val commit: () -> Unit, )
+- com.viewcompose.renderer.view.tree.RenderTreeCommitFailure — data class RenderTreeCommitFailure( val operation: AndroidViewOperation?, val nodeKey: Any?, val cause: Throwable, )
+- com.viewcompose.renderer.view.tree.RenderTreeResult — data class RenderTreeResult( val mountedNodes: List<MountedNode>, val reconcileResult: com.viewcompose.renderer.reconcile.ReconcileResult<MountedNode>, val stats: RenderStats, val structure: RenderStructureStats = RenderStructureStats(), val warnings: List<String> = emptyList(), val tree: List<RenderTreeNode> = emptyList(), val patches: List<RenderPatchRecord> = emptyList(), val commitEffects: List<RenderTreeCommitEffect> = emptyList(), val commitFailures: List<RenderTreeCommitFailure> = emptyList(), )
+- com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch — data class ViewTreeObservedPropertyPatch( val id: Long, val mountedNode: MountedNode, val previous: VNode, val next: VNode, )
+- com.viewcompose.renderer.view.tree.ViewTreeRenderer — object ViewTreeRenderer
+
+## runtime.reusable-content
+
+- Kind: integration
+- Artifact: viewcompose-runtime@0.1.0-alpha03
+- Reference: reference.runtime.reusable-content
+- Compiled sample: module.runtime-reusable-content (:viewcompose-runtime:compileTestKotlin)
+- Related documents: /architecture/lazy-collections, /modules/viewcompose-runtime
+
+
+
+## runtime.state
+
+- Kind: dsl
+- Artifact: viewcompose-runtime@0.1.0-alpha03
+- Reference: reference.runtime.state
+- Compiled sample: module.runtime-state (:viewcompose-runtime:compileTestKotlin)
+- Related documents: /architecture/effects, /architecture/state-snapshots, /migration/compose-state-recomposition-and-restoration, /modules/viewcompose-runtime, /tutorials, /tutorials/getting-started, /tutorials/state-and-events
+
+
+
+## shadow.android-backend
+
+- Kind: integration
+- Artifact: viewcompose-shadow-android@0.1.0-alpha04
+- Reference: reference.shadow.android-backend
+- Compiled sample: module.shadow-backend-selection (:viewcompose-shadow-android:compileDebugUnitTestKotlin)
+- Related documents: /architecture/modifier, /guides/shadows, /modules/viewcompose-shadow-android
+
+- com.viewcompose.shadow.android.InnerShadowBitmapRasterizer — class InnerShadowBitmapRasterizer( maxCacheBytes: Int = DefaultMaxCacheBytes, private val maxRasterBytes: Int = DefaultMaxRasterBytes, )
+- com.viewcompose.shadow.android.InnerShadowSpecResolver — object InnerShadowSpecResolver
+- com.viewcompose.shadow.android.RasterizedInnerShadow — data class RasterizedInnerShadow( val bitmap: Bitmap, )
+- com.viewcompose.shadow.android.RasterizedShadow — data class RasterizedShadow( val bitmap: Bitmap, val drawOffsetXPx: Float, val drawOffsetYPx: Float, )
+- com.viewcompose.shadow.android.ResolvedInnerShadowSpec — data class ResolvedInnerShadowSpec( val density: UiDensity, val groups: List<ResolvedShadowGroup>, )
+- com.viewcompose.shadow.android.ResolvedShadowGroup — data class ResolvedShadowGroup( val shape: UiShape, val shadows: List<ResolvedShadowLayer>, )
+- com.viewcompose.shadow.android.ResolvedShadowLayer — data class ResolvedShadowLayer( val color: Int, val blurRadiusPx: Float, val spreadRadiusPx: Float, val offsetXPx: Float, val offsetYPx: Float, )
+- com.viewcompose.shadow.android.ResolvedShadowSpec — data class ResolvedShadowSpec( val density: UiDensity, val groups: List<ResolvedShadowGroup>, )
+- com.viewcompose.shadow.android.ShadowBitmapRasterizer — class ShadowBitmapRasterizer( maxCacheBytes: Int = DefaultMaxCacheBytes, private val maxRasterBytes: Int = DefaultMaxRasterBytes, )
+- com.viewcompose.shadow.android.ShadowDecorationLayer — object ShadowDecorationLayer
+- com.viewcompose.shadow.android.ShadowRasterCacheStats — data class ShadowRasterCacheStats( val hits: Long, val misses: Long, val evictions: Long, val oversizedSkips: Long, val cachedBytes: Int, )
+- com.viewcompose.shadow.android.ShadowRenderBackend — enum class ShadowRenderBackend
+- com.viewcompose.shadow.android.ShadowRenderBackendDecision — data class ShadowRenderBackendDecision( val backend: ShadowRenderBackend, val reason: ShadowRenderDecisionReason, )
+- com.viewcompose.shadow.android.ShadowRenderBackendSelector — object ShadowRenderBackendSelector
+- com.viewcompose.shadow.android.ShadowRenderBackendStats — data class ShadowRenderBackendStats( val policy: ShadowRenderPolicy, val bitmapDraws: Long, val renderNodeDraws: Long, val renderNodeRecordings: Long, val renderNodeCacheHits: Long, val renderNodeCacheEvictions: Long, val renderNodeCachedBytes: Int, val decisionsByReason: Map<ShadowRenderDecisionReason, Long>, val lastDecision: ShadowRenderBackendDecision?, )
+- com.viewcompose.shadow.android.ShadowRenderDecisionReason — enum class ShadowRenderDecisionReason
+- com.viewcompose.shadow.android.ShadowRenderPolicy — enum class ShadowRenderPolicy( val wireValue: String, )
+- com.viewcompose.shadow.android.ShadowSpecResolver — object ShadowSpecResolver
+- com.viewcompose.shadow.android.ShadowViewDecorationBackend — class ShadowViewDecorationBackend : AndroidViewDecorationBackend
+
+## shadow.modifiers
+
+- Kind: modifier
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.shadow.modifiers
+- Compiled sample: guide.shadow-card (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/modifier, /guides/shadows, /modules/viewcompose-shadow-android
+
+- com.viewcompose.ui.modifier.Modifier.dropShadow — fun Modifier.dropShadow( shadow: UiShadow, shape: UiShape? = null, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.dropShadows — fun Modifier.dropShadows( shadows: List<UiShadow>, shape: UiShape? = null, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.innerShadow — fun Modifier.innerShadow( shadow: UiShadow, shape: UiShape? = null, ): Modifier
+- com.viewcompose.ui.modifier.Modifier.innerShadows — fun Modifier.innerShadows( shadows: List<UiShadow>, shape: UiShape? = null, ): Modifier
+
+## text.input
+
+- Kind: dsl
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.text.input
+- Compiled sample: guide.text-input-editing (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/focus-visibility-and-pager-selection-ownership, /architecture/text-input, /guides/text-input, /guides/text-input-rich-text, /migration/dsl-contract-convergence, /modules/viewcompose-text-core, /modules/viewcompose-ui-foundation, /tutorials/text-input
+
+- com.viewcompose.ui.foundation.UiTreeBuilder.BasicTextField — fun UiTreeBuilder.BasicTextField( state: TextFieldState, style: BasicTextFieldStyle, hint: String = "", placeholder: String = hint, enabled: Boolean = true, singleLine: Boolean = true, readOnly: Boolean = false, maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE, minLines: Int = if (singleLine) 1 else 1, keyboardOptions: TextFieldKeyboardOptions = TextFieldKeyboardOptions(), inputTransformation: InputTransformation? = null, receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default, onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null, onFocusChange: ((Boolean) -> Unit)? = null, autofillHints: Set<TextFieldAutofillHint> = emptySet(), key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.SearchBar — fun UiTreeBuilder.SearchBar( state: TextFieldState, onSearch: ((String) -> Unit)? = null, placeholder: String = "", leadingIcon: ImageSource? = null, trailingIcon: (UiTreeBuilder.() -> Unit)? = null, enabled: Boolean = true, key: Any? = null, modifier: Modifier = Modifier, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.TextField — fun UiTreeBuilder.TextField( state: TextFieldState, hint: String = "", label: String = "", placeholder: String = hint, supportingText: String = "", inputProfile: TextFieldInputProfile = TextFieldInputProfile.Text, linePolicy: TextFieldLinePolicy = TextFieldLinePolicy.SingleLine, readOnly: Boolean = false, inputTransformation: InputTransformation? = null, receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default, onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null, onFocusChange: ((Boolean) -> Unit)? = null, variant: TextFieldVariant = TextFieldVariant.Filled, size: TextFieldSize = TextFieldSize.Medium, enabled: Boolean = true, isError: Boolean = false, overrides: TextFieldOverrides = TextFieldOverrides.None, key: Any? = null, modifier: Modifier = Modifier, )
+
+## text.platform-font-family
+
+- Kind: integration
+- Artifact: viewcompose-ui-contract@0.1.0-alpha04
+- Reference: reference.text.platform-font-family
+- Compiled sample: module.ui-contract-font-family (:viewcompose-ui-contract:compileTestKotlin)
+- Related documents: /modules/viewcompose-ui-contract
+
+
+
+## theme.foundation
+
+- Kind: dsl
+- Artifact: viewcompose-ui-foundation@0.1.0-alpha01
+- Reference: reference.theme.foundation
+- Compiled sample: guide.theming-local-override (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/component-appearance-resolution-boundary, /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/design-system-resolution-boundary, /architecture/theming, /guides/theming-local-overrides, /modules/viewcompose-ui-foundation
+
+- com.viewcompose.ui.foundation.UiTreeBuilder.UiTheme — fun UiTreeBuilder.UiTheme( tokens: UiThemeTokens = UiThemeDefaults.light(), content: UiTreeBuilder.() -> Unit, )
+- com.viewcompose.ui.foundation.UiTreeBuilder.UiThemeOverride — fun UiTreeBuilder.UiThemeOverride( colors: UiColors? = null, stateColors: UiStateColors? = null, typography: UiTypography? = null, shapes: UiShapes? = null, controls: UiControlSizing? = null, interactions: UiInteractionTokens? = null, overlays: UiOverlays? = null, content: UiTreeBuilder.() -> Unit, ) | fun UiTreeBuilder.UiThemeOverride( colors: (UiColors.() -> UiColors)? = null, stateColors: (UiStateColors.() -> UiStateColors)? = null, typography: (UiTypography.() -> UiTypography)? = null, shapes: (UiShapes.() -> UiShapes)? = null, controls: (UiControlSizing.() -> UiControlSizing)? = null, interactions: (UiInteractionTokens.() -> UiInteractionTokens)? = null, overlays: (UiOverlays.() -> UiOverlays)? = null, content: UiTreeBuilder.() -> Unit, )
+
+## theme.material3
+
+- Kind: integration
+- Artifact: viewcompose-material3@0.1.0-alpha01
+- Reference: reference.theme.material3
+- Compiled sample: tutorial.theming (:samples:tutorials:compileDebugKotlin)
+- Related documents: /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/design-system-resolution-boundary, /architecture/theming, /guides/theming-dynamic-color, /guides/theming, /modules/viewcompose-material3, /modules/viewcompose-material3-android, /tutorials/theming
+
+- com.viewcompose.material3.UiTreeBuilder.Material3Theme — fun UiTreeBuilder.Material3Theme( resolvedTheme: Material3ResolvedTheme, refreshController: Material3ThemeRefreshController? = null, content: UiTreeBuilder.() -> Unit, ) | fun UiTreeBuilder.Material3Theme( tokens: UiThemeTokens = Material3ThemeDefaults.light(), content: UiTreeBuilder.() -> Unit, )
+
+## theme.oneui7
+
+- Kind: integration
+- Artifact: viewcompose-oneui7@0.1.0-alpha01
+- Reference: reference.theme.oneui7
+- Compiled sample: module.oneui7-theme (:viewcompose-oneui7:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/design-system-resolution-boundary, /modules/viewcompose-oneui7
+
+- com.viewcompose.oneui7.UiTreeBuilder.OneUi7Theme — fun UiTreeBuilder.OneUi7Theme( tokens: UiThemeTokens = OneUi7ThemeDefaults.light(), integrations: List<UiIntegrationAttribution> = OneUi7DefaultIntegrations, content: UiTreeBuilder.() -> Unit, )
+
+## viewmodel.owner-boundaries
+
+- Kind: integration
+- Artifact: viewcompose-viewmodel-androidx@0.1.0-alpha01
+- Reference: reference.viewmodel.owner-boundaries
+- Compiled sample: module.viewmodel-owner-boundary (:viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/navigation, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-android, /modules/viewcompose-viewmodel-androidx
+
+- com.viewcompose.viewmodel.LocalViewModelStoreOwner — object LocalViewModelStoreOwner
+- com.viewcompose.viewmodel.UiTreeBuilder.ProvideViewModelStoreOwner — fun UiTreeBuilder.ProvideViewModelStoreOwner( owner: ViewModelStoreOwner, content: UiTreeBuilder.() -> Unit, )
+
+## viewmodel.saved-state
+
+- Kind: integration
+- Artifact: viewcompose-viewmodel-androidx@0.1.0-alpha01
+- Reference: reference.viewmodel.saved-state
+- Compiled sample: module.viewmodel-saved-state (:viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/navigation, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-viewmodel-androidx
+
+
+
+## viewmodel.scoped-owners
+
+- Kind: integration
+- Artifact: viewcompose-viewmodel-androidx@0.1.0-alpha01
+- Reference: reference.viewmodel.scoped-owners
+- Compiled sample: module.viewmodel-scoped-owners (:viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/decisions/retained-viewmodel-scope-ownership, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-viewmodel-androidx
+
+- com.viewcompose.viewmodel.rememberViewModelScopeProvider — fun rememberViewModelScopeProvider( key: Any, parentOwner: ViewModelStoreOwner = requireLocalViewModelStoreOwner(), lifecycleOwner: LifecycleOwner = requireLifecycleOwner(parentOwner), defaultArgs: Bundle = Bundle(), defaultCreationExtras: CreationExtras = parentOwner.defaultCreationExtrasForScope(), defaultFactory: ViewModelProvider.Factory = parentOwner.defaultFactoryForScope(), ): ViewModelScopeProvider
+- com.viewcompose.viewmodel.rememberViewModelStoreOwner — fun rememberViewModelStoreOwner( key: Any, provider: ViewModelScopeProvider, savedStateRegistryOwner: SavedStateRegistryOwner? = LocalViewModelStoreOwner.current as? SavedStateRegistryOwner, ): ViewModelStoreOwner
+- com.viewcompose.viewmodel.ViewModelScopeProvider — class ViewModelScopeProvider( parentOwner: ViewModelStoreOwner, providerKey: Any, defaultArgs: Bundle = Bundle(), defaultCreationExtras: CreationExtras = parentOwner.defaultCreationExtras(), defaultFactory: ViewModelProvider.Factory = parentOwner.defaultFactory(), )
+- com.viewcompose.viewmodel.ViewModelStoreOwnerLease — class ViewModelStoreOwnerLease internal constructor( val owner: ViewModelStoreOwner, private val closeAction: () -> Unit, ) : AutoCloseable
+
+## viewmodel.store-resolution
+
+- Kind: integration
+- Artifact: viewcompose-viewmodel-androidx@0.1.0-alpha01
+- Reference: reference.viewmodel.store-resolution
+- Compiled sample: module.viewmodel-resolution (:viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin)
+- Related documents: /architecture/navigation, /migration/compose-host-lifecycle-and-android-interop, /modules/viewcompose-viewmodel-androidx
+
+- com.viewcompose.viewmodel.viewModel — fun <reified VM : ViewModel> viewModel( key: String? = null, owner: ViewModelStoreOwner? = null, factory: ViewModelProvider.Factory? = null, extras: CreationExtras? = null, ): VM | fun <VM : ViewModel> viewModel( modelClass: KClass<VM>, key: String? = null, owner: ViewModelStoreOwner? = null, factory: ViewModelProvider.Factory? = null, extras: CreationExtras? = null, ): VM | fun <reified VM : ViewModel> viewModel( key: String? = null, owner: ViewModelStoreOwner? = null, noinline initializer: CreationExtras.() -> VM, ): VM | fun <VM : ViewModel> viewModel( modelClass: KClass<VM>, key: String? = null, owner: ViewModelStoreOwner? = null, initializer: CreationExtras.() -> VM, ): VM

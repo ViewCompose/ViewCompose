@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement Phase 1 by generating the canonical versioned AI Knowledge Bundle and compact llms.txt from Governance V2, compiled samples, publication metadata, and exact source fingerprints.
+next_action: Implement Phase 2 generated static validation, pinned tool-owned compilation, Preview evidence adaptation, and bounded read-only project analysis without exposing a protocol surface yet.
 maven_release_changesets: []
 ---
 
@@ -44,14 +44,14 @@ maven_release_changesets: []
 
 ## Status
 
-Active. The repository and SceneView comparison audit and Phase 0 contract, threat-model,
-evaluation, version, and security freeze are complete. Phase 1 canonical knowledge generation is
-active.
+Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 canonical knowledge
+generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
+validation, compilation, Preview evidence, and project-analysis foundations are active.
 
 Last verified: 2026-08-29.
 
-Next action: generate the canonical versioned AI Knowledge Bundle and compact `llms.txt` from
-Governance V2, compiled samples, publication metadata, and exact source fingerprints.
+Next action: implement Phase 2 from the generated index, using a pinned tool-owned compiler harness,
+the existing Preview protocol, and bounded read-only analysis before CLI or MCP exposure.
 
 ## Maven release changesets
 
@@ -262,10 +262,11 @@ independently versioned before an implementation makes accidental decisions perm
 
 ### Acceptance evidence (2026-08-29)
 
-Phase 0 is complete at source revision `1de3ceaa` plus this implementation slice. ADR-0025 accepts
-the canonical lineage, provider/runtime isolation, cumulative evidence, untrusted execution,
-Design IR, version, Q-level, metric, and threat-model contracts. `tools/ai/` contains five JSON
-Schemas, five reserved capability IDs, 17 metrics, 14 evaluation cases, and 11 fixture-backed cases.
+Phase 0 is complete at source revision `1de3ceaa` plus this implementation slice. ADR-0009's AI
+tooling invariants accept the canonical lineage, provider/runtime isolation, cumulative evidence,
+untrusted execution, and Design IR boundary. `tools/ai/` freezes version, Q-level, metric, and
+threat contracts in five JSON Schemas, five capability IDs, 17 metrics, 14 evaluation cases, and 11
+fixture-backed cases.
 
 The following fresh commands passed on macOS using Android Studio JBR 21.0.10:
 
@@ -327,6 +328,49 @@ machine contract instead of adding another handwritten API reference.
   regenerated.
 - The hosted documentation size, link, language, and translation gates remain within accepted
   budgets.
+
+### Acceptance evidence (2026-08-29)
+
+Phase 1 is complete. Generator source revision
+`7af858dca1aacf1241106db46021c65fcffa3715` produces bundle fingerprint
+`ee1765176164201252fe4f3c0b9839a26ee1d87def028255ae2fc435c6594ec1`. The 1,169,945-byte local
+bundle contains 30 artifacts, 77 capabilities, 537 symbols resolved to exact source declarations,
+209 registered samples, and 10 reviewed rules. Its compact hosted `llms.txt` is 2,646 bytes; the
+173,728-byte text fallback and structured JSON/JSONL stay outside the deployed site.
+
+Fresh Android Studio JBR 21 verification passed:
+
+```text
+npm --prefix tools/ai run verify                         # 7/7 tests
+npm --prefix tools/ai run verify:knowledge               # exact fingerprint/revision
+./gradlew -p tools/viewcompose-quality-build test         # compiled task ownership tests
+./gradlew verifyAiToolingContracts verifyAiKnowledgeBundle \
+  verifyDocumentationStructure verifyDevelopmentToolingIsolation \
+  verifyViewComposeReleaseIntent                         # 23 tasks
+./gradlew verifyCompleteViewComposeApiDocs                # 6/6 groups, 9m 1s cold
+npm --prefix website run build                            # 37.4s wrapper
+```
+
+The root gate reported zero Governance V2 issues, zero release artifacts, and no tooling-isolation
+violation. The production site retained 133 immutable API versions and manuals, 133 Chinese
+fallback routes, two search indexes, 526 audited pages, 30 redirects, 6.7/8.0 MiB JavaScript,
+650/768 KiB maximum JavaScript, and 112/128 KiB CSS. Exact output was 491,946,739 bytes, including
+49,175,846 non-API bytes against the unchanged 49,178,214.4-byte ceiling (2,368.4 bytes headroom).
+
+Comparison context: a same-corpus candidate with a separate bilingual AI ADR route produced
+49,553,310 non-API bytes. Consolidating its boundary into ADR-0009's machine-readable invariants
+and the executable plan/contracts reduced output by 377,464 bytes (`-0.7617%`) without weakening
+the decision or raising the ceiling. The result is **improved**
+for deterministic AI discoverability and **no material runtime change** because only downstream
+tooling and documentation changed. The hosted representation result is **mixed**: all public site
+gates pass, but headroom is nearly exhausted.
+
+Limitations: this bundle supports only exact `current-source`; released-version bundles, static
+validation, compilation, rendering, project analysis, CLI/MCP, conversion, and model adapters do
+not exist yet. KDoc summaries are emitted only when deterministic source adjacency is available,
+and registered non-executable samples remain evidence records rather than copyable code. The next
+phase must preserve the bundle as its only symbol source and must recover site headroom before
+publishing another large route.
 
 ## Phase 2 — Validation, compilation, render, and analysis foundations
 

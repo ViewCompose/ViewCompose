@@ -505,6 +505,73 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("website/src/data/capability-reference.json"),
             )
         }
+        project.tasks.register<Exec>("generateAiKnowledgeBundle") {
+            group = "documentation"
+            description =
+                "Generates the versioned AI Knowledge Bundle and compact hosted llms.txt."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "generate:knowledge")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai/contracts")) {
+                    include("**/*.json")
+                },
+                project.fileTree(project.rootDir.resolve("tools/ai/knowledge")) {
+                    include("**/*.json")
+                },
+                project.fileTree(project.rootDir.resolve("tools/ai/scripts")) {
+                    include("knowledge-generator.mjs", "generate-knowledge.mjs")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/capabilities",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/samples",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                extension.sourceSetDirectories,
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+            )
+            outputs.dir(project.rootDir.resolve("tools/ai/generated/current-source"))
+            outputs.file(project.rootDir.resolve("website/static/llms.txt"))
+        }
+        project.tasks.register<Exec>("verifyAiKnowledgeBundle") {
+            group = "verification"
+            description =
+                "Verifies AI Knowledge Bundle determinism, source completeness, and freshness."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:knowledge")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include("contracts/**/*.json", "knowledge/**/*.json", "scripts/**/*.mjs")
+                    exclude("scripts/**/*.test.mjs")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/capabilities",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/samples",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                extension.sourceSetDirectories,
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+                project.fileTree(project.rootDir.resolve("tools/ai/generated/current-source")),
+                project.rootDir.resolve("website/static/llms.txt"),
+            )
+        }
         project.tasks.register<Exec>("verifyDocumentLanguages") {
             group = "verification"
             description =
