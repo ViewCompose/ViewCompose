@@ -443,6 +443,40 @@
       "metricIds": ["xml.generated-preview-isolation"]
     },
     {
+      "id": "xml.generated-layout-comparison-login",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/login.design-ir.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compared"
+      },
+      "metricIds": [
+        "xml.generated-layout-semantic-exactness",
+        "xml.generated-layout-geometry-exactness"
+      ]
+    },
+    {
+      "id": "xml.generated-layout-comparison-profile-card",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/profile-card.design-ir.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compared"
+      },
+      "metricIds": [
+        "xml.generated-layout-semantic-exactness",
+        "xml.generated-layout-geometry-exactness"
+      ]
+    },
+    {
       "id": "xml.unsupported-style-cycle",
       "phase": 4,
       "category": "xml-migration",

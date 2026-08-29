@@ -27,6 +27,7 @@ const packageContractPath = fileURLToPath(
 const sourcePaths = Object.freeze([
   'contracts/design-ir.schema.json',
   'contracts/generated-preview-request.schema.json',
+  'contracts/layout-comparison.schema.json',
   'contracts/mcp-protocol.json',
   'contracts/tool-envelope.schema.json',
   'contracts/xml-project-context.schema.json',

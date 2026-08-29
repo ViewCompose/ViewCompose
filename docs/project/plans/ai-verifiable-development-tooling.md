@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze a generated-layout semantic and geometry comparison contract that evaluates Design IR expectations against accepted render-tree evidence before screenshot or prompt generation begins.
+next_action: Implement the frozen generated-layout comparator, attach exact compared evidence to XML render mode, and add corruption and one-pixel drift denominators before screenshot or prompt generation begins.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -77,13 +77,14 @@ build execution. The tool-owned harness, source-bound CLI/MCP render mode, exact
 stable cache proof, and installed-package render denominator now pass. Exact embedded PNG bytes now
 also become a tool-owned Android resource without any caller path, URL, inspected-project resource
 read, or network access; the accepted XML v2 profile-card fixture compiles and renders through that
-lane. The active foundational gap is structured semantic and geometry comparison between the
-converter's Design IR expectations and accepted render-tree evidence.
+lane. The exact structured semantic and geometry comparison contract between the converter's Design
+IR expectations and accepted render-tree evidence is now frozen. Its comparator and public
+`compared` evidence remain the active foundational implementation gap.
 
 Last verified: 2026-08-30.
 
-Next action: freeze generated-layout semantic and geometry comparison against Design IR and the
-accepted render tree before adding screenshot, prompt, or repair adapters.
+Next action: implement the frozen generated-layout comparison against Design IR and the accepted
+render tree before adding screenshot, prompt, or repair adapters.
 
 ## Maven release changesets
 
@@ -1359,6 +1360,51 @@ JPEG/WebP, arbitrary files, remote images, or application resource merging. It p
 screen and its declared semantics, not pixel parity against the original XML or complete
 accessibility behavior. The next foundational step is an exact semantic and geometry comparison
 contract over Design IR and render-tree evidence before screenshot-driven generation or repair.
+
+### Contract freeze — exact generated layout comparison
+
+The first comparison contract is now frozen around evidence already owned by the XML conversion
+request. Callers cannot submit a replacement Design IR, render tree, policy, artifact path, or
+threshold. The comparator must reopen the exact content-addressed render tree, verify its SHA-256
+and aggregate Preview identity, reject symbolic links, and compare it only with the canonical
+compact fingerprint of the Design IR generated in the same request. A passing conversion advances
+from `rendered` to `compared`; any mismatch retains only `rendered` evidence.
+
+Node identity is exact and intentionally narrow. One leading `id:` is removed from a Design IR ID;
+all other IDs are preserved and must resolve to exactly one authored virtual-node key. The only
+v1 semantic-host exception is the current one-child `Column` wrapper around `TextField`; its
+keyless child must have the same bounds. Kinds, parents, child order, visible text, content
+descriptions, declared roles, and visibility are separate exact checks. String values resolve only
+through the exact Preview binding source. Placeholder rendering absent from the tree, state and
+event behavior, focus traversal, complete accessibility behavior, style, typography, and pixels
+remain explicit non-claims.
+
+Geometry uses integer render-tree coordinates in the accepted screenshot viewport. Declared dp is
+rounded to the nearest pixel at the frozen density, with zero tolerance. V1 checks only applicable
+exact dimensions, root and padded-child match-parent spans, observable uniform padding anchors,
+containment, and vertical sibling order. Wrap-content records its observed bounds without claiming
+a target size; `GONE` requires zero or absent visible bounds and makes size comparison
+not-applicable. No aggregate score can hide a failed identity, structure, semantic, or geometry
+check.
+
+The two frozen denominators bind directly to the accepted login and profile-card renders. Login
+maps 4/4 Design IR nodes and freezes 32 required checks, including the one allowlisted text-field
+wrapper. Profile card maps 3/3 nodes and freezes 24 required checks plus one hidden-geometry
+non-applicable result. Changed IR, changed render bytes or fingerprint, duplicate keys, kind drift,
+and one-pixel exact-dimension drift are named failure denominators.
+
+On 2026-08-30, Node 25.6.0 passed 128/128 tooling tests. Phase 0 now verifies nine schemas, 38
+metrics, 37 cases, 34 fixture-backed cases, and two layout-comparison fixtures. Two clean package
+builds produced the same 46-file, 276,927-byte archive with 1,567,175 declared file bytes and
+SHA-256 `c45ff5c2431944f5501ee53428f21e055b882f017288a3203116ca7501a58a26`.
+The offline lifecycle, installed compilation fixtures, both installed generated renders, SPDX
+inventory, and both MCP protocol eras remained green.
+
+This contract-only slice is **improved** comparison safety and measurability with **no material
+Android runtime or accepted render behavior change**. It does not yet emit a comparison result or
+upgrade the public conversion evidence. The next step is the bounded comparator, exact golden
+results for both screens, and corruption, ambiguity, semantic, structure, and one-pixel failure
+tests before any screenshot, prompt, or repair adapter is considered.
 
 ### Implementation evidence — bounded XML to Design IR
 

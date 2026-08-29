@@ -156,6 +156,7 @@ async function verifySchemas(versions) {
     xmlProjectContext: 'xml-project-context.schema.json',
     xmlLayoutDependencies: 'xml-layout-dependencies.schema.json',
     generatedPreviewRequest: 'generated-preview-request.schema.json',
+    layoutComparison: 'layout-comparison.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -236,6 +237,7 @@ async function verifyExamples(schemas) {
     ['design-ir.json', 'design-ir.schema.json'],
     ['xml-project-context.json', 'xml-project-context.schema.json'],
     ['xml-layout-dependencies.json', 'xml-layout-dependencies.schema.json'],
+    ['layout-comparison.json', 'layout-comparison.schema.json'],
   ];
   for (const [exampleName, schemaName] of examples) {
     const example = await readJson(resolve(contractsDirectory, 'examples', exampleName));
@@ -1005,6 +1007,203 @@ async function verifyGeneratedPreview(schemas) {
   return contract;
 }
 
+async function verifyLayoutComparison(schemas) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/xml');
+  const contract = await readJson(resolve(fixtureDirectory, 'layout-comparison-contract.json'));
+  if (
+    contract.schemaVersion !== 1 ||
+    contract.contractId !== 'viewcompose-generated-layout-comparison-v1' ||
+    JSON.stringify(contract.requiresContracts) !== JSON.stringify([
+      'design-ir-v1',
+      'viewcompose-generated-preview-v1',
+      'viewcompose-preview-protocol-v1',
+      'layout-comparison-v1',
+    ]) ||
+    contract.activation?.tool !== 'convert_xml_to_viewcompose' ||
+    contract.activation?.mode !== 'render' ||
+    contract.activation?.successEvidence !== 'compared' ||
+    contract.activation?.failureEvidence !== 'rendered'
+  ) {
+    throw new Error('Layout comparison must extend the exact Design IR and generated Preview contracts');
+  }
+  if (
+    contract.input?.callerSuppliedDesignIr !== false ||
+    contract.input?.callerSuppliedRenderTree !== false ||
+    contract.input?.callerSuppliedPolicy !== false ||
+    contract.integrity?.followSymbolicLinks !== false ||
+    contract.integrity?.absolutePathsInPublicResult !== false ||
+    contract.integrity?.networkAccess !== false ||
+    contract.integrity?.executeInspectedProjectBuildLogic !== false ||
+    contract.identity?.keyMultiplicity !== 'exactly one virtual node' ||
+    contract.geometry?.tolerancePx !== 0 ||
+    contract.evidence?.passLevel !== 'compared' ||
+    contract.evidence?.mismatchLevel !== 'rendered' ||
+    contract.evidence?.allRequiredChecksMustPass !== true ||
+    contract.evidence?.oneAggregateScore !== false
+  ) {
+    throw new Error('Layout comparison integrity, isolation, or exact-pass boundary changed');
+  }
+  if (
+    JSON.stringify(contract.semanticHostWrappers) !== JSON.stringify([{
+      designKind: 'text-field',
+      identityRenderKind: 'column',
+      semanticRenderKind: 'text-field',
+      maxDepth: 1,
+      requirements: [
+        'exactly one child',
+        'child key is absent',
+        'identity and semantic host bounds are equal',
+      ],
+    }]) ||
+    JSON.stringify(contract.kindMapping) !== JSON.stringify({
+      box: 'box',
+      button: 'button',
+      column: 'column',
+      image: 'image',
+      text: 'text',
+      'text-field': 'text-field',
+    })
+  ) {
+    throw new Error('Layout comparison kind or semantic-host mapping changed');
+  }
+  for (const [name, ceiling] of Object.entries({
+    maxDesignNodes: 1000,
+    maxVirtualNodes: 2000,
+    maxNativeNodes: 4000,
+    maxDepth: 64,
+    maxRenderTreeBytes: 8 * 1024 * 1024,
+    maxChecksPerNode: 128,
+    maxFindings: 1000,
+    maxWrapperDepth: 1,
+  })) {
+    const value = contract.limits?.[name];
+    if (!Number.isInteger(value) || value <= 0 || value > ceiling) {
+      throw new Error(`Layout comparison limit ${name} exceeds its frozen ceiling`);
+    }
+  }
+  assertUnique(contract.diagnosticCodes, 'Layout comparison diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-COMPARE-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid layout comparison diagnostic code: ${code}`);
+    }
+  }
+
+  const designSchema = schemas.get('design-ir.schema.json');
+  const requestSchema = schemas.get('generated-preview-request.schema.json');
+  const generatedPreview = await readJson(resolve(fixtureDirectory, 'generated-preview-contract.json'));
+  const previewBySource = new Map(generatedPreview.supportedFixtures.map((fixture) => [
+    fixture.source,
+    fixture,
+  ]));
+  const declaredInputs = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const [source, designIr, previewRequest] = await Promise.all([
+      readFile(resolve(fixtureDirectory, fixture.source)),
+      readJson(resolve(fixtureDirectory, fixture.designIr)),
+      readJson(resolve(fixtureDirectory, fixture.previewRequest)),
+    ]);
+    assertSchemaValue(designIr, designSchema, fixture.designIr);
+    assertSchemaValue(previewRequest, requestSchema, fixture.previewRequest);
+    const designFingerprint = createHash('sha256')
+      .update(JSON.stringify(designIr))
+      .digest('hex');
+    const requestFingerprint = createHash('sha256')
+      .update(JSON.stringify(previewRequest))
+      .digest('hex');
+    if (
+      !['contract-frozen', 'implemented'].includes(fixture.status) ||
+      designFingerprint !== fixture.expectedDesignIrFingerprint ||
+      requestFingerprint !== fixture.expectedRequestFingerprint ||
+      createHash('sha256').update(source).digest('hex') !== designIr.source.fingerprint
+    ) {
+      throw new Error(`${fixture.source}: layout comparison input identity is stale`);
+    }
+    const preview = previewBySource.get(fixture.source);
+    if (
+      !preview ||
+      preview.request !== fixture.previewRequest ||
+      preview.expectedRequestFingerprint !== fixture.expectedRequestFingerprint ||
+      preview.expectedOutputFingerprint !== fixture.acceptedOutputFingerprint ||
+      preview.expectedRenderTree?.sha256 !== fixture.acceptedRenderTreeFingerprint ||
+      preview.expectedImage?.widthPx !== fixture.viewport.widthPx ||
+      preview.expectedImage?.heightPx !== fixture.viewport.heightPx
+    ) {
+      throw new Error(`${fixture.source}: accepted Preview evidence changed beneath comparison`);
+    }
+    const designNodes = [];
+    visitDesignNodes(designIr.roots, (node) => designNodes.push(node));
+    const expectedNodes = fixture.expectedNodes;
+    assertUnique(expectedNodes.map((node) => node.designNodeId), `${fixture.source} compared nodes`);
+    assertUnique(expectedNodes.map((node) => node.identityKey), `${fixture.source} identity keys`);
+    if (
+      designNodes.length !== fixture.expectedSummary.designNodes ||
+      JSON.stringify(designNodes.map((node) => node.id)) !==
+        JSON.stringify(expectedNodes.map((node) => node.designNodeId)) ||
+      fixture.expectedSummary.mappedNodes !== expectedNodes.length
+    ) {
+      throw new Error(`${fixture.source}: compared Design IR node denominator changed`);
+    }
+    let requiredChecks = 0;
+    let notApplicableChecks = 0;
+    for (let index = 0; index < expectedNodes.length; index += 1) {
+      const expected = expectedNodes[index];
+      const designNode = designNodes[index];
+      const normalizedKey = designNode.id.startsWith('id:') ? designNode.id.slice(3) : designNode.id;
+      const mappedKind = contract.kindMapping[designNode.kind];
+      const wrapper = contract.semanticHostWrappers.find((candidate) =>
+        candidate.designKind === designNode.kind);
+      assertUnique(expected.checkIds, `${fixture.source} ${designNode.id} check IDs`);
+      const hiddenChecks = expected.checkIds.filter((id) => id === 'geometry.hidden').length;
+      requiredChecks += expected.checkIds.length - hiddenChecks;
+      notApplicableChecks += hiddenChecks;
+      if (
+        expected.identityKey !== normalizedKey ||
+        expected.semanticRenderKind !== mappedKind ||
+        expected.wrapperDepth > contract.limits.maxWrapperDepth ||
+        expected.checkIds.length > contract.limits.maxChecksPerNode ||
+        expected.bounds.length !== 4 ||
+        expected.bounds.some((coordinate) => !Number.isInteger(coordinate) || coordinate < 0) ||
+        (expected.wrapperDepth === 0 && expected.identityRenderKind !== mappedKind) ||
+        (expected.wrapperDepth === 1 && (
+          wrapper?.identityRenderKind !== expected.identityRenderKind ||
+          wrapper?.semanticRenderKind !== expected.semanticRenderKind
+        ))
+      ) {
+        throw new Error(`${fixture.source}: mapping contract changed for ${designNode.id}`);
+      }
+    }
+    if (
+      fixture.expectedSummary.requiredChecks !== requiredChecks ||
+      fixture.expectedSummary.passedChecks !== requiredChecks ||
+      fixture.expectedSummary.failedChecks !== 0 ||
+      fixture.expectedSummary.notApplicableChecks !== notApplicableChecks
+    ) {
+      throw new Error(`${fixture.source}: comparison check denominator changed`);
+    }
+    declaredInputs.add(`${fixture.designIr}\0${fixture.previewRequest}`);
+  }
+  assertUnique([...declaredInputs], 'Layout comparison fixture inputs');
+  assertUnique(
+    contract.unsupportedDenominators.map((item) => item.mutation),
+    'Layout comparison unsupported mutations',
+  );
+  for (const denominator of contract.unsupportedDenominators) {
+    for (const code of denominator.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`Undeclared layout comparison diagnostic code ${code}`);
+      }
+    }
+  }
+
+  const example = await readJson(resolve(contractsDirectory, 'examples/layout-comparison.json'));
+  const fingerprint = example.comparisonFingerprint;
+  delete example.comparisonFingerprint;
+  if (createHash('sha256').update(JSON.stringify(example)).digest('hex') !== fingerprint) {
+    throw new Error('Layout comparison example fingerprint is stale');
+  }
+  return contract;
+}
+
 async function verifyMetrics(schemas) {
   const metrics = await readJson(resolve(evaluationDirectory, 'metrics.json'));
   assertSchemaValue(metrics, schemas.get('metric-contract.schema.json'), 'evaluation/metrics.json');
@@ -1089,6 +1288,7 @@ export async function verifyPhase0() {
   const xmlProjectContext = await verifyXmlProjectContext(schemas);
   const xmlLayoutDependencies = await verifyXmlLayoutDependencies(schemas);
   const generatedPreview = await verifyGeneratedPreview(schemas);
+  const layoutComparison = await verifyLayoutComparison(schemas);
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -1107,6 +1307,7 @@ export async function verifyPhase0() {
         xmlLayoutDependencies.unsupportedFixtures.length,
     generatedPreviewFixtures:
       generatedPreview.supportedFixtures.length + generatedPreview.unsupportedFixtures.length,
+    layoutComparisonFixtures: layoutComparison.supportedFixtures.length,
   };
 }
 
@@ -1121,7 +1322,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.xmlV2Fixtures} frozen XML v2 fixtures and ` +
           `${summary.xmlProjectContextFixtures} frozen XML project-context fixtures and ` +
           `${summary.xmlLayoutDependencyFixtures} frozen XML layout-dependency fixtures and ` +
-          `${summary.generatedPreviewFixtures} frozen generated-Preview fixtures.`,
+          `${summary.generatedPreviewFixtures} frozen generated-Preview fixtures and ` +
+          `${summary.layoutComparisonFixtures} frozen layout-comparison fixtures.`,
       );
     })
     .catch((error) => {

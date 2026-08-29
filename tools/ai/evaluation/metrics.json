@@ -291,6 +291,24 @@
       "environment": "fixed tool-owned harness with no inspected-project build, caller task, dependency, output path, network, or symlink traversal"
     },
     {
+      "id": "xml.generated-layout-semantic-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical Design IR against the exact accepted render tree; unique normalized keys, allowlisted semantic hosts, structure, observable text, roles, content descriptions, and visibility"
+    },
+    {
+      "id": "xml.generated-layout-geometry-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "single frozen Preview configuration; integer bounds, nearest-pixel dp conversion, zero tolerance, declared dimensions, padding, containment, and column order"
+    },
+    {
       "id": "migration.unsupported-honesty",
       "phase": 4,
       "measure": "reported_ratio",
