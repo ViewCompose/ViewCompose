@@ -140,6 +140,36 @@ class NavHostPublicApiTest {
     }
 
     @Test
+    fun `typed commands reject a background thread before invoking the encoder`() {
+        var encodeCalls = 0
+        val route = NavRouteSpec(
+            name = "details",
+            encodeArguments = { _: Unit ->
+                encodeCalls += 1
+                emptyMap()
+            },
+            decodeArguments = { Unit },
+        )
+        val controller = deterministicController()
+        val fixture = renderPublicHost(controller)
+        var failure: Throwable? = null
+        val worker = Thread {
+            failure = runCatching {
+                controller.navigate(route, Unit)
+            }.exceptionOrNull()
+        }
+
+        worker.start()
+        worker.join()
+
+        assertTrue(failure is IllegalStateException)
+        assertTrue(failure?.message.orEmpty().contains("main thread"))
+        assertEquals(0, encodeCalls)
+        assertEquals(listOf("home"), controller.routeNames())
+        fixture.session.dispose()
+    }
+
+    @Test
     fun `result pop resumes previous destination and consumes its FIFO inbox once`() {
         val resultKey = NavResultKey.text("selection")
         val received = mutableListOf<String>()
