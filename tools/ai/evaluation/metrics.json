@@ -237,6 +237,24 @@
       "environment": "bounded read-only Kotlin and Java lexical inventory with explicit candidate confidence"
     },
     {
+      "id": "xml.layout-dependency-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "ordered explicit resource roots, default layout files, stable include edges, no AGP execution"
+    },
+    {
+      "id": "xml.include-merge-expansion",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "bounded project-only include and merge fixtures with cross-file provenance"
+    },
+    {
       "id": "migration.unsupported-honesty",
       "phase": 4,
       "measure": "reported_ratio",

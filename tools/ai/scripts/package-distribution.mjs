@@ -29,6 +29,7 @@ const sourcePaths = Object.freeze([
   'contracts/mcp-protocol.json',
   'contracts/tool-envelope.schema.json',
   'contracts/xml-project-context.schema.json',
+  'contracts/xml-layout-dependencies.schema.json',
   'generated/current-source/artifacts.json',
   'generated/current-source/capabilities.json',
   'generated/current-source/llms-full.txt',

@@ -88,6 +88,7 @@ async function verifySchemas(versions) {
     toolEnvelope: 'tool-envelope.schema.json',
     designIr: 'design-ir.schema.json',
     xmlProjectContext: 'xml-project-context.schema.json',
+    xmlLayoutDependencies: 'xml-layout-dependencies.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -167,6 +168,7 @@ async function verifyExamples(schemas) {
     ['tool-result.json', 'tool-envelope.schema.json'],
     ['design-ir.json', 'design-ir.schema.json'],
     ['xml-project-context.json', 'xml-project-context.schema.json'],
+    ['xml-layout-dependencies.json', 'xml-layout-dependencies.schema.json'],
   ];
   for (const [exampleName, schemaName] of examples) {
     const example = await readJson(resolve(contractsDirectory, 'examples', exampleName));
@@ -595,6 +597,126 @@ async function verifyXmlProjectContext(schemas) {
   return contract;
 }
 
+async function verifyXmlLayoutDependencies(schemas) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/xml');
+  const contract = await readJson(resolve(fixtureDirectory, 'layout-dependency-contract.json'));
+  if (
+    contract.schemaVersion !== 1 ||
+    contract.contractId !== 'android-xml-layout-dependencies-v1' ||
+    JSON.stringify(contract.requiresSubsetIds) !==
+      JSON.stringify(['android-xml-layout-v1', 'android-xml-layout-v2']) ||
+    contract.activation !== 'explicit-project-input-only'
+  ) {
+    throw new Error('XML layout dependencies must extend the exact accepted v1 and v2 subsets');
+  }
+  if (
+    contract.execution?.readOnly !== true ||
+    contract.execution?.networkAccess !== false ||
+    contract.execution?.executeProjectBuildLogic !== false ||
+    contract.execution?.followSymbolicLinks !== false ||
+    contract.execution?.automaticVariantSelection !== false ||
+    contract.selection?.qualifiedLayouts !== 'inventory-only' ||
+    contract.selection?.resourceRootPrecedence !== 'first declared root wins' ||
+    contract.include?.overrideAttributes !== false ||
+    contract.merge?.activation !== 'included-root-only' ||
+    contract.provenance?.rawSourceInOutput !== false
+  ) {
+    throw new Error('XML layout dependency execution, selection, expansion, or provenance boundary changed');
+  }
+  for (const [name, ceiling] of Object.entries({
+    maxLayoutFiles: 64,
+    maxIncludeDepth: 16,
+    maxIncludeEdges: 256,
+    maxExpandedBytes: 1024 * 1024,
+  })) {
+    const value = contract.limits?.[name];
+    if (!Number.isInteger(value) || value <= 0 || value > ceiling) {
+      throw new Error(`XML layout dependency limit ${name} exceeds its frozen ceiling`);
+    }
+  }
+  assertUnique(contract.diagnosticCodes, 'XML layout dependency diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-XML-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid XML layout dependency diagnostic code: ${code}`);
+    }
+  }
+
+  const schema = schemas.get('xml-layout-dependencies.schema.json');
+  const publicExample = await readJson(
+    resolve(contractsDirectory, 'examples/xml-layout-dependencies.json'),
+  );
+  const declaredInputs = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const projectRoot = resolve(fixtureDirectory, fixture.projectRoot);
+    const files = [...fixture.files].sort();
+    if (JSON.stringify(files) !== JSON.stringify(fixture.files)) {
+      throw new Error(`${fixture.projectRoot}: layout dependency files must use normalized order`);
+    }
+    const contentByPath = new Map();
+    for (const path of files) {
+      contentByPath.set(path, await readProjectFixtureFile(projectRoot, path));
+    }
+    const graph = await readJson(resolve(fixtureDirectory, fixture.goldenGraph));
+    assertSchemaValue(graph, schema, fixture.goldenGraph);
+    if (JSON.stringify(graph) !== JSON.stringify(publicExample)) {
+      throw new Error('The public XML layout dependency example must equal the frozen golden');
+    }
+    if (
+      graph.nodes.length !== fixture.expectedLayoutFiles ||
+      graph.edges.length !== fixture.expectedIncludes ||
+      graph.coverage.layoutFiles !== fixture.expectedLayoutFiles ||
+      graph.coverage.expandedIncludes !== fixture.expectedIncludes
+    ) {
+      throw new Error(`${fixture.projectRoot}: layout dependency denominator changed`);
+    }
+    for (const node of graph.nodes) {
+      const content = contentByPath.get(node.path);
+      if (!content || createHash('sha256').update(content).digest('hex') !== node.fingerprint) {
+        throw new Error(`${fixture.projectRoot}: stale layout dependency node ${node.path}`);
+      }
+      const source = content.toString('utf8');
+      const actualKind = /<merge\b/u.test(source) ? 'merge' : 'layout';
+      if (node.rootKind !== actualKind) {
+        throw new Error(`${fixture.projectRoot}: root kind changed for ${node.path}`);
+      }
+    }
+    for (const edge of graph.edges) {
+      const source = contentByPath.get(edge.source.path)?.toString('utf8');
+      const line = source?.split('\n')[edge.source.startLine - 1];
+      const expected = `<include layout="${edge.to}" />`;
+      if (!line || line.indexOf(expected) + 1 !== edge.source.startColumn) {
+        throw new Error(`${fixture.projectRoot}: include edge position changed for ${edge.to}`);
+      }
+    }
+    const expectedFingerprint = createHash('sha256').update(JSON.stringify({
+      root: graph.root,
+      nodes: graph.nodes,
+      edges: graph.edges,
+    })).digest('hex');
+    if (graph.fingerprint !== expectedFingerprint) {
+      throw new Error(`${fixture.projectRoot}: layout dependency graph fingerprint is stale`);
+    }
+    declaredInputs.add(fixture.projectRoot);
+  }
+  for (const fixture of contract.unsupportedFixtures) {
+    if (fixture.kind === 'project') {
+      const projectRoot = resolve(fixtureDirectory, fixture.projectRoot);
+      for (const path of fixture.files) await readProjectFixtureFile(projectRoot, path);
+      declaredInputs.add(fixture.projectRoot);
+    } else {
+      await readFile(resolve(fixtureDirectory, fixture.source));
+      declaredInputs.add(fixture.source);
+    }
+    for (const code of fixture.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`Undeclared XML layout dependency diagnostic code ${code}`);
+      }
+    }
+  }
+  assertUnique([...declaredInputs], 'XML layout dependency fixture inputs');
+  return contract;
+}
+
 async function verifyMetrics(schemas) {
   const metrics = await readJson(resolve(evaluationDirectory, 'metrics.json'));
   assertSchemaValue(metrics, schemas.get('metric-contract.schema.json'), 'evaluation/metrics.json');
@@ -677,6 +799,7 @@ export async function verifyPhase0() {
   const xmlSubset = await verifyXmlSubset(schemas);
   const xmlSubsetV2 = await verifyXmlSubsetV2(schemas);
   const xmlProjectContext = await verifyXmlProjectContext(schemas);
+  const xmlLayoutDependencies = await verifyXmlLayoutDependencies(schemas);
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -690,6 +813,9 @@ export async function verifyPhase0() {
       xmlSubsetV2.supportedFixtures.length + xmlSubsetV2.unsupportedFixtures.length,
     xmlProjectContextFixtures:
       xmlProjectContext.supportedFixtures.length + xmlProjectContext.unsupportedFixtures.length,
+    xmlLayoutDependencyFixtures:
+      xmlLayoutDependencies.supportedFixtures.length +
+        xmlLayoutDependencies.unsupportedFixtures.length,
   };
 }
 
@@ -702,7 +828,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.cases} cases, ${summary.fixtures} fixture-backed cases, and ` +
           `${summary.xmlFixtures} frozen XML fixtures and ` +
           `${summary.xmlV2Fixtures} frozen XML v2 fixtures and ` +
-          `${summary.xmlProjectContextFixtures} frozen XML project-context fixtures.`,
+          `${summary.xmlProjectContextFixtures} frozen XML project-context fixtures and ` +
+          `${summary.xmlLayoutDependencyFixtures} frozen XML layout-dependency fixtures.`,
       );
     })
     .catch((error) => {

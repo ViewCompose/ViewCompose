@@ -35,8 +35,8 @@ completion:
   - XML, Compose, screenshot, and Figma paths share one explicit Design IR, preserve provenance and unsupported semantics, and never silently invent application behavior.
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
-last_verified: 2026-08-29
-next_action: Freeze the explicit-root Android layout dependency contract for bounded include and merge expansion, cycle rejection, provenance, and call-site evidence before implementation.
+last_verified: 2026-08-30
+next_action: Implement the frozen explicit-root Android layout dependency graph and bounded include and merge expansion, then prove exact cross-file provenance and hermetic compilation.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -66,12 +66,14 @@ project input form of the shared CLI/MCP converter, and its styled golden passes
 compiler without changing standalone source input. Android XML layout v2 is now contract-frozen as
 the next compatible subset for `FrameLayout`, `ImageView`, explicit image accessibility, drawable
 bindings, image scaling, and visibility. Its parser, IR, generator, project composition, installed
-CLI/MCP generation, and hermetic compile gates now pass.
+CLI/MCP generation, and hermetic compile gates now pass. The following explicit-root layout
+dependency contract is also frozen: it bounds default-layout selection, `include`/`merge`
+expansion, dependency cycles, graph identity, and cross-file provenance before implementation.
 
-Last verified: 2026-08-29.
+Last verified: 2026-08-30.
 
-Next action: freeze the explicit-root Android layout dependency contract for bounded `include` and
-`merge` expansion, cycle rejection, provenance, and call-site evidence before implementation.
+Next action: implement the frozen explicit-root layout dependency graph and bounded `include` and
+`merge` expansion, then prove exact cross-file provenance and hermetic compilation.
 
 ## Maven release changesets
 
@@ -1059,6 +1061,49 @@ claimed; source selectors, tint, gravity, qualified drawables, style-supplied v2
 includes, merge roots, and Android resource merging remain unsupported. The next foundational gap
 is a frozen explicit-root layout dependency graph for bounded `include`/`merge` expansion; the
 resolver must not traverse layout dependencies before that contract exists.
+
+### Contract freeze — Android XML layout dependencies v1
+
+The project-only dependency contract now freezes the missing boundary before any resolver follows
+an `include`. Callers must provide one project root, the root layout path, and ordered explicit
+resource roots. Only unqualified `@layout/name` references in default `layout/` directories are
+selectable; qualified directories remain inventory evidence, the first declared resource root wins,
+and duplicate candidates at the same precedence fail closed. The resolver remains read-only,
+offline, rejects symbolic links, and never executes Gradle, AGP, resource merging, or automatic
+variant selection.
+
+An `include` accepts only its `layout` attribute and preserves an ordinary included root. A `merge`
+root is valid only when reached through an `include`; it splices its ordered children into that
+position and accepts no semantic attribute beyond the Android namespace declaration. Source-only
+conversion containing an `include`, standalone `merge`, missing layouts, cycles, unsupported
+include attributes, or any dependency ceiling violation returns a stable fail-closed diagnostic and
+no generated Kotlin. The ceilings are 64 layout files, 16 include levels, 256 dependency edges, and
+1 MiB of expanded input.
+
+The schema records the selected path and SHA-256 for every layout, ordered include edges with their
+original one-based source positions, explicit selection completeness, and a canonical graph
+fingerprint. The positive denominator is a three-file screen: its root includes one ordinary
+`FrameLayout` profile header and one `merge` action group. Its intended expanded result contains six
+IR nodes and preserves one drawable and four string resources. The negative project denominator is
+a two-file cycle; the existing screen is also the source-only rejection denominator. This expands
+Phase 4 to seven schemas, 32 metrics, 30 evaluation cases, 27 fixture-backed cases, and three frozen
+layout-dependency fixtures while retaining four base XML fixtures, two XML v2 fixtures, and three
+project-context fixtures.
+
+On 2026-08-30, Node 25.6.0 passed the expanded Phase 0 contract verifier with exact schema, fixture,
+edge-position, file-fingerprint, graph-fingerprint, diagnostic, execution-boundary, and ceiling
+checks. The schema also entered the installed offline distribution: two clean 42-file package builds
+were byte-identical, with a 263,198-byte archive, 1,497,969 declared file bytes, and archive SHA-256
+`3425c259291fac19754c15feaf578a56877deb74c1be4ff27eff50b3453fc482`. Offline install/uninstall,
+SPDX/license inventory, both MCP protocol versions, the existing compiled sample, and both XML
+compile lanes passed under JDK 21. The repository contract and documentation-structure gates passed
+20 actionable tasks (6 executed and 14 up-to-date).
+
+Compared with the v2 implementation denominator, this is **improved** measurable project layout
+dependency coverage with **no material conversion or Android runtime behavior change**: the graph,
+fixtures, metrics, and installed schema freeze intended behavior only. The next action is exact
+resolver and expansion implementation plus hermetic compilation; no layout traversal may bypass
+this graph contract.
 
 ### Implementation evidence — bounded XML to Design IR
 

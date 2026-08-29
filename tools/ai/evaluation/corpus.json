@@ -313,6 +313,53 @@
       ]
     },
     {
+      "id": "xml.layout-dependencies-screen",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/layout-dependencies/screen.dependencies.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "xml.layout-dependency-exactness",
+        "xml.include-merge-expansion"
+      ]
+    },
+    {
+      "id": "xml.layout-dependency-cycle",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/layout-dependencies/cycle/app/src/main/res/layout/a.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-INCLUDE-CYCLE"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
+      "id": "xml.source-only-include",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/layout-dependencies/supported/app/src/main/res/layout/screen.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-PROJECT-CONTEXT-REQUIRED"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
       "id": "xml.unsupported-style-cycle",
       "phase": 4,
       "category": "xml-migration",

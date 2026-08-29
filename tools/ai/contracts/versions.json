@@ -5,6 +5,7 @@
     "toolEnvelope": 1,
     "designIr": 1,
     "xmlProjectContext": 1,
+    "xmlLayoutDependencies": 1,
     "evaluationCorpus": 1,
     "metricContract": 1
   },
