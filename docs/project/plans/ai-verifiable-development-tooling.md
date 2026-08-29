@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement the fail-closed Android XML v1 parser and prove exact Design IR output against the frozen login golden.
+next_action: Implement deterministic Design IR-to-ViewCompose Kotlin generation and compile the frozen XML migration output.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -54,12 +54,13 @@ workflows are complete. The reproducible local distribution, offline lifecycle, 
 inventory, installed compile example, and protocol compatibility gates complete the Phase 3
 foundation.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
-one supported golden and three explicit unsupported denominators.
+one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
+the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates.
 
 Last verified: 2026-08-29.
 
-Next action: implement the fail-closed Android XML v1 parser and prove exact Design IR output
-against the frozen login golden.
+Next action: implement deterministic Design IR-to-ViewCompose Kotlin generation and compile the
+frozen XML migration output.
 
 ## Maven release changesets
 
@@ -851,6 +852,30 @@ one four-node login golden with three string resources and one caller state bind
 View, Data Binding, and unknown-attribute rejection fixtures. Phase 4 begins with 27 total metrics,
 22 evaluation cases, 19 fixture-backed cases, and four XML source fixtures; implementation may not
 widen this subset silently.
+
+### Implementation evidence — bounded XML to Design IR
+
+The first Phase 4 implementation uses a dependency-free scanner and tree builder rather than
+executing Android resource tooling or application Gradle code. It enforces the frozen byte, depth,
+node, attribute, and unsupported-fragment ceilings; accepts only a bounded repository-relative
+source identity; checks tag matching and duplicate attributes; and rejects `DOCTYPE`, declared
+entities, CDATA, unsupported processing instructions, unknown namespaces, duplicate Android IDs,
+and malformed input before any generation claim. Attribute values are parsed into typed IR values,
+not retained as an untyped property bag.
+
+On 2026-08-29, Node 25.6.0 passed 81/81 AI-tooling tests in 1.33 seconds. The dedicated Phase 4 gate
+matched 1/1 schema golden, 1/1 repeated deterministic conversion, 4/4 complete node provenance,
+1/1 resource-preservation denominator, and 3/3 unsupported fixtures. The compiled quality-build
+suite plus root `verifyAiDesignIr` passed 18 tasks (4 executed and 14 up-to-date) in 14 seconds.
+Compared with the contract-only baseline, the result is **improved** deterministic migration and
+unsupported-source localization with **no material runtime change** because the parser and gate are
+downstream development tooling and execute no application code.
+
+Limitations: this evidence proves only IR conversion for the four-element XML v1 subset. It does
+not yet generate Kotlin, compile a converted result, render a migrated layout, inspect call sites,
+resolve styles/resources, or support `include`, `merge`, `FrameLayout`, ConstraintLayout, lists,
+custom Views, Data Binding, or behavior. The next action is deterministic IR-to-Kotlin generation
+with the existing hermetic compiler as its acceptance boundary.
 
 ### Phase 4A: Design IR and code generation
 

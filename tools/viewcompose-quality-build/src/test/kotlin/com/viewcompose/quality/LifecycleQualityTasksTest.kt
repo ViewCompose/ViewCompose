@@ -75,6 +75,7 @@ class LifecycleQualityTasksTest {
                 "verifyAiLayoutDiagnosis",
                 "verifyAiConsumerWorkflows",
                 "verifyAiDistribution",
+                "verifyAiDesignIr",
                 "verifyDocumentationStructure",
                 "verifyDslApiContracts",
                 "verifyMigrationPairedSamples",

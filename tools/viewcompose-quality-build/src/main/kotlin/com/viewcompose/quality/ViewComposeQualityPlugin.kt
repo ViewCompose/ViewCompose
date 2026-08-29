@@ -633,6 +633,26 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiDesignIr") {
+            group = "verification"
+            description =
+                "Verifies deterministic Android XML conversion to the frozen Design IR subset."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-design-ir")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "evaluation/fixtures/xml/**",
+                        "scripts/schema-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-design-ir.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =
