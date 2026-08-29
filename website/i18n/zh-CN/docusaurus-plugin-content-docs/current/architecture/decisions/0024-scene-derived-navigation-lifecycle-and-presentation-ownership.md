@@ -28,16 +28,17 @@ invariants:
   - 逻辑 Entry 所有权可跨原生 Presentation 销毁继续存在；永久移除时必须先销毁 Presentation，再销毁 Entry Owner。
   - 一份 Reducer 输出的计划统一拥有 Stack、Scene、Lifecycle、Presentation、Focus、Transition、Rollback 与终止清理决策。
 evidence:
-  - docs/project/plans/navigation-lifecycle-and-scene-evolution.md
+  - docs/archive/navigation-lifecycle-and-scene-evolution.md
   - docs/architecture/decisions/0023-retained-viewmodel-scope-ownership.md
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavLifecyclePlannerTest.kt
+  - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavExecutionReducerTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt
   - app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt
 translation_source: architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md
-translation_source_hash: b979e515a90a548613299fdb391cdc0abd160db2675463ffd0f85cefae7782da
+translation_source_hash: e70a1c419bf8663fa2d64425e4470b5297832640db7af63f5cce7d4fb2d30aa3
 translation_status: current
 ---
 
@@ -153,8 +154,9 @@ Phase 4 根据证据选择有界的 `DisposeWhenHidden` 作为默认策略。在
 的中位耗时从 13,318 us 增至 49,573 us，即增加 36,255 us（272.2%）；但两个策略在 90 Hz 下
 都采集到 252 帧，P95 都为 9 ms，且超过 32 ms 的帧都为 0。结论为 **mixed**：空闲资源上界
 得到改善，实测稳定转场 **no material change**，而实测重建昂贵的页面可显式选择 `Bounded` 或
-`RetainAll`。单台设备、合成内容、进程级 PSS 和短时运行限制了结论外推；Phase 7 继续负责更广的
-设备、泄漏与真实负载证据。
+`RetainAll`。单台设备、合成内容、进程级 PSS 和短时运行限制了结论外推。Phase 7 后续补充了双设备
+可达性与资源证据以及单设备 Release Benchmark；API 24、更广 OEM 和代表性 Overlay 负载仍不在已接受
+证据边界内。
 
 默认策略不得无界。永久移除 Entry 时，先销毁 Presentation，再销毁 Owner 并终止清理 ViewModel。
 配置或进程恢复不会重建任何 Live View、Effect、Animation 或 Candidate Transaction。
@@ -260,7 +262,8 @@ ViewModel 与 Saveable State Identity 并不需要 Live Presentation。
 3. Phase 3 在 Android 应用已接受的 Transition、Overlay、Pane、Host Cap、Graph Order、Focus 与
    Terminal Lifecycle Matrix。
 4. Phase 4 分离 Presentation、实现三种策略，并根据已经解释的 Device Memory、Restoration、
-   Recreation 与 Frame 证据选择 `DisposeWhenHidden`；更广的 Leak 与负载矩阵保留到 Phase 7。
+   Recreation 与 Frame 证据选择 `DisposeWhenHidden`；Phase 7 补充已接受的 Reachability、Resource
+   与 Release Benchmark 矩阵。
 5. Phase 5 发布 Destination Context 与 Compiled Q3 Sample，并验证稳定 Holder Identity、Delayed
    Capture、Presentation Recreation、Nested Host、Pane、Overlay 与 Removal。
 6. Phase 6 发布纯 Core Reducer 与类型化 Android Executor，并从 Coordinator 删除被替代的
@@ -268,6 +271,5 @@ ViewModel 与 Saveable State Identity 并不需要 Live Presentation。
 7. Phase 7 与 Phase 8 关闭 Typed Route/Ecosystem Disposition、Coverage、Device、Performance、
    Documentation、Release 与 Archive 门禁。
 
-有效的
-[Navigation Lifecycle 与 Scene 演进计划](../../../../../../../docs/project/plans/navigation-lifecycle-and-scene-evolution.md)
-拥有阶段顺序与验收证据。当前 Architecture 与 Module Manual 只在相应实现行为落地时更新。
+[已归档的 Navigation Lifecycle 与 Scene 演进计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/navigation-lifecycle-and-scene-evolution.md)
+记录已完成的阶段顺序与验收证据；有效 Architecture 与 Module Manual 负责已交付契约。

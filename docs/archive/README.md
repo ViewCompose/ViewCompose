@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `navigation-lifecycle-and-scene-evolution.md` | Navigation Phase 0～8 已闭环：统一 Lifecycle DSL、Scene/Entry Cap、转场生命周期、Entry/Presentation 分离、有界保留、Destination Context、单 Reducer/Executor、结构化 Deep Link、结果、类型化 Route、Kotlinx Serialization、NavigationEvent、覆盖率与资源证据、Content/Overlay Scene 均已落地；Core 93 项与 Android 188 项测试、Pixel 19 项完整矩阵、小米 Overlay 场景、全仓 Quick/Preview、双语长期文档和发布意图均已验收，Forward History、任意 Scene、独立 Window 与 Preview 输入需按真实用例重新立项 |
 | `viewmodel-androidx-optimal-architecture-and-compose-parity.md` | ViewModel Phase 0～6 已闭环：Lifecycle 2.11 唯一 Store 解析、通用 Retained Scoped Owner、Navigation/Host 收敛、单 Owner `SavedStateHandle`、52 项所属模块与 276 项受影响层测试、Android 9 Activity Root 与多 Stack 进程重建、全仓 Quick/Preview 及双语长期文档均已验收；Release 模式、更广设备/API 矩阵、内存与运行时性能只保留证据门槛，不再阻塞该架构计划归档 |
 | `documentation-system-governance-v2.md` | Governance V2 已从 733 条历史 finding 和 311 条精确 Exception 收敛为 531 个公开入口、123 个双语公共页面、201 个可执行代码块全部结构化归属；生成 Reference、公开 API impact、信息架构、样例与语言门禁均已闭环，临时基线及兼容路径已硬切删除，永久门禁以零 issue、零 Exception 的 blocking strict mode 运行 |
 | `lazy-list-tail-performance-diagnostics.md` | 列表尾部性能根因已归因到重复的不可变转换/观察记账与兼容物理内容上的冷逻辑所有者安装；生产修复使滚动与变更 P95 分别较已接受基线改善 `26.2%` 和 `24.8%`，同轮对照不再落入回退门槛，临时诊断探针已硬切且 Release 排除、仓库与小米组成套件门禁闭环；Mutation P99 与 Scroll heap 只保留纵向观察，越线需重新立项 |

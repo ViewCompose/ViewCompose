@@ -138,7 +138,8 @@ before owner destruction and ViewModel clear.
 
 An API-33 synthetic comparison selected the bounded default: native retention and PSS improved,
 synchronous rebuild regressed, and its short settled-frame sample had **no material change**. Exact
-results and limitations remain in the [active plan](../project/plans/navigation-lifecycle-and-scene-evolution.md).
+results and limitations remain in the
+[archived plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/navigation-lifecycle-and-scene-evolution.md).
 
 The entry owner also retains one `NavDestinationContext`. Destination DSL reads it from
 `LocalNavDestinationContext`; nested hosts replace the Local for their child entry and restore the
@@ -271,6 +272,7 @@ Run `./gradlew :viewcompose-navigation-core:test :viewcompose-navigation-android
 for the deterministic architecture suite. Device behavior is accepted only when the guide's real
 Back, recreation, predictive-Back, and failure journey also passes.
 
-Current test deltas, device results, limitations, and next actions are interpreted in the
-[active navigation plan](../project/plans/navigation-lifecycle-and-scene-evolution.md); raw test
+Accepted test deltas, device results, limitations, and final dispositions are interpreted in the
+[archived navigation plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/navigation-lifecycle-and-scene-evolution.md);
+raw test
 output alone does not change these contracts.
