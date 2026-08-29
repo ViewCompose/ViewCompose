@@ -10,6 +10,7 @@ capability_ids:
   - navigation.deep-links
   - navigation.destination-context
   - navigation.host
+  - navigation.kotlinx-serialization-routes
   - navigation.presentation-retention
   - navigation.result-consumption
   - navigation.results
@@ -19,6 +20,7 @@ capability_ids:
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
+  - viewcompose-navigation-kotlinx-serialization
 sample_ids:
   - module.navigation-android-results
   - module.navigation-core-execution-plan
@@ -54,130 +56,78 @@ motion, deep-link, multi-stack, graph-owner, and adaptive-pane APIs remain in th
 ## Choose one controller owner
 
 Create the controller with `rememberNavHostController` in the same UI owner that mounts `NavHost`.
-Do not cache it in a process singleton or attach it to two hosts. The remembered controller saves
-the committed stack, entry and graph identities, route arguments, and destination-owned saved
-state through the nearest ViewCompose saveable-state registry.
+Never cache it in a process singleton or share it across hosts. It saves committed stack and owner
+identities, arguments, and destination state through the nearest ViewCompose registry.
 
 Mount `NavHost` below both `LocalLifecycleOwner` and `LocalViewModelStoreOwner`. Standard Activity
-and Fragment `setUiContent` hosts do this automatically. A low-level `renderInto` integration must
-provide both explicitly; `NavHost` intentionally refuses to create a private fallback store.
+and Fragment `setUiContent` hosts do this; `renderInto` integrations must provide both because no
+private fallback store is created.
 
 Use a stable `NavGraph` when routes need typed arguments, nested ownership, or deep links. Restore
-fails closed when the current graph no longer accepts the saved route hierarchy. Treat that as a
-safe restart at the configured start destination, not as a partially restored stack.
+fails closed to the start destination when the graph rejects a saved hierarchy.
 
 Declare one stable `NavRouteSpec<T>` per application route and reuse it in `destination`,
-`navigation`, controller typed commands, and `NavEntry.toRoute`. Encode only durable identifiers
-and small primitive values; load domain objects from the destination ViewModel. Keep the explicit
-route name and argument schema compatible across releases. A codec exception is a caller error and
-occurs before the Android host begins a navigation transaction.
+`navigation`, typed commands, and `NavEntry.toRoute`. Encode durable IDs and small primitives, load
+domain objects in the ViewModel, and keep names and schemas restore-compatible. Codec errors occur
+before the host transaction.
+
+The optional [Kotlinx adapter](../modules/viewcompose-navigation-kotlinx-serialization/README.md)
+derives specs for flat serialized routes; unsupported shapes use explicit Core codecs.
 
 Model external navigation with `NavDeepLinkRequest`. A declaration may constrain URI, action,
-MIME type, or all three; every declared constraint must match. The Android `Intent` overload maps
-only `data`, `action`, and `type` into that same Core request. Inspect `NavDeepLinkResult` before
-assuming navigation occurred, and validate the complete URI before routing when signatures or an
-exact query-key set are part of the application's security boundary.
+MIME type, or all three, and every constraint must match. Android maps only Intent data, action,
+and type. Inspect `NavDeepLinkResult`, and validate the complete URI at security boundaries.
 
 ## Restore state and connect platform Back
 
 Leave `systemBackEnabled = true` for the ordinary Activity or Fragment host. `NavHost` registers
-with the nearest AndroidX Back dispatcher only while the controller can consume Back; at the active
-root it follows the configured retained-stack history or delegates outward.
+with AndroidX Back only while the controller can consume it; an active root follows retained-stack
+history or delegates outward.
 
 Call `popBackStack` for an in-UI Back action. System Back and predictive Back then use the same
-transaction boundary. Predictive Back previews the previous destination without publishing the
-candidate stack; cancellation restores the committed scene, while completion commits through the
-same path as a programmatic pop.
+transaction. Predictive preview never publishes its candidate: cancel restores the committed
+scene, and completion follows the programmatic-pop path.
 
 Declare a stable `NavResultKey`, pop with its value, and observe it with `NavResultEffect` in the
-previous page. Delivery is saved, FIFO, and deferred until that page is `RESUMED`; use the
-destination context inbox when explicit acknowledgement or retry is required.
+previous page. Delivery is saved, FIFO, and waits for `RESUMED`; explicit acknowledgement or retry
+uses the destination-context inbox.
 
 ## Keep route rendering exhaustive
 
 Render every accepted route in the `NavHost` content block and reject unknown routes immediately.
-The content block runs inside the destination's framework-owned lifecycle, ViewModelStore,
-SavedStateRegistry, saveable-state namespace, and child render session. A second push of the same
-route still creates a distinct entry owner unless the selected launch mode explicitly reuses it.
-
-Destination and graph ViewModelStores come from one shared Lifecycle 2.11 scoped-owner provider.
-They survive Activity configuration recreation when the parent store and remembered controller
-state survive, but a permanent pop or graph removal clears the corresponding scope. Process
-recreation restores state into new ViewModel instances rather than serializing live models.
-
-Change `contentKey` only when destination content closes over a non-observable parent value.
-Observable ViewCompose state invalidates the owning destination session directly. Changing the
-controller, lifecycle owner, parent ViewModelStore owner, overlay factory, debug identity, or host
-`key` changes ownership and therefore recreates the native host.
+It runs in the destination-owned lifecycle, stores, saveable namespace, and child render session;
+repeated pushes create distinct owners unless launch mode reuses one. Scoped stores survive
+configuration recreation with their parent, clear on permanent removal, and recreate ViewModels
+from restored state after process death. Change `contentKey` only for a non-observable parent
+capture; changing a host owner, controller, factory, debug identity, or host `key` recreates the
+native host.
 
 ## Observe destination presentation without duplicating Lifecycle
 
 Read `LocalNavDestinationContext.current` during destination DSL declaration when content needs to
-distinguish hidden, visible, covered, interactive, transitioning, pane, or overlay roles. Capture
-the returned context holder for a later callback; do not perform a global current-page lookup and
-do not read the Local from an effect callback. A nested `NavHost` supplies its own nearest holder.
-
-The holder's `entry` is stable for its retained lifetime. Its `presentation.value` may change when
-the semantic scene changes and may therefore invalidate content that reads it. The holder remains
-the same when `DisposeWhenHidden` releases and later rebuilds the native presentation. Permanent
-removal stops presentation updates and drives the standard destination Lifecycle to `DESTROYED`.
-
-Keep resource thresholds on standard AndroidX Lifecycle: use lifecycle effects or lifecycle-aware
-Flow collection for cameras, sensors, players, network collection, and other active work. Use the
-destination context for coarse presentation decisions only. It deliberately excludes per-frame
-ordinary-transition and predictive-Back progress.
+distinguish presentation roles, and capture that nearest holder for callbacks. Its entry survives
+hidden-presentation disposal; permanent removal ends updates and destroys its Lifecycle. Active
+resources still follow AndroidX Lifecycle because this context is coarse and has no frame progress.
 
 ## Choose presentation retention deliberately
 
 Keep the default `NavPresentationRetentionPolicy.DisposeWhenHidden` unless device evidence for a
-specific destination shows that rebuilding its native View tree is unacceptable. The default
-disposes a fully hidden `RenderSession`, View tree, effects, focus, accessibility state, and native
-resources after transition settlement. It preserves the destination owner, ViewModels,
-SavedStateRegistry, `rememberSaveable` values, route arguments, and graph identity. Reveal then
-rebuilds the presentation transactionally before publishing the new scene.
-
-Use `NavPresentationRetentionPolicy.Bounded(maxHiddenPresentations = n)` when an application needs
-a measured cache across several recently hidden surfaces. The positive maximum counts only hidden
-presentations; visible panes and transition participants are outside the bound. Use `RetainAll`
-only as an explicit, measured opt-in. It is unbounded across deep and multiple stacks and therefore
-is not a safe general default.
-
-Changing the policy does not recreate `NavHost` or its entry owners. Tightening a policy evicts
-excess hidden presentations immediately; relaxing it affects future presentations and does not
-eagerly compose hidden stacks. Initial, configuration-restored, and process-restored attachment
-materializes only the visible pane set.
+destination proves rebuild cost unacceptable. It releases hidden native presentation but retains
+owner state. Use measured `Bounded(n)` caching when needed; `RetainAll` is unbounded. Policy changes
+preserve owners, and initial or restored attachment materializes only visible panes.
 
 ## Keep one policy source in custom integrations
 
-Normal applications should use `NavHost`; it already executes the Core plan. A custom platform
-host may call `NavExecutionReducer.settled`, `transition`, or `predictivePreview` for its matching
-event. These are three ergonomic inputs into one implementation, not three lifecycle systems. Each
-returns the same `NavExecutionPlan`, and `reconcile` reapplies host-lifecycle or retention changes
-to an existing semantic phase.
-
-Execute the plan as a whole. Prepare and refresh every required presentation before committing its
-candidate stack; publish the planned scene, lifecycle, interaction, and Back ownership together;
-then perform planned eviction or terminal cleanup at its stated boundary. Do not derive lifecycle
-from View attachment, run a second retention cache, or calculate Back eligibility separately. The
-compiled Core sample shows plan construction; Android's built-in executor remains internal because
-platform mutation is a host responsibility, not an application DSL API.
+Normal applications use `NavHost`. A custom host must execute each complete `NavExecutionPlan`:
+prepare before commit, publish scene/lifecycle/interaction/Back together, then clean up at the
+planned boundary. It must not derive parallel lifecycle, retention, or Back policy.
 
 ## Handle command outcomes
 
-Every controller command returns `NavResult`:
-
-| Result | Application action |
-| --- | --- |
-| `Committed` | Read its stack snapshot or let observable `navigationState` update the UI. |
-| `NoChange` | Keep the current UI; the command was valid but already effective. |
-| `Queued` | Wait for `navigationState`; this is accepted work, not completion. |
-| `Failed` | Report its structured `NavFailure` and retain the committed stack it carries. |
-
-Pass `onFailure` to `NavHost` when the application has logging, fallback, or test policy. Without a
-handler, the host raises `NavHostException`. Do not catch an arbitrary destination failure and
-mutate a second application-owned back stack: failures before stack commit already preserve the
-old stack and visible page, while failures after commit identify that boundary with
-`NavFailure.stackCommitted`.
+Every command returns `Committed`, `NoChange`, `Queued`, or `Failed`. Observe `navigationState` for
+queued completion and report the structured failure without replacing the committed stack. Use
+`onFailure` for logging, fallback, or tests; otherwise `NavHostException` is raised. Pre-commit
+failure preserves the old page, and `NavFailure.stackCommitted` marks a post-commit boundary.
 
 ## Verify the task
 
@@ -187,34 +137,9 @@ Run the compiled tutorial and the Navigation Android tests:
 ./gradlew :samples:tutorials:assembleDebug :viewcompose-navigation-android:testDebugUnitTest
 ```
 
-Then verify one real host journey:
-
-1. Push two destinations and change saveable state in each one.
-2. Press the in-UI Back action and system Back; both must expose the same previous entry.
-3. Recreate the Activity and confirm the current route, entry identity, saveable values, and
-   destination ViewModel instance remain.
-4. On Android 13 or newer, cancel and then complete an edge Back gesture. Cancellation must leave
-   the stack unchanged; completion must pop exactly once.
-5. Inject a destination-render failure through the application's test seam. The previous page must
-   remain visible when `stackCommitted` is false, and `onFailure` must receive the exact phase.
-6. Build a deep stack under the selected presentation policy. Verify the native presentation count,
-   then reveal an evicted page and confirm owner, ViewModel, and saveable-state identity are stable.
-
-The task is complete only when all six checks pass. A detached-command exception, changed entry
-identity after ordinary Activity recreation, duplicate pop, visible candidate after failed render,
-premature ViewModel clear, unbounded hidden Views without explicit policy, or treating `Queued` as
-completion is a failed configuration.
-
-## Choose the next focused task
-
-- Use strict URI/action/MIME deep-link declarations and inspect `NavDeepLinkResult` before accepting
-  external requests.
-- Use `NavStackConfiguration` for independently retained tab stacks and derive tab selection from
-  `navigationState.activeStackId`.
-- Use `NavPanePolicy.Adaptive` only when multiple visible destinations are intended to share the
-  validated pane scene.
-- Use `ProvideNavGraphOwner` only inside active destination content when state must belong to a
-  graph rather than one leaf destination.
-
-These features extend the same controller and transaction model; they are not alternative
-navigation paths.
+On one real host, verify UI and system Back agree; Activity recreation preserves route, entry,
+saveable state, and ViewModel identity; predictive Back cancel/commit changes the stack zero/one
+times; a pre-commit render failure keeps the prior page; and deep-stack presentation stays within
+policy while an evicted page restores its owner state. Detached commands, duplicate pops,
+premature owner cleanup, unbounded native retention, or treating `Queued` as completion fail the
+configuration.

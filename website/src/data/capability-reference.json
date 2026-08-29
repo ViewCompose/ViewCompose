@@ -106,6 +106,13 @@
       "versionState": "released"
     },
     {
+      "apiReference": "/api/viewcompose-navigation-kotlinx-serialization/current/",
+      "artifact": "viewcompose-navigation-kotlinx-serialization",
+      "moduleManual": "/modules/viewcompose-navigation-kotlinx-serialization/",
+      "version": "0.1.0-alpha01",
+      "versionState": "next"
+    },
+    {
       "apiReference": "/api/viewcompose-oneui7/0.1.0-alpha02/",
       "artifact": "viewcompose-oneui7",
       "moduleManual": "/modules/viewcompose-oneui7/0.1.0-alpha02/",
@@ -834,6 +841,21 @@
         "sampleClass": "compiled-region",
         "sampleId": "tutorial.navigation",
         "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "navigation.kotlinx-serialization-routes",
+      "referenceId": "reference.navigation.kotlinx-serialization-routes",
+      "relatedDocumentIds": [
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "module.viewcompose-navigation-kotlinx-serialization",
+        "migration.compose-navigation"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.navigation-kotlinx-serialization-route",
+        "versionLane": "next"
       }
     },
     {
@@ -1723,6 +1745,10 @@
     "module.viewcompose-navigation-core": {
       "documentType": "module",
       "path": "/modules/viewcompose-navigation-core"
+    },
+    "module.viewcompose-navigation-kotlinx-serialization": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-navigation-kotlinx-serialization"
     },
     "module.viewcompose-oneui7": {
       "documentType": "module",
@@ -4365,6 +4391,14 @@
           "symbol": "com.viewcompose.navigation.rememberNavHostController"
         },
         {
+          "artifact": "viewcompose-navigation-kotlinx-serialization",
+          "capabilityId": "navigation.kotlinx-serialization-routes",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation.serialization",
+          "overloadCount": 2,
+          "symbol": "com.viewcompose.navigation.serialization.serializableNavRouteSpec"
+        },
+        {
           "artifact": "viewcompose-overlay-android",
           "capabilityId": "overlay.android-transport",
           "kind": "integration",
@@ -4738,7 +4772,7 @@
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
-      "entryCount": 174,
+      "entryCount": 175,
       "groupId": "integrations"
     },
     {
@@ -6491,18 +6525,18 @@
   ],
   "schemaVersion": 3,
   "summary": {
-    "artifactCount": 30,
+    "artifactCount": 31,
     "countsByKind": {
       "component": 72,
       "dsl": 33,
       "host": 53,
-      "integration": 174,
+      "integration": 175,
       "modifier": 77,
       "tooling": 130
     },
-    "entryCount": 539,
+    "entryCount": 540,
     "groupCount": 15,
-    "ownedEntryCount": 539,
-    "sourceFingerprint": "32325354c6244a81bde6e23c503304e41b1940b09c571baf90200d16e206c173"
+    "ownedEntryCount": 540,
+    "sourceFingerprint": "15b1c2f48deb81cdde406bbd2a2b27056aa1ec973492f1501ea72f24325ccd43"
   }
 }

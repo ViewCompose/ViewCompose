@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.kotlinx-serialization-routes",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-kotlinx-serialization" },
+  "artifact": "viewcompose-navigation-kotlinx-serialization",
+  "version_state": { "lane": "next" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.navigation.serialization.serializableNavRouteSpec", "kind": "overload-set", "visibility": "public", "source": "viewcompose-navigation-kotlinx-serialization/src/main/kotlin/com/viewcompose/navigation/serialization/SerializableNavRouteSpec.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.navigation.kotlinx-serialization-routes", "generated": true },
+  "sample_owner": { "sample_id": "module.navigation-kotlinx-serialization-route" },
+  "document_owners": {
+    "guide": ["guide.navigation-production-host"],
+    "architecture": ["architecture.navigation-runtime"],
+    "module": ["module.viewcompose-navigation-kotlinx-serialization"],
+    "migration": ["migration.compose-navigation"]
+  }
+}

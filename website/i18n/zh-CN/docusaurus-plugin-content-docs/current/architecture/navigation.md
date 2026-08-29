@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: e8b26e506e54ea02d84bef57b3b220fadb2f0d3446ab73780e3c78351881b39c
+translation_source_hash: daac9bb175c18abf6e9d21f7a02ac1a6071644fac0d7a6bf31b3bc79359dfcec
 translation_status: current
 ---
 
@@ -9,13 +9,16 @@ translation_status: current
 ## 1. 所有权边界
 
 ViewCompose 导航使用 Activity 或 Window 作为最外层 Android Host，但 Destination 是框架持有
-的页面，而不是 Activity 或 Fragment。能力分布在两个已发布产物中：
+的页面，而不是 Activity 或 Fragment。必需 Runtime 由两个已发布产物持有，另有一个可选
+Serialization Integration：
 
 - `viewcompose-navigation-core` 持有平台无关的 Route、Graph、保留栈、事务、Lifecycle Plan、
   结构化 URI/action/MIME Deep Link 匹配器和 Pane Scene 模型；
 - `viewcompose-navigation-android` 持有 Destination 与 Graph 的 Android Owner、子
   RenderSession、原生 View 展示、SavedState 编码、`Intent` 适配、系统与 Predictive Back，
   以及视觉 Motion。
+- `viewcompose-navigation-kotlinx-serialization` 可选地从受支持的 Kotlinx Serializer Descriptor
+  派生 Core Spec，但不参与 Stack 或 Host Ownership。
 
 这一分层让状态机不依赖 Android 所有权，同时让原生 Host 在唯一位置协调栈状态、渲染、
 Lifecycle 和 View 层级变化。

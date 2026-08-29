@@ -85,6 +85,7 @@
     "modules/viewcompose-media3-androidx/README.md",
     "modules/viewcompose-navigation-android/README.md",
     "modules/viewcompose-navigation-core/README.md",
+    "modules/viewcompose-navigation-kotlinx-serialization/README.md",
     "modules/viewcompose-oneui7/README.md",
     "modules/viewcompose-overlay-android/README.md",
     "modules/viewcompose-overlay-material3-android/README.md",

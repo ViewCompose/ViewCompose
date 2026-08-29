@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: 45fd452e1a349fa62e26ed891fe41fe9f63e1b3a3e2f4db54e4cda5a07908c0b
+translation_source_hash: 668a02a6a1bed4566c256bd70dc23bef904c9f7e26ec5e7035926c048d5f19e2
 translation_status: current
 ---
 
@@ -11,11 +11,13 @@ Navigation 3 的所有权模型不同，因此迁移时必须先确定实际来�
 
 - **来源状态：** Navigation 2.9.8 或 Navigation3 1.1.5，以及 Compose UI/Runtime 1.12.0、
   Activity 1.13.0、Lifecycle 2.11.0 和 SavedState 1.5.0。
-- **目标状态：** `viewcompose-navigation-core` 0.1.0-alpha03，以及
+- **目标状态：** `viewcompose-navigation-core` 0.1.0-alpha03、源码已登记的
+  `viewcompose-navigation-kotlinx-serialization` 0.1.0-alpha01，以及
   `viewcompose-navigation-android`、`viewcompose-lifecycle-androidx` 和
   `viewcompose-viewmodel-androidx` 0.1.0-alpha02。
 - **最后核验：** 2026-08-29。
-- **重新核验负责人：** `viewcompose-navigation-core`、`viewcompose-navigation-android`、
+- **重新核验负责人：** `viewcompose-navigation-core`、
+  `viewcompose-navigation-kotlinx-serialization`、`viewcompose-navigation-android`、
   `viewcompose-lifecycle-androidx` 和 `viewcompose-viewmodel-androidx` 的维护者。
 
 相关页面：[迁移总览](README.md) ·
@@ -127,7 +129,7 @@ owner 传播、多返回栈、恢复、Predictive Back，也不覆盖任何 Navi
 | --- | --- | --- | --- | --- |
 | 导航所有权 | Navigation 2 以库拥有的 `NavController` 为中心。Navigation 3 通常向 `NavDisplay` 暴露应用拥有的返回栈集合。 | `NavBackStackController` 拥有不可变的单栈或多栈快照，并向 Android 宿主公开已 prepare 的 transition。 | Intentionally different | [`NavBackStackController.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt)和 [`NavHostRuntime.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostRuntime.kt)。它把类似 Navigation 2 的控制器所有权，与更接近 Navigation 3 的显式快照和 pane 概念组合在一起。 |
 | 宿主与目的地类型 | Navigation 2 支持 Compose、Fragment、Activity 和自定义目的地。Navigation 3 通过 `NavDisplay` 渲染 entry 内容。 | `NavHost` 渲染由框架管理的原生 View 会话。Activity 或 Fragment 是宿主 owner，不是目的地类型。 | Intentionally different | [`NavHostDsl.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostDsl.kt)和 [`NavDestinationSessionStore.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationSessionStore.kt)。未实现直接 Fragment 或 Activity 目的地。 |
-| Graph 与类型化 route | Navigation 2 的类型安全 Route 会在 Graph 声明、导航和 Entry 解码之间复用可序列化 Route Type。Navigation 3 Key 由应用定义且通常可以保存；1.1.5 规定 Instance-key `entry` 注册优先于 Class-key 注册。 | 一个 `NavRouteSpec<T>` 提供稳定 Graph Name 与显式 Encoder/Decoder Callback。Graph DSL、Android 命令与 `NavEntry.toRoute` 会复用它，存储模型仍是封闭的 `NavRoute`/`NavValue`。 | Partially supported | `NavRouteSpec.kt`、`NavRouteSpecTest.kt` 和 `NavHostPublicApiTest.kt` 中的类型化命令覆盖。编译期使用路径已闭环，但仍缺少编译器生成的 Kotlin Serialization、Custom `NavType`、多态 Key 以及 Navigation3 Instance/Class 注册优先级。 |
+| Graph 与类型化 route | Navigation 2 的类型安全 Route 会在 Graph 声明、导航和 Entry 解码之间复用可序列化 Route Type。Navigation 3 Key 由应用定义且通常可以保存；1.1.5 规定 Instance-key `entry` 注册优先于 Class-key 注册。 | 一个 `NavRouteSpec<T>` 提供稳定 Identity 与编码。可选 Kotlinx Adapter 为扁平 Scalar Class/Object Schema 派生 Spec；Graph DSL、Android 命令与 `NavEntry.toRoute` 仍只存储封闭的 `NavRoute`/`NavValue`。 | Partially supported | `NavRouteSpec.kt`、`SerializableNavRouteSpec.kt`、两组定向测试与类型化 Host 测试覆盖生成的 Scalar Serializer；Custom `NavType`、Nested/Collection/Polymorphic Key 与 Navigation3 Instance/Class 优先级仍缺失。 |
 | 返回栈操作 | Navigation 2 提供 `navigate`、`popBackStack`、`popUpTo` 和 `NavOptions`；Navigation 3 通过应用集合更新表示栈变化。 | Push、pop、replace、reset、栈选择和深层链接命令作为一个事务执行 prepare、render，随后 commit 或 rollback。 | Partially supported | [`NavBackStackController.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt)、[`NavBackStackControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt)和 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)。两阶段事务的保证强于 API 名称映射，但不包含 Navigation 2 的完整 `NavOptions` 能力面。 |
 | Scene Execution Plan | Navigation 3 从应用 Back Stack State 派生 Scene，并通过 Decorator 组合 Entry 内容；Navigation 2 把大部分执行策略保留在 Controller 与 Navigator 实现内部。 | `NavExecutionReducer` 是公开、纯函数的 Q3 边界。Settled、Transition 与 Predictive Preview 输入会生成一份不可变 Plan，统一 Stack、Scene、Lifecycle、Presentation、Interaction、Back、Rollback 与 Cleanup；Android Host 从该 Plan 执行类型化 Effect。 | Intentionally different | `NavExecutionPlan.kt`、其可编译 Sample、Reducer Model Test 与 Android Coordinator Test。这提供更强的自定义 Executor 可检查性，但不等于 Navigation 3 开放的 Scene/Decorator 生态。 |
 | Entry 与 graph owner | `NavBackStackEntry` 拥有生命周期、ViewModel 和保存状态。Lifecycle 2.11 增加了可继承父级 factory 与 `CreationExtras` 的 Navigation3 ViewModel decorator。 | 每个目的地和 graph 都有自己的 lifecycle、saved-state owner、ViewCompose saveable-state registry 和租赁的 ViewModelStore。owner 继承必需的 host 父级默认 Factory 与初始 extra，再替换自己的子级所有权与 route 默认值。 | Supported | [`NavEntryOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt)、[`NavGraphOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt)、[`NavEntryOwnerEnvironment.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt)，以及 [`NavEntryOwnerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt)与 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的 Factory、extra、SavedStateHandle、目的地和 graph 覆盖。 |
@@ -181,8 +183,9 @@ Composition”的模型：它保留 Destination/Graph Owner、ViewModel、SavedS
 
 ViewCompose Graph、Destination、Entry 和 Stack 身份都是显式的。`NavRouteSpec<T>` 围绕一份
 声明闭合应用使用路径：在 Graph 注册 Spec、用类型值导航，再用同一 Spec 解码 Entry。其 Callback
-仍编码为 `NavValue` 基础类型集合，使 Controller Snapshot 保持确定且可保存，但能力仍窄于
-Navigation 2 编译器生成的序列化和任意 Navigation 3 应用 Key。
+仍编码为 `NavValue` 基础类型集合，使 Controller Snapshot 保持确定且可保存。可选 Kotlinx
+Adapter 可为扁平 Scalar Class/Object Schema 生成该 Codec；Structured Value 与任意 Navigation 3
+应用 Key 仍不在契约内。
 
 优先使用稳定标识符和基础 route value。导航后，从 repository 或 ViewModel 加载复杂领域
 对象，不要把它们序列化到 route 中。迁移还必须定义未知 route、错误 value 和 graph 结构
@@ -349,8 +352,9 @@ inspection mode 中启用 Predictive Back；Navigation3 1.1.5 保留该行为。
 ## 迁移风险与不支持行为
 
 - 不支持 Activity 和 Fragment 目的地；它们只保留 Android 宿主角色。
-- 仍不支持编译器生成的 Route 序列化、任意可序列化 Route 对象和多态 Navigation3 Key 注册；
-  请使用显式 `NavRouteSpec<T>`，或等待可选 Serialization Adapter。
+- 可选 Kotlinx Adapter 支持生成的扁平 Scalar Route Serializer，但不支持任意 Nested、Collection、
+  Polymorphic Route Object、Custom `NavType` 或 Navigation3 Key 优先级；不支持的 Wire Shape 使用
+  显式 `NavRouteSpec<T>`。
 - 不支持直接 NavigationEvent dispatcher owner、callback、forward event、测试和 Preview API。
 - 不支持通用 Navigation3 scene 策略与 metadata；pane 策略范围更窄。
 - 隐藏会话保留 Effect 和原生 View，增加生命周期与内存风险。

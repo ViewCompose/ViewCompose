@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Publish an optional Kotlinx Serialization adapter that maps supported route descriptors onto the existing typed navigation contract.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-kotlinx-serialization", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

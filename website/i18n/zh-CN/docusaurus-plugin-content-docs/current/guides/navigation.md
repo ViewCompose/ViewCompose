@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 82c01c12f77c5fd4cf8b3560e9c1ec2787e4394b68d1d6e613ee23b50a5d9775
+translation_source_hash: f28c26fc3548c15a7bfbbbef7edaf7d6b61fcce68d319b1a9b506371cdf1c1f3
 translation_status: current
 ---
 
@@ -15,118 +15,68 @@ Pane 的完整签名与可选 API 仍由 [Navigation Android 模块手册](../mo
 ## 选择唯一的 Controller Owner
 
 在挂载 `NavHost` 的同一个 UI Owner 中通过 `rememberNavHostController` 创建 Controller。
-不要把它缓存在进程单例中，也不要同时挂到两个 Host。remember 的 Controller 会通过最近的
-ViewCompose saveable-state registry 保存已提交栈、Entry 与 Graph 身份、Route 参数和
-Destination 自有 SavedState。
+不得缓存在进程单例或跨 Host 共享。它通过最近的 ViewCompose Registry 保存已提交栈与 Owner
+Identity、参数和 Destination State。
 
 请把 `NavHost` 挂在 `LocalLifecycleOwner` 和 `LocalViewModelStoreOwner` 两个边界之下。标准 Activity
-与 Fragment `setUiContent` Host 会自动完成；底层 `renderInto` 集成必须显式提供二者。`NavHost`
-不会创建私有兜底 Store。
+与 Fragment `setUiContent` Host 会提供二者；`renderInto` 集成必须显式提供，因为没有私有兜底 Store。
 
 当 Route 需要类型化参数、嵌套所有权或深链时，请使用稳定的 `NavGraph`。如果当前 Graph 已不
-接受保存的 Route 层级，恢复会失败关闭。应把结果视为安全回到配置的起始目标页，不得拼接出
-部分恢复的栈。
+接受保存的 Route 层级，恢复会失败关闭到起始目标页。
 
 为每个应用 Route 声明一个稳定 `NavRouteSpec<T>`，并在 `destination`、`navigation`、Controller
-类型化命令与 `NavEntry.toRoute` 中复用。只编码可持久化标识符和少量基础值，领域对象应由目标页
-ViewModel 加载。跨版本保持显式 Route Name 与参数 Schema 兼容。Codec 异常属于调用方错误，且会
-在 Android Host 启动导航事务前发生。
+类型化命令与 `NavEntry.toRoute` 中复用。只编码持久 ID 和少量基础值，领域对象由 ViewModel
+加载，并保持 Name 与 Schema 可恢复。Codec 错误发生在 Host 事务前。
+
+可选 [Kotlinx Adapter](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-kotlinx-serialization)
+为扁平序列化 Route 派生 Spec；不支持的 Shape 使用显式 Core Codec。
 
 使用 `NavDeepLinkRequest` 表达外部导航。声明可以约束 URI、action、MIME type 或三者组合，且
-每个声明约束都必须匹配。Android `Intent` 重载只把 `data`、`action` 与 `type` 映射到同一份 Core
-请求。假定导航已发生前必须检查 `NavDeepLinkResult`；当签名或精确 query key 集合属于应用安全
-边界时，还应在路由前验证完整 URI。
+每项约束都必须匹配。Android 只映射 Intent Data、Action 与 Type。检查 `NavDeepLinkResult`，并在
+安全边界验证完整 URI。
 
 ## 恢复状态并接入平台返回
 
 普通 Activity 或 Fragment Host 保持 `systemBackEnabled = true`。只有 Controller 能消费返回
-时，`NavHost` 才会向最近的 AndroidX Back Dispatcher 注册；到达活动根节点后，它会按配置的
-保留栈历史处理，或向外层继续分发。
+时，`NavHost` 才向 AndroidX Back 注册；活动根节点按保留栈历史处理或向外分发。
 
 界面内返回按钮调用 `popBackStack`。系统返回和 Predictive Back 就会使用同一事务边界。
-Predictive Back 在不发布候选栈的前提下预览上一目标页；取消时恢复已提交 Scene，完成时则走
-与程序化 Pop 相同的路径提交。
+Predictive Preview 不发布候选栈；取消恢复已提交 Scene，完成走程序化 Pop 路径。
 
 声明稳定的 `NavResultKey`，带值 Pop，并在上一页用 `NavResultEffect` 观察。交付可保存、遵循
-FIFO，且延迟至该页面 `RESUMED`；显式确认或重试应使用 Destination Context Inbox。
+FIFO，并等待页面 `RESUMED`；显式确认或重试使用 Destination Context Inbox。
 
 ## 穷举处理 Route 渲染
 
 在 `NavHost` 内容块中渲染每个可接受 Route，并立即拒绝未知 Route。内容块运行在 Destination
-由框架持有的 Lifecycle、ViewModelStore、SavedStateRegistry namespace、saveable-state
-namespace 和子 RenderSession 中。除非明确选择复用的 Launch Mode，否则连续两次 Push 同一
-Route 仍会创建两个不同 Entry Owner。
-
-Destination 与 Graph ViewModelStore 来自同一个共享 Lifecycle 2.11 Scoped-owner Provider。只要
-父 Store 和 remember 的 Controller 状态仍保留，它们就能跨 Activity 配置重建存活；永久 Pop 或
-移除 Graph 会清理相应 Scope。进程重建会把状态恢复到新的 ViewModel 实例，而不是序列化活跃模型。
-
-只有当 Destination 内容闭包读取不可观察的父级值时才修改 `contentKey`。可观察的 ViewCompose
-状态会直接使所属 Destination Session 失效。Controller、Lifecycle Owner、父级
-ViewModelStore Owner、Overlay Factory、调试身份或 Host `key` 的变化属于所有权变化，因此会
-重建原生 Host。
+自有的 Lifecycle、Store、Saveable Namespace 与子 RenderSession 中；除非 Launch Mode 复用，
+重复 Push 会创建不同 Owner。Scoped Store 随 Parent 跨配置重建存活，在永久移除时清理，并在进程
+重建后从状态创建新 ViewModel。只为不可观察的父级 Capture 修改 `contentKey`；Host Owner、
+Controller、Factory、调试身份或 Host `key` 改变会重建原生 Host。
 
 ## 观察 Destination Presentation，而不复制 Lifecycle
 
 当内容需要区分 Hidden、Visible、Covered、Interactive、Transition、Pane 或 Overlay Role 时，
-应在 Destination DSL 声明阶段读取 `LocalNavDestinationContext.current`。后续回调应捕获返回的
-Context Holder；不要查询全局 Current Page，也不要在 Effect 回调内读取 Local。嵌套 `NavHost`
-会提供自己的最近 Holder。
-
-Holder 的 `entry` 在 Retained 生命周期内保持稳定。语义 Scene 改变时，
-`presentation.value` 可能变化，并使读取它的内容失效。即使 `DisposeWhenHidden` 释放并随后重建
-原生 Presentation，Holder 仍是同一个。永久移除会停止 Presentation 更新，并把标准 Destination
-Lifecycle 驱动到 `DESTROYED`。
-
-资源阈值继续使用标准 AndroidX Lifecycle：相机、传感器、播放器、网络收集和其他活动工作应使用
-Lifecycle Effect 或 Lifecycle-aware Flow 收集。Destination Context 只用于粗粒度 Presentation
-决策；普通转场和 Predictive Back 的逐帧 Progress 被刻意排除。
+应在 Destination DSL 声明阶段读取 `LocalNavDestinationContext.current`，并为回调捕获最近 Holder。
+其 Entry 跨隐藏展示释放存活；永久移除会停止更新并销毁 Lifecycle。活动资源仍遵循 AndroidX
+Lifecycle，因为该 Context 只表达粗粒度 Role，不含逐帧 Progress。
 
 ## 明确选择展示保留策略
 
 除非针对具体 Destination 的真机证据表明其原生 View Tree 重建成本不可接受，否则保持默认
-`NavPresentationRetentionPolicy.DisposeWhenHidden`。默认策略会在转场稳定后释放完全隐藏页面的
-`RenderSession`、View Tree、Effect、Focus、Accessibility State 和原生资源，同时保留 Destination
-Owner、ViewModel、SavedStateRegistry、`rememberSaveable` 值、Route 参数与 Graph Identity。
-再次展示时，会先事务性重建 Presentation，再发布新 Scene。
-
-应用需要缓存最近若干隐藏 Surface 时，使用
-`NavPresentationRetentionPolicy.Bounded(maxHiddenPresentations = n)`。正数上限只计算隐藏展示；
-可见 Pane 和转场参与者不在上限内。仅把 `RetainAll` 用作显式且有测量依据的选择；它会跨深栈和
-多栈无界增长，因此不适合作为通用默认值。
-
-修改策略不会重建 `NavHost` 或 Entry Owner。收紧策略会立即淘汰超限隐藏展示；放宽策略只影响
-后续展示，不会急切组合隐藏 Stack。首次连接、配置恢复连接和进程恢复连接都只物化可见 Pane
-集合。
+`DisposeWhenHidden`。它释放隐藏原生展示但保留 Owner State。需要时使用经测量的 `Bounded(n)`；
+`RetainAll` 无界。策略变化保留 Owner，首次或恢复连接只物化可见 Pane。
 
 ## 自定义集成只保留一个策略来源
 
-普通应用应直接使用 `NavHost`；它已经执行 Core Plan。自定义平台 Host 可以在对应事件调用
-`NavExecutionReducer.settled`、`transition` 或 `predictivePreview`。它们是进入同一实现的三个
-易用入口，不是三套 Lifecycle 系统。每个入口都返回相同的 `NavExecutionPlan`；`reconcile` 则把
-Host Lifecycle 或 Retention 变化重新应用到既有语义 Phase。
-
-应把 Plan 作为整体执行：Candidate Stack Commit 前准备并刷新全部所需 Presentation；随后一起
-发布 Plan 指定的 Scene、Lifecycle、Interaction 与 Back Ownership；最后在规定边界执行 Eviction
-或终态清理。不要从 View Attachment 推导 Lifecycle，不要运行第二套 Retention Cache，也不要
-单独计算 Back Eligibility。Core 的可编译 Sample 展示 Plan 构造；Android 内置 Executor 保持
-Internal，因为平台 Mutation 属于 Host 职责，而不是应用 DSL API。
+普通应用使用 `NavHost`。自定义 Host 必须完整执行 `NavExecutionPlan`：Commit 前准备，一起发布
+Scene/Lifecycle/Interaction/Back，再按计划清理；不得派生并行 Lifecycle、Retention 或 Back Policy。
 
 ## 处理命令结果
 
-每个 Controller 命令都返回 `NavResult`：
-
-| 结果 | 应用行为 |
-| --- | --- |
-| `Committed` | 读取其中的栈快照，或让可观察的 `navigationState` 更新界面。 |
-| `NoChange` | 保持当前界面；命令有效，但目标状态已经生效。 |
-| `Queued` | 等待 `navigationState`；这表示任务已入队，而不是已经完成。 |
-| `Failed` | 上报结构化 `NavFailure`，并保留结果中携带的已提交栈。 |
-
-如果应用有日志、降级或测试策略，请向 `NavHost` 传入 `onFailure`。未提供 Handler 时，Host 会
-抛出 `NavHostException`。不要捕获任意 Destination 失败后再修改第二套应用自有返回栈：栈提交
-前的失败已经会保留旧栈和可见页面；提交后的失败会通过 `NavFailure.stackCommitted` 明确标出
-边界。
+每个命令返回 `Committed`、`NoChange`、`Queued` 或 `Failed`。通过 `navigationState` 观察入队任务
+完成，并上报结构化 Failure，不替换已提交栈。日志、降级或测试使用 `onFailure`，否则抛出
+`NavHostException`。提交前失败保留旧页面，`NavFailure.stackCommitted` 标记提交后边界。
 
 ## 验证任务
 
@@ -136,31 +86,7 @@ Internal，因为平台 Mutation 属于 Host 职责，而不是应用 DSL API。
 ./gradlew :samples:tutorials:assembleDebug :viewcompose-navigation-android:testDebugUnitTest
 ```
 
-然后验证一条真实 Host 路径：
-
-1. 连续 Push 两个 Destination，并在每一页修改可保存状态。
-2. 分别点击界面返回按钮和系统返回；两者必须展示同一个上一个 Entry。
-3. 重建 Activity，确认当前 Route、Entry 身份、saveable 值和 Destination ViewModel 实例保持不变。
-4. 在 Android 13 或更高版本上，先取消再完成一次边缘返回手势。取消不得改变栈；完成必须只
-   Pop 一次。
-5. 通过应用测试接缝注入 Destination 渲染失败。当 `stackCommitted` 为 false 时，前一页必须
-   保持可见，且 `onFailure` 必须收到准确阶段。
-6. 在所选展示策略下构建深栈，校验原生展示数量；随后展示已淘汰页面，并确认 Owner、ViewModel
-   与 Saveable-state Identity 保持稳定。
-
-只有六项检查全部通过，任务才算完成。Detached 命令异常、普通 Activity 重建后 Entry 身份
-变化、重复 Pop、失败渲染后候选页可见、ViewModel 提前清理、没有显式策略却保留无界隐藏 View，
-或把 `Queued` 当成完成，都属于配置失败。
-
-## 选择下一项聚焦任务
-
-- 使用严格的 URI/action/MIME Deep Link 声明，并在接受外部请求前检查
-  `NavDeepLinkResult`。
-- 使用 `NavStackConfiguration` 配置相互独立的保留 Tab 栈，并从
-  `navigationState.activeStackId` 派生 Tab 选中态。
-- 只有确实希望多个可见 Destination 共享已验证 Pane Scene 时，才使用
-  `NavPanePolicy.Adaptive`。
-- 只有在活动 Destination 内容内部，而且状态应属于 Graph 而不是某个叶子 Destination 时，
-  才使用 `ProvideNavGraphOwner`。
-
-这些能力扩展的是同一套 Controller 和事务模型，不是替代导航路径。
+在一条真实 Host 路径中验证：界面与系统 Back 一致；Activity 重建保留 Route、Entry、可保存状态
+和 ViewModel Identity；Predictive Back 取消与提交分别改变栈零次与一次；提交前渲染失败保留前页；
+深栈展示符合策略，且被淘汰页面恢复 Owner 状态。Detached 命令、重复 Pop、Owner 提前清理、无界
+原生保留，或把 `Queued` 当成完成，都表示配置失败。

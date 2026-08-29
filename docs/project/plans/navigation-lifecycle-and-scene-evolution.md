@@ -14,6 +14,7 @@ capability_ids:
   - navigation.deep-links
   - navigation.destination-context
   - navigation.host
+  - navigation.kotlinx-serialization-routes
   - navigation.presentation-retention
   - navigation.result-consumption
   - navigation.results
@@ -24,6 +25,7 @@ artifact_ids:
   - viewcompose-lifecycle-androidx
   - viewcompose-navigation-android
   - viewcompose-navigation-core
+  - viewcompose-navigation-kotlinx-serialization
 sample_ids:
   - module.navigation-android-destination-context
   - module.navigation-android-deep-link
@@ -36,6 +38,7 @@ sample_ids:
   - module.navigation-core-results
   - module.navigation-core-scene-projection
   - module.navigation-core-typed-route
+  - module.navigation-kotlinx-serialization-route
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
 non_goals:
@@ -61,7 +64,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Publish the optional Kotlinx Serialization adapter over the completed typed-route contract before the broader evidence matrix.
+next_action: Re-audit and disposition direct NavigationEvent integration, general scene strategies, diagnostics, and testing utilities before the coverage, leak, memory, and performance matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
@@ -71,6 +74,7 @@ maven_release_changesets:
   - release/changes/20260829-navigation-structured-deep-links.json
   - release/changes/20260829-navigation-transition-lifecycle.json
   - release/changes/20260829-navigation-typed-routes.json
+  - release/changes/20260829-navigation-kotlinx-serialization.json
 ---
 
 # Navigation Lifecycle and Scene Evolution Plan
@@ -81,12 +85,13 @@ Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecy
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
-structured deep-link, entry-targeted result, and typed-route contract slices are complete.
+structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
+Serialization adapter slices are complete.
 
 Last verified: 2026-08-29.
 
-Next action: publish the optional Kotlinx Serialization adapter over the completed typed-route
-contract before the broader evidence matrix.
+Next action: re-audit and disposition direct NavigationEvent integration, general scene strategies,
+diagnostics, and testing utilities before the coverage, leak, memory, and performance matrix.
 
 ## Maven release changesets
 
@@ -98,6 +103,7 @@ contract before the broader evidence matrix.
 - `release/changes/20260829-navigation-structured-deep-links.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
 - `release/changes/20260829-navigation-typed-routes.json`
+- `release/changes/20260829-navigation-kotlinx-serialization.json`
 
 ## Release intent rationale
 
@@ -146,6 +152,15 @@ scanner; its one-impact-per-detected-change rule therefore admits no immutable i
 two capability records, canonical KDoc, compiled samples, module/architecture/migration owners,
 generated Reference, translations, and one two-artifact Changeset provide the structured
 dispositions without claiming `No documentation impact`.
+
+Slice 7.4 registers `viewcompose-navigation-kotlinx-serialization` as an unpublished first-release
+feature. Its public factory returns Core `NavRouteSpec<T>` and accepts `KSerializer<T>`, so
+Navigation Core and `kotlinx-serialization-core` are compile dependencies; the JSON bridge is a
+private runtime dependency. Governance V2 detects the factory overload set and admits exactly one
+Q3 impact record covering codec behavior, inputs/outputs, callback, failure, performance, and
+compatibility fields. The module catalog, strict API list, dependency contract, source-registered
+version, compiled sample, bilingual manual, generated Reference, and one Changeset travel with the
+same first-release registration.
 
 ## Objective
 
@@ -1007,6 +1022,77 @@ Acceptance evidence:
   **no material change**, not a device-pass claim. Serialization-backed schema convenience,
   coverage, leaks, memory, and representative performance remain **inconclusive**. Next: publish
   the optional Kotlinx Serialization adapter as slice 7.4.
+
+#### Capability slice 7.4: optional Kotlinx Serialization adapter
+
+The dependency and schema audit freezes one new platform-neutral integration artifact:
+`viewcompose-navigation-kotlinx-serialization`. Navigation Core remains dependency-free. The new
+artifact exposes Navigation Core and `kotlinx-serialization-core` as compile dependencies, keeps
+the JSON tree implementation private, and is registered as an unpublished `0.1.0-alpha01`
+artifact until its first signed Maven release.
+
+The Q3 API is one explicit factory family:
+
+1. `serializableNavRouteSpec(name, serializer)` is the Java-visible and custom-serializer entry;
+   `serializableNavRouteSpec<T>(name)` obtains the generated serializer for Kotlin callers.
+2. The adapter validates the complete serializer descriptor when the spec is created. The root
+   must be a class or object whose fields are scalar, enum, nullable scalar, or a supported inline
+   scalar. Nested objects, collections, maps, polymorphic/contextual shapes, unsigned values, and
+   non-object roots fail immediately with the field path in the diagnostic.
+3. Mapping is descriptor-driven rather than value-size-driven: Boolean maps to `BooleanValue`;
+   Byte/Short/Int to `IntValue`; Long to `LongValue`; Float to `FloatValue`; Double to
+   `DoubleValue`; Char/String/enum to `Text`; and an explicit nullable value to `Null`. A small
+   Long therefore never changes storage type as its value crosses Int range.
+4. Encoding uses a strict internal JSON object tree only as a serializer bridge, then stores the
+   existing immutable `NavRoute`/`NavValue` map. Decoding rebuilds that tree only after rejecting
+   unknown names, nullability violations, and mismatched `NavValue` variants. Defaults may remain
+   omitted and are reconstructed by the serializer. No JSON string, serializer, registry, or
+   decoded object enters snapshots or host retention.
+
+The artifact owns `navigation.kotlinx-serialization-routes`, canonical KDoc, one compiled Q3
+sample, a bilingual module manual, catalog/publishing/dependency registration, migration and
+architecture dispositions, generated Reference input, focused schema/round-trip/error tests, and
+one first-release feature Changeset. The implementation PR must prove strict API documentation,
+published dependency metadata, local JVM consumption, documentation/site budgets, and repository
+QA. Android device evidence is not applicable unless implementation unexpectedly changes a
+platform module.
+
+Acceptance evidence:
+
+- The implementation matches the frozen dependency boundary. The optional pure Kotlin/JVM
+  integration is classified in the runtime `integration` layer and depends on Core's `kernel`
+  layer; Core remains serialization-independent. Descriptor validation is eager and path-aware,
+  mapping is descriptor-stable, JSON is call-local, and snapshots retain only `NavRoute` and
+  `NavValue`. This is **improved** generated-route convenience without a parallel stack model.
+- The new artifact passed 10/10 focused tests with zero failures, errors, or skips. Its first-release
+  baseline was zero tests, so the absolute gain is ten and a normalized percentage is not
+  meaningful. Scalar/object/inline/default round trips, Long storage stability, serial names,
+  non-finite values, malformed arguments, null violations, and every rejected schema family are
+  covered; accepted line/branch coverage remains **inconclusive** because no report exists.
+- Strict Dokka and the compiled Q3 sample passed. Local publication produced the intended POM:
+  Navigation Core, Serialization Core 1.7.3, and Kotlin stdlib are compile dependencies, while
+  Serialization JSON 1.7.3 is runtime-only. Publishing, dependency-contract, package-root,
+  namespace, and five-layer direction gates passed; release intent resolved exactly one feature
+  artifact and no ignored or shared classifications.
+- `qaQuick` passed all 2,277 actionable tasks in 6m28s (1,046 executed and 1,231 up to date), and
+  `qaPreview` passed all 1,218 in 18s (146/1,072). Documentation governance reported zero issues
+  against `09c98019`, all 77 script tests passed, all 127 required Chinese mirrors were current,
+  development-tooling isolation passed, and the generated Reference contained 540 entries.
+  Repository confidence is **improved** and Preview behavior has **no material change**; cache
+  ratios and wall time are execution context, not performance evidence.
+- Complete API generation rebuilt six immutable revision groups serially with zero invalid groups
+  in 787.5s; `verifyCompleteViewComposeApiDocs` passed in 13m22s. The full bilingual site verified
+  133 immutable API/manual versions, one unpublished current API tree, 528 accessible pages, 30
+  redirects, and every budget. The first complete output measured 49,269,140 non-API bytes, 90,926
+  above the unchanged 46.9 MiB ceiling. Consolidating duplicated navigation-guide and module prose
+  reduced 106,338 bytes (0.22%) to 49,162,802, leaving 15,412 bytes headroom. Documentation size is
+  **improved** without raising the budget; the remaining headroom is deliberately monitored.
+- Physical-device evidence is not applicable: the slice changes no Android artifact, Activity,
+  View, Lifecycle, saved-state transport, or platform callback. Platform behavior therefore has
+  **no material change**, not a device-pass claim. Nested/collection/polymorphic serialization,
+  custom `NavType`, Navigation3 instance/class key precedence, broader coverage, leaks, memory, and
+  representative performance remain **inconclusive**. Next: disposition direct NavigationEvent,
+  general scene strategies, diagnostics, and testing utilities, then execute the evidence matrix.
 
 ### Phase 8: document, release, and archive
 
