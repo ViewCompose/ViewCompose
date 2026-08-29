@@ -54,6 +54,7 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * hidden retained page eagerly.
  *
  * @sample com.viewcompose.navigation.samples.rememberedNavHostSample
+ * @sample com.viewcompose.navigation.samples.customOverlayNavHostSample
  * @sample com.viewcompose.navigation.samples.inheritedNavViewModelFactorySample
  * @sample com.viewcompose.navigation.samples.retainedDestinationThemeSample
  * @sample com.viewcompose.navigation.samples.BoundedPresentationNavigation
@@ -66,7 +67,8 @@ import com.viewcompose.viewmodel.LocalViewModelStoreOwner
  * @param contentKey invalidation key for non-observable destination-content dependencies
  * @param debug enables navigation runtime diagnostics
  * @param debugTag Android log tag used by diagnostics
- * @param overlayHostFactory creates destination overlay support for the native host container
+ * @param overlayHostFactory creates destination overlay support when the native host is created;
+ * change [key] to rebuild an existing host with a different factory
  * @param onFailure optional failure handler; unhandled failures throw [NavHostException]
  * @param key application identity component that can force a new native host
  * @param content destination renderer receiving each prepared or refreshed [NavEntry]
@@ -140,7 +142,6 @@ fun UiTreeBuilder.NavHost(
             userKey = key,
             debug = debug,
             debugTag = debugTag,
-            overlayHostFactory = overlayHostFactory,
         ),
         modifier = Modifier
             .fillMaxSize()
@@ -164,7 +165,6 @@ private class NavHostNodeKey(
     private val userKey: Any?,
     private val debug: Boolean,
     private val debugTag: String,
-    private val overlayHostFactory: (ViewGroup) -> OverlayHost,
 ) {
     override fun equals(other: Any?): Boolean {
         return other is NavHostNodeKey &&
@@ -173,8 +173,7 @@ private class NavHostNodeKey(
             other.parentViewModelStoreOwner === parentViewModelStoreOwner &&
             other.userKey == userKey &&
             other.debug == debug &&
-            other.debugTag == debugTag &&
-            other.overlayHostFactory === overlayHostFactory
+            other.debugTag == debugTag
     }
 
     override fun hashCode(): Int {
@@ -184,7 +183,6 @@ private class NavHostNodeKey(
         result = 31 * result + (userKey?.hashCode() ?: 0)
         result = 31 * result + debug.hashCode()
         result = 31 * result + debugTag.hashCode()
-        result = 31 * result + System.identityHashCode(overlayHostFactory)
         return result
     }
 }

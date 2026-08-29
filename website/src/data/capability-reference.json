@@ -847,7 +847,7 @@
       ],
       "sample": {
         "sampleClass": "compiled-region",
-        "sampleId": "module.navigation-core-scene-projection",
+        "sampleId": "module.navigation-core-execution-plan",
         "versionLane": "released"
       }
     },
@@ -6409,6 +6409,6 @@
     "entryCount": 537,
     "groupCount": 15,
     "ownedEntryCount": 537,
-    "sourceFingerprint": "0fd26fefc2003e5f8a097ba6ba2dfda140bbb80e8353d086d7a8c52861661e5e"
+    "sourceFingerprint": "807a106db7b6a457dba1a4ee11446afcc0a487b33a3d857e708d4ab2661b107e"
   }
 }

@@ -37,7 +37,7 @@ evidence:
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt
   - app/src/androidTest/java/com/viewcompose/NavigationBackDeviceTest.kt
 translation_source: architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md
-translation_source_hash: 0bdf5139a9d61b9122d48e16158719e4287ad007abf7d6d2c2674ab6fdd9fadd
+translation_source_hash: b979e515a90a548613299fdb391cdc0abd160db2675463ffd0f85cefae7782da
 translation_status: current
 ---
 
@@ -161,10 +161,13 @@ Phase 4 根据证据选择有界的 `DisposeWhenHidden` 作为默认策略。在
 
 ### 一个 Reducer 拥有导航决策
 
-Core 将演进为一个纯 Reducer。它输出的不可变 Execution Plan 同时包含 Stack Mutation、Scene/Layer
-Projection、Entry/Graph Lifecycle Target、Presentation Create/Refresh/Retain/Evict/Dispose、
-Focus/Input、Back Ownership、Transition Effect、Rollback 与终止清理。Android Executor 负责
-`LifecycleRegistry`、View、Focus、Back Dispatch 与 Animation，不独立重建策略。
+Core 现在公开一个纯 `NavExecutionReducer`。它输出的不可变 `NavExecutionPlan` 同时包含 Stack
+Mutation、Scene/Layer Projection、Entry/Graph Lifecycle Target、Presentation 的
+Prepare/Refresh/Retain/Evict/Dispose、Transition Phase 与 Participant、Focus/Input/Accessibility、
+Back Ownership、Rollback 与终止清理。Settled、Transition 和 Predictive Preview 三个入口委托给
+同一实现。Android 类型化 Executor 负责 `LifecycleRegistry`、View、Input、Focus、Accessibility、
+Back Dispatch 与 RenderSession，不独立重建策略；Motion Driver 消费同一 Plan 的 Scene 与 Stack
+Endpoint。
 
 Commit 前失败不会发布 Candidate Stack 或 Destination Context；Commit 后失败只走一条有文档的
 终止恢复路径。旧的 Visible/Interactive-only Projection 与命令式并行决策会在替代 Slice 中删除，
@@ -260,7 +263,8 @@ ViewModel 与 Saveable State Identity 并不需要 Live Presentation。
    Recreation 与 Frame 证据选择 `DisposeWhenHidden`；更广的 Leak 与负载矩阵保留到 Phase 7。
 5. Phase 5 发布 Destination Context 与 Compiled Q3 Sample，并验证稳定 Holder Identity、Delayed
    Capture、Presentation Recreation、Nested Host、Pane、Overlay 与 Removal。
-6. Phase 6 收敛 Reducer/Executor 并删除被替代的命令编排。
+6. Phase 6 发布纯 Core Reducer 与类型化 Android Executor，并从 Coordinator 删除被替代的
+   Lifecycle、Presentation Retention、Interaction、Back、Rollback 与 Cleanup 计算。
 7. Phase 7 与 Phase 8 关闭 Typed Route/Ecosystem Disposition、Coverage、Device、Performance、
    Documentation、Release 与 Archive 门禁。
 

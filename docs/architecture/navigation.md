@@ -19,6 +19,7 @@ artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-core-execution-plan
   - tutorial.navigation
 invariants:
   - Navigation state commits only after required destination sessions and owners are prepared successfully.
@@ -28,6 +29,7 @@ invariants:
   - Restored state is accepted only when it remains compatible with the current graph and stack configuration.
 evidence:
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt
+  - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavExecutionReducerTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt
@@ -71,7 +73,29 @@ undo application state. Every terminal visual path settles on the committed targ
 post-commit effect is reported with `stackCommitted = true`; the host never pretends that the old
 stack is still authoritative.
 
-## 3. Destination and graph identity
+## 3. Unified execution plan
+
+Navigation Core reduces each settled reconciliation, committed transition, or predictive preview
+into one immutable `NavExecutionPlan`. The three entry points describe distinct caller moments but
+share one reducer implementation and one output vocabulary. That plan is the sole decision source
+for the before/after stack, scene and layer order, lifecycle targets, presentation preparation,
+refresh, retention, eviction and disposal, render suspension, input/accessibility/focus ownership,
+system Back ownership, rollback, and terminal cleanup.
+
+The Android `AndroidNavExecutionPlanExecutor` interprets the plan in a fixed boundary order:
+prepare or refresh candidates before stack commit; publish presentations and interaction;
+reconcile destination context and owner lifecycle; pause outgoing rendering; then perform safe
+eviction. Permanent-removal cleanup remains terminal so an exiting View can finish motion before
+its owner is destroyed. Destination containers consume disallowed touch, generic-motion, and key
+input, block descendant focus, and leave the accessibility tree while the plan marks them
+non-owning. The host Back adapter reads the same plan rather than querying a parallel stack rule.
+
+The reducer is pure and platform-neutral; executors contain Android effects and must not infer a
+second policy from View visibility or attachment. Pre-commit preparation failure rolls back only
+the plan's candidate presentations and owners without publishing its stack or destination context.
+After stack commit, failures preserve the committed target and use the plan's terminal cleanup.
+
+## 4. Destination and graph identity
 
 Every destination entry owns stable route identity, Lifecycle, SavedStateRegistry namespace,
 ViewCompose saveable-state namespace, and a lease on a keyed ViewModelStore. Its child render
@@ -138,7 +162,7 @@ after the parent lifecycle reaches `DESTROYED` closes presentation owners withou
 removing stores, allowing a configuration-recreated host with the same parent store and saved scope
 identity to lease the existing ViewModels. A finishing parent remains the final clear boundary.
 
-## 4. Lifecycle projection
+## 5. Lifecycle projection
 
 Navigation Core owns one immutable `NavScene`. Each destination projection carries presence,
 visibility, interaction, coarse transition phase, pane role, and content/overlay layer role. The
@@ -178,7 +202,7 @@ Core can model content and overlay layers, but the current Android navigation ho
 overlay-navigation surface. Overlay lifecycle execution therefore remains unclaimed rather than
 being inferred from the model or the separate UI overlay transport.
 
-## 5. Restoration boundary
+## 6. Restoration boundary
 
 Remembered controllers persist committed stacks, route arguments, destination and graph identities,
 selection history, a private host-scope identity, destination and graph SavedStateRegistry bundles,
@@ -195,7 +219,7 @@ The immediately preceding version-4 format is migrated by assigning a fresh host
 newer unknown formats remain fail-closed. These rules prevent an old SavedState or ViewModel
 namespace from being attached to a different destination after an application update.
 
-## 6. Back and visual motion
+## 7. Back and visual motion
 
 System Back participates only while the active controller can consume it. Predictive Back creates a
 preview over committed entries without changing the core stack. Cancellation restores the settled
@@ -209,7 +233,7 @@ owned destination roots after commit, own no page/session retention, and cannot 
 accessibility focus. Capture failure degrades the affected visual pair without changing navigation
 state.
 
-## 7. Evidence and verification
+## 8. Evidence and verification
 
 The invariant boundary is covered at three levels:
 
@@ -238,3 +262,12 @@ rechecks predictive progress against real native Views. Compared with the previo
 encoded premature incoming `RESUMED` and popped outgoing `STARTED`, the conclusion is
 **improved**. General navigation overlays, API-34 platform edge-gesture delivery, memory, leaks,
 and performance remain **inconclusive** and stay assigned to the active plan.
+
+The reducer/executor convergence passed fresh 71/71 Navigation Core and 165/165 Navigation Android
+suites, compared with Phase 5 baselines of 60 and 162 respectively. All 15 navigation Back cases
+then passed on the same physical API-33 Pixel 4 XL. The coordinator fell from 1,597 to 1,176 lines
+because scene, lifecycle, presentation, interaction, Back, rollback, and cleanup policy now comes
+from one Core plan. The conclusion is **improved**. The device run is limited to one API level and
+synthetic navigation host; line/branch coverage, representative leaks, memory, and performance,
+general overlays, typed routes, and direct NavigationEvent integration remain **inconclusive** and
+belong to Phase 7.

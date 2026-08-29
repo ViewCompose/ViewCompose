@@ -169,9 +169,8 @@ internal class AndroidNavHostBackAdapter(
     }
 
     private fun syncEnabled() {
-        callback.isEnabled = !destroyed &&
-            systemBackEnabled &&
-            canHandleBack()
+        val hostCanHandleBack = canHandleBack()
+        callback.isEnabled = !destroyed && systemBackEnabled && hostCanHandleBack
     }
 }
 

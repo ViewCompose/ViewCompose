@@ -21,7 +21,9 @@ artifact_ids:
   - viewcompose-navigation-core
 sample_ids:
   - module.navigation-android-destination-context
+  - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
+  - module.navigation-core-execution-plan
   - module.navigation-core-scene-projection
 status: active
 scope: Evolve navigation around one scene-derived destination lifecycle, separate retained entry ownership from native presentation lifetime, and stabilize one host-independent Lifecycle DSL consumption surface.
@@ -48,9 +50,10 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute Phase 6 by converging stack, scene, lifecycle, presentation, focus, transition, rollback, and cleanup decisions on one reducer-produced plan with typed Android executors.
+next_action: Execute Phase 7 capability-gap closure, coverage, leak, memory, performance, and broader device evidence.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
+  - release/changes/20260829-navigation-execution-reducer.json
   - release/changes/20260829-navigation-presentation-retention.json
   - release/changes/20260829-navigation-scene-projection.json
   - release/changes/20260829-navigation-transition-lifecycle.json
@@ -63,17 +66,17 @@ maven_release_changesets:
 Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecycle DSL
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
-complete.
+complete. Phase 6 reducer/executor convergence and acceptance are complete; Phase 7 is next.
 
 Last verified: 2026-08-29.
 
-Next action: execute Phase 6 by converging stack, scene, lifecycle, presentation, focus,
-transition, rollback, and cleanup decisions on one reducer-produced plan with typed Android
-executors.
+Next action: execute Phase 7 capability-gap closure, coverage, leak, memory, performance, and
+broader device evidence.
 
 ## Maven release changesets
 
 - `release/changes/20260829-navigation-destination-context.json`
+- `release/changes/20260829-navigation-execution-reducer.json`
 - `release/changes/20260829-navigation-presentation-retention.json`
 - `release/changes/20260829-navigation-scene-projection.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
@@ -105,6 +108,17 @@ hard-cut to the bounded `DisposeWhenHidden` default. The new Q3
 `NavPresentationRetentionPolicy` capability, compiled sample, public-host impact disposition, and
 immutable Changeset travel with the same slice. The app debug host and instrumentation remain
 unpublished acceptance evidence; release planning derives reverse-dependency propagation.
+
+Phase 6 classifies Navigation Core as a feature because it publishes the pure Q3
+`NavExecutionReducer` and immutable `NavExecutionPlan` contract. Navigation Android is a fix:
+public Android declarations are unchanged, while its coordinator now executes that plan as the
+single lifecycle, presentation, interaction, Back, rollback, and cleanup policy source. Governance
+V2 detects no application-facing DSL/component/host entry in this pure Core model, so its strict
+one-impact-per-detected-change rule admits no immutable Core impact record. The device-discovered
+Android host fix clarifies `NavHost` construction identity in public KDoc and therefore carries one
+`navigation.host` impact plus a compiled custom-overlay construction sample. The capability
+inventory, canonical KDoc, compiled samples, handwritten owners, generated Reference, impact, and
+Changeset provide the structured disposition without claiming `No documentation impact`.
 
 ## Objective
 
@@ -429,9 +443,9 @@ same slice that establishes its replacement:
 | 2 | Core scene and lifecycle projection | Pure scene/entry caps and model tests replace visible/interactive-only decisions | Complete |
 | 3 | Android transition lifecycle correction | Ordinary, predictive, and pane transitions match the matrix; unsupported general overlay execution has an explicit disposition | Complete |
 | 4 | Entry/presentation lifetime separation | Dispose, retain, and bounded policies pass restoration, cleanup, and memory gates | Complete |
-| 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Next |
-| 6 | Reducer and executor convergence | One typed plan owns stack, scene, lifecycle, presentation, focus, and effects; obsolete paths are absent | Pending |
-| 7 | Capability and test closure | Typed routes and ecosystem gaps have accepted dispositions; unit, device, coverage, memory, and performance gates pass | Pending |
+| 5 | Destination context DSL | Stable per-entry context, compiled Q3 sample, and non-frame-rate observation contracts pass | Complete |
+| 6 | Reducer and executor convergence | One typed plan owns stack, scene, lifecycle, presentation, focus, and effects; obsolete paths are absent | Complete |
+| 7 | Capability and test closure | Typed routes and ecosystem gaps have accepted dispositions; unit, device, coverage, memory, and performance gates pass | Next |
 | 8 | Documentation, release, and archive | Durable conclusions are current, Changesets are released or accepted, all gates pass, and the plan is archived | Pending |
 
 ### Phase 0: freeze contracts before implementation
@@ -771,6 +785,39 @@ navigation remains assigned to Phase 7 rather than being hidden behind the conte
 3. Delete the superseded command sequencing and any state reconstructed independently by the
    coordinator, driver, or session store.
 4. Add model equivalence, re-entrancy, failure, cancellation, and terminal-state guards.
+
+Phase 6 acceptance compared fresh results with the completed Phase 5 baseline. Navigation Core
+passed 71/71 tests versus 60/60, an absolute increase of 11 and a normalized increase of 18.3%.
+Navigation Android passed 165/165 versus 162/162, an absolute increase of three and a normalized
+increase of 1.9%. The new contracts cover reducer terminal states, deterministic retention and
+rollback, typed interaction execution, dynamic Back enablement, and explicit-key host replacement.
+
+The full `NavigationBackDeviceTest` suite passed 15/15 on the physical Pixel 4 XL running API 33.
+An earlier 14/15 run exposed an unstable function-identity dependency: an inline
+`overlayHostFactory` could replace the host during ordinary recomposition and lose Back ownership.
+The factory is now captured at host creation, excluded from host reconciliation identity, and
+explicit `key` replacement with the same controller is covered separately. The coordinator fell
+from 1,597 to 1,176 lines, an absolute reduction of 421 lines or 26.4%; structural inspection found
+no production-side lifecycle planner call, scene reconstruction, direct owner reconciliation, or
+presentation disposal outside the typed executor path.
+
+The conclusion is **improved**: one pure plan is now the policy source for stack, scene, lifecycle,
+presentation, interaction, Back, rollback, and terminal cleanup, and Android applies it through one
+typed executor. Evidence is limited to deterministic unit/Robolectric suites and one API-33 device;
+line/branch coverage, representative leaks, memory, performance, general overlay navigation,
+typed-route serialization, direct NavigationEvent integration, navigation results, diagnostics,
+and testing utilities remain **inconclusive** and explicitly advance to Phase 7.
+
+Repository acceptance passed `qaQuick` across all 2,268 actionable tasks: 1,944 executed and 324
+were up to date. `qaPreview` passed all 1,209 actionable tasks: 141 executed and 1,068 were up to
+date, including both Paparazzi-backed Preview hosts. Documentation governance reported zero issues
+against `cab55049`, all 77 documentation-script tests passed, all 126 required Chinese mirrors were
+current, development-tooling isolation passed, and release intent resolved exactly the Core feature
+plus Android fix in one Changeset. This is **improved** repository integration confidence and **no
+material change** in Preview behavior; mixed cache state is execution context, not performance
+evidence. Current Core and Android Dokka generation passed, while one complete historical API-doc
+retry was **inconclusive** after an external package-list download timed out in an old revision; CI
+remains the retry boundary for that network-dependent publication check.
 
 ### Phase 7: close mature-navigation gaps and evidence
 

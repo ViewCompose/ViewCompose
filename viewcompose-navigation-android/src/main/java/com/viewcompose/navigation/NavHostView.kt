@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.util.TypedValue
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.AttrRes
@@ -194,10 +196,35 @@ internal data class NavPaneLayout(
 }
 
 /**
+ * Destination surface that enforces the execution plan's input-ownership decision.
+ *
+ * Returning handled while input is disabled prevents an event from falling through to a
+ * transitioning sibling. System Back remains owned by the host runtime and does not depend on a
+ * destination's key dispatch.
+ */
+internal class NavDestinationContainer(
+    context: Context,
+) : FrameLayout(context) {
+    internal var acceptsNavigationInput: Boolean = true
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        return if (acceptsNavigationInput) super.dispatchTouchEvent(event) else true
+    }
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        return if (acceptsNavigationInput) super.dispatchGenericMotionEvent(event) else true
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        return if (acceptsNavigationInput) super.dispatchKeyEvent(event) else true
+    }
+}
+
+/**
  * Creates a destination root container and inherits the host theme background as its surface.
  */
-internal fun destinationContainer(context: Context): FrameLayout {
-    return FrameLayout(context).apply {
+internal fun destinationContainer(context: Context): NavDestinationContainer {
+    return NavDestinationContainer(context).apply {
         layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT,

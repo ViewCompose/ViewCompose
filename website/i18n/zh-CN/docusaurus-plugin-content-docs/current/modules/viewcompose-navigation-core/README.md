@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 534f8a7e88205065a5cd96b57e8251aea9daa941a51a33214d4a0cf1bf039497
+translation_source_hash: 710336690883a10a5c1c13c5e3dc43fa0191ca19db53df526f5069b01dea324f
 translation_status: current
 ---
 
@@ -197,6 +197,61 @@ check(plan.targetStates[list.id] == NavEntryLifecycleState.Created)
 check(plan.targetStates[detail.id] == NavEntryLifecycleState.Resumed)
 check(plan.transitions.first().entryId == list.id)
 ```
+
+## 统一执行 Reducer
+
+`NavExecutionReducer` 是 Stack Transaction、Pane Scene 与 Lifecycle Projection 之上的唯一策略
+边界。`settled`、`transition` 和 `predictivePreview` 分别表达三类事件的前置条件，但统一委托给
+同一实现并返回相同的不可变 `NavExecutionPlan`。`reconcile` 保留原计划的 Stack 和 Scene 决策，
+只重新计算外层 Host Lifecycle、Presentation Inventory、Retention 或 Back Ownership。
+
+计划同时包含 Candidate 或 Committed Stack Delta、精确 Semantic Scene、有序 Lifecycle Target、
+Presentation 的 prepare/refresh/retain/evict/dispose 列表、Input/Focus/Accessibility 与 Back
+Ownership、Rendering Suspension、提交前 Rollback 和终态 Cleanup。它只包含 ID 与 Core Value，
+绝不持有 View、`LifecycleOwner`、Callback 或动画进度。平台 Adapter 必须先准备计划要求的全部
+Presentation，再提交 Transaction；提交后按计划顺序发布 Effect，并直接使用计划记录的
+Rollback 或 Cleanup 列表，不能从 Controller State 重建第二套策略。
+
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-execution-plan" sample_id="module.navigation-core-execution-plan" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
+```kotlin
+val plan = NavExecutionReducer.transition(
+    currentLifecycleStates = mapOf(
+        before.top.id to NavEntryLifecycleState.Resumed,
+    ),
+    transaction = transaction,
+    beforePaneScene = NavPaneScene(
+        listOf(NavPane(NavPaneRole.Primary, before.top.id)),
+    ),
+    afterPaneScene = NavPaneScene(
+        listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id)),
+    ),
+    hostState = NavHostLifecycleState.Resumed,
+    presentedEntryIds = listOf(before.top.id),
+    maxRetainedHiddenPresentations = 0,
+)
+
+// A platform adapter prepares these identities before committing the stack.
+check(plan.preparePresentationEntryIds == listOf(transaction.after.top.id))
+check(plan.inputEntryIds.isEmpty())
+check(plan.rollbackOwnerEntryIds == listOf(transaction.after.top.id))
+check(plan.lifecycle.targetStates.values.none(NavEntryLifecycleState.Resumed::equals))
+```
+
+所有 Reducer 调用都无副作用，复杂度与 Retained Entry、Graph Depth、Current Owner 和
+Presentation 数量线性相关。`null` 明确表示 Hidden Presentation 无上限，非负值表示确定性的
+Oldest-first 上限。该 API 仍为 Alpha，刻意不提供旧新双计划兼容桥。
+
+## 执行 Reducer 验收
+
+Phase 5 基线通过 60/60 项 Navigation Core 测试。Phase 6 新鲜执行以零 Failure、Error 或 Skip
+通过 71/71；其中 11 项 Reducer 测试覆盖稳定态、Push、Pop、Reset、Predictive Preview、有限与
+无限 Retention、Reconciliation、Candidate Back Ownership、不可变 Snapshot 和非法输入。测试
+绝对增加 11 项，标准化增加 18.3%。
+
+结论为 **improved**。Stack Mutation、Semantic Scene、Lifecycle、Presentation Inventory、
+Interaction、Back、Rollback 与终态 Cleanup 现在只有一个纯确定性结果。该执行本身不证明行/分支
+覆盖率、Android Executor 正确性、真机行为、无泄漏或代表性性能；这些维度在此仍为
+**inconclusive**，由 Android 模块证据或 Phase 7 覆盖。
 
 ## 自适应 pane
 

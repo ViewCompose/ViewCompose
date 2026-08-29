@@ -147,7 +147,7 @@ enum class NavTransactionStatus {
  * @property mutation complete retained-entry delta
  */
 class NavTransaction internal constructor(
-    private val owner: NavBackStackController,
+    internal val owner: NavBackStackController,
     internal val transactionId: Long,
     internal val beforeState: NavStackSetSnapshot,
     internal val afterState: NavStackSetSnapshot,
@@ -267,10 +267,14 @@ class NavBackStackController private constructor(
      * [rootBackBehavior] and available selection history.
      */
     fun systemBackCommand(): NavCommand? {
+        return systemBackCommand(currentState)
+    }
+
+    internal fun systemBackCommand(state: NavStackSetSnapshot): NavCommand? {
         return when {
-            currentState.activeStack.entries.size > 1 -> NavCommand.Pop
+            state.activeStack.entries.size > 1 -> NavCommand.Pop
             rootBackBehavior == NavRootBackBehavior.PreviousStack &&
-                currentState.selectionHistory.isNotEmpty() -> NavCommand.PopStackHistory
+                state.selectionHistory.isNotEmpty() -> NavCommand.PopStackHistory
             else -> null
         }
     }

@@ -8,6 +8,13 @@
   "symbols": [
     { "symbol_id": "com.viewcompose.navigation.core.NavEntryLifecycleState", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavLifecyclePlanner.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavEntryPresence", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavExecutionPhase", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavExecutionPlan", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavExecutionReducer", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavExecutionReducer.predictivePreview", "kind": "function", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavExecutionReducer.reconcile", "kind": "function", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavExecutionReducer.settled", "kind": "function", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt" },
+    { "symbol_id": "com.viewcompose.navigation.core.NavExecutionReducer.transition", "kind": "function", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavHostLifecycleState", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavLifecyclePlanner.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavLifecyclePlan", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavLifecyclePlanner.kt" },
     { "symbol_id": "com.viewcompose.navigation.core.NavLifecyclePlanner", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavLifecyclePlanner.kt" },
@@ -21,7 +28,7 @@
     { "symbol_id": "com.viewcompose.navigation.core.NavSceneVisibility", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt" }
   ],
   "reference_owner": { "reference_id": "reference.navigation.scene-projection", "generated": true },
-  "sample_owner": { "sample_id": "module.navigation-core-scene-projection" },
+  "sample_owner": { "sample_id": "module.navigation-core-execution-plan" },
   "document_owners": {
     "architecture": [
       "architecture.navigation-runtime",

@@ -9,9 +9,12 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavEntryPresence
+import com.viewcompose.navigation.core.NavExecutionReducer
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlanner
+import com.viewcompose.navigation.core.NavPane
 import com.viewcompose.navigation.core.NavPaneRole
+import com.viewcompose.navigation.core.NavPaneScene
 import com.viewcompose.navigation.core.NavPreparation
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavRootBackBehavior
@@ -182,4 +185,36 @@ fun lifecyclePlanningSample() {
     check(plan.targetStates[detail.id] == NavEntryLifecycleState.Resumed)
     check(plan.transitions.first().entryId == list.id)
     // DOCS_REGION_END(navigation-core-scene-projection)
+}
+
+fun navigationExecutionPlanSample() {
+    val controller = NavBackStackController.create(NavRoute("home"))
+    val before = controller.snapshot()
+    val transaction = (
+        controller.prepare(NavCommand.Push(NavRoute("details"))) as NavPreparation.Ready
+    ).transaction
+    // DOCS_REGION_START(navigation-core-execution-plan)
+    val plan = NavExecutionReducer.transition(
+        currentLifecycleStates = mapOf(
+            before.top.id to NavEntryLifecycleState.Resumed,
+        ),
+        transaction = transaction,
+        beforePaneScene = NavPaneScene(
+            listOf(NavPane(NavPaneRole.Primary, before.top.id)),
+        ),
+        afterPaneScene = NavPaneScene(
+            listOf(NavPane(NavPaneRole.Primary, transaction.after.top.id)),
+        ),
+        hostState = NavHostLifecycleState.Resumed,
+        presentedEntryIds = listOf(before.top.id),
+        maxRetainedHiddenPresentations = 0,
+    )
+
+    // A platform adapter prepares these identities before committing the stack.
+    check(plan.preparePresentationEntryIds == listOf(transaction.after.top.id))
+    check(plan.inputEntryIds.isEmpty())
+    check(plan.rollbackOwnerEntryIds == listOf(transaction.after.top.id))
+    check(plan.lifecycle.targetStates.values.none(NavEntryLifecycleState.Resumed::equals))
+    // DOCS_REGION_END(navigation-core-execution-plan)
+    transaction.rollback()
 }

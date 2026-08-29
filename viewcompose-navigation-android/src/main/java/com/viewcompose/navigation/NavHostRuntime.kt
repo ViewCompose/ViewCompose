@@ -51,13 +51,13 @@ internal class NavHostRuntime private constructor(
         canHandleBack = {
             !destroyed &&
                 coordinator.state == NavHostCoordinatorState.Attached &&
-                controller.backStackController.systemBackCommand() != null
+                coordinator.ownsSystemBack
         },
         isPreviewActive = { previewId ->
             coordinator.activeBackPreview?.id == previewId
         },
         onBackPressed = {
-            controller.backStackController.systemBackCommand()?.let { command ->
+            coordinator.systemBackCommand?.let { command ->
                 publishNavigationResult(coordinator.navigate(command))
             }
             Unit
