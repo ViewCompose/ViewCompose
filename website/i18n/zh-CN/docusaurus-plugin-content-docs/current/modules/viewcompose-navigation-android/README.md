@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: e6325de31dea0aab7ffebc29008a7f19bebf5ec8ef32582f33f0956beb521b05
+translation_source_hash: 10e9f0080652c6d8aa96a8d41f645a5e0549c9068e6bdd04643465da1c2cd96f
 translation_status: current
 ---
 
@@ -27,8 +27,9 @@ dependencies {
 - 平台：Android 库，最低 SDK 跟随仓库 Android 策略。
 - API 依赖包括 Navigation Core、Runtime、UI Contract 和 UI Foundation，因为它们的 Route、State、
   Node 与 Builder 类型构成公开 Navigation API。
-- 实现依赖包括 Android Host、Lifecycle、ViewModel 集成和中立 Android Overlay 传输。Android
-  Renderer 仅通过 Android Host 私有传递，并不是本产物的直接依赖。
+- 实现依赖包括 Android Host、Lifecycle、ViewModel 集成、中立 Android Overlay 传输、Activity
+  Back 兼容路径和 NavigationEvent 1.1.2 直接输入。Android Renderer 仅通过 Android Host 私有
+  传递，并不是本产物的直接依赖；`navigationevent-testing` 只用于测试。
 - 该产物会传递引入 `viewcompose-navigation-core`；只需要平台无关模型时可单独依赖 core。
 
 ## Controller 与宿主
@@ -226,9 +227,15 @@ Pane。版本、结构、上限、配置或 Graph 层级无效时会 Fail Closed
 
 ## Android 系统返回与预测性返回
 
-`NavHost` 仅在能消费 Back 时向最近的 AndroidX Dispatcher 注册，并在活跃根使用保留 Stack 历史。
-Predictive Preview 不提交 Stack：取消恢复稳定 Scene，完成进入普通 Pop 事务，命令重定向从当前
-视觉状态继续。Preview Owner 最高为 `STARTED`；Detach、关闭或销毁会取消未完成 Preview。
+当生命周期至少为 `STARTED` 且能够消费 Back 时，`NavHost` 会向最近的
+`ViewTreeNavigationEventDispatcherOwner` 注册一个默认优先级 Handler。若不存在该 Owner，则兼容
+回退到最近的 Activity `OnBackPressedDispatcherOwner`；两条路径互斥。位于活跃根时会禁用 Handler，
+让保留 Stack 历史、外层 Handler 或 Dispatcher Fallback 继续处理。
+
+两条路径共用同一套 Preview 与 Pop 状态机。Predictive Preview 不提交 Stack：取消恢复稳定 Scene，
+完成进入普通 Pop 事务，命令重定向从当前视觉状态继续。Detach、关闭、Stop、Owner 替换或销毁都会
+取消未完成 Preview，并忽略该手势随后迟到的终态 Callback。Forward History 与 Android Studio
+Preview 输入不在当前 Host 契约内。
 
 ## Motion 动效
 

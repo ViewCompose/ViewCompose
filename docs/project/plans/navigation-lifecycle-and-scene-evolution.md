@@ -64,9 +64,10 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement the accepted direct NavigationEvent host integration in capability slice 7.5, then execute the coverage, leak, memory, and performance matrix.
+next_action: Accept capability slice 7.5 through repository and physical-device gates, then execute the coverage, leak, memory, and performance matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
+  - release/changes/20260829-navigation-event-host.json
   - release/changes/20260829-navigation-execution-reducer.json
   - release/changes/20260829-navigation-presentation-retention.json
   - release/changes/20260829-navigation-results.json
@@ -87,16 +88,17 @@ Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination c
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
 structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
 Serialization adapter slices are complete. The remaining-gap audit is complete and capability
-slice 7.5 is frozen for direct NavigationEvent host integration.
+slice 7.5 implements direct NavigationEvent host integration; acceptance is in progress.
 
 Last verified: 2026-08-29.
 
-Next action: implement the accepted direct NavigationEvent host integration in capability slice
-7.5, then execute the coverage, leak, memory, and performance matrix.
+Next action: accept capability slice 7.5 through repository and physical-device gates, then execute
+the coverage, leak, memory, and performance matrix.
 
 ## Maven release changesets
 
 - `release/changes/20260829-navigation-destination-context.json`
+- `release/changes/20260829-navigation-event-host.json`
 - `release/changes/20260829-navigation-execution-reducer.json`
 - `release/changes/20260829-navigation-presentation-retention.json`
 - `release/changes/20260829-navigation-results.json`
@@ -162,6 +164,12 @@ Q3 impact record covering codec behavior, inputs/outputs, callback, failure, per
 compatibility fields. The module catalog, strict API list, dependency contract, source-registered
 version, compiled sample, bilingual manual, generated Reference, and one Changeset travel with the
 same first-release registration.
+
+Slice 7.5 classifies Navigation Android as a feature because the existing Q3 `NavHost` changes from
+transitive Activity Back handling to direct NavigationEvent 1.1.2 ownership, with an exclusive
+legacy compatibility fallback. No public declaration is added: canonical KDoc, the existing
+compiled host sample, one host impact disposition, bilingual owning documents, and one immutable
+Changeset describe the changed Android behavior and dependency metadata.
 
 ## Objective
 

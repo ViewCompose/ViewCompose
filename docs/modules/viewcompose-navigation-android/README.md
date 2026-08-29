@@ -55,9 +55,10 @@ dependencies {
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
 - API dependencies are Navigation Core, Runtime, UI Contract, and UI Foundation because their
   route, state, node, and builder types form the public navigation surface.
-- Implementation dependencies are Android Host, Lifecycle, ViewModel integration, and the neutral
-  Android overlay transport. Android Renderer arrives privately through Android Host and is not a
-  direct dependency of this artifact.
+- Implementation dependencies are Android Host, Lifecycle, ViewModel integration, the neutral
+  Android overlay transport, Activity Back compatibility, and NavigationEvent 1.1.2 direct input.
+  Android Renderer arrives privately through Android Host and is not a direct dependency of this
+  artifact; `navigationevent-testing` remains test-only.
 - The artifact transitively supplies `viewcompose-navigation-core`; applications may depend on the
   core artifact alone when they need only the platform-neutral model.
 
@@ -273,11 +274,17 @@ is accepted with a fresh host-scope identity.
 
 ## Android system and predictive Back
 
-`NavHost` registers with the nearest AndroidX Back dispatcher only while it can consume Back, using
-retained-stack history at an active root. Predictive preview does not commit the stack: cancel
-restores the settled scene, completion uses the ordinary pop transaction, and command redirection
-continues from current visuals. Preview owners stay at most `STARTED`; detach, disable, or destroy
-cancels an unfinished preview.
+While `STARTED` and able to consume Back, `NavHost` registers one default-priority handler with the
+nearest `ViewTreeNavigationEventDispatcherOwner`. If none exists, it uses the nearest Activity
+`OnBackPressedDispatcherOwner` as a compatibility fallback; the two paths are mutually exclusive.
+At an active root the handler is disabled so retained-stack history, an outer handler, or the
+dispatcher fallback can continue.
+
+Both paths feed one preview and pop state machine. Predictive preview does not commit the stack:
+cancel restores the settled scene, completion uses the ordinary pop transaction, and command
+redirection continues from current visuals. Detach, disable, stop, owner replacement, or destroy
+cancels an unfinished preview, and a late terminal callback from that cancelled gesture is ignored.
+Forward history and Android Studio Preview input remain outside this host contract.
 
 ## Motion
 

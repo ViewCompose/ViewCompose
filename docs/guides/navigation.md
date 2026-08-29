@@ -81,8 +81,10 @@ and type. Inspect `NavDeepLinkResult`, and validate the complete URI at security
 ## Restore state and connect platform Back
 
 Leave `systemBackEnabled = true` for the ordinary Activity or Fragment host. `NavHost` registers
-with AndroidX Back only while the controller can consume it; an active root follows retained-stack
-history or delegates outward.
+directly with the nearest View-tree NavigationEvent owner only while `STARTED` and able to consume
+Back. If that owner is absent, it uses the Activity Back dispatcher compatibility path. An active
+root disables its handler so retained-stack history or an outer fallback can continue; do not add a
+second owner or callback around the host.
 
 Call `popBackStack` for an in-UI Back action. System Back and predictive Back then use the same
 transaction. Predictive preview never publishes its candidate: cancel restores the committed

@@ -27,7 +27,7 @@ artifact_ids:
 sample_ids:
   - module.navigation-android-results
   - module.navigation-core-execution-plan
-source_state: Jetpack Navigation 2.9.8 and Navigation3 1.1.5 with Compose 1.12.0 and current stable AndroidX owner semantics.
+source_state: Jetpack Navigation 2.9.8 and Navigation3 1.1.6 with Compose 1.12.0 and current stable AndroidX owner semantics.
 target_state: ViewCompose Navigation Core 0.1.0-alpha03, source-registered Kotlinx Serialization adapter 0.1.0-alpha01, and Navigation Android 0.1.0-alpha02 transactional host contracts.
 ---
 
@@ -37,7 +37,7 @@ This page compares ViewCompose navigation with both Jetpack Navigation 2 and Nav
 Navigation 2 and Navigation 3 have different ownership models, so a migration must identify its
 actual source before mapping APIs or lifecycle behavior.
 
-- **Source state:** Navigation 2.9.8 or Navigation3 1.1.5, with Compose UI/Runtime 1.12.0,
+- **Source state:** Navigation 2.9.8 or Navigation3 1.1.6, with Compose UI/Runtime 1.12.0,
   Activity 1.13.0, Lifecycle 2.11.0, and SavedState 1.5.0.
 - **Target state:** `viewcompose-navigation-core` 0.1.0-alpha03 and
   source-registered `viewcompose-navigation-kotlinx-serialization` 0.1.0-alpha01, plus
@@ -67,7 +67,7 @@ The upstream side is a semantic review of official stable documentation and rele
 - [Navigation 3 scenes](https://developer.android.com/guide/navigation/navigation-3/scenes)
 - [Navigation 3 multiple-back-stack recipe](https://developer.android.com/guide/navigation/navigation-3/recipes/multiple-backstacks)
 - [Navigation 3 deep-link recipe](https://developer.android.com/guide/navigation/navigation-3/recipes/deeplinks-basic)
-- [Navigation3 1.1.5 release notes](https://developer.android.com/jetpack/androidx/releases/navigation3)
+- [Navigation3 1.1.6 release notes](https://developer.android.com/jetpack/androidx/releases/navigation3)
 - [Lifecycle 2.11 release notes](https://developer.android.com/jetpack/androidx/releases/lifecycle)
 - [Activity 1.13 release notes](https://developer.android.com/jetpack/androidx/releases/activity)
 - [NavigationEvent release notes](https://developer.android.com/jetpack/androidx/releases/navigationevent)
@@ -76,7 +76,7 @@ The repository's executable Android baseline is Compose 1.7.8, Navigation 2.9.8,
 Lifecycle 2.11.0, and Kotlin 2.2.10. The paired sample below compiles one Navigation 2 controller,
 host, route, and navigation action on each side. The cited ViewCompose JVM, integration, and device
 tests establish broader local behavior. None of this is an executable comparison against
-Navigation3 1.1.5, and the paired sample does not prove parity with the complete Navigation 2.9.8
+Navigation3 1.1.6, and the paired sample does not prove parity with the complete Navigation 2.9.8
 surface. Navigation 2 and Navigation 3 claims must still be re-reviewed from official sources
 whenever those versions change.
 
@@ -158,7 +158,7 @@ and **Unsupported**.
 | --- | --- | --- | --- | --- |
 | Navigation ownership | Navigation 2 centers on a library-owned `NavController`. Navigation 3 normally exposes an application-owned back-stack collection to `NavDisplay`. | A `NavBackStackController` owns immutable single- or multi-stack snapshots and exposes prepared transitions to the Android host. | Intentionally different | [`NavBackStackController.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt) and [`NavHostRuntime.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostRuntime.kt). It combines controller ownership similar to Navigation 2 with explicit snapshot and pane concepts closer to Navigation 3. |
 | Host and destination type | Navigation 2 supports Compose, Fragment, Activity, and custom destinations. Navigation 3 renders entry content through `NavDisplay`. | `NavHost` renders framework-managed native View sessions. An Activity or Fragment is a host owner, not a destination type. | Intentionally different | [`NavHostDsl.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostDsl.kt) and [`NavDestinationSessionStore.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationSessionStore.kt). Direct Fragment or Activity destinations are not implemented. |
-| Graphs and typed routes | Navigation 2 type-safe routes use serializable route types across graph declaration, navigation, and entry decoding. Navigation 3 keys are application-defined and normally saveable; 1.1.5 gives an instance-key `entry` registration precedence over a class-key registration. | One `NavRouteSpec<T>` supplies stable identity and encoding. The optional Kotlinx adapter derives it for flat scalar class/object schemas; Graph DSL, Android commands, and `NavEntry.toRoute` still store only closed `NavRoute`/`NavValue`. | Partially supported | [`NavRouteSpec.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavRouteSpec.kt), [`SerializableNavRouteSpec.kt`](../../viewcompose-navigation-kotlinx-serialization/src/main/kotlin/com/viewcompose/navigation/serialization/SerializableNavRouteSpec.kt), both focused suites, and typed host tests. Generated scalar serializers are covered; custom `NavType`, nested/collection/polymorphic keys, and Navigation3 instance/class precedence remain absent. |
+| Graphs and typed routes | Navigation 2 type-safe routes use serializable route types across graph declaration, navigation, and entry decoding. Navigation 3 keys are application-defined and normally saveable; 1.1.6 retains instance-key `entry` precedence over a class-key registration. | One `NavRouteSpec<T>` supplies stable identity and encoding. The optional Kotlinx adapter derives it for flat scalar class/object schemas; Graph DSL, Android commands, and `NavEntry.toRoute` still store only closed `NavRoute`/`NavValue`. | Partially supported | [`NavRouteSpec.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavRouteSpec.kt), [`SerializableNavRouteSpec.kt`](../../viewcompose-navigation-kotlinx-serialization/src/main/kotlin/com/viewcompose/navigation/serialization/SerializableNavRouteSpec.kt), both focused suites, and typed host tests. Generated scalar serializers are covered; custom `NavType`, nested/collection/polymorphic keys, and Navigation3 instance/class precedence remain absent. |
 | Back-stack operations | Navigation 2 supplies `navigate`, `popBackStack`, `popUpTo`, and `NavOptions`; Navigation 3 represents stack changes through application collection updates. | Push, pop, replace, reset, stack selection, and deep-link commands are prepared, rendered, and then committed or rolled back as one transaction. | Partially supported | [`NavBackStackController.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt), [`NavBackStackControllerTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt), and [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). The two-phase transaction is stronger than an API-name mapping but is not the full Navigation 2 `NavOptions` surface. |
 | Scene execution plan | Navigation 3 derives scenes from application back-stack state and composes entry content through decorators; Navigation 2 keeps most execution policy inside the controller and navigator implementations. | `NavExecutionReducer` is a public, pure Q3 boundary. Settled, transition, and predictive-preview inputs produce one immutable plan for stack, scene, lifecycle, presentation, interaction, Back, rollback, and cleanup; the Android host performs typed effects from that plan. | Intentionally different | [`NavExecutionPlan.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt), its compiled sample, reducer model tests, and Android coordinator tests. This is stronger inspectability for custom executors, not parity with Navigation 3's open scene/decorator ecosystem. |
 | Entry and graph owners | `NavBackStackEntry` owns lifecycle, ViewModel, and saved state. Lifecycle 2.11 adds Navigation3 ViewModel decorators that inherit parent factories and `CreationExtras`. | Each destination and graph gets its own lifecycle, saved-state owner, ViewCompose saveable-state registry, and leased ViewModelStore. Owners inherit the required host parent's default Factory and starting extras, then replace their child ownership and route defaults. | Supported | [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), [`NavGraphOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt), [`NavEntryOwnerEnvironment.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt), and Factory, extras, SavedStateHandle, destination, and graph coverage in [`NavEntryOwnerTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt) and [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
@@ -170,8 +170,8 @@ and **Unsupported**.
 | Deep links | Navigation 2 matches URI, action, and MIME type. Navigation 3 supplies recipes for parsing external input into application keys. | `NavDeepLinkRequest` and `NavDeepLink` match strict URI, action, MIME, or combined declarations without Android types. Android maps `Intent.data`, `action`, and `type` into the same resolver; nested graphs, launch modes, structured rejection, ambiguity rejection, and inert extra query values remain supported. | Supported | [`NavDeepLink.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavDeepLink.kt), [`NavDeepLinkTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavDeepLinkTest.kt), and Intent/transaction coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). ViewCompose deliberately omits Navigation 2's Android-specific builder surface while preserving the material matching capability in Core. |
 | Return results | Navigation 2 uses the previous entry's `SavedStateHandle`; Navigation 3 uses application-owned state. | Result pop is atomic; the surviving entry owns a saved FIFO inbox, and `NavResultEffect` consumes at `RESUMED`. | Supported | [`NavResult.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavResult.kt), [`NavResultInbox.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavResultInbox.kt), and result transaction/lifecycle tests. No global or cross-stack bus is provided. |
 | Save, restore, and process death | Navigation 2 restores controller and entry state; Navigation 3 restores saveable keys and decorator state. Neither restores live ViewModel instances. | ViewCompose saves the complete configured stack set, route values, entry and graph saved state, saveable values, and a private host-scope identity. It retains live ViewModels only through the parent store during configuration recreation, migrates version-4 snapshots with a fresh scope identity, and rejects corrupt or structurally invalid state. | Supported | [`NavHostSavedState.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostSavedState.kt), [`NavHostSavedStateTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostSavedStateTest.kt), and restoration coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). Live Views, ViewModels, effects, animations, and uncommitted transactions are not process-restored. |
-| System Back and Predictive Back | Navigation 2 Compose integrates Predictive Back. Navigation 3 uses NavigationEvent and scene transitions. | The Android host drives transactional predictive start, progress, cancellation, and commit through Activity Back. | Supported | [`AndroidNavHostBackAdapter.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/AndroidNavHostBackAdapter.kt), its tests, and focused API-33 device coverage. Direct NavigationEvent and API-34 platform delivery remain separate gaps. |
-| Direct NavigationEvent integration | Activity and Navigation3 expose `NavigationEventDispatcher`, nested dispatcher owners, testing utilities, and Compose handlers. Navigation3 1.1.3 uses NavigationEvent 1.1.2, including Predictive Back in Android Studio Preview inspection mode. | ViewCompose uses the compatible Activity `OnBackPressedDispatcher` path but exposes no direct NavigationEvent callback, dispatcher-owner, forward-event, testing, or Preview integration. | Unsupported | No corresponding ViewCompose public API was found. Existing back behavior remains supported because Activity implements `OnBackPressedDispatcher` on top of NavigationEvent; unsupported refers to direct integration only. |
+| System Back and Predictive Back | Navigation 2 Compose integrates Predictive Back. Navigation 3 uses NavigationEvent and scene transitions. | The Android host drives transactional predictive start, progress, cancellation, and commit from the nearest NavigationEvent owner, with Activity Back as a compatibility fallback. | Supported | [`AndroidNavHostBackAdapter.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/AndroidNavHostBackAdapter.kt), its direct/legacy tests, and focused device coverage. Both inputs share one transactional preview and pop state machine. |
+| Direct NavigationEvent integration | Activity and Navigation3 expose `NavigationEventDispatcher`, nested dispatcher owners, testing utilities, and Compose handlers. Navigation3 uses NavigationEvent 1.1.2, including Predictive Back in Android Studio Preview inspection mode. | `NavHost` registers directly with the nearest View-tree owner, observes lifecycle and root delegation, and is tested with the official dispatcher fixture. Activity Back is used only when no direct owner exists. | Partially supported | The production handler is internal because applications already provide the official owner boundary. Forward history, a ViewCompose dispatcher facade, and Android Studio Preview input remain absent. |
 | Adaptive panes and overlays | Navigation 3 scenes can select one or more entries and coordinate overlays and transitions. Versions 1.1.3 and 1.1.4 fix nested-overlay and popped-entry metadata animation defects. | ViewCompose exposes a general platform-neutral semantic scene value and a fixed host policy for up to three newest pane entries. Adaptive panes, lifecycle, presentation, focus, and Back consume one reducer plan, but the Android host has no general overlay-navigation surface. | Partially supported | [`NavScene.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavScene.kt), [`NavExecutionPlan.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavExecutionPlan.kt), adaptive host tests, and reducer tests. The partial rating is caused by overlay and scene-strategy breadth, not ordinary or predictive execution consistency. |
 
 ## Choosing the source navigation model
@@ -296,7 +296,7 @@ sets beside the scene. The Android host consumes transition roles for its curren
 predictive, and adaptive-pane scenes. Do not infer general overlay-navigation support from the Core
 layer vocabulary.
 
-ViewCompose selects up to the three newest eligible pane entries. Navigation3 1.1.5 has a more
+ViewCompose selects up to the three newest eligible pane entries. Navigation3 1.1.6 has a more
 general scene and metadata model. Its 1.1.3 nested-overlay fix and 1.1.4 popped-entry metadata-lambda
 fix are upstream reliability changes, not evidence that ViewCompose supports arbitrary scenes or
 the same overlay animation lifecycle.
@@ -364,22 +364,18 @@ an in-memory stack switch.
 
 ## System Back and Predictive Back
 
-The ViewCompose Android adapter registers with `OnBackPressedDispatcher`, updates enablement from
-the controller's ability to handle Back, and drives predictive start, progress, cancellation, and
-commit through the staged navigation transaction. Activity 1.13 remains compatible with this API
-because Activity's dispatcher is implemented on top of NavigationEvent.
+The ViewCompose Android adapter registers one default-priority handler with the nearest
+`ViewTreeNavigationEventDispatcherOwner` while its lifecycle is at least `STARTED` and its stack can
+pop. When that owner is absent, it uses `OnBackPressedDispatcherOwner` as a compatibility fallback;
+the registrations are mutually exclusive. Both paths drive the same staged predictive and ordinary
+pop transaction. Stop, detach, disablement, owner replacement, and destruction cancel before
+unregistering, and a late terminal callback from that cancelled gesture cannot become an ordinary
+Back. At a root the handler is disabled and the dispatcher selects the next handler or fallback.
 
-Direct NavigationEvent integration is nevertheless unsupported. ViewCompose does not expose a
-`NavigationEventDispatcherOwner`, `NavigationEventCallback`, forward-event fallback, official
-NavigationEvent test fake, or inspection-mode Preview handler. New integration work should prefer
-NavigationEvent as recommended by Activity rather than assuming the legacy adapter is the final
-abstraction.
-
-Navigation3 1.1.3 updates its NavigationEvent dependency to 1.1.2, which enables Predictive Back
-in Android Studio Preview inspection mode; Navigation3 1.1.5 retains that behavior. ViewCompose
-device procedures and adapter tests do not verify Preview support. The API 35 device procedure
-referenced by the navigation guide was not rerun while authoring this page, so device status is
-carried as existing repository evidence rather than a fresh result.
+The host depends on NavigationEvent 1.1.2 and its tests use the official testing dispatcher. It does
+not expose a duplicate ViewCompose owner/callback facade, forward-event history, or an
+inspection-mode Preview handler. Navigation3 1.1.6 retains NavigationEvent-backed Preview support;
+that Preview path remains outside ViewCompose's device and adapter evidence.
 
 ## Migration paths
 
@@ -405,8 +401,8 @@ carried as existing repository evidence rather than a fresh result.
 4. Replace general scenes with the supported pane policy or record the scene as unsupported.
 5. Verify repeated keys across multiple stacks and parent factory/`CreationExtras` propagation.
 6. Replace application collection mutations with one supported transactional controller command.
-7. Keep direct NavigationEvent and Preview dependencies outside ViewCompose until an integration
-   exists.
+7. Use the nearest official NavigationEvent owner already consumed by `NavHost`; do not wrap it in a
+   duplicate owner. Keep forward history and Preview-specific input application-owned.
 
 ## Migration risks and unsupported behavior
 
@@ -414,15 +410,15 @@ carried as existing repository evidence rather than a fresh result.
 - The optional Kotlinx adapter supports generated flat scalar route serializers, not arbitrary
   nested/collection/polymorphic route objects, custom `NavType`, or Navigation3 key precedence;
   use an explicit `NavRouteSpec<T>` for unsupported wire shapes.
-- Direct NavigationEvent dispatcher-owner, callback, forward-event, testing, and Preview APIs are
-  unsupported.
+- Direct backward NavigationEvent input is supported, but forward history, a ViewCompose dispatcher
+  facade, and Android Studio Preview input are unsupported.
 - General Navigation3 scene strategies and metadata are unsupported; the pane policy is narrower.
 - Hidden sessions retain effects and native Views, increasing both lifecycle and memory risk.
 - Arbitrary non-navigation UI scopes still require an application-owned provider boundary.
 - Exact or signed deep-link query sets require application validation before routing; undeclared
   values are otherwise tolerated and inert.
-- API-34 platform edge-gesture delivery and NavigationEvent Preview behavior were not rerun for this
-  page; selected predictive and lifecycle behavior passed on a physical API-33 device.
+- NavigationEvent Preview behavior is not verified; the physical-device result below covers the
+  documented Android host and platform Back path only.
 
 ## Re-verification requirements
 
@@ -434,5 +430,5 @@ changes.
 The minimum local evidence is the navigation-core controller, lifecycle, and deep-link tests; the
 Android host owner, saved-state, destination-session, and Back-adapter tests; process-recreation
 coverage; and the documented API 35 predictive-back device procedure. The upstream half requires
-a fresh official semantic review. Do not infer Navigation 2.9.8 or Navigation3 1.1.5 parity solely
+a fresh official semantic review. Do not infer Navigation 2.9.8 or Navigation3 1.1.6 parity solely
 from the repository's Compose 1.7.8 executable dependency baseline.
