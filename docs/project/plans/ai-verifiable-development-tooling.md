@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Bind the persistent Preview worker compatibility fingerprint to the exact build-manifest input fingerprint before implementing the deterministic screenshot repair proposer.
+next_action: Implement a bounded deterministic proposer that maps accepted structured candidate evidence to eligible typed Design IR patches without exposing a public repair mode.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -116,9 +116,9 @@ orientation, system bars, and accepted semantic evidence exactly match the rende
 The bounded deterministic repair contract and its provider-offline internal orchestrator are now
 implemented, including typed Design IR patch application, source-bound candidate evaluation, and
 content-addressed structured candidate evidence, but automatic repair is not yet a public tool
-mode. Next action: close the newly reproduced cross-build persistent Preview worker isolation gap,
-then implement a bounded deterministic proposer over accepted structured findings without claiming
-perceptual or cross-device equivalence.
+mode. The reproduced cross-build persistent Preview worker isolation gap is now closed by binding
+worker reuse to one exact build identity. Next action: implement a bounded deterministic proposer
+over accepted structured findings without claiming perceptual or cross-device equivalence.
 
 ## Maven release changesets
 
@@ -2472,6 +2472,48 @@ traceability, structured finding availability, immutable session state, and clai
 policy, perceptual equivalence, arbitrary source repair, or public convergence. The next action is
 to close the cross-build Preview worker isolation gap, then implement a bounded deterministic
 proposer that consumes only this accepted evidence and emits eligible typed Design IR patches.
+
+### Implementation correction — exact-build Preview worker isolation
+
+The repeated installed-distribution failure was a real cross-build isolation defect rather than a
+candidate-evidence regression. Running the screenshot target before the XML target in one
+persistent Preview worker produced a schema-valid, semantically exact XML comparison but changed
+the rendered output to
+`e4d6eabbe698970fd2faac2f3ff0b4363c4221bdff29c2965d107c6927a8f4f1`, its PNG to
+`ccd9e8a1a8cb0ff3ff98dce4f1e7eda2f771eb98a44aa9fcfb6279dfc0d4b343`, and its render tree to
+`03298986d5e5519227183a649d8ebe4ebd07e71a1e60f1d600ee685e83015929`. Removing only the XML
+render cache and starting a cold worker restored the accepted output
+`6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab`. The failure was therefore
+history-dependent pixel and render-tree evidence, not a stale golden.
+
+The Gradle plugin previously derived worker compatibility only from the narrow Layoutlib
+environment and render-runtime identities. It now also includes the complete build-manifest input
+fingerprint. Project bytecode or resource changes therefore retire the persistent worker before a
+new render, while identical-build batches and repeated requests may still reuse it. The child class
+loader remains fresh for every command; the stronger process key additionally contains AndroidX
+and Layoutlib caches that live outside that loader. A focused unit denominator proves sensitivity
+to each of build input, Layoutlib environment, and render runtime identity.
+
+From an empty Preview harness, the full installed distribution now passes 2/2 byte-reproducible
+package builds, offline install/uninstall, SPDX/license inventory, both MCP protocol eras, the
+screenshot compile/render/layout/exact-pixel lanes, and then the XML, image XML, and layout-
+dependency compile/render/comparison lanes. In particular, XML after screenshot again returns the
+accepted comparison fingerprint
+`470b4e23384479ff29528fe311058618b6ace6536465aeaf08bb477a10cc737d`. The 23 non-TestKit plugin
+tests pass. Two complete 24-test plugin-suite attempts reached the functional TestKit case but
+failed while writing Gradle lock/result files after the host volume exhausted its remaining space;
+those attempts are **inconclusive** and are not treated as functional evidence. The cold installed
+distribution is the accepted end-to-end cross-build denominator.
+
+This correction changes production source in the published
+`viewcompose-preview-gradle-plugin`, so
+`release/changes/20260829-preview-worker-jvm21-resolution.json` classifies it as a fix and the owning
+English/Chinese module manuals define the new reuse boundary. The result is **mixed** operationally:
+cross-build determinism and evidence integrity are improved, while a changed build now pays cold
+Layoutlib setup instead of risking process-cache contamination. Application runtime behavior is
+unchanged. Any later attempt to recover cross-build warm reuse must first pass the same cold-start,
+screenshot-to-XML pixel and render-tree denominator. The next action returns to the bounded
+deterministic screenshot repair proposer.
 
 ### Implementation evidence — bounded XML to Design IR
 

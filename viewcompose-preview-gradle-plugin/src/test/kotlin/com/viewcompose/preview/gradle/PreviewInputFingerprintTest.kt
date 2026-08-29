@@ -71,4 +71,29 @@ class PreviewInputFingerprintTest {
             PreviewInputFingerprint.combine(mapOf("resources" to second.getValue("resources"))),
         )
     }
+
+    @Test
+    fun `persistent worker compatibility includes the exact build input identity`() {
+        val layoutlib = "a".repeat(64)
+        val build = "b".repeat(64)
+        val runtime = "c".repeat(64)
+        val baseline = previewWorkerCompatibilityFingerprint(layoutlib, build, runtime)
+
+        assertEquals(
+            baseline,
+            previewWorkerCompatibilityFingerprint(layoutlib, build, runtime),
+        )
+        assertNotEquals(
+            baseline,
+            previewWorkerCompatibilityFingerprint(layoutlib, "d".repeat(64), runtime),
+        )
+        assertNotEquals(
+            baseline,
+            previewWorkerCompatibilityFingerprint("e".repeat(64), build, runtime),
+        )
+        assertNotEquals(
+            baseline,
+            previewWorkerCompatibilityFingerprint(layoutlib, build, "f".repeat(64)),
+        )
+    }
 }

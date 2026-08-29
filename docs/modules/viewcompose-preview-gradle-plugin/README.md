@@ -46,8 +46,11 @@ while preserving unrelated annotations and stack frames.
 Discovery scans compiled project directories and JARs without loading application classes into the
 Gradle daemon. It combines source locations with canonical runtime/boot classpaths, manifests,
 resources, assets, resource packages, and project bytecode. One full fingerprint invalidates render
-output; a narrower Layoutlib compatibility fingerprint excludes reloadable project code so a warm
-worker can retain platform state while every render receives a fresh application class loader.
+output; a narrower Layoutlib compatibility fingerprint still owns reusable materialization such as
+resource symbols. Persistent worker compatibility additionally includes the full build-input
+fingerprint, so Layoutlib process state is reused only within one exact build while every render
+also receives a fresh application class loader. A project bytecode or resource change starts a new
+worker instead of inheriting process-global AndroidX or Layoutlib caches from another build.
 
 `viewComposePreviewDescriptors` aggregates descriptor export. Variant tasks include
 `discoverDebugViewComposePreviews`, `renderDebugViewComposePreview`, and
@@ -85,6 +88,25 @@ CI and the existing Preview suites remain the release gate. The accepted render 
 the worker reported 220 ms render duration after a 2,315 ms Layoutlib setup. The plugin suite passed
 23/23 tests, and documentation, translation, release-intent, and development-tooling-isolation gates
 also passed.
+
+The 2026-08-30 cross-build isolation acceptance reproduced a history-dependent render by running
+the generated screenshot target before the generated XML target in one persistent worker. The XML
+result remained semantically and structurally exact, but its PNG and render-tree identities changed
+from the accepted cold render. Binding worker compatibility to the complete build-manifest input
+fingerprint now retires the process whenever project code or resources change. From an empty
+Preview harness, the installed distribution sequence passed the screenshot, XML, image XML,
+comparison, exact-pixel, dual-protocol MCP, and offline install/uninstall gates; XML returned the
+accepted output fingerprint
+`6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab` after the screenshot build.
+The 23 non-TestKit plugin tests passed, including exact sensitivity to build, Layoutlib, and render
+runtime identities. Two attempts at the complete 24-test plugin suite reached only the functional
+TestKit denominator before the host volume exhausted its remaining space, so those attempts are
+**inconclusive** and are not accepted as functional evidence; the cold installed distribution is
+the accepted end-to-end denominator. The result is **mixed** operationally: cross-build pixel
+determinism is improved, while a changed build now pays cold Layoutlib setup instead of reusing a
+potentially contaminated process. Application runtime behavior remains unchanged. If cold setup
+latency becomes material, any narrower reuse key must first pass the same cross-build pixel and
+render-tree denominator.
 
 See [Preview tooling](../../tooling/preview.md), [Preview Core](../viewcompose-preview-core/README.md),
 and the [generated API reference](https://docs.viewcompose.com/api/viewcompose-preview-gradle-plugin/current/).

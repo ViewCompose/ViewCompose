@@ -283,11 +283,10 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             targetRuntimeFiles = retainedRuntimeClasspath,
             resourceSymbols = resourceSymbols,
         )
-        val workerCompatibilityFingerprint = PreviewInputFingerprint.combine(
-            mapOf(
-                "layoutlib-environment" to manifest.layoutlibCompatibilityFingerprint,
-                "render-runtime" to renderRuntimeFingerprint,
-            ),
+        val workerCompatibilityFingerprint = previewWorkerCompatibilityFingerprint(
+            layoutlibCompatibilityFingerprint = manifest.layoutlibCompatibilityFingerprint,
+            buildInputFingerprint = manifest.inputFingerprint,
+            renderRuntimeFingerprint = renderRuntimeFingerprint,
         )
         val prepared = pendingPlans.map { plan ->
             preparePlan(
@@ -813,6 +812,25 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         }
     }
 }
+
+/**
+ * Binds a persistent Layoutlib process to one exact build input identity.
+ *
+ * Reloadable project classes use a child class loader, but Layoutlib and AndroidX retain process
+ * caches outside that loader. Reusing the process after project bytecode or resources change can
+ * therefore make pixels depend on render history even when semantic output remains valid.
+ */
+internal fun previewWorkerCompatibilityFingerprint(
+    layoutlibCompatibilityFingerprint: String,
+    buildInputFingerprint: String,
+    renderRuntimeFingerprint: String,
+): String = PreviewInputFingerprint.combine(
+    mapOf(
+        "build-inputs" to buildInputFingerprint,
+        "layoutlib-environment" to layoutlibCompatibilityFingerprint,
+        "render-runtime" to renderRuntimeFingerprint,
+    ),
+)
 
 /**
  * Lifecycle and SavedState classes must come from the Android target, not JVM/desktop variants
