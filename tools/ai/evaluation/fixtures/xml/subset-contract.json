@@ -123,6 +123,7 @@
     {
       "source": "login.xml",
       "goldenIr": "login.design-ir.json",
+      "goldenKotlin": "login.viewcompose.kt",
       "expectedNodes": 4,
       "expectedResources": [
         "string/email_hint",
@@ -130,6 +131,7 @@
         "string/login_title"
       ],
       "expectedStateBindings": ["emailState"],
+      "expectedResourceParameters": ["loginTitle", "emailHint", "loginAction"],
       "expectedFunction": "LoginView"
     }
   ],

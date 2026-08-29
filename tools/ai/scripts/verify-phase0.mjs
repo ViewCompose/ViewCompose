@@ -260,9 +260,10 @@ async function verifyXmlSubset(schemas) {
   for (const fixture of contract.supportedFixtures) {
     const sourcePath = resolve(fixtureDirectory, fixture.source);
     const goldenPath = resolve(fixtureDirectory, fixture.goldenIr);
-    const [source, golden] = await Promise.all([
+    const [source, golden, goldenKotlin] = await Promise.all([
       readFile(sourcePath),
       readJson(goldenPath),
+      readFile(resolve(fixtureDirectory, fixture.goldenKotlin), 'utf8'),
     ]);
     assertSchemaValue(golden, designSchema, fixture.goldenIr);
     const fingerprint = createHash('sha256').update(source).digest('hex');
@@ -284,6 +285,15 @@ async function verifyXmlSubset(schemas) {
     declaredSources.add(fixture.source);
     if (fixture.goldenIr === 'login.design-ir.json' && JSON.stringify(golden) !== JSON.stringify(example)) {
       throw new Error('The public Design IR example must equal the frozen login golden');
+    }
+    if (
+      !goldenKotlin.startsWith('package generated.viewcompose\n') ||
+      !goldenKotlin.includes(`fun UiTreeBuilder.${fixture.expectedFunction}(`) ||
+      fixture.expectedResourceParameters.some((parameter) =>
+        !goldenKotlin.includes(`    ${parameter}: String,`)) ||
+      !goldenKotlin.endsWith('\n')
+    ) {
+      throw new Error(`${fixture.goldenKotlin}: generated Kotlin contract is incomplete`);
     }
   }
   for (const fixture of contract.unsupportedFixtures) {

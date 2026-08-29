@@ -653,6 +653,32 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiXmlMigration") {
+            group = "verification"
+            description =
+                "Generates and hermetically compiles the frozen XML-to-ViewCompose Kotlin golden."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-xml")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "evaluation/fixtures/xml/**",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-to-kotlin.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-xml.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+                project.rootDir.resolve("tools/ai-compiler-harness/build.gradle.kts"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

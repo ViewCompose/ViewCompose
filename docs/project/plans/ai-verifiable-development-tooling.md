@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement deterministic Design IR-to-ViewCompose Kotlin generation and compile the frozen XML migration output.
+next_action: Expose the accepted XML migration core through one CLI/MCP tool and the offline distribution without weakening its fail-closed contract.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -55,12 +55,13 @@ inventory, installed compile example, and protocol compatibility gates complete 
 foundation.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
-the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates.
+the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
+IR-to-Kotlin generator now produces the exact login golden and passes the hermetic compiler.
 
 Last verified: 2026-08-29.
 
-Next action: implement deterministic Design IR-to-ViewCompose Kotlin generation and compile the
-frozen XML migration output.
+Next action: expose the accepted XML migration core through one CLI/MCP tool and the offline
+distribution without weakening its fail-closed contract.
 
 ## Maven release changesets
 
@@ -876,6 +877,37 @@ not yet generate Kotlin, compile a converted result, render a migrated layout, i
 resolve styles/resources, or support `include`, `merge`, `FrameLayout`, ConstraintLayout, lists,
 custom Views, Data Binding, or behavior. The next action is deterministic IR-to-Kotlin generation
 with the existing hermetic compiler as its acceptance boundary.
+
+### Implementation evidence — deterministic Kotlin generation and compilation
+
+The second Phase 4 implementation validates Design IR v1 again before generation, accepts only the
+normalized five target node kinds, and rejects unknown properties, semantics, state, events,
+modifiers, expressions, or resource types. It emits sorted imports, escaped Kotlin literals,
+deterministically deconflicted parameter identifiers, stable keys, caller `String` resource
+bindings, caller-owned `TextFieldState`, and a migration report that always requires resource,
+state/restoration, ViewBinding, listener, adapter, and imperative-mutation review. Blocked IR never
+receives Kotlin output.
+
+The first real compile correctly rejected an assumed
+`com.viewcompose.ui.foundation.TextFieldState` import. The generator was corrected to the canonical
+`com.viewcompose.text.TextFieldState` declaration and compiled again; this demonstrates why
+generation is not accepted on string comparison alone. The accepted cache-miss compile completed
+in 10.85 seconds, produced two class files totaling 5,484 bytes, and returned class fingerprint
+`f46767ea9e87195cc74237a2cac1b230dbe76fa94cc9107caf134dcedc9518cd`. The deterministic Kotlin
+fingerprint is `6c4f6dafef9e0b4808eefab440d14e331b1a3b55bc8becff7a05d3669cc73be1`.
+
+On 2026-08-29, Node 25.6.0 passed 86/86 AI-tooling tests in 1.34 seconds. The dedicated XML gate
+matched 1/1 Kotlin golden, 1/1 resource migration report, and 1/1 hermetic compile. The compiled
+quality-build suite plus both Phase 4 root tasks passed 19 tasks (7 executed and 12 up-to-date) in
+32 seconds. Compared with IR-only conversion, the result is **improved** executable fidelity with
+**no material runtime change** because generation and compilation remain downstream tooling.
+
+Limitations: the generated function deliberately accepts resolved strings instead of directly
+calling Android `stringResource`; the migration report makes that host-boundary work explicit.
+Compilation proves API and type correctness in the frozen artifact lane, not runtime rendering,
+resource resolution, call-site completeness, visual parity, or behavior. The accepted core is not
+yet exposed through CLI/MCP or included in the installable distribution; that protocol and
+packaging slice is next.
 
 ### Phase 4A: Design IR and code generation
 
