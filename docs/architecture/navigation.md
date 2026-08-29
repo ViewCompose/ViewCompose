@@ -74,8 +74,6 @@ model. Its stable name is used for graph declaration; its encoder produces close
 arguments; its decoder reconstructs application values from an entry. Android typed commands
 encode before entering the host transaction. Graphs never retain codec callbacks, snapshots never
 retain application objects, and string routes remain the interoperability and recovery boundary.
-The optional Kotlinx adapter maps supported flat scalar descriptors onto that same model and fails
-unsupported schemas when a spec is created; JSON remains a private call-local bridge.
 
 ## 2. Transaction boundary
 

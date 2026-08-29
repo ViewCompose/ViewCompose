@@ -64,7 +64,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement the frozen optional Kotlinx Serialization adapter over the completed typed-route contract before the broader evidence matrix.
+next_action: Re-audit and disposition direct NavigationEvent integration, general scene strategies, diagnostics, and testing utilities before the coverage, leak, memory, and performance matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
@@ -85,12 +85,13 @@ Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecy
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
-structured deep-link, entry-targeted result, and typed-route contract slices are complete.
+structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
+Serialization adapter slices are complete.
 
 Last verified: 2026-08-29.
 
-Next action: implement the frozen optional Kotlinx Serialization adapter over the completed
-typed-route contract before the broader evidence matrix.
+Next action: re-audit and disposition direct NavigationEvent integration, general scene strategies,
+diagnostics, and testing utilities before the coverage, leak, memory, and performance matrix.
 
 ## Maven release changesets
 
@@ -1055,6 +1056,43 @@ one first-release feature Changeset. The implementation PR must prove strict API
 published dependency metadata, local JVM consumption, documentation/site budgets, and repository
 QA. Android device evidence is not applicable unless implementation unexpectedly changes a
 platform module.
+
+Acceptance evidence:
+
+- The implementation matches the frozen dependency boundary. The optional pure Kotlin/JVM
+  integration is classified in the runtime `integration` layer and depends on Core's `kernel`
+  layer; Core remains serialization-independent. Descriptor validation is eager and path-aware,
+  mapping is descriptor-stable, JSON is call-local, and snapshots retain only `NavRoute` and
+  `NavValue`. This is **improved** generated-route convenience without a parallel stack model.
+- The new artifact passed 10/10 focused tests with zero failures, errors, or skips. Its first-release
+  baseline was zero tests, so the absolute gain is ten and a normalized percentage is not
+  meaningful. Scalar/object/inline/default round trips, Long storage stability, serial names,
+  non-finite values, malformed arguments, null violations, and every rejected schema family are
+  covered; accepted line/branch coverage remains **inconclusive** because no report exists.
+- Strict Dokka and the compiled Q3 sample passed. Local publication produced the intended POM:
+  Navigation Core, Serialization Core 1.7.3, and Kotlin stdlib are compile dependencies, while
+  Serialization JSON 1.7.3 is runtime-only. Publishing, dependency-contract, package-root,
+  namespace, and five-layer direction gates passed; release intent resolved exactly one feature
+  artifact and no ignored or shared classifications.
+- `qaQuick` passed all 2,277 actionable tasks in 6m28s (1,046 executed and 1,231 up to date), and
+  `qaPreview` passed all 1,218 in 18s (146/1,072). Documentation governance reported zero issues
+  against `09c98019`, all 77 script tests passed, all 127 required Chinese mirrors were current,
+  development-tooling isolation passed, and the generated Reference contained 540 entries.
+  Repository confidence is **improved** and Preview behavior has **no material change**; cache
+  ratios and wall time are execution context, not performance evidence.
+- Complete API generation rebuilt six immutable revision groups serially with zero invalid groups
+  in 787.5s; `verifyCompleteViewComposeApiDocs` passed in 13m22s. The full bilingual site verified
+  133 immutable API/manual versions, one unpublished current API tree, 528 accessible pages, 30
+  redirects, and every budget. The first complete output measured 49,269,140 non-API bytes, 90,926
+  above the unchanged 46.9 MiB ceiling. Consolidating duplicated navigation-guide and module prose
+  reduced 106,338 bytes (0.22%) to 49,162,802, leaving 15,412 bytes headroom. Documentation size is
+  **improved** without raising the budget; the remaining headroom is deliberately monitored.
+- Physical-device evidence is not applicable: the slice changes no Android artifact, Activity,
+  View, Lifecycle, saved-state transport, or platform callback. Platform behavior therefore has
+  **no material change**, not a device-pass claim. Nested/collection/polymorphic serialization,
+  custom `NavType`, Navigation3 instance/class key precedence, broader coverage, leaks, memory, and
+  representative performance remain **inconclusive**. Next: disposition direct NavigationEvent,
+  general scene strategies, diagnostics, and testing utilities, then execute the evidence matrix.
 
 ### Phase 8: document, release, and archive
 

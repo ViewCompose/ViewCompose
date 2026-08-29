@@ -392,9 +392,6 @@ exactly the saved stack IDs. Pending transactions are never part of persisted st
 
 The complete generated reference is available in the
 [`viewcompose-navigation-core` API tree](https://docs.viewcompose.com/api/viewcompose-navigation-core/current/).
-Applications using supported flat Kotlinx Serialization route schemas may add the optional
-[`viewcompose-navigation-kotlinx-serialization`](../viewcompose-navigation-kotlinx-serialization/README.md)
-adapter; Core itself remains serialization-independent.
 
 ## Compatibility notes
 

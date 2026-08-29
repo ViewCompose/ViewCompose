@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: ca8cdc6c7d4d814e706c77811c8f295f8ff456a3050a6559622fd504620dc9f1
+translation_source_hash: daac9bb175c18abf6e9d21f7a02ac1a6071644fac0d7a6bf31b3bc79359dfcec
 translation_status: current
 ---
 
@@ -27,8 +27,6 @@ Lifecycle 和 View 层级变化。
 Graph 声明，Encoder 生成封闭的 `NavValue` 参数，Decoder 从 Entry 重建应用值。Android 类型化
 命令会在进入 Host 事务前编码。Graph 不保留 Codec Callback，Snapshot 不保留应用对象，String
 Route 仍是互操作和恢复边界。
-可选 Kotlinx Adapter 把支持的扁平 Scalar Descriptor 映射到同一模型，并在创建 Spec 时拒绝不支持
-的 Schema；JSON 始终是单次调用内的私有 Bridge。
 
 ## 2. 事务边界
 

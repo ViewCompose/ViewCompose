@@ -18,15 +18,9 @@ minimal_usage_sample_id: module.navigation-kotlinx-serialization-route
 
 # Navigation Kotlinx Serialization
 
-`viewcompose-navigation-kotlinx-serialization` is the optional JVM adapter that creates a Core
-`NavRouteSpec<T>` from a Kotlinx `KSerializer<T>`. Use it when application route values already use
-Kotlinx Serialization. Keep custom Core codecs when a route has a structured or domain-specific
-wire shape.
-
-This source-registered `0.1.0-alpha01` artifact is not Maven Central-published until its first
-signed release. It targets JVM 11, exposes `viewcompose-navigation-core` and
-`kotlinx-serialization-core` to callers, and keeps its JSON tree bridge private. It has no Android,
-host, lifecycle, View, or saved-state dependency.
+This optional JVM 11 adapter creates a Core `NavRouteSpec<T>` from a Kotlinx `KSerializer<T>`. The
+source-registered `0.1.0-alpha01` exposes Navigation Core and Serialization Core, has no platform
+dependencies, and is intended for flat route schemas.
 
 ## Create a route spec
 
@@ -47,39 +41,16 @@ fun serializableRouteSample(): ProfileRoute {
 }
 ```
 
-The reified overload obtains the generated serializer. Java callers and custom serializers use
-`serializableNavRouteSpec(name, serializer)`. The returned spec works unchanged with Core graph
-declarations, Android typed commands, and `NavEntry.toRoute`.
-
-## Schema and storage contract
-
-| Declared field | Stored value |
-| --- | --- |
-| Boolean | `BooleanValue` |
-| Byte, Short, Int | `IntValue` |
-| Long | `LongValue` |
-| Float / Double | `FloatValue` / `DoubleValue` |
-| Char, String, enum | `Text` |
-| Nullable scalar | matching value or `Null` |
+The reified overload obtains the serializer; other callers pass it. Exact mapping is Boolean to
+`BooleanValue`, Byte/Short/Int to `IntValue`, Long to `LongValue`, Float/Double to their matching
+value, Char/String/enum to `Text`, and nullable scalars to their value or `Null`.
 
 The root must be a class or object with scalar, enum, nullable-scalar, or supported inline-scalar
 fields. Construction rejects nested objects, collections, maps, polymorphic/contextual shapes,
-unsigned fields, and non-object roots. Float and Double values must be finite. Defaults omitted by
-the serializer remain absent and are reconstructed on decode.
+unsigned fields, non-object roots, and non-finite floats. Call-local JSON bridges the serializer;
+only immutable `NavRoute`/`NavValue` is retained. Decode rejects unknown names, invalid nulls, and
+wrong variants; omitted defaults are reconstructed. Keep schema restore-compatible; alternative
+JSON names are disabled.
 
-Mapping follows the descriptor, not the current value. A Long remains `LongValue` even when it fits
-inside Int. Decode rejects unknown names, invalid nulls, and mismatched `NavValue` variants. The
-adapter uses a strict JSON object tree only during a call; snapshots and hosts still retain only
-immutable `NavRoute` and `NavValue` data.
-
-## Compatibility and verification
-
-Keep the explicit route name, serialized field names, field types, nullability, and defaults
-compatible with restored state. Renames require an application migration; alternative JSON names
-are deliberately disabled. Tests cover supported scalar mappings, object and inline routes,
-defaults, storage stability, malformed arguments, and every rejected schema family.
-
-See the [Navigation Core manual](../viewcompose-navigation-core/README.md),
-[navigation architecture](../../architecture/navigation.md), and
-[Compose migration comparison](../../migration/compose-navigation.md). The generated symbols are
-in the [`viewcompose-navigation-kotlinx-serialization` API tree](https://docs.viewcompose.com/api/viewcompose-navigation-kotlinx-serialization/current/).
+See [Navigation Core](../viewcompose-navigation-core/README.md), [architecture](../../architecture/navigation.md),
+[Compose migration](../../migration/compose-navigation.md), and the [generated API](https://docs.viewcompose.com/api/viewcompose-navigation-kotlinx-serialization/current/).
