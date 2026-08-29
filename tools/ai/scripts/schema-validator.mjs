@@ -88,6 +88,9 @@ export function validateSchemaValue(value, schema, rootSchema = schema, path = '
     if (schema.minItems !== undefined && value.length < schema.minItems) {
       violations.push(`${path}: array has fewer than ${schema.minItems} items`);
     }
+    if (schema.maxItems !== undefined && value.length > schema.maxItems) {
+      violations.push(`${path}: array has more than ${schema.maxItems} items`);
+    }
     if (schema.uniqueItems) {
       const encoded = value.map((item) => JSON.stringify(item));
       if (new Set(encoded).size !== encoded.length) {

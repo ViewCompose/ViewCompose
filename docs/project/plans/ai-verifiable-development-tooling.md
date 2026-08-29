@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Add the Phase 3 stdio MCP server over the accepted shared tool catalog and prove semantic CLI/MCP parity.
+next_action: Add deterministic diagnose_layout evidence over the accepted Preview tree before publishing consumer Agent workflows.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -48,13 +48,14 @@ maven_release_changesets:
 Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 canonical knowledge
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
 static validation, pinned compilation, Preview evidence, read-only project findings, and internal
-CLI foundations are complete. Phase 3 deterministic Knowledge Bundle retrieval and its CLI surface
-are complete; stdio MCP and consumer Agent workflows remain active.
+CLI foundations are complete. Phase 3 deterministic Knowledge Bundle retrieval, its CLI surface,
+and dual-era stdio MCP are complete; layout diagnosis, packaging, and consumer Agent workflows
+remain active.
 
 Last verified: 2026-08-29.
 
-Next action: add the Phase 3 stdio MCP server over the accepted shared tool catalog and prove
-semantic CLI/MCP parity.
+Next action: add deterministic `diagnose_layout` evidence over the accepted Preview tree before
+publishing consumer Agent workflows.
 
 ## Maven release changesets
 
@@ -572,7 +573,7 @@ one knowledge source.
 | `search_component` | Deterministic local search with stable ranked results and explicit version filter |
 | `get_sample` | Return a compiled source region plus build target, imports, artifacts, capability ID, and fingerprint |
 | `validate_code` | Run requested static and/or hermetic compile modes and return structured diagnostics/evidence |
-| `render_code` | Render an already compilable supported snippet through the Preview adapter |
+| `render_preview` | Render one allowlisted compiled target through the Preview adapter |
 | `diagnose_layout` | Interpret render/layout tree and structured diagnostics using deterministic rules |
 | `analyze_project` | Run the bounded, read-only Phase 2 project inventory and findings pipeline |
 
@@ -582,9 +583,9 @@ makes every step inspectable. Conversion tools enter only with Phase 4 evidence.
 
 ### Additional deliverables
 
-1. A local stdio MCP server with schema negotiation, capability discovery, version selection,
-   structured errors, cancellation, progress, output limits, safe logging, and no default network
-   listener.
+1. A local stdio MCP server with per-request version metadata, capability discovery, explicit
+   version selection, legacy-client compatibility, structured errors, cancellation, progress,
+   output limits, safe logging, and no default network listener.
 2. A stable CLI over the same service/core for CI, debugging, and clients without MCP.
 3. Client-neutral consumer skills for creating a screen, retrieving API, reviewing code, debugging
    layout, and validating before delivery. Contributor workflows remain separate from framework
@@ -627,9 +628,47 @@ Limitations: this first ranker is lexical and primarily serves canonical English
 it does not claim fuzzy, multilingual, embedding, or model-semantic retrieval. Only the exact
 `current-source` bundle is selectable. Rule applicability is labeled as general, component, or
 signature-derived rather than inferred as typed program behavior. The CLI is still internal and
-unpackaged, and MCP protocol negotiation, cancellation/progress mapping, safe logs, resources,
-transport parity, client skills, and released-version bundles remain pending. The next action is a
-stdio MCP adapter over this same catalog and dispatcher, not a second implementation.
+unpackaged; at this slice, MCP transport parity and client workflows remained pending. The MCP
+slice below closes the transport-parity requirement without changing the ranker's stated limits.
+
+### Implementation evidence — dual-era stdio MCP slice
+
+The second Phase 3 slice freezes a local stdio contract and one seven-tool catalog shared by the
+CLI and MCP. It implements the current MCP `2026-07-28` stateless model: `server/discover` reports
+the supported versions and fixed capabilities, while every modern request independently declares
+its protocol version and client capabilities. It also supports the exact `2025-11-25` legacy
+`initialize`/`initialized` lifecycle for clients still migrating, but never infers a downgrade or
+uses legacy connection state for modern requests. The public render tool is accurately named
+`render_preview` because this slice selects an allowlisted compiled Preview target; it does not
+claim arbitrary snippet rendering.
+
+Each newline-delimited stdio call creates the same immutable provider-neutral request consumed by
+the internal CLI. Results are returned unchanged as MCP structured content and serialized text;
+semantic parity excludes only elapsed wall-clock measurement. The server keeps a deterministic
+tool order, JSON Schema 2020-12 input contracts, stable protocol versus actionable tool errors,
+opt-in bounded progress, cancellation propagation into compiler/Preview child processes, and the
+MCP rule that a cancelled call emits no later response. It rejects messages above 4 MiB, limits
+concurrent calls to four, bounds tool output to 1 MiB before transport duplication, writes only MCP
+JSON to stdout, logs no request content, and opens no network listener.
+
+On 2026-08-29, Node 25.6.0 passed 65/65 AI-tooling tests in 1.35 seconds, including modern discovery,
+unsupported-version recovery, deterministic listing, legacy lifecycle, CLI/MCP parity, tool versus
+protocol errors, progress, cancellation, external abort propagation, catalog bounds, and an actual
+stdio subprocess. The standalone Phase 3 MCP corpus reported seven tools and zero semantic
+mismatches for `modifier.layout`; the compiled quality-build suite and root `verifyAiMcp` gate also
+passed. The root `qaQuick` lifecycle executed the new gate and completed 2,273 tasks (2,183 executed
+and 90 up-to-date) in 6 minutes 42 seconds. Compared with the retrieval-only baseline, a local Agent
+can now discover and invoke the same accepted core over two explicit protocol eras with no semantic
+fork; the conclusion is **improved** interoperability with **no material runtime change** because
+the server remains downstream development tooling.
+
+Limitations: only stdio is supported; HTTP, authentication, subscriptions, resources/prompts,
+released-version Knowledge Bundles, installable packaging, checksums/SBOM, and client adapters are
+not yet claimed. The current tool list intentionally omits `diagnose_layout` until deterministic
+rules consume accepted Preview tree evidence. `generate_ui`, repair, and conversion remain
+inspectable client workflows or later phases, not opaque server-side model calls. The next action
+is that missing deterministic layout-diagnosis foundation, followed by consumer skills and
+packaging.
 
 ### Acceptance gate
 

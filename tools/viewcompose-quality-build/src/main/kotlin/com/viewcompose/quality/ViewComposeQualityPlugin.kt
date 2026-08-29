@@ -545,6 +545,30 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiMcp") {
+            group = "verification"
+            description =
+                "Verifies stdio MCP protocol compatibility, tool discovery, and CLI parity."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-mcp")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/mcp-protocol.json",
+                        "contracts/tool-envelope.schema.json",
+                        "generated/current-source/**/*.json",
+                        "generated/current-source/**/*.jsonl",
+                        "scripts/ai-tool.mjs",
+                        "scripts/knowledge-retriever.mjs",
+                        "scripts/mcp-server.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase3-mcp.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

@@ -133,6 +133,34 @@ test('maps compile, render, and project request limits into provider-neutral ada
   assert.equal(captured[2].arguments_.limits.maxDepth, 5);
 });
 
+test('propagates transport cancellation into the bounded execution signal', async () => {
+  const controller = new AbortController();
+  let adapterStarted;
+  const started = new Promise((resolvePromise) => { adapterStarted = resolvePromise; });
+  const pending = dispatchToolRequest(await request('validate_code', {
+    mode: 'compile',
+    source: 'fun example() = Unit',
+    artifactIds: ['viewcompose-ui-foundation'],
+  }), {
+    signal: controller.signal,
+    compile: async (arguments_) => {
+      adapterStarted();
+      await new Promise((resolvePromise) =>
+        arguments_.signal.addEventListener('abort', resolvePromise, {once: true}));
+      return toolResult({
+        requestId: arguments_.requestId,
+        tool: 'validate_code',
+        status: 'cancelled',
+        level: 'static',
+        diagnostics: [],
+      });
+    },
+  });
+  await started;
+  controller.abort('test transport cancellation');
+  assert.equal((await pending).status, 'cancelled');
+});
+
 test('replaces oversized adapter data with one bounded stable result', async () => {
   const result = await dispatchToolRequest(await request('analyze_project', {
     projectRoot: '/workspace/sample',

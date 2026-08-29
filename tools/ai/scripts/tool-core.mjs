@@ -122,3 +122,9 @@ export function sourceLocation(source, path, offset, length = 1) {
 export function utf8Bytes(value) {
   return Buffer.byteLength(value, 'utf8');
 }
+
+export function semanticToolResult(result) {
+  const normalized = structuredClone(result);
+  delete normalized.elapsedMs;
+  return normalized;
+}

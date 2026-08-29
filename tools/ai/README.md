@@ -29,7 +29,10 @@ The implementation order is fixed by
    Bundle identity before dispatch and is the transport-parity reference for Phase 3.
 10. `scripts/knowledge-retriever.mjs` integrity-checks the complete immutable bundle before exposing
     exact API, component, and sample lookup or deterministic ranked component search. Its input
-    schemas are shared catalog data for the CLI and later MCP transport.
+    schemas are shared catalog data for every transport.
+11. `scripts/mcp-server.mjs` exposes that same catalog and dispatcher over local newline-delimited
+    stdio. It supports modern MCP `2026-07-28` per-request metadata plus the exact `2025-11-25`
+    compatibility handshake, with no network listener or session-derived modern state.
 
 Run the Phase 0 gate with:
 
@@ -136,6 +139,31 @@ applicable reviewed rules, and the declared sample; ambiguous receiver families 
 explicitly non-executable evidence outline. `search_component` supports bounded artifact, artifact
 version, capability, and kind filters and uses a stable lexical score with deterministic tie breaks.
 No retrieval result reads canonical source files outside the integrity-checked bundle.
+
+Run the local MCP server and its protocol/parity gate with:
+
+```bash
+npm --silent --prefix tools/ai run mcp
+npm --prefix tools/ai run verify:phase3-mcp
+./gradlew verifyAiMcp
+```
+
+The preferred protocol follows the
+[MCP `2026-07-28` specification](https://modelcontextprotocol.io/specification/2026-07-28): clients
+may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
+`io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
+migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
+lifecycle; it never silently downgrades either era. `tools/list` returns seven tools in stable
+order: the four retrieval tools, `validate_code`, `render_preview`, and `analyze_project`.
+
+Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
+provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.
+Tool argument failures remain actionable tool errors, while malformed requests and unknown tools
+remain JSON-RPC errors. Progress is emitted only for a caller-provided token. Cancellation aborts
+the underlying bounded execution and suppresses every later response or progress message. The
+stdio boundary accepts at most 4 MiB per message and four concurrent calls, writes only MCP JSON to
+stdout, uses content-free stderr diagnostics, and opens no socket. The current server is still an
+internal repository tool rather than an installed or semantically versioned distribution.
 
 ## Version lanes
 

@@ -11,8 +11,9 @@ import {
   searchComponents,
 } from './knowledge-retriever.mjs';
 import {renderPreview} from './preview-adapter.mjs';
-import {assertSchemaValue} from './schema-validator.mjs';
+import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
+import {TOOL_DEFINITIONS} from './tool-catalog.mjs';
 import {
   diagnostic,
   loadKnowledgeManifest,
@@ -58,6 +59,7 @@ export async function dispatchToolRequest(request, {
   getComponentReference = retrieveComponentReference,
   searchComponent = searchComponents,
   getSample = retrieveSample,
+  signal,
 } = {}) {
   const schema = await loadToolEnvelopeSchema();
   assertSchemaValue(request, schema, 'AI tool request');
@@ -82,8 +84,30 @@ export async function dispatchToolRequest(request, {
       truncated: true,
     });
   }
+  const definition = TOOL_DEFINITIONS[request.tool];
+  if (!definition) {
+    return boundaryResult(request, {
+      status: 'unsupported',
+      code: 'VC-AI-TOOL-UNSUPPORTED',
+      message: `AI tool ${request.tool} is not implemented.`,
+      nextAction: 'Use one tool declared by the current ViewCompose AI tool catalog.',
+    });
+  }
+  const argumentViolations = validateSchemaValue(request.arguments, definition.inputSchema);
+  if (argumentViolations.length > 0) {
+    return boundaryResult(request, {
+      status: 'invalid',
+      code: 'VC-AI-ARGUMENTS-INVALID',
+      message: `${request.tool} arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`,
+      nextAction: 'Use the exact arguments declared by the current tool catalog.',
+      level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
+    });
+  }
 
   const controller = new AbortController();
+  const cancel = () => controller.abort(signal?.reason);
+  signal?.addEventListener('abort', cancel, {once: true});
+  if (signal?.aborted) cancel();
   const timeout = setTimeout(() => controller.abort(), request.limits.timeoutMs);
   let result;
   try {
@@ -163,15 +187,11 @@ export async function dispatchToolRequest(request, {
         });
         break;
       default:
-        result = await boundaryResult(request, {
-          status: 'unsupported',
-          code: 'VC-AI-TOOL-UNSUPPORTED',
-          message: `Internal CLI tool ${request.tool} is not implemented.`,
-          nextAction: 'Use one tool declared by the current ViewCompose AI tool catalog.',
-        });
+        throw new Error(`Tool catalog and dispatcher diverged for ${request.tool}.`);
     }
   } finally {
     clearTimeout(timeout);
+    signal?.removeEventListener('abort', cancel);
   }
 
   let encoded = JSON.stringify(result);
@@ -191,6 +211,21 @@ export async function dispatchToolRequest(request, {
   }
   assertSchemaValue(result, schema, 'AI tool result');
   return result;
+}
+
+export async function createToolRequest({tool, arguments: arguments_, requestId, limits}) {
+  const manifest = await loadKnowledgeManifest();
+  const definition = TOOL_DEFINITIONS[tool];
+  if (!definition) throw new Error(`Unknown ViewCompose AI tool ${tool}.`);
+  return {
+    schemaVersion: 1,
+    kind: 'request',
+    requestId,
+    tool,
+    framework: manifest.framework,
+    limits: {...definition.defaultLimits, ...limits},
+    arguments: arguments_ ?? {},
+  };
 }
 
 async function readStdin() {

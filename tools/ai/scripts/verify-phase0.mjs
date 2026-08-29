@@ -126,6 +126,38 @@ function verifyVersions(versions) {
   }
 }
 
+async function verifyMcpProtocol() {
+  const protocol = await readJson(resolve(contractsDirectory, 'mcp-protocol.json'));
+  if (protocol.schemaVersion !== 1 || protocol.transport !== 'stdio') {
+    throw new Error('mcp-protocol.json: only frozen stdio contract version 1 is accepted');
+  }
+  if (protocol.specification !== 'https://modelcontextprotocol.io/specification/2026-07-28') {
+    throw new Error('mcp-protocol.json: specification source changed without contract review');
+  }
+  if (protocol.preferredVersion !== protocol.supportedVersions?.[0]) {
+    throw new Error('mcp-protocol.json: preferred version must be the first supported version');
+  }
+  assertUnique(protocol.supportedVersions, 'MCP protocol versions');
+  if (
+    JSON.stringify(protocol.supportedVersions) !==
+    JSON.stringify(['2026-07-28', '2025-11-25'])
+  ) {
+    throw new Error('mcp-protocol.json: supported protocol eras changed without contract review');
+  }
+  if (protocol.compatibility?.implicitVersionDowngrade !== false) {
+    throw new Error('mcp-protocol.json: implicit protocol downgrade must remain disabled');
+  }
+  if (
+    !Number.isInteger(protocol.limits?.maxMessageBytes) ||
+    !Number.isInteger(protocol.limits?.maxConcurrentRequests) ||
+    protocol.limits.maxMessageBytes > 4 * 1024 * 1024 ||
+    protocol.limits.maxConcurrentRequests > 4
+  ) {
+    throw new Error('mcp-protocol.json: stdio resource limits exceed the accepted contract');
+  }
+  return protocol;
+}
+
 async function verifyExamples(schemas) {
   const examples = [
     ['knowledge-bundle-manifest.json', 'knowledge-bundle-manifest.schema.json'],
@@ -214,6 +246,7 @@ async function verifyCorpus(schemas, metrics) {
 export async function verifyPhase0() {
   const versions = await readJson(resolve(contractsDirectory, 'versions.json'));
   verifyVersions(versions);
+  await verifyMcpProtocol();
   const schemas = await verifySchemas(versions);
   await verifyExamples(schemas);
   const metrics = await verifyMetrics(schemas);

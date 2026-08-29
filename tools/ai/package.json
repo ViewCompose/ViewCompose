@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "tool": "node scripts/ai-tool.mjs",
+    "mcp": "node scripts/mcp-server.mjs",
     "generate:knowledge": "node scripts/generate-knowledge.mjs --write",
     "test": "node --test scripts/*.test.mjs",
     "verify": "npm run test && node scripts/verify-phase0.mjs",
@@ -12,6 +13,7 @@
     "verify:phase2-compile": "node scripts/verify-phase2-compile.mjs",
     "verify:phase2-render": "node scripts/verify-phase2-render.mjs",
     "verify:phase2-static": "node scripts/verify-phase2-static.mjs",
-    "verify:phase3-retrieval": "node scripts/verify-phase3-retrieval.mjs"
+    "verify:phase3-retrieval": "node scripts/verify-phase3-retrieval.mjs",
+    "verify:phase3-mcp": "node scripts/verify-phase3-mcp.mjs"
   }
 }
