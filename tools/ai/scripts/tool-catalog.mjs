@@ -19,6 +19,34 @@ const artifactIds = {
   uniqueItems: true,
   items: stableId,
 };
+const previewConfiguration = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    widthDp: {type: 'integer', minimum: 1, maximum: 2000},
+    heightDp: {type: 'integer', minimum: -1, maximum: 4000},
+    density: {type: 'number', minimum: 0.5, maximum: 8},
+    fontScale: {type: 'number', minimum: 0.5, maximum: 3},
+    localeTags: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 4,
+      items: {type: 'string', minLength: 2, maxLength: 35},
+    },
+    layoutDirection: {enum: ['Ltr', 'Rtl']},
+    theme: {enum: ['Light', 'Dark']},
+  },
+};
+const previewArguments = {
+  targetId: {type: 'string', minLength: 1, maxLength: 256},
+  capabilityIds,
+  configuration: previewConfiguration,
+};
+const previewLimits = {
+  timeoutMs: 120000,
+  maxInputBytes: 262144,
+  maxOutputBytes: 1048576,
+};
 
 const executableDefinitions = {
   validate_code: {
@@ -50,34 +78,21 @@ const executableDefinitions = {
       type: 'object',
       additionalProperties: false,
       required: ['targetId'],
-      properties: {
-        targetId: {type: 'string', minLength: 1, maxLength: 256},
-        capabilityIds,
-        configuration: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            widthDp: {type: 'integer', minimum: 1, maximum: 2000},
-            heightDp: {type: 'integer', minimum: -1, maximum: 4000},
-            density: {type: 'number', minimum: 0.5, maximum: 8},
-            fontScale: {type: 'number', minimum: 0.5, maximum: 3},
-            localeTags: {
-              type: 'array',
-              minItems: 1,
-              maxItems: 4,
-              items: {type: 'string', minLength: 2, maxLength: 35},
-            },
-            layoutDirection: {enum: ['Ltr', 'Rtl']},
-            theme: {enum: ['Light', 'Dark']},
-          },
-        },
-      },
+      properties: previewArguments,
     },
-    defaultLimits: {
-      timeoutMs: 120000,
-      maxInputBytes: 262144,
-      maxOutputBytes: 1048576,
+    defaultLimits: previewLimits,
+    evidenceLevel: 'rendered',
+  },
+  diagnose_layout: {
+    title: 'Diagnose a ViewCompose Layout',
+    description: 'Interpret accepted Preview protocol layout facts without model or pixel inference.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['targetId'],
+      properties: previewArguments,
     },
+    defaultLimits: previewLimits,
     evidenceLevel: 'rendered',
   },
   analyze_project: {
@@ -140,6 +155,7 @@ export const TOOL_NAMES = Object.freeze([
   'get_sample',
   'validate_code',
   'render_preview',
+  'diagnose_layout',
   'analyze_project',
 ]);
 

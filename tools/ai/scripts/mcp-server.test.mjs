@@ -53,6 +53,7 @@ test('discovers the stateless modern server and deterministically lists the shar
     'get_sample',
     'validate_code',
     'render_preview',
+    'diagnose_layout',
     'analyze_project',
   ]);
   assert.equal(listing.result.tools[0].inputSchema.required.includes('versionLane'), true);
@@ -139,7 +140,7 @@ test('supports the 2025-11-25 initialize lifecycle without weakening modern requ
     params: {},
   });
   assert.equal(listing.result.resultType, undefined);
-  assert.equal(listing.result.tools.length, 7);
+  assert.equal(listing.result.tools.length, 8);
 });
 
 test('emits bounded opt-in progress and suppresses all output after cancellation', async () => {

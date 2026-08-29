@@ -569,6 +569,26 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiLayoutDiagnosis") {
+            group = "verification"
+            description =
+                "Verifies exact deterministic diagnosis over accepted Preview layout evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-layout")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "evaluation/corpus.json",
+                        "evaluation/metrics.json",
+                        "evaluation/fixtures/render/**/*.json",
+                        "scripts/layout-diagnoser.mjs",
+                        "scripts/preview-adapter.mjs",
+                        "scripts/verify-phase3-layout.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

@@ -140,6 +140,68 @@ function renderOutputFingerprint(image, tree) {
     .digest('hex');
 }
 
+/**
+ * Reopens the exact render-tree selected by an accepted Preview result.
+ *
+ * The caller cannot choose a path: target metadata and the content-addressed cache layout derive
+ * the only accepted location. Every path segment and the recorded byte/hash identity are checked
+ * again so a later diagnostic pass fails closed if the cache changed after rendering.
+ */
+export async function readAcceptedPreviewSnapshot(
+  renderResult,
+  {repository = repositoryRoot(), targets = SUPPORTED_PREVIEW_TARGETS} = {},
+) {
+  if (
+    renderResult?.tool !== 'render_preview' ||
+    renderResult?.status !== 'success' ||
+    renderResult?.evidence?.level !== 'rendered' ||
+    renderResult?.evidence?.renderLane !== RENDER_LANE ||
+    !SHA256.test(renderResult?.evidence?.outputFingerprint ?? '')
+  ) throw new Error('RENDER_EVIDENCE_INVALID');
+  const data = renderResult.data;
+  const target = targets[data?.targetId];
+  if (
+    !target ||
+    data.modulePath !== target.modulePath ||
+    data.buildVariant !== target.buildVariant ||
+    !SHA256.test(data.buildFingerprint ?? '') ||
+    !PREVIEW_ID.test(data.previewId ?? '') ||
+    !PREVIEW_ID.test(data.variantId ?? '') ||
+    !SHA256.test(data.renderTree?.sha256 ?? '') ||
+    !Number.isInteger(data.renderTree?.bytes) ||
+    data.renderTree.bytes < 1 ||
+    data.renderTree.bytes > MAX_RENDER_TREE_BYTES
+  ) throw new Error('RENDER_EVIDENCE_INVALID');
+  const expectedPath = resolve(
+    repository,
+    target.projectDirectory,
+    'build',
+    'viewcompose-preview',
+    target.buildVariant,
+    'render-cache',
+    data.buildFingerprint,
+    data.previewId,
+    data.variantId,
+    'render-tree.json',
+  );
+  const declaredPath = resolve(repository, data.renderTree.path ?? '');
+  if (declaredPath !== expectedPath) throw new Error('RENDER_EVIDENCE_INVALID');
+  const tree = await readBoundedRegularFile(declaredPath, MAX_RENDER_TREE_BYTES, repository);
+  if (tree.bytes !== data.renderTree.bytes || sha256(tree.buffer) !== data.renderTree.sha256) {
+    throw new Error('RENDER_EVIDENCE_INVALID');
+  }
+  const snapshot = JSON.parse(tree.buffer.toString('utf8'));
+  if (
+    snapshot === null ||
+    typeof snapshot !== 'object' ||
+    Array.isArray(snapshot) ||
+    !Array.isArray(snapshot.tree) ||
+    !Array.isArray(snapshot.layoutDiagnostics ?? []) ||
+    !Array.isArray(snapshot.warnings ?? [])
+  ) throw new Error('RENDER_EVIDENCE_INVALID');
+  return snapshot;
+}
+
 function pngDimensions(buffer) {
   const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   if (buffer.length < 57 || !buffer.subarray(0, 8).equals(signature)) return null;

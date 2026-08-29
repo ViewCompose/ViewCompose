@@ -3,7 +3,7 @@ import test from 'node:test';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {publicToolDefinition, TOOL_DEFINITIONS, TOOL_NAMES} from './tool-catalog.mjs';
 
-test('publishes one stable catalog for retrieval, validation, Preview, and project analysis', () => {
+test('publishes one stable catalog for retrieval, validation, Preview diagnosis, and project analysis', () => {
   assert.deepEqual(TOOL_NAMES, [
     'get_api_reference',
     'get_component_reference',
@@ -11,6 +11,7 @@ test('publishes one stable catalog for retrieval, validation, Preview, and proje
     'get_sample',
     'validate_code',
     'render_preview',
+    'diagnose_layout',
     'analyze_project',
   ]);
   assert.deepEqual(Object.keys(TOOL_DEFINITIONS).sort(), [...TOOL_NAMES].sort());
@@ -35,4 +36,11 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
     gradleTask: ':app:runAnything',
   }, TOOL_DEFINITIONS.render_preview.inputSchema);
   assert.ok(undeclared.some((violation) => violation.includes('unexpected property gradleTask')));
+
+  const diagnosisEscape = validateSchemaValue({
+    targetId: 'samples.counter.CounterPreview',
+    renderTreePath: '../../arbitrary.json',
+  }, TOOL_DEFINITIONS.diagnose_layout.inputSchema);
+  assert.ok(diagnosisEscape.some((violation) =>
+    violation.includes('unexpected property renderTreePath')));
 });

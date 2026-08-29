@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Add deterministic diagnose_layout evidence over the accepted Preview tree before publishing consumer Agent workflows.
+next_action: Publish client-neutral consumer Agent skills over the accepted eight-tool CLI/MCP core, then add installable packaging and compatibility evidence.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -49,13 +49,13 @@ Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 can
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
 static validation, pinned compilation, Preview evidence, read-only project findings, and internal
 CLI foundations are complete. Phase 3 deterministic Knowledge Bundle retrieval, its CLI surface,
-and dual-era stdio MCP are complete; layout diagnosis, packaging, and consumer Agent workflows
-remain active.
+dual-era stdio MCP, and deterministic Preview layout diagnosis are complete; packaging and consumer
+Agent workflows remain active.
 
 Last verified: 2026-08-29.
 
-Next action: add deterministic `diagnose_layout` evidence over the accepted Preview tree before
-publishing consumer Agent workflows.
+Next action: publish client-neutral consumer Agent skills over the accepted eight-tool CLI/MCP
+core, then add installable packaging and compatibility evidence.
 
 ## Maven release changesets
 
@@ -668,13 +668,49 @@ can now discover and invoke the same accepted core over two explicit protocol er
 fork; the conclusion is **improved** interoperability with **no material runtime change** because
 the server remains downstream development tooling.
 
-Limitations: only stdio is supported; HTTP, authentication, subscriptions, resources/prompts,
-released-version Knowledge Bundles, installable packaging, checksums/SBOM, and client adapters are
-not yet claimed. The current tool list intentionally omits `diagnose_layout` until deterministic
-rules consume accepted Preview tree evidence. `generate_ui`, repair, and conversion remain
-inspectable client workflows or later phases, not opaque server-side model calls. The next action
-is that missing deterministic layout-diagnosis foundation, followed by consumer skills and
-packaging.
+Limitations at this slice: only stdio was supported; HTTP, authentication, subscriptions,
+resources/prompts, released-version Knowledge Bundles, installable packaging, checksums/SBOM, and
+client adapters were not claimed. The seven-tool list intentionally omitted `diagnose_layout`
+until the following slice could consume accepted Preview tree evidence. `generate_ui`, repair, and
+conversion remained inspectable client workflows or later phases, not opaque server-side model
+calls.
+
+### Implementation evidence — deterministic layout diagnosis slice
+
+The third Phase 3 slice adds `diagnose_layout` as the eighth shared CLI/MCP tool. A request selects
+the same fixed Preview target and bounded configuration as `render_preview`; it cannot provide a
+Gradle task, arbitrary file, render tree, image, or project path. The adapter renders or accepts a
+verified cache entry, derives the only valid content-addressed tree path from repository-owned
+target metadata, and then rechecks every path segment, byte count, SHA-256, render lane, target,
+variant, and output identity before interpretation. Cache mutation between render and diagnosis
+therefore fails closed.
+
+The interpreter maps only Preview protocol v1 facts already measured after Android layout:
+zero-size nodes, partial or full clipping, intentional container clipping, text ellipsis, clipped
+text content, bounds, metrics, node identity, and matching source call sites. It does not inspect
+pixels or source code, apply model judgment, or invent overlap, accessibility, touch-target, or
+design-intent findings. Unknown kinds and malformed geometry are rejected instead of guessed. At
+most 100 findings are returned with an explicit truncation diagnostic; a clean result means only
+that the renderer emitted no structured layout diagnostic or warning.
+
+On 2026-08-29, Node 25.6.0 passed 71/71 AI-tooling tests in 1.33 seconds. The frozen clipping and
+ellipsis fixture produced both expected stable codes in deterministic severity/geometry order,
+for an exact-match ratio of 1.00 against the required 1.00 threshold. The MCP parity verifier
+reported eight tools and zero semantic mismatches. An end-to-end call over the real Counter target
+revalidated the existing render cache, preserved output fingerprint
+`bb7eba4f51d1aa4f788b0991b7c8635815d6943c374978b685f92619420841d0`, and returned a clean result
+with zero layout findings. The compiled quality-build suite passed all tests in 10 seconds. The root
+`qaQuick` lifecycle executed the new gate and completed 2,274 tasks (2,184 executed and 90
+up-to-date) in 6 minutes 39 seconds. Compared with raw `render_preview` output, Agents now receive
+bounded, source-aware repair facts without parsing renderer internals; the conclusion is
+**improved** layout debuggability with **no material runtime change** because the implementation
+remains isolated downstream tooling.
+
+Limitations: only one allowlisted Counter Preview target and one labeled layout-diagnosis fixture
+are accepted today. The tool reports renderer-owned layout facts, not arbitrary snippet rendering,
+pixel comparison, accessibility conformance, overlap detection, or automatic repair. The next
+action is to publish client-neutral consumer workflows over the accepted eight-tool core, then add
+installable packaging and compatibility evidence.
 
 ### Acceptance gate
 

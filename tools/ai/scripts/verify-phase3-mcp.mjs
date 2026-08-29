@@ -41,5 +41,5 @@ if (response.result.structuredContent.data.capability.capabilityId !== 'modifier
 }
 console.log(
   `Verified Phase 3 MCP ${MCP_PROTOCOL.supportedVersions.join(' + ')}: ` +
-    '7 deterministic tools, stdio-only transport, and 0 CLI/MCP semantic mismatches.',
+    '8 deterministic tools, stdio-only transport, and 0 CLI/MCP semantic mismatches.',
 );

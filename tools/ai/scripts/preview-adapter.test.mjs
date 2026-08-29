@@ -3,7 +3,11 @@ import {mkdir, mkdtemp, rm, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import test from 'node:test';
-import {RENDER_LANE, renderPreview} from './preview-adapter.mjs';
+import {
+  readAcceptedPreviewSnapshot,
+  RENDER_LANE,
+  renderPreview,
+} from './preview-adapter.mjs';
 
 const buildFingerprint = 'a'.repeat(64);
 const previewId = 'counterpreviewkt-counterpreview-2942afc5dcb6';
@@ -174,6 +178,31 @@ test('accepts a cache hit only after revalidating image and render-tree bytes', 
     assert.equal(poisoned.status, 'failed');
     assert.equal(poisoned.diagnostics[0].code, 'VC-AI-RENDER-CACHE-POISONED');
     assert.equal(executions, 2);
+  } finally {
+    await rm(fixture.repository, {recursive: true, force: true});
+  }
+});
+
+test('reopens only the exact content-addressed render tree and rejects later mutation', async () => {
+  const fixture = await fixtureRepository();
+  try {
+    const artifacts = await writeSuccessfulRender(fixture);
+    const rendered = await renderPreview({}, {
+      repository: fixture.repository,
+      javaFeature: 21,
+      javaHome: '/fixed/jdk-21',
+      runProcess: async () => successfulProcess(),
+    });
+    const snapshot = await readAcceptedPreviewSnapshot(rendered, {
+      repository: fixture.repository,
+    });
+    assert.deepEqual(snapshot.tree, []);
+
+    await writeFile(artifacts.renderTreePath, '{"stats":{},"tree":[],"warnings":["changed"]}\n');
+    await assert.rejects(
+      readAcceptedPreviewSnapshot(rendered, {repository: fixture.repository}),
+      /RENDER_EVIDENCE_INVALID/u,
+    );
   } finally {
     await rm(fixture.repository, {recursive: true, force: true});
   }

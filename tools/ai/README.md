@@ -117,8 +117,8 @@ npm --silent --prefix tools/ai run tool -- --pretty < request.json
 ```
 
 It currently dispatches `get_api_reference`, `get_component_reference`, `search_component`,
-`get_sample`, `validate_code` (`static` or `compile`), `render_preview`, and `analyze_project`. The
-request must name the exact `framework.versionLane` and
+`get_sample`, `validate_code` (`static` or `compile`), `render_preview`, `diagnose_layout`, and
+`analyze_project`. The request must name the exact `framework.versionLane` and
 `framework.identity` from `generated/current-source/manifest.json`; input, output, and timeout
 limits are mandatory and are propagated to the underlying adapter. Stdout contains only one JSON
 result. Operational errors use stderr and exit code 2. The CLI accepts no project-selected command,
@@ -140,6 +140,22 @@ explicitly non-executable evidence outline. `search_component` supports bounded 
 version, capability, and kind filters and uses a stable lexical score with deterministic tie breaks.
 No retrieval result reads canonical source files outside the integrity-checked bundle.
 
+Run the deterministic layout-diagnosis corpus directly or through the root quality gate:
+
+```bash
+npm --prefix tools/ai run verify:phase3-layout
+./gradlew verifyAiLayoutDiagnosis
+```
+
+`diagnose_layout` accepts the same allowlisted target and bounded configuration as
+`render_preview`; it never accepts a caller-selected render-tree path. After rendering, it reopens
+only the derived content-addressed tree and rechecks every path segment, byte count, and SHA-256.
+The tool maps Preview protocol v1 facts for zero size, clipping, text ellipsis, and text-content
+clipping to stable source-aware codes. It also preserves bounded renderer warnings, returns at most
+100 findings, and fails closed on an unknown diagnostic kind or changed evidence. A clean result
+means only that this renderer reported no structured layout diagnostic or warning; it is not a
+pixel, accessibility, overlap, or design-intent claim.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -153,8 +169,9 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns seven tools in stable
-order: the four retrieval tools, `validate_code`, `render_preview`, and `analyze_project`.
+lifecycle; it never silently downgrades either era. `tools/list` returns eight tools in stable
+order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
+`analyze_project`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
 provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.

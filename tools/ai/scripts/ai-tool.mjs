@@ -11,6 +11,7 @@ import {
   searchComponents,
 } from './knowledge-retriever.mjs';
 import {renderPreview} from './preview-adapter.mjs';
+import {diagnoseLayout} from './layout-diagnoser.mjs';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
 import {TOOL_DEFINITIONS} from './tool-catalog.mjs';
@@ -54,6 +55,7 @@ export async function dispatchToolRequest(request, {
   validate = validateKotlin,
   compile = compileKotlin,
   render = renderPreview,
+  diagnose = diagnoseLayout,
   analyze = analyzeProject,
   getApiReference = retrieveApiReference,
   getComponentReference = retrieveComponentReference,
@@ -160,6 +162,19 @@ export async function dispatchToolRequest(request, {
       }
       case 'render_preview':
         result = await render({
+          targetId: request.arguments.targetId,
+          configuration: request.arguments.configuration,
+          capabilityIds: request.arguments.capabilityIds,
+          requestId: request.requestId,
+          limits: {
+            timeoutMs: request.limits.timeoutMs,
+            maxOutputBytes: request.limits.maxOutputBytes,
+          },
+          signal: controller.signal,
+        });
+        break;
+      case 'diagnose_layout':
+        result = await diagnose({
           targetId: request.arguments.targetId,
           configuration: request.arguments.configuration,
           capabilityIds: request.arguments.capabilityIds,

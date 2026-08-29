@@ -98,7 +98,7 @@ test('rejects framework drift and unsupported tools without invoking adapters', 
   assert.equal(invocations, 0);
 });
 
-test('maps compile, render, and project request limits into provider-neutral adapters', async () => {
+test('maps compile, render, layout diagnosis, and project limits into provider-neutral adapters', async () => {
   const captured = [];
   const handler = (tool, level) => async (arguments_) => {
     captured.push({tool, arguments_});
@@ -119,6 +119,9 @@ test('maps compile, render, and project request limits into provider-neutral ada
   await dispatchToolRequest(await request('render_preview', {
     targetId: 'samples.counter.CounterPreview',
   }), {render: handler('render_preview', 'rendered')});
+  await dispatchToolRequest(await request('diagnose_layout', {
+    targetId: 'samples.counter.CounterPreview',
+  }), {diagnose: handler('diagnose_layout', 'rendered')});
   await dispatchToolRequest(await request('analyze_project', {
     projectRoot: '/workspace/sample',
     maxFiles: 25,
@@ -129,8 +132,10 @@ test('maps compile, render, and project request limits into provider-neutral ada
   assert.equal(captured[0].arguments_.signal instanceof AbortSignal, true);
   assert.equal(captured[1].arguments_.limits.timeoutMs, 10_000);
   assert.equal(captured[1].arguments_.signal instanceof AbortSignal, true);
-  assert.equal(captured[2].arguments_.limits.maxFiles, 25);
-  assert.equal(captured[2].arguments_.limits.maxDepth, 5);
+  assert.equal(captured[2].arguments_.limits.timeoutMs, 10_000);
+  assert.equal(captured[2].arguments_.signal instanceof AbortSignal, true);
+  assert.equal(captured[3].arguments_.limits.maxFiles, 25);
+  assert.equal(captured[3].arguments_.limits.maxDepth, 5);
 });
 
 test('propagates transport cancellation into the bounded execution signal', async () => {
