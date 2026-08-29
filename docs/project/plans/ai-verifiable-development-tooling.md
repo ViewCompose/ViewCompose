@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement Phase 2 generated static validation, pinned tool-owned compilation, Preview evidence adaptation, and bounded read-only project analysis without exposing a protocol surface yet.
+next_action: Complete Phase 2 with pinned tool-owned compilation, Preview evidence adaptation, cancellation/cache adversarial coverage, and deeper project findings without exposing a protocol surface yet.
 maven_release_changesets: []
 ---
 
@@ -50,8 +50,9 @@ validation, compilation, Preview evidence, and project-analysis foundations are 
 
 Last verified: 2026-08-29.
 
-Next action: implement Phase 2 from the generated index, using a pinned tool-owned compiler harness,
-the existing Preview protocol, and bounded read-only analysis before CLI or MCP exposure.
+Next action: complete Phase 2 with a pinned tool-owned compiler harness, the existing Preview
+protocol, cancellation/cache adversarial coverage, and deeper read-only findings before CLI or MCP
+exposure.
 
 ## Maven release changesets
 
@@ -397,6 +398,37 @@ Create the evidence-producing core before exposing a broad protocol surface.
    executing project build logic.
 6. One local internal CLI used by tests and later transports. The validation core does not depend
    on MCP types.
+
+### Implementation evidence — static and project-safety slice
+
+The first Phase 2 slice now derives a 537-entry validator index directly from the accepted Phase 1
+bundle and returns the frozen tool-result envelope. It rejects governed symbols used through an
+unavailable import or receiver, requires an explicit `contentDescription` decision for the
+ViewCompose `Image` component, masks Kotlin strings and nested comments before rule matching, and
+keeps source spans stable. It deliberately does not infer that a supporting public type is absent
+only because that type lacks an independent Governance V2 capability entry.
+
+The read-only analyzer accepts one canonical absolute root, rejects path traversal, symbolic links,
+requested build execution, and limits beyond fixed hard caps. It excludes common build outputs and
+secret-bearing files, bounds file count, bytes, depth, time, and response data, and never executes
+the inspected project's Gradle logic. `verifyAiStaticTooling` runs the Phase 2 static/security
+corpus from `qaQuick`.
+
+On 2026-08-29, Node 25.6.0 completed 20/20 AI-tooling unit tests in 1.25 seconds and the separate
+Phase 2 runner passed 5/5 currently applicable static, project-analysis, and security corpus cases.
+The compiled quality-build plugin suite and root `verifyAiStaticTooling`,
+`verifyAiToolingContracts`, `verifyAiKnowledgeBundle`, and
+`verifyDevelopmentToolingIsolation` tasks also passed. The normalized pass rate is 100%; no prior
+Phase 2 implementation existed, so a latency or accuracy delta is not applicable. The conclusion
+is **improved** deterministic rejection and project-safety evidence with **no material runtime
+change**, because the implementation and gate remain downstream tooling.
+
+Limitations: the static slice is not a Kotlin type checker, its initial rule family is intentionally
+narrower than the complete deliverable list, and the project analyzer does not yet resolve
+dependencies or produce migration findings. Compilation, rendering, cancellation, cache behavior,
+and internal CLI evidence remain pending. The next action is the pinned compiler adapter and Preview
+evidence path, followed by expansion of static rules only when labeled positive and negative
+fixtures preserve the frozen false-positive budget.
 
 ### Acceptance gate
 

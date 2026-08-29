@@ -505,6 +505,26 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("website/src/data/capability-reference.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiStaticTooling") {
+            group = "verification"
+            description =
+                "Verifies deterministic AI static validation and read-only project analysis."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase2-static")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/**/*.json",
+                        "evaluation/**/*.json",
+                        "evaluation/**/*.kt",
+                        "generated/current-source/**/*.json",
+                        "generated/current-source/**/*.jsonl",
+                        "scripts/**/*.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

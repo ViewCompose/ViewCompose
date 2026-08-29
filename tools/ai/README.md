@@ -15,6 +15,9 @@ The implementation order is fixed by
    combines those rules with Governance V2, canonical source declarations, and compiled samples.
 5. `generated/current-source/` contains the exact versioned Phase 1 bundle. Later validator, CLI,
    MCP, Design IR conversion, and visual adapters may consume it only through the frozen contracts.
+6. `scripts/static-validator.mjs` derives its symbol index from that generated bundle and emits the
+   frozen result envelope; `scripts/project-analyzer.mjs` owns bounded read-only inventory without
+   executing an inspected project's Gradle build.
 
 Run the Phase 0 gate with:
 
@@ -36,6 +39,24 @@ npm --prefix tools/ai run verify:knowledge
 The compact generated discovery surface is also copied to `website/static/llms.txt`. Commit
 canonical inputs or generator changes first, then generate from that immutable revision and commit
 the outputs; never edit generated files manually.
+
+Run the current Phase 2 static and project-security corpus with:
+
+```bash
+npm --prefix tools/ai run verify:phase2-static
+./gradlew verifyAiStaticTooling
+```
+
+The static validator reports only facts it can establish from the generated governed-symbol index.
+Supporting public types that are referenced by capability signatures but do not have their own
+governed entry are not declared nonexistent merely because they are absent from `symbols.jsonl`.
+Static success is evidence level `static`, never `compiled`.
+
+Project analysis accepts one absolute root, rejects path escape and all requested build execution,
+never follows symbolic links, excludes common build output and secret-bearing files, and enforces
+fixed hard caps above request-level file, byte, depth, timeout, and output limits. Output truncation
+does not return the oversized inventory. The current analyzer returns an inventory and framework
+signals only; dependency resolution, migration findings, and code mutation remain unsupported.
 
 ## Version lanes
 
