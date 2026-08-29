@@ -41,7 +41,7 @@ test('builds a deterministic complete bundle from Governance V2 and compiled sam
   assert.equal(first.manifest.counts.samples, 209);
   assert.equal(first.manifest.counts.rules, 10);
   const resolved = first.symbols.filter((symbol) => symbol.declarations.length > 0).length;
-  assert.ok(resolved / first.symbols.length >= 0.95, `Only ${resolved}/537 symbols resolved`);
+  assert.equal(resolved, first.symbols.length);
   const sample = first.samples.find(
     (candidate) => candidate.sampleId === 'module.ui-foundation-profile-summary',
   );

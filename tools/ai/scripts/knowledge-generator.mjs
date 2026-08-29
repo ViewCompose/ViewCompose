@@ -432,6 +432,14 @@ export async function buildKnowledgeBundle(options = {}) {
       ),
     });
   }
+  const unresolvedSymbols = symbols
+    .filter((symbol) => symbol.declarations.length === 0)
+    .map((symbol) => symbol.symbolId);
+  if (unresolvedSymbols.length > 0) {
+    throw new Error(
+      `Cannot generate source-complete knowledge; unresolved declarations:\n${unresolvedSymbols.join('\n')}`,
+    );
+  }
 
   const samples = [];
   for (const record of sampleRecords.sort((left, right) => left.sample_id.localeCompare(right.sample_id))) {
