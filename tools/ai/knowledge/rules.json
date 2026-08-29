@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "code": "VC-AI-UNKNOWN-SYMBOL",
+      "severity": "error",
+      "title": "Use a current published ViewCompose symbol",
+      "summary": "Reject a ViewCompose-looking declaration that is absent from the selected knowledge bundle or is recorded as removed.",
+      "evidenceRequired": "compiled",
+      "sourceDocuments": ["project.documentation-governance", "project.api-documentation-quality"]
+    },
+    {
+      "code": "VC-AI-ARTIFACT-REQUIRED",
+      "severity": "error",
+      "title": "Declare the owning artifact",
+      "summary": "Every generated symbol must resolve to the exact owning artifact and version lane; aggregate artifacts are not assumed.",
+      "evidenceRequired": "compiled",
+      "sourceDocuments": ["module.catalog", "project.publishing"]
+    },
+    {
+      "code": "VC-AI-MODIFIER-ORDER",
+      "severity": "warning",
+      "title": "Preserve Modifier order",
+      "summary": "Modifier elements are ordered behavior. A conversion or repair must not reorder layout, drawing, input, semantics, or parent-data elements without evidence.",
+      "evidenceRequired": "rendered",
+      "sourceDocuments": ["architecture.modifier-runtime", "migration.compose-layout-modifier-environment"]
+    },
+    {
+      "code": "VC-AI-UNIT-DP-SP",
+      "severity": "error",
+      "title": "Use typed density and text units",
+      "summary": "Layout dimensions use UiDp/dp and text sizes use UiSp/sp unless the selected API documents another typed unit.",
+      "evidenceRequired": "compiled",
+      "sourceDocuments": ["tutorial.layouts-and-modifiers", "migration.compose-layout-modifier-environment"]
+    },
+    {
+      "code": "VC-AI-LIFECYCLE-PAIRED-WORK",
+      "severity": "error",
+      "title": "Bind resource work to the nearest Lifecycle",
+      "summary": "Use the lifecycle-aware Flow and paired effect APIs for threshold-bound work; do not branch once on a non-observable lifecycle snapshot.",
+      "evidenceRequired": "static",
+      "sourceDocuments": ["architecture.lifecycle-saved-state", "module.viewcompose-lifecycle-androidx"]
+    },
+    {
+      "code": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "severity": "warning",
+      "title": "Describe meaningful images",
+      "summary": "A meaningful Image or Icon requires a content description. Null is reserved for content that is deliberately decorative.",
+      "evidenceRequired": "rendered",
+      "sourceDocuments": ["architecture.modifier-runtime", "guide.image-loading"]
+    },
+    {
+      "code": "VC-AI-A11Y-TOUCH-TARGET",
+      "severity": "warning",
+      "title": "Preserve accessible touch targets",
+      "summary": "Interactive output must preserve the design-system touch-target contract and cannot use visual bounds as the only interaction bound.",
+      "evidenceRequired": "rendered",
+      "sourceDocuments": ["architecture.renderer-neutral-interaction-indication", "guide.focus-input"]
+    },
+    {
+      "code": "VC-AI-ANDROID-VIEW-COMMIT",
+      "severity": "error",
+      "title": "Keep non-replayable Android View work after commit",
+      "summary": "Non-replayable native operations belong in AndroidView.onCommit or another documented commit boundary, not in replayable update work.",
+      "evidenceRequired": "static",
+      "sourceDocuments": ["architecture.android-view-side-effects", "architecture.render-failures"]
+    },
+    {
+      "code": "VC-AI-PROJECT-READ-ONLY",
+      "severity": "error",
+      "title": "Keep analysis read-only and bounded",
+      "summary": "Project analysis cannot execute build logic or write files; migration returns an explicit patch plan before a client applies changes.",
+      "evidenceRequired": "static",
+      "sourceDocuments": ["architecture.ai-verifiable-development-tooling-boundary"]
+    },
+    {
+      "code": "VC-AI-EVIDENCE-DEPTH",
+      "severity": "error",
+      "title": "Report only evidence that actually passed",
+      "summary": "Knowledge, static, compiled, rendered, and compared results are cumulative and cannot be promoted by inference.",
+      "evidenceRequired": "knowledge",
+      "sourceDocuments": ["architecture.ai-verifiable-development-tooling-boundary"]
+    }
+  ]
+}

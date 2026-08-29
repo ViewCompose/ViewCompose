@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "generate:knowledge": "node scripts/generate-knowledge.mjs --write",
     "test": "node --test scripts/*.test.mjs",
-    "verify": "npm run test && node scripts/verify-phase0.mjs"
+    "verify": "npm run test && node scripts/verify-phase0.mjs",
+    "verify:knowledge": "node scripts/generate-knowledge.mjs --verify"
   }
 }
