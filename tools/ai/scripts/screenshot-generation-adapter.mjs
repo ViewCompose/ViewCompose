@@ -2,9 +2,10 @@ import {compileKotlin} from './compiler-adapter.mjs';
 import {renderGeneratedPreview} from './generated-preview-adapter.mjs';
 import {generateScreenshotKotlin} from './screenshot-design-ir-to-kotlin.mjs';
 import {compareGeneratedLayout} from './layout-comparator.mjs';
+import {compareScreenshotPixels} from './pixel-comparator.mjs';
 import {diagnostic, toolResult} from './tool-core.mjs';
 
-function generatedData(generated, compilation, preview, comparison) {
+function generatedData(generated, compilation, preview, comparison, pixelComparison) {
   return Object.fromEntries(Object.entries({
     kotlin: generated?.kotlin,
     generationReport: generated?.report,
@@ -12,6 +13,7 @@ function generatedData(generated, compilation, preview, comparison) {
     compilation,
     preview,
     comparison,
+    pixelComparison,
   }).filter(([, value]) => value !== undefined));
 }
 
@@ -22,6 +24,7 @@ export async function generateScreenshotViewCompose(arguments_, {
   compile = compileKotlin,
   render = renderGeneratedPreview,
   compare = compareGeneratedLayout,
+  comparePixels = compareScreenshotPixels,
 } = {}) {
   const started = performance.now();
   if (signal?.aborted) {
@@ -63,7 +66,7 @@ export async function generateScreenshotViewCompose(arguments_, {
       outputFingerprint: generated.outputFingerprint,
     });
   }
-  if (['render', 'compare'].includes(arguments_.generationRequest.mode)) {
+  if (['render', 'compare', 'compare-pixels'].includes(arguments_.generationRequest.mode)) {
     const preview = await render({
       generatedKotlin: generated.kotlin,
       generationReport: generated.report,
@@ -97,21 +100,56 @@ export async function generateScreenshotViewCompose(arguments_, {
       preview: preview.data,
       previewEvidence: preview.evidence,
     });
+    if (compared.status !== 'success' || arguments_.generationRequest.mode === 'compare') {
+      return toolResult({
+        requestId,
+        tool: 'generate_screenshot_viewcompose',
+        status: compared.status,
+        level: compared.evidenceLevel,
+        diagnostics: [...preview.diagnostics, ...compared.diagnostics],
+        data: generatedData(generated, undefined, preview.data, compared.comparison),
+        elapsedMs: performance.now() - started,
+        cache: preview.evidence.cache,
+        compilerLane: preview.evidence.compilerLane,
+        renderLane: preview.evidence.renderLane,
+        outputFingerprint: compared.status === 'success'
+          ? compared.comparison.comparisonFingerprint
+          : preview.evidence.outputFingerprint,
+        truncated: preview.truncated || compared.status === 'limited',
+      });
+    }
+    const pixelCompared = await comparePixels({
+      referenceRequest: arguments_.pixelReference.request,
+      referenceResult: arguments_.pixelReference.result,
+      semanticComparison: compared.comparison,
+      preview: preview.data,
+      previewEvidence: preview.evidence,
+    }, {signal});
     return toolResult({
       requestId,
       tool: 'generate_screenshot_viewcompose',
-      status: compared.status,
-      level: compared.evidenceLevel,
-      diagnostics: [...preview.diagnostics, ...compared.diagnostics],
-      data: generatedData(generated, undefined, preview.data, compared.comparison),
+      status: pixelCompared.status,
+      level: pixelCompared.evidenceLevel,
+      diagnostics: [
+        ...preview.diagnostics,
+        ...compared.diagnostics,
+        ...pixelCompared.diagnostics,
+      ],
+      data: generatedData(
+        generated,
+        undefined,
+        preview.data,
+        compared.comparison,
+        pixelCompared.comparison,
+      ),
       elapsedMs: performance.now() - started,
       cache: preview.evidence.cache,
       compilerLane: preview.evidence.compilerLane,
       renderLane: preview.evidence.renderLane,
-      outputFingerprint: compared.status === 'success'
-        ? compared.comparison.comparisonFingerprint
+      outputFingerprint: pixelCompared.status === 'success'
+        ? pixelCompared.comparison.comparisonFingerprint
         : preview.evidence.outputFingerprint,
-      truncated: preview.truncated || compared.status === 'limited',
+      truncated: preview.truncated || pixelCompared.status === 'limited',
     });
   }
   const compilation = await compile({

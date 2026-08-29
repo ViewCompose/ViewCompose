@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen exact RGBA pixel comparator for eligible references, then freeze a bounded repair contract without introducing a perceptual aggregate score.
+next_action: Freeze a bounded deterministic repair contract over separate compile, semantic, structure, exact-pixel, and safety gates without introducing a perceptual aggregate score.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -107,14 +107,13 @@ installed-package verification.
 
 Last verified: 2026-08-30.
 
-The screenshot semantic and structural comparison is now implemented, and the separate pixel-reference
-eligibility contract is frozen. It admits only canonical, zero-redaction, full-viewport references
+The screenshot semantic and structural comparison and the separate exact RGBA comparison are now
+implemented. Pixel comparison admits only canonical, zero-redaction, full-viewport references
 whose dimensions, density, font scale, locale, layout direction, color space, alpha mode,
 orientation, system bars, and accepted semantic evidence exactly match the render. The original
 16×24 inference wireframe is therefore not assigned a pixel score.
 
-Next action: implement exact RGBA comparison for the eligible reference without claiming perceptual
-or cross-device equivalence, then freeze a bounded repair loop.
+Next action: freeze a bounded repair loop without claiming perceptual or cross-device equivalence.
 
 ## Maven release changesets
 
@@ -2129,6 +2128,69 @@ provider boundary changes, so this slice needs no Maven changeset or module-manu
 behavior change**. The next action is to implement the frozen exact comparator, prove decoded RGBA
 identity and mismatches through CLI/MCP and the installed package, and only then freeze bounded
 repair behavior.
+
+### Implementation evidence — exact screenshot RGBA comparison
+
+`generate_screenshot_viewcompose` now exposes `compare-pixels` after `compare`. The mode requires
+the exact canonical preprocessing request/result pair in addition to the resolved screenshot result
+and explicit Preview bindings. It regenerates and source-binds the same Kotlin, renders in the fixed
+Preview lane, and must first reproduce all 27/27 semantic and structural checks. Pixel comparison is
+never reached when rendering or semantic comparison fails.
+
+The comparator reproduces the reference preprocessing result, rejects any changed lineage or
+redaction, and requires exact viewport, density, font scale, locale, layout direction, `sRGB`,
+straight alpha, orientation, system-bar, and crop identity. It then reopens only the contained
+regular rendered PNG, rejects symbolic links and changed bytes, and uses the same strict bounded
+non-interlaced 8-bit RGBA decoder as screenshot preprocessing. The preprocessing-compatible limit
+is 1,310,720 compressed bytes, 16 MiB decoded bytes, and 4,194,304 pixels per image. Cancellation is
+checked before and during reference reproduction, decoding, artifact reads, and channel comparison.
+
+The accepted 1079×2339 denominator compares 2,523,781 pixels and 10,095,124 RGBA channels. All
+pixels match at zero tolerance: exact pixel ratio 1, zero mismatched pixels, zero RGBA mean absolute
+error, zero RGBA root mean square error, and zero maximum channel delta. The comparison fingerprint
+is `5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b`. The pixel-specific
+generation request and report fingerprints are
+`7dca8567dfc551fc1ea3e708535b361a783ec805c466ce8655d1a657ab5d6a8b` and
+`98599de109dcc98ff978326bf9a906dc9b131549f2dce665cc04639adce61c78`. A second end-to-end run
+revalidates the content-addressed artifacts through a stable cache hit.
+
+Four fail-closed denominators remain separate: the configuration-mismatched redacted wireframe,
+missing semantic evidence, changed canonical reference identity, and one red-channel unit changed
+in the render. The last case reports exactly one mismatched pixel and maximum channel delta 1. It
+does not collapse that result into a perceptual or aggregate score. Pixel mismatch preserves the
+accepted render fingerprint and `rendered` evidence; only an exact pass publishes the pixel
+comparison fingerprint at `compared` evidence.
+
+Phase 0 remains at 14 schemas and 60 metrics and now contains 65 cases, 62 fixture-backed cases,
+and five screenshot-pixel fixtures. Node 25.6.0 passes 194/194 AI-tooling tests. The dedicated gate
+reproduces 1/1 exact comparison, 1/1 cache hit, and 4/4 fail-closed denominators. Installed CLI and
+modern MCP calls reproduce the same pixel fingerprint after explicit
+`VIEWCOMPOSE_SOURCE_ROOT` binding, while both MCP protocol eras retain the same thirteen-tool
+catalog.
+
+The dependency-free offline package now contains 62 files and 1,789,505 declared bytes; its
+320,125-byte archive has SHA-256
+`b58ad3bad5b58e96e00b1ed819f017496fd9c0d8c5d24a6685ffac7fdf107eb3`. Relative to the frozen
+pixel contract, this adds the comparator as one file, 18,908 declared bytes (+1.07%), and 3,820
+archive bytes (+1.21%). It adds no runtime dependency or provider boundary.
+
+The first combined distribution run exposed a verifier-only timeout classification gap:
+`compare-pixels` still received the 10-second static-request budget and correctly returned
+`VC-AI-PIXEL-CANCELLED` when a cache replay exceeded it. The verifier now classifies
+`compare-pixels` with the existing source-bound `compile`/`render`/`compare` 120-second budget.
+The repeated distribution gate passes 2/2 reproducible builds, offline install/uninstall,
+SPDX/license inventory, both MCP protocol eras, and every prior plus exact-pixel installed
+denominator. The focused quality-build suite passes seven tasks, with two executed and five
+up-to-date. The final combined pixel, distribution, documentation, development-tooling-isolation,
+and release-intent gate passes 23 actionable tasks, with nine executed and 14 up-to-date.
+
+No published ViewCompose artifact, public/protected API, Android runtime, or application process
+changes, so this slice needs no Maven changeset or module-manual update. This is **improved** exact
+visual evidence, artifact integrity, cancellation, installed transport coverage, and claim honesty
+with **no material Android runtime behavior change**. Perceptual similarity, cross-device or
+cross-renderer equivalence, font equivalence, design intent, aesthetic quality, interaction,
+motion, and repair remain unclaimed. The next action is to freeze a bounded repair contract whose
+iterations cannot bypass compilation, semantic, structural, exact-pixel, or safety failures.
 
 ### Implementation evidence — bounded XML to Design IR
 

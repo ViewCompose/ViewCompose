@@ -58,6 +58,14 @@ const screenshotPreviewRequestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json',
   import.meta.url,
 );
+const pixelReferenceRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.request.json',
+  import.meta.url,
+);
+const pixelReferenceResultPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.result.json',
+  import.meta.url,
+);
 
 async function request(tool, arguments_, overrides = {}) {
   const manifest = await loadKnowledgeManifest();
@@ -440,6 +448,67 @@ test('dispatches screenshot comparison with exact resolved and rendered lineage'
   assert.equal(compared.designIr.documentId, 'screenshot-wireframe');
   assert.deepEqual(compared.previewBindings, previewRequest.bindings);
   assert.equal(compared.previewEvidence.outputFingerprint, 'b'.repeat(64));
+});
+
+test('dispatches eligible pixel comparison only after semantic comparison', async () => {
+  const [
+    resolutionResult,
+    generationRequest,
+    previewRequest,
+    referenceRequest,
+    referenceResult,
+  ] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(renderGenerationRequestPath, 'utf8').then(JSON.parse),
+    readFile(screenshotPreviewRequestPath, 'utf8').then(JSON.parse),
+    readFile(pixelReferenceRequestPath, 'utf8').then(JSON.parse),
+    readFile(pixelReferenceResultPath, 'utf8').then(JSON.parse),
+  ]);
+  generationRequest.mode = 'compare-pixels';
+  let pixelInvocation;
+  const result = await dispatchToolRequest(await request(
+    'generate_screenshot_viewcompose',
+    {
+      resolutionResult,
+      generationRequest,
+      previewBindings: previewRequest.bindings,
+      pixelReference: {request: referenceRequest, result: referenceResult},
+    },
+    {limits: {maxInputBytes: 2_000_000, maxOutputBytes: 2_000_000}},
+  ), {
+    renderGenerated: async (value) => toolResult({
+      requestId: value.requestId,
+      tool: 'render_preview',
+      status: 'success',
+      level: 'rendered',
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'a'.repeat(64)}},
+      compilerLane: 'preview-compiler',
+      renderLane: 'preview-renderer',
+      outputFingerprint: 'b'.repeat(64),
+    }),
+    compareGenerated: async () => ({
+      status: 'success',
+      evidenceLevel: 'compared',
+      diagnostics: [],
+      comparison: {comparisonFingerprint: 'c'.repeat(64)},
+    }),
+    comparePixelsGenerated: async (value) => {
+      pixelInvocation = value;
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {comparisonFingerprint: 'd'.repeat(64)},
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compared');
+  assert.equal(result.evidence.outputFingerprint, 'd'.repeat(64));
+  assert.equal(pixelInvocation.semanticComparison.comparisonFingerprint, 'c'.repeat(64));
+  assert.equal(pixelInvocation.referenceResult.outputFingerprint, referenceResult.outputFingerprint);
 });
 
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {

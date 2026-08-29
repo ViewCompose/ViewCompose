@@ -337,6 +337,10 @@ function parsePng(asset, signal) {
   return pixels;
 }
 
+export function decodeScreenshotPng(asset, {signal} = {}) {
+  return parsePng(asset, signal);
+}
+
 function cropPixels(pixels, sourceWidth, rectangle) {
   const output = Buffer.alloc(rectangle.width * rectangle.height * 4);
   const rowBytes = rectangle.width * 4;
@@ -403,6 +407,10 @@ function encodePng(pixels, width, height) {
     );
   }
   return encoded;
+}
+
+export function encodeScreenshotPng(pixels, width, height) {
+  return encodePng(pixels, width, height);
 }
 
 async function screenshotFailure({requestId, error, elapsedMs}) {

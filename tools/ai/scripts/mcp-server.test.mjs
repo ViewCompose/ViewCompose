@@ -46,6 +46,14 @@ const screenshotPreviewRequestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json',
   import.meta.url,
 );
+const pixelReferenceRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.request.json',
+  import.meta.url,
+);
+const pixelReferenceResultPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.result.json',
+  import.meta.url,
+);
 const protocolVersionKey = 'io.modelcontextprotocol/protocolVersion';
 const clientInfoKey = 'io.modelcontextprotocol/clientInfo';
 const clientCapabilitiesKey = 'io.modelcontextprotocol/clientCapabilities';
@@ -337,6 +345,80 @@ test('returns the same screenshot comparison through CLI and MCP', async () => {
   assert.equal(
     response.result.structuredContent.data.comparison.comparisonFingerprint,
     'c'.repeat(64),
+  );
+  assert.equal(response.result.isError, false);
+});
+
+test('returns the same eligible pixel comparison through CLI and MCP', async () => {
+  const [
+    resolutionResult,
+    generationRequest,
+    previewRequest,
+    referenceRequest,
+    referenceResult,
+  ] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(renderGenerationRequestPath, 'utf8').then(JSON.parse),
+    readFile(screenshotPreviewRequestPath, 'utf8').then(JSON.parse),
+    readFile(pixelReferenceRequestPath, 'utf8').then(JSON.parse),
+    readFile(pixelReferenceResultPath, 'utf8').then(JSON.parse),
+  ]);
+  generationRequest.mode = 'compare-pixels';
+  const arguments_ = {
+    resolutionResult,
+    generationRequest,
+    previewBindings: previewRequest.bindings,
+    pixelReference: {request: referenceRequest, result: referenceResult},
+  };
+  const renderGenerated = async (value) => toolResult({
+    requestId: value.requestId,
+    tool: 'render_preview',
+    status: 'success',
+    level: 'rendered',
+    diagnostics: [],
+    data: {generatedPreview: {requestFingerprint: 'a'.repeat(64)}},
+    compilerLane: 'preview-compiler',
+    renderLane: 'preview-renderer',
+    outputFingerprint: 'b'.repeat(64),
+  });
+  const compareGenerated = async () => ({
+    status: 'success',
+    evidenceLevel: 'compared',
+    diagnostics: [],
+    comparison: {comparisonFingerprint: 'c'.repeat(64)},
+  });
+  const comparePixelsGenerated = async () => ({
+    status: 'success',
+    evidenceLevel: 'compared',
+    diagnostics: [],
+    comparison: {comparisonFingerprint: 'd'.repeat(64)},
+  });
+  const id = 'screenshot-pixel-comparison-parity';
+  const direct = await dispatchToolRequest(await createToolRequest({
+    tool: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+    requestId: mcpToolRequestId(id),
+  }), {renderGenerated, compareGenerated, comparePixelsGenerated});
+  const session = new ViewComposeMcpSession({
+    dispatch: (toolRequest, {signal}) => dispatchToolRequest(toolRequest, {
+      signal,
+      renderGenerated,
+      compareGenerated,
+      comparePixelsGenerated,
+    }),
+  });
+  const response = await session.receive(request(id, 'tools/call', {
+    name: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+  }));
+  assert.deepEqual(
+    semanticToolResult(response.result.structuredContent),
+    semanticToolResult(direct),
+  );
+  assert.equal(response.result.structuredContent.evidence.level, 'compared');
+  assert.equal(
+    response.result.structuredContent.data.pixelComparison.comparisonFingerprint,
+    'd'.repeat(64),
   );
   assert.equal(response.result.isError, false);
 });

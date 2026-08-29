@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "operation": "xor-render-channel",
+  "pixelIndex": 0,
+  "channel": "red",
+  "value": 1,
+  "expectedDiagnosticCodes": ["VC-AI-PIXEL-MISMATCH"],
+  "expectedMetrics": {
+    "mismatchedPixels": 1,
+    "maxChannelDelta": 1
+  }
+}

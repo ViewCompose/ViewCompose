@@ -1014,6 +1014,24 @@
         "diagnosticCodes": ["VC-AI-PIXEL-REFERENCE-INTEGRITY-MISMATCH"]
       },
       "metricIds": ["visual.screenshot-pixel-comparison-safety"]
+    },
+    {
+      "id": "visual.screenshot-pixel-one-channel-mismatch",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-pixel/render-one-channel.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-PIXEL-MISMATCH"]
+      },
+      "metricIds": [
+        "visual.screenshot-pixel-exactness",
+        "visual.screenshot-pixel-comparison-safety"
+      ]
     }
   ]
 }

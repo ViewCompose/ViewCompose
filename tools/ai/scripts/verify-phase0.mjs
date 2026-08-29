@@ -2198,7 +2198,9 @@ export async function verifyPhase0() {
   const screenshotKotlinGeneration = await verifyPhase5ScreenshotGeneration({compileGolden: false});
   const screenshotGeneratedPreview = await verifyPhase5ScreenshotRender({renderGolden: false});
   const screenshotLayoutComparison = await verifyPhase5ScreenshotComparison({compareGolden: false});
-  const screenshotPixelComparison = await verifyPhase5ScreenshotPixelComparison();
+  const screenshotPixelComparison = await verifyPhase5ScreenshotPixelComparison({
+    compareGolden: false,
+  });
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {

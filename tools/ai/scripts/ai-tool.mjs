@@ -74,6 +74,7 @@ export async function dispatchToolRequest(request, {
   generateScreenshot = generateScreenshotViewCompose,
   renderGenerated,
   compareGenerated,
+  comparePixelsGenerated,
   signal,
 } = {}) {
   const schema = await loadToolEnvelopeSchema();
@@ -182,7 +183,7 @@ export async function dispatchToolRequest(request, {
                 : request.tool === 'resolve_screenshot_inference'
                   ? 'Use the unchanged validated import and exact human-resolution request.'
                   : request.tool === 'generate_screenshot_viewcompose'
-                    ? 'Use one exact resolved result and the frozen generate, compile, or render request with explicit Preview bindings.'
+                    ? 'Use one exact resolved result and the frozen generate, compile, render, compare, or compare-pixels request; rendered modes require explicit Preview bindings and compare-pixels also requires one canonical pixel reference.'
           : 'Use the exact arguments declared by the current tool catalog.',
       level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
     });
@@ -336,6 +337,7 @@ export async function dispatchToolRequest(request, {
           compile,
           render: renderGenerated,
           compare: compareGenerated,
+          comparePixels: comparePixelsGenerated,
         });
         break;
       default:

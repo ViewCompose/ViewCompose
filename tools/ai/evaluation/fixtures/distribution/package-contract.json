@@ -68,6 +68,7 @@
       "scripts/knowledge-retriever.mjs",
       "scripts/layout-diagnoser.mjs",
       "scripts/layout-comparator.mjs",
+      "scripts/pixel-comparator.mjs",
       "scripts/mcp-server.mjs",
       "scripts/preview-adapter.mjs",
       "scripts/project-analyzer.mjs",
@@ -144,7 +145,8 @@
       "convert_xml_to_viewcompose:render",
       "generate_screenshot_viewcompose:compile",
       "generate_screenshot_viewcompose:render",
-      "generate_screenshot_viewcompose:compare"
+      "generate_screenshot_viewcompose:compare",
+      "generate_screenshot_viewcompose:compare-pixels"
     ],
     "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
     "implicitProtocolDowngrade": false

@@ -8,6 +8,9 @@ const generationSchemaPath = fileURLToPath(
 const generatedPreviewSchemaPath = fileURLToPath(
   new URL('../contracts/generated-preview-request.schema.json', import.meta.url),
 );
+const screenshotPreprocessingSchemaPath = fileURLToPath(
+  new URL('../contracts/screenshot-preprocessing.schema.json', import.meta.url),
+);
 
 export const SCREENSHOT_GENERATION_SCHEMA = Object.freeze(
   JSON.parse(await readFile(generationSchemaPath, 'utf8')),
@@ -21,6 +24,9 @@ export const SCREENSHOT_GENERATION_REPORT_SCHEMA = Object.freeze({
   $defs: structuredClone(SCREENSHOT_GENERATION_SCHEMA.$defs),
 });
 const GENERATED_PREVIEW_SCHEMA = JSON.parse(await readFile(generatedPreviewSchemaPath, 'utf8'));
+const SCREENSHOT_PREPROCESSING_SCHEMA = JSON.parse(
+  await readFile(screenshotPreprocessingSchemaPath, 'utf8'),
+);
 
 function namespaceSchema(value, prefix) {
   if (Array.isArray(value)) return value.map((item) => namespaceSchema(item, prefix));
@@ -44,6 +50,7 @@ function namespacedDefinitions(definitions, prefix) {
 
 const generationPrefix = 'generation_';
 const previewPrefix = 'preview_';
+const preprocessingPrefix = 'preprocessing_';
 const generationRequestForModes = (modes) => {
   const request = namespaceSchema(
     structuredClone(SCREENSHOT_GENERATION_SCHEMA.$defs.request),
@@ -88,10 +95,46 @@ export const SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA = Object.freeze({
         },
       },
     },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: [
+        'resolutionResult',
+        'generationRequest',
+        'previewBindings',
+        'pixelReference',
+      ],
+      properties: {
+        ...commonArgumentProperties,
+        generationRequest: generationRequestForModes(['compare-pixels']),
+        previewBindings: {
+          type: 'array',
+          maxItems: 64,
+          items: {
+            oneOf: [
+              {$ref: `#/$defs/${previewPrefix}textFieldStateBinding`},
+              {$ref: `#/$defs/${previewPrefix}unitCallbackBinding`},
+              {$ref: `#/$defs/${previewPrefix}booleanCallbackBinding`},
+              {$ref: `#/$defs/${previewPrefix}imeActionCallbackBinding`},
+            ],
+          },
+        },
+        pixelReference: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['request', 'result'],
+          properties: {
+            request: {$ref: `#/$defs/${preprocessingPrefix}request`},
+            result: {$ref: `#/$defs/${preprocessingPrefix}result`},
+          },
+        },
+      },
+    },
   ],
   $defs: {
     ...namespacedDefinitions(SCREENSHOT_GENERATION_SCHEMA.$defs, generationPrefix),
     ...namespacedDefinitions(GENERATED_PREVIEW_SCHEMA.$defs, previewPrefix),
+    ...namespacedDefinitions(SCREENSHOT_PREPROCESSING_SCHEMA.$defs, preprocessingPrefix),
   },
 });
 

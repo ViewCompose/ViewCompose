@@ -98,9 +98,9 @@
         "maxChannelDelta"
       ],
       "properties": {
-        "totalPixels": {"type": "integer", "minimum": 1, "maximum": 16777216},
-        "comparedPixels": {"type": "integer", "minimum": 1, "maximum": 16777216},
-        "mismatchedPixels": {"type": "integer", "minimum": 0, "maximum": 16777216},
+        "totalPixels": {"type": "integer", "minimum": 1, "maximum": 4194304},
+        "comparedPixels": {"type": "integer", "minimum": 1, "maximum": 4194304},
+        "mismatchedPixels": {"type": "integer", "minimum": 0, "maximum": 4194304},
         "exactPixelRatio": {"type": "number", "minimum": 0, "maximum": 1},
         "meanAbsoluteErrorRgba": {"type": "number", "minimum": 0, "maximum": 255},
         "rootMeanSquareErrorRgba": {"type": "number", "minimum": 0, "maximum": 255},

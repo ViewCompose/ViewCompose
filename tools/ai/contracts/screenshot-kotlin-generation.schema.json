@@ -15,7 +15,7 @@
         "schemaVersion": {"const": 1},
         "kind": {"const": "request"},
         "input": {"$ref": "#/$defs/inputIdentity"},
-        "mode": {"enum": ["generate", "compile", "render", "compare"]},
+        "mode": {"enum": ["generate", "compile", "render", "compare", "compare-pixels"]},
         "policy": {
           "type": "object",
           "additionalProperties": false,

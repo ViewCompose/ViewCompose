@@ -15,6 +15,14 @@ const previewRequestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json',
   import.meta.url,
 );
+const pixelReferenceRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.request.json',
+  import.meta.url,
+);
+const pixelReferenceResultPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.result.json',
+  import.meta.url,
+);
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
@@ -202,6 +210,62 @@ test('retains rendered identity when screenshot comparison fails', async () => {
   assert.equal(result.evidence.outputFingerprint, 'd'.repeat(64));
   assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
   assert.equal(result.diagnostics[0].code, 'VC-AI-COMPARE-SEMANTIC-MISMATCH');
+});
+
+test('compares pixels only after the exact screenshot layout passes', async () => {
+  const input = await arguments_('compare-pixels');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  input.pixelReference = {
+    request: await readJson(pixelReferenceRequestPath),
+    result: await readJson(pixelReferenceResultPath),
+  };
+  let pixelInvocation;
+  const result = await generateScreenshotViewCompose(input, {
+    requestId: 'screenshot-compare-pixels',
+    render: async () => ({
+      status: 'success',
+      evidence: {
+        level: 'rendered',
+        cache: 'hit',
+        compilerLane: 'preview-compiler',
+        renderLane: 'preview-renderer',
+        outputFingerprint: 'd'.repeat(64),
+      },
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'e'.repeat(64)}},
+      truncated: false,
+    }),
+    compare: async () => ({
+      status: 'success',
+      evidenceLevel: 'compared',
+      diagnostics: [],
+      comparison: {comparisonFingerprint: 'f'.repeat(64)},
+    }),
+    comparePixels: async (value) => {
+      pixelInvocation = value;
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {
+          comparisonFingerprint: 'a'.repeat(64),
+          metrics: {mismatchedPixels: 0},
+        },
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compared');
+  assert.equal(result.evidence.outputFingerprint, 'a'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(result.data.pixelComparison.metrics.mismatchedPixels, 0);
+  assert.equal(
+    pixelInvocation.referenceResult.outputFingerprint,
+    input.pixelReference.result.outputFingerprint,
+  );
+  assert.equal(pixelInvocation.semanticComparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(pixelInvocation.previewEvidence.outputFingerprint, 'd'.repeat(64));
 });
 
 test('honors cancellation before screenshot generation', async () => {

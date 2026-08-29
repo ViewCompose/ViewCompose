@@ -8,9 +8,9 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-frozen",
-    "publicPixelCompareMode": false,
-    "implementation": false,
+    "status": "implemented",
+    "publicPixelCompareMode": true,
+    "implementation": true,
     "successEvidence": "compared",
     "failureEvidence": "rendered"
   },
@@ -78,9 +78,9 @@
   },
   "limits": {
     "maxCompressedBytesPerPng": 1310720,
-    "maxDecodedBytesPerPng": 67108864,
+    "maxDecodedBytesPerPng": 16777216,
     "maxDimensionPx": 4096,
-    "maxPixels": 16777216,
+    "maxPixels": 4194304,
     "maxPngChunks": 128,
     "maxFindings": 1000
   },
@@ -94,6 +94,7 @@
     "VC-AI-PIXEL-IMAGE-INTEGRITY-MISMATCH",
     "VC-AI-PIXEL-DIMENSION-MISMATCH",
     "VC-AI-PIXEL-MISMATCH",
+    "VC-AI-PIXEL-CANCELLED",
     "VC-AI-PIXEL-LIMIT"
   ],
   "lineage": {
@@ -102,6 +103,9 @@
     "referenceResult": "screenshot-pixel/pixel-reference.result.json",
     "referenceOutputFingerprint": "7a4b4458c215ed139191c0c85fe5f47d31b9c8b6a1db9f48f4d82806e4eb05c1",
     "referencePngFingerprint": "5d909bb84a6ac002f44ce0e1e0e6cf16dfce5f53ad742d6c91c66b8077fbb7a5",
+    "pixelGenerationRequest": "screenshot-pixel/wireframe.generation-request.json",
+    "pixelGenerationRequestFingerprint": "7dca8567dfc551fc1ea3e708535b361a783ec805c466ce8655d1a657ab5d6a8b",
+    "pixelGenerationReportFingerprint": "98599de109dcc98ff978326bf9a906dc9b131549f2dce665cc04639adce61c78",
     "semanticComparisonContract": "screenshot-layout-comparison-contract.json",
     "semanticComparisonFingerprint": "ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31",
     "previewRequest": "screenshot-render/wireframe.preview-request.json",
@@ -111,8 +115,9 @@
   },
   "supportedFixtures": [
     {
-      "status": "contract-frozen",
+      "status": "implemented",
       "source": "canonicalized screenshot render reference",
+      "expectedComparisonFingerprint": "5ac4341b880376f4f7c4e54c316a115d5d2ba448b8502d4cafdc76a50c875c5b",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "configuration": {
         "density": 2.625,
@@ -151,6 +156,10 @@
     {
       "mutation": "screenshot-pixel/reference-integrity.mutation.json",
       "diagnosticCodes": ["VC-AI-PIXEL-REFERENCE-INTEGRITY-MISMATCH"]
+    },
+    {
+      "mutation": "screenshot-pixel/render-one-channel.mutation.json",
+      "diagnosticCodes": ["VC-AI-PIXEL-MISMATCH"]
     }
   ]
 }

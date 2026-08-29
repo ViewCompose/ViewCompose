@@ -296,7 +296,9 @@ passes only that source and the fixed artifact/capability selection to the herme
 `render` mode requires the exact explicit Preview bindings and enters the fixed source-bound
 Layoutlib harness. `compare` mode performs that same render and then reopens only its verified
 render tree, maps the exact resolved Design IR, and upgrades evidence to `compared` only when every
-supported check passes.
+supported check passes. `compare-pixels` additionally requires one canonical screenshot
+preprocessing request/result pair and runs only after the semantic and structural comparison
+passes.
 
 The screenshot generated-Preview implementation identifies `sourceKind: "screenshot"`, uses the dedicated
 `GeneratedScreenshotPreview` target and `AI/Screenshot` group, and requires the exact state/event
@@ -315,13 +317,15 @@ text-field placeholder, source screenshot regions, exact
 source geometry, pixels, style, typography, accessibility traversal, state mutation, and event
 behavior because the current evidence cannot compare them.
 
-Screenshot pixel comparison remains contract-frozen and is not yet a public tool mode. Its
-eligibility gate requires a reproducible canonical screenshot reference with no redactions, a full
-viewport crop, exact dimensions and device configuration, and a passing semantic/structural
-comparison from the same render. The checked-in 16×24 inference wireframe is intentionally
-ineligible for pixel scoring because it does not share the 1079×2339 render viewport or density and
-contains a redaction. The eligible infrastructure reference freezes separate exact RGBA metrics
-with zero channel tolerance and no aggregate or perceptual similarity score.
+Screenshot pixel comparison is implemented as the public `compare-pixels` mode. Its eligibility
+gate requires a reproducible canonical screenshot reference with no redactions, a full viewport
+crop, exact dimensions and device configuration, and a passing semantic/structural comparison from
+the same render. It reopens the contained rendered PNG, verifies its byte identity, strictly decodes
+both images as bounded non-interlaced 8-bit RGBA, and reports exact pixel ratio, mismatched pixels,
+RGBA mean absolute error, RGBA root mean square error, and maximum channel delta separately. The
+checked-in 16×24 inference wireframe is intentionally ineligible because it does not share the
+1079×2339 render viewport or density and contains a redaction. No aggregate or perceptual
+similarity score is produced.
 
 Run the local MCP server and its protocol/parity gate with:
 
