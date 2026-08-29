@@ -133,7 +133,7 @@ export async function verifyPhase5ScreenshotPreprocessing() {
 
   const definition = TOOL_DEFINITIONS.prepare_screenshot;
   if (
-    TOOL_NAMES.at(-1) !== 'prepare_screenshot' ||
+    !TOOL_NAMES.includes('prepare_screenshot') ||
     definition.defaultLimits.maxInputBytes !== 2_000_000 ||
     definition.defaultLimits.maxOutputBytes !== 2_000_000 ||
     Buffer.byteLength(JSON.stringify(first)) > definition.defaultLimits.maxOutputBytes ||

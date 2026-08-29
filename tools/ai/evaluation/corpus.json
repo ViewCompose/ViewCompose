@@ -664,7 +664,8 @@
       "metricIds": [
         "visual.screenshot-inference-lineage",
         "visual.screenshot-inference-evidence-coverage",
-        "visual.screenshot-inference-uncertainty-honesty"
+        "visual.screenshot-inference-uncertainty-honesty",
+        "visual.screenshot-inference-validation-exactness"
       ]
     },
     {

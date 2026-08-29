@@ -1,5 +1,6 @@
 import {KNOWLEDGE_TOOL_DEFINITIONS} from './knowledge-retriever.mjs';
 import {SCREENSHOT_REQUEST_SCHEMA} from './screenshot-contract.mjs';
+import {SCREENSHOT_INFERENCE_VALIDATION_ARGUMENTS_SCHEMA} from './screenshot-inference-contract.mjs';
 
 const stableId = {
   type: 'string',
@@ -275,6 +276,18 @@ const executableDefinitions = {
     },
     evidenceLevel: 'static',
   },
+  validate_screenshot_inference: {
+    title: 'Validate and Import Screenshot Design Inference',
+    description:
+      'Reproduce screenshot preprocessing and validate provider-neutral Design IR lineage, evidence, uncertainty, and consent without provider or network execution.',
+    inputSchema: SCREENSHOT_INFERENCE_VALIDATION_ARGUMENTS_SCHEMA,
+    defaultLimits: {
+      timeoutMs: 10000,
+      maxInputBytes: 4000000,
+      maxOutputBytes: 2000000,
+    },
+    evidenceLevel: 'static',
+  },
 };
 
 const knowledgeDefaults = {
@@ -312,6 +325,7 @@ export const TOOL_NAMES = Object.freeze([
   'analyze_project',
   'convert_xml_to_viewcompose',
   'prepare_screenshot',
+  'validate_screenshot_inference',
 ]);
 
 export function publicToolDefinition(name) {

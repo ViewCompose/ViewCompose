@@ -381,6 +381,15 @@
       "environment": "human-golden mode remains offline; future provider mode requires explicit provider identity, exact-input consent receipt, purpose, retention review, and accepts no credential field"
     },
     {
+      "id": "visual.screenshot-inference-validation-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "public offline validator replays canonical preprocessing, reconstructs the inference request, verifies result and Design IR fingerprints, and imports only complete per-node evidence without provider execution"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",

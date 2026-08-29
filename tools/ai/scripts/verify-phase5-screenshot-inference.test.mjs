@@ -10,6 +10,8 @@ test('freezes screenshot inference lineage, evidence, uncertainty, and consent w
   assert.equal(summary.evidenceRecords, 4);
   assert.equal(summary.unresolvedQuestions, 6);
   assert.equal(summary.blockingQuestions, 6);
+  assert.equal(summary.deterministicValidations, 2);
+  assert.equal(summary.providerImports, 1);
   assert.equal(summary.providerExecutions, 0);
   assert.equal(summary.networkRequests, 0);
   assert.equal(
@@ -23,5 +25,9 @@ test('freezes screenshot inference lineage, evidence, uncertainty, and consent w
   assert.equal(
     summary.resultFingerprint,
     '4bd30960cccdfe3b9a4402293b3739a3238a25fcef12fb2911c595a3df7a66c0',
+  );
+  assert.equal(
+    summary.validationFingerprint,
+    '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845',
   );
 });

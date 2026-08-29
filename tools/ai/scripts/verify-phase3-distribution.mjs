@@ -33,6 +33,15 @@ const screenshotRequestPath = fileURLToPath(
 const screenshotResultPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot/privacy-grid.result.json', import.meta.url),
 );
+const inferencePreprocessingRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot/inference-wireframe.request.json', import.meta.url),
+);
+const inferenceRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-inference/wireframe.request.json', import.meta.url),
+);
+const inferenceResultPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-inference/wireframe.result.json', import.meta.url),
+);
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
@@ -280,6 +289,33 @@ async function verifyCliFlow(
   ) {
     throw new Error('Installed CLI did not reproduce the frozen screenshot preprocessing golden.');
   }
+  const [inferencePreprocessingRequest, inferenceRequest, inferenceResult] = await Promise.all([
+    readJson(inferencePreprocessingRequestPath),
+    readJson(inferenceRequestPath),
+    readJson(inferenceResultPath),
+  ]);
+  const {interpretation, intent, policy, authorization} = inferenceRequest;
+  const inferenceArguments = {
+    preprocessingRequest: inferencePreprocessingRequest,
+    inferenceDeclaration: {interpretation, intent, policy, authorization},
+    inferenceResult,
+  };
+  const validatedInference = await runCli(
+    cli,
+    knowledge,
+    'validate_screenshot_inference',
+    inferenceArguments,
+    'distribution-screenshot-inference',
+  );
+  if (
+    validatedInference.status !== 'success' ||
+    validatedInference.evidence.level !== 'static' ||
+    validatedInference.evidence.outputFingerprint !==
+      '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845' ||
+    validatedInference.data?.summary?.codeGenerationAllowed !== false
+  ) {
+    throw new Error('Installed CLI did not validate the frozen screenshot inference golden.');
+  }
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
     name: 'Column',
@@ -484,6 +520,7 @@ async function verifyCliFlow(
   }
   return {
     screenshot: screenshot.evidence.outputFingerprint,
+    screenshotInference: validatedInference.evidence.outputFingerprint,
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlPreview: renderedXml.evidence.outputFingerprint,
@@ -495,12 +532,24 @@ async function verifyCliFlow(
 
 async function verifyMcpMatrix(mcp, contract) {
   const modernVersion = contract.compatibility.protocolVersions[0];
-  const [xml, xmlV2, screenshotRequest, screenshotExpected] = await Promise.all([
+  const [
+    xml,
+    xmlV2,
+    screenshotRequest,
+    screenshotExpected,
+    inferencePreprocessingRequest,
+    inferenceRequest,
+    inferenceResult,
+  ] = await Promise.all([
     readFile(xmlFixturePath, 'utf8'),
     readFile(xmlV2FixturePath, 'utf8'),
     readJson(screenshotRequestPath),
     readJson(screenshotResultPath),
+    readJson(inferencePreprocessingRequestPath),
+    readJson(inferenceRequestPath),
+    readJson(inferenceResultPath),
   ]);
+  const {interpretation, intent, policy, authorization} = inferenceRequest;
   const modern = await runMcp(mcp, [{
     jsonrpc: '2.0',
     id: 'modern-list',
@@ -564,23 +613,41 @@ async function verifyMcpMatrix(mcp, contract) {
       arguments: screenshotRequest,
       _meta: modernMeta(modernVersion),
     },
+  }, {
+    jsonrpc: '2.0',
+    id: 'modern-screenshot-inference',
+    method: 'tools/call',
+    params: {
+      name: 'validate_screenshot_inference',
+      arguments: {
+        preprocessingRequest: inferencePreprocessingRequest,
+        inferenceDeclaration: {interpretation, intent, policy, authorization},
+        inferenceResult,
+      },
+      _meta: modernMeta(modernVersion),
+    },
   }]));
   const modernList = modern.find((response) => response.id === 'modern-list');
   const modernXml = modern.find((response) => response.id === 'modern-xml');
   const modernScreenshot = modern.find((response) => response.id === 'modern-screenshot');
+  const modernScreenshotInference = modern.find(
+    (response) => response.id === 'modern-screenshot-inference',
+  );
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
   const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
   const modernXmlLayoutDependencies = modern.find(
     (response) => response.id === 'modern-xml-layout-dependencies',
   );
   if (
-    modern.length !== 6 ||
+    modern.length !== 7 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
     modernScreenshot?.result?.structuredContent?.evidence?.outputFingerprint !==
       screenshotExpected.outputFingerprint ||
     JSON.stringify(modernScreenshot?.result?.structuredContent?.data) !==
       JSON.stringify(screenshotExpected) ||
+    modernScreenshotInference?.result?.structuredContent?.evidence?.outputFingerprint !==
+      '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
@@ -721,6 +788,7 @@ async function main() {
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
       `prepared screenshot ${compileFingerprints.screenshot}, ` +
+      `validated screenshot inference ${compileFingerprints.screenshotInference}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +

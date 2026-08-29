@@ -6,7 +6,7 @@ test('accepts the checked-in Phase 0 contracts and evaluation corpus', async () 
   const summary = await verifyPhase0();
   assert.equal(summary.schemas, 11);
   assert.equal(summary.reservedCapabilities, 5);
-  assert.equal(summary.metrics, 45);
+  assert.equal(summary.metrics, 46);
   assert.equal(summary.cases, 45);
   assert.equal(summary.fixtures, 42);
   assert.equal(summary.xmlFixtures, 4);

@@ -26,6 +26,18 @@ const screenshotProviderTransfer = new URL(
   '../evaluation/fixtures/visual/screenshot/provider-transfer.request.json',
   import.meta.url,
 );
+const inferencePreprocessingRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot/inference-wireframe.request.json',
+  import.meta.url,
+);
+const inferenceRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-inference/wireframe.request.json',
+  import.meta.url,
+);
+const inferenceResultPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-inference/wireframe.result.json',
+  import.meta.url,
+);
 
 async function request(tool, arguments_, overrides = {}) {
   const manifest = await loadKnowledgeManifest();
@@ -212,6 +224,44 @@ test('dispatches deterministic screenshot preprocessing and preserves fail-close
   assert.equal(
     provider.diagnostics[0].code,
     'VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED',
+  );
+});
+
+test('dispatches offline screenshot inference validation and denies credential-shaped input', async () => {
+  const [preprocessingRequest, inferenceRequest, inferenceResult] = await Promise.all([
+    readFile(inferencePreprocessingRequestPath, 'utf8').then(JSON.parse),
+    readFile(inferenceRequestPath, 'utf8').then(JSON.parse),
+    readFile(inferenceResultPath, 'utf8').then(JSON.parse),
+  ]);
+  const {interpretation, intent, policy, authorization} = inferenceRequest;
+  const arguments_ = {
+    preprocessingRequest,
+    inferenceDeclaration: {interpretation, intent, policy, authorization},
+    inferenceResult,
+  };
+  const result = await dispatchToolRequest(await request(
+    'validate_screenshot_inference',
+    arguments_,
+    {requestId: 'inference-dispatch', limits: {maxInputBytes: 4_000_000, maxOutputBytes: 2_000_000}},
+  ));
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'static');
+  assert.equal(
+    result.data.validationFingerprint,
+    '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845',
+  );
+  assert.equal(result.data.summary.codeGenerationAllowed, false);
+
+  const credential = structuredClone(arguments_);
+  credential.inferenceDeclaration.authorization.apiKey = 'forbidden-not-a-real-secret';
+  const denied = await dispatchToolRequest(await request(
+    'validate_screenshot_inference',
+    credential,
+  ));
+  assert.equal(denied.status, 'invalid');
+  assert.equal(
+    denied.diagnostics[0].code,
+    'VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED',
   );
 });
 

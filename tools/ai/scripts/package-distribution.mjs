@@ -55,6 +55,8 @@ const sourcePaths = Object.freeze([
   'scripts/project-analyzer.mjs',
   'scripts/schema-validator.mjs',
   'scripts/screenshot-contract.mjs',
+  'scripts/screenshot-inference-contract.mjs',
+  'scripts/screenshot-inference-validator.mjs',
   'scripts/screenshot-preprocessor.mjs',
   'scripts/static-validator.mjs',
   'scripts/tool-catalog.mjs',

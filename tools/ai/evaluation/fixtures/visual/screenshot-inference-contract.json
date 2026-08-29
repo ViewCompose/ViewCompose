@@ -12,6 +12,15 @@
     "publicTool": false,
     "evidence": "static"
   },
+  "validation": {
+    "tool": "validate_screenshot_inference",
+    "status": "implemented",
+    "publicTool": true,
+    "mode": "offline-import",
+    "providerExecution": false,
+    "networkAccess": false,
+    "expectedValidationFingerprint": "556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845"
+  },
   "execution": {
     "providerExecution": false,
     "networkAccess": false,
@@ -34,6 +43,7 @@
     "designIrSchemaVersion": 1,
     "allowedNodeKinds": ["box", "button", "column", "image", "row", "text", "text-field"],
     "behaviorInference": "forbidden",
+    "expressionInference": "forbidden",
     "resourceInference": "placeholder-only",
     "textInference": "observed-or-unresolved",
     "accessibilityInference": "observed-or-unresolved",
@@ -95,12 +105,14 @@
     "VC-AI-SCREENSHOT-INFERENCE-CONSENT-REQUIRED",
     "VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED",
     "VC-AI-SCREENSHOT-INFERENCE-PROVIDER-NOT-CONFIGURED",
+    "VC-AI-SCREENSHOT-INFERENCE-PREPROCESSING-FAILED",
     "VC-AI-SCREENSHOT-INFERENCE-EVIDENCE-INCOMPLETE",
     "VC-AI-SCREENSHOT-INFERENCE-REGION-INVALID",
     "VC-AI-SCREENSHOT-INFERENCE-CONFIDENCE-UNRESOLVED",
     "VC-AI-SCREENSHOT-INFERENCE-BEHAVIOR-FORBIDDEN",
     "VC-AI-SCREENSHOT-INFERENCE-CODEGEN-BLOCKED",
     "VC-AI-SCREENSHOT-INFERENCE-LIMIT",
+    "VC-AI-SCREENSHOT-INFERENCE-CANCELLED",
     "VC-AI-SCREENSHOT-INFERENCE-UNRESOLVED"
   ],
   "supportedFixtures": [
@@ -110,6 +122,7 @@
       "status": "contract-frozen",
       "expectedRequestFingerprint": "f789490fa61fa8d6a74e546b8defa536a78c9cebc83a123ba70da9967030a62b",
       "expectedResultFingerprint": "4bd30960cccdfe3b9a4402293b3739a3238a25fcef12fb2911c595a3df7a66c0",
+      "expectedValidationFingerprint": "556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845",
       "expectedDesignIrFingerprint": "585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a",
       "expectedNodes": 4,
       "expectedEvidenceRecords": 4,

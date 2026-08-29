@@ -13,6 +13,7 @@ import {
 } from './knowledge-retriever.mjs';
 import {renderPreview} from './preview-adapter.mjs';
 import {prepareScreenshot} from './screenshot-preprocessor.mjs';
+import {validateScreenshotInference} from './screenshot-inference-validator.mjs';
 import {diagnoseLayout} from './layout-diagnoser.mjs';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
@@ -66,6 +67,7 @@ export async function dispatchToolRequest(request, {
   getSample = retrieveSample,
   convertXml = convertXmlToViewCompose,
   prepare = prepareScreenshot,
+  validateScreenshot = validateScreenshotInference,
   renderGenerated,
   compareGenerated,
   signal,
@@ -109,22 +111,49 @@ export async function dispatchToolRequest(request, {
         Object.hasOwn(request.arguments.screenshot, key));
     const screenshotProviderTransferDenied = request.tool === 'prepare_screenshot' &&
       request.arguments?.privacy?.providerTransfer === true;
+    const inferenceAuthorization = request.tool === 'validate_screenshot_inference'
+      ? request.arguments?.inferenceDeclaration?.authorization
+      : undefined;
+    const inferenceCredentialDenied = inferenceAuthorization &&
+      ['apiKey', 'token', 'credential', 'credentials'].some((key) =>
+        Object.hasOwn(inferenceAuthorization, key));
+    const inferenceConsentRequired = inferenceAuthorization?.mode === 'provider-adapter' &&
+      (!Object.hasOwn(inferenceAuthorization, 'consentReceipt') ||
+        !Object.hasOwn(inferenceAuthorization, 'consentInputFingerprint'));
     return boundaryResult(request, {
       status: 'invalid',
       code: screenshotPathDenied
         ? 'VC-AI-SCREENSHOT-PATH-DENIED'
         : screenshotProviderTransferDenied
           ? 'VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED'
+          : inferenceCredentialDenied
+            ? 'VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED'
+            : inferenceConsentRequired
+              ? 'VC-AI-SCREENSHOT-INFERENCE-CONSENT-REQUIRED'
+              : request.tool === 'validate_screenshot_inference'
+                ? 'VC-AI-SCREENSHOT-INFERENCE-INPUT-INVALID'
           : 'VC-AI-ARGUMENTS-INVALID',
       message: screenshotPathDenied
         ? 'Screenshot preprocessing accepts no path, URL, or URI input.'
         : screenshotProviderTransferDenied
           ? 'The deterministic screenshot preprocessor cannot transfer input to a provider.'
+          : inferenceCredentialDenied
+            ? 'Screenshot inference validation accepts no credential field.'
+            : inferenceConsentRequired
+              ? 'Provider-produced inference requires consent bound to the exact preprocessed input.'
+              : request.tool === 'validate_screenshot_inference'
+                ? `Screenshot inference arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
           : `${request.tool} arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`,
       nextAction: screenshotPathDenied
         ? 'Embed one integrity-declared PNG as canonical base64.'
         : screenshotProviderTransferDenied
           ? 'Set providerTransfer to false and use a separately reviewed provider adapter later.'
+          : inferenceCredentialDenied
+            ? 'Remove credentials; this validator performs no provider or network execution.'
+            : inferenceConsentRequired
+              ? 'Provide the consent receipt identity and exact approved input fingerprint.'
+              : request.tool === 'validate_screenshot_inference'
+                ? 'Use the exact preprocessing request, inference declaration, and result contracts.'
           : 'Use the exact arguments declared by the current tool catalog.',
       level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
     });
@@ -251,6 +280,13 @@ export async function dispatchToolRequest(request, {
         result = await prepare(request.arguments, {
           requestId: request.requestId,
           signal: controller.signal,
+        });
+        break;
+      case 'validate_screenshot_inference':
+        result = await validateScreenshot(request.arguments, {
+          requestId: request.requestId,
+          signal: controller.signal,
+          prepare,
         });
         break;
       default:

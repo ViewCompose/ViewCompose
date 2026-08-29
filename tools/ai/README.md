@@ -251,18 +251,21 @@ types 0 through 4, and fails closed on changed identity/CRC, unsupported PNG for
 external references, provider transfer, limits, and cancellation. It does not infer UI, call a
 model, or convert the image to Design IR.
 
-Screenshot-to-Design-IR inference v1 is contract-frozen but is not a public tool or provider
-adapter. Its request accepts only the exact output asset and fingerprints returned by
-`prepare_screenshot`; a caller path, URL, URI, credential, changed preprocessing identity, or
-unreviewed provider transfer fails closed. The checked-in offline human golden maps every Design IR
-node to exactly one in-bounds pixel region and keeps structure, geometry, style, content, and
-semantics confidence separate. It does not aggregate confidence or infer behavior. Unknown text,
-state, resources, behavior, and accessibility remain placeholder bindings, blocked unsupported
-semantics, and explicit questions whose defaults are forbidden; code generation remains disabled
-while any blocking question exists. A future provider adapter must identify the provider and
-immutable model, bind an explicit consent receipt to the exact preprocessed input and approved
-purpose, complete retention review, persist neither raw request nor raw response, and use
-metadata-only logs. No provider has been selected or executed by this contract slice.
+Screenshot-to-Design-IR inference v1 keeps generation provider-neutral and exposes no model or
+provider adapter. The public `validate_screenshot_inference` tool is an offline import boundary for
+an externally produced raw result. It accepts the original `prepare_screenshot` request, a compact
+inference declaration, and the raw result; the adapter reruns deterministic preprocessing and
+reconstructs the exact inference request, so callers do not duplicate the preprocessed PNG in the
+tool input. It then checks every schema, fingerprint, lineage link, approved-input identity,
+node/evidence region, confidence-specific question, forbidden default, unsupported semantic, and
+authorization record before importing Design IR. A caller path, URL, URI, credential, changed
+preprocessing identity, invented behavior or expression, or unreviewed provider transfer fails
+closed. Unknown text, state, resources, behavior, and accessibility remain placeholder bindings,
+blocked unsupported semantics, and explicit questions; code generation stays disabled while any
+blocking question exists. Provider-produced results additionally require an immutable provider and
+model identity plus an explicit consent receipt bound to the exact preprocessed input and approved
+purpose. The validator selects or executes no provider, opens no network connection, and persists
+neither the screenshot nor the raw inference result.
 
 Run the local MCP server and its protocol/parity gate with:
 
@@ -281,9 +284,10 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns ten tools in stable
+lifecycle; it never silently downgrades either era. `tools/list` returns eleven tools in stable
 order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
-`analyze_project`, followed by `convert_xml_to_viewcompose` and `prepare_screenshot`.
+`analyze_project`, followed by `convert_xml_to_viewcompose`, `prepare_screenshot`, and
+`validate_screenshot_inference`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
 provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.

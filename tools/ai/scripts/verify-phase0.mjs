@@ -1421,7 +1421,7 @@ async function verifyScreenshotPreprocessing(schemas) {
     throw new Error('Screenshot preprocessing exceeds the frozen MCP stdio message boundary');
   }
   if (
-    TOOL_NAMES.at(-1) !== contract.activation.tool ||
+    !TOOL_NAMES.includes(contract.activation.tool) ||
     TOOL_DEFINITIONS.prepare_screenshot?.defaultLimits?.maxInputBytes !==
       contract.transport.maxInputJsonBytes ||
     TOOL_DEFINITIONS.prepare_screenshot?.defaultLimits?.maxOutputBytes !==
@@ -1686,7 +1686,18 @@ async function verifyScreenshotDesignInference(schemas, screenshotPreprocessing)
     contract.execution?.providerExecution !== false ||
     contract.execution?.networkAccess !== false ||
     contract.execution?.credentialsAccepted !== false ||
-    contract.execution?.providerSelected !== false
+    contract.execution?.providerSelected !== false ||
+    contract.validation?.tool !== 'validate_screenshot_inference' ||
+    contract.validation?.status !== 'implemented' ||
+    contract.validation?.publicTool !== true ||
+    contract.validation?.mode !== 'offline-import' ||
+    contract.validation?.providerExecution !== false ||
+    contract.validation?.networkAccess !== false ||
+    contract.validation?.expectedValidationFingerprint !==
+      '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845' ||
+    !TOOL_NAMES.includes(contract.validation.tool) ||
+    TOOL_DEFINITIONS[contract.validation.tool]?.defaultLimits?.maxInputBytes !== 4_000_000 ||
+    TOOL_DEFINITIONS[contract.validation.tool]?.defaultLimits?.maxOutputBytes !== 2_000_000
   ) {
     throw new Error('Screenshot inference activation or execution boundary changed');
   }
@@ -1712,6 +1723,7 @@ async function verifyScreenshotDesignInference(schemas, screenshotPreprocessing)
       'box', 'button', 'column', 'image', 'row', 'text', 'text-field',
     ]) ||
     contract.inferencePolicy?.behaviorInference !== 'forbidden' ||
+    contract.inferencePolicy?.expressionInference !== 'forbidden' ||
     contract.inferencePolicy?.resourceInference !== 'placeholder-only' ||
     contract.inferencePolicy?.textInference !== 'observed-or-unresolved' ||
     contract.inferencePolicy?.accessibilityInference !== 'observed-or-unresolved' ||

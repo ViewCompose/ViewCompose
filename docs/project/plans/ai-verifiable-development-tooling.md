@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze the provider-neutral screenshot-to-Design-IR inference, consent, provenance, uncertainty, and evaluation contract on top of the implemented deterministic preprocessor before selecting any provider adapter.
+next_action: Freeze a human-resolution patch contract that answers the imported screenshot questions without permitting arbitrary executable expressions, then make code-generation eligibility mechanically derivable from the resolved Design IR.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -84,14 +84,18 @@ input, deterministic preprocessing, privacy, and evaluation boundary is now froz
 model-backed generation begins. The dependency-free preprocessor is now the tenth shared CLI/MCP
 tool and reproduces the same privacy golden through the installed package. It still performs no UI
 inference. The provider-neutral screenshot-to-Design-IR request/result, lineage, evidence,
-uncertainty, and consent contract is now frozen without selecting a provider. The next boundary is
-an offline validator/import adapter for externally produced inference results; provider selection
-remains a separate, explicitly authorized decision.
+uncertainty, and consent contract is frozen without selecting a provider. Its offline validator is
+now the eleventh shared CLI/MCP tool: it deterministically reproduces preprocessing, reconstructs
+the exact inference request, validates an externally produced result, and imports Design IR only
+after every lineage, evidence, uncertainty, and authorization check passes. It performs no model or
+provider execution and no network request. The next boundary is a typed human-resolution patch for
+the imported blocking questions; provider selection remains a separate, explicitly authorized
+decision.
 
 Last verified: 2026-08-30.
 
-Next action: implement a provider-independent, offline screenshot-inference result validator/import
-adapter against the frozen contract before selecting or implementing any provider-backed adapter.
+Next action: freeze a provider-independent human-resolution patch contract for imported screenshot
+questions before enabling Design-IR-to-Kotlin generation or selecting any provider-backed adapter.
 
 ## Maven release changesets
 
@@ -1612,6 +1616,49 @@ accessibility, or production visual fidelity. It does not call a model, generate
 reconstructed screen, render or compare that screen, or authorize any provider. The next action is
 an offline validator/import adapter that can accept externally produced results only after all
 frozen schema, lineage, evidence, uncertainty, and authorization checks pass.
+
+### Implementation evidence — offline screenshot inference validation
+
+`validate_screenshot_inference` is now the eleventh public CLI/MCP tool and remains an entirely
+offline import boundary. Its input contains the original preprocessing request, a compact inference
+declaration, and an externally produced raw result. The adapter reruns `prepare_screenshot` and
+reconstructs the full inference request internally instead of accepting a caller-supplied duplicate
+of the preprocessed PNG. It verifies both request and result schemas, the accepted framework bundle
+and lane, canonical request/result/Design-IR fingerprints, exact preprocessing lineage, every
+node/evidence/source-region relationship, dimension-specific confidence, blocking questions,
+forbidden defaults, unsupported semantics, summary counts, code-generation status, and producer
+authorization before returning imported Design IR. Behavior, executable expressions, resolved
+resource bindings, changed lineage, missing evidence, out-of-bounds regions, and malformed consent
+fail closed with stable diagnostics.
+
+The human-reviewed golden imports deterministically twice with validation fingerprint
+`556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845`. The focused gate also
+accepts one externally produced provider-provenance result only when its immutable provider/model
+identities and consent receipt bind to the exact preprocessed input. This proves import validation,
+not provider operation: the adapter performs zero provider executions and zero network requests.
+Credential-shaped input, missing consent, and changed preprocessing lineage supply 3/3 explicit
+failure denominators. The imported golden remains incomplete with six blocking questions and
+`codeGenerationAllowed` false; successful validation never upgrades uncertain pixels into behavior,
+state, resource, accessibility, or production-fidelity claims.
+
+Node 25.6.0 passes 153/153 tooling tests. Phase 0 verifies 11 schemas, 46 metrics, 45 cases, 42
+fixture-backed cases, four screenshot-preprocessing fixtures, and four screenshot-inference
+fixtures. The installed package returns the same validation fingerprint through both the CLI and
+preferred MCP protocol, retains both supported MCP protocol eras, and passes the complete 2/2
+reproducible-build and offline install/uninstall lifecycle. Relative to the contract-only inference
+slice, package file count increases from 51 to 53 (+3.92%), declared bytes from 1,643,944 to
+1,672,552 (+1.74%), and archive bytes from 292,512 to 298,393 (+2.01%). The archive SHA-256 is
+`4769a85cd7e65ef7d4747c31b2e5344634aff514c2e8cab8f2c859cb51ea1933`. The quality-build
+plugin suite passed. The combined AI-contract, preprocessing, inference, installed-distribution,
+documentation-structure, development-tooling-isolation, and release-intent root gate passed 25
+actionable tasks, with 11 executed and 14 up-to-date.
+
+This is **improved** deterministic import integrity, consent enforcement, unsupported-case honesty,
+and installed-tool parity with **no material Android runtime behavior change**. It neither calls a
+model nor makes the incomplete IR compilable. The next action is a typed, human-supplied resolution
+patch that can answer only the exact blocking questions, preserve provenance, forbid arbitrary
+executable content, and derive code-generation eligibility mechanically before any provider is
+selected.
 
 ### Implementation evidence — bounded XML to Design IR
 

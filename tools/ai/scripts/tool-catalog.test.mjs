@@ -15,6 +15,7 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     'analyze_project',
     'convert_xml_to_viewcompose',
     'prepare_screenshot',
+    'validate_screenshot_inference',
   ]);
   assert.deepEqual(Object.keys(TOOL_DEFINITIONS).sort(), [...TOOL_NAMES].sort());
   for (const name of TOOL_NAMES) {
@@ -23,7 +24,9 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     assert.equal(definition.inputSchema.type, 'object');
     assert.equal(definition.annotations.readOnlyHint, true);
     assert.ok(TOOL_DEFINITIONS[name].defaultLimits.maxOutputBytes <=
-      (name === 'prepare_screenshot' ? 2_000_000 : 1024 * 1024));
+      (['prepare_screenshot', 'validate_screenshot_inference'].includes(name)
+        ? 2_000_000
+        : 1024 * 1024));
   }
 });
 
@@ -158,4 +161,13 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
     output: {},
   }, TOOL_DEFINITIONS.prepare_screenshot.inputSchema);
   assert.ok(screenshotPath.some((violation) => violation.includes('unexpected property path')));
+
+  assert.deepEqual(
+    TOOL_DEFINITIONS.validate_screenshot_inference.inputSchema.required,
+    ['preprocessingRequest', 'inferenceDeclaration', 'inferenceResult'],
+  );
+  assert.equal(
+    TOOL_DEFINITIONS.validate_screenshot_inference.defaultLimits.maxInputBytes,
+    4_000_000,
+  );
 });

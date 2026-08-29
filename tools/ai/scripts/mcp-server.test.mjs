@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
+import {readFile} from 'node:fs/promises';
 import {Readable, Writable} from 'node:stream';
 import {fileURLToPath} from 'node:url';
 import test from 'node:test';
@@ -13,6 +14,18 @@ import {
 import {semanticToolResult, toolResult} from './tool-core.mjs';
 
 const executable = fileURLToPath(new URL('./mcp-server.mjs', import.meta.url));
+const inferencePreprocessingRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot/inference-wireframe.request.json',
+  import.meta.url,
+);
+const inferenceRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-inference/wireframe.request.json',
+  import.meta.url,
+);
+const inferenceResultPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-inference/wireframe.result.json',
+  import.meta.url,
+);
 const protocolVersionKey = 'io.modelcontextprotocol/protocolVersion';
 const clientInfoKey = 'io.modelcontextprotocol/clientInfo';
 const clientCapabilitiesKey = 'io.modelcontextprotocol/clientCapabilities';
@@ -57,6 +70,7 @@ test('discovers the stateless modern server and deterministically lists the shar
     'analyze_project',
     'convert_xml_to_viewcompose',
     'prepare_screenshot',
+    'validate_screenshot_inference',
   ]);
   assert.equal(listing.result.tools[0].inputSchema.required.includes('versionLane'), true);
 });
@@ -92,6 +106,39 @@ test('returns the exact provider-neutral result through CLI and MCP', async () =
   );
   assert.equal(JSON.parse(response.result.content[0].text).evidence.bundleFingerprint,
     direct.evidence.bundleFingerprint);
+  assert.equal(response.result.isError, false);
+});
+
+test('returns the same offline screenshot inference import through CLI and MCP', async () => {
+  const [preprocessingRequest, inferenceRequest, inferenceResult] = await Promise.all([
+    readFile(inferencePreprocessingRequestPath, 'utf8').then(JSON.parse),
+    readFile(inferenceRequestPath, 'utf8').then(JSON.parse),
+    readFile(inferenceResultPath, 'utf8').then(JSON.parse),
+  ]);
+  const {interpretation, intent, policy, authorization} = inferenceRequest;
+  const arguments_ = {
+    preprocessingRequest,
+    inferenceDeclaration: {interpretation, intent, policy, authorization},
+    inferenceResult,
+  };
+  const id = 'screenshot-inference-parity';
+  const direct = await dispatchToolRequest(await createToolRequest({
+    tool: 'validate_screenshot_inference',
+    arguments: arguments_,
+    requestId: mcpToolRequestId(id),
+  }));
+  const response = await new ViewComposeMcpSession().receive(request(id, 'tools/call', {
+    name: 'validate_screenshot_inference',
+    arguments: arguments_,
+  }));
+  assert.deepEqual(
+    semanticToolResult(response.result.structuredContent),
+    semanticToolResult(direct),
+  );
+  assert.equal(
+    response.result.structuredContent.data.validationFingerprint,
+    '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845',
+  );
   assert.equal(response.result.isError, false);
 });
 
@@ -142,7 +189,7 @@ test('supports the 2025-11-25 initialize lifecycle without weakening modern requ
     params: {},
   });
   assert.equal(listing.result.resultType, undefined);
-  assert.equal(listing.result.tools.length, 10);
+  assert.equal(listing.result.tools.length, 11);
 });
 
 test('emits bounded opt-in progress and suppresses all output after cancellation', async () => {
