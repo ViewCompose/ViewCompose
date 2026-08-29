@@ -1,6 +1,14 @@
 import {lstat, readFile, readdir, realpath} from 'node:fs/promises';
 import {basename, extname, isAbsolute, relative, resolve, sep} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {diagnostic, toolResult, utf8Bytes} from './tool-core.mjs';
+
+const artifactsPath = fileURLToPath(
+  new URL('../generated/current-source/artifacts.json', import.meta.url),
+);
+const symbolsPath = fileURLToPath(
+  new URL('../generated/current-source/symbols.jsonl', import.meta.url),
+);
 
 export const DEFAULT_PROJECT_LIMITS = Object.freeze({
   maxFiles: 1000,
@@ -26,6 +34,49 @@ const defaultExcludedNames = new Set([
 ]);
 const secretSuffixes = ['.jks', '.keystore', '.p12', '.pfx', '.pem', '.key'];
 const readableExtensions = new Set(['.gradle', '.java', '.json', '.kts', '.kt', '.toml', '.xml']);
+const kotlinExtensions = new Set(['.java', '.kt', '.kts']);
+const dependencyArtifactPattern = /^[a-z0-9][a-z0-9-]*$/u;
+const importedNamePattern = /^com\.viewcompose\.[A-Za-z_][A-Za-z0-9_.]*(?:\.\*)?$/u;
+const migrationWidgets = new Set([
+  'Button',
+  'FrameLayout',
+  'ImageButton',
+  'ImageView',
+  'LinearLayout',
+  'RecyclerView',
+  'TextView',
+]);
+
+let projectKnowledgePromise;
+
+async function loadProjectKnowledge() {
+  projectKnowledgePromise ??= Promise.all([
+    readFile(artifactsPath, 'utf8').then(JSON.parse),
+    readFile(symbolsPath, 'utf8').then((content) => content.trim().split('\n').filter(Boolean).map(JSON.parse)),
+  ]).then(([artifactDocument, symbols]) => {
+    const artifactVersions = new Map(
+      artifactDocument.artifacts.map((artifact) => [artifact.artifact, artifact.version]),
+    );
+    const imports = new Map();
+    const namespaces = new Map();
+    for (const symbol of symbols) {
+      const importName = `${symbol.namespace}.${symbol.simpleName}`;
+      const fact = {
+        artifactId: symbol.artifactId,
+        capabilityId: symbol.capabilityId,
+        symbolId: symbol.symbolId,
+      };
+      const importFacts = imports.get(importName) ?? [];
+      importFacts.push(fact);
+      imports.set(importName, importFacts);
+      const namespaceFacts = namespaces.get(symbol.namespace) ?? [];
+      namespaceFacts.push(fact);
+      namespaces.set(symbol.namespace, namespaceFacts);
+    }
+    return {artifactVersions, imports, namespaces};
+  });
+  return projectKnowledgePromise;
+}
 
 function pathEscapes(root, candidate) {
   const relation = relative(root, candidate);
@@ -73,6 +124,245 @@ function normalizeLimits(requested) {
   return limits;
 }
 
+function sourcePosition(content, path, offset) {
+  const lines = content.slice(0, offset).split('\n');
+  return {
+    path,
+    startLine: lines.length,
+    startColumn: lines.at(-1).length + 1,
+  };
+}
+
+function pushUnique(map, key, value, identity) {
+  const values = map.get(key) ?? [];
+  if (!values.some((entry) => identity(entry) === identity(value))) values.push(value);
+  map.set(key, values);
+}
+
+function parseDependencies(content, path, knowledge, findings) {
+  const coordinatePatterns = [
+    /["']com\.viewcompose:([a-z0-9][a-z0-9-]*):([^"']+)["']/gu,
+    /module\s*=\s*["']com\.viewcompose:([a-z0-9][a-z0-9-]*)["'][^\n]*?version\s*=\s*["']([^"']+)["']/gu,
+    /group\s*=\s*["']com\.viewcompose["'][^\n]*?name\s*=\s*["']([a-z0-9][a-z0-9-]*)["'][^\n]*?version\s*=\s*["']([^"']+)["']/gu,
+  ];
+  for (const pattern of coordinatePatterns) {
+    for (const match of content.matchAll(pattern)) {
+      const artifactId = match[1];
+      if (!dependencyArtifactPattern.test(artifactId)) continue;
+      const version = match[2];
+      pushUnique(findings.dependencies, artifactId, {
+        artifactId,
+        version,
+        expectedCurrentVersion: knowledge.artifactVersions.get(artifactId) ?? null,
+        path,
+        ...sourcePosition(content, path, match.index),
+      }, (entry) => `${entry.version}:${entry.path}:${entry.startLine}`);
+    }
+  }
+  for (const match of content.matchAll(/project\(\s*["']:([a-z0-9:-]+)["']\s*\)/gu)) {
+    const artifactId = match[1].split(':').filter(Boolean).at(-1);
+    if (!knowledge.artifactVersions.has(artifactId)) continue;
+    pushUnique(findings.dependencies, artifactId, {
+      artifactId,
+      version: 'current-project',
+      expectedCurrentVersion: knowledge.artifactVersions.get(artifactId),
+      path,
+      ...sourcePosition(content, path, match.index),
+    }, (entry) => `${entry.version}:${entry.path}:${entry.startLine}`);
+  }
+}
+
+function parseImports(content, path, knowledge, findings) {
+  for (const match of content.matchAll(/^\s*import\s+(com\.viewcompose\.[A-Za-z_][A-Za-z0-9_.]*(?:\.\*)?)/gmu)) {
+    const importName = match[1];
+    if (!importedNamePattern.test(importName)) continue;
+    let facts;
+    let resolution;
+    if (importName.endsWith('.*')) {
+      facts = knowledge.namespaces.get(importName.slice(0, -2));
+      resolution = facts ? 'wildcard-namespace' : 'unknown-namespace';
+    } else {
+      facts = knowledge.imports.get(importName);
+      if (facts) {
+        resolution = 'governed-symbol';
+      } else {
+        facts = knowledge.namespaces.get(importName.slice(0, importName.lastIndexOf('.')));
+        resolution = facts ? 'supporting-symbol' : 'unknown-namespace';
+      }
+    }
+    const uniqueFacts = facts ? [...new Map(facts.map((fact) => [
+      `${fact.artifactId}:${fact.capabilityId}:${fact.symbolId}`,
+      fact,
+    ])).values()] : [];
+    const entry = {
+      importName,
+      resolution,
+      artifactIds: [...new Set(uniqueFacts.map((fact) => fact.artifactId))].sort(),
+      capabilityIds: resolution === 'governed-symbol'
+        ? [...new Set(uniqueFacts.map((fact) => fact.capabilityId))].sort()
+        : [],
+      symbolIds: resolution === 'governed-symbol'
+        ? [...new Set(uniqueFacts.map((fact) => fact.symbolId))].sort()
+        : [],
+      path,
+      ...sourcePosition(content, path, match.index),
+    };
+    findings.imports.push(entry);
+    if (resolution === 'unknown-namespace') findings.unknownImports.push(entry);
+  }
+}
+
+function parseConfiguration(content, path, findings) {
+  for (const [field, pattern] of Object.entries({
+    compileSdk: /\bcompileSdk(?:Version)?\s*(?:=\s*)?(\d+)/gu,
+    minSdk: /\bminSdk(?:Version)?\s*(?:=\s*)?(\d+)/gu,
+    targetSdk: /\btargetSdk(?:Version)?\s*(?:=\s*)?(\d+)/gu,
+  })) {
+    for (const match of content.matchAll(pattern)) {
+      findings.configuration.push({
+        field,
+        value: Number(match[1]),
+        path,
+        ...sourcePosition(content, path, match.index),
+      });
+    }
+  }
+}
+
+function parseMigrationSignals(content, path, extension, findings) {
+  if (extension === '.xml') {
+    const widgets = [];
+    for (const match of content.matchAll(/<\s*(?:[A-Za-z0-9_.]+\.)?([A-Z][A-Za-z0-9_]*)\b/gu)) {
+      if (migrationWidgets.has(match[1])) widgets.push(match[1]);
+    }
+    if (widgets.length > 0) {
+      findings.migrations.androidXml.push({path, widgets: [...new Set(widgets)].sort()});
+    }
+  }
+  if (kotlinExtensions.has(extension)) {
+    const composeImports = [...content.matchAll(/^\s*import\s+(androidx\.compose\.[A-Za-z0-9_.]+)/gmu)]
+      .map((match) => match[1]);
+    if (composeImports.length > 0) {
+      findings.migrations.jetpackCompose.push({
+        path,
+        imports: [...new Set(composeImports)].sort(),
+      });
+    }
+    if (/@(?:com\.viewcompose\.preview\.tooling\.)?ViewComposePreview\b/u.test(content)) {
+      findings.previewSources.push(path);
+    }
+  }
+}
+
+function finalizeFindings(findings, knowledge) {
+  const dependencies = [...findings.dependencies.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .flatMap(([, entries]) => entries.sort((left, right) =>
+      `${left.path}:${left.startLine}`.localeCompare(`${right.path}:${right.startLine}`)));
+  const declaredArtifacts = new Set(dependencies.map((entry) => entry.artifactId));
+  const usedArtifacts = new Set(findings.imports.flatMap((entry) => entry.artifactIds));
+  const capabilityUsage = new Map();
+  for (const entry of findings.imports) {
+    for (const capabilityId of entry.capabilityIds) {
+      const usage = capabilityUsage.get(capabilityId) ?? {capabilityId, imports: [], paths: []};
+      usage.imports.push(entry.importName);
+      usage.paths.push(entry.path);
+      capabilityUsage.set(capabilityId, usage);
+    }
+  }
+  const versionLanes = dependencies.map((entry) => ({
+    ...entry,
+    state: entry.version === 'current-project' || entry.version === entry.expectedCurrentVersion
+      ? 'current-bundle'
+      : /[$<{]|\.ref$/u.test(entry.version)
+        ? 'unresolved-expression'
+        : 'different-from-current-bundle',
+  }));
+  return {
+    dependencies: versionLanes,
+    imports: findings.imports.sort((left, right) =>
+      `${left.path}:${left.startLine}:${left.importName}`
+        .localeCompare(`${right.path}:${right.startLine}:${right.importName}`)),
+    artifacts: [...usedArtifacts].sort().map((artifactId) => ({
+      artifactId,
+      expectedCurrentVersion: knowledge.artifactVersions.get(artifactId) ?? null,
+      declared: declaredArtifacts.has(artifactId),
+    })),
+    capabilities: [...capabilityUsage.values()].sort((left, right) =>
+      left.capabilityId.localeCompare(right.capabilityId)).map((entry) => ({
+      capabilityId: entry.capabilityId,
+      imports: [...new Set(entry.imports)].sort(),
+      paths: [...new Set(entry.paths)].sort(),
+    })),
+    unknownImports: findings.unknownImports,
+    configuration: findings.configuration.sort((left, right) =>
+      `${left.path}:${left.startLine}:${left.field}`
+        .localeCompare(`${right.path}:${right.startLine}:${right.field}`)),
+    migrations: findings.migrations,
+    previewSources: [...new Set(findings.previewSources)].sort(),
+  };
+}
+
+function projectDiagnostics(findings) {
+  const diagnostics = [];
+  for (const entry of findings.unknownImports) {
+    diagnostics.push(diagnostic({
+      code: 'VC-AI-PROJECT-UNKNOWN-IMPORT',
+      severity: 'warning',
+      message: `Import ${entry.importName} does not resolve to a namespace in the current Knowledge Bundle.`,
+      nextAction: 'Replace the import with a governed current-lane symbol or select the matching released bundle.',
+      source: {
+        path: entry.path,
+        startLine: entry.startLine,
+        startColumn: entry.startColumn,
+      },
+    }));
+  }
+  for (const entry of findings.dependencies.filter((dependency) => dependency.expectedCurrentVersion === null)) {
+    diagnostics.push(diagnostic({
+      code: 'VC-AI-PROJECT-UNKNOWN-ARTIFACT',
+      severity: 'warning',
+      message: `Dependency com.viewcompose:${entry.artifactId} is not present in the current Knowledge Bundle.`,
+      nextAction: 'Correct the coordinate or select the exact released bundle that owns it.',
+      artifactId: entry.artifactId,
+      source: {
+        path: entry.path,
+        startLine: entry.startLine,
+        startColumn: entry.startColumn,
+      },
+    }));
+  }
+  for (const artifact of findings.artifacts.filter((entry) => !entry.declared)) {
+    const usage = findings.imports.find((entry) => entry.artifactIds.includes(artifact.artifactId));
+    diagnostics.push(diagnostic({
+      code: 'VC-AI-ARTIFACT-REQUIRED',
+      severity: 'warning',
+      message: `Imported symbols are owned by ${artifact.artifactId}, but no exact dependency was found in the inspected files.`,
+      nextAction: 'Declare the owning artifact explicitly or include the Gradle file that declares it.',
+      artifactId: artifact.artifactId,
+      source: usage ? {
+        path: usage.path,
+        startLine: usage.startLine,
+        startColumn: usage.startColumn,
+      } : undefined,
+    }));
+  }
+  const versions = new Set(
+    findings.dependencies
+      .filter((entry) => entry.state === 'different-from-current-bundle')
+      .map((entry) => entry.version),
+  );
+  if (versions.size > 0) {
+    diagnostics.push(diagnostic({
+      code: 'VC-AI-PROJECT-VERSION-LANE',
+      severity: 'warning',
+      message: `Detected released dependency versions outside the current-source bundle: ${[...versions].sort().join(', ')}.`,
+      nextAction: 'Select exact released Knowledge Bundles before validating those APIs.',
+    }));
+  }
+  return diagnostics.slice(0, 200);
+}
+
 export async function inspectProjectRequest(spec, {requestId = 'analyze-project'} = {}) {
   if (!spec || typeof spec.projectRoot !== 'string' || !isAbsolute(spec.projectRoot)) {
     return securityFailure({
@@ -98,6 +388,19 @@ export async function inspectProjectRequest(spec, {requestId = 'analyze-project'
       nextAction: 'Request an inventory or a bounded patch plan for explicit client application.',
     });
   }
+  if (
+    spec.excluded !== undefined &&
+    (!Array.isArray(spec.excluded) ||
+      spec.excluded.length > 100 ||
+      spec.excluded.some((value) => typeof value !== 'string' || value.length === 0 || value.length > 128))
+  ) {
+    return securityFailure({
+      requestId,
+      code: 'VC-AI-PROJECT-EXCLUSION-INVALID',
+      message: 'Project exclusions must be a bounded array of non-empty file names or suffixes.',
+      nextAction: 'Use at most 100 simple names or patterns such as *.generated.kt.',
+    });
+  }
   const limits = normalizeLimits(spec.limits);
   if (!limits) {
     return securityFailure({
@@ -115,6 +418,14 @@ export async function inspectProjectRequest(spec, {requestId = 'analyze-project'
         code: 'VC-AI-PATH-ESCAPE',
         message: 'The requested path resolves outside the declared project root.',
         nextAction: 'Submit a root-contained relative path without parent traversal.',
+      });
+    }
+    if (isSecretPath(candidate)) {
+      return securityFailure({
+        requestId,
+        code: 'VC-AI-SECRET-PATH-DENIED',
+        message: 'Project analysis refuses direct access to a secret-bearing path.',
+        nextAction: 'Analyze source and configuration declarations without credential files.',
       });
     }
   }
@@ -170,11 +481,12 @@ export async function analyzeProject({
 } = {}) {
   const started = performance.now();
   const preflight = await inspectProjectRequest(
-    {projectRoot, requestedPath, readOnly: true, limits: requestedLimits},
+    {projectRoot, requestedPath, readOnly: true, limits: requestedLimits, excluded},
     {requestId},
   );
   if (preflight.status !== 'success') return preflight;
   const limits = preflight.data.limits;
+  const knowledge = await loadProjectKnowledge();
   const root = await realpath(projectRoot);
   const target = resolve(root, requestedPath);
   if (pathEscapes(root, target)) {
@@ -190,6 +502,14 @@ export async function analyzeProject({
   let totalBytes = 0;
   let excludedCount = 0;
   const signals = {viewComposeImports: 0, gradleFiles: 0, kotlinFiles: 0, xmlFiles: 0};
+  const collectedFindings = {
+    dependencies: new Map(),
+    imports: [],
+    unknownImports: [],
+    configuration: [],
+    migrations: {androidXml: [], jetpackCompose: []},
+    previewSources: [],
+  };
   const queue = [{path: target, depth: 0}];
   while (queue.length > 0) {
     if (performance.now() - started > limits.timeoutMs) {
@@ -236,7 +556,7 @@ export async function analyzeProject({
         nextAction: 'Replace the link with a root-contained regular file or exclude it.',
       });
     }
-    if (isExcluded(current.path, excluded) && current.path !== target) {
+    if (isExcluded(current.path, excluded)) {
       excludedCount += 1;
       continue;
     }
@@ -277,10 +597,28 @@ export async function analyzeProject({
     if (readableExtensions.has(extension) && metadata.size <= 256 * 1024) {
       const content = await readFile(current.path, 'utf8');
       signals.viewComposeImports += (content.match(/\b(?:import|implementation)\b[^\n]*\bcom\.viewcompose\b/gu) ?? []).length;
+      parseDependencies(content, projectPath, knowledge, collectedFindings);
+      parseImports(content, projectPath, knowledge, collectedFindings);
+      parseConfiguration(content, projectPath, collectedFindings);
+      parseMigrationSignals(content, projectPath, extension, collectedFindings);
     }
   }
   files.sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0);
-  const data = {projectRoot: root, readOnly: true, files, totalBytes, excludedCount, signals, limits};
+  const findings = finalizeFindings(collectedFindings, knowledge);
+  signals.viewComposeArtifacts = findings.artifacts.length;
+  signals.viewComposeCapabilities = findings.capabilities.length;
+  signals.migrationFiles = findings.migrations.androidXml.length + findings.migrations.jetpackCompose.length;
+  const diagnostics = projectDiagnostics(findings);
+  const data = {
+    projectRoot: root,
+    readOnly: true,
+    files,
+    totalBytes,
+    excludedCount,
+    signals,
+    findings,
+    limits,
+  };
   const serializedBytes = utf8Bytes(JSON.stringify(data));
   return toolResult({
     requestId,
@@ -292,7 +630,7 @@ export async function analyzeProject({
       severity: 'error',
       message: 'Project inventory exceeds the bounded output limit.',
       nextAction: 'Narrow the requested project scope.',
-    })] : [],
+    })] : diagnostics,
     data: serializedBytes > limits.maxOutputBytes ? undefined : data,
     elapsedMs: performance.now() - started,
     truncated: serializedBytes > limits.maxOutputBytes,

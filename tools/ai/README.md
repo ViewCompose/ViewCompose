@@ -24,6 +24,9 @@ The implementation order is fixed by
 8. `scripts/preview-adapter.mjs` discovers and renders only allowlisted compiled targets through the
    canonical Preview protocol, then labels a result `rendered` only after PNG and render-tree
    containment, structure, size, and fingerprint checks pass.
+9. `scripts/ai-tool.mjs` is the internal stdin/stdout CLI over the same provider-neutral static,
+   compile, render, and project-analysis core. It validates the frozen envelope and exact Knowledge
+   Bundle identity before dispatch and is the transport-parity reference for Phase 3.
 
 Run the Phase 0 gate with:
 
@@ -93,8 +96,26 @@ new render; poisoned cache entries fail closed.
 Project analysis accepts one absolute root, rejects path escape and all requested build execution,
 never follows symbolic links, excludes common build output and secret-bearing files, and enforces
 fixed hard caps above request-level file, byte, depth, timeout, and output limits. Output truncation
-does not return the oversized inventory. The current analyzer returns an inventory and framework
-signals only; dependency resolution, migration findings, and code mutation remain unsupported.
+does not return the oversized inventory. Without executing Gradle, the current analyzer derives
+exact ViewCompose coordinates and current-bundle version disposition, governed imports, owning
+artifacts and capabilities, Android SDK declarations, Preview sources, and Android XML or Jetpack
+Compose migration candidates. It reports unresolved namespaces, unknown artifacts, missing exact
+artifact declarations, and version-lane differences as structured findings. Regex-derived facts do
+not claim transitive dependency resolution, version-catalog alias resolution, deprecation state, or
+migration fidelity, and the analyzer never mutates code.
+
+Invoke the Phase 2 internal CLI by writing exactly one frozen request envelope to stdin:
+
+```bash
+npm --silent --prefix tools/ai run tool -- --pretty < request.json
+```
+
+It currently dispatches `validate_code` (`static` or `compile`), `render_preview`, and
+`analyze_project`. The request must name the exact `framework.versionLane` and
+`framework.identity` from `generated/current-source/manifest.json`; input, output, and timeout
+limits are mandatory and are propagated to the underlying adapter. Stdout contains only one JSON
+result. Operational errors use stderr and exit code 2. The CLI accepts no project-selected command,
+Gradle task, classpath, dependency coordinate, output directory, network endpoint, or credential.
 
 ## Version lanes
 

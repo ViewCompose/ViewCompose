@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Complete Phase 2 with one internal CLI, expanded read-only project findings, and end-to-end acceptance without exposing MCP yet.
+next_action: Begin Phase 3 with deterministic Knowledge Bundle retrieval shared by the local CLI and later stdio MCP transport.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -47,13 +47,13 @@ maven_release_changesets:
 
 Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 canonical knowledge
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
-validation, pinned compilation, and Preview evidence foundations are complete; the internal CLI and
-deeper project findings remain active.
+static validation, pinned compilation, Preview evidence, read-only project findings, and internal
+CLI foundations are complete.
 
 Last verified: 2026-08-29.
 
-Next action: complete Phase 2 with one internal CLI, expanded read-only findings, and end-to-end
-acceptance before MCP exposure.
+Next action: begin Phase 3 with deterministic Knowledge Bundle retrieval shared by the local CLI and
+later stdio MCP transport.
 
 ## Maven release changesets
 
@@ -501,8 +501,48 @@ activated only by an explicit tooling request.
 Limitations: the current allowlist contains one target with its light/dark variants and `en-US`
 configuration, not arbitrary application builds or a visual-comparison claim. The local macOS/JBR
 21 measurements are not a cross-host latency distribution, and a matching render does not prove
-interaction behavior. The next action is one internal CLI over the shared static, compile, render,
-and project-analysis core, followed by deeper bounded project findings and Phase 2 closeout.
+interaction behavior. The internal CLI and project-analysis closeout below reuse this fixed lane;
+later phases may widen it only with independent corpus evidence.
+
+### Implementation evidence — project findings and internal CLI closeout
+
+The final Phase 2 slice expands the read-only analyzer from inventory signals into bounded facts
+derived from the accepted Knowledge Bundle. It recognizes exact ViewCompose Maven and project
+coordinates, declared/current-bundle versions, governed and supporting imports, owning artifacts,
+capability usage, Android SDK declarations, Preview sources, and Android XML or Jetpack Compose
+migration candidates. Unknown namespaces and artifacts, imports whose owning artifact was not
+declared in the inspected files, and exact dependency versions outside the current-source bundle
+produce stable warnings. Direct secret targets and malformed exclusion policies now fail before
+traversal. The analyzer still never invokes Gradle, resolves a plugin, follows a symbolic link,
+writes source, or treats a regex-derived candidate as a proven migration.
+
+The provider-neutral internal CLI reads one frozen request envelope from stdin, requires the exact
+Knowledge Bundle lane and identity, propagates mandatory input/output/time limits, and dispatches
+the same static validator, compiler, Preview, and project analyzer used by their direct corpus
+runners. Stdout contains one schema-validated result only; malformed envelopes fail on stderr
+without partial JSON. Unsupported tools and framework drift fail before adapter invocation. This is
+an internal parity seam, not yet a supported MCP or public distribution contract.
+
+On 2026-08-29, Node 25.6.0 passed 43/43 tooling tests in 1.30 seconds, including internal CLI
+process-boundary, identity, dispatch, limit, and malformed-envelope cases plus the expanded project
+facts and secret-target cases. The independent static/security corpus passed 5/5, compiler corpus
+passed 1/1, and render corpus passed 1/1 through the same adapters. The exact CLI also returned
+schema-valid static, compiled, rendered, and project-analysis results in the fixed current-source
+lane. Repository documentation, release-intent, quality-build, development-tooling-isolation, and
+Phase 2 gates passed; root `qaQuick` completed 2,271 tasks (1,200 executed and 1,071 up-to-date) in
+6 minutes 40 seconds. Compared with the inventory-only slice, analyzable framework facts expanded
+without changing the fixed traversal or process-execution boundary; the conclusion is **improved**
+project evidence and transport consistency with **no material runtime change**.
+
+Limitations: Gradle/TOML discovery is deliberately syntax-bounded and does not resolve version
+catalog aliases, convention plugins, transitive dependencies, arbitrary expressions, or released
+Knowledge Bundles. Supporting imports without their own governed symbol remain facts rather than
+invented API entries. The CLI is repository-internal, has no packaging or compatibility promise,
+and exposes no retrieval or MCP transport yet. Compiler resource fixtures, additional artifact
+lanes, arbitrary Preview targets, deprecation/removal findings, richer typed analysis, and
+cross-host performance distributions remain future work. The next action is Phase 3 deterministic
+retrieval over this accepted core, followed by CLI/MCP parity rather than duplicated transport
+logic.
 
 ### Acceptance gate
 

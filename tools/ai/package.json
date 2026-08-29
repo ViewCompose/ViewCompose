@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "tool": "node scripts/ai-tool.mjs",
     "generate:knowledge": "node scripts/generate-knowledge.mjs --write",
     "test": "node --test scripts/*.test.mjs",
     "verify": "npm run test && node scripts/verify-phase0.mjs",
