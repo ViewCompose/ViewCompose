@@ -2,6 +2,7 @@ package com.viewcompose.quality
 
 import org.gradle.api.tasks.Exec
 import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -155,6 +156,8 @@ class ViewComposeQualityRootPluginTest {
             project.tasks.getByName("verifyConnectedAndroidDeviceReady") is
                 VerifyConnectedAndroidDeviceReadyTask,
         )
+        assertTrue(project.tasks.getByName("navigationCoverageReport") is JacocoReport)
+        assertEquals("verification", project.tasks.getByName("verifyNavigationCoverage").group)
         listOf(
             "benchmarkComparisonReport",
             "testBenchmarkComparisonTool",

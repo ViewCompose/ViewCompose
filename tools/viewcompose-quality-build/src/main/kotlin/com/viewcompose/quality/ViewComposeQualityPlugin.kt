@@ -856,6 +856,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             )
         }
         project.registerLifecycleQualityTasks(extension)
+        project.registerNavigationCoverageTasks(extension)
     }
 }
 
