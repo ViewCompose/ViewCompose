@@ -16,6 +16,8 @@ import {repositoryRoot} from './tool-core.mjs';
 const SHA256 = /^[a-f0-9]{64}$/u;
 const ZERO_FINGERPRINT = '0'.repeat(64);
 const STANDARD_GATES = Object.freeze(['safety', 'compilation', 'render', 'semantics', 'structure']);
+const GATE_ORDER = Object.freeze([...STANDARD_GATES, 'exact-pixels']);
+const MAX_EVIDENCE_BYTES = 16 * 1024 * 1024;
 
 export class ScreenshotRepairCandidateEvaluationError extends Error {
   constructor(code, message) {
@@ -56,8 +58,57 @@ function notRunGate(name) {
 }
 
 function completeAfter(gates, name) {
-  const order = [...STANDARD_GATES, 'exact-pixels'];
-  for (const later of order.slice(order.indexOf(name) + 1)) gates.push(notRunGate(later));
+  for (const later of GATE_ORDER.slice(GATE_ORDER.indexOf(name) + 1)) {
+    gates.push(notRunGate(later));
+  }
+}
+
+function diagnosticCodes(value) {
+  return [...new Set((Array.isArray(value?.diagnostics) ? value.diagnostics : [])
+    .map((item) => item?.code)
+    .filter((code) => /^VC-AI-[A-Z0-9-]+$/u.test(code ?? '')))].sort();
+}
+
+function sealCandidateEvidence({
+  baseResolutionResultFingerprint,
+  candidateResolutionResultFingerprint,
+  inputDesignIrFingerprint,
+  candidateEvaluation,
+  designIr,
+  changeFingerprint,
+  diagnosticsByGate,
+  layoutComparison,
+  pixelComparison,
+}) {
+  const evidence = {
+    schemaVersion: 1,
+    status: candidateEvaluation.gates.at(-1).status !== 'not-run'
+      ? 'complete'
+      : 'short-circuited',
+    lineage: {
+      baseResolutionResultFingerprint,
+      candidateResolutionResultFingerprint,
+      inputDesignIrFingerprint,
+      candidateDesignIrFingerprint: candidateEvaluation.designIrFingerprint,
+      changeFingerprint: changeFingerprint ?? null,
+    },
+    candidateEvaluation: structuredClone(candidateEvaluation),
+    designIr: structuredClone(designIr),
+    diagnostics: GATE_ORDER.map((gate) => ({
+      gate,
+      codes: [...(diagnosticsByGate.get(gate) ?? [])],
+    })),
+    layoutComparison: layoutComparison === undefined ? null : structuredClone(layoutComparison),
+    pixelComparison: pixelComparison === undefined ? null : structuredClone(pixelComparison),
+  };
+  if (Buffer.byteLength(JSON.stringify(evidence), 'utf8') > MAX_EVIDENCE_BYTES) {
+    throw new ScreenshotRepairCandidateEvaluationError(
+      'VC-AI-REPAIR-INPUT-INVALID',
+      'Screenshot repair candidate evidence exceeds the 16 MiB internal ceiling.',
+    );
+  }
+  evidence.evidenceFingerprint = fingerprintRepairValue(evidence);
+  return evidence;
 }
 
 function stageFingerprint(stage, value) {
@@ -248,7 +299,7 @@ function exactPixelGate(compared) {
   );
 }
 
-export async function evaluateScreenshotRepairCandidate({
+async function evaluateCandidateCore({
   resolutionResult,
   generationRequest: baseGenerationRequest,
   previewBindings,
@@ -273,10 +324,13 @@ export async function evaluateScreenshotRepairCandidate({
     patch,
   };
   if (!validateAcceptedResolution(resolutionResult)) {
-    return failedSafetyEvaluation(input, {
-      stage: 'resolution',
-      code: 'VC-AI-REPAIR-INPUT-INVALID',
-    });
+    return {
+      evaluation: failedSafetyEvaluation(input, {
+        stage: 'resolution',
+        code: 'VC-AI-REPAIR-INPUT-INVALID',
+      }),
+      evidence: null,
+    };
   }
 
   let designIr = structuredClone(resolutionResult.designIr);
@@ -295,10 +349,13 @@ export async function evaluateScreenshotRepairCandidate({
       safetyEvidenceFingerprint = applied.outputFingerprint;
     } catch (error) {
       if (signal?.aborted || error?.code === 'VC-AI-REPAIR-CANCELLED') throwIfCancelled(signal);
-      return failedSafetyEvaluation(input, {
-        stage: 'typed-patch',
-        code: error?.code ?? 'VC-AI-REPAIR-INPUT-INVALID',
-      });
+      return {
+        evaluation: failedSafetyEvaluation(input, {
+          stage: 'typed-patch',
+          code: error?.code ?? 'VC-AI-REPAIR-INPUT-INVALID',
+        }),
+        evidence: null,
+      };
     }
   }
 
@@ -311,10 +368,13 @@ export async function evaluateScreenshotRepairCandidate({
     pixelReference: structuredClone(pixelReference),
   };
   if (validateSchemaValue(fullArguments, SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA).length > 0) {
-    return failedSafetyEvaluation({...input, resolutionResult: candidate}, {
-      stage: 'candidate-input',
-      code: 'VC-AI-REPAIR-INPUT-INVALID',
-    });
+    return {
+      evaluation: failedSafetyEvaluation({...input, resolutionResult: candidate}, {
+        stage: 'candidate-input',
+        code: 'VC-AI-REPAIR-INPUT-INVALID',
+      }),
+      evidence: null,
+    };
   }
 
   const identity = candidateFingerprint({
@@ -325,11 +385,36 @@ export async function evaluateScreenshotRepairCandidate({
     patch,
   });
   const gates = [standardGate('safety', 'passed', 1, 1, safetyEvidenceFingerprint)];
+  const diagnosticsByGate = new Map(GATE_ORDER.map((gate) => [gate, []]));
+  let layoutComparison;
+  let pixelComparison;
+  const finish = () => {
+    const evaluation = sealRepairEvaluation({
+      candidateFingerprint: identity,
+      designIrFingerprint,
+      gates,
+    });
+    return {
+      evaluation,
+      evidence: sealCandidateEvidence({
+        baseResolutionResultFingerprint: resolutionResult.resultFingerprint,
+        candidateResolutionResultFingerprint: candidate.resultFingerprint,
+        inputDesignIrFingerprint: resolutionResult.designIrFingerprint,
+        candidateEvaluation: evaluation,
+        designIr,
+        changeFingerprint: patch?.changeFingerprint,
+        diagnosticsByGate,
+        layoutComparison,
+        pixelComparison,
+      }),
+    };
+  };
   const compileResult = await generate({
     resolutionResult: candidate,
     generationRequest: generationRequest(baseGenerationRequest, 'compile', candidate),
   }, {requestId: `${requestId}-compile`, limits, signal});
   throwIfCancelled(signal);
+  diagnosticsByGate.set('compilation', diagnosticCodes(compileResult));
   const compileFingerprint = stageFingerprint('compilation', compileResult);
   const compilePassed = compileResult?.status === 'success' &&
     compileResult?.evidence?.level === 'compiled' &&
@@ -344,7 +429,7 @@ export async function evaluateScreenshotRepairCandidate({
   ));
   if (!compilePassed) {
     completeAfter(gates, 'compilation');
-    return sealRepairEvaluation({candidateFingerprint: identity, designIrFingerprint, gates});
+    return finish();
   }
 
   const renderResult = await generate({
@@ -353,6 +438,7 @@ export async function evaluateScreenshotRepairCandidate({
     previewBindings: structuredClone(previewBindings),
   }, {requestId: `${requestId}-render`, limits, signal});
   throwIfCancelled(signal);
+  diagnosticsByGate.set('render', diagnosticCodes(renderResult));
   const renderFingerprint = stageFingerprint('render', renderResult);
   const renderPassed = renderResult?.status === 'success' &&
     renderResult?.evidence?.level === 'rendered' &&
@@ -369,7 +455,7 @@ export async function evaluateScreenshotRepairCandidate({
   ));
   if (!renderPassed) {
     completeAfter(gates, 'render');
-    return sealRepairEvaluation({candidateFingerprint: identity, designIrFingerprint, gates});
+    return finish();
   }
 
   const compared = await compare({
@@ -379,16 +465,26 @@ export async function evaluateScreenshotRepairCandidate({
     previewEvidence: renderResult.evidence,
   }, {repository});
   throwIfCancelled(signal);
+  layoutComparison = compared?.comparison;
+  const layoutDiagnosticCodes = diagnosticCodes(compared);
+  diagnosticsByGate.set(
+    'semantics',
+    layoutDiagnosticCodes.filter((code) => code.includes('SEMANTIC')),
+  );
+  diagnosticsByGate.set(
+    'structure',
+    layoutDiagnosticCodes.filter((code) => !code.includes('SEMANTIC')),
+  );
   const comparison = comparisonGates(compared);
   gates.push(comparison.semantics);
   if (comparison.semantics.status !== 'passed') {
     completeAfter(gates, 'semantics');
-    return sealRepairEvaluation({candidateFingerprint: identity, designIrFingerprint, gates});
+    return finish();
   }
   gates.push(comparison.structure);
   if (comparison.structure.status !== 'passed') {
     completeAfter(gates, 'structure');
-    return sealRepairEvaluation({candidateFingerprint: identity, designIrFingerprint, gates});
+    return finish();
   }
 
   const pixelCompared = await comparePixels({
@@ -399,17 +495,49 @@ export async function evaluateScreenshotRepairCandidate({
     previewEvidence: renderResult.evidence,
   }, {repository, signal});
   throwIfCancelled(signal);
+  pixelComparison = pixelCompared?.comparison;
+  diagnosticsByGate.set('exact-pixels', diagnosticCodes(pixelCompared));
   gates.push(exactPixelGate(pixelCompared));
-  return sealRepairEvaluation({candidateFingerprint: identity, designIrFingerprint, gates});
+  return finish();
+}
+
+export async function evaluateScreenshotRepairCandidate(input, options) {
+  return (await evaluateCandidateCore(input, options)).evaluation;
+}
+
+export async function evaluateScreenshotRepairCandidateWithEvidence(input, options) {
+  return evaluateCandidateCore(input, options);
+}
+
+export function createScreenshotRepairCandidateSession(input, options = {}) {
+  const immutableInput = structuredClone(input);
+  const evidenceByCandidate = new Map();
+  const evaluate = async (patch, signal) => {
+    const result = await evaluateCandidateCore({
+      ...structuredClone(immutableInput),
+      ...(patch === undefined ? {} : {patch: structuredClone(patch)}),
+    }, {
+      ...options,
+      signal: signal ?? options.signal,
+    });
+    if (result.evidence !== null) {
+      evidenceByCandidate.set(
+        result.evaluation.candidateFingerprint,
+        structuredClone(result.evidence),
+      );
+    }
+    return result.evaluation;
+  };
+  return Object.freeze({
+    evaluateInitial: ({signal} = {}) => evaluate(undefined, signal),
+    evaluatePatch: ({patch}, {signal} = {}) => evaluate(patch, signal),
+    readEvidence: (candidateFingerprint) => {
+      const evidence = evidenceByCandidate.get(candidateFingerprint);
+      return evidence === undefined ? null : structuredClone(evidence);
+    },
+  });
 }
 
 export function createScreenshotRepairCandidateEvaluator(input, options = {}) {
-  const immutableInput = structuredClone(input);
-  return async ({patch}, {signal} = {}) => evaluateScreenshotRepairCandidate({
-    ...structuredClone(immutableInput),
-    patch: structuredClone(patch),
-  }, {
-    ...options,
-    signal: signal ?? options.signal,
-  });
+  return createScreenshotRepairCandidateSession(input, options).evaluatePatch;
 }

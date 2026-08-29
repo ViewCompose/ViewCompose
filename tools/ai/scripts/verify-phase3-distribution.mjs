@@ -655,7 +655,20 @@ async function verifyCliFlow(
     renderedXml.data?.preview?.image?.sha256 !== expectedPreview.expectedImage.sha256 ||
     renderedXml.data?.preview?.renderTree?.sha256 !== expectedPreview.expectedRenderTree.sha256
   ) {
-    throw new Error('Installed CLI did not render the frozen generated XML Preview.');
+    throw new Error(
+      'Installed CLI did not render the frozen generated XML Preview: ' + JSON.stringify({
+        status: renderedXml.status,
+        evidenceLevel: renderedXml.evidence?.level,
+        outputFingerprint: renderedXml.evidence?.outputFingerprint,
+        diagnosticCodes: renderedXml.diagnostics?.map((diagnostic) => diagnostic.code),
+        renderFingerprint: renderedXml.data?.comparison?.render?.outputFingerprint,
+        comparisonFingerprint: renderedXml.data?.comparison?.comparisonFingerprint,
+        previewRequestFingerprint:
+          renderedXml.data?.preview?.generatedPreview?.requestFingerprint,
+        imageSha256: renderedXml.data?.preview?.image?.sha256,
+        renderTreeSha256: renderedXml.data?.preview?.renderTree?.sha256,
+      }),
+    );
   }
   const imagePreviewRequest = await readJson(generatedImagePreviewRequestPath);
   const renderedImageXml = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {

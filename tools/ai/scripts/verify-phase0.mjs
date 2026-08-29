@@ -288,6 +288,7 @@ async function verifySchemas(versions) {
     screenshotKotlinGeneration: 'screenshot-kotlin-generation.schema.json',
     screenshotPixelComparison: 'screenshot-pixel-comparison.schema.json',
     screenshotRepair: 'screenshot-repair.schema.json',
+    screenshotRepairCandidateEvidence: 'screenshot-repair-candidate-evidence.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };

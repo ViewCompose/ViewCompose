@@ -985,6 +985,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.fileTree(project.rootDir.resolve("tools/ai")) {
                     include(
                         "contracts/screenshot-repair.schema.json",
+                        "contracts/screenshot-repair-candidate-evidence.schema.json",
                         "contracts/design-ir.schema.json",
                         "evaluation/fixtures/visual/screenshot-repair-contract.json",
                         "evaluation/fixtures/visual/screenshot-repair/**",
@@ -1016,6 +1017,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                         "contracts/screenshot-kotlin-generation.schema.json",
                         "contracts/screenshot-pixel-comparison.schema.json",
                         "contracts/screenshot-preprocessing.schema.json",
+                        "contracts/screenshot-repair-candidate-evidence.schema.json",
                         "contracts/screenshot-repair.schema.json",
                         "evaluation/fixtures/visual/screenshot-generation/wireframe.request.json",
                         "evaluation/fixtures/visual/screenshot-pixel/pixel-reference.*.json",

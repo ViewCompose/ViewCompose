@@ -129,13 +129,15 @@ function assertContract(contract, schema) {
       'viewcompose-screenshot-layout-comparison-v1',
       'viewcompose-screenshot-pixel-comparison-v1',
       'screenshot-repair-v2',
+      'screenshot-repair-candidate-evidence-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
     contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
     contract.activation?.implementation !== true ||
     contract.activation?.typedPatchApplier !== true ||
-    contract.activation?.candidateEvaluator !== true
+    contract.activation?.candidateEvaluator !== true ||
+    contract.activation?.candidateEvidenceRecord !== true
   ) {
     throw new Error('Screenshot repair activation boundary changed');
   }
@@ -200,6 +202,9 @@ function assertContract(contract, schema) {
     ) ||
     !contract.claims?.checked?.includes(
       'source-bound compile and render evidence for each evaluated candidate',
+    ) ||
+    !contract.claims?.checked?.includes(
+      'content-addressed candidate evidence excludes generated source and image bytes',
     ) ||
     !contract.claims?.checked?.includes(
       'pixel evidence cannot override safety, compilation, render, semantic, or structural failure',
@@ -400,6 +405,13 @@ export async function verifyPhase5ScreenshotRepair() {
       !/^[a-f0-9]{64}$/u.test(fixture.expectedCandidateFingerprint ?? '') ||
       !/^[a-f0-9]{64}$/u.test(fixture.expectedDesignIrFingerprint ?? '') ||
       !/^[a-f0-9]{64}$/u.test(fixture.expectedEvaluationFingerprint ?? '') ||
+      !/^[a-f0-9]{64}$/u.test(fixture.expectedEvidenceFingerprint ?? '') ||
+      !Array.isArray(fixture.expectedEvidenceDiagnosticCodes) ||
+      fixture.expectedEvidenceDiagnosticCodes.some(
+        (code) => !/^VC-AI-[A-Z0-9-]+$/u.test(code),
+      ) ||
+      new Set(fixture.expectedEvidenceDiagnosticCodes).size !==
+        fixture.expectedEvidenceDiagnosticCodes.length ||
       fixture.expectedGateStatuses?.length !== 6 ||
       fixture.expectedGateStatuses.some((status) => !['passed', 'failed'].includes(status)) ||
       fixture.expectedGateEvidence?.length !== 6 ||

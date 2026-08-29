@@ -4,7 +4,8 @@
   "requiresContracts": [
     "viewcompose-screenshot-layout-comparison-v1",
     "viewcompose-screenshot-pixel-comparison-v1",
-    "screenshot-repair-v2"
+    "screenshot-repair-v2",
+    "screenshot-repair-candidate-evidence-v1"
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
@@ -13,6 +14,7 @@
     "implementation": true,
     "typedPatchApplier": true,
     "candidateEvaluator": true,
+    "candidateEvidenceRecord": true,
     "successEvidence": "compared",
     "incompleteEvidence": "rendered"
   },
@@ -61,6 +63,7 @@
       "no regression of a previously passed deterministic gate",
       "strict improvement at the first failing gate before candidate acceptance",
       "source-bound compile and render evidence for each evaluated candidate",
+      "content-addressed candidate evidence excludes generated source and image bytes",
       "pixel evidence cannot override safety, compilation, render, semantic, or structural failure"
     ],
     "notClaimed": [
@@ -126,6 +129,8 @@
         "expectedCandidateFingerprint": "1f8f98ebbcbe0bcf51366b5d96ba033e7bab46a0220a8c165c9cc19e2ab6d135",
         "expectedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
         "expectedEvaluationFingerprint": "aae65dcd1f23d3fec65dc3955c3bbec7e5f80b2c1cf85f4a2d997ca0e2845e06",
+        "expectedEvidenceFingerprint": "9325dcf8955a3edc492226a8b45da4825eaa08d132e15f7f142597d6a58fccec",
+        "expectedEvidenceDiagnosticCodes": [],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "passed"],
         "expectedGateEvidence": [
           "61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a",
@@ -148,6 +153,8 @@
         "expectedCandidateFingerprint": "a49828e84181500d5c9bd3955943a2bd24de0b4f9b7870afffbd72529813367c",
         "expectedDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
         "expectedEvaluationFingerprint": "8f0a65ef59dfe39b42aa25342994ae22cdbb5cede1cffcfaa0d6cadfa95586d9",
+        "expectedEvidenceFingerprint": "26ff69bf21775b201d840668b5facf1d0041b553083bcd113008e769c157aa3b",
+        "expectedEvidenceDiagnosticCodes": ["VC-AI-PIXEL-MISMATCH"],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "failed"],
         "expectedGateEvidence": [
           "ea77e571ae5977da628cdb40f12d83f664c2ed43b9375c42743ecd574098c219",

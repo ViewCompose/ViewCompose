@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Integrate the internal bounded repair orchestrator and typed Design IR patch applier with the existing compile/render/comparison lanes before exposing any public repair mode.
+next_action: Bind the persistent Preview worker compatibility fingerprint to the exact build-manifest input fingerprint before implementing the deterministic screenshot repair proposer.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -114,9 +114,11 @@ orientation, system bars, and accepted semantic evidence exactly match the rende
 16×24 inference wireframe is therefore not assigned a pixel score.
 
 The bounded deterministic repair contract and its provider-offline internal orchestrator are now
-implemented, including typed Design IR patch application, but automatic repair is not yet a public
-tool mode. Next action: integrate repaired candidates with the existing compile/render/comparison
-lanes without claiming perceptual or cross-device equivalence.
+implemented, including typed Design IR patch application, source-bound candidate evaluation, and
+content-addressed structured candidate evidence, but automatic repair is not yet a public tool
+mode. Next action: close the newly reproduced cross-build persistent Preview worker isolation gap,
+then implement a bounded deterministic proposer over accepted structured findings without claiming
+perceptual or cross-device equivalence.
 
 ## Maven release changesets
 
@@ -2413,6 +2415,63 @@ localization, cache honesty, and orchestration readiness with **no material Andr
 change**. Automatic finding-to-patch policy, arbitrary source repair, and public repair activation
 remain unclaimed; the next action is a bounded deterministic proposer over the accepted structured
 findings.
+
+### Implementation evidence — content-addressed screenshot repair candidates
+
+The candidate evaluator now retains one bounded evidence record for every schema-valid candidate
+that reaches source generation. The v1 record binds the base and candidate resolution identities,
+input and candidate Design IR identities, optional typed-change identity, complete six-gate
+evaluation, immutable candidate Design IR, gate-specific diagnostic codes, structured layout
+comparison, and structured exact-pixel comparison. It excludes generated Kotlin and PNG bytes,
+has a 16 MiB internal ceiling, and is fingerprinted over canonical JSON. A session stores evidence
+by candidate fingerprint and returns defensive clones, so a proposer can inspect deterministic
+findings without mutating accepted evaluation state. Safety failures before a valid candidate
+identity retain no partial evidence.
+
+The real source-bound denominator reproduces two complete records. The unchanged exact candidate
+has evidence fingerprint
+`9325dcf8955a3edc492226a8b45da4825eaa08d132e15f7f142597d6a58fccec`, no diagnostic codes,
+and all six gates pass. The typed `Welcome` → `Hello` candidate has evidence fingerprint
+`26ff69bf21775b201d840668b5facf1d0041b553083bcd113008e769c157aa3b`; compilation, rendering,
+12 semantic checks, and 15 structural checks pass, while its sole retained diagnostic is
+`VC-AI-PIXEL-MISMATCH` for the frozen 5,102-of-2,523,781 exact-pixel difference. The dedicated
+verifier independently validates the record schema and every nested Design IR, candidate
+evaluation, layout comparison, and pixel comparison contract before recomputing the evidence
+fingerprint and lineage.
+
+Phase 0 now verifies 16 schemas, 64 metrics, 73 cases, 70 fixture-backed cases, and nine screenshot
+repair denominators. Node 25.6.0 passes 228/228 AI-tooling tests, including immutable session lookup,
+content-address recomputation, raw-source/image exclusion, compile/render short-circuiting, and all
+prior orchestration denominators. The dependency-free package now contains 67 files and 1,848,041
+declared bytes; its 331,563-byte archive has SHA-256
+`d239b6c00a8210e12e906f2c003e71a726378d8089b27e5b179d0ce03430910c`. Relative to the
+source-bound evaluator package, the evidence contract and implementation add one file, 6,889
+declared bytes (+0.37%), and 1,373 archive bytes (+0.42%), with no runtime dependency or provider
+boundary.
+
+The candidate-specific Gradle gates pass 2/2 source-bound candidates, and the dedicated Phase 4
+generated-Preview gate independently passes 2/2 exact cold renders plus 2/2 stable cache hits.
+However, two full Gradle distribution replays and one direct distribution replay consistently
+produced a different, still schema-valid and semantically exact XML Preview only after the same
+persistent worker had rendered the screenshot target: output
+`e4d6eabbe698970fd2faac2f3ff0b4363c4221bdff29c2965d107c6927a8f4f1`, PNG
+`ccd9e8a1a8cb0ff3ff98dce4f1e7eda2f771eb98a44aa9fcfb6279dfc0d4b343`, and render tree
+`03298986d5e5519227183a649d8ebe4ebd07e71a1e60f1d600ee685e83015929`. Removing only that
+request's ignored render cache and running XML Preview in a cold worker restored the accepted
+`6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab` output exactly. This
+acceptance result is therefore **mixed**: candidate evidence is reproducible, while the combined
+installed sequence exposes a pre-existing cross-build worker-isolation defect. The worker
+compatibility fingerprint currently omits the build-manifest input fingerprint; the next action is
+to bind those identities and add a screenshot-to-XML switch denominator before rerunning the full
+distribution gate.
+
+No published ViewCompose artifact, public/protected API, Android runtime, or application process
+changes, so no Maven changeset or module-manual update is required. This is **improved** candidate
+traceability, structured finding availability, immutable session state, and claim accuracy with
+**no material Android runtime behavior change**. The record is internal and does not prove a repair
+policy, perceptual equivalence, arbitrary source repair, or public convergence. The next action is
+to close the cross-build Preview worker isolation gap, then implement a bounded deterministic
+proposer that consumes only this accepted evidence and emits eligible typed Design IR patches.
 
 ### Implementation evidence — bounded XML to Design IR
 

@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import test from 'node:test';
-import {orchestrateScreenshotRepair, sealRepairPatch} from './repair-orchestrator.mjs';
+import {
+  fingerprintRepairValue,
+  orchestrateScreenshotRepair,
+  sealRepairPatch,
+} from './repair-orchestrator.mjs';
 import {
   createScreenshotRepairCandidateEvaluator,
+  createScreenshotRepairCandidateSession,
   evaluateScreenshotRepairCandidate,
+  evaluateScreenshotRepairCandidateWithEvidence,
   ScreenshotRepairCandidateEvaluationError,
 } from './screenshot-repair-candidate-evaluator.mjs';
+import {validateSchemaValue} from './schema-validator.mjs';
 
 const fixtureRoot = new URL('../evaluation/fixtures/visual/', import.meta.url);
 const [resolutionResult, baseGenerationRequest, previewRequest, referenceRequest, referenceResult] =
@@ -17,6 +24,10 @@ const [resolutionResult, baseGenerationRequest, previewRequest, referenceRequest
     'screenshot-pixel/pixel-reference.request.json',
     'screenshot-pixel/pixel-reference.result.json',
   ].map((path) => readFile(new URL(path, fixtureRoot), 'utf8').then(JSON.parse)));
+const evidenceSchema = JSON.parse(await readFile(new URL(
+  '../contracts/screenshot-repair-candidate-evidence.schema.json',
+  import.meta.url,
+), 'utf8'));
 
 const fingerprints = Object.freeze({
   compilation: '1'.repeat(64),
@@ -139,6 +150,38 @@ test('evaluates the six deterministic gates in order and preserves separate evid
   assert.equal(result.gates[3].passedChecks, 2);
   assert.equal(result.gates[4].passedChecks, 3);
   assert.equal(result.gates[5].comparedPixels, 100);
+});
+
+test('returns one bounded content-addressed evidence record without source or image bytes', async () => {
+  const result = await evaluateScreenshotRepairCandidateWithEvidence(input(), adapters());
+  assert.equal(result.evidence.status, 'complete');
+  assert.equal(result.evidence.candidateEvaluation.evaluationFingerprint,
+    result.evaluation.evaluationFingerprint);
+  assert.equal(result.evidence.lineage.inputDesignIrFingerprint,
+    resolutionResult.designIrFingerprint);
+  assert.equal(result.evidence.lineage.changeFingerprint, null);
+  assert.equal(result.evidence.diagnostics.length, 6);
+  assert.equal(result.evidence.layoutComparison.comparisonFingerprint, fingerprints.layout);
+  assert.equal(result.evidence.pixelComparison.comparisonFingerprint, fingerprints.pixels);
+  const copy = structuredClone(result.evidence);
+  delete copy.evidenceFingerprint;
+  assert.equal(result.evidence.evidenceFingerprint, fingerprintRepairValue(copy));
+  assert.deepEqual(validateSchemaValue(result.evidence, evidenceSchema), []);
+  const encoded = JSON.stringify(result.evidence);
+  assert.doesNotMatch(encoded, /generatedKotlin|image\/png|base64/u);
+});
+
+test('keeps immutable candidate evidence addressable inside one evaluator session', async () => {
+  const session = createScreenshotRepairCandidateSession(input(), adapters());
+  const initial = await session.evaluateInitial();
+  const first = session.readEvidence(initial.candidateFingerprint);
+  assert.equal(first.candidateEvaluation.candidateFingerprint, initial.candidateFingerprint);
+  first.designIr.documentId = 'mutated-outside-session';
+  assert.equal(
+    session.readEvidence(initial.candidateFingerprint).designIr.documentId,
+    resolutionResult.designIr.documentId,
+  );
+  assert.equal(session.readEvidence('f'.repeat(64)), null);
 });
 
 test('applies a typed patch and rebinds compile and render lineage to the candidate', async () => {

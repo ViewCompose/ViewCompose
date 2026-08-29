@@ -347,8 +347,12 @@ arguments or an exact child permutation, rejects no-op operations, and revalidat
 candidate before publishing its canonical fingerprint. The internal candidate evaluator rebinds the
 patched IR to a content-addressed generation request, runs the hermetic compiler and source-bound
 Preview as separate gates, categorizes semantic versus structural checks from the accepted render,
-and enters exact pixels only after both categories pass. Candidate proposal remains an injected
-internal boundary; no MCP/CLI caller can activate repair yet.
+and enters exact pixels only after both categories pass. Each accepted candidate is also retained
+inside one evaluator session as a bounded, immutable, content-addressed evidence record containing
+the exact Design IR, candidate evaluation, gate diagnostic codes, and structured layout/pixel
+comparisons. The record excludes generated Kotlin and PNG bytes, and callers receive clones rather
+than mutable session state. Candidate proposal remains an injected internal boundary; no MCP/CLI
+caller can activate repair yet.
 
 Run the local MCP server and its protocol/parity gate with:
 
