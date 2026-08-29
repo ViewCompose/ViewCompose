@@ -21,6 +21,7 @@ import com.viewcompose.navigation.core.NavNoChangeReason
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavRouteSpec
 import com.viewcompose.navigation.core.NavResultKey
 import com.viewcompose.navigation.core.NavStackSelectionMode
 import com.viewcompose.navigation.core.NavStackSetSnapshot
@@ -237,6 +238,28 @@ class NavHostController internal constructor(
         )
     }
 
+    /**
+     * Encodes [value] through [route] and pushes the resulting route onto the active stack.
+     *
+     * Encoding runs on the main thread before the host transaction begins. An encoder failure
+     * therefore leaves navigation, rendering, lifecycle owners, and result mailboxes unchanged.
+     *
+     * @sample com.viewcompose.navigation.samples.typedRouteNavigationSample
+     * @param route typed declaration shared by graph registration and destination decoding
+     * @param value application route value to encode into closed, persistable arguments
+     * @param launchMode reuse or creation rule applied to the encoded route
+     * @throws IllegalStateException when called off the main thread or without an attached host
+     */
+    @MainThread
+    fun <T> navigate(
+        route: NavRouteSpec<T>,
+        value: T,
+        launchMode: NavLaunchMode = NavLaunchMode.Standard,
+    ): NavResult {
+        requireMainThread()
+        return navigate(route.encode(value), launchMode)
+    }
+
     /** Pops the active top, or returns `NoChange` when the stack is at its root. */
     @MainThread
     fun popBackStack(): NavResult = execute(NavCommand.Pop)
@@ -268,10 +291,38 @@ class NavHostController internal constructor(
         return execute(NavCommand.ReplaceTop(route))
     }
 
+    /**
+     * Encodes [value] before atomically replacing the active top with typed [route].
+     *
+     * An encoder failure occurs before the host transaction and leaves committed state unchanged.
+     */
+    @MainThread
+    fun <T> replaceTop(
+        route: NavRouteSpec<T>,
+        value: T,
+    ): NavResult {
+        requireMainThread()
+        return replaceTop(route.encode(value))
+    }
+
     /** Resets the active stack to a single newly owned [route]. */
     @MainThread
     fun reset(route: NavRoute): NavResult {
         return execute(NavCommand.Reset(route))
+    }
+
+    /**
+     * Encodes [value] before resetting the active stack to one newly owned typed [route].
+     *
+     * An encoder failure occurs before the host transaction and leaves committed state unchanged.
+     */
+    @MainThread
+    fun <T> reset(
+        route: NavRouteSpec<T>,
+        value: T,
+    ): NavResult {
+        requireMainThread()
+        return reset(route.encode(value))
     }
 
     /** Atomically presents [stackId] while retaining every other stack and its owners. */
