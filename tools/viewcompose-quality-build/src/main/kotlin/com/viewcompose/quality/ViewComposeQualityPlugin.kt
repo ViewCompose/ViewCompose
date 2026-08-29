@@ -941,6 +941,31 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotPixelComparison") {
+            group = "verification"
+            description =
+                "Verifies screenshot pixel-reference eligibility and exact comparison contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-pixel-comparison")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-pixel-comparison.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "evaluation/fixtures/visual/screenshot-layout-comparison-contract.json",
+                        "evaluation/fixtures/visual/screenshot-pixel-comparison-contract.json",
+                        "evaluation/fixtures/visual/screenshot-pixel/**",
+                        "evaluation/fixtures/visual/screenshot/inference-wireframe.*",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/verify-phase5-screenshot-pixel-comparison.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

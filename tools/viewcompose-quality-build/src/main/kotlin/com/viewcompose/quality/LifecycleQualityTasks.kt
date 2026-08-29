@@ -40,6 +40,7 @@ internal fun Project.registerLifecycleQualityTasks(extension: ViewComposeQuality
         dependsOn("verifyAiScreenshotGeneration")
         dependsOn("verifyAiScreenshotRender")
         dependsOn("verifyAiScreenshotComparison")
+        dependsOn("verifyAiScreenshotPixelComparison")
         dependsOn("verifyDocumentationStructure")
         dependsOn("verifyDslApiContracts")
         dependsOn("verifyMigrationPairedSamples")

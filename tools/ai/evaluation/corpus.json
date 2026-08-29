@@ -949,6 +949,71 @@
         "diagnosticCodes": ["VC-AI-COMPARE-STRUCTURE-MISMATCH"]
       },
       "metricIds": ["visual.screenshot-comparison-safety"]
+    },
+    {
+      "id": "visual.screenshot-pixel-reference-contract",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-pixel-comparison-contract.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "compared"
+      },
+      "metricIds": [
+        "visual.screenshot-pixel-reference-eligibility",
+        "visual.screenshot-pixel-exactness"
+      ]
+    },
+    {
+      "id": "visual.screenshot-pixel-configuration-redaction-denied",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-pixel/configuration-redaction.mutation.json"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": [
+          "VC-AI-PIXEL-CONFIGURATION-MISMATCH",
+          "VC-AI-PIXEL-REDACTION-UNSUPPORTED"
+        ]
+      },
+      "metricIds": ["visual.screenshot-pixel-comparison-safety"]
+    },
+    {
+      "id": "visual.screenshot-pixel-semantic-evidence-required",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-pixel/missing-semantic.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-PIXEL-SEMANTIC-EVIDENCE-REQUIRED"]
+      },
+      "metricIds": ["visual.screenshot-pixel-comparison-safety"]
+    },
+    {
+      "id": "visual.screenshot-pixel-reference-integrity-denied",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-pixel/reference-integrity.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-PIXEL-REFERENCE-INTEGRITY-MISMATCH"]
+      },
+      "metricIds": ["visual.screenshot-pixel-comparison-safety"]
     }
   ]
 }

@@ -489,6 +489,33 @@
       "environment": "changed semantic text or declared structure must downgrade compared evidence and return category-specific diagnostics without an aggregate similarity score"
     },
     {
+      "id": "visual.screenshot-pixel-reference-eligibility",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical screenshot request/result lineage, zero redactions, full viewport crop, and exact density, font scale, locale, layout direction, dimensions, color space, alpha, orientation, and system bars"
+    },
+    {
+      "id": "visual.screenshot-pixel-exactness",
+      "phase": 5,
+      "measure": "exact_pixel_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "strictly eligible canonical sRGB straight-alpha RGBA references and the same accepted screenshot render; zero channel and dimension tolerance"
+    },
+    {
+      "id": "visual.screenshot-pixel-comparison-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "configuration-mismatched, redacted, integrity-changed, or semantic-evidence-free references remain ineligible and never receive a pixel similarity score"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",

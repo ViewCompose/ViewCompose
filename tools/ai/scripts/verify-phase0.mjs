@@ -10,6 +10,9 @@ import {verifyPhase5ScreenshotResolution} from './verify-phase5-screenshot-resol
 import {verifyPhase5ScreenshotGeneration} from './verify-phase5-screenshot-generation.mjs';
 import {verifyPhase5ScreenshotRender} from './verify-phase5-screenshot-render.mjs';
 import {verifyPhase5ScreenshotComparison} from './verify-phase5-screenshot-comparison.mjs';
+import {
+  verifyPhase5ScreenshotPixelComparison,
+} from './verify-phase5-screenshot-pixel-comparison.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -281,6 +284,8 @@ async function verifySchemas(versions) {
     screenshotPreprocessing: 'screenshot-preprocessing.schema.json',
     screenshotDesignInference: 'screenshot-design-inference.schema.json',
     screenshotInferenceResolution: 'screenshot-inference-resolution.schema.json',
+    screenshotKotlinGeneration: 'screenshot-kotlin-generation.schema.json',
+    screenshotPixelComparison: 'screenshot-pixel-comparison.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -2193,6 +2198,7 @@ export async function verifyPhase0() {
   const screenshotKotlinGeneration = await verifyPhase5ScreenshotGeneration({compileGolden: false});
   const screenshotGeneratedPreview = await verifyPhase5ScreenshotRender({renderGolden: false});
   const screenshotLayoutComparison = await verifyPhase5ScreenshotComparison({compareGolden: false});
+  const screenshotPixelComparison = await verifyPhase5ScreenshotPixelComparison();
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -2230,6 +2236,9 @@ export async function verifyPhase0() {
     screenshotLayoutComparisonFixtures:
       screenshotLayoutComparison.supportedGoldens +
         screenshotLayoutComparison.failClosedDenominators,
+    screenshotPixelComparisonFixtures:
+      screenshotPixelComparison.supportedGoldens +
+        screenshotPixelComparison.failClosedDenominators,
   };
 }
 
@@ -2251,7 +2260,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.screenshotInferenceResolutionFixtures} frozen screenshot-resolution fixtures and ` +
           `${summary.screenshotKotlinGenerationFixtures} frozen screenshot-generation fixtures and ` +
           `${summary.screenshotGeneratedPreviewFixtures} frozen screenshot-Preview fixtures and ` +
-          `${summary.screenshotLayoutComparisonFixtures} frozen screenshot-comparison fixtures.`,
+          `${summary.screenshotLayoutComparisonFixtures} frozen screenshot-comparison fixtures and ` +
+          `${summary.screenshotPixelComparisonFixtures} frozen screenshot-pixel fixtures.`,
       );
     })
     .catch((error) => {

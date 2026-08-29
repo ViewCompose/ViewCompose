@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-pixel-comparison-v1.schema.json",
+  "title": "ViewCompose screenshot pixel comparison v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "reference",
+    "render",
+    "policy",
+    "metrics",
+    "findings",
+    "comparisonFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["passed", "failed"]},
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestFingerprint",
+        "outputFingerprint",
+        "pngFingerprint",
+        "widthPx",
+        "heightPx",
+        "configuration"
+      ],
+      "properties": {
+        "requestFingerprint": {"$ref": "#/$defs/sha256"},
+        "outputFingerprint": {"$ref": "#/$defs/sha256"},
+        "pngFingerprint": {"$ref": "#/$defs/sha256"},
+        "widthPx": {"$ref": "#/$defs/dimension"},
+        "heightPx": {"$ref": "#/$defs/dimension"},
+        "configuration": {"$ref": "#/$defs/configuration"}
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semanticComparisonFingerprint",
+        "requestFingerprint",
+        "outputFingerprint",
+        "pngFingerprint",
+        "widthPx",
+        "heightPx",
+        "configuration"
+      ],
+      "properties": {
+        "semanticComparisonFingerprint": {"$ref": "#/$defs/sha256"},
+        "requestFingerprint": {"$ref": "#/$defs/sha256"},
+        "outputFingerprint": {"$ref": "#/$defs/sha256"},
+        "pngFingerprint": {"$ref": "#/$defs/sha256"},
+        "widthPx": {"$ref": "#/$defs/dimension"},
+        "heightPx": {"$ref": "#/$defs/dimension"},
+        "configuration": {"$ref": "#/$defs/configuration"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "colorSpace",
+        "alphaMode",
+        "coordinateSpace",
+        "redactions",
+        "semanticEvidenceRequired",
+        "dimensionTolerancePx",
+        "channelTolerance",
+        "aggregateScore"
+      ],
+      "properties": {
+        "version": {"const": 1},
+        "colorSpace": {"const": "sRGB"},
+        "alphaMode": {"const": "straight"},
+        "coordinateSpace": {"const": "exact-cropped-viewport"},
+        "redactions": {"const": "none"},
+        "semanticEvidenceRequired": {"const": true},
+        "dimensionTolerancePx": {"const": 0},
+        "channelTolerance": {"const": 0},
+        "aggregateScore": {"const": false}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "totalPixels",
+        "comparedPixels",
+        "mismatchedPixels",
+        "exactPixelRatio",
+        "meanAbsoluteErrorRgba",
+        "rootMeanSquareErrorRgba",
+        "maxChannelDelta"
+      ],
+      "properties": {
+        "totalPixels": {"type": "integer", "minimum": 1, "maximum": 16777216},
+        "comparedPixels": {"type": "integer", "minimum": 1, "maximum": 16777216},
+        "mismatchedPixels": {"type": "integer", "minimum": 0, "maximum": 16777216},
+        "exactPixelRatio": {"type": "number", "minimum": 0, "maximum": 1},
+        "meanAbsoluteErrorRgba": {"type": "number", "minimum": 0, "maximum": 255},
+        "rootMeanSquareErrorRgba": {"type": "number", "minimum": 0, "maximum": 255},
+        "maxChannelDelta": {"type": "integer", "minimum": 0, "maximum": 255}
+      }
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "comparisonFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "density",
+        "fontScale",
+        "localeTag",
+        "layoutDirection",
+        "colorSpace",
+        "alphaMode",
+        "orientation",
+        "systemBars",
+        "crop"
+      ],
+      "properties": {
+        "density": {"type": "number", "minimum": 0.1, "maximum": 16},
+        "fontScale": {"type": "number", "minimum": 0.1, "maximum": 8},
+        "localeTag": {"type": "string", "minLength": 1, "maxLength": 128},
+        "layoutDirection": {"enum": ["Ltr", "Rtl"]},
+        "colorSpace": {"const": "sRGB"},
+        "alphaMode": {"const": "straight"},
+        "orientation": {"const": "upright"},
+        "systemBars": {"$ref": "#/$defs/insets"},
+        "crop": {"$ref": "#/$defs/rectangle"}
+      }
+    },
+    "insets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leftPx", "topPx", "rightPx", "bottomPx"],
+      "properties": {
+        "leftPx": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "topPx": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "rightPx": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "bottomPx": {"type": "integer", "minimum": 0, "maximum": 4096}
+      }
+    },
+    "rectangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "y": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "width": {"$ref": "#/$defs/dimension"},
+        "height": {"$ref": "#/$defs/dimension"}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "category", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-PIXEL-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "category": {"enum": ["integrity", "configuration", "pixel"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "dimension": {"type": "integer", "minimum": 1, "maximum": 4096},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

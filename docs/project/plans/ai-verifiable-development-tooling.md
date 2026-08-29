@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze and implement the semantic and geometry comparison contract for the accepted screenshot render tree before any pixel-parity claim.
+next_action: Implement the frozen exact RGBA pixel comparator for eligible references, then freeze a bounded repair contract without introducing a perceptual aggregate score.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -107,8 +107,14 @@ installed-package verification.
 
 Last verified: 2026-08-30.
 
-Next action: freeze and implement semantic and geometry comparison against the accepted screenshot
-render tree before any pixel-parity claim or provider-backed adapter.
+The screenshot semantic and structural comparison is now implemented, and the separate pixel-reference
+eligibility contract is frozen. It admits only canonical, zero-redaction, full-viewport references
+whose dimensions, density, font scale, locale, layout direction, color space, alpha mode,
+orientation, system bars, and accepted semantic evidence exactly match the render. The original
+16×24 inference wireframe is therefore not assigned a pixel score.
+
+Next action: implement exact RGBA comparison for the eligible reference without claiming perceptual
+or cross-device equivalence, then freeze a bounded repair loop.
 
 ## Maven release changesets
 
@@ -2070,6 +2076,59 @@ traversal, state/event behavior, focus, interaction, and responsive configuratio
 unclaimed. This is **improved** closed-loop semantic and structural validation with **no material
 Android runtime behavior change**. The next action is to define a separate pixel/perceptual metric
 and bounded repair contract without weakening these exact checks.
+
+### Contract freeze — screenshot pixel-reference eligibility and exact metrics
+
+Screenshot pixel comparison v1 freezes a separate gate after semantic and structural comparison.
+It does not reinterpret the original inference image as a visual golden. A reference is eligible
+only when its screenshot preprocessing request and result reproduce exactly, contain no redaction,
+cover the full rendered viewport, and match the accepted render in width, height, density, font
+scale, locale, layout direction, `sRGB` color space, straight alpha, upright orientation, zero
+system-bar insets, and crop coordinates. A passing semantic comparison from the same render is
+mandatory. Callers cannot supply a comparison policy or artifact path.
+
+The accepted infrastructure reference is the 1079×2339 rendered PNG re-entered through canonical
+screenshot preprocessing at density 2.625, font scale 1, `en-US`, and LTR. Its preprocessing
+request fingerprint is
+`06ded39bf3588193305ba1574c43ca3a6b6d0ff9c4cd19ec3e12eb75afdefefd`; its canonical result and
+PNG fingerprints are `7a4b4458c215ed139191c0c85fe5f47d31b9c8b6a1db9f48f4d82806e4eb05c1` and
+`5d909bb84a6ac002f44ce0e1e0e6cf16dfce5f53ad742d6c91c66b8077fbb7a5`. The render PNG retains
+fingerprint `072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd`; differing encoded PNG
+bytes are permitted only because preprocessing deterministically strips metadata and re-encodes
+the same RGBA image. The implementation denominator is 2,523,781 pixels with zero dimension or
+channel tolerance. It will report exact pixel ratio, mismatched pixels, RGBA mean absolute error,
+RGBA root mean square error, and maximum channel delta separately; no aggregate similarity score
+exists.
+
+The old 16×24 inference wireframe is explicitly ineligible because its viewport and density differ
+and one user-declared redaction is present. Missing semantic evidence and changed reference output
+identity are separate fail-closed denominators. The gate verifies 1/1 eligible reference and 3/3
+ineligible cases, while `publicPixelCompareMode = false` and `implementation = false` prevent the
+contract from being mistaken for executed pixel evidence. Perceptual similarity, cross-device or
+cross-renderer equivalence, font equivalence, motion, interactions, design intent, aesthetic
+quality, and automatic repair remain unclaimed.
+
+Phase 0 now verifies 14 schemas, 60 metrics, 64 cases, 61 fixture-backed cases, and four
+screenshot-pixel fixtures. Node 25.6.0 passes 186/186 AI-tooling tests. The new
+`verifyAiScreenshotPixelComparison` task is part of `qaQuick`. The offline package ships the result
+schema as its 61st file and has no new runtime dependency. It contains 1,770,597 declared bytes and
+a 316,305-byte archive, SHA-256
+`41dd31d8630e5f7c022b960010b9ffbdd252c8ad1d4fe1d268f0ac7c2514d209`. Relative to the semantic
+comparison implementation, this adds one schema file, 6,876 declared bytes (+0.39%), and 942
+archive bytes (+0.30%).
+
+The distribution gate passes 2/2 reproducible builds, offline install/uninstall, SPDX/license
+inventory, both MCP protocol eras, and every prior installed screenshot and XML denominator. The
+focused quality-build suite passes seven tasks. The combined pixel-contract, distribution,
+documentation, development-tooling-isolation, and release-intent gate passes 23 actionable tasks,
+with nine executed and 14 up-to-date.
+
+No published ViewCompose artifact, public/protected API, Android runtime, application process, or
+provider boundary changes, so this slice needs no Maven changeset or module-manual update. This is
+**improved** visual-claim integrity and eligibility coverage with **no material Android runtime
+behavior change**. The next action is to implement the frozen exact comparator, prove decoded RGBA
+identity and mismatches through CLI/MCP and the installed package, and only then freeze bounded
+repair behavior.
 
 ### Implementation evidence — bounded XML to Design IR
 

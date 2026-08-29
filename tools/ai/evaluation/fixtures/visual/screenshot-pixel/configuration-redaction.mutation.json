@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "operation": "replace-reference-pair",
+  "request": "../screenshot/inference-wireframe.request.json",
+  "result": "../screenshot/inference-wireframe.result.json",
+  "expectedDiagnosticCodes": [
+    "VC-AI-PIXEL-CONFIGURATION-MISMATCH",
+    "VC-AI-PIXEL-REDACTION-UNSUPPORTED"
+  ]
+}

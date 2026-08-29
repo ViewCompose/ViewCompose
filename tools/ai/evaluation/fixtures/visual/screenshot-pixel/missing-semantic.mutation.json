@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "operation": "remove-semantic-comparison",
+  "expectedDiagnosticCodes": ["VC-AI-PIXEL-SEMANTIC-EVIDENCE-REQUIRED"]
+}

@@ -315,6 +315,14 @@ text-field placeholder, source screenshot regions, exact
 source geometry, pixels, style, typography, accessibility traversal, state mutation, and event
 behavior because the current evidence cannot compare them.
 
+Screenshot pixel comparison remains contract-frozen and is not yet a public tool mode. Its
+eligibility gate requires a reproducible canonical screenshot reference with no redactions, a full
+viewport crop, exact dimensions and device configuration, and a passing semantic/structural
+comparison from the same render. The checked-in 16×24 inference wireframe is intentionally
+ineligible for pixel scoring because it does not share the 1079×2339 render viewport or density and
+contains a redaction. The eligible infrastructure reference freezes separate exact RGBA metrics
+with zero channel tolerance and no aggregate or perceptual similarity score.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -326,6 +334,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-resolution
 npm --prefix tools/ai run verify:phase5-screenshot-generation
 npm --prefix tools/ai run verify:phase5-screenshot-render
 npm --prefix tools/ai run verify:phase5-screenshot-comparison
+npm --prefix tools/ai run verify:phase5-screenshot-pixel-comparison
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
@@ -333,6 +342,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-comparison
 ./gradlew verifyAiScreenshotGeneration
 ./gradlew verifyAiScreenshotRender
 ./gradlew verifyAiScreenshotComparison
+./gradlew verifyAiScreenshotPixelComparison
 ```
 
 The preferred protocol follows the
