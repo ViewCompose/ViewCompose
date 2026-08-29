@@ -57,11 +57,12 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Implement the frozen entry-targeted navigation-result mailbox, then disposition typed-route serialization before the broader evidence matrix.
+next_action: Implement the frozen typed-route contract, then publish its optional Kotlinx Serialization adapter before the broader evidence matrix.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-execution-reducer.json
   - release/changes/20260829-navigation-presentation-retention.json
+  - release/changes/20260829-navigation-results.json
   - release/changes/20260829-navigation-scene-projection.json
   - release/changes/20260829-navigation-structured-deep-links.json
   - release/changes/20260829-navigation-transition-lifecycle.json
@@ -75,18 +76,19 @@ Active. The architecture and test audit, Phase 0 contract freeze, Phase 1 Lifecy
 stabilization, Phase 2 Core scene projection, Phase 3 Android transition lifecycle correction,
 Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination context are
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
-structured deep-link slice is complete.
+structured deep-link and entry-targeted result slices are complete.
 
 Last verified: 2026-08-29.
 
-Next action: implement the frozen entry-targeted navigation-result mailbox, then disposition
-typed-route serialization before the broader evidence matrix.
+Next action: implement the frozen typed-route contract, then publish its optional Kotlinx
+Serialization adapter before the broader evidence matrix.
 
 ## Maven release changesets
 
 - `release/changes/20260829-navigation-destination-context.json`
 - `release/changes/20260829-navigation-execution-reducer.json`
 - `release/changes/20260829-navigation-presentation-retention.json`
+- `release/changes/20260829-navigation-results.json`
 - `release/changes/20260829-navigation-scene-projection.json`
 - `release/changes/20260829-navigation-structured-deep-links.json`
 - `release/changes/20260829-navigation-transition-lifecycle.json`
@@ -924,6 +926,39 @@ Acceptance evidence:
   (0.17%) to 49,151,244 and left 26,970 bytes headroom. Site-size confidence is **improved**. Leak,
   memory, representative workload, and runtime performance remain **inconclusive**. Next:
   disposition typed-route serialization, then run the broader matrix.
+
+#### Capability slice 7.3: typed-route contract
+
+The audit accepts the remaining type-safety gap as material. `NavRoute` already provides closed,
+restorable value storage, but graph declarations select destinations by `String`, callers manually
+construct argument maps, and destination content manually casts `NavValue`. Navigation 2 instead
+connects serializable route types to graph declaration, navigation, and `toRoute`; Navigation 3
+uses application key types and requires serialization only for a persistent back stack.
+
+The frozen Q3 design introduces Core-owned `navigation.typed-routes` and Android-owned
+`navigation.typed-route-host`:
+
+1. One final `NavRouteSpec<T>` owns a stable explicit route name plus the only encode/decode pair.
+   Encoding still produces `NavRoute`, so transactions, deep links, restoration, `SingleTop`, and
+   diagnostics retain one storage model rather than a typed parallel stack.
+2. Core graph overloads accept the same spec; `NavEntry.toRoute(spec)` and `hasRoute(spec)` provide
+   destination and test access. Android `navigate`, `replaceTop`, and `reset` overloads encode
+   through that spec before entering the existing transaction.
+3. A mismatched route name fails before decode; encoder/decoder failures remain caller-visible and
+   cannot partially mutate a stack. Specs and decoded objects are application declarations, never
+   persisted or retained by the host; only their closed `NavValue` result crosses process state.
+
+Identity, argument immutability, error atomicity, restoration compatibility, main-thread command
+entry, graph/deep-link coexistence, and Java-visible generic signatures are applicable contract
+fields. Lifecycle and presentation do not change. Canonical KDoc, compiled Core and Android Q3
+samples, both module manuals, guide, architecture, migration, Reference, translations, tests, and
+one Changeset are required in the implementation PR.
+
+This slice deliberately excludes runtime `KClass` registries, implicit class-name route identity,
+arbitrary live-object persistence, and a mandatory serialization dependency in Navigation Core.
+Slice 7.4 will publish a separate optional Kotlinx Serialization adapter over `NavRouteSpec<T>`;
+custom codecs remain the escape hatch for unsupported schemas. This split is dependency isolation,
+not two routing implementations.
 
 ### Phase 8: document, release, and archive
 
