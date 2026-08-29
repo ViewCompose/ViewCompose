@@ -17,7 +17,8 @@
       "validate_code",
       "render_preview",
       "diagnose_layout",
-      "analyze_project"
+      "analyze_project",
+      "convert_xml_to_viewcompose"
     ],
     "skills": [
       "viewcompose-api-reference",
@@ -35,6 +36,7 @@
       "sbom.spdx.json",
       "third-party-licenses.json",
       "contracts/mcp-protocol.json",
+      "contracts/design-ir.schema.json",
       "contracts/tool-envelope.schema.json",
       "generated/current-source/artifacts.json",
       "generated/current-source/capabilities.json",
@@ -47,6 +49,7 @@
       "scripts/ai-tool.mjs",
       "scripts/bounded-process.mjs",
       "scripts/compiler-adapter.mjs",
+      "scripts/design-ir-to-kotlin.mjs",
       "scripts/knowledge-retriever.mjs",
       "scripts/layout-diagnoser.mjs",
       "scripts/mcp-server.mjs",
@@ -56,6 +59,8 @@
       "scripts/static-validator.mjs",
       "scripts/tool-catalog.mjs",
       "scripts/tool-core.mjs",
+      "scripts/xml-migration.mjs",
+      "scripts/xml-to-design-ir.mjs",
       "skills/manifest.json",
       "skills/viewcompose-api-reference/SKILL.md",
       "skills/viewcompose-create-screen/SKILL.md",
@@ -96,12 +101,14 @@
       "search_component",
       "get_sample",
       "validate_code:static",
-      "analyze_project"
+      "analyze_project",
+      "convert_xml_to_viewcompose:generate"
     ],
     "sourceBoundModes": [
       "validate_code:compile",
       "render_preview",
-      "diagnose_layout"
+      "diagnose_layout",
+      "convert_xml_to_viewcompose:compile"
     ],
     "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
     "implicitProtocolDowngrade": false

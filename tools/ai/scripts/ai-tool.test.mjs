@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
+import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import {dispatchToolRequest} from './ai-tool.mjs';
@@ -77,6 +78,23 @@ test('dispatches deterministic knowledge retrieval through the same envelope', a
   assert.equal(sample.data.executable, true);
 });
 
+test('dispatches standalone XML migration through the frozen tool envelope', async () => {
+  const source = await readFile(
+    new URL('../evaluation/fixtures/xml/login.xml', import.meta.url),
+    'utf8',
+  );
+  const result = await dispatchToolRequest(await request('convert_xml_to_viewcompose', {
+    source,
+    path: 'res/layout/login.xml',
+    mode: 'generate',
+  }));
+  assert.equal(result.status, 'success');
+  assert.equal(result.tool, 'convert_xml_to_viewcompose');
+  assert.equal(result.evidence.level, 'static');
+  assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.LoginView('));
+  assert.equal(result.data.migrationReport.callSiteReview.required, true);
+});
+
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {
   let invocations = 0;
   const drift = await dispatchToolRequest(await request('validate_code', {
@@ -98,7 +116,7 @@ test('rejects framework drift and unsupported tools without invoking adapters', 
   assert.equal(invocations, 0);
 });
 
-test('maps compile, render, layout diagnosis, and project limits into provider-neutral adapters', async () => {
+test('maps compile, render, layout diagnosis, project, and XML limits into provider-neutral adapters', async () => {
   const captured = [];
   const handler = (tool, level) => async (arguments_) => {
     captured.push({tool, arguments_});
@@ -127,6 +145,11 @@ test('maps compile, render, layout diagnosis, and project limits into provider-n
     maxFiles: 25,
     maxDepth: 5,
   }), {analyze: handler('analyze_project', 'static')});
+  await dispatchToolRequest(await request('convert_xml_to_viewcompose', {
+    source: '<TextView />',
+    path: 'res/layout/screen.xml',
+    mode: 'generate',
+  }), {convertXml: handler('convert_xml_to_viewcompose', 'static')});
 
   assert.equal(captured[0].arguments_.limits.maxSourceBytes, 256 * 1024);
   assert.equal(captured[0].arguments_.signal instanceof AbortSignal, true);
@@ -136,6 +159,9 @@ test('maps compile, render, layout diagnosis, and project limits into provider-n
   assert.equal(captured[2].arguments_.signal instanceof AbortSignal, true);
   assert.equal(captured[3].arguments_.limits.maxFiles, 25);
   assert.equal(captured[3].arguments_.limits.maxDepth, 5);
+  assert.equal(captured[4].arguments_.limits.maxSourceBytes, 256 * 1024);
+  assert.equal(captured[4].arguments_.signal instanceof AbortSignal, true);
+  assert.equal(captured[4].arguments_.mode, 'generate');
 });
 
 test('propagates transport cancellation into the bounded execution signal', async () => {

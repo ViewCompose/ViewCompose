@@ -118,7 +118,8 @@ npm --silent --prefix tools/ai run tool -- --pretty < request.json
 
 It currently dispatches `get_api_reference`, `get_component_reference`, `search_component`,
 `get_sample`, `validate_code` (`static` or `compile`), `render_preview`, `diagnose_layout`, and
-`analyze_project`. The request must name the exact `framework.versionLane` and
+`analyze_project`, plus `convert_xml_to_viewcompose` (`generate` or `compile`). The request must name
+the exact `framework.versionLane` and
 `framework.identity` from `generated/current-source/manifest.json`; input, output, and timeout
 limits are mandatory and are propagated to the underlying adapter. Stdout contains only one JSON
 result. Operational errors use stderr and exit code 2. The CLI accepts no project-selected command,
@@ -156,6 +157,24 @@ clipping to stable source-aware codes. It also preserves bounded renderer warnin
 means only that this renderer reported no structured layout diagnostic or warning; it is not a
 pixel, accessibility, overlap, or design-intent claim.
 
+Run the bounded XML migration gates with:
+
+```bash
+npm --prefix tools/ai run verify:phase4-design-ir
+JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-xml
+./gradlew verifyAiDesignIr verifyAiXmlMigration
+```
+
+`convert_xml_to_viewcompose` accepts only the frozen Android XML layout v1 subset documented by
+`evaluation/fixtures/xml/subset-contract.json`. `generate` parses XML into typed Design IR and
+returns deterministic ViewCompose Kotlin plus resource/state bindings and a mandatory call-site
+review checklist. It runs standalone and never invokes Gradle. `compile` performs the same steps and
+then enters the fixed hermetic compiler; callers must select this deeper mode explicitly. Custom
+Views, Data Binding, unknown attributes/elements/namespaces, unsupported values, `DOCTYPE`/entities,
+malformed XML, duplicate IDs, and limit violations return localized diagnostics and no Kotlin.
+String resources remain explicit caller `String` bindings and `TextFieldState` remains caller-owned;
+the tool does not invent listeners or rewrite ViewBinding/application call sites.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -169,9 +188,9 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns eight tools in stable
+lifecycle; it never silently downgrades either era. `tools/list` returns nine tools in stable
 order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
-`analyze_project`.
+`analyze_project`, followed by `convert_xml_to_viewcompose`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
 provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.
@@ -220,7 +239,7 @@ npm --prefix tools/ai run package:distribution
 ```
 
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
-exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the eight-tool CLI/MCP core,
+exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the nine-tool CLI/MCP core,
 five consumer skills, the immutable Knowledge Bundle, an SPDX 2.3 package record, the MIT license,
 and a reviewed empty runtime-dependency license inventory. It intentionally contains no
 `node_modules`, Gradle project, Android SDK, JDK, provider adapter, network listener, or model.
@@ -244,8 +263,9 @@ npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
 ```
 
 `get_api_reference`, `get_component_reference`, `search_component`, `get_sample`, static
-`validate_code`, and `analyze_project` work from the installed package alone. Compile-mode
-`validate_code`, `render_preview`, and `diagnose_layout` remain source-bound: set
+`validate_code`, `analyze_project`, and generate-mode `convert_xml_to_viewcompose` work from the
+installed package alone. Compile-mode `validate_code`, compile-mode
+`convert_xml_to_viewcompose`, `render_preview`, and `diagnose_layout` remain source-bound: set
 `VIEWCOMPOSE_SOURCE_ROOT` to the absolute root of the matching ViewCompose checkout and provide the
 pinned JDK/Android/Gradle offline lane. The adapter requires the exact Knowledge Bundle source
 revision to be present in that checkout's Git ancestry and rejects missing wrapper/settings files,

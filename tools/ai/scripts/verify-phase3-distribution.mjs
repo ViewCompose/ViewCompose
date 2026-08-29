@@ -18,6 +18,9 @@ const knowledgePath = fileURLToPath(new URL('../generated/current-source/manifes
 const compileFixturePath = fileURLToPath(
   new URL('../evaluation/fixtures/kotlin/foundation-profile-summary-valid.kt', import.meta.url),
 );
+const xmlFixturePath = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/login.xml', import.meta.url),
+);
 const outputRoot = resolve(aiRoot, 'build/distribution');
 const npmEnvironment = Object.freeze({
   npm_config_audit: 'false',
@@ -92,7 +95,7 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
     tool,
     framework: knowledge.framework,
     limits: {
-      timeoutMs: tool === 'validate_code' ? 120_000 : 10_000,
+      timeoutMs: tool === 'validate_code' || arguments_.mode === 'compile' ? 120_000 : 10_000,
       maxInputBytes: 4 * 1024 * 1024,
       maxOutputBytes: 1024 * 1024,
     },
@@ -103,10 +106,64 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
   return JSON.parse(result.stdout);
 }
 
-async function runMcp(executable, messages) {
-  const result = await runStreaming(executable, `${messages.map(JSON.stringify).join('\n')}\n`);
-  if (result.stderr !== '') throw new Error('Installed MCP server emitted unexpected stderr.');
-  return result.stdout.trim().split('\n').filter(Boolean).map(JSON.parse);
+function runMcp(executable, messages, {timeoutMs = 180_000} = {}) {
+  return new Promise((resolvePromise, reject) => {
+    const child = spawn(executable, [], {
+      cwd: repositoryRoot,
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const expectedResponses = messages.filter((message) => message.id !== undefined).length;
+    const responses = [];
+    const stderr = [];
+    let stdoutBuffer = '';
+    let outputBytes = 0;
+    let settled = false;
+    const settle = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      callback(value);
+    };
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      settle(reject, new Error(`${executable} exceeded ${timeoutMs} ms.`));
+    }, timeoutMs);
+    child.stderr.on('data', (chunk) => stderr.push(chunk));
+    child.stdout.on('data', (chunk) => {
+      outputBytes += chunk.length;
+      if (outputBytes > 8 * 1024 * 1024) {
+        child.kill('SIGKILL');
+        settle(reject, new Error(`${executable} exceeded the verifier output bound.`));
+        return;
+      }
+      stdoutBuffer += chunk.toString('utf8');
+      let newline = stdoutBuffer.indexOf('\n');
+      while (newline !== -1) {
+        const line = stdoutBuffer.slice(0, newline).trim();
+        stdoutBuffer = stdoutBuffer.slice(newline + 1);
+        if (line !== '') responses.push(JSON.parse(line));
+        newline = stdoutBuffer.indexOf('\n');
+      }
+      if (responses.length === expectedResponses && !child.stdin.destroyed) child.stdin.end();
+    });
+    child.once('error', (error) => settle(reject, error));
+    child.once('close', (exitCode) => {
+      const errorOutput = Buffer.concat(stderr).toString('utf8');
+      if (exitCode !== 0) {
+        settle(reject, new Error(`${executable} exited ${exitCode}: ${errorOutput.slice(0, 4096)}`));
+      } else if (errorOutput !== '') {
+        settle(reject, new Error('Installed MCP server emitted unexpected stderr.'));
+      } else if (responses.length !== expectedResponses) {
+        settle(reject, new Error(
+          `Installed MCP server returned ${responses.length} of ${expectedResponses} responses.`,
+        ));
+      } else {
+        settle(resolvePromise, responses);
+      }
+    });
+    child.stdin.write(`${messages.map(JSON.stringify).join('\n')}\n`);
+  });
 }
 
 function modernMeta(version) {
@@ -185,6 +242,41 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
     throw new Error('Installed CLI did not retrieve the frozen compiled sample.');
   }
 
+  const xml = await readFile(xmlFixturePath, 'utf8');
+  const generated = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    source: xml,
+    path: 'res/layout/login.xml',
+    mode: 'generate',
+  }, 'distribution-xml-generate');
+  if (
+    generated.status !== 'success' ||
+    generated.evidence.level !== 'static' ||
+    !generated.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
+    generated.data?.migrationReport?.bindings?.resources?.length !== 3
+  ) {
+    throw new Error('Installed CLI did not generate the frozen standalone XML migration.');
+  }
+
+  const rejectedXmlCompile = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    source: xml,
+    path: 'res/layout/login.xml',
+    mode: 'compile',
+  }, 'distribution-xml-mismatched-source', {VIEWCOMPOSE_SOURCE_ROOT: installedPackageRoot});
+  if (
+    rejectedXmlCompile.status !== 'unsupported' ||
+    rejectedXmlCompile.diagnostics?.[0]?.code !== 'VC-AI-SOURCE-ROOT-MISMATCH'
+  ) {
+    throw new Error('Installed XML compile did not reject a mismatched source checkout.');
+  }
+  const compiledXml = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    source: xml,
+    path: 'res/layout/login.xml',
+    mode: 'compile',
+  }, 'distribution-xml-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  if (compiledXml.status !== 'success' || compiledXml.evidence.level !== 'compiled') {
+    throw new Error('Installed CLI did not compile the frozen XML migration.');
+  }
+
   const source = await readFile(compileFixturePath, 'utf8');
   const rejected = await runCli(cli, knowledge, 'validate_code', {
     mode: 'compile',
@@ -209,22 +301,50 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
   if (compiled.status !== 'success' || compiled.evidence.level !== 'compiled') {
     throw new Error('Installed CLI did not compile the frozen end-to-end sample.');
   }
-  return compiled.evidence.outputFingerprint;
+  return {
+    sample: compiled.evidence.outputFingerprint,
+    xml: compiledXml.evidence.outputFingerprint,
+  };
 }
 
 async function verifyMcpMatrix(mcp, contract) {
   const modernVersion = contract.compatibility.protocolVersions[0];
+  const xml = await readFile(xmlFixturePath, 'utf8');
   const modern = await runMcp(mcp, [{
     jsonrpc: '2.0',
     id: 'modern-list',
     method: 'tools/list',
     params: {_meta: modernMeta(modernVersion)},
+  }, {
+    jsonrpc: '2.0',
+    id: 'modern-xml',
+    method: 'tools/call',
+    params: {
+      name: 'convert_xml_to_viewcompose',
+      arguments: {source: xml, path: 'res/layout/login.xml', mode: 'generate'},
+      _meta: modernMeta(modernVersion),
+    },
   }]);
+  const modernList = modern.find((response) => response.id === 'modern-list');
+  const modernXml = modern.find((response) => response.id === 'modern-xml');
   if (
-    modern.length !== 1 ||
-    modern[0].result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',')
+    modern.length !== 2 ||
+    modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
+    modernXml?.result?.structuredContent?.status !== 'success' ||
+    !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(')
   ) {
-    throw new Error(`Installed MCP server failed modern protocol ${modernVersion}.`);
+    const responseSummary = modern.map((response) => ({
+      id: response.id,
+      error: response.error,
+      toolCount: response.result?.tools?.length,
+      status: response.result?.structuredContent?.status,
+      diagnosticCodes: response.result?.structuredContent?.diagnostics?.map((diagnostic) => diagnostic.code),
+      kotlinPrefix: response.result?.structuredContent?.data?.kotlin?.slice(0, 80),
+    }));
+    throw new Error(
+      `Installed MCP server failed modern protocol ${modernVersion}: ` +
+      JSON.stringify(responseSummary),
+    );
   }
 
   const legacyVersion = contract.compatibility.protocolVersions[1];
@@ -304,7 +424,7 @@ async function main() {
     await Promise.all([access(cli), access(mcp), access(packageRoot)]);
     await verifyInstalledFiles(packageRoot, primary.manifest);
     await verifyInventory(packageRoot, contract);
-    const compileFingerprint = await verifyCliFlow(cli, knowledge, packageRoot);
+    const compileFingerprints = await verifyCliFlow(cli, knowledge, packageRoot);
     await verifyMcpMatrix(mcp, contract);
 
     await execFileAsync('npm', [
@@ -331,7 +451,8 @@ async function main() {
     process.stdout.write(
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
-      `2/2 installed MCP protocol versions, and compiled example ${compileFingerprint}.\n`,
+      `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
+      `and compiled XML migration ${compileFingerprints.xml}.\n`,
     );
   } finally {
     if (!uninstalled) {

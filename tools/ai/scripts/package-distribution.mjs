@@ -25,6 +25,7 @@ const packageContractPath = fileURLToPath(
   new URL('../evaluation/fixtures/distribution/package-contract.json', import.meta.url),
 );
 const sourcePaths = Object.freeze([
+  'contracts/design-ir.schema.json',
   'contracts/mcp-protocol.json',
   'contracts/tool-envelope.schema.json',
   'generated/current-source/artifacts.json',
@@ -38,6 +39,7 @@ const sourcePaths = Object.freeze([
   'scripts/ai-tool.mjs',
   'scripts/bounded-process.mjs',
   'scripts/compiler-adapter.mjs',
+  'scripts/design-ir-to-kotlin.mjs',
   'scripts/knowledge-retriever.mjs',
   'scripts/layout-diagnoser.mjs',
   'scripts/mcp-server.mjs',
@@ -47,6 +49,8 @@ const sourcePaths = Object.freeze([
   'scripts/static-validator.mjs',
   'scripts/tool-catalog.mjs',
   'scripts/tool-core.mjs',
+  'scripts/xml-migration.mjs',
+  'scripts/xml-to-design-ir.mjs',
   'skills/manifest.json',
   'skills/viewcompose-api-reference/SKILL.md',
   'skills/viewcompose-create-screen/SKILL.md',

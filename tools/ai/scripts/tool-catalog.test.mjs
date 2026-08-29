@@ -13,6 +13,7 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     'render_preview',
     'diagnose_layout',
     'analyze_project',
+    'convert_xml_to_viewcompose',
   ]);
   assert.deepEqual(Object.keys(TOOL_DEFINITIONS).sort(), [...TOOL_NAMES].sort());
   for (const name of TOOL_NAMES) {
@@ -43,4 +44,9 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
   }, TOOL_DEFINITIONS.diagnose_layout.inputSchema);
   assert.ok(diagnosisEscape.some((violation) =>
     violation.includes('unexpected property renderTreePath')));
+
+  const missingXmlMode = validateSchemaValue({
+    source: '<TextView />',
+  }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
+  assert.ok(missingXmlMode.some((violation) => violation.includes('missing required property mode')));
 });

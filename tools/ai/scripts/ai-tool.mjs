@@ -16,6 +16,7 @@ import {diagnoseLayout} from './layout-diagnoser.mjs';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
 import {TOOL_DEFINITIONS} from './tool-catalog.mjs';
+import {convertXmlToViewCompose} from './xml-migration.mjs';
 import {
   diagnostic,
   loadKnowledgeManifest,
@@ -62,6 +63,7 @@ export async function dispatchToolRequest(request, {
   getComponentReference = retrieveComponentReference,
   searchComponent = searchComponents,
   getSample = retrieveSample,
+  convertXml = convertXmlToViewCompose,
   signal,
 } = {}) {
   const schema = await loadToolEnvelopeSchema();
@@ -200,6 +202,21 @@ export async function dispatchToolRequest(request, {
             timeoutMs: request.limits.timeoutMs,
             maxOutputBytes: request.limits.maxOutputBytes,
           }).filter(([, value]) => value !== undefined)),
+        });
+        break;
+      case 'convert_xml_to_viewcompose':
+        result = await convertXml({
+          source: request.arguments.source,
+          path: request.arguments.path,
+          mode: request.arguments.mode,
+          requestId: request.requestId,
+          limits: {
+            maxSourceBytes: request.limits.maxInputBytes,
+            timeoutMs: request.limits.timeoutMs,
+            maxOutputBytes: request.limits.maxOutputBytes,
+          },
+          signal: controller.signal,
+          compile,
         });
         break;
       default:
