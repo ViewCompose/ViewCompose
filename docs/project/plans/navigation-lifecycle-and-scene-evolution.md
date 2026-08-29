@@ -1241,6 +1241,48 @@ three-policy resource evidence, selected release benchmarks, repository QA, docu
 governance, and interpreted evidence pass. Any production defect exposed by the matrix is fixed in
 a separate capability slice with its own release and documentation disposition.
 
+Acceptance evidence in progress:
+
+- The compiled quality plugin now owns `navigationCoverageReport` and
+  `verifyNavigationCoverage`, and `qaQuick` consumes the latter. The selected Core bundle covered
+  237/265 lines (`89.43%`) and 165/223 branches (`73.99%`), above its `80%`/`70%` floors. The
+  Android bundle covered 1,763/2,146 lines (`82.15%`) and 615/1,022 branches (`60.18%`), above its
+  `70%`/`60%` floors. Core passed 85/85 tests; Android passed 182/182, one more than slice 7.5
+  (`+0.55%`) because edge-progress normalization now covers non-finite, clamped, right-edge, and
+  unknown-edge branches. The previous repository had no accepted coverage gate, so a normalized
+  coverage delta is not meaningful. The absolute baseline is **improved** and fails closed on
+  missing execution data, class bundles, or either floor.
+- The physical Pixel 4 XL/API 33 passed the complete `NavigationBackDeviceTest` class 18/18 with
+  zero failures, errors, or skips in `51.420 s`, two more cases than slice 7.5's 16 (`+12.5%`). The
+  Xiaomi MI 6/API 28 passed the three required reachability/resource cases 3/3 in `9.874 s`; this is
+  its first such baseline, so no percentage delta is defined. Terminal pop made the presentation,
+  LifecycleOwner, and ViewModel unreachable. `Bounded(2)` eviction made the home presentation
+  unreachable while its owner and ViewModel remained reachable at `CREATED`. This is **improved**
+  release and retention confidence across two API/OEM tiers, not proof for API 24 or every current
+  target implementation.
+- At depth 13, the Pixel recorded `DisposeWhenHidden` as 1 presentation / 5,659 KiB Java /
+  12,031 KiB native / 200,769 KiB PSS / 46,550 us median pop; `Bounded(2)` as 3 / 6,181 /
+  11,537 / 200,901 / 50,466; and `RetainAll` as 13 / 10,249 / 12,673 / 204,821 / 10,901. Relative
+  to dispose, bounded changed Java by `+9.2%`, native by `-4.1%`, PSS by `+0.07%`, and pop by
+  `+8.4%`; retain-all changed them by `+81.1%`, `+5.3%`, `+2.0%`, and `-76.6%`.
+- The MI 6 recorded dispose as 1 / 4,037 / 20,964 / 153,437 / 62,343; bounded as 3 / 4,843 /
+  22,198 / 155,945 / 56,635; and retain-all as 13 / 8,885 / 24,061 / 161,894 / 8,130, in the same
+  units and order. Relative to dispose, bounded changed Java/native/PSS/pop by `+20.0%`, `+5.9%`,
+  `+1.6%`, and `-9.2%`; retain-all changed them by `+120.1%`, `+14.8%`, `+5.5%`, and `-87.0%`.
+  The conclusion is **mixed**: retaining all presentations buys much faster synchronous pop at a
+  repeatable Java/native/PSS cost, while bounded retention enforces the intended three-presentation
+  structural cap with a much smaller resource delta but no universal latency win. Samples are
+  sequential single-process observations after bounded GC settling, so allocator history, shared
+  pages, OEM accounting, and one run per policy prevent absolute thresholds or cross-device
+  ranking. Keep bounded retention as the balanced default and rerun repeated samples if that
+  default or the depth contract changes.
+- `qaQuick` passed all 2,280 tasks in `7m05s` (894 executed and 1,386 up to date), including the new
+  coverage gate, unit/Robolectric suites, R8, Paparazzi hosts, release/Javadoc publication, and
+  compiled samples. Release intent resolved zero changed artifacts, zero ignored artifacts, and
+  zero shared classifications against `2198d156`; development-tooling isolation passed. This is
+  **improved** repository confidence and confirms the slice remains test/tooling-only; cache mix and
+  wall time are execution context rather than performance evidence.
+
 ### Phase 8: document, release, and archive
 
 1. Move durable generic lifecycle conclusions to `docs/architecture/lifecycle-and-saved-state.md`
