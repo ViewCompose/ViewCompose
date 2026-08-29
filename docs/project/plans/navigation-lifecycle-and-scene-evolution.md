@@ -64,7 +64,7 @@ completion:
   - Navigation-specific presentation state has one stable per-entry source, is not inferred from AndroidX Lifecycle, and cannot schedule frame-rate recomposition by default.
   - All affected capability, API, sample, module, architecture, migration, release-intent, documentation, unit, device, and performance gates pass before archival.
 last_verified: 2026-08-29
-next_action: Execute the Phase 7 coverage, leak, memory, and representative performance matrix after the accepted NavigationEvent slice 7.5.
+next_action: Implement capability slice 7.6 navigation coverage, reachability, memory, and release-benchmark evidence without changing production APIs.
 maven_release_changesets:
   - release/changes/20260829-navigation-destination-context.json
   - release/changes/20260829-navigation-event-host.json
@@ -88,12 +88,12 @@ Phase 4 entry/presentation lifetime separation, and Phase 5 stable destination c
 complete. Phase 6 reducer/executor convergence and acceptance are complete. Phase 7 is active; its
 structured deep-link, entry-targeted result, typed-route contract, and optional Kotlinx
 Serialization adapter slices are complete. The remaining-gap audit and capability slice 7.5 direct
-NavigationEvent host integration are complete. Phase 7 continues with its coverage, leak, memory,
-and representative performance matrix.
+NavigationEvent host integration are complete. Phase 7 continues with capability slice 7.6, which
+freezes the remaining coverage, reachability, memory, and representative performance matrix.
 
 Last verified: 2026-08-29.
 
-Next action: execute the Phase 7 coverage, leak, memory, and representative performance matrix.
+Next action: implement capability slice 7.6 without changing production APIs.
 
 ## Maven release changesets
 
@@ -1195,6 +1195,51 @@ Acceptance evidence:
   run, not performance evidence. Leak, memory, representative navigation performance, Android
   Studio Preview input, forward history, and general overlay scenes remain **inconclusive** and are
   the next Phase 7 matrix or explicitly deferred capabilities.
+
+#### Capability slice 7.6: coverage and resource evidence closure
+
+This slice adds evidence infrastructure and tests only. Navigation Core and Navigation Android
+production declarations, runtime behavior, dependency metadata, publication inputs, and artifacts
+remain unchanged; therefore no capability-impact record, public API documentation change, or Maven
+Changeset is admitted. The unpublished quality build, debug host, Android tests, existing benchmark
+module, active plan, and capability-verification workflow own the work.
+
+The accepted matrix is:
+
+1. The compiled quality plugin owns one `navigationCoverageReport` and one
+   `verifyNavigationCoverage` entry point. They run the existing Core JVM and Android Robolectric
+   suites with JaCoCo, emit XML and HTML under the root quality-report directory, and fail when a
+   report or required class bundle is missing. `qaQuick` consumes the verification task.
+2. The Core bundle covers scene/lifecycle projection and `NavExecutionReducer`; its initial floor is
+   80% line and 70% branch. The Android bundle covers the plan executor/coordinator, entry and graph
+   owner stores, destination session/retention policy, Back adapter, runtime, and public `NavHost`
+   execution path; its floor is 70% line and 60% branch. JaCoCo compiler-generated classes are
+   excluded explicitly, while real uncovered production branches remain visible. Floors may rise
+   after the first accepted baseline but cannot be lowered to make a change pass.
+3. A real-device reachability test captures weak references before a terminal pop and proves the
+   destination View, owner, and ViewModel become unreachable after settled cleanup. Bounded-LRU
+   eviction separately proves the native presentation becomes unreachable while its logical owner
+   and ViewModel remain alive. The harness uses bounded polling and allocation pressure; a timeout
+   fails instead of being reported as a leak measurement.
+4. The existing depth-13 retention measurement expands from `DisposeWhenHidden` and `RetainAll` to
+   all three policies, including `Bounded(2)`. Each sample records live presentation count, Java
+   allocated heap, native allocated heap, total PSS, and median synchronous pop time after the same
+   warmup/GC procedure. Structural presentation bounds are gates; heap/PSS and timing are evidence,
+   not absolute cross-device thresholds.
+5. The existing release/R8 Macrobenchmarks remain the representative workload. On one explicitly
+   selected physical device, profile-guided ViewCompose push/pop and Activity enter/exit references
+   run from one installed benchmark pair. Frame P50/P95, heap/RSS, trace sections, device/build
+   context, absolute results, normalized comparisons, limitations, and conclusion are recorded;
+   debug frame tests do not substitute for this evidence.
+6. The complete `NavigationBackDeviceTest` reruns on the Pixel 4 XL/API 33, and the reachability plus
+   retention evidence also runs on the connected Xiaomi MI 6/API 28 when supported. A skipped case,
+   unsupported collector, missing benchmark metric, or single-device result is reported exactly and
+   cannot be generalized to the full API 24/current-target matrix.
+
+The implementation is complete only when coverage floors, unit suites, device reachability,
+three-policy resource evidence, selected release benchmarks, repository QA, documentation
+governance, and interpreted evidence pass. Any production defect exposed by the matrix is fixed in
+a separate capability slice with its own release and documentation disposition.
 
 ### Phase 8: document, release, and archive
 
