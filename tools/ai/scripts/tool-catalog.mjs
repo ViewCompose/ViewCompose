@@ -125,7 +125,7 @@ const executableDefinitions = {
   convert_xml_to_viewcompose: {
     title: 'Convert Android XML to ViewCompose',
     description:
-      'Convert source-only or explicit-root Android XML project context to deterministic ViewCompose Kotlin.',
+      'Convert source-only or explicit-root Android XML project context, including bounded layout dependencies, to deterministic ViewCompose Kotlin.',
     inputSchema: {
       type: 'object',
       oneOf: [

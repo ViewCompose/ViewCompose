@@ -162,8 +162,10 @@ Run the bounded XML migration gates with:
 ```bash
 npm --prefix tools/ai run verify:phase4-design-ir
 JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-project-context
+JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-layout-dependencies
 JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase4-xml
-./gradlew verifyAiDesignIr verifyAiXmlProjectContext verifyAiXmlMigration
+./gradlew verifyAiDesignIr verifyAiXmlProjectContext verifyAiXmlLayoutDependencies \
+  verifyAiXmlMigration
 ```
 
 `convert_xml_to_viewcompose` accepts only the compatible frozen Android XML layout v1 and v2
@@ -182,6 +184,14 @@ logic, follows symbolic links, or claims call-site completeness. Qualified resou
 evidence only; themes, aliases, implicit style parents, resource conflicts, formatted resources,
 and unsafe or missing defaults fail closed. The returned `projectContext` and migration report use
 project-relative paths and fingerprints and contain no raw application source.
+
+Project form also resolves the explicit-root layout graph frozen by
+`evaluation/fixtures/xml/layout-dependency-contract.json`. Unqualified `@layout/name` includes use
+the first declared default `layout/` root. Ordinary included roots remain nodes, while an included
+`merge` root contributes its ordered children at the include position. Every graph edge and IR node
+retains its original project-relative file and line. Source-only includes, standalone merge roots,
+missing layouts, cycles, include overrides, symbolic links, and dependency ceilings fail closed;
+the tool never performs AGP variant or resource merging.
 
 Layout v2 adds `FrameLayout` as ordered-overlay `Box`, `ImageView` as `Image`, and
 `android:visibility`. Drawable references become caller-owned `ImageSource` parameters; the tool

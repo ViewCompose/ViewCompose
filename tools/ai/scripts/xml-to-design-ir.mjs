@@ -434,6 +434,7 @@ function unsupportedFragment({node, attribute, code, reason, source, path, sourc
     preservedSource: (attribute?.raw ?? node.raw ?? source.slice(node.start, node.end ?? node.start + 1))
       .slice(0, 16384),
     disposition: 'blocked',
+    diagnosticSource: {path, source, offset},
   };
 }
 
@@ -442,16 +443,42 @@ function addUnsupported(state, fragment) {
     state.limitExceeded = true;
     return;
   }
-  state.unsupported.push(fragment);
+  const {diagnosticSource, ...publicFragment} = fragment;
+  state.unsupported.push(publicFragment);
+  state.unsupportedLocations.push(diagnosticSource);
 }
 
 function mapNode(node, sourcePath, source, state, sourceIndex) {
+  sourcePath = node.origin?.path ?? sourcePath;
+  source = node.origin?.source ?? source;
   const fallbackSourceId = `${node.name}[${sourceIndex}]`;
   if (node.name === 'layout') {
     addUnsupported(state, unsupportedFragment({
       node,
       code: 'VC-AI-XML-DATA-BINDING-UNSUPPORTED',
       reason: 'Android Data Binding layout roots and expressions require typed call-site analysis.',
+      source,
+      path: sourcePath,
+      sourceId: fallbackSourceId,
+    }));
+    return null;
+  }
+  if (node.name === 'include') {
+    addUnsupported(state, unsupportedFragment({
+      node,
+      code: 'VC-AI-XML-PROJECT-CONTEXT-REQUIRED',
+      reason: 'Android include elements require explicit project and resource roots.',
+      source,
+      path: sourcePath,
+      sourceId: fallbackSourceId,
+    }));
+    return null;
+  }
+  if (node.name === 'merge') {
+    addUnsupported(state, unsupportedFragment({
+      node,
+      code: 'VC-AI-XML-MERGE-ROOT-UNSUPPORTED',
+      reason: 'A merge root is supported only when expanded from an explicit project include.',
       source,
       path: sourcePath,
       sourceId: fallbackSourceId,
@@ -861,8 +888,18 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
   };
 }
 
-function diagnosticsForUnsupported(unsupported, source, path) {
-  return unsupported.map((fragment) => {
+function diagnosticsForUnsupported(unsupported, source, path, locations = []) {
+  return unsupported.map((fragment, index) => {
+    const location = locations[index];
+    if (location) {
+      return {
+        code: fragment.code,
+        severity: 'error',
+        message: fragment.reason,
+        nextAction: 'Resolve or explicitly replace this source fragment before generating Kotlin.',
+        source: sourceLocation(location.source, location.path, location.offset),
+      };
+    }
     const line = Number(fragment.sourceSpan.slice(fragment.sourceSpan.lastIndexOf(':') + 1));
     const lines = source.split('\n');
     const offset = lines.slice(0, Math.max(0, line - 1)).reduce((sum, item) => sum + item.length + 1, 0);
@@ -924,6 +961,7 @@ export async function convertXmlToDesignIr({
   source,
   path = 'layout.xml',
   limits,
+  expandedRoot,
 } = {}) {
   const started = performance.now();
   const parsed = parseBoundedAndroidLayoutXml({source, path, limits});
@@ -935,10 +973,11 @@ export async function convertXmlToDesignIr({
   const state = {
     ids: new Set(),
     unsupported: [],
+    unsupportedLocations: [],
     limitExceeded: false,
     limits: acceptedLimits,
   };
-  const root = mapNode(parsed.root, normalizedPath, source, state, '0');
+  const root = mapNode(expandedRoot ?? parsed.root, normalizedPath, source, state, '0');
   if (state.limitExceeded) {
     return {
       ...failure('limited', 'VC-AI-XML-LIMIT',
@@ -949,7 +988,12 @@ export async function convertXmlToDesignIr({
   if (!root) {
     return {
       status: 'unsupported',
-      diagnostics: diagnosticsForUnsupported(state.unsupported, source, normalizedPath),
+      diagnostics: diagnosticsForUnsupported(
+        state.unsupported,
+        source,
+        normalizedPath,
+        state.unsupportedLocations,
+      ),
       unsupported: state.unsupported,
       elapsedMs: performance.now() - started,
     };
@@ -968,7 +1012,12 @@ export async function convertXmlToDesignIr({
   assertSchemaValue(ir, await loadDesignIrSchema(), 'Converted Android XML Design IR');
   return {
     status: state.unsupported.length === 0 ? 'success' : 'unsupported',
-    diagnostics: diagnosticsForUnsupported(state.unsupported, source, normalizedPath),
+    diagnostics: diagnosticsForUnsupported(
+      state.unsupported,
+      source,
+      normalizedPath,
+      state.unsupportedLocations,
+    ),
     ir,
     unsupported: state.unsupported,
     elapsedMs: performance.now() - started,

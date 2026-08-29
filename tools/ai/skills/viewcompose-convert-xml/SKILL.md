@@ -23,7 +23,9 @@ resource, state, and behavior decision.
 3. Call `convert_xml_to_viewcompose` in `generate` mode. Inspect its Design IR, unsupported
    diagnostics, resource/state bindings, source mapping, and call-site review before changing the
    project. For project form, also inspect the context fingerprint, coverage, resource/style
-   evidence, confidence on every call site, and the explicit `not-proven` completeness result.
+   evidence, layout-dependency graph and include-edge provenance, confidence on every call site,
+   and the explicit `not-proven` completeness result. Confirm that every included file came from an
+   explicitly ordered default `layout/` root and that an expanded `merge` retained child order.
    Never fabricate, guess, or substitute an API or behavior to bypass a blocked fragment.
 4. For an unsupported component or usage shape, use `get_component_reference` and `get_sample` only
    to prepare an explicit manual migration plan. Retrieval does not turn unsupported XML semantics

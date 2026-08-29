@@ -676,6 +676,39 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiXmlLayoutDependencies") {
+            group = "verification"
+            description =
+                "Verifies bounded Android XML layout dependency graphs and include/merge expansion."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-layout-dependencies")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/xml-layout-dependencies.schema.json",
+                        "contracts/xml-project-context.schema.json",
+                        "evaluation/fixtures/xml/layout-dependencies/**",
+                        "evaluation/fixtures/xml/layout-dependency-contract.json",
+                        "evaluation/metrics.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-to-kotlin.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-layout-dependencies.mjs",
+                        "scripts/xml-migration.mjs",
+                        "scripts/xml-project-context.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-layout-dependencies.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+                project.rootDir.resolve("tools/ai-compiler-harness/build.gradle.kts"),
+            )
+        }
         project.tasks.register<Exec>("verifyAiXmlMigration") {
             group = "verification"
             description =

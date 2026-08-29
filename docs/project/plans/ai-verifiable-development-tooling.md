@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen explicit-root Android layout dependency graph and bounded include and merge expansion, then prove exact cross-file provenance and hermetic compilation.
+next_action: Freeze a source-bound generated-screen Preview contract so XML migration can advance from compiled evidence to deterministic render evidence without executing the inspected project build.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -68,12 +68,14 @@ the next compatible subset for `FrameLayout`, `ImageView`, explicit image access
 bindings, image scaling, and visibility. Its parser, IR, generator, project composition, installed
 CLI/MCP generation, and hermetic compile gates now pass. The following explicit-root layout
 dependency contract is also frozen: it bounds default-layout selection, `include`/`merge`
-expansion, dependency cycles, graph identity, and cross-file provenance before implementation.
+expansion, dependency cycles, graph identity, and cross-file provenance before implementation. Its
+resolver, project-context composition, CLI/MCP distribution, and hermetic compile gate now pass.
 
 Last verified: 2026-08-30.
 
-Next action: implement the frozen explicit-root layout dependency graph and bounded `include` and
-`merge` expansion, then prove exact cross-file provenance and hermetic compilation.
+Next action: freeze a source-bound generated-screen Preview contract so XML migration can advance
+from compiled evidence to deterministic render evidence without executing the inspected project
+build.
 
 ## Maven release changesets
 
@@ -1104,6 +1106,58 @@ dependency coverage with **no material conversion or Android runtime behavior ch
 fixtures, metrics, and installed schema freeze intended behavior only. The next action is exact
 resolver and expansion implementation plus hermetic compilation; no layout traversal may bypass
 this graph contract.
+
+### Implementation evidence — Android XML layout dependencies v1
+
+The project converter now resolves one deterministic dependency graph before mapping any include.
+It selects only default `layout/name.xml` files from ordered explicit resource roots, rejects every
+symbolic-link segment, hashes each selected raw file, and traverses no qualified directory. The
+first root containing an included layout wins. Ordinary included roots remain ordered nodes with
+their namespace declaration removed from the expanded internal tree; included `merge` roots splice
+their children at the original edge. Cycles, missing layouts, include overrides, standalone merge,
+invalid or exceeded limits, and source-only includes fail before Kotlin generation.
+
+Expansion does not synthesize a concatenated source file. Each parsed node carries its originating
+project-relative path and source, so the six-node positive fixture retains exact provenance from
+`screen.xml`, `profile_header.xml`, and `profile_actions.xml`. Duplicate IDs are checked after the
+cross-file tree is assembled. Project context scans all three selected layouts for referenced
+strings and IDs, while the migration report preserves one drawable and four string bindings. The
+returned result includes both the schema-validated graph and its project-context evidence; no raw
+application source enters either public evidence object. The second bounded expansion pass consumes
+only the project resolver's in-memory, source-owned style/dimension results, so accepted v1 style
+and string resolution also composes across an included layout without changing the raw graph
+fingerprints or executing Android resource tooling.
+
+On 2026-08-30, the dedicated gate matched 1/1 dependency graph, 1/1 exact Kotlin golden, 1/1
+include/merge expansion with complete cross-file provenance, 1/1 resource denominator, and 2/2
+fail-closed contract inputs. The generated Kotlin fingerprint is
+`ac1ecc66785420b08c4bcb2c1486e49f3c651730a71c554c967f9e052c6ff6b8`; JDK 21 hermetic compilation
+produced class fingerprint
+`0da92c36e83b7f81d73dce57942f7378778b939cfed74052d2f46be43de330c8`.
+Node 25.6.0 passed 115/115 AI-tooling tests, including first-root precedence, missing layout,
+unsupported include override, standalone merge, symbolic-link, cycle, and runtime-ceiling cases.
+
+The installed CLI generated and compiled the same dependency fixture, and modern MCP returned the
+same two-edge graph without exceeding its frozen four-request concurrency ceiling. Two clean local
+package builds remained identical: the 43-file, 266,988-byte archive has 1,520,468 declared file
+bytes and SHA-256
+`d1df410e100eb397681153c327ae5ab5ec105aa8d37780bd787dcf0e525908fd`. Offline lifecycle,
+SPDX/license inventory, both MCP protocol versions, and all four installed compile denominators
+passed. The quality-build plugin suite passed, and `verifyAiXmlLayoutDependencies` is now an owned
+`qaQuick` dependency; its root execution passed 15 actionable tasks (1 executed and 14 up-to-date).
+The final complete Design IR/project-context/layout-dependency/base-v2 XML stack passed 18
+actionable tasks (4 executed and 14 up-to-date). After bounded cleanup of this worktree's
+reconstructible build outputs recovered space for npm's atomic uninstall, the final distribution,
+layout-dependency, documentation, and tooling-isolation run passed 22 actionable tasks (8 executed
+and 14 up-to-date).
+
+Compared with the graph-contract-only denominator, this is **improved** executable multi-layout
+migration evidence with **no material Android runtime change**, because traversal, expansion,
+generation, and compilation remain downstream tooling. Limitations remain explicit: style-supplied
+v2 image/visibility fields are not an accepted subset, qualified layouts and Android resource
+merging remain inventory-only, and compilation does not prove pixels, interaction, accessibility
+behavior, or host call-site replacement. The next foundational gap is a generated screen Preview
+lane that can render converter output without executing the inspected project build.
 
 ### Implementation evidence — bounded XML to Design IR
 

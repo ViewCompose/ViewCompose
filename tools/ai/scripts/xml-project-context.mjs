@@ -616,6 +616,7 @@ async function collectFiles(root, roots, limits, started) {
 export async function resolveXmlProjectContext({
   projectRoot,
   layoutPath,
+  layoutPaths,
   resourceRoots = [],
   sourceRoots = [],
   limits: requestedLimits,
@@ -625,10 +626,17 @@ export async function resolveXmlProjectContext({
   if (!limits) return {...failure('invalid', 'VC-AI-XML-PROJECT-LIMIT', 'Project-context limits exceed the frozen ceilings.'), elapsedMs: performance.now() - started};
   const root = await canonicalRoot(projectRoot);
   const normalizedLayout = projectPath(layoutPath);
+  const normalizedLayouts = layoutPaths === undefined
+    ? [normalizedLayout]
+    : Array.isArray(layoutPaths) ? layoutPaths.map(projectPath) : [];
   const normalizedResourceRoots = resourceRoots.map(projectPath);
   const normalizedSourceRoots = sourceRoots.map(projectPath);
   if (
     !root || !normalizedLayout ||
+    normalizedLayouts.length === 0 || normalizedLayouts.length > 64 ||
+    normalizedLayouts.some((path) => !path) ||
+    !normalizedLayouts.includes(normalizedLayout) ||
+    new Set(normalizedLayouts).size !== normalizedLayouts.length ||
     resourceRoots.length === 0 || resourceRoots.length > limits.maxResourceRoots ||
     sourceRoots.length > limits.maxSourceRoots ||
     normalizedResourceRoots.some((path) => !path) || normalizedSourceRoots.some((path) => !path)
@@ -640,6 +648,12 @@ export async function resolveXmlProjectContext({
   if (layoutMetadata.error || !layoutMetadata.metadata.isFile()) return {...failure('invalid', 'VC-AI-XML-PROJECT-PATH-INVALID', `Layout ${normalizedLayout} is not a contained regular file.`, normalizedLayout), elapsedMs: performance.now() - started};
   if (!normalizedResourceRoots.some((path) => normalizedLayout.startsWith(`${path}/layout/`))) {
     return {...failure('invalid', 'VC-AI-XML-PROJECT-PATH-INVALID', 'The layout must be inside an explicit resource-root layout directory.', normalizedLayout), elapsedMs: performance.now() - started};
+  }
+  if (normalizedLayouts.some((path) =>
+    !normalizedResourceRoots.some((resourceRoot) =>
+      /^layout\/[^/]+\.xml$/u.test(path.slice(resourceRoot.length + 1)) &&
+      path.startsWith(`${resourceRoot}/`)))) {
+    return {...failure('invalid', 'VC-AI-XML-PROJECT-PATH-INVALID', 'Every layout dependency must be a default layout XML inside an explicit resource root.', normalizedLayout), elapsedMs: performance.now() - started};
   }
 
   const resourceFiles = await collectFiles(root, normalizedResourceRoots, limits, started);
@@ -657,7 +671,14 @@ export async function resolveXmlProjectContext({
     return directory === 'values' || directory.startsWith('values-');
   });
   const readableSources = sourceFiles.files.filter((file) => sourceExtensions.has(extname(file.normalized)));
-  const allFiles = new Map([[layoutMetadata.normalized, layoutMetadata]]);
+  const layoutFiles = [];
+  for (const path of normalizedLayouts) {
+    const metadata = path === normalizedLayout ? layoutMetadata : await safeMetadata(root, path);
+    if (metadata.error === 'symlink') return {...failure('invalid', 'VC-AI-XML-PROJECT-SYMLINK-DENIED', `Layout ${path} traverses a symbolic link.`, path), elapsedMs: performance.now() - started};
+    if (metadata.error || !metadata.metadata.isFile()) return {...failure('invalid', 'VC-AI-XML-PROJECT-PATH-INVALID', `Layout ${path} is not a contained regular file.`, path), elapsedMs: performance.now() - started};
+    layoutFiles.push(metadata);
+  }
+  const allFiles = new Map(layoutFiles.map((metadata) => [metadata.normalized, metadata]));
   for (const file of [...valueFiles, ...readableSources]) allFiles.set(file.normalized, file);
   if (allFiles.size > limits.maxFiles) return {...failure('limited', 'VC-AI-XML-PROJECT-LIMIT', 'Project context exceeds maxFiles.'), elapsedMs: performance.now() - started};
 
@@ -672,12 +693,17 @@ export async function resolveXmlProjectContext({
     totalBytes += content.byteLength;
   }
   const layoutSource = contentByPath.get(normalizedLayout).toString('utf8');
-  const parsedLayout = parseBoundedAndroidLayoutXml({source: layoutSource, path: normalizedLayout});
-  if (parsedLayout.status !== 'success') return {...parsedLayout, elapsedMs: performance.now() - started};
-  for (const node of (() => { const nodes = []; visitLayout(parsedLayout.root, (item) => nodes.push(item)); return nodes; })()) {
-    for (const attribute of node.attributes) {
-      if (attribute.value.startsWith('?')) {
-        return {...failure('unsupported', 'VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED', 'Theme attributes require runtime theme resolution.', normalizedLayout, layoutSource, attribute.start), elapsedMs: performance.now() - started};
+  const parsedLayouts = [];
+  for (const path of normalizedLayouts) {
+    const source = contentByPath.get(path).toString('utf8');
+    const parsed = parseBoundedAndroidLayoutXml({source, path});
+    if (parsed.status !== 'success') return {...parsed, elapsedMs: performance.now() - started};
+    parsedLayouts.push({path, source, root: parsed.root});
+    for (const node of (() => { const nodes = []; visitLayout(parsed.root, (item) => nodes.push(item)); return nodes; })()) {
+      for (const attribute of node.attributes) {
+        if (attribute.value.startsWith('?')) {
+          return {...failure('unsupported', 'VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED', 'Theme attributes require runtime theme resolution.', path, source, attribute.start), elapsedMs: performance.now() - started};
+        }
       }
     }
   }
@@ -708,46 +734,48 @@ export async function resolveXmlProjectContext({
   const effectiveStyles = [];
   const referencedResourceKeys = new Set();
   let styleFailure = null;
-  visitLayout(parsedLayout.root, (node) => {
-    if (styleFailure) return;
-    const attributes = new Map(node.attributes.map((attribute) => [attribute.name, attribute]));
-    for (const attribute of node.attributes) {
-      const resource = /^@(string|dimen)\/([A-Za-z][A-Za-z0-9_]*)$/u.exec(attribute.value);
-      if (resource) referencedResourceKeys.add(definitionKey(resource[1], resource[2]));
-    }
-    const styleAttribute = attributes.get('style');
-    if (!styleAttribute) return;
-    const match = /^@style\/([A-Za-z][A-Za-z0-9_]*)$/u.exec(styleAttribute.value);
-    if (!match) {
-      styleFailure = failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED', 'Styles must use unqualified @style/name references.', normalizedLayout, layoutSource, styleAttribute.start);
-      return;
-    }
-    const resolvedStyle = resolveStyle(match[1], stylesByName, limits);
-    if (resolvedStyle.status !== 'success') {
-      styleFailure = resolvedStyle;
-      return;
-    }
-    const allowed = new Set([...commonAttributes, ...(elementAttributes[node.name] ?? [])]);
-    const items = [];
-    for (const item of resolvedStyle.items) {
-      if (!allowed.has(item.attribute)) {
-        styleFailure = failure('unsupported', 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `${item.attribute} is not supported on ${node.name}.`, item.path);
+  for (const layout of parsedLayouts) {
+    visitLayout(layout.root, (node) => {
+      if (styleFailure) return;
+      const attributes = new Map(node.attributes.map((attribute) => [attribute.name, attribute]));
+      for (const attribute of node.attributes) {
+        const resource = /^@(string|dimen)\/([A-Za-z][A-Za-z0-9_]*)$/u.exec(attribute.value);
+        if (resource) referencedResourceKeys.add(definitionKey(resource[1], resource[2]));
+      }
+      const styleAttribute = attributes.get('style');
+      if (!styleAttribute) return;
+      const match = /^@style\/([A-Za-z][A-Za-z0-9_]*)$/u.exec(styleAttribute.value);
+      if (!match) {
+        styleFailure = failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED', 'Styles must use unqualified @style/name references.', layout.path, layout.source, styleAttribute.start);
         return;
       }
-      const value = attributeValue(item.rawValue, item.attribute);
-      if (!value || value.kind === 'resource' && value.type === 'style') {
-        styleFailure = failure('unsupported', item.rawValue.startsWith('?') ? 'VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED' : 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `Style item ${item.attribute} has an unsupported value.`, item.path);
+      const resolvedStyle = resolveStyle(match[1], stylesByName, limits);
+      if (resolvedStyle.status !== 'success') {
+        styleFailure = resolvedStyle;
         return;
       }
-      if (value.kind === 'resource') referencedResourceKeys.add(definitionKey(value.type, value.name));
-      items.push({attribute: item.attribute, value, definedBy: item.definedBy, startLine: item.startLine});
-    }
-    items.sort((left, right) => styleAttributeOrder.indexOf(left.attribute) - styleAttributeOrder.indexOf(right.attribute));
-    effectiveStyles.push({reference: styleAttribute.value, name: match[1], chain: resolvedStyle.chain, items});
-  });
+      const allowed = new Set([...commonAttributes, ...(elementAttributes[node.name] ?? [])]);
+      const items = [];
+      for (const item of resolvedStyle.items) {
+        if (!allowed.has(item.attribute)) {
+          styleFailure = failure('unsupported', 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `${item.attribute} is not supported on ${node.name}.`, item.path);
+          return;
+        }
+        const value = attributeValue(item.rawValue, item.attribute);
+        if (!value || value.kind === 'resource' && value.type === 'style') {
+          styleFailure = failure('unsupported', item.rawValue.startsWith('?') ? 'VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED' : 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `Style item ${item.attribute} has an unsupported value.`, item.path);
+          return;
+        }
+        if (value.kind === 'resource') referencedResourceKeys.add(definitionKey(value.type, value.name));
+        items.push({attribute: item.attribute, value, definedBy: item.definedBy, startLine: item.startLine});
+      }
+      items.sort((left, right) => styleAttributeOrder.indexOf(left.attribute) - styleAttributeOrder.indexOf(right.attribute));
+      effectiveStyles.push({reference: styleAttribute.value, name: match[1], chain: resolvedStyle.chain, items});
+    });
+  }
   if (styleFailure) return {...styleFailure, elapsedMs: performance.now() - started};
 
-  const ids = layoutIds(parsedLayout.root);
+  const ids = new Set(parsedLayouts.flatMap((layout) => [...layoutIds(layout.root)]));
   const layoutName = basename(normalizedLayout, '.xml');
   const sourceInputs = readableSources.map((file) => ({
     path: file.normalized,
@@ -785,7 +813,8 @@ export async function resolveXmlProjectContext({
   const normalizedStyles = [...new Map(effectiveStyles.map((style) => [style.reference, style])).values()]
     .sort((left, right) => left.reference.localeCompare(right.reference));
   const resourcesByReference = new Map(resources.map((resource) => [resource.reference, resource]));
-  const resolvedSource = resolveLayoutStyles(layoutSource, parsedLayout.root, normalizedStyles, resourcesByReference);
+  const rootLayout = parsedLayouts.find((layout) => layout.path === normalizedLayout);
+  const resolvedSource = resolveLayoutStyles(layoutSource, rootLayout.root, normalizedStyles, resourcesByReference);
   const parsedResolved = parseBoundedAndroidLayoutXml({source: resolvedSource, path: normalizedLayout});
   if (parsedResolved.status !== 'success') return {...parsedResolved, elapsedMs: performance.now() - started};
 
@@ -826,6 +855,10 @@ export async function resolveXmlProjectContext({
     diagnostics: [],
     context,
     resolvedSource,
+    resolvedLayoutSources: Object.fromEntries(parsedLayouts.map((layout) => [
+      layout.path,
+      resolveLayoutStyles(layout.source, layout.root, normalizedStyles, resourcesByReference),
+    ])),
     elapsedMs: performance.now() - started,
   };
 }

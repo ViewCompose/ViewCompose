@@ -27,6 +27,9 @@ const xmlV2FixturePath = fileURLToPath(
 const xmlProjectFixtureRoot = fileURLToPath(
   new URL('../evaluation/fixtures/xml/project-context/supported/', import.meta.url),
 );
+const xmlLayoutDependencyFixtureRoot = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/layout-dependencies/supported/', import.meta.url),
+);
 const outputRoot = resolve(aiRoot, 'build/distribution');
 const npmEnvironment = Object.freeze({
   npm_config_audit: 'false',
@@ -280,6 +283,23 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
     throw new Error('Installed CLI did not preserve explicit-root XML project context.');
   }
 
+  const layoutGenerated = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    projectRoot: xmlLayoutDependencyFixtureRoot,
+    layoutPath: 'app/src/main/res/layout/screen.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: [],
+    mode: 'generate',
+  }, 'distribution-xml-layout-dependencies-generate');
+  if (
+    layoutGenerated.status !== 'success' ||
+    !layoutGenerated.data?.kotlin?.includes('fun UiTreeBuilder.ScreenView(') ||
+    layoutGenerated.data?.layoutDependencies?.nodes?.length !== 3 ||
+    layoutGenerated.data?.layoutDependencies?.edges?.length !== 2 ||
+    layoutGenerated.data?.designIr?.roots?.[0]?.children?.length !== 4
+  ) {
+    throw new Error('Installed CLI did not expand the frozen XML layout dependency graph.');
+  }
+
   const xmlV2 = await readFile(xmlV2FixturePath, 'utf8');
   const generatedV2 = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
     source: xmlV2,
@@ -321,6 +341,19 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
   if (compiledXmlV2.status !== 'success' || compiledXmlV2.evidence.level !== 'compiled') {
     throw new Error('Installed CLI did not compile the frozen XML v2 migration.');
   }
+  const compiledXmlLayoutDependencies = await runCli(cli, knowledge, 'convert_xml_to_viewcompose', {
+    projectRoot: xmlLayoutDependencyFixtureRoot,
+    layoutPath: 'app/src/main/res/layout/screen.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: [],
+    mode: 'compile',
+  }, 'distribution-xml-layout-dependencies-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  if (
+    compiledXmlLayoutDependencies.status !== 'success' ||
+    compiledXmlLayoutDependencies.evidence.level !== 'compiled'
+  ) {
+    throw new Error('Installed CLI did not compile the frozen XML layout dependency migration.');
+  }
 
   const source = await readFile(compileFixturePath, 'utf8');
   const rejected = await runCli(cli, knowledge, 'validate_code', {
@@ -350,6 +383,7 @@ async function verifyCliFlow(cli, knowledge, installedPackageRoot) {
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlV2: compiledXmlV2.evidence.outputFingerprint,
+    xmlLayoutDependencies: compiledXmlLayoutDependencies.evidence.outputFingerprint,
   };
 }
 
@@ -398,12 +432,31 @@ async function verifyMcpMatrix(mcp, contract) {
       _meta: modernMeta(modernVersion),
     },
   }]);
+  modern.push(...await runMcp(mcp, [{
+    jsonrpc: '2.0',
+    id: 'modern-xml-layout-dependencies',
+    method: 'tools/call',
+    params: {
+      name: 'convert_xml_to_viewcompose',
+      arguments: {
+        projectRoot: xmlLayoutDependencyFixtureRoot,
+        layoutPath: 'app/src/main/res/layout/screen.xml',
+        resourceRoots: ['app/src/main/res'],
+        sourceRoots: [],
+        mode: 'generate',
+      },
+      _meta: modernMeta(modernVersion),
+    },
+  }]));
   const modernList = modern.find((response) => response.id === 'modern-list');
   const modernXml = modern.find((response) => response.id === 'modern-xml');
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
   const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
+  const modernXmlLayoutDependencies = modern.find(
+    (response) => response.id === 'modern-xml-layout-dependencies',
+  );
   if (
-    modern.length !== 4 ||
+    modern.length !== 5 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
@@ -411,7 +464,10 @@ async function verifyMcpMatrix(mcp, contract) {
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
       ?.includes('fun UiTreeBuilder.StyledLoginView(') ||
     !modernXmlV2?.result?.structuredContent?.data?.kotlin
-      ?.includes('fun UiTreeBuilder.ProfileCardView(')
+      ?.includes('fun UiTreeBuilder.ProfileCardView(') ||
+    modernXmlLayoutDependencies?.result?.structuredContent?.data?.layoutDependencies?.edges?.length !== 2 ||
+    !modernXmlLayoutDependencies?.result?.structuredContent?.data?.kotlin
+      ?.includes('fun UiTreeBuilder.ScreenView(')
   ) {
     const responseSummary = modern.map((response) => ({
       id: response.id,
@@ -532,8 +588,9 @@ async function main() {
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
-      `compiled XML v1 migration ${compileFingerprints.xml}, and compiled XML v2 migration ` +
-      `${compileFingerprints.xmlV2}.\n`,
+      `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
+      `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
+      `${compileFingerprints.xmlLayoutDependencies}.\n`,
     );
   } finally {
     if (!uninstalled) {

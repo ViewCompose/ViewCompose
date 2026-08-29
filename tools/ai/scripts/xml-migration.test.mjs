@@ -9,6 +9,9 @@ import {convertXmlToViewCompose} from './xml-migration.mjs';
 const projectContextRoot = fileURLToPath(
   new URL('../evaluation/fixtures/xml/project-context/supported/', import.meta.url),
 );
+const layoutDependencyRoot = fileURLToPath(
+  new URL('../evaluation/fixtures/xml/layout-dependencies/', import.meta.url),
+);
 
 async function fixture(name) {
   return readFile(fileURLToPath(new URL(`../evaluation/fixtures/xml/${name}`, import.meta.url)), 'utf8');
@@ -139,6 +142,131 @@ test('composes explicit project context with the XML v2 image subset', async (co
   assert.equal(result.data.projectContext.callSites.length, 0);
   assert.ok(result.data.kotlin.includes('profileAvatar: ImageSource'));
   assert.equal(result.data.migrationReport.projectEvidence.completeness, 'not-proven');
+});
+
+test('expands project include and merge layouts with exact graph and cross-file provenance', async () => {
+  const projectRoot = resolve(layoutDependencyRoot, 'supported');
+  const expectedGraph = JSON.parse(
+    await readFile(resolve(layoutDependencyRoot, 'screen.dependencies.json'), 'utf8'),
+  );
+  const expectedKotlin = await readFile(resolve(layoutDependencyRoot, 'screen.kt'), 'utf8');
+  const result = await convertXmlToViewCompose({
+    projectRoot,
+    layoutPath: 'app/src/main/res/layout/screen.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: [],
+    mode: 'generate',
+    requestId: 'xml-layout-dependencies',
+  });
+
+  assert.equal(result.status, 'success');
+  assert.deepEqual(result.data.layoutDependencies, expectedGraph);
+  const flatten = (node) => [node, ...node.children.flatMap(flatten)];
+  const nodes = flatten(result.data.designIr.roots[0]);
+  assert.equal(nodes.length, 6);
+  assert.deepEqual(nodes.map((node) => node.provenance.sourceSpan), [
+    'app/src/main/res/layout/screen.xml:2',
+    'app/src/main/res/layout/profile_header.xml:2',
+    'app/src/main/res/layout/profile_header.xml:6',
+    'app/src/main/res/layout/profile_actions.xml:3',
+    'app/src/main/res/layout/profile_actions.xml:8',
+    'app/src/main/res/layout/screen.xml:9',
+  ]);
+  assert.deepEqual(
+    result.data.migrationReport.bindings.resources.map((binding) => binding.source),
+    [
+      '@drawable/profile_avatar',
+      '@string/profile_photo',
+      '@string/profile_title',
+      '@string/edit_profile',
+      '@string/footer_label',
+    ],
+  );
+  assert.equal(result.data.migrationReport.projectEvidence.layoutFiles, 3);
+  assert.equal(result.data.migrationReport.projectEvidence.expandedIncludes, 2);
+  assert.equal(result.data.kotlin, expectedKotlin);
+});
+
+test('requires project context for include and rejects include cycles before generation', async () => {
+  const sourceOnly = await convertXmlToViewCompose({
+    source: await readFile(
+      resolve(layoutDependencyRoot, 'supported/app/src/main/res/layout/screen.xml'),
+      'utf8',
+    ),
+    path: 'res/layout/screen.xml',
+    mode: 'generate',
+    requestId: 'xml-source-include',
+  });
+  assert.equal(sourceOnly.status, 'unsupported');
+  assert.equal(sourceOnly.diagnostics[0].code, 'VC-AI-XML-PROJECT-CONTEXT-REQUIRED');
+  assert.equal(Object.hasOwn(sourceOnly.data, 'kotlin'), false);
+
+  const cycle = await convertXmlToViewCompose({
+    projectRoot: resolve(layoutDependencyRoot, 'cycle'),
+    layoutPath: 'app/src/main/res/layout/a.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: [],
+    mode: 'generate',
+    requestId: 'xml-include-cycle',
+  });
+  assert.equal(cycle.status, 'unsupported');
+  assert.equal(cycle.diagnostics[0].code, 'VC-AI-XML-INCLUDE-CYCLE');
+  assert.equal(cycle.data, undefined);
+});
+
+test('composes accepted style and resource resolution across an included layout', async (context) => {
+  const projectRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-xml-styled-include-'));
+  context.after(() => rm(projectRoot, {recursive: true, force: true}));
+  const layoutDirectory = resolve(projectRoot, 'app/src/main/res/layout');
+  const valuesDirectory = resolve(projectRoot, 'app/src/main/res/values');
+  await Promise.all([
+    mkdir(layoutDirectory, {recursive: true}),
+    mkdir(valuesDirectory, {recursive: true}),
+  ]);
+  await Promise.all([
+    writeFile(resolve(layoutDirectory, 'styled_screen.xml'), `<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <include layout="@layout/styled_label" />
+</LinearLayout>
+`),
+    writeFile(resolve(layoutDirectory, 'styled_label.xml'), `<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/IncludedLabel" />
+`),
+    writeFile(resolve(valuesDirectory, 'styles.xml'), `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="included_title">Included title</string>
+    <style name="IncludedLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:text">@string/included_title</item>
+    </style>
+</resources>
+`),
+  ]);
+
+  const result = await convertXmlToViewCompose({
+    projectRoot,
+    layoutPath: 'app/src/main/res/layout/styled_screen.xml',
+    resourceRoots: ['app/src/main/res'],
+    sourceRoots: [],
+    mode: 'generate',
+    requestId: 'xml-styled-include',
+  });
+  assert.equal(result.status, 'success');
+  assert.equal(result.data.layoutDependencies.edges.length, 1);
+  assert.equal(result.data.projectContext.styles.length, 1);
+  assert.deepEqual(
+    result.data.migrationReport.bindings.resources.map((binding) => binding.source),
+    ['@string/included_title'],
+  );
+  assert.equal(
+    result.data.designIr.roots[0].children[0].provenance.sourceSpan,
+    'app/src/main/res/layout/styled_label.xml:2',
+  );
+  assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.StyledScreenView('));
 });
 
 test('compiles project-aware generated Kotlin through the hermetic adapter', async () => {
