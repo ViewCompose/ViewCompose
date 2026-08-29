@@ -913,6 +913,28 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotComparison") {
+            group = "verification"
+            description =
+                "Verifies screenshot semantic and structural geometry comparison contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-comparison")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "evaluation/fixtures/visual/screenshot-compare/**",
+                        "evaluation/fixtures/visual/screenshot-layout-comparison-contract.json",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/verify-phase5-screenshot-comparison.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

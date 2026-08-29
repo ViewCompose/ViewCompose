@@ -462,6 +462,33 @@
       "environment": "fixed no-op or explicit boolean callback behavior with no caller lambda source, project build, task, dependency, path, provider, or network selection"
     },
     {
+      "id": "visual.screenshot-comparison-semantic-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact resolved screenshot Design IR and accepted render tree; authored identity, structure, mapped kind and role, visibility, and declared title/button text only"
+    },
+    {
+      "id": "visual.screenshot-comparison-structure-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "zero-tolerance checks for declared parent/child order, column sibling order, containment, and allowlisted wrapper bounds; no source-region or pixel-parity claim"
+    },
+    {
+      "id": "visual.screenshot-comparison-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "changed semantic text or declared structure must downgrade compared evidence and return category-specific diagnostics without an aggregate similarity score"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",

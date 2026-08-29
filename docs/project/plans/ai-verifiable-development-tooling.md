@@ -1967,6 +1967,59 @@ runtime behavior, interaction, responsive variants, or pixel similarity to the i
 The next action is to bind this accepted tree to an exact semantic and geometry comparison before
 adding any pixel metric or repair loop.
 
+### Contract freeze — screenshot semantic and structural geometry comparison
+
+Screenshot layout comparison v1 freezes the exact boundary between accepted screenshot rendering
+and any visual claim. It reuses the existing schema-validated generated-layout comparator but binds
+its inputs to the resolved screenshot Design IR fingerprint
+`6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603`, generated Preview request
+fingerprint `3bd5fe6b172856fd4e45cb30d8d301968f14353a549057c7e87041b30352b77c`, aggregate render
+fingerprint `ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076`, and render-tree
+fingerprint `5228e401662349d9142cf695c42e21805c7c332ac36bc09334a32251d2f27000`. Callers cannot replace
+the Design IR, render tree, comparison policy, project build, task, dependency, path, provider, or
+network boundary.
+
+The frozen positive denominator maps all four authored nodes and requires 27/27 checks: exact node
+keys; declared parent, child, and sibling order; `Column`, `Text`, `TextField`, and `Button` kinds;
+the field and button roles; visibility; exact `Welcome` and `Continue` text; containment; vertical
+order; and the allowlisted single-child text-field wrapper with equal wrapper and semantic-host
+bounds. It uses zero tolerance for facts that the Design IR actually declares and has no aggregate
+similarity score. The expected comparison fingerprint is
+`ad5831b8af7895b85f84651e23284555a54911696868f70c70829974f7a50f31`. Separate semantic-text
+and sibling-order mutations must downgrade evidence to `rendered` with category-specific
+diagnostics.
+
+This contract explicitly does **not** compare the `Email address` placeholder because the accepted
+render-tree properties do not expose it. The resolved screenshot IR also declares no dp size or
+padding modifiers, so containment and order are real runtime geometry evidence but not a claim that
+rendered nodes match the screenshot's source pixel regions or exact source geometry. Pixel or
+perceptual similarity, style, color, typography, draw order, accessibility traversal, state
+mutation, event execution, focus, interaction behavior, and responsive configurations remain
+outside the denominator.
+
+The contract-only gate verifies 1/1 positive denominator and 2/2 fail-closed mutations. Phase 0 now
+contains 13 schemas, 57 metrics, 60 cases, 57 fixture-backed cases, and three screenshot-comparison
+fixtures; Node 25.6.0 passes 181/181 AI-tooling tests. `verifyAiScreenshotComparison` is part of
+`qaQuick`, but the public tool still exposes only `generate`, `compile`, and `render`: activation is
+intentionally frozen as `publicCompareMode = false` and `implementation = false` until the adapter
+can reproduce this exact result.
+
+The offline package remains at 60 files and has 1,762,156 declared bytes plus a 314,886-byte
+archive, SHA-256 `bcae69502515df08617a5a2b1b92e8086d0df43e5699dbb8276711fc24a471e8`. Relative to the
+screenshot-render implementation, the tooling README adds 555 declared bytes (+0.03%) and 173
+archive bytes (+0.05%); no runtime dependency or executable contract file enters the package. The
+distribution gate passes 2/2 reproducible builds, offline install/uninstall, license inventory,
+both MCP protocol eras, all prior installed screenshot and XML compile/render denominators, and
+both XML layout comparisons. The focused quality-build suite passes seven tasks, and the combined
+comparison, documentation, development-tooling-isolation, and release-intent gate passes 22
+actionable tasks, with eight executed and 14 up-to-date.
+
+No published ViewCompose artifact, public/protected API, Android runtime, application process, or
+provider boundary changes, so this slice needs no Maven release changeset or module-manual update.
+This is **improved** comparison precision and claim honesty with **no material runtime behavior
+change**. The next action is to implement a source-bound `compare` mode, reproduce the exact
+comparison through CLI, MCP, and the installed package, and keep pixel metrics separate.
+
 ### Implementation evidence — bounded XML to Design IR
 
 The first Phase 4 implementation uses a dependency-free scanner and tree builder rather than

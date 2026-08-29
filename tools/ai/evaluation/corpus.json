@@ -902,6 +902,53 @@
         "visual.screenshot-render-binding-exactness",
         "visual.screenshot-render-binding-safety"
       ]
+    },
+    {
+      "id": "visual.screenshot-comparison-wireframe-contract",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-layout-comparison-contract.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "visual.screenshot-comparison-semantic-exactness",
+        "visual.screenshot-comparison-structure-exactness"
+      ]
+    },
+    {
+      "id": "visual.screenshot-comparison-title-mismatch",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-compare/title-text.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-COMPARE-SEMANTIC-MISMATCH"]
+      },
+      "metricIds": ["visual.screenshot-comparison-safety"]
+    },
+    {
+      "id": "visual.screenshot-comparison-order-mismatch",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-compare/sibling-order.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "rendered",
+        "diagnosticCodes": ["VC-AI-COMPARE-STRUCTURE-MISMATCH"]
+      },
+      "metricIds": ["visual.screenshot-comparison-safety"]
     }
   ]
 }

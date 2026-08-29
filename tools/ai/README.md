@@ -304,7 +304,12 @@ initial text; `() -> Unit` and `(Boolean) -> Unit` receive fixed no-op callbacks
 source or project code. Missing, reordered, source-mismatched, type-mismatched, or source-bearing
 callbacks fail before the fixed Preview harness can run. Successful rendering returns exact
 generated-source, wrapper, PNG, render-tree, and aggregate output fingerprints at `rendered`
-evidence. It does not yet claim semantic, geometry, accessibility-runtime, or pixel parity.
+evidence. Screenshot layout comparison v1 now freezes the next evidence boundary without exposing
+an unimplemented mode: the accepted resolved Design IR and render tree must match all 27 supported
+identity, structure, semantic, and containment/order checks before evidence may become `compared`.
+The contract deliberately excludes the text-field placeholder, source screenshot regions, exact
+source geometry, pixels, style, typography, accessibility traversal, state mutation, and event
+behavior because the current evidence cannot compare them.
 
 Run the local MCP server and its protocol/parity gate with:
 
@@ -316,12 +321,14 @@ npm --prefix tools/ai run verify:phase5-screenshot-inference
 npm --prefix tools/ai run verify:phase5-screenshot-resolution
 npm --prefix tools/ai run verify:phase5-screenshot-generation
 npm --prefix tools/ai run verify:phase5-screenshot-render
+npm --prefix tools/ai run verify:phase5-screenshot-comparison
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
 ./gradlew verifyAiScreenshotResolution
 ./gradlew verifyAiScreenshotGeneration
 ./gradlew verifyAiScreenshotRender
+./gradlew verifyAiScreenshotComparison
 ```
 
 The preferred protocol follows the

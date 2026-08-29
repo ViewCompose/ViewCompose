@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "operation": "replace-node-property",
+  "nodeId": "wireframe-title",
+  "property": "text",
+  "value": {"kind": "literal", "value": "Welcome back"},
+  "expectedDiagnostic": "VC-AI-COMPARE-SEMANTIC-MISMATCH"
+}
