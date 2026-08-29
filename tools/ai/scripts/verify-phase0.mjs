@@ -6,6 +6,7 @@ import {inflateSync} from 'node:zlib';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {canonicalJson} from './screenshot-contract.mjs';
 import {TOOL_DEFINITIONS, TOOL_NAMES} from './tool-catalog.mjs';
+import {verifyPhase5ScreenshotResolution} from './verify-phase5-screenshot-resolution.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -276,6 +277,7 @@ async function verifySchemas(versions) {
     layoutComparison: 'layout-comparison.schema.json',
     screenshotPreprocessing: 'screenshot-preprocessing.schema.json',
     screenshotDesignInference: 'screenshot-design-inference.schema.json',
+    screenshotInferenceResolution: 'screenshot-inference-resolution.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -2184,6 +2186,7 @@ export async function verifyPhase0() {
     schemas,
     screenshotPreprocessing,
   );
+  const screenshotInferenceResolution = await verifyPhase5ScreenshotResolution();
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -2209,6 +2212,9 @@ export async function verifyPhase0() {
     screenshotDesignInferenceFixtures:
       screenshotDesignInference.supportedFixtures.length +
         screenshotDesignInference.unsupportedFixtures.length,
+    screenshotInferenceResolutionFixtures:
+      screenshotInferenceResolution.supportedGoldens +
+        screenshotInferenceResolution.failClosedDenominators,
   };
 }
 
@@ -2226,7 +2232,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.generatedPreviewFixtures} frozen generated-Preview fixtures and ` +
           `${summary.layoutComparisonFixtures} frozen layout-comparison fixtures and ` +
           `${summary.screenshotPreprocessingFixtures} frozen screenshot-preprocessing fixtures and ` +
-          `${summary.screenshotDesignInferenceFixtures} frozen screenshot-inference fixtures.`,
+          `${summary.screenshotDesignInferenceFixtures} frozen screenshot-inference fixtures and ` +
+          `${summary.screenshotInferenceResolutionFixtures} frozen screenshot-resolution fixtures.`,
       );
     })
     .catch((error) => {

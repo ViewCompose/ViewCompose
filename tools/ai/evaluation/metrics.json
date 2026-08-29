@@ -390,6 +390,24 @@
       "environment": "public offline validator replays canonical preprocessing, reconstructs the inference request, verifies result and Design IR fingerprints, and imports only complete per-node evidence without provider execution"
     },
     {
+      "id": "visual.screenshot-resolution-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "every typed human answer binds to one imported question, source region, required action, validation identity, review receipt, and exact resolved Design IR fingerprint"
+    },
+    {
+      "id": "visual.screenshot-resolution-safety",
+      "phase": 5,
+      "measure": "blocked_or_authorized_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "missing question coverage, changed validation lineage, executable expressions, guessed resources, and callback source fail closed before code-generation eligibility"
+    },
+    {
       "id": "visual.semantic-preservation",
       "phase": 5,
       "measure": "exact_match_ratio",

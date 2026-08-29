@@ -267,6 +267,17 @@ model identity plus an explicit consent receipt bound to the exact preprocessed 
 purpose. The validator selects or executes no provider, opens no network connection, and persists
 neither the screenshot nor the raw inference result.
 
+Screenshot inference resolution v1 is contract-frozen but is not yet a public tool. It accepts only
+typed human answers bound to an exact validated import, question ID, node, pixel region, required
+action, reviewer identity, and review receipt. Content decisions may set only literal, input-profile,
+or caller-owned state values; behavior decisions name caller callback bindings without callback
+source; accessibility review records an explicit role, label source, traversal position, and
+decorative decision for every node. Expressions, guessed resources, unknown questions, changed
+lineage, and incomplete blocking-question coverage fail closed. The resolved golden has no remaining
+questions, unsupported semantics, or placeholder bindings, so the contract marks it eligible for a
+future screenshot-specific generator. That eligibility is not a compilation, render, or visual
+parity claim, and no resolution adapter is public in this slice.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -274,9 +285,11 @@ npm --silent --prefix tools/ai run mcp
 npm --prefix tools/ai run verify:phase3-mcp
 npm --prefix tools/ai run verify:phase5-screenshot
 npm --prefix tools/ai run verify:phase5-screenshot-inference
+npm --prefix tools/ai run verify:phase5-screenshot-resolution
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
+./gradlew verifyAiScreenshotResolution
 ```
 
 The preferred protocol follows the

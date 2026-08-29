@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze a human-resolution patch contract that answers the imported screenshot questions without permitting arbitrary executable expressions, then make code-generation eligibility mechanically derivable from the resolved Design IR.
+next_action: Implement the provider-independent screenshot-inference resolution adapter against the frozen typed-answer contract, then expose it through the shared CLI/MCP package without making a compile or render claim.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -88,14 +88,18 @@ uncertainty, and consent contract is frozen without selecting a provider. Its of
 now the eleventh shared CLI/MCP tool: it deterministically reproduces preprocessing, reconstructs
 the exact inference request, validates an externally produced result, and imports Design IR only
 after every lineage, evidence, uncertainty, and authorization check passes. It performs no model or
-provider execution and no network request. The next boundary is a typed human-resolution patch for
-the imported blocking questions; provider selection remains a separate, explicitly authorized
-decision.
+provider execution and no network request. The typed human-resolution patch contract is now also
+frozen: it binds every answer to the exact validated import, question, node, pixel region, required
+action, reviewer, and review receipt; forbids executable expressions and guessed resources; and
+derives code-generation eligibility only after all blocking questions, unsupported semantics, and
+placeholder bindings reach zero. The next boundary is its offline resolution adapter and shared
+CLI/MCP surface; provider selection remains a separate, explicitly authorized decision.
 
 Last verified: 2026-08-30.
 
-Next action: freeze a provider-independent human-resolution patch contract for imported screenshot
-questions before enabling Design-IR-to-Kotlin generation or selecting any provider-backed adapter.
+Next action: implement the provider-independent screenshot-inference resolution adapter against the
+frozen typed-answer contract, then add it to the shared CLI/MCP package before enabling
+Design-IR-to-Kotlin generation or selecting any provider-backed adapter.
 
 ## Maven release changesets
 
@@ -1659,6 +1663,60 @@ model nor makes the incomplete IR compilable. The next action is a typed, human-
 patch that can answer only the exact blocking questions, preserve provenance, forbid arbitrary
 executable content, and derive code-generation eligibility mechanically before any provider is
 selected.
+
+### Contract freeze — typed screenshot inference resolution
+
+Screenshot inference resolution v1 now freezes the provider-independent boundary between one
+validated, incomplete inference import and a Design IR that may enter a future generator. The
+request carries the exact validation, inference-result, and input-Design-IR fingerprints. Its human
+authorization binds reviewer identity, an immutable review receipt, the exact validation
+fingerprint, completed source inspection, and the `resolve-screenshot-inference` purpose while
+keeping provider execution, network access, and content-bearing logs false. Every answer must match
+one imported question's ID, optional node, pixel region, category, and required action; duplicate,
+unknown, or missing answers cannot silently resolve anything.
+
+The answer surface is intentionally typed and data-only. Content answers may update only properties
+or state with a literal string, one bounded Android input profile, or a resolved caller-owned
+binding. Behavior answers may name only `click`, `focus-change`, or `keyboard-action` callback
+bindings and cannot contain callback source. Accessibility review must cover every imported node
+exactly once with an explicit role, label source, traversal index, and decorative decision.
+Expressions, guessed resources, arbitrary executable source, and provider credentials do not fit
+the schema. An unsupported semantic may disappear only through its question-bound resolution
+record and the same review receipt.
+
+The exact wireframe golden answers all six imported blocking questions: title and button labels,
+input purpose/state, field keyboard behavior, button click ownership, and the four-node
+accessibility review. It adds two resolved caller event bindings and two semantic roles while
+preserving all four nodes, kinds, hierarchy, screenshot source identity, and pixel provenance. The
+resolved Design IR fingerprint is
+`0ae93f54fea2dfee3f3ea4c9a712bf3dcf4ce21143c00e3488a159a8551f6821`; the resolution request
+fingerprint is `c2712d96b7f1e821e18c0952dcd31becafb48eea0df848e2983efb319dd3fea6`, and the result
+fingerprint is `b6466ed78cfe2386e4b1a77238758e1c01d50a4fe374b0b36efae419e22e7f88`. The result has zero
+remaining questions, unsupported semantics, and placeholder bindings, so
+`codeGenerationAllowed` is mechanically true. That flag is eligibility only: this contract makes no
+compilation, render, pixel, visual-parity, or production-behavior claim.
+
+The focused gate passes 1/1 golden, 6/6 typed answers, 6/6 resolved unsupported semantics, 2/2
+event bindings, 2/2 semantic roles, and 3/3 fail-closed denominators for missing coverage,
+expression injection, and changed validation lineage. It performs zero provider executions and zero
+network requests. Node 25.6.0 passes 154/154 tooling tests. Phase 0 now verifies 12 schemas, 48
+metrics, 49 cases, 46 fixture-backed cases, and four screenshot-resolution fixtures in addition to
+the earlier screenshot evidence. The complete offline distribution retains its installed CLI/MCP,
+compile, render-comparison, SPDX, and 2/2 reproducible-build lifecycle. Relative to the implemented
+inference validator, package file count increases from 53 to 54 (+1.89%), declared bytes from
+1,672,552 to 1,686,032 (+0.81%), and archive bytes from 298,393 to 299,922 (+0.51%). The archive
+SHA-256 is `0a8b6ee752687c9b3b590d57ef82a6a149118ef0012abcba2890bee52cb672dd`.
+The quality-build plugin suite passed. The combined AI-contract, screenshot preprocessing,
+inference, resolution, installed-distribution, documentation-structure,
+development-tooling-isolation, and release-intent root gate passed 26 actionable tasks, with 12
+executed and 14 up-to-date.
+
+This is **improved** resolution provenance, executable-content safety, accessibility review
+coverage, and code-generation-gate measurability with **no material Android runtime behavior
+change**. The resolution is still a frozen fixture rather than a public mutation tool. The next
+action is an offline adapter that reproduces this patch from the validated import, exposes it through
+the shared CLI/MCP package, and preserves the same fail-closed boundary before screenshot-specific
+Kotlin generation begins.
 
 ### Implementation evidence — bounded XML to Design IR
 

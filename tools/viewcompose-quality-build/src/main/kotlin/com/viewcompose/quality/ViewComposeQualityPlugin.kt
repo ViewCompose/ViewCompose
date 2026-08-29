@@ -828,6 +828,29 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotResolution") {
+            group = "verification"
+            description =
+                "Verifies typed human answers, exact screenshot-inference lineage, and code-generation eligibility."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-resolution")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "evaluation/fixtures/visual/screenshot-inference/**",
+                        "evaluation/fixtures/visual/screenshot-inference-contract.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/**",
+                        "evaluation/fixtures/visual/screenshot-resolution-contract.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/verify-phase5-screenshot-resolution.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

@@ -712,6 +712,65 @@
         "diagnosticCodes": ["VC-AI-SCREENSHOT-INFERENCE-LINEAGE-MISMATCH"]
       },
       "metricIds": ["visual.screenshot-inference-lineage"]
+    },
+    {
+      "id": "visual.screenshot-resolution-wireframe-contract",
+      "phase": 5,
+      "category": "visual-generation",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-resolution/wireframe.result.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": ["visual.screenshot-resolution-exactness"]
+    },
+    {
+      "id": "visual.screenshot-resolution-missing-answer",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-resolution/missing-answer.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-RESOLUTION-COVERAGE-INCOMPLETE"]
+      },
+      "metricIds": ["visual.screenshot-resolution-safety"]
+    },
+    {
+      "id": "visual.screenshot-resolution-expression-denied",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-resolution/expression-injection.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-RESOLUTION-EXECUTABLE-DENIED"]
+      },
+      "metricIds": ["visual.screenshot-resolution-safety"]
+    },
+    {
+      "id": "visual.screenshot-resolution-lineage-mismatch",
+      "phase": 5,
+      "category": "security",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/visual/screenshot-resolution/lineage-mismatch.mutation.json"
+      },
+      "expected": {
+        "outcome": "fail",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-SCREENSHOT-RESOLUTION-LINEAGE-MISMATCH"]
+      },
+      "metricIds": ["visual.screenshot-resolution-safety"]
     }
   ]
 }

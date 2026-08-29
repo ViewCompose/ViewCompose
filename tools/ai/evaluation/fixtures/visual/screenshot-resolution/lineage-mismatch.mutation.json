@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-resolution/wireframe.request.json",
+  "operation": "replace-validation-fingerprint",
+  "value": "0000000000000000000000000000000000000000000000000000000000000000",
+  "expectedSchemaValid": true,
+  "expectedDiagnostic": "VC-AI-SCREENSHOT-RESOLUTION-LINEAGE-MISMATCH"
+}
