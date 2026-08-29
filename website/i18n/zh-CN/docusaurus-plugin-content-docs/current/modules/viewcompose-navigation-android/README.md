@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 25f25b43e04f4f6568cd0d65b31d90fee21679809ee02bef6056a4680dd18bb1
+translation_source_hash: 646621ef1173f055e23012e7badc4743fb681c13a3085b465fcf34f3d5c6cd36
 translation_status: current
 ---
 
@@ -366,51 +366,6 @@ Route 参数或匹配策略。URI-only 声明继续接受 `ACTION_VIEW` Intent�
 
 完整生成参考位于
 [`viewcompose-navigation-android` API 树](https://docs.viewcompose.com/api/viewcompose-navigation-android/current/)。
-
-## 共享 Scoped Owner 验收
-
-对比基线是 148 项 Navigation Android 测试，其 ViewModelStore 由导航自行分配，Activity 与
-Fragment Owner 直接注入。Phase 3 的 Clean Run 通过 151/151 项 Navigation Android 测试和
-21/21 项 Android Aggregate Host Case，无 Skip、Failure 或 Error。新增三项导航契约分别覆盖
-缺少 Owner 时失败、Host 重建时保留 ViewModel Identity，以及 Version 4 状态迁移；Aggregate
-Host 的源码测试方法由 10 增至 11 项，并区分 Activity ViewTree 发现与 Fragment 显式 Owner
-优先级。
-
-结论为 **improved**。导航现已共享通用 Lifecycle 2.11 Provider，可跨配置重建保留 ViewModel，
-在逻辑移除时清理，且不再私有分配 ViewModelStore。这些结果属于 JVM/Robolectric 证据；没有测量
-真机内存、进程终止、帧耗时或 OEM 生命周期顺序，因此这些维度仍为 **inconclusive**。Phase 4
-将继续删除独立 SavedStateHandle Holder；单独的导航 Lifecycle/Scene Plan 仍负责设备、内存、
-Presentation Retention 与 Transition Projection 验收。
-
-## 转场 Lifecycle 验收
-
-此前 151 项 Navigation Android 基线把进入页面过早设为 `RESUMED`，并把已 Pop 离场页面保留为
-`STARTED`。替换为冻结语义 Scene 断言后，新鲜执行仍为 151/151 全部通过；普通、Predictive、
-重定向、Host Cap 与自适应转场的定向子集为 20/20。
-
-随后，App 设备 Harness 在 API 33 的 Pixel 4 XL 真机上通过 2/2 项定向用例。新用例读取
-Destination DSL 内捕获的最近 `LocalLifecycleOwner`，验证 Push、Predictive Preview、取消、提交、
-已 Pop 离场、销毁与终态 Resume；配套旧用例使用真实原生 View 验证 Predictive Progress 与取消。
-这是 **improved** 的 Lifecycle 结果，当前支持的 Host Scene 已不存在提前 Resume。通用导航 Overlay、
-API 34 平台边缘手势分发、内存、泄漏与性能结果仍为 **inconclusive**；下一计划阶段负责
-Presentation Retention Policy 及其设备测量。
-
-## 执行 Reducer 验收
-
-Phase 5 基线通过 162/162 项 Navigation Android 测试。Phase 6 新鲜执行通过 165/165，新增三项
-Host Boundary 契约，分别覆盖类型化 Interaction 执行、动态切换系统 Back 时不意外替换 Host，
-以及使用同一 Controller 完成显式 `key` Runtime 替换。测试绝对增加 3 项，标准化增加 1.9%。
-
-最终真机执行在 API 33 的 Pixel 4 XL 上通过全部 15 项 `NavigationBackDeviceTest`。此前一次
-14/15 执行发现 Inline `overlayHostFactory` Lambda 被错误纳入 Host Identity，普通重组就可能替换
-Runtime。现在 Factory 在 Host 创建时捕获，函数 Identity 不再参与协调，显式 `key` 仍是经过测试
-的替换边界。Coordinator 从 1,597 行缩减至 1,176 行，绝对减少 421 行，即 26.4%；生产调用点也
-不再绕过 Core Plan 重建 Lifecycle、Scene、Retention、Rollback、Cleanup 或 Back 策略。
-
-结论为 **improved**。同一类型化 Plan 现在同时驱动确定性 Core 策略与 Android Effect，已有完整
-真机 Back 矩阵继续保持绿色。通用 Overlay 导航、类型化 Route 序列化、直接 NavigationEvent
-集成、代表性内存与泄漏测试、行/分支覆盖率以及更广设备和性能矩阵仍为 **inconclusive**，由
-Phase 7 继续负责。
 
 ## 兼容性说明
 

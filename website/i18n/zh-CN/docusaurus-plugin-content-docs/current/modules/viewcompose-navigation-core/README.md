@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 35142af5c88d1f3bb4c7486de65a68b107a10169e34ec2c4d3d2cde8e700351a
+translation_source_hash: 3f84332a52a21d892a7d21a409dc5d84f8e19ad9a7a1623710647621f224f432
 translation_status: current
 ---
 
@@ -266,18 +266,6 @@ check(plan.lifecycle.targetStates.values.none(NavEntryLifecycleState.Resumed::eq
 所有 Reducer 调用都无副作用，复杂度与 Retained Entry、Graph Depth、Current Owner 和
 Presentation 数量线性相关。`null` 明确表示 Hidden Presentation 无上限，非负值表示确定性的
 Oldest-first 上限。该 API 仍为 Alpha，刻意不提供旧新双计划兼容桥。
-
-## 执行 Reducer 验收
-
-Phase 5 基线通过 60/60 项 Navigation Core 测试。Phase 6 新鲜执行以零 Failure、Error 或 Skip
-通过 71/71；其中 11 项 Reducer 测试覆盖稳定态、Push、Pop、Reset、Predictive Preview、有限与
-无限 Retention、Reconciliation、Candidate Back Ownership、不可变 Snapshot 和非法输入。测试
-绝对增加 11 项，标准化增加 18.3%。
-
-结论为 **improved**。Stack Mutation、Semantic Scene、Lifecycle、Presentation Inventory、
-Interaction、Back、Rollback 与终态 Cleanup 现在只有一个纯确定性结果。该执行本身不证明行/分支
-覆盖率、Android Executor 正确性、真机行为、无泄漏或代表性性能；这些维度在此仍为
-**inconclusive**，由 Android 模块证据或 Phase 7 覆盖。
 
 ## 自适应 pane
 

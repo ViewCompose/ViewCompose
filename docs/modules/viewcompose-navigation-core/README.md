@@ -306,19 +306,6 @@ and presentations. `null` is the explicit unbounded hidden-presentation limit; n
 are deterministic oldest-first bounds. The API is Alpha and intentionally has no legacy dual-plan
 bridge.
 
-## Execution reducer acceptance
-
-The Phase 5 baseline passed 60/60 Navigation Core tests. A fresh Phase 6 run passed 71/71 with zero
-failures, errors, or skips: 11 reducer tests now cover settled, push, pop, reset, predictive preview,
-bounded and unbounded retention, reconciliation, candidate Back ownership, immutable snapshots, and
-invalid inputs. This is an absolute increase of 11 tests and a normalized increase of 18.3%.
-
-Conclusion: **improved**. Stack mutation, semantic scene, lifecycle, presentation inventory,
-interaction, Back, rollback, and terminal cleanup now have one pure deterministic result. This run
-does not establish line/branch coverage, Android executor correctness, device behavior, leak
-freedom, or representative performance; those dimensions are **inconclusive** here and are covered
-by the Android module evidence or Phase 7.
-
 ## Adaptive panes
 
 `NavPaneStrategy` converts the active stack into one to three logical panes. `Single` exposes only

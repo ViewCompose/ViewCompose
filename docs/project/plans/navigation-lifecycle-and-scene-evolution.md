@@ -836,70 +836,42 @@ remains the retry boundary for that network-dependent publication check.
 
 #### Capability slice 7.1: structured deep-link requests
 
-The re-audit accepted action and MIME matching as a material gap. Navigation 2 exposes URI, action,
-and MIME deep-link dimensions, while ViewCompose previously hard-coded the Android adapter to
-`ACTION_VIEW` plus data even though Core already owned strict URI parsing. The completed slice adds
-one platform-neutral `NavDeepLinkRequest`, permits URI-, action-, MIME-, and combined declarations,
-and routes string, `Uri`, structured, and `Intent` entry points through the same Core matcher. The
-Android layer now adapts only `Intent.data`, `action`, and `type`; it owns no ranking or decoding
-policy.
+The audit accepted action and MIME matching as a material gap. The completed slice adds the
+platform-neutral `NavDeepLinkRequest`; URI-, action-, MIME-, and combined declarations now share one
+Core matcher, while Android only adapts `Intent.data`, `action`, and `type`. Every declared
+constraint must match, malformed supplied fields cannot fall through to a broad candidate, combined
+declarations rank first, and equally specific matches remain ambiguous. MIME matching is
+locale-independent and supports exact and component-wildcard constraints. The obsolete URI-only
+`matchingPatterns` diagnostic was hard-cut to immutable `NavDeepLink` candidates; this Core alpha
+correction is classified as source/binary breaking.
 
-The design deliberately differs from a permissive fallback matcher. Every declared constraint must
-match, malformed supplied fields are rejected before a broad action-only fallback can win, combined
-declarations rank ahead of single-dimension candidates, and tied most-specific candidates remain a
-structured ambiguity. MIME matching is locale-independent and supports exact or component-wildcard
-constraints. The obsolete `matchingPatterns` string diagnostic was hard-cut in favor of immutable
-`NavDeepLink` candidates because action-only and MIME-only declarations have no URI pattern to
-report. This is a source/binary breaking Core alpha correction and is recorded accordingly.
+Governance recorded `navigation.deep-links`, canonical KDoc, Q3 Core and Android compiled samples,
+both module manuals, guide, architecture, Compose migration, generated Reference, translations, and
+the breaking/feature Changeset. No Tutorial or redirect applies. The application-entry detector
+correctly reported zero entry declarations because these low-level Core models and controller
+members are outside its DSL/host/tooling taxonomy.
 
-Documentation Governance V2 classified zero detected application-entry API changes for this
-committed slice because its detector intentionally covers DSL, Modifier, component, host,
-integration, and tooling entry declarations rather than low-level Core model constructors or
-controller members. Adding impact records for those symbols is therefore rejected as a false
-classification. The accepted manual disposition is the new `navigation.deep-links` capability,
-Q3 Core and Android compiled samples, canonical KDoc, both module manuals, production guide,
-architecture, Compose migration, generated Reference, translated mirrors, and the breaking/feature
-Changeset. No Tutorial or redirect applies: first-success navigation does not accept untrusted
-external input, and no symbol or document route moved.
+Acceptance evidence:
 
-Fresh Navigation Core tests passed 76/76 with zero failures, errors, or skips, compared with the
-Phase 6 baseline of 71: five added cases, a 7.0% increase. Fresh Navigation Android tests passed
-166/166 with zero failures, errors, or skips, compared with 165: one added Robolectric case, a 0.6%
-increase. Coverage includes action-only routing, MIME wildcard and case behavior, three-dimension
-matching, combined-declaration precedence, missing and mismatched constraints, malformed-field
-rejection before fallback, duplicate matcher identity, Android Intent adaptation, and the direct
-structured host entry point. The result is **improved** capability and regression confidence.
-
-The strict Navigation Core API-documentation audit passed after replacing two inherited reducer
-property links with literal property names; all new deep-link declarations, overloads, and Q3
-sample links were accepted. The Android publication task remains **inconclusive** because Dokka
-rejects the module's pre-existing overlapping `androidJvm` and `release` source roots before it
-inspects declarations. A direct retry reproduced the same configuration error for
-`src/main/kotlin` and `src/main/java`; it did not report a new API-comment defect. The next action is
-to correct the shared Android Dokka convention once for every affected Android artifact, then rerun
-the strict Android audit instead of weakening this module's source layout or audit policy here.
-
-The first repository-wide `qaQuick` run stopped at the demo application's Release compilation: its
-internal result model still required a non-null URI pattern and therefore exposed the exact stale
-URI-only assumption that the Alpha hard cut intended to remove. The demo now renders one matcher
-summary assembled from URI, action, and MIME constraints, and a focused Release compilation passed.
-The subsequent complete `qaQuick` run passed all 2,268 actionable tasks, with 192 executed and 2,076
-up to date. `qaPreview` passed all 1,209 actionable tasks, with 140 executed and 1,069 up to date,
-including both Paparazzi-backed Preview hosts. This is **improved** repository integration and **no
-material change** in Preview output; the mixed cache state is execution context, not performance
-evidence. Documentation governance, language/translation structure, release intent, and development
-tooling isolation also passed in the same acceptance sequence.
-
-The focused structured-deep-link device test passed 1/1 on a physical Pixel 4 XL running API 33. It
-delivered an explicit `ACTION_SEND` plus `image/png` Intent through a real Activity, selected the
-declared retained stack, and settled on the expected destination. The first installation attempt
-stopped in a stale incremental `packageDebug` state; a focused full package rebuild succeeded and
-the unchanged test command then passed, so this is build-cache context rather than a product
-failure. Together with the deterministic JVM/Robolectric suites, the result is **improved** Android
-adapter confidence. Evidence is limited to one device and explicit Activity delivery; implicit
-resolver/OEM delivery, line/branch coverage, memory, leaks, and performance remain **inconclusive**
-and stay in Phase 7. Next action: disposition typed-route serialization and navigation results
-before running the broader evidence matrix.
+- Core passed 76/76 tests, up 5 from the Phase 6 baseline of 71 (+7.0%); Android passed 166/166, up
+  1 from 165 (+0.6%), with no failures, errors, or skips. The new action, MIME, combined-ranking,
+  malformed-input, ambiguity, Intent-adapter, and host cases make confidence **improved**.
+- The strict Core API-documentation audit passed. Android remains **inconclusive** because its
+  pre-existing Dokka `androidJvm`/`release` source-root overlap fails before declaration inspection;
+  fix the shared Android Dokka convention and rerun without weakening source layout or policy.
+- After the demo's stale URI-only result model was hard-cut, `qaQuick` passed 2,268 tasks (192
+  executed, 2,076 up to date) and `qaPreview` passed 1,209 (140/1,069), including both Preview hosts.
+  Repository integration is **improved** and Preview output has **no material change**; cache ratios
+  are context, not performance evidence. Documentation, release-intent, and tooling gates passed.
+- CI first measured 49,227,197 B of non-API site output, 48,983 B above the 46.9 MiB limit. Moving
+  duplicated phase evidence from published manuals to this active plan reduced the same local build
+  by 73,087 B (0.15%) to 49,154,110 B, leaving 24,104 B headroom; documentation size is
+  **improved** without raising the budget. Local version verification remains **inconclusive**
+  because the checkout lacks the CI-generated complete API trees; rerun the full site gate in CI.
+- A physical Pixel 4 XL/API 33 passed 1/1 explicit `ACTION_SEND` + `image/png` Activity test after a
+  full package rebuild cleared stale incremental output. Adapter confidence is **improved**; one
+  device does not cover implicit/OEM delivery, coverage, leaks, memory, or performance, which remain
+  **inconclusive**. Next: disposition typed routes and navigation results, then run that matrix.
 
 ### Phase 8: document, release, and archive
 

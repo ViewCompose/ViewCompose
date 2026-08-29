@@ -436,61 +436,6 @@ already retains each stack and owns selection history.
 The complete generated reference is available in the
 [`viewcompose-navigation-android` API tree](https://docs.viewcompose.com/api/viewcompose-navigation-android/current/).
 
-## Shared scoped-owner acceptance
-
-The comparison baseline was the 148-test Navigation Android suite with navigation-owned
-ViewModelStore allocation and direct Activity/Fragment owner injection. The clean Phase 3 run
-passed 151/151 Navigation Android tests and 21/21 aggregate Android host cases with zero skips,
-failures, or errors. Three new navigation contracts cover missing-owner failure, retained
-ViewModel identity across host recreation, and version-4 state migration; aggregate host source
-coverage increased from 10 to 11 test methods and now distinguishes Activity ViewTree discovery
-from Fragment explicit-owner precedence.
-
-Conclusion: **improved**. Navigation now shares the general Lifecycle 2.11 provider, retains
-ViewModels across configuration recreation, clears them at logical removal, and allocates no
-private ViewModelStore. The result is JVM/Robolectric evidence; it does not measure device memory,
-process-kill behavior, frame time, or OEM lifecycle ordering, so those dimensions remain
-**inconclusive**. Phase 4 next removes the standalone SavedStateHandle holder path; the separate
-navigation lifecycle-and-scene plan retains device, memory, presentation-retention, and transition
-projection acceptance.
-
-## Transition lifecycle acceptance
-
-The previous 151-test Navigation Android baseline encoded premature `RESUMED` for an incoming page
-and retained a popped outgoing page at `STARTED`. A fresh run passed 151/151 tests after replacing
-those expectations with frozen semantic-scene assertions. The focused ordinary, predictive,
-redirect, host-cap, and adaptive transition subset passed 20/20.
-
-The app device harness then passed 2/2 selected cases on a physical Pixel 4 XL running API 33. The
-new case reads the nearest `LocalLifecycleOwner` captured inside destination DSL and verifies push,
-predictive preview, cancellation, commit, popped exit, destruction, and terminal resume. The
-existing companion case verifies predictive progress and cancellation against real native Views.
-This is an **improved** lifecycle result with no premature resume in the supported host scenes.
-General navigation overlays, API-34 platform edge-gesture delivery, memory, leak, and performance
-results remain **inconclusive**; the next plan phase owns presentation-retention policy and its
-device measurements.
-
-## Execution reducer acceptance
-
-The Phase 5 baseline passed 162/162 Navigation Android tests. A fresh Phase 6 run passed 165/165,
-adding three host-boundary contracts for typed interaction execution, dynamic system-Back
-enablement without accidental host replacement, and explicit-key runtime replacement with the same
-controller. This is an absolute increase of three tests and a normalized increase of 1.9%.
-
-The final physical-device run passed all 15 `NavigationBackDeviceTest` cases on a Pixel 4 XL running
-API 33. An earlier 14/15 run exposed that an inline `overlayHostFactory` lambda incorrectly
-participated in host identity and could replace the runtime during an ordinary recomposition. The
-factory is now captured at host creation, its function identity is excluded from reconciliation,
-and an explicit `key` remains the tested replacement boundary. The coordinator shrank from 1,597 to
-1,176 lines, an absolute reduction of 421 lines or 26.4%, while production call sites no longer
-reconstruct lifecycle, scene, retention, rollback, cleanup, or Back policy outside the Core plan.
-
-Conclusion: **improved**. The same typed plan now drives deterministic Core policy and Android
-effects, and the complete existing device Back matrix remains green. General overlay navigation,
-typed-route serialization, direct NavigationEvent integration, representative memory and leak
-tests, line/branch coverage, and broader device/performance matrices remain **inconclusive** and
-are assigned to Phase 7.
-
 ## Compatibility notes
 
 The `0.1.0-alpha01` line establishes one-controller/one-host attachment, main-thread serialized
