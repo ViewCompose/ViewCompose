@@ -958,6 +958,19 @@ API/manual routes, both search indexes, and all site budgets passed; accepted wa
 34.2–59.8 seconds. The accepted
 representation is **improved** while XML-tool behavior remains **no material change**.
 
+Repository-wide acceptance was initially **inconclusive** because the clean `qaQuick` run exhausted
+the local volume after 2,059 actionable tasks (2,042 executed and 17 up-to-date). The failing
+Preview Gradle plugin functional test reported `No space left on device` while writing its nested
+build cache; its isolated retry then passed all 23 actionable tasks. A first incremental root retry
+again exhausted the volume while serializing `viewcompose-preview` test results, so the resulting
+`EOFException` and 25 temporary-directory failures were classified as the same environmental
+failure rather than framework regressions. Only reproducible worktree outputs, Docusaurus caches,
+the lockfile-reconstructible `website/node_modules` tree, and the corrupted test-task output were
+removed. The recovered `viewcompose-preview` suite passed all 171 actionable tasks, and the final
+root `qaQuick` passed all 2,278 actionable tasks (362 executed and 1,916 up-to-date) in 3 minutes.
+The accepted conclusion is **no material regression** across the repository gate; low local disk
+capacity remains an evidence limitation and should be provisioned before the next clean lifecycle.
+
 ### Phase 4A: Design IR and code generation
 
 1. Freeze the tooling-only IR schema and provenance/unsupported representation from Phase 0.
