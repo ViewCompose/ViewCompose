@@ -1,6 +1,7 @@
 import {KNOWLEDGE_TOOL_DEFINITIONS} from './knowledge-retriever.mjs';
 import {SCREENSHOT_REQUEST_SCHEMA} from './screenshot-contract.mjs';
 import {SCREENSHOT_INFERENCE_VALIDATION_ARGUMENTS_SCHEMA} from './screenshot-inference-contract.mjs';
+import {SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA} from './screenshot-generation-contract.mjs';
 import {SCREENSHOT_RESOLUTION_ARGUMENTS_SCHEMA} from './screenshot-resolution-contract.mjs';
 
 const stableId = {
@@ -301,6 +302,18 @@ const executableDefinitions = {
     },
     evidenceLevel: 'static',
   },
+  generate_screenshot_viewcompose: {
+    title: 'Generate ViewCompose from Resolved Screenshot Design IR',
+    description:
+      'Generate or hermetically compile deterministic ViewCompose Kotlin from one exact resolved screenshot result without provider, network, callback-source, or project-build execution.',
+    inputSchema: SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA,
+    defaultLimits: {
+      timeoutMs: 120000,
+      maxInputBytes: 2000000,
+      maxOutputBytes: 2000000,
+    },
+    evidenceLevel: 'static',
+  },
 };
 
 const knowledgeDefaults = {
@@ -340,6 +353,7 @@ export const TOOL_NAMES = Object.freeze([
   'prepare_screenshot',
   'validate_screenshot_inference',
   'resolve_screenshot_inference',
+  'generate_screenshot_viewcompose',
 ]);
 
 export function publicToolDefinition(name) {

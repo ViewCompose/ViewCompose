@@ -30,6 +30,14 @@ const resolutionRequestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-resolution/wireframe.request.json',
   import.meta.url,
 );
+const resolvedScreenshotPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json',
+  import.meta.url,
+);
+const generationRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json',
+  import.meta.url,
+);
 const protocolVersionKey = 'io.modelcontextprotocol/protocolVersion';
 const clientInfoKey = 'io.modelcontextprotocol/clientInfo';
 const clientCapabilitiesKey = 'io.modelcontextprotocol/clientCapabilities';
@@ -76,6 +84,7 @@ test('discovers the stateless modern server and deterministically lists the shar
     'prepare_screenshot',
     'validate_screenshot_inference',
     'resolve_screenshot_inference',
+    'generate_screenshot_viewcompose',
   ]);
   assert.equal(listing.result.tools[0].inputSchema.required.includes('versionLane'), true);
 });
@@ -187,6 +196,34 @@ test('returns the same typed screenshot resolution through CLI and MCP', async (
   assert.equal(response.result.isError, false);
 });
 
+test('returns the same generated screenshot Kotlin through CLI and MCP', async () => {
+  const [resolutionResult, generationRequest] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(generationRequestPath, 'utf8').then(JSON.parse),
+  ]);
+  generationRequest.mode = 'generate';
+  const arguments_ = {resolutionResult, generationRequest};
+  const id = 'screenshot-generation-parity';
+  const direct = await dispatchToolRequest(await createToolRequest({
+    tool: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+    requestId: mcpToolRequestId(id),
+  }));
+  const response = await new ViewComposeMcpSession().receive(request(id, 'tools/call', {
+    name: 'generate_screenshot_viewcompose',
+    arguments: arguments_,
+  }));
+  assert.deepEqual(
+    semanticToolResult(response.result.structuredContent),
+    semanticToolResult(direct),
+  );
+  assert.equal(
+    response.result.structuredContent.data.kotlinFingerprint,
+    '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9',
+  );
+  assert.equal(response.result.isError, false);
+});
+
 test('keeps invalid tool arguments actionable and unknown tools at protocol level', async () => {
   const session = new ViewComposeMcpSession();
   const invalid = await session.receive(request(1, 'tools/call', {
@@ -234,7 +271,7 @@ test('supports the 2025-11-25 initialize lifecycle without weakening modern requ
     params: {},
   });
   assert.equal(listing.result.resultType, undefined);
-  assert.equal(listing.result.tools.length, 12);
+  assert.equal(listing.result.tools.length, 13);
 });
 
 test('emits bounded opt-in progress and suppresses all output after cancellation', async () => {

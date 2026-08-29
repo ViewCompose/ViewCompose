@@ -45,6 +45,9 @@ const inferenceResultPath = fileURLToPath(
 const resolutionRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/visual/screenshot-resolution/wireframe.request.json', import.meta.url),
 );
+const screenshotGenerationRequestPath = fileURLToPath(
+  new URL('../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json', import.meta.url),
+);
 const generatedPreviewRequestPath = fileURLToPath(
   new URL('../evaluation/fixtures/xml/generated-preview/login.preview-request.json', import.meta.url),
 );
@@ -336,6 +339,45 @@ async function verifyCliFlow(
   ) {
     throw new Error('Installed CLI did not resolve the frozen screenshot inference golden.');
   }
+  const generationRequest = await readJson(screenshotGenerationRequestPath);
+  generationRequest.mode = 'generate';
+  const generatedScreenshot = await runCli(
+    cli,
+    knowledge,
+    'generate_screenshot_viewcompose',
+    {resolutionResult: resolvedInference.data, generationRequest},
+    'distribution-screenshot-generation',
+  );
+  if (
+    generatedScreenshot.status !== 'success' ||
+    generatedScreenshot.evidence.level !== 'static' ||
+    generatedScreenshot.evidence.outputFingerprint !==
+      '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
+    generatedScreenshot.data?.generationReport?.bindings?.states?.length !== 1 ||
+    generatedScreenshot.data?.generationReport?.bindings?.events?.length !== 2 ||
+    generatedScreenshot.data?.generationReport?.accessibility?.nodes?.length !== 4
+  ) {
+    throw new Error('Installed CLI did not generate the frozen screenshot Kotlin golden.');
+  }
+  generationRequest.mode = 'compile';
+  const compiledScreenshot = await runCli(
+    cli,
+    knowledge,
+    'generate_screenshot_viewcompose',
+    {resolutionResult: resolvedInference.data, generationRequest},
+    'distribution-screenshot-generation-compile',
+    {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot},
+  );
+  if (
+    compiledScreenshot.status !== 'success' ||
+    compiledScreenshot.evidence.level !== 'compiled' ||
+    compiledScreenshot.data?.kotlinFingerprint !==
+      '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
+    compiledScreenshot.data?.generationReport?.reportFingerprint !==
+      '51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d'
+  ) {
+    throw new Error('Installed CLI did not compile the frozen screenshot Kotlin golden.');
+  }
   const component = await runCli(cli, knowledge, 'get_component_reference', {
     versionLane: 'current-source',
     name: 'Column',
@@ -542,6 +584,8 @@ async function verifyCliFlow(
     screenshot: screenshot.evidence.outputFingerprint,
     screenshotInference: validatedInference.evidence.outputFingerprint,
     screenshotResolution: resolvedInference.evidence.outputFingerprint,
+    screenshotGeneration: compiledScreenshot.evidence.outputFingerprint,
+    screenshotKotlin: generatedScreenshot.evidence.outputFingerprint,
     sample: compiled.evidence.outputFingerprint,
     xml: compiledXml.evidence.outputFingerprint,
     xmlPreview: renderedXml.evidence.outputFingerprint,
@@ -562,6 +606,7 @@ async function verifyMcpMatrix(mcp, contract) {
     inferenceRequest,
     inferenceResult,
     resolutionRequest,
+    generationRequest,
   ] = await Promise.all([
     readFile(xmlFixturePath, 'utf8'),
     readFile(xmlV2FixturePath, 'utf8'),
@@ -571,6 +616,7 @@ async function verifyMcpMatrix(mcp, contract) {
     readJson(inferenceRequestPath),
     readJson(inferenceResultPath),
     readJson(resolutionRequestPath),
+    readJson(screenshotGenerationRequestPath),
   ]);
   const {interpretation, intent, policy, authorization} = inferenceRequest;
   const modern = await runMcp(mcp, [{
@@ -672,13 +718,30 @@ async function verifyMcpMatrix(mcp, contract) {
   const modernScreenshotResolution = modern.find(
     (response) => response.id === 'modern-screenshot-resolution',
   );
+  generationRequest.mode = 'generate';
+  modern.push(...await runMcp(mcp, [{
+    jsonrpc: '2.0',
+    id: 'modern-screenshot-generation',
+    method: 'tools/call',
+    params: {
+      name: 'generate_screenshot_viewcompose',
+      arguments: {
+        resolutionResult: modernScreenshotResolution?.result?.structuredContent?.data,
+        generationRequest,
+      },
+      _meta: modernMeta(modernVersion),
+    },
+  }]));
+  const modernScreenshotGeneration = modern.find(
+    (response) => response.id === 'modern-screenshot-generation',
+  );
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
   const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
   const modernXmlLayoutDependencies = modern.find(
     (response) => response.id === 'modern-xml-layout-dependencies',
   );
   if (
-    modern.length !== 8 ||
+    modern.length !== 9 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
     modernScreenshot?.result?.structuredContent?.evidence?.outputFingerprint !==
@@ -689,6 +752,8 @@ async function verifyMcpMatrix(mcp, contract) {
       '556c13d133d63e34fa81d1c04df3bee938509c5ced1d244ccf2366d48cb6e845' ||
     modernScreenshotResolution?.result?.structuredContent?.evidence?.outputFingerprint !==
       '61426e6904d9ffbdf1b29ec77fd8e6e0ee345494a0aad3b18028781f20ef981a' ||
+    modernScreenshotGeneration?.result?.structuredContent?.evidence?.outputFingerprint !==
+      '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
@@ -831,6 +896,8 @@ async function main() {
       `prepared screenshot ${compileFingerprints.screenshot}, ` +
       `validated screenshot inference ${compileFingerprints.screenshotInference}, ` +
       `resolved screenshot inference ${compileFingerprints.screenshotResolution}, ` +
+      `generated screenshot Kotlin ${compileFingerprints.screenshotKotlin}, ` +
+      `compiled screenshot Kotlin ${compileFingerprints.screenshotGeneration}, ` +
       `compiled XML v1 migration ${compileFingerprints.xml}, compiled XML v2 migration ` +
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +

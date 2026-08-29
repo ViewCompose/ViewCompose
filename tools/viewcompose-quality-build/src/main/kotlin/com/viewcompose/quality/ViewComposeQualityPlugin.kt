@@ -877,7 +877,11 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                         "scripts/compiler-adapter.mjs",
                         "scripts/schema-validator.mjs",
                         "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-design-ir-to-kotlin.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
                         "scripts/static-validator.mjs",
+                        "scripts/tool-catalog.mjs",
                         "scripts/tool-core.mjs",
                         "scripts/verify-phase5-screenshot-generation.mjs",
                     )

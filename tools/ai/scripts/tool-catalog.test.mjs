@@ -17,6 +17,7 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     'prepare_screenshot',
     'validate_screenshot_inference',
     'resolve_screenshot_inference',
+    'generate_screenshot_viewcompose',
   ]);
   assert.deepEqual(Object.keys(TOOL_DEFINITIONS).sort(), [...TOOL_NAMES].sort());
   for (const name of TOOL_NAMES) {
@@ -25,7 +26,8 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     assert.equal(definition.inputSchema.type, 'object');
     assert.equal(definition.annotations.readOnlyHint, true);
     assert.ok(TOOL_DEFINITIONS[name].defaultLimits.maxOutputBytes <=
-      (['prepare_screenshot', 'validate_screenshot_inference', 'resolve_screenshot_inference'].includes(name)
+      (['prepare_screenshot', 'validate_screenshot_inference', 'resolve_screenshot_inference',
+        'generate_screenshot_viewcompose'].includes(name)
         ? 2_000_000
         : 1024 * 1024));
   }

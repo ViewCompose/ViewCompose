@@ -15,6 +15,7 @@ import {renderPreview} from './preview-adapter.mjs';
 import {prepareScreenshot} from './screenshot-preprocessor.mjs';
 import {validateScreenshotInference} from './screenshot-inference-validator.mjs';
 import {resolveScreenshotInference} from './screenshot-resolution-adapter.mjs';
+import {generateScreenshotViewCompose} from './screenshot-generation-adapter.mjs';
 import {diagnoseLayout} from './layout-diagnoser.mjs';
 import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
@@ -70,6 +71,7 @@ export async function dispatchToolRequest(request, {
   prepare = prepareScreenshot,
   validateScreenshot = validateScreenshotInference,
   resolveScreenshot = resolveScreenshotInference,
+  generateScreenshot = generateScreenshotViewCompose,
   renderGenerated,
   compareGenerated,
   signal,
@@ -145,6 +147,8 @@ export async function dispatchToolRequest(request, {
                 ? 'VC-AI-SCREENSHOT-INFERENCE-INPUT-INVALID'
                 : request.tool === 'resolve_screenshot_inference'
                   ? 'VC-AI-SCREENSHOT-RESOLUTION-INPUT-INVALID'
+                  : request.tool === 'generate_screenshot_viewcompose'
+                    ? 'VC-AI-SCREENSHOT-GENERATION-INPUT-INVALID'
           : 'VC-AI-ARGUMENTS-INVALID',
       message: screenshotPathDenied
         ? 'Screenshot preprocessing accepts no path, URL, or URI input.'
@@ -160,6 +164,8 @@ export async function dispatchToolRequest(request, {
                 ? `Screenshot inference arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
                 : request.tool === 'resolve_screenshot_inference'
                   ? `Screenshot resolution arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
+                  : request.tool === 'generate_screenshot_viewcompose'
+                    ? `Screenshot generation arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
           : `${request.tool} arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`,
       nextAction: screenshotPathDenied
         ? 'Embed one integrity-declared PNG as canonical base64.'
@@ -175,6 +181,8 @@ export async function dispatchToolRequest(request, {
                 ? 'Use the exact preprocessing request, inference declaration, and result contracts.'
                 : request.tool === 'resolve_screenshot_inference'
                   ? 'Use the unchanged validated import and exact human-resolution request.'
+                  : request.tool === 'generate_screenshot_viewcompose'
+                    ? 'Use one exact resolved result and the frozen generate or compile request.'
           : 'Use the exact arguments declared by the current tool catalog.',
       level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
     });
@@ -314,6 +322,18 @@ export async function dispatchToolRequest(request, {
         result = await resolveScreenshot(request.arguments, {
           requestId: request.requestId,
           signal: controller.signal,
+        });
+        break;
+      case 'generate_screenshot_viewcompose':
+        result = await generateScreenshot(request.arguments, {
+          requestId: request.requestId,
+          limits: {
+            maxSourceBytes: request.limits.maxInputBytes,
+            timeoutMs: request.limits.timeoutMs,
+            maxOutputBytes: request.limits.maxOutputBytes,
+          },
+          signal: controller.signal,
+          compile,
         });
         break;
       default:

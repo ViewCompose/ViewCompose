@@ -280,7 +280,8 @@ unsupported semantics, or placeholder bindings, so it becomes eligible for a fut
 screenshot-specific generator. That eligibility is not a compilation, render, or visual-parity
 claim. The adapter calls no provider, opens no network connection, and executes no answer content.
 
-Screenshot Kotlin generation v1 is contract-frozen but is not yet a public tool. It accepts only a
+Screenshot Kotlin generation v1 is implemented as the public `generate_screenshot_viewcompose`
+tool. It accepts only a
 resolved screenshot inference result whose exact result and Design IR fingerprints match the
 request and whose mechanical code-generation gate is true. The frozen mapping turns caller-owned
 text state into `TextFieldState`, keyboard actions into
@@ -290,6 +291,8 @@ and visible labels use the real `Button`, `TextField`, and `Text` behavior. Beca
 no public traversal-index modifier, the report preserves every reviewed accessibility decision and
 requires the resolved ascending traversal to equal generated hierarchy order instead of inventing
 an API. The exact wireframe Kotlin golden compiles in the pinned JDK 21/Kotlin UI Foundation lane.
+`generate` mode returns deterministic static source and its complete mapping report; `compile` mode
+passes only that source and the fixed artifact/capability selection to the hermetic compiler.
 Rendering and visual parity remain explicit non-claims until a later gate.
 
 Run the local MCP server and its protocol/parity gate with:
@@ -313,10 +316,11 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns twelve tools in stable
+lifecycle; it never silently downgrades either era. `tools/list` returns thirteen tools in stable
 order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
 `analyze_project`, followed by `convert_xml_to_viewcompose`, `prepare_screenshot`, and
-`validate_screenshot_inference`, then `resolve_screenshot_inference`.
+`validate_screenshot_inference`, then `resolve_screenshot_inference` and
+`generate_screenshot_viewcompose`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
 provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.

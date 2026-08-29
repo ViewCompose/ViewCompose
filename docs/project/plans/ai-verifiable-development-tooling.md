@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen screenshot-specific resolved-Design-IR-to-Kotlin generator and expose generate/compile evidence through the shared CLI and MCP without adding a render claim.
+next_action: Freeze explicit Preview bindings and a source-bound render contract for screenshot-generated Kotlin, then compare its semantic tree before any pixel-parity claim.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -98,13 +98,15 @@ caller bindings, persists the complete accessibility review into Design IR, and 
 resolved golden through the installed package with no provider, network, or answer execution. The
 next screenshot-specific Kotlin generation contract is now frozen. Its checked-in golden maps the
 typed state and event bindings to real public APIs, preserves every accessibility disposition in a
-machine-checked report, and passes the hermetic compiler. The generator and public tool are not yet
-implemented; provider selection remains a separate, explicitly authorized decision.
+machine-checked report, and passes the hermetic compiler. The thirteenth shared CLI/MCP tool now
+reproduces that source and report in generate mode and returns hermetic compiled evidence in compile
+mode, including from the installed package. Provider selection remains a separate, explicitly
+authorized decision.
 
 Last verified: 2026-08-30.
 
-Next action: implement the frozen screenshot-specific resolved-Design-IR-to-Kotlin generator and
-expose generate/compile evidence through the shared CLI and MCP without adding a render claim or
+Next action: freeze explicit Preview bindings and a source-bound render contract for
+screenshot-generated Kotlin, then compare its semantic tree before any pixel-parity claim or
 provider-backed adapter.
 
 ## Maven release changesets
@@ -1821,6 +1823,50 @@ deterministic by bytes, and compilable against the accepted artifact. It does no
 generator can reproduce the source, expose it through CLI/MCP, render it, match the screenshot, or
 behave correctly in an application. The next action is to implement the frozen generator and a
 bounded generate/compile tool before any render or visual-comparison claim.
+
+### Implementation evidence — screenshot Kotlin generation and compilation
+
+`generate_screenshot_viewcompose` is now the thirteenth public CLI/MCP tool. It accepts the complete
+resolved result plus the generation request; callers cannot replace the resolved IR with an
+unbound object or select a package, function body, callback source, classpath, capability, compiler,
+Gradle task, project path, model, or provider. The implementation revalidates the resolution and
+Design IR schemas, recomputes both fingerprints, confirms the request identity and mechanical
+eligibility, and accepts only the four frozen component kinds and their exact typed fields.
+
+The generator allocates deterministic Kotlin identifiers, keeps state parameters before event
+parameters, merges repeated compatible caller bindings, rejects signature conflicts, and escapes
+Kotlin string templates. It reproduces the exact source fingerprint
+`5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9` and report fingerprint
+`51c09b75e1a8bec953191e50388795c61fff6c45841de1f7832e050d2824752d` twice. The same mapper
+also enforces the complete accessibility review and rejects traversal that cannot be represented by
+the generated hierarchy order. Generate mode returns `static` evidence; compile mode alone invokes
+the existing fixed UI Foundation compiler and reproduces class-output fingerprint
+`7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67`.
+
+Node 25.6.0 passes 174/174 tooling tests. The focused gate passes 4/4 nodes, 1/1 state binding, 2/2
+event bindings, 4/4 accessibility records, 3/3 fail-closed denominators, 2/2 deterministic
+generations, and 1/1 hermetic compile. Phase 0 remains at 13 schemas, 51 metrics, 53 cases, 50
+fixture-backed cases, and four screenshot-generation fixtures. Direct CLI and MCP generate results
+are semantically identical. The installed package reproduces both the exact Kotlin fingerprint and
+the exact compiled class fingerprint; both supported MCP eras list the thirteen-tool catalog, and
+the modern protocol reproduces generation through the installed server.
+
+The complete distribution passes 2/2 reproducible builds, offline install/uninstall, SPDX/license
+inventory, installed compilation, and the existing generated-layout comparison denominators.
+Relative to the contract-only slice, package file count increases from 57 to 60 (+5.26%), declared
+bytes from 1,720,941 to 1,752,068 (+1.81%), and archive bytes from 306,601 to 312,952 (+2.07%). The
+archive SHA-256 is `749ae2ca07a8cd269326b673ab9e7ad62517431721bf9be62571b3e92374e236`.
+The quality-build plugin suite passes. The combined AI-contract, screenshot preprocessing,
+inference, resolution, generation, installed-distribution, documentation-structure,
+development-tooling-isolation, and release-intent root gate passes 27 actionable tasks, with 13
+executed and 14 up-to-date.
+
+This is **improved** deterministic source generation, typed behavior binding, accessibility
+disposition preservation, hermetic compile evidence, and installed transport parity with **no
+material Android runtime behavior change**. The result is compilable code, not a render or visual
+parity claim. The next action is to freeze explicit Preview values for caller state and callbacks,
+render the source through the existing isolated harness, and compare its semantic tree before
+introducing screenshot pixel metrics or a provider adapter.
 
 ### Implementation evidence — bounded XML to Design IR
 

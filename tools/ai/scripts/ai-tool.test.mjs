@@ -42,6 +42,14 @@ const resolutionRequestPath = new URL(
   '../evaluation/fixtures/visual/screenshot-resolution/wireframe.request.json',
   import.meta.url,
 );
+const resolvedScreenshotPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json',
+  import.meta.url,
+);
+const generationRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json',
+  import.meta.url,
+);
 
 async function request(tool, arguments_, overrides = {}) {
   const manifest = await loadKnowledgeManifest();
@@ -314,6 +322,30 @@ test('dispatches exact typed screenshot resolution and denies executable content
     denied.diagnostics[0].code,
     'VC-AI-SCREENSHOT-RESOLUTION-EXECUTABLE-DENIED',
   );
+});
+
+test('dispatches deterministic screenshot Kotlin generation through the shared envelope', async () => {
+  const [resolutionResult, generationRequest] = await Promise.all([
+    readFile(resolvedScreenshotPath, 'utf8').then(JSON.parse),
+    readFile(generationRequestPath, 'utf8').then(JSON.parse),
+  ]);
+  generationRequest.mode = 'generate';
+  const result = await dispatchToolRequest(await request(
+    'generate_screenshot_viewcompose',
+    {resolutionResult, generationRequest},
+    {requestId: 'screenshot-generation-dispatch', limits: {
+      maxInputBytes: 2_000_000,
+      maxOutputBytes: 2_000_000,
+    }},
+  ));
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'static');
+  assert.equal(
+    result.data.kotlinFingerprint,
+    '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9',
+  );
+  assert.equal(result.data.generationReport.bindings.states.length, 1);
+  assert.equal(result.data.generationReport.bindings.events.length, 2);
 });
 
 test('rejects framework drift and unsupported tools without invoking adapters', async () => {

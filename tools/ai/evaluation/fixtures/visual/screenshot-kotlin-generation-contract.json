@@ -8,9 +8,9 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-only",
-    "publicTool": false,
-    "implementation": false,
+    "status": "implemented",
+    "publicTool": true,
+    "implementation": true,
     "evidence": "compiled-golden"
   },
   "lineage": {
@@ -87,7 +87,7 @@
     },
     "decorative": {
       "false": "default-visible",
-      "true": "hidden"
+      "true": "unsupported-without-image-subset"
     }
   },
   "compiler": {
@@ -111,6 +111,7 @@
     "maxGeneratedBytes": 262144
   },
   "diagnosticCodes": [
+    "VC-AI-SCREENSHOT-GENERATION-CANCELLED",
     "VC-AI-SCREENSHOT-GENERATION-INPUT-INVALID",
     "VC-AI-SCREENSHOT-GENERATION-LINEAGE-MISMATCH",
     "VC-AI-SCREENSHOT-GENERATION-NOT-ELIGIBLE",

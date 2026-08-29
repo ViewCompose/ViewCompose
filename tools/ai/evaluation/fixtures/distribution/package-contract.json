@@ -21,7 +21,8 @@
       "convert_xml_to_viewcompose",
       "prepare_screenshot",
       "validate_screenshot_inference",
-      "resolve_screenshot_inference"
+      "resolve_screenshot_inference",
+      "generate_screenshot_viewcompose"
     ],
     "skills": [
       "viewcompose-api-reference",
@@ -74,6 +75,9 @@
       "scripts/screenshot-inference-contract.mjs",
       "scripts/screenshot-inference-validator.mjs",
       "scripts/screenshot-preprocessor.mjs",
+      "scripts/screenshot-design-ir-to-kotlin.mjs",
+      "scripts/screenshot-generation-adapter.mjs",
+      "scripts/screenshot-generation-contract.mjs",
       "scripts/screenshot-resolution-adapter.mjs",
       "scripts/screenshot-resolution-contract.mjs",
       "scripts/static-validator.mjs",
@@ -128,14 +132,16 @@
       "convert_xml_to_viewcompose:generate",
       "prepare_screenshot",
       "validate_screenshot_inference",
-      "resolve_screenshot_inference"
+      "resolve_screenshot_inference",
+      "generate_screenshot_viewcompose:generate"
     ],
     "sourceBoundModes": [
       "validate_code:compile",
       "render_preview",
       "diagnose_layout",
       "convert_xml_to_viewcompose:compile",
-      "convert_xml_to_viewcompose:render"
+      "convert_xml_to_viewcompose:render",
+      "generate_screenshot_viewcompose:compile"
     ],
     "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
     "implicitProtocolDowngrade": false

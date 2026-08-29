@@ -3,8 +3,10 @@ import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {compileKotlin} from './compiler-adapter.mjs';
+import {generateScreenshotKotlin} from './screenshot-design-ir-to-kotlin.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {canonicalJson} from './screenshot-contract.mjs';
+import {TOOL_DEFINITIONS, TOOL_NAMES} from './tool-catalog.mjs';
 
 const fixtureRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = `${fixtureRoot}screenshot-kotlin-generation-contract.json`;
@@ -53,12 +55,15 @@ function assertContract(contract) {
       'screenshot-kotlin-generation-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-only' ||
-    contract.activation?.publicTool !== false ||
-    contract.activation?.implementation !== false ||
-    contract.activation?.evidence !== 'compiled-golden'
+    contract.activation?.status !== 'implemented' ||
+    contract.activation?.publicTool !== true ||
+    contract.activation?.implementation !== true ||
+    contract.activation?.evidence !== 'compiled-golden' ||
+    !TOOL_NAMES.includes(contract.activation.tool) ||
+    TOOL_DEFINITIONS[contract.activation.tool]?.defaultLimits?.maxInputBytes !== 2_000_000 ||
+    TOOL_DEFINITIONS[contract.activation.tool]?.defaultLimits?.maxOutputBytes !== 2_000_000
   ) {
-    throw new Error('Screenshot Kotlin generation activation changed before implementation');
+    throw new Error('Screenshot Kotlin generation activation changed');
   }
   if (
     contract.lineage?.acceptedInput !== 'resolved-screenshot-inference-only' ||
@@ -97,7 +102,9 @@ function assertContract(contract) {
     contract.accessibility?.traversal?.publicModifierAvailable !== false ||
     contract.accessibility?.traversal?.emission !== 'hierarchy-order' ||
     contract.accessibility?.traversal?.exactAscendingOrderRequired !== true ||
-    contract.accessibility?.traversal?.callSiteReviewRequired !== true
+    contract.accessibility?.traversal?.callSiteReviewRequired !== true ||
+    contract.accessibility?.decorative?.false !== 'default-visible' ||
+    contract.accessibility?.decorative?.true !== 'unsupported-without-image-subset'
   ) {
     throw new Error('Screenshot Kotlin accessibility honesty changed');
   }
@@ -224,7 +231,7 @@ function assertResolvedMapping(resolution, request, report, kotlin, expected) {
   }
 }
 
-function assertUnsupportedFixtures(contract, descriptors) {
+async function assertUnsupportedFixtures(contract, descriptors, resolution, request) {
   for (let index = 0; index < contract.unsupportedFixtures.length; index += 1) {
     const fixture = contract.unsupportedFixtures[index];
     const descriptor = descriptors[index];
@@ -246,6 +253,47 @@ function assertUnsupportedFixtures(contract, descriptors) {
       (descriptor.expectedDiagnostic.endsWith('UNSUPPORTED') && !provesUnsupported)
     ) {
       throw new Error(`${fixture.mutation}: fail-closed reason changed`);
+    }
+    const arguments_ = {
+      resolutionResult: structuredClone(resolution),
+      generationRequest: structuredClone(request),
+    };
+    if (provesNotEligible) {
+      arguments_.resolutionResult.summary.codeGenerationAllowed = false;
+      arguments_.resolutionResult.resultFingerprint = fingerprintJson(
+        arguments_.resolutionResult,
+        'resultFingerprint',
+      );
+      arguments_.generationRequest.input.resolutionResultFingerprint =
+        arguments_.resolutionResult.resultFingerprint;
+    } else if (provesLineage) {
+      arguments_.generationRequest.input.resolvedDesignIrFingerprint = descriptor.value;
+    } else {
+      const node = collectNodes(arguments_.resolutionResult.designIr.roots).find((candidate) =>
+        candidate.id === descriptor.nodeId);
+      const event = node.events.find((candidate) => candidate.kind === descriptor.from);
+      event.kind = descriptor.value;
+      arguments_.resolutionResult.designIrFingerprint = fingerprintJson(
+        arguments_.resolutionResult.designIr,
+      );
+      arguments_.resolutionResult.resultFingerprint = fingerprintJson(
+        arguments_.resolutionResult,
+        'resultFingerprint',
+      );
+      arguments_.generationRequest.input.resolvedDesignIrFingerprint =
+        arguments_.resolutionResult.designIrFingerprint;
+      arguments_.generationRequest.input.resolutionResultFingerprint =
+        arguments_.resolutionResult.resultFingerprint;
+    }
+    const rejected = await generateScreenshotKotlin(arguments_);
+    const expectedStatus = descriptor.expectedDiagnostic.endsWith('UNSUPPORTED')
+      ? 'unsupported'
+      : 'invalid';
+    if (
+      rejected.status !== expectedStatus ||
+      rejected.diagnostics?.[0]?.code !== descriptor.expectedDiagnostic
+    ) {
+      throw new Error(`${fixture.mutation}: generator did not return the frozen failure`);
     }
   }
 }
@@ -291,12 +339,26 @@ export async function verifyPhase5ScreenshotGeneration({compileGolden = true, co
     throw new Error('Screenshot Kotlin golden fingerprint changed');
   }
   assertResolvedMapping(resolution, request, report, kotlin, fixture);
-  assertUnsupportedFixtures(contract, unsupportedDescriptors);
+  const [first, second] = await Promise.all([
+    generateScreenshotKotlin({resolutionResult: resolution, generationRequest: request}),
+    generateScreenshotKotlin({resolutionResult: resolution, generationRequest: request}),
+  ]);
+  if (
+    first.status !== 'success' ||
+    second.status !== 'success' ||
+    first.kotlin !== kotlin ||
+    second.kotlin !== kotlin ||
+    JSON.stringify(first.report) !== JSON.stringify(report) ||
+    JSON.stringify(second.report) !== JSON.stringify(report)
+  ) {
+    throw new Error('Screenshot Kotlin generator did not reproduce the frozen source and report');
+  }
+  await assertUnsupportedFixtures(contract, unsupportedDescriptors, resolution, request);
 
   let compilationFingerprint = null;
   if (compileGolden) {
     const compilation = await compile({
-      source: kotlin,
+      source: first.kotlin,
       path: `generated/viewcompose/${report.target.functionName}.kt`,
       artifactIds: contract.compiler.artifactIds,
       capabilityIds: contract.compiler.capabilityIds,
@@ -320,6 +382,7 @@ export async function verifyPhase5ScreenshotGeneration({compileGolden = true, co
     reportFingerprint,
     compilationFingerprint,
     compiled: compileGolden ? 1 : 0,
+    deterministicGenerations: 2,
     providerExecutions: 0,
     networkRequests: 0,
   };
@@ -332,7 +395,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       `Verified Phase 5 screenshot Kotlin generation contract: ${result.supportedGoldens}/1 golden, ` +
         `${result.nodes}/4 nodes, ${result.stateBindings}/1 state binding, ` +
         `${result.eventBindings}/2 event bindings, ${result.accessibilityRecords}/4 accessibility records, ` +
-        `${result.failClosedDenominators}/3 fail-closed denominators, ${result.compiled}/1 hermetic compile, ` +
+        `${result.failClosedDenominators}/3 fail-closed denominators, ` +
+        `${result.deterministicGenerations}/2 deterministic generations, ` +
+        `${result.compiled}/1 hermetic compile, ` +
         `${result.providerExecutions} provider executions, and ${result.networkRequests} network requests; ` +
         `Kotlin ${result.kotlinFingerprint}, report ${result.reportFingerprint}, ` +
         `classes ${result.compilationFingerprint}.\n`,
