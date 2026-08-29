@@ -210,6 +210,33 @@
       "environment": "declared XML resource references against IR and generated parameter bindings"
     },
     {
+      "id": "xml.project-resource-resolution",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "explicit project-relative resource roots, default values definitions, no AGP execution"
+    },
+    {
+      "id": "xml.project-style-resolution",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "bounded explicit style parents, supported items, and inline override precedence"
+    },
+    {
+      "id": "xml.callsite-inventory-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "bounded read-only Kotlin and Java lexical inventory with explicit candidate confidence"
+    },
+    {
       "id": "migration.unsupported-honesty",
       "phase": 4,
       "measure": "reported_ratio",

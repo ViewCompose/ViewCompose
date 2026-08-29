@@ -266,6 +266,54 @@
       "metricIds": ["xml.supported-compile", "xml.resource-preservation"]
     },
     {
+      "id": "xml.project-context-styled-login",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/project-context/styled-login.context.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "xml.project-resource-resolution",
+        "xml.project-style-resolution",
+        "xml.callsite-inventory-exactness"
+      ]
+    },
+    {
+      "id": "xml.unsupported-style-cycle",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/project-context/style-cycle/app/src/main/res/layout/cycle.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-STYLE-CYCLE"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
+      "id": "xml.unsupported-theme-attribute",
+      "phase": 4,
+      "category": "xml-migration",
+      "input": {
+        "kind": "fixture",
+        "fixture": "fixtures/xml/project-context/theme-attribute/app/src/main/res/layout/theme_text.xml"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "evidenceLevel": "static",
+        "diagnosticCodes": ["VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED"]
+      },
+      "metricIds": ["migration.unsupported-honesty"]
+    },
+    {
       "id": "xml.unsupported-custom-view",
       "phase": 4,
       "category": "xml-migration",

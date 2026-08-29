@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/xml-project-context-v1.schema.json",
+  "title": "ViewCompose Android XML project context v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contextId",
+    "layout",
+    "resourceRoots",
+    "sourceRoots",
+    "resources",
+    "styles",
+    "callSites",
+    "coverage",
+    "limitations",
+    "fingerprint"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contextId": { "$ref": "#/$defs/stableId" },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "resourceName", "fingerprint"],
+      "properties": {
+        "path": { "$ref": "#/$defs/projectPath" },
+        "resourceName": { "$ref": "#/$defs/stableId" },
+        "fingerprint": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "resourceRoots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "precedence"],
+        "properties": {
+          "path": { "$ref": "#/$defs/projectPath" },
+          "precedence": { "type": "integer", "minimum": 0, "maximum": 15 }
+        }
+      }
+    },
+    "sourceRoots": {
+      "type": "array",
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/projectPath" }
+    },
+    "resources": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": { "$ref": "#/$defs/resource" }
+    },
+    "styles": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": { "$ref": "#/$defs/style" }
+    },
+    "callSites": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": { "$ref": "#/$defs/callSite" }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resourceFiles",
+        "sourceFiles",
+        "scannedBytes",
+        "resourceResolution",
+        "callSiteAnalysis",
+        "completeness",
+        "executedProjectBuildLogic",
+        "networkAccess"
+      ],
+      "properties": {
+        "resourceFiles": { "type": "integer", "minimum": 0 },
+        "sourceFiles": { "type": "integer", "minimum": 0 },
+        "scannedBytes": { "type": "integer", "minimum": 0 },
+        "resourceResolution": { "const": "explicit-roots-only" },
+        "callSiteAnalysis": { "const": "bounded-lexical" },
+        "completeness": { "const": "not-proven" },
+        "executedProjectBuildLogic": { "const": false },
+        "networkAccess": { "const": false }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/stableId" }
+    },
+    "fingerprint": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "type", "name", "status", "definitions", "effectiveValue"],
+      "properties": {
+        "reference": { "pattern": "^@(string|dimen)/[A-Za-z0-9_]+$", "type": "string" },
+        "type": { "enum": ["string", "dimen"] },
+        "name": { "$ref": "#/$defs/stableId" },
+        "status": { "enum": ["resolved", "preserved", "unsupported"] },
+        "definitions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/definition" }
+        },
+        "effectiveValue": { "$ref": "#/$defs/value" }
+      }
+    },
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "startLine", "qualifiers", "selected", "value"],
+      "properties": {
+        "path": { "$ref": "#/$defs/projectPath" },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "qualifiers": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableId" }
+        },
+        "selected": { "type": "boolean" },
+        "value": { "$ref": "#/$defs/value" }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "name", "chain", "items"],
+      "properties": {
+        "reference": { "pattern": "^@style/[A-Za-z0-9_]+$", "type": "string" },
+        "name": { "$ref": "#/$defs/stableId" },
+        "chain": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableId" }
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["attribute", "value", "definedBy", "startLine"],
+            "properties": {
+              "attribute": { "pattern": "^(android:)?[A-Za-z][A-Za-z0-9_]*$", "type": "string" },
+              "value": { "$ref": "#/$defs/value" },
+              "definedBy": { "$ref": "#/$defs/stableId" },
+              "startLine": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "value": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "string" },
+            "value": { "type": "string", "maxLength": 16384 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value", "unit"],
+          "properties": {
+            "kind": { "const": "dimension" },
+            "value": { "type": "number", "minimum": 0 },
+            "unit": { "enum": ["dp", "sp", "px"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "reference", "type", "name"],
+          "properties": {
+            "kind": { "const": "resource" },
+            "reference": { "pattern": "^@(string|dimen|style)/[A-Za-z0-9_]+$", "type": "string" },
+            "type": { "enum": ["string", "dimen", "style"] },
+            "name": { "$ref": "#/$defs/stableId" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "type", "value"],
+          "properties": {
+            "kind": { "const": "enum" },
+            "type": { "$ref": "#/$defs/stableId" },
+            "value": { "$ref": "#/$defs/stableId" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "layout-dimension" },
+            "value": { "enum": ["match-parent", "wrap-content"] }
+          }
+        }
+      ]
+    },
+    "callSite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "target",
+        "path",
+        "startLine",
+        "startColumn",
+        "language",
+        "evidence",
+        "confidence",
+        "snippetFingerprint",
+        "migrationAction"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "layout-reference",
+            "id-reference",
+            "resource-reference",
+            "view-binding-reference",
+            "listener-registration",
+            "imperative-mutation",
+            "adapter-assignment"
+          ]
+        },
+        "target": { "pattern": "^(layout|id|string|dimen|style)/[A-Za-z0-9_]+$", "type": "string" },
+        "path": { "$ref": "#/$defs/projectPath" },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "startColumn": { "type": "integer", "minimum": 1 },
+        "language": { "enum": ["kotlin", "java"] },
+        "evidence": { "enum": ["exact-symbol", "binding-convention", "bounded-lexical"] },
+        "confidence": { "enum": ["exact", "candidate"] },
+        "snippetFingerprint": { "$ref": "#/$defs/sha256" },
+        "migrationAction": {
+          "enum": [
+            "replace-inflation",
+            "preserve-resource",
+            "reconnect-binding",
+            "reconnect-listener",
+            "review-mutation",
+            "review-adapter"
+          ]
+        }
+      }
+    },
+    "projectPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

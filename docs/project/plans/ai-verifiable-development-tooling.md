@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-29
-next_action: Freeze the next XML migration increment for Android resource/style resolution and read-only call-site dependency inventory before widening the accepted element subset.
+next_action: Implement the frozen Android XML project-context resolver and bounded call-site inventory without executing inspected-project build logic or widening the accepted element subset.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -59,12 +59,14 @@ the frozen IR determinism, provenance, resource-preservation, and unsupported-ho
 IR-to-Kotlin generator now produces the exact login golden and passes the hermetic compiler. The
 accepted converter is the ninth shared CLI/MCP tool, works in standalone generation and explicit
 source-bound compile modes, ships in the reproducible offline package, and is orchestrated by the
-sixth client-neutral consumer workflow.
+sixth client-neutral consumer workflow. The next increment is now frozen as Android XML project
+context v1: explicit-root resource and style resolution plus a read-only, bounded lexical call-site
+inventory whose completeness is never claimed.
 
 Last verified: 2026-08-29.
 
-Next action: freeze the next XML migration increment for Android resource/style resolution and
-read-only call-site dependency inventory before widening the accepted element subset.
+Next action: implement the frozen Android XML project-context resolver and bounded call-site
+inventory without executing inspected-project build logic or widening the accepted element subset.
 
 ## Maven release changesets
 
@@ -856,6 +858,50 @@ one four-node login golden with three string resources and one caller state bind
 View, Data Binding, and unknown-attribute rejection fixtures. Phase 4 begins with 27 total metrics,
 22 evaluation cases, 19 fixture-backed cases, and four XML source fixtures; implementation may not
 widen this subset silently.
+
+### Contract freeze — Android XML project context v1
+
+The second Phase 4 contract adds project evidence without weakening the accepted XML source subset.
+Callers must provide one canonical project root, one project-relative layout, ordered explicit
+resource roots, and ordered Kotlin or Java source roots. The resolver remains read-only, offline,
+rejects symbolic links and root escape, never executes inspected-project Gradle logic, and never
+chooses a variant implicitly. Only default `values` definitions select generation evidence;
+qualified definitions are inventory-only. String identities remain preserved with their default
+literals recorded as evidence, while finite non-negative `dp`, `sp`, and `px` dimensions may be
+resolved without density conversion.
+
+Style support is bounded to explicit unqualified `@style/name` references and explicit parents,
+with a maximum 16-entry chain. Inline attributes override the selected style, which overrides its
+nearest parent. Only attributes already owned by Android XML layout v1 are accepted. Cycles,
+implicit dotted parents, theme attributes, aliases, package/framework resources, missing default
+definitions, duplicate same-precedence definitions, formatted strings, plurals, arrays, markup,
+and XLIFF fail closed. This resolves reusable declarations without pretending to reproduce AGP
+resource merging or Android runtime selection.
+
+The companion call-site inventory scans only declared Kotlin and Java roots and returns stable
+locations plus snippet fingerprints for exact layout, ID, and resource symbols; ViewBinding naming,
+listener registration, imperative mutation, and adapter assignment remain explicit candidates when
+lexical evidence cannot prove ownership. Raw source is not returned. Coverage is always
+`bounded-lexical` and completeness is always `not-proven`, so dynamic, reflective, generated,
+excluded, and semantically linked code remains mandatory human/agent review work.
+
+The frozen denominator adds one supported five-file project with four resources, two effective
+styles, and seven call-site findings, plus style-cycle and theme-attribute rejection projects. The
+public context example is byte-equivalent to the supported golden, and every input file, layout,
+and source-line finding carries a SHA-256 identity. Phase 4 now has six schemas, 30 metrics, 25
+evaluation cases, 22 fixture-backed cases, four base XML fixtures, and three project-context
+fixtures. This is a contract-only **improvement** in measurable migration coverage with **no
+material runtime or supported-tool behavior change** until the isolated resolver is implemented.
+
+On 2026-08-29, Node 25.6.0 passed all 91 existing AI-tooling tests with the expanded contract, and
+the compiled root contract, distribution, and documentation gates passed 21 actionable tasks. Two
+package builds remained byte-identical after adding the project-context schema: the 40-file,
+250,839-byte archive has SHA-256
+`9167e42d60c77c7474e0e72479a01caa460c781d432b080dbf4c601a7882e1a7` and 1,441,250
+declared file bytes. The installed offline lifecycle, both MCP eras, the independent compile
+example, and the already accepted XML conversion still pass. This is **improved** distributable
+contract visibility with **no material behavior change**; the archive remains local, unsigned, and
+unpublished, and the new schema does not imply an implemented resolver.
 
 ### Implementation evidence — bounded XML to Design IR
 

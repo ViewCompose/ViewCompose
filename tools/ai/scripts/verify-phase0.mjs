@@ -87,6 +87,7 @@ async function verifySchemas(versions) {
     knowledgeBundleManifest: 'knowledge-bundle-manifest.schema.json',
     toolEnvelope: 'tool-envelope.schema.json',
     designIr: 'design-ir.schema.json',
+    xmlProjectContext: 'xml-project-context.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
@@ -165,6 +166,7 @@ async function verifyExamples(schemas) {
     ['tool-request.json', 'tool-envelope.schema.json'],
     ['tool-result.json', 'tool-envelope.schema.json'],
     ['design-ir.json', 'design-ir.schema.json'],
+    ['xml-project-context.json', 'xml-project-context.schema.json'],
   ];
   for (const [exampleName, schemaName] of examples) {
     const example = await readJson(resolve(contractsDirectory, 'examples', exampleName));
@@ -309,6 +311,171 @@ async function verifyXmlSubset(schemas) {
   return contract;
 }
 
+async function readProjectFixtureFile(projectRoot, projectPath) {
+  const candidate = resolve(projectRoot, projectPath);
+  if (!isWithin(projectRoot, candidate)) {
+    throw new Error(`XML project-context fixture escapes its root: ${projectPath}`);
+  }
+  const canonicalRoot = await realpath(projectRoot);
+  const canonicalCandidate = await realpath(candidate);
+  if (!isWithin(canonicalRoot, canonicalCandidate)) {
+    throw new Error(`XML project-context fixture resolves outside its root: ${projectPath}`);
+  }
+  let current = canonicalRoot;
+  for (const segment of relative(canonicalRoot, canonicalCandidate).split(sep).filter(Boolean)) {
+    current = resolve(current, segment);
+    if ((await lstat(current)).isSymbolicLink()) {
+      throw new Error(`XML project-context fixture traverses a symbolic link: ${projectPath}`);
+    }
+  }
+  if (!(await lstat(canonicalCandidate)).isFile()) {
+    throw new Error(`XML project-context fixture is not a regular file: ${projectPath}`);
+  }
+  return readFile(canonicalCandidate);
+}
+
+async function verifyXmlProjectContext(schemas) {
+  const fixtureDirectory = resolve(evaluationDirectory, 'fixtures/xml');
+  const contract = await readJson(resolve(fixtureDirectory, 'project-context-contract.json'));
+  if (
+    contract.schemaVersion !== 1 ||
+    contract.subsetId !== 'android-xml-project-context-v1' ||
+    contract.baseSubsetId !== 'android-xml-layout-v1'
+  ) {
+    throw new Error('XML project context must extend android-xml-layout-v1 at schema version 1');
+  }
+  if (
+    contract.execution?.readOnly !== true ||
+    contract.execution?.networkAccess !== false ||
+    contract.execution?.executeProjectBuildLogic !== false ||
+    contract.execution?.followSymbolicLinks !== false ||
+    contract.execution?.automaticVariantSelection !== false
+  ) {
+    throw new Error('XML project context must remain read-only, offline, and independent of project build logic');
+  }
+  for (const [name, ceiling] of Object.entries({
+    maxFiles: 1000,
+    maxBytes: 4 * 1024 * 1024,
+    maxResourceRoots: 16,
+    maxSourceRoots: 16,
+    maxStyleDepth: 16,
+    maxDefinitionsPerResource: 64,
+    maxCallSites: 4096,
+    timeoutMs: 10_000,
+  })) {
+    const value = contract.limits?.[name];
+    if (!Number.isInteger(value) || value <= 0 || value > ceiling) {
+      throw new Error(`XML project-context limit ${name} exceeds its frozen ceiling`);
+    }
+  }
+  if (
+    JSON.stringify(contract.resourceResolution?.types) !== JSON.stringify(['string', 'dimen']) ||
+    contract.resourceResolution?.qualifiedDefinitions !== 'inventory-only' ||
+    contract.styleResolution?.cycles !== 'fail closed' ||
+    contract.styleResolution?.implicitDottedParents !== false ||
+    contract.styleResolution?.themeAttributes !== false ||
+    contract.callSiteInventory?.analysis !== 'bounded-lexical' ||
+    contract.callSiteInventory?.completeness !== 'not-proven' ||
+    contract.callSiteInventory?.rawSourceInOutput !== false
+  ) {
+    throw new Error('XML project-context evidence or unsupported boundary changed without contract review');
+  }
+  assertUnique(contract.diagnosticCodes, 'XML project-context diagnostic codes');
+  for (const code of contract.diagnosticCodes) {
+    if (!/^VC-AI-XML-[A-Z0-9-]+$/u.test(code)) {
+      throw new Error(`Invalid XML project-context diagnostic code: ${code}`);
+    }
+  }
+
+  const contextSchema = schemas.get('xml-project-context.schema.json');
+  const publicExample = await readJson(resolve(contractsDirectory, 'examples/xml-project-context.json'));
+  const declaredRoots = new Set();
+  for (const fixture of contract.supportedFixtures) {
+    const projectRoot = resolve(fixtureDirectory, fixture.projectRoot);
+    const canonicalRoot = await realpath(projectRoot);
+    if (!isWithin(await realpath(fixtureDirectory), canonicalRoot)) {
+      throw new Error(`${fixture.projectRoot}: project fixture escapes the XML fixture root`);
+    }
+    const files = [...fixture.files].sort();
+    if (JSON.stringify(files) !== JSON.stringify(fixture.files)) {
+      throw new Error(`${fixture.projectRoot}: declared files must use normalized path order`);
+    }
+    assertUnique(files, `${fixture.projectRoot} declared files`);
+    const aggregate = createHash('sha256');
+    const contentByPath = new Map();
+    let scannedBytes = 0;
+    for (const projectPath of files) {
+      const content = await readProjectFixtureFile(canonicalRoot, projectPath);
+      const fingerprint = createHash('sha256').update(content).digest('hex');
+      aggregate.update(projectPath).update('\0').update(fingerprint).update('\n');
+      contentByPath.set(projectPath, content);
+      scannedBytes += content.byteLength;
+    }
+    const golden = await readJson(resolve(fixtureDirectory, fixture.goldenContext));
+    assertSchemaValue(golden, contextSchema, fixture.goldenContext);
+    if (JSON.stringify(golden) !== JSON.stringify(publicExample)) {
+      throw new Error('The public XML project-context example must equal the frozen supported golden');
+    }
+    const layout = contentByPath.get(fixture.layoutPath);
+    if (!layout || golden.layout.path !== fixture.layoutPath) {
+      throw new Error(`${fixture.projectRoot}: the golden layout path is outside the declared files`);
+    }
+    if (golden.layout.fingerprint !== createHash('sha256').update(layout).digest('hex')) {
+      throw new Error(`${fixture.projectRoot}: the golden layout fingerprint is stale`);
+    }
+    if (
+      golden.fingerprint !== aggregate.digest('hex') ||
+      golden.coverage.scannedBytes !== scannedBytes ||
+      golden.coverage.resourceFiles !== fixture.resourceFiles.length ||
+      golden.coverage.sourceFiles !== fixture.sourceFiles.length ||
+      golden.coverage.completeness !== 'not-proven' ||
+      golden.coverage.executedProjectBuildLogic !== false ||
+      golden.coverage.networkAccess !== false
+    ) {
+      throw new Error(`${fixture.projectRoot}: project-context coverage or fingerprint is stale`);
+    }
+    const resources = golden.resources.map((entry) => entry.reference);
+    const styles = golden.styles.map((entry) => entry.reference);
+    const callSiteKinds = Object.fromEntries(
+      [...new Set(golden.callSites.map((entry) => entry.kind))].sort().map((kind) => [
+        kind,
+        golden.callSites.filter((entry) => entry.kind === kind).length,
+      ]),
+    );
+    if (
+      JSON.stringify(resources) !== JSON.stringify(fixture.expectedResources) ||
+      JSON.stringify(styles) !== JSON.stringify(fixture.expectedStyles) ||
+      JSON.stringify(callSiteKinds) !== JSON.stringify(fixture.expectedCallSiteKinds)
+    ) {
+      throw new Error(`${fixture.projectRoot}: golden resources, styles, or call-site denominator changed`);
+    }
+    for (const callSite of golden.callSites) {
+      const content = contentByPath.get(callSite.path)?.toString('utf8');
+      const line = content?.split('\n')[callSite.startLine - 1];
+      if (!line || callSite.startColumn > line.length + 1) {
+        throw new Error(`${fixture.projectRoot}: call-site position is outside ${callSite.path}`);
+      }
+      const snippetFingerprint = createHash('sha256').update(line.trim()).digest('hex');
+      if (callSite.snippetFingerprint !== snippetFingerprint) {
+        throw new Error(`${fixture.projectRoot}: call-site snippet fingerprint is stale at ${callSite.path}:${callSite.startLine}`);
+      }
+    }
+    declaredRoots.add(fixture.projectRoot);
+  }
+  for (const fixture of contract.unsupportedFixtures) {
+    const projectRoot = resolve(fixtureDirectory, fixture.projectRoot);
+    for (const projectPath of fixture.files) await readProjectFixtureFile(projectRoot, projectPath);
+    for (const code of fixture.diagnosticCodes) {
+      if (!contract.diagnosticCodes.includes(code)) {
+        throw new Error(`${fixture.projectRoot}: undeclared project-context diagnostic code ${code}`);
+      }
+    }
+    declaredRoots.add(fixture.projectRoot);
+  }
+  assertUnique([...declaredRoots], 'XML project-context fixture roots');
+  return contract;
+}
+
 async function verifyMetrics(schemas) {
   const metrics = await readJson(resolve(evaluationDirectory, 'metrics.json'));
   assertSchemaValue(metrics, schemas.get('metric-contract.schema.json'), 'evaluation/metrics.json');
@@ -389,6 +556,7 @@ export async function verifyPhase0() {
   const schemas = await verifySchemas(versions);
   await verifyExamples(schemas);
   const xmlSubset = await verifyXmlSubset(schemas);
+  const xmlProjectContext = await verifyXmlProjectContext(schemas);
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -398,6 +566,8 @@ export async function verifyPhase0() {
     fixtures: corpus.cases.filter((item) => item.input.kind === 'fixture').length,
     reservedCapabilities: versions.reservedCapabilities.length,
     xmlFixtures: xmlSubset.supportedFixtures.length + xmlSubset.unsupportedFixtures.length,
+    xmlProjectContextFixtures:
+      xmlProjectContext.supportedFixtures.length + xmlProjectContext.unsupportedFixtures.length,
   };
 }
 
@@ -408,7 +578,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         `Verified AI tooling Phase 0: ${summary.schemas} schemas, ` +
           `${summary.reservedCapabilities} reserved capabilities, ${summary.metrics} metrics, ` +
           `${summary.cases} cases, ${summary.fixtures} fixture-backed cases, and ` +
-          `${summary.xmlFixtures} frozen XML fixtures.`,
+          `${summary.xmlFixtures} frozen XML fixtures and ` +
+          `${summary.xmlProjectContextFixtures} frozen XML project-context fixtures.`,
       );
     })
     .catch((error) => {
