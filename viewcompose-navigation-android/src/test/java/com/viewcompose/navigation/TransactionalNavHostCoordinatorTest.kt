@@ -6,6 +6,7 @@ package com.viewcompose.navigation
  */
 
 import android.view.View
+import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import com.viewcompose.navigation.core.NavBackStackController
 import com.viewcompose.navigation.core.NavCommand
@@ -101,6 +102,36 @@ class TransactionalNavHostCoordinatorTest {
             NavEntryLifecycleState.Resumed,
             checkNotNull(ownerStore.ownerOrNull(root.id)).entryLifecycleState,
         )
+    }
+
+    @Test
+    fun `typed plan executor transfers input focus eligibility accessibility and back ownership`() {
+        attach()
+        val root = coordinator.snapshot.top
+        val rootContainer = checkNotNull(sessionStore.sessionOrNull(root.id)).container
+
+        assertEquals(ViewGroup.FOCUS_AFTER_DESCENDANTS, rootContainer.descendantFocusability)
+        assertTrue(rootContainer.acceptsNavigationInput)
+        assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO, rootContainer.importantForAccessibility)
+        assertFalse(coordinator.ownsSystemBack)
+
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val details = coordinator.snapshot.top
+        val detailsContainer = checkNotNull(sessionStore.sessionOrNull(details.id)).container
+
+        assertEquals(ViewGroup.FOCUS_BLOCK_DESCENDANTS, rootContainer.descendantFocusability)
+        assertFalse(rootContainer.acceptsNavigationInput)
+        assertEquals(
+            View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS,
+            rootContainer.importantForAccessibility,
+        )
+        assertEquals(ViewGroup.FOCUS_AFTER_DESCENDANTS, detailsContainer.descendantFocusability)
+        assertTrue(detailsContainer.acceptsNavigationInput)
+        assertEquals(
+            View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+            detailsContainer.importantForAccessibility,
+        )
+        assertTrue(coordinator.ownsSystemBack)
     }
 
     @Test

@@ -31,6 +31,7 @@ evidence:
   - docs/project/plans/navigation-lifecycle-and-scene-evolution.md
   - docs/architecture/decisions/0023-retained-viewmodel-scope-ownership.md
   - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavLifecyclePlannerTest.kt
+  - viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavExecutionReducerTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/TransactionalNavHostCoordinatorTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt
   - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt
@@ -174,11 +175,14 @@ View, effect, animation, or candidate transaction.
 
 ### One reducer owns navigation decisions
 
-Core evolves toward one pure reducer whose immutable execution plan contains stack mutation, scene
-and layer projection, entry and graph lifecycle targets, presentation create/refresh/retain/evict/
-dispose operations, focus and input ownership, Back ownership, transition effects, rollback, and
-terminal cleanup. Android executors perform `LifecycleRegistry`, View, focus, Back-dispatch, and
-animation work; they do not independently reconstruct policy.
+Core now exposes one pure `NavExecutionReducer` whose immutable `NavExecutionPlan` contains stack
+mutation, scene and layer projection, entry and graph lifecycle targets, presentation
+prepare/refresh/retain/evict/dispose operations, transition phase and participants, focus, input
+and accessibility ownership, Back ownership, rollback, and terminal cleanup. Its settled,
+transition, and predictive-preview entry points delegate to one implementation. The Android typed
+executor performs `LifecycleRegistry`, View, input, focus, accessibility, Back-dispatch, and
+render-session work without independently reconstructing policy; the motion driver consumes the
+same planned scene and stack endpoints.
 
 Pre-commit failure publishes neither the candidate stack nor its destination context. Post-commit
 failure follows one documented terminal recovery path. The existing visible/interactive-only
@@ -285,7 +289,9 @@ coupling it to entry ownership.
    broader leak and workload matrices remain in Phase 7.
 5. Phase 5 publishes destination context with compiled Q3 samples and proves stable holder identity,
    delayed capture, presentation recreation, nested hosts, panes, overlays, and removal.
-6. Phase 6 converges reducer and executors and deletes superseded command sequencing.
+6. Phase 6 publishes the pure Core reducer and typed Android executor, then deletes superseded
+   lifecycle, presentation-retention, interaction, Back, rollback, and cleanup calculations from
+   the coordinator.
 7. Phases 7 and 8 close typed-route/ecosystem dispositions, coverage, device, performance,
    documentation, release, and archival gates.
 

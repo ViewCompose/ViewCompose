@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 91ba6bea3c3b1c4c35407edec1c3b66ebef8b511198a1d3d3cbf341a322713ec
+translation_source_hash: 417df2ea3062206cc7a71ba7c2a01d17796699b314021a4cab2fffa966343746
 translation_status: current
 ---
 
@@ -85,6 +85,19 @@ Owner、ViewModel、SavedStateRegistry、`rememberSaveable` 值、Route 参数�
 修改策略不会重建 `NavHost` 或 Entry Owner。收紧策略会立即淘汰超限隐藏展示；放宽策略只影响
 后续展示，不会急切组合隐藏 Stack。首次连接、配置恢复连接和进程恢复连接都只物化可见 Pane
 集合。
+
+## 自定义集成只保留一个策略来源
+
+普通应用应直接使用 `NavHost`；它已经执行 Core Plan。自定义平台 Host 可以在对应事件调用
+`NavExecutionReducer.settled`、`transition` 或 `predictivePreview`。它们是进入同一实现的三个
+易用入口，不是三套 Lifecycle 系统。每个入口都返回相同的 `NavExecutionPlan`；`reconcile` 则把
+Host Lifecycle 或 Retention 变化重新应用到既有语义 Phase。
+
+应把 Plan 作为整体执行：Candidate Stack Commit 前准备并刷新全部所需 Presentation；随后一起
+发布 Plan 指定的 Scene、Lifecycle、Interaction 与 Back Ownership；最后在规定边界执行 Eviction
+或终态清理。不要从 View Attachment 推导 Lifecycle，不要运行第二套 Retention Cache，也不要
+单独计算 Back Eligibility。Core 的可编译 Sample 展示 Plan 构造；Android 内置 Executor 保持
+Internal，因为平台 Mutation 属于 Host 职责，而不是应用 DSL API。
 
 ## 处理命令结果
 

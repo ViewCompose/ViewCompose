@@ -433,6 +433,7 @@ class NavDestinationSessionStoreTest {
         sessionStore.updatePresentationRetentionPolicy(
             NavPresentationRetentionPolicy.DisposeWhenHidden,
         )
+        sessionStore.disposePresentation(root.id)
 
         assertNull(sessionStore.sessionOrNull(root.id))
         assertSame(rootOwner, ownerStore.ownerOrNull(root.id))
@@ -451,6 +452,7 @@ class NavDestinationSessionStoreTest {
             layerOrder = listOf(root.id, details.id),
             visibleEntryIds = setOf(root.id),
         )
+        sessionStore.disposePresentation(details.id)
 
         assertSame(rootOwner, rebuiltSession.owner)
         assertSame(rebuiltSession, sessionStore.sessionOrNull(root.id))
@@ -472,6 +474,7 @@ class NavDestinationSessionStoreTest {
         sessionStore.updatePresentationRetentionPolicy(
             NavPresentationRetentionPolicy.DisposeWhenHidden,
         )
+        sessionStore.disposePresentation(root.id)
 
         val failed = sessionStore.prepare(
             entry = root,
@@ -515,6 +518,7 @@ class NavDestinationSessionStoreTest {
         sessionStore.present(order.take(3), setOf(second.id))
         prepareAndCommit(third, "Third")
         sessionStore.present(order.take(4), setOf(third.id))
+        sessionStore.disposePresentation(root.id)
 
         assertNull(sessionStore.sessionOrNull(root.id))
         assertTrue(sessionStore.sessionOrNull(first.id) != null)
@@ -529,6 +533,7 @@ class NavDestinationSessionStoreTest {
         assertTrue(sessionStore.sessionOrNull(third.id) != null)
         prepareAndCommit(fourth, "Fourth")
         sessionStore.present(order, setOf(fourth.id))
+        sessionStore.disposePresentation(second.id)
 
         assertNull(sessionStore.sessionOrNull(second.id))
         assertTrue(sessionStore.sessionOrNull(first.id) != null)
@@ -551,6 +556,7 @@ class NavDestinationSessionStoreTest {
         sessionStore.updatePresentationRetentionPolicy(
             NavPresentationRetentionPolicy.DisposeWhenHidden,
         )
+        sessionStore.disposePresentation(root.id)
 
         sessionStore.remove(root.id)
 

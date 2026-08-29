@@ -1,6 +1,7 @@
 package com.viewcompose.navigation
 
 import android.view.View
+import android.view.ViewGroup
 import androidx.annotation.MainThread
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.navigation.core.NavEntry
@@ -16,6 +17,12 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.withUiLocalSnapshot
 
 internal typealias NavDestinationContent = UiTreeBuilder.(NavEntry) -> Unit
+
+/** Immutable presentation inventory consumed by the Core execution reducer. */
+internal data class NavDestinationPresentationState(
+    val presentedEntryIds: List<NavEntryId>,
+    val hiddenEntryIdsOldestFirst: List<NavEntryId>,
+)
 
 /**
  * Manages destination View sessions, candidate sessions, and host child layout.
@@ -34,7 +41,6 @@ internal class NavDestinationSessionStore(
     private var pendingCandidate: NavDestinationCandidate? = null
     private val hiddenPresentationRecency = linkedSetOf<NavEntryId>()
     private var presentationRetentionPolicy = initialPresentationRetentionPolicy
-    private var lastVisibleEntryIds = emptySet<NavEntryId>()
     private var destroyed = false
 
     @MainThread
@@ -209,6 +215,21 @@ internal class NavDestinationSessionStore(
     fun sessionOrNull(entryId: NavEntryId): NavDestinationSession? = sessions[entryId]
 
     @MainThread
+    fun presentationState(): NavDestinationPresentationState {
+        return NavDestinationPresentationState(
+            presentedEntryIds = sessions.keys.toList(),
+            hiddenEntryIdsOldestFirst = hiddenPresentationRecency.toList(),
+        )
+    }
+
+    val maxRetainedHiddenPresentations: Int?
+        @MainThread get() = when (val policy = presentationRetentionPolicy) {
+            NavPresentationRetentionPolicy.DisposeWhenHidden -> 0
+            NavPresentationRetentionPolicy.RetainAll -> null
+            is NavPresentationRetentionPolicy.Bounded -> policy.maxHiddenPresentations
+        }
+
+    @MainThread
     fun updateRenderEnvironment(
         localSnapshot: UiLocalSnapshot,
         content: NavDestinationContent,
@@ -219,15 +240,15 @@ internal class NavDestinationSessionStore(
     }
 
     @MainThread
-    fun updatePresentationRetentionPolicy(policy: NavPresentationRetentionPolicy) {
+    fun updatePresentationRetentionPolicy(policy: NavPresentationRetentionPolicy): Boolean {
         check(!destroyed) {
             "A destroyed destination session store cannot change presentation retention."
         }
         if (presentationRetentionPolicy == policy) {
-            return
+            return false
         }
         presentationRetentionPolicy = policy
-        enforcePresentationRetention(lastVisibleEntryIds)
+        return true
     }
 
     @MainThread
@@ -275,8 +296,39 @@ internal class NavDestinationSessionStore(
                 hostView.bringChildToFront(session.container)
             }
         }
-        lastVisibleEntryIds = visibleEntryIds.toSet()
-        enforcePresentationRetention(visibleEntryIds)
+    }
+
+    /** Applies reducer-owned input, focus eligibility, and accessibility ownership. */
+    @MainThread
+    fun applyInteraction(
+        inputEntryIds: Set<NavEntryId>,
+        accessibilityEntryIds: Set<NavEntryId>,
+    ) {
+        check(inputEntryIds.all(sessions::containsKey)) {
+            "Navigation input ownership references a destination without a presentation."
+        }
+        check(accessibilityEntryIds.all(sessions::containsKey)) {
+            "Navigation accessibility ownership references a destination without a presentation."
+        }
+        sessions.forEach { (entryId, session) ->
+            val acceptsInput = entryId in inputEntryIds
+            session.container.acceptsNavigationInput = acceptsInput
+            session.container.descendantFocusability = if (acceptsInput) {
+                ViewGroup.FOCUS_AFTER_DESCENDANTS
+            } else {
+                ViewGroup.FOCUS_BLOCK_DESCENDANTS
+            }
+            session.container.importantForAccessibility = if (
+                entryId in accessibilityEntryIds
+            ) {
+                View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+            } else {
+                View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            }
+            if (!acceptsInput && session.container.hasFocus()) {
+                session.container.clearFocus()
+            }
+        }
     }
 
     /**
@@ -311,7 +363,6 @@ internal class NavDestinationSessionStore(
     @MainThread
     fun disposePresentation(entryId: NavEntryId) {
         hiddenPresentationRecency.remove(entryId)
-        lastVisibleEntryIds = lastVisibleEntryIds - entryId
         val session = sessions.remove(entryId) ?: return
         if (session.container.parent === hostView) {
             hostView.removeView(session.container)
@@ -340,7 +391,6 @@ internal class NavDestinationSessionStore(
         }
         sessions.clear()
         hiddenPresentationRecency.clear()
-        lastVisibleEntryIds = emptySet()
         try {
             ownerStore.destroy(retainViewModelScopes)
         } catch (throwable: Throwable) {
@@ -383,24 +433,4 @@ internal class NavDestinationSessionStore(
         }
     }
 
-    private fun enforcePresentationRetention(visibleEntryIds: Set<NavEntryId>) {
-        hiddenPresentationRecency.removeAll(visibleEntryIds)
-        hiddenPresentationRecency.retainAll(sessions.keys)
-        val retainedHiddenCount = when (val policy = presentationRetentionPolicy) {
-            NavPresentationRetentionPolicy.DisposeWhenHidden -> 0
-            NavPresentationRetentionPolicy.RetainAll -> Int.MAX_VALUE
-            is NavPresentationRetentionPolicy.Bounded -> policy.maxHiddenPresentations
-        }
-        val failures = mutableListOf<Throwable>()
-        while (hiddenPresentationRecency.size > retainedHiddenCount) {
-            val entryId = hiddenPresentationRecency.first()
-            runCatching {
-                disposePresentation(entryId)
-            }.exceptionOrNull()?.let(failures::add)
-        }
-        failures.firstOrNull()?.let { first ->
-            failures.drop(1).forEach(first::addSuppressed)
-            throw first
-        }
-    }
 }

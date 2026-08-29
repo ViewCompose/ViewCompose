@@ -10,10 +10,12 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-android
   - viewcompose-navigation-core
 sample_ids:
+  - module.navigation-core-execution-plan
   - tutorial.navigation
 task: Configure one production NavHost with restoration, system Back, and explicit failure handling.
 success_checks:
@@ -119,6 +121,21 @@ Changing the policy does not recreate `NavHost` or its entry owners. Tightening 
 excess hidden presentations immediately; relaxing it affects future presentations and does not
 eagerly compose hidden stacks. Initial, configuration-restored, and process-restored attachment
 materializes only the visible pane set.
+
+## Keep one policy source in custom integrations
+
+Normal applications should use `NavHost`; it already executes the Core plan. A custom platform
+host may call `NavExecutionReducer.settled`, `transition`, or `predictivePreview` for its matching
+event. These are three ergonomic inputs into one implementation, not three lifecycle systems. Each
+returns the same `NavExecutionPlan`, and `reconcile` reapplies host-lifecycle or retention changes
+to an existing semantic phase.
+
+Execute the plan as a whole. Prepare and refresh every required presentation before committing its
+candidate stack; publish the planned scene, lifecycle, interaction, and Back ownership together;
+then perform planned eviction or terminal cleanup at its stated boundary. Do not derive lifecycle
+from View attachment, run a second retention cache, or calculate Back eligibility separately. The
+compiled Core sample shows plan construction; Android's built-in executor remains internal because
+platform mutation is a host responsibility, not an application DSL API.
 
 ## Handle command outcomes
 

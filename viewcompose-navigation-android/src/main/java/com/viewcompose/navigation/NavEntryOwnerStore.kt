@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavExecutionPlan
 import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlan
@@ -107,15 +108,53 @@ internal class NavEntryOwnerStore(
     fun graphOwnerOrNull(entryId: NavEntryId): NavGraphOwner? = graphOwners[entryId]
 
     @MainThread
+    fun currentLifecycleStates(): Map<NavEntryId, NavEntryLifecycleState> {
+        return LinkedHashMap(
+            owners.mapValues { (_, owner) -> owner.entryLifecycleState },
+        )
+    }
+
+    /** Applies one reducer-owned scene and lifecycle plan without reconstructing host policy. */
+    @MainThread
+    fun execute(plan: NavExecutionPlan): NavLifecyclePlan {
+        return applyLifecyclePlan(
+            retainedEntries = plan.retainedEntries,
+            scene = plan.scene,
+            hostState = null,
+            plan = plan.lifecycle,
+        )
+    }
+
+    @MainThread
     fun reconcile(
         retainedEntries: List<NavEntry>,
         scene: NavScene,
         hostState: NavHostLifecycleState,
     ): NavLifecyclePlan {
+        val plan = NavLifecyclePlanner.plan(
+            currentStates = owners.mapValues { (_, owner) -> owner.entryLifecycleState },
+            entries = retainedEntries,
+            scene = scene,
+            hostState = hostState,
+        )
+        return applyLifecyclePlan(
+            retainedEntries = retainedEntries,
+            scene = scene,
+            hostState = hostState,
+            plan = plan,
+        )
+    }
+
+    private fun applyLifecyclePlan(
+        retainedEntries: List<NavEntry>,
+        scene: NavScene,
+        hostState: NavHostLifecycleState?,
+        plan: NavLifecyclePlan,
+    ): NavLifecyclePlan {
         check(!destroyed) {
-            "A destroyed navigation entry owner store cannot be reconciled."
+            "A destroyed navigation entry owner store cannot execute a lifecycle plan."
         }
-        // Create destination and graph owners before the pure planner snapshots their current state.
+        // Create destination and graph owners before applying the reducer's ordered targets.
         retainedEntries.forEach { entry ->
             entry.graphEntries.forEachIndexed { depth, graphEntry ->
                 graphOwnerFor(
@@ -125,12 +164,6 @@ internal class NavEntryOwnerStore(
             }
             ownerFor(entry)
         }
-        val plan = NavLifecyclePlanner.plan(
-            currentStates = owners.mapValues { (_, owner) -> owner.entryLifecycleState },
-            entries = retainedEntries,
-            scene = scene,
-            hostState = hostState,
-        )
         retainedEntries.forEach { entry ->
             val presentation = checkNotNull(scene[entry.id]) {
                 "Navigation scene omitted retained destination ${entry.id}."
@@ -166,7 +199,11 @@ internal class NavEntryOwnerStore(
             ownerDepths.remove(entryId)
             restoredOwnerStates.remove(entryId)
         }
-        if (hostState == NavHostLifecycleState.Destroyed) {
+        if (
+            hostState == NavHostLifecycleState.Destroyed ||
+            plan.targetStates.isNotEmpty() &&
+            plan.targetStates.values.all(NavEntryLifecycleState.Destroyed::equals)
+        ) {
             viewModelScopeProvider.clearAll()
             destroyed = true
             restoredOwnerStates.clear()

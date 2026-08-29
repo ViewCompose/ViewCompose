@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.navigation-host-construction-identity",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-navigation-android",
+  "symbol_id": "com.viewcompose.navigation.UiTreeBuilder.NavHost",
+  "capability_id": "navigation.host",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "inputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "failure",
+    "android",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": ["com.viewcompose.navigation.UiTreeBuilder.NavHost"]
+    },
+    "module": {
+      "status": "updated",
+      "targets": ["module.viewcompose-navigation-android"]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": ["module.navigation-android-host-construction"]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": ["reference.navigation.host"]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The first-success tutorial uses the default overlay factory and has no construction-identity choice."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The production workflow does not install a custom overlay factory; the owning module documents this advanced input."
+    },
+    "architecture": {
+      "status": "not-applicable",
+      "rationale": "Excluding unstable function identity is a host reconciliation detail and changes no durable ownership boundary."
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "The fix preserves the public signature and requires no Compose migration choice for default hosts."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No public symbol or documentation route moved."
+    }
+  }
+}

@@ -20,6 +20,8 @@ import com.viewcompose.lifecycle.ProvideLifecycleOwner
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.runtime.State
+import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
@@ -64,6 +66,46 @@ class AndroidNavHostBackAdapterTest {
 
         assertEquals(1, fixture.owner.fallbackCount)
         assertEquals(listOf("home", "details"), fixture.controller.routeNames())
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `changing system back enablement keeps host identity and restores plan ownership`() {
+        val enabled = mutableStateOf(true)
+        val fixture = renderHost(systemBackEnabledState = enabled)
+        fixture.controller.navigate(NavRoute("details"))
+
+        enabled.value = false
+        fixture.session.render()
+        fixture.owner.onBackPressedDispatcher.onBackPressed()
+
+        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(listOf("home", "details"), fixture.controller.routeNames())
+
+        enabled.value = true
+        fixture.session.render()
+        fixture.owner.onBackPressedDispatcher.onBackPressed()
+
+        assertEquals(1, fixture.owner.fallbackCount)
+        assertEquals(listOf("home"), fixture.controller.routeNames())
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `changing explicit host key rebuilds runtime without losing controller ownership`() {
+        val hostKey = mutableStateOf("first")
+        val fixture = renderHost(hostKeyState = hostKey)
+        fixture.controller.navigate(NavRoute("details"))
+        val originalHost = fixture.navHostView
+
+        hostKey.value = "second"
+        fixture.session.render()
+
+        val replacementHost = fixture.root.requireNavHostView()
+        assertTrue(replacementHost !== originalHost)
+        fixture.owner.onBackPressedDispatcher.onBackPressed()
+        assertEquals(0, fixture.owner.fallbackCount)
+        assertEquals(listOf("home"), fixture.controller.routeNames())
         fixture.session.dispose()
     }
 
@@ -132,6 +174,8 @@ class AndroidNavHostBackAdapterTest {
 
     private fun renderHost(
         systemBackEnabled: Boolean = true,
+        systemBackEnabledState: State<Boolean>? = null,
+        hostKeyState: State<String>? = null,
     ): BackHostFixture {
         val application = RuntimeEnvironment.getApplication()
         val root = FrameLayout(application)
@@ -153,8 +197,9 @@ class AndroidNavHostBackAdapterTest {
                         controller = controller,
                         transitionSpec = NavTransitionSpec.None,
                         presentationRetentionPolicy = NavPresentationRetentionPolicy.RetainAll,
-                        systemBackEnabled = systemBackEnabled,
+                        systemBackEnabled = systemBackEnabledState?.value ?: systemBackEnabled,
                         overlayHostFactory = { OverlayHostDefaults.noOp },
+                        key = hostKeyState?.value,
                     ) { entry ->
                         Text(entry.route.name)
                     }
@@ -162,6 +207,7 @@ class AndroidNavHostBackAdapterTest {
             }
         }
         return BackHostFixture(
+            root = root,
             owner = owner,
             controller = controller,
             session = session,
@@ -191,6 +237,7 @@ class AndroidNavHostBackAdapterTest {
 }
 
 private data class BackHostFixture(
+    val root: FrameLayout,
     val owner: TestBackOwner,
     val controller: NavHostController,
     val session: RenderSession,

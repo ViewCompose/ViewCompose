@@ -1,6 +1,5 @@
 package com.viewcompose.navigation
 
-import android.view.ViewGroup
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
@@ -13,7 +12,7 @@ import com.viewcompose.ui.foundation.UiLocalSnapshot
 internal class NavDestinationSession(
     val entry: NavEntry,
     val owner: NavEntryOwner,
-    val container: ViewGroup,
+    val container: NavDestinationContainer,
     private val renderSession: RenderSession,
     private val renderEnvironment: NavDestinationRenderEnvironment,
 ) {

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: ad3b2a2d2b4aa38d1890d760efca59b1054be0174fdec09bcfc3abe52d2ad634
+translation_source_hash: 209202daba5b9b5d52d422b762f29256beacadf6b27c53f158b7ed600b97f2a7
 translation_status: current
 ---
 
@@ -33,7 +33,27 @@ Android Host 准备 Destination Owner 和子 RenderSession，在暂存原生容�
 到已提交目标。提交后 Effect 失败会以 `stackCommitted = true` 上报；Host 不会假装旧栈仍是
 权威状态。
 
-## 3. Destination 与 Graph 身份
+## 3. 统一 Execution Plan
+
+Navigation Core 会把每次稳定态协调、已提交转场或 Predictive Preview 归约为一份不可变
+`NavExecutionPlan`。三个入口分别表达调用方所处的时刻，但共享同一 Reducer 实现与同一输出词汇。
+这份 Plan 是 Before/After Stack、Scene 与 Layer Order、Lifecycle Target、Presentation 的准备、
+刷新、保留、淘汰与销毁、Render 暂停、Input/Accessibility/Focus Ownership、系统 Back Ownership、
+Rollback 与终止清理的唯一决策来源。
+
+Android `AndroidNavExecutionPlanExecutor` 按固定边界解释 Plan：Stack Commit 前准备或刷新
+Candidate；随后发布 Presentation 与 Interaction；协调 Destination Context 和 Owner Lifecycle；
+暂停 Outgoing Render；最后执行安全淘汰。永久移除仍属于终态清理，使 Exiting View 能完成 Motion
+后再销毁 Owner。当 Plan 判定 Destination 不拥有输入时，其容器会消费 Touch、Generic Motion 与
+Key Input、阻止后代获得 Focus，并退出 Accessibility Tree。Host Back Adapter 也读取同一 Plan，
+不会再查询一套并行 Stack 规则。
+
+Reducer 保持纯函数和平台无关；Executor 持有 Android Effect，不得根据 View Visibility 或
+Attachment 另行推导策略。Commit 前准备失败只回滚 Plan 指定的 Candidate Presentation 与 Owner，
+不会发布 Candidate Stack 或 Destination Context。Stack Commit 后的失败保留已提交目标，并使用
+Plan 指定的终态清理。
+
+## 4. Destination 与 Graph 身份
 
 每个 Destination Entry 都持有稳定的 Route Identity、Lifecycle、SavedStateRegistry Namespace、
 ViewCompose Saveable-state Namespace，以及一个 Keyed ViewModelStore Lease。其子 RenderSession
@@ -88,7 +108,7 @@ Lifecycle 终止和 Store 终止按顺序执行，但不是同一事件。永久
 展示 Owner 而不终止 Store，使配置重建后的 Host 能用同一父 Store 和已保存 Scope 身份重新租用
 既有 ViewModel；完成中的父级仍是最终清理边界。
 
-## 4. Lifecycle 投影
+## 5. Lifecycle 投影
 
 Navigation Core 持有一份不可变 `NavScene`。每个 Destination Projection 都携带 Presence、
 Visibility、Interaction、粗粒度 Transition Phase、Pane Role 与 Content/Overlay Layer Role。
@@ -124,7 +144,7 @@ Android Coordinator 会在普通转场或 Predictive 转场开始时冻结恰好
 Core 可以表达 Content 与 Overlay Layer，但当前 Android 导航 Host 尚无通用 Overlay 导航 Surface。
 因此 Overlay Lifecycle 执行仍不作支持声明，也不能从 Core Model 或独立 UI Overlay Transport 推断。
 
-## 5. 恢复边界
+## 6. 恢复边界
 
 remember 的 Controller 会持久化已提交栈、Route 参数、Destination 与 Graph 身份、选择历史、
 私有 Host Scope 身份、Destination 与 Graph 的 SavedStateRegistry Bundle，以及 ViewCompose
@@ -138,7 +158,7 @@ Pane 集合；隐藏目的地内容不会急切执行。配置重建可以通过
 未知的新格式仍会失败关闭。这些规则可以防止应用升级后把旧 SavedState 或 ViewModel Namespace
 绑定到另一个 Destination。
 
-## 6. 返回与视觉 Motion
+## 7. 返回与视觉 Motion
 
 只有活动 Controller 可以消费返回时，系统返回才会参与。Predictive Back 在已提交 Entry 上
 创建预览，但不改变 Core 栈。取消时恢复稳定 Scene，完成时执行普通 Pop 事务。Detach、禁用
@@ -149,7 +169,7 @@ Preview 参与者保持在 `STARTED`；提交后，被 Pop 的离场 Entry 会�
 Destination Root，不持有页面或 Session，也不能接收输入或无障碍焦点。捕获失败只降级对应
 视觉配对，不改变导航状态。
 
-## 7. 证据与验证
+## 8. 证据与验证
 
 不变量边界有三个层次的覆盖：
 
@@ -175,3 +195,10 @@ Preview、取消、提交和稳定；另一项再次用真实原生 View 验证 
 进入页面过早设为 `RESUMED`、把已 Pop 离场页面保留为 `STARTED` 的测试，结论为 **improved**。
 通用导航 Overlay、API 34 平台边缘手势分发、内存、泄漏和性能仍为 **inconclusive**，继续由活跃
 计划负责。
+
+Reducer/Executor 收敛的新鲜执行分别通过 71/71 项 Navigation Core 与 165/165 项 Navigation
+Android 测试，Phase 5 对应基线为 60 和 162。随后，同一台 API 33 Pixel 4 XL 上的全部 15 项导航
+Back 用例通过。由于 Scene、Lifecycle、Presentation、Interaction、Back、Rollback 与 Cleanup
+策略现在都来自一份 Core Plan，Coordinator 从 1,597 行降至 1,176 行。结论为 **improved**。
+真机执行仅覆盖一个 API Level 和合成导航 Host；行/分支覆盖率、代表性泄漏、内存与性能、通用
+Overlay、类型化 Route 以及直接 NavigationEvent 集成仍为 **inconclusive**，继续由 Phase 7 负责。

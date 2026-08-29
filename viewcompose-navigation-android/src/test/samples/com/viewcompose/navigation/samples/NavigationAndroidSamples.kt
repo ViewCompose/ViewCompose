@@ -1,5 +1,6 @@
 package com.viewcompose.navigation.samples
 
+import android.view.ViewGroup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.navigation.LocalNavDestinationContext
@@ -15,6 +16,7 @@ import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.runtime.MutableState
+import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTheme
@@ -47,6 +49,22 @@ fun UiTreeBuilder.rememberedNavHostSample() {
         }
     }
 }
+
+// DOCS_REGION_START(navigation-android-host-construction)
+fun UiTreeBuilder.customOverlayNavHostSample(
+    controller: NavHostController,
+    overlayHostFactory: (ViewGroup) -> OverlayHost,
+    overlayFactoryVersion: Any,
+) {
+    NavHost(
+        controller = controller,
+        overlayHostFactory = overlayHostFactory,
+        key = overlayFactoryVersion,
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+// DOCS_REGION_END(navigation-android-host-construction)
 
 // DOCS_REGION_START(navigation-android-host)
 fun UiTreeBuilder.AppNavigation() {

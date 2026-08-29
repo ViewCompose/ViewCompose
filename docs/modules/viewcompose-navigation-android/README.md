@@ -10,12 +10,14 @@ capability_ids:
   - navigation.destination-context
   - navigation.host
   - navigation.presentation-retention
+  - navigation.scene-projection
 artifact_ids:
   - viewcompose-navigation-android
 sample_ids:
   - module.navigation-android-dependency
   - module.navigation-android-destination-context
   - module.navigation-android-host
+  - module.navigation-android-host-construction
   - module.navigation-android-presentation-retention
 coordinate: com.viewcompose:viewcompose-navigation-android:0.1.0-alpha02
 minimal_usage_sample_id: module.navigation-android-dependency
@@ -69,6 +71,26 @@ fun UiTreeBuilder.AppNavigation() {
 }
 ```
 
+Custom overlay transports are constructor inputs. Keep their factory reference stable across
+ordinary renders and advance an explicit key only when the transport must be rebuilt:
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-host-construction" sample_id="module.navigation-android-host-construction" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.customOverlayNavHostSample(
+    controller: NavHostController,
+    overlayHostFactory: (ViewGroup) -> OverlayHost,
+    overlayFactoryVersion: Any,
+) {
+    NavHost(
+        controller = controller,
+        overlayHostFactory = overlayHostFactory,
+        key = overlayFactoryVersion,
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+```
+
 One `NavHostController` can be attached to exactly one active `NavHost`. Navigation commands are
 main-thread APIs and require attachment so the core transaction, destination rendering, owner
 lifecycle, and native View hierarchy share one commit boundary.
@@ -87,8 +109,10 @@ ID. Restoring destination Locals cannot overwrite the child session owner.
 
 Change `contentKey` when destination content closes over non-observable values. Observable state
 invalidates its owning destination session directly. Changing `key`, controller identity, lifecycle
-owner, debug identity, or overlay factory recreates the native host because those inputs change
-ownership rather than content.
+owner, or debug identity recreates the native host because those inputs change ownership rather
+than content. `overlayHostFactory` is captured when that host is created and is deliberately absent
+from identity equality because lambda identity is not stable across render passes; change `key`
+when installing a different factory.
 
 The default nested overlay factory explicitly constructs `viewcompose-overlay-android`; it never
 discovers a Material backend from classpath order. A named design integration may pass an explicit
@@ -182,6 +206,27 @@ current operation reaches a terminal state. A queued result is therefore not com
 The controller exposes immediate immutable `snapshot` and `stackState` projections plus observable
 `navigationState`. Selected-tab UI should derive its selection from `activeStackId` rather than
 maintaining a second source of truth.
+
+## Typed plan execution
+
+The host coordinator does not independently calculate lifecycle, retention, focus, accessibility,
+or Back policy. Navigation Core's `NavExecutionReducer` supplies one `NavExecutionPlan` through
+separate settled, transition, and predictive-preview entry points backed by the same reducer. The
+internal `AndroidNavExecutionPlanExecutor` then performs only typed platform effects.
+
+Preparation and refresh happen before the irreversible stack boundary. After commit, the executor
+publishes the exact planned scene and layer order, applies input and accessibility ownership,
+updates destination context and lifecycle in child-down/parent-up order, suspends outgoing render
+work, and evicts only plan-selected hidden presentations. Terminal cleanup disposes a permanently
+removed presentation before destroying its owner. Rollback similarly consumes explicit candidate
+IDs from the plan rather than inspecting whichever Views happen to be attached.
+
+During motion, destination containers outside `inputEntryIds` consume touch, generic-motion, and
+key events and block descendant focus. Entries outside `accessibilityEntryIds` hide descendants
+from accessibility independently. At settlement, the plan restores those rights to the interactive
+pane set. `NavHost` system-Back registration reads the same plan's ownership result. Applications
+normally do not invoke the Core reducer directly; it is a Q3 integration boundary for tests and
+custom platform executors.
 
 ## Destination and graph ownership
 
@@ -397,6 +442,27 @@ This is an **improved** lifecycle result with no premature resume in the support
 General navigation overlays, API-34 platform edge-gesture delivery, memory, leak, and performance
 results remain **inconclusive**; the next plan phase owns presentation-retention policy and its
 device measurements.
+
+## Execution reducer acceptance
+
+The Phase 5 baseline passed 162/162 Navigation Android tests. A fresh Phase 6 run passed 165/165,
+adding three host-boundary contracts for typed interaction execution, dynamic system-Back
+enablement without accidental host replacement, and explicit-key runtime replacement with the same
+controller. This is an absolute increase of three tests and a normalized increase of 1.9%.
+
+The final physical-device run passed all 15 `NavigationBackDeviceTest` cases on a Pixel 4 XL running
+API 33. An earlier 14/15 run exposed that an inline `overlayHostFactory` lambda incorrectly
+participated in host identity and could replace the runtime during an ordinary recomposition. The
+factory is now captured at host creation, its function identity is excluded from reconciliation,
+and an explicit `key` remains the tested replacement boundary. The coordinator shrank from 1,597 to
+1,176 lines, an absolute reduction of 421 lines or 26.4%, while production call sites no longer
+reconstruct lifecycle, scene, retention, rollback, cleanup, or Back policy outside the Core plan.
+
+Conclusion: **improved**. The same typed plan now drives deterministic Core policy and Android
+effects, and the complete existing device Back matrix remains green. General overlay navigation,
+typed-route serialization, direct NavigationEvent integration, representative memory and leak
+tests, line/branch coverage, and broader device/performance matrices remain **inconclusive** and
+are assigned to Phase 7.
 
 ## Compatibility notes
 

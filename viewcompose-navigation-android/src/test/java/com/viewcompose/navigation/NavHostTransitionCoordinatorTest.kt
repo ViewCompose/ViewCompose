@@ -6,6 +6,7 @@ package com.viewcompose.navigation
  */
 
 import android.view.View
+import android.view.ViewGroup
 import com.viewcompose.navigation.core.NavBackStackController
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
@@ -105,6 +106,24 @@ class NavHostTransitionCoordinatorTest {
         )
         assertEquals(View.VISIBLE, session(root).container.visibility)
         assertEquals(View.VISIBLE, session(details).container.visibility)
+        assertEquals(
+            ViewGroup.FOCUS_BLOCK_DESCENDANTS,
+            session(root).container.descendantFocusability,
+        )
+        assertFalse(session(root).container.acceptsNavigationInput)
+        assertEquals(
+            ViewGroup.FOCUS_BLOCK_DESCENDANTS,
+            session(details).container.descendantFocusability,
+        )
+        assertFalse(session(details).container.acceptsNavigationInput)
+        assertEquals(
+            View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS,
+            session(root).container.importantForAccessibility,
+        )
+        assertEquals(
+            View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+            session(details).container.importantForAccessibility,
+        )
         assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
         assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
         assertEquals(

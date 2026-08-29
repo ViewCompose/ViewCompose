@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: e38506d957e526c58bc3c26bb2c12146e5c4ab6e075a64708b0638c7a3706187
+translation_source_hash: aa1fa9833b780e765eaf2335b125122bc401c8d4c669a38c0dc2b35220cc7592
 translation_status: current
 ---
 
@@ -49,6 +49,26 @@ fun UiTreeBuilder.AppNavigation() {
 }
 ```
 
+自定义 Overlay Transport 属于构造输入。普通渲染之间应保持 Factory 引用稳定，仅在必须重建
+Transport 时推进显式 Key：
+
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-host-construction" sample_id="module.navigation-android-host-construction" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun UiTreeBuilder.customOverlayNavHostSample(
+    controller: NavHostController,
+    overlayHostFactory: (ViewGroup) -> OverlayHost,
+    overlayFactoryVersion: Any,
+) {
+    NavHost(
+        controller = controller,
+        overlayHostFactory = overlayHostFactory,
+        key = overlayFactoryVersion,
+    ) { entry ->
+        Text(entry.route.name)
+    }
+}
+```
+
 一个 `NavHostController` 同时只能连接一个活跃 `NavHost`。导航命令必须在主线程调用且要求宿主
 已连接，确保 core 事务、目的地渲染、owner 生命周期和原生 View 层级共用同一个提交边界。
 
@@ -63,8 +83,10 @@ Scene。
 新的 ID。恢复目的地 Local 时不能覆盖子 Session 所有者。
 
 目的地闭包依赖不可观察值时应修改 `contentKey`。可观察状态会直接使所属目的地会话失效。
-`key`、controller identity、lifecycle owner、调试 identity 或 overlay factory 的变化会重建
-原生宿主，因为这些输入改变的是 ownership，而非普通内容。
+`key`、Controller Identity、Lifecycle Owner 或调试 Identity 的变化会重建原生 Host，因为这些
+输入改变的是 Ownership，而非普通内容。`overlayHostFactory` 会在 Host 创建时捕获；Lambda
+Identity 跨 Render Pass 并不稳定，因此刻意不参与 Identity Equality。需要安装不同 Factory 时，
+应同时修改 `key`。
 
 默认嵌套 Overlay Factory 显式构造 `viewcompose-overlay-android`，不会按 Classpath 顺序发现
 Material Backend。具名设计集成在目的地 Surface 需要额外 Presenter 时可以传入显式 Factory。
@@ -148,6 +170,25 @@ Controller 命令返回 `NavResult`：
 
 Controller 提供即时不可变 `snapshot` 和 `stackState`，以及可观察 `navigationState`。Tab 选中
 状态应从 `activeStackId` 派生，不要维护第二份状态源。
+
+## 类型化 Plan 执行
+
+Host Coordinator 不再独立计算 Lifecycle、Retention、Focus、Accessibility 或 Back 策略。
+Navigation Core 的 `NavExecutionReducer` 通过稳定态、Transition 与 Predictive Preview 三个入口
+提供同一种 `NavExecutionPlan`，这些入口共用同一 Reducer。内部
+`AndroidNavExecutionPlanExecutor` 只执行类型化平台 Effect。
+
+Preparation 与 Refresh 发生在不可逆 Stack 边界之前。Commit 后，Executor 发布 Plan 中精确的
+Scene 与 Layer Order，应用 Input 和 Accessibility Ownership，以 Child-down/Parent-up 顺序更新
+Destination Context 与 Lifecycle，暂停 Outgoing Render，并且只淘汰 Plan 选中的隐藏
+Presentation。终态清理会先释放永久移除的 Presentation，再销毁 Owner。Rollback 同样读取 Plan
+中明确的 Candidate ID，而不是检查当时恰好 Attached 的 View。
+
+Motion 期间，不在 `inputEntryIds` 中的 Destination Container 会消费 Touch、Generic Motion 和
+Key Event，并阻止后代获得 Focus。不在 `accessibilityEntryIds` 中的 Entry 会独立隐藏其无障碍
+后代。稳定后，Plan 会把这些权限恢复给可交互 Pane 集合。`NavHost` 的系统 Back 注册也读取同一
+Plan 的 Ownership 结果。应用通常无需直接调用 Core Reducer；它是面向测试和自定义平台 Executor
+的 Q3 集成边界。
 
 ## 目的地与图 Ownership
 
@@ -328,6 +369,23 @@ Destination DSL 内捕获的最近 `LocalLifecycleOwner`，验证 Push、Predict
 这是 **improved** 的 Lifecycle 结果，当前支持的 Host Scene 已不存在提前 Resume。通用导航 Overlay、
 API 34 平台边缘手势分发、内存、泄漏与性能结果仍为 **inconclusive**；下一计划阶段负责
 Presentation Retention Policy 及其设备测量。
+
+## 执行 Reducer 验收
+
+Phase 5 基线通过 162/162 项 Navigation Android 测试。Phase 6 新鲜执行通过 165/165，新增三项
+Host Boundary 契约，分别覆盖类型化 Interaction 执行、动态切换系统 Back 时不意外替换 Host，
+以及使用同一 Controller 完成显式 `key` Runtime 替换。测试绝对增加 3 项，标准化增加 1.9%。
+
+最终真机执行在 API 33 的 Pixel 4 XL 上通过全部 15 项 `NavigationBackDeviceTest`。此前一次
+14/15 执行发现 Inline `overlayHostFactory` Lambda 被错误纳入 Host Identity，普通重组就可能替换
+Runtime。现在 Factory 在 Host 创建时捕获，函数 Identity 不再参与协调，显式 `key` 仍是经过测试
+的替换边界。Coordinator 从 1,597 行缩减至 1,176 行，绝对减少 421 行，即 26.4%；生产调用点也
+不再绕过 Core Plan 重建 Lifecycle、Scene、Retention、Rollback、Cleanup 或 Back 策略。
+
+结论为 **improved**。同一类型化 Plan 现在同时驱动确定性 Core 策略与 Android Effect，已有完整
+真机 Back 矩阵继续保持绿色。通用 Overlay 导航、类型化 Route 序列化、直接 NavigationEvent
+集成、代表性内存与泄漏测试、行/分支覆盖率以及更广设备和性能矩阵仍为 **inconclusive**，由
+Phase 7 继续负责。
 
 ## 兼容性说明
 
