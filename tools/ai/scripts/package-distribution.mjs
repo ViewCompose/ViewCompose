@@ -74,6 +74,7 @@ const sourcePaths = Object.freeze([
   'scripts/design-ir-to-kotlin.mjs',
   'scripts/design-ir-repair-patch.mjs',
   'scripts/generated-preview-adapter.mjs',
+  'scripts/framework-project-profile.mjs',
   'scripts/knowledge-retriever.mjs',
   'scripts/layout-diagnoser.mjs',
   'scripts/layout-comparator.mjs',

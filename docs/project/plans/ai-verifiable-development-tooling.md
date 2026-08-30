@@ -330,6 +330,29 @@ runtime behavior, so no Maven release Changeset or module-manual update is requi
 public development-tooling contract and therefore owns ADR-0025, the Phase 0 schema/example, the AI
 Integration chapter in both locales, and the installed-package acceptance gate.
 
+### Implementation evidence — read-only consumer Artifact profile
+
+The first detector traverses one explicit physical project root with fixed file, byte, depth, and
+per-file ceilings; excludes build, cache, IDE, dependency, credential, and repository metadata
+trees; and rejects symbolic links without following them. It recognizes exact literal Gradle
+coordinates, used default `libs.versions.toml` library aliases and bundles, and Gradle dependency
+lock records. A lock may resolve a dynamic declaration, but a stale lock that disagrees with an
+exact declaration remains a conflict. ViewCompose imports without any resolvable dependency are
+not classified as a new project.
+
+On 2026-08-30, Node 25.6.0 passed the focused 8/8 detector cases and the complete 290/290 AI-tooling
+tests. The exact denominators are 1/1 literal multi-Artifact profile, 1/1 used catalog alias, 1/1
+catalog bundle, 1/1 dynamic declaration resolved by a lock, 2/2 unresolved/conflict families, 1/1
+empty-versus-import distinction, and 1/1 symbolic-link denial. Relative to the contract-only
+baseline, this is **improved** project-version evidence with **no material Android runtime change**;
+the detector is downstream Node tooling and never invokes Gradle.
+
+The evidence is local macOS filesystem coverage. It does not resolve custom catalog names,
+arbitrary Kotlin/Groovy variables, convention plugins, composite-build dependency substitution,
+or a live Gradle graph, and it does not yet select or install a Release. Those inputs fail closed.
+The next action is the exact Released Knowledge Pack and generated compatibility profile that give
+the detector a trustworthy candidate to match.
+
 ## Maven release changesets
 
 - `release/changes/20260829-preview-worker-jvm21-resolution.json`

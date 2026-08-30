@@ -635,6 +635,12 @@ global-latest upgrade until an exact released Knowledge Pack, read-only project 
 and matching release metadata are available. Unresolved or conflicting versions must preserve the
 old integration rather than guessing.
 
+`framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
+accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and
+dependency lock records; distinguishes a dependency-free project from imports with missing
+identity; and returns `resolved`, `empty`, `unresolved`, or `conflict` without executing consumer
+Gradle. It is packaged for the later upgrader but is not a public standalone command in `0.2.0`.
+
 Tags matching `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
 the tag against the frozen release contract, repeats the complete distribution gate from a clean
 checkout, refuses an existing Release, creates GitHub build-provenance attestations for the exact
