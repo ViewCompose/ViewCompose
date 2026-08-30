@@ -55,7 +55,7 @@
     "notClaimed": [
       "local verification of host identity, authentication receipts, or revocation checks",
       "authority for a decision loaded from a file, stdin, CLI argument, MCP argument, or network payload",
-      "a production durable host store, authenticated host integration, patch executor, or recovery workflow",
+      "a production durable host store, authenticated host integration, source-writing patch executor, or recovery workflow",
       "public or unattended screenshot repair execution"
     ]
   },

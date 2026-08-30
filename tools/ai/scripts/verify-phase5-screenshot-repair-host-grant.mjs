@@ -87,7 +87,7 @@ function assertContract(contract, schema) {
       'authority for a decision loaded from a file, stdin, CLI argument, MCP argument, or network payload',
     ) ||
     !contract.claims?.notClaimed?.includes(
-      'a production durable host store, authenticated host integration, patch executor, or recovery workflow',
+      'a production durable host store, authenticated host integration, source-writing patch executor, or recovery workflow',
     ) ||
     schema.$id !==
       'https://schemas.viewcompose.com/ai/screenshot-repair-host-grant-v1.schema.json' ||
@@ -410,7 +410,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         `Verified screenshot repair host-grant contract: ${summary.supportedGrants}/1 ` +
           `synthetic trusted-host grant, ${summary.invalidDenominators}/17 invalid, ` +
           `${summary.deniedDenominators}/5 denied, and ${summary.cancelledDenominators}/1 ` +
-          'cancelled denominators; the internal callback is implemented and repair execution remains off.',
+          'cancelled denominators; the internal callback is implemented and public repair execution remains off.',
       );
     })
     .catch((error) => {

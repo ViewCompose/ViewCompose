@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement an isolated attended in-memory Design IR executor and trusted-host terminal-outcome callback that consume the frozen grant exactly once while keeping source writes and public activation disabled.
+next_action: Freeze and implement a durable idempotent terminal-outcome store that records exactly one conflict-checked receipt per consumed reservation and reconciles uncertain writes without re-executing the patch.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -133,10 +133,13 @@ bindings while fixing `executionAuthorized` to false; every execution mode remai
 The following host-grant lifecycle now has an internal direct-callback adapter: only an explicitly
 registered in-process host may authenticate both reviewer receipts, check revocation, and atomically
 reserve one terminal repair attempt. A durable file-backed test host proves concurrent and
-cross-instance replay denial. Production host integration, patch execution, and public activation
-remain off. The terminal outcome contract now additionally freezes applied, failed, cancelled, and
-indeterminate receipts after reservation; every state is terminal and non-retryable, while only an
-exact committed application may expose content-addressed output identities.
+cross-instance replay denial. The terminal outcome contract now additionally freezes applied,
+failed, cancelled, and indeterminate receipts after reservation; every state is terminal and
+non-retryable, while only an exact committed application may expose content-addressed output
+identities. An internal attended executor now consumes the process-local grant capability, applies
+only the exact typed Design IR patch in memory, and accepts a terminal receipt only through another
+direct trusted-host callback. Production host integration, persistent source output, durable
+terminal storage, and public activation remain off.
 
 ## Maven release changesets
 
@@ -2860,7 +2863,9 @@ and covers the crash window where an effect cannot be proved; it is still termin
 executed again. Every branch carries a host-issued terminal receipt bound to the same trust domain
 and reservation, and the outcome receipt must differ from the reservation receipt.
 
-The frozen verifier passes 4/4 terminal outcomes and 24/24 invalid mutations. It separately rejects
+At contract-freeze commit
+`2b87d2ad1dfc33bb35721d4ab7e75f2502850062`, the verifier passed 4/4 terminal outcomes and 24/24
+invalid mutations. It separately rejected
 fingerprint drift; every grant, request, authorization, proposal, change, Design IR, reservation,
 and trust-domain mismatch; second or non-terminal attempts; retry or unattended flags; source-write,
 public, or caller-outcome activation; applied/failed/cancelled/indeterminate effect mismatches;
@@ -2873,11 +2878,57 @@ offline package contains 75 files and 1,939,636 declared bytes; its 346,442-byte
 package, the contract schema and packaged explanation add one file, 10,935 declared bytes (+0.57%),
 and 1,114 archive bytes (+0.32%), with no runtime dependency or executable registration.
 
-This is **improved** terminal-state completeness, crash-window honesty, and replay resistance with
+This was **improved** terminal-state completeness, crash-window honesty, and replay resistance with
 **no material Android runtime behavior change**. It does not implement an executor, authenticate a
 production outcome receipt, make effect and receipt persistence atomic, recover an indeterminate
 attempt, write application source, or activate CLI/MCP repair. The next prerequisite is an isolated
-attended in-memory executor plus trusted-host terminal callback that implement this exact contract.
+attended in-memory executor plus trusted-host terminal callback; the implementation below supplies
+that boundary without adding a production store or public mode.
+
+### Implementation evidence — attended in-memory repair execution
+
+The host-grant adapter now attaches execution authority only to the exact granted object it returns
+from a validated direct callback. The authority lives in a private process-local registry, is
+consumed synchronously once, and is absent from structured clones or reconstructed JSON. A wrong
+trust domain cannot consume it; concurrent consumers produce exactly one application; replay of the
+original object is denied as already consumed. Calling the exported consumption primitive can only
+burn an existing capability, never create or transfer one.
+
+The packaged executor accepts exactly the authoritative grant, its bound screenshot Design IR, and
+one typed patch whose content address equals the authorized change. It revalidates the grant schema,
+decision fingerprint, trust domain, attended policy, input size, target Design IR identity, patch
+schema, and change identity. Cancellation after reservation and invalid patch input both consume the
+attempt and become terminal non-committed drafts. A successful application uses the existing typed
+Design IR patcher entirely in memory; it does not write source, return raw Design IR to the host, or
+expose the result before receipt validation.
+
+A separate immutable host handle retains the terminal-record callback privately. The callback sees
+only lineage, executor, effect, diagnostic, and content-address metadata. Its returned outcome must
+pass the frozen schema, content address, byte ceiling, complete lineage, attempt, executor,
+trust-domain, reservation, receipt, and exact effect checks. The host may conservatively downgrade
+an uncertain effect to `indeterminate`. A callback exception or malformed receipt produces the
+schema-checked `unrecordedResult`: effect `unknown`, no output, execution authorization false, and
+retry forbidden. The consumed grant remains unusable.
+
+The implementation verifier reports one direct application, zero replayed applications, zero
+accepted serialized grants, and zero outputs exposed without a terminal receipt. Dedicated tests
+also cover authorized-change drift, invalid typed input, cancellation, trusted indeterminate
+downgrade, missing or invalid receipts, concurrent consumption, serialized host handles, and
+process-local authority loss. Node 25.6.0 passes 261/261 AI-tooling tests; Phase 0 remains at 21
+schemas.
+
+The dependency-free offline package contains 76 files and 1,953,674 declared bytes; its
+349,027-byte archive has SHA-256
+`1178c9d6a198edb6db0125e7431853530229f555ba4f8fc46cccbcf69c7b12cb`. Relative to the outcome-
+contract package, this slice adds one adapter file, 14,038 declared bytes (+0.72%), and 2,585 archive
+bytes (+0.75%), with no runtime dependency or executable tool registration.
+
+This is **improved** authority isolation, exact-change enforcement, terminal receipt integrity, and
+fail-closed output handling with **no material Android runtime behavior change**. It does not supply
+a production durable terminal store, make effect and receipt persistence atomic, authenticate real
+host receipts, reconcile uncertain storage writes, persist or publish the output Design IR, write
+application source, or activate CLI/MCP repair. The next prerequisite is a durable idempotent
+terminal store that resolves one receipt per reservation without ever re-executing the patch.
 
 ### Implementation evidence — bounded XML to Design IR
 

@@ -3,6 +3,14 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {fingerprintRepairValue} from './repair-orchestrator.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
+import {
+  createTrustedScreenshotRepairOutcomeHost,
+  executeTrustedScreenshotRepair,
+} from './screenshot-repair-execution-adapter.mjs';
+import {
+  createTrustedScreenshotRepairHost,
+  requestScreenshotRepairHostGrant,
+} from './screenshot-repair-host-grant-adapter.mjs';
 
 const visualRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = resolve(visualRoot, 'screenshot-repair-execution-outcome-contract.json');
@@ -46,9 +54,9 @@ function assertContract(contract, schema) {
       'screenshot-repair-execution-outcome-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-frozen' ||
+    contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
-    contract.activation?.implementation !== false ||
+    contract.activation?.implementation !== true ||
     contract.activation?.executionAuthorized !== false
   ) {
     throw new Error('Screenshot repair execution-outcome activation boundary changed');
@@ -77,7 +85,7 @@ function assertContract(contract, schema) {
     'failed and cancelled outcomes prove no committed output while indeterminate outcomes make no effect claim',
   ];
   const notClaimed = [
-    'an implemented patch executor or terminal-outcome adapter',
+    'a production durable terminal store, source-writing executor, or recovery workflow',
     'atomic persistence across patch effect and terminal receipt',
     'automatic rollback or recovery after an indeterminate effect',
     'persistent application source changes or public repair execution',
@@ -114,6 +122,8 @@ function assertContract(contract, schema) {
     schema.$defs?.executor?.properties?.persistentSourceWrite?.const !== false ||
     schema.$defs?.executor?.properties?.publicToolMode?.const !== false ||
     schema.$defs?.executor?.properties?.callerSuppliedOutcome?.const !== false ||
+    schema.$defs?.unrecordedResult?.properties?.retryAllowed?.const !== false ||
+    schema.$defs?.unrecordedResult?.properties?.effect?.$ref !== '#/$defs/unknownEffect' ||
     schema.$defs?.terminalReceipt?.properties?.outcomeTransport?.const !==
       'trusted-host-callback-only'
   ) {
@@ -213,6 +223,119 @@ function seal(value) {
   return result;
 }
 
+function findNode(nodes, id) {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    const child = findNode(node.children, id);
+    if (child) return child;
+  }
+  return undefined;
+}
+
+async function directGrant(hostGrant, authorization, validationResult) {
+  const host = createTrustedScreenshotRepairHost({
+    trustDomainId: hostGrant.trustDomainId,
+    reserve: async () => structuredClone(hostGrant),
+  });
+  return requestScreenshotRepairHostGrant({authorization, validationResult}, {host});
+}
+
+function executionInput(grantDecision, resolutionResult, proposerContract) {
+  const designIr = structuredClone(resolutionResult.designIr);
+  const title = findNode(designIr.roots, 'wireframe-title');
+  title.properties.find((field) => field.name === 'text').value.value = 'Hello';
+  if (fingerprintRepairValue(designIr) !== grantDecision.grant.targetDesignIrFingerprint) {
+    throw new Error('Screenshot repair execution candidate identity changed');
+  }
+  return {
+    grantDecision,
+    designIr,
+    patch: structuredClone(proposerContract.supportedFixtures[0].expectedPatch),
+  };
+}
+
+function outcomeHost(hostGrant, {fail = false} = {}) {
+  return createTrustedScreenshotRepairOutcomeHost({
+    trustDomainId: hostGrant.trustDomainId,
+    record: async (draft) => {
+      if (fail) throw new Error('synthetic terminal store failure');
+      const outcome = {
+        ...structuredClone(draft),
+        receipt: {
+          issuerTrustDomainId: draft.lineage.hostTrustDomainId,
+          reservationReceipt: draft.lineage.reservationReceipt,
+          terminalState: 'recorded',
+          outcomeTransport: 'trusted-host-callback-only',
+          outcomeReceipt: fingerprintRepairValue({draft, purpose: 'terminal-outcome'}),
+        },
+      };
+      outcome.outcomeFingerprint = fingerprintRepairValue(outcome);
+      return outcome;
+    },
+  });
+}
+
+async function verifyImplementedAdapter({
+  hostGrant,
+  authorization,
+  validationResult,
+  resolutionResult,
+  proposerContract,
+  schema,
+}) {
+  const host = outcomeHost(hostGrant);
+  const grant = await directGrant(hostGrant, authorization, validationResult);
+  const outcome = await executeTrustedScreenshotRepair(
+    executionInput(grant, resolutionResult, proposerContract),
+    {host},
+  );
+  let replayCode;
+  try {
+    await executeTrustedScreenshotRepair(
+      executionInput(grant, resolutionResult, proposerContract),
+      {host},
+    );
+  } catch (error) {
+    replayCode = error?.code;
+  }
+
+  const serializableGrant = await directGrant(hostGrant, authorization, validationResult);
+  let serializedCode;
+  try {
+    await executeTrustedScreenshotRepair(
+      executionInput(structuredClone(serializableGrant), resolutionResult, proposerContract),
+      {host},
+    );
+  } catch (error) {
+    serializedCode = error?.code;
+  }
+
+  const unrecordedGrant = await directGrant(hostGrant, authorization, validationResult);
+  const unrecorded = await executeTrustedScreenshotRepair(
+    executionInput(unrecordedGrant, resolutionResult, proposerContract),
+    {host: outcomeHost(hostGrant, {fail: true})},
+  );
+  if (
+    outcome.status !== 'applied' ||
+    outcome.effect.outputExposed !== true ||
+    validateSchemaValue(outcome, schema).length > 0 ||
+    replayCode !== 'VC-AI-REPAIR-EXECUTION-GRANT-ALREADY-CONSUMED' ||
+    serializedCode !== 'VC-AI-REPAIR-EXECUTION-GRANT-UNTRUSTED' ||
+    unrecorded.status !== 'blocked' ||
+    unrecorded.effect.outputExposed !== false ||
+    unrecorded.retryAllowed !== false ||
+    validateSchemaValue(unrecorded, schema.$defs.unrecordedResult, schema).length > 0
+  ) {
+    throw new Error('Screenshot repair execution adapter boundary changed');
+  }
+  return {
+    directApplications: 1,
+    replayedApplications: 0,
+    serializedGrantsAccepted: 0,
+    unrecordedOutputsExposed: 0,
+  };
+}
+
 function mutateFixture(mutation, fixtures) {
   const [applied, failed, cancelled, indeterminate] = fixtures;
   const result = structuredClone(applied);
@@ -302,10 +425,15 @@ function mutateFixture(mutation, fixtures) {
 }
 
 export async function verifyPhase5ScreenshotRepairExecutionOutcome() {
-  const [contract, schema, hostGrant] = await Promise.all([
+  const [contract, schema, hostGrant, authorization, validationResult, resolutionResult,
+    proposerContract] = await Promise.all([
     readJson(contractPath),
     readJson(schemaPath),
     readJson(hostGrantPath),
+    readJson(resolve(visualRoot, 'screenshot-repair/rollback.authorization.json')),
+    readJson(resolve(visualRoot, 'screenshot-repair/rollback.authorization-validation.json')),
+    readJson(resolve(visualRoot, 'screenshot-resolution/wireframe.result.json')),
+    readJson(resolve(visualRoot, 'screenshot-repair-proposer-contract.json')),
   ]);
   assertContract(contract, schema);
   if (contract.supportedFixtures?.length !== 4 || contract.invalidFixtures?.length !== 24) {
@@ -333,8 +461,16 @@ export async function verifyPhase5ScreenshotRepairExecutionOutcome() {
       );
     }
   }
+  const adapter = await verifyImplementedAdapter({
+    hostGrant,
+    authorization,
+    validationResult,
+    resolutionResult,
+    proposerContract,
+    schema,
+  });
   return {
-    implementation: false,
+    implementation: true,
     publicRepairMode: false,
     executionAuthorized: false,
     terminalOutcomes: fixtures.length,
@@ -342,6 +478,7 @@ export async function verifyPhase5ScreenshotRepairExecutionOutcome() {
     statuses: fixtures.map((outcome) => outcome.status),
     outputBearingOutcomes: fixtures.filter((outcome) => outcome.effect.outputExposed).length,
     retryableOutcomes: fixtures.filter((outcome) => outcome.attempt.retryAllowed).length,
+    adapter,
   };
 }
 
@@ -352,7 +489,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         `Verified screenshot repair execution-outcome contract: ${summary.terminalOutcomes}/4 ` +
           `terminal outcomes and ${summary.invalidDenominators}/24 invalid denominators; ` +
           `${summary.outputBearingOutcomes}/1 outcomes expose output, ` +
-          `${summary.retryableOutcomes}/0 are retryable, and execution remains off.`,
+          `${summary.retryableOutcomes}/0 are retryable; the internal attended adapter is ` +
+          'implemented and public execution remains off.',
       );
     })
     .catch((error) => {

@@ -8,9 +8,9 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-frozen",
+    "status": "implemented-internal",
     "publicRepairMode": false,
-    "implementation": false,
+    "implementation": true,
     "executionAuthorized": false
   },
   "boundary": {
@@ -55,7 +55,7 @@
       "the terminal receipt is host-issued, purpose-bound to the same reservation, and distinct from the reservation receipt"
     ],
     "notClaimed": [
-      "an implemented patch executor or terminal-outcome adapter",
+      "a production durable terminal store, source-writing executor, or recovery workflow",
       "atomic persistence across patch effect and terminal receipt",
       "authentication of a production host outcome receipt",
       "automatic rollback or recovery after an indeterminate effect",

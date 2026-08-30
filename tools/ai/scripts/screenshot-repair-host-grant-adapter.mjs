@@ -14,6 +14,7 @@ const SHA256 = /^[a-f0-9]{64}$/u;
 const STABLE_ID = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/u;
 const MAX_RECORD_BYTES = 65_536;
 const trustedHosts = new WeakMap();
+const trustedGrants = new WeakMap();
 const DECISION_POLICY = Object.freeze({
   decisionTransport: 'trusted-host-callback-only',
   callerSuppliedDecision: false,
@@ -242,6 +243,18 @@ export function createTrustedScreenshotRepairHost({trustDomainId, reserve} = {})
   return handle;
 }
 
+export function consumeTrustedScreenshotRepairGrant(decision, {trustDomainId} = {}) {
+  const authority = decision !== null && typeof decision === 'object'
+    ? trustedGrants.get(decision)
+    : undefined;
+  if (!authority || authority.trustDomainId !== trustDomainId) {
+    return Object.freeze({status: 'untrusted'});
+  }
+  if (authority.consumed) return Object.freeze({status: 'already-consumed'});
+  authority.consumed = true;
+  return Object.freeze({status: 'consumed'});
+}
+
 export async function requestScreenshotRepairHostGrant(input, {host, signal} = {}) {
   const hostImplementation = host !== null && typeof host === 'object'
     ? trustedHosts.get(host)
@@ -285,5 +298,9 @@ export async function requestScreenshotRepairHostGrant(input, {host, signal} = {
       'VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH',
     );
   }
-  return structuredClone(decision);
+  const trustedDecision = structuredClone(decision);
+  if (trustedDecision.status === 'granted') {
+    trustedGrants.set(trustedDecision, {trustDomainId, consumed: false});
+  }
+  return trustedDecision;
 }

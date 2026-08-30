@@ -290,6 +290,45 @@
         "outcomeReceipt": {"$ref": "#/$defs/sha256"}
       }
     },
+    "unrecordedResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "reason",
+        "lineage",
+        "attempt",
+        "executor",
+        "effect",
+        "executionAuthorized",
+        "retryAllowed",
+        "diagnostics",
+        "failureFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-execution-recording-failure"},
+        "status": {"const": "blocked"},
+        "reason": {
+          "enum": ["terminal-receipt-unavailable", "terminal-receipt-invalid"]
+        },
+        "lineage": {"$ref": "#/$defs/lineage"},
+        "attempt": {"$ref": "#/$defs/terminalAttempt"},
+        "executor": {"$ref": "#/$defs/executor"},
+        "effect": {"$ref": "#/$defs/unknownEffect"},
+        "executionAuthorized": {"const": false},
+        "retryAllowed": {"const": false},
+        "diagnostics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "failureFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
     "diagnostic": {
       "type": "object",
       "additionalProperties": false,

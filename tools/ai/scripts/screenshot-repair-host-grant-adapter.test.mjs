@@ -6,6 +6,7 @@ import test from 'node:test';
 import {fingerprintRepairValue} from './repair-orchestrator.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {
+  consumeTrustedScreenshotRepairGrant,
   createTrustedScreenshotRepairHost,
   requestScreenshotRepairHostGrant,
 } from './screenshot-repair-host-grant-adapter.mjs';
@@ -256,4 +257,30 @@ test('rejects a changed validation identity before invoking the trusted host', a
   assert.equal(result.reason, 'input-invalid');
   assert.equal(calls, 0);
   assertDecision(result);
+});
+
+test('marks only the direct returned grant as an atomic process-local capability', async () => {
+  const host = createTrustedScreenshotRepairHost({
+    trustDomainId: 'fixture-repair-host',
+    reserve: async () => structuredClone(grantedDecision),
+  });
+  const granted = await requestScreenshotRepairHostGrant(adapterInput(), {host});
+  assert.deepEqual(
+    consumeTrustedScreenshotRepairGrant(structuredClone(granted), {
+      trustDomainId: 'fixture-repair-host',
+    }),
+    {status: 'untrusted'},
+  );
+  assert.deepEqual(
+    consumeTrustedScreenshotRepairGrant(granted, {trustDomainId: 'other-trust-domain'}),
+    {status: 'untrusted'},
+  );
+  assert.deepEqual(
+    consumeTrustedScreenshotRepairGrant(granted, {trustDomainId: 'fixture-repair-host'}),
+    {status: 'consumed'},
+  );
+  assert.deepEqual(
+    consumeTrustedScreenshotRepairGrant(granted, {trustDomainId: 'fixture-repair-host'}),
+    {status: 'already-consumed'},
+  );
 });
