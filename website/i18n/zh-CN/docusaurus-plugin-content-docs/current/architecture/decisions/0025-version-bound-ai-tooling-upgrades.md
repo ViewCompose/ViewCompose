@@ -19,9 +19,11 @@ evidence:
   - tools/ai/contracts/framework-profile-index.schema.json
   - tools/ai/contracts/examples/framework-compatibility-profile.json
   - tools/ai/generated/released/index.json
+  - tools/ai/scripts/tooling-upgrade.mjs
+  - tools/ai/scripts/agent-client-integration.mjs
   - ./gradlew verifyAiToolingContracts
 translation_source: architecture/decisions/0025-version-bound-ai-tooling-upgrades.md
-translation_source_hash: 183c99f00e71fbfa8749dc35cab8964605462b62368ccbf22739d8748d1428a1
+translation_source_hash: 5d75a24dfaf5d8aa70c75d21fde581e0aa15e2e2f4ddbba8a68641a94baccf18
 translation_status: current
 ---
 
@@ -116,7 +118,7 @@ Navigation、Lifecycle、Image 和 Preview Artifact。
    冲突声明、不支持 Artifact、路径穿越和符号链接，且不得调用 Gradle。
 4. 候选解析测试证明精确子集匹配、同 Profile Runtime 升级、旧 Profile 保留、无候选、Checksum
    失败和 Contract Major 拒绝。
-5. 安装后 Package 必须在开放公共 `upgrade` 命令前，为 Codex、Claude Code 与 Cursor 复现成功、
-   冲突、中断、Rollback 和恢复。
+5. 安装后 Package 必须为 Codex、Claude Code 与 Cursor 复现成功、冲突、中断、Rollback 和恢复。
+   Release `0.3.0` 只有在这些测试通过后才开放公共 `upgrade` 命令。
 6. 公共文档必须区分当前安装的 Runtime 版本、生效框架 Profile、Knowledge Bundle Fingerprint 和
    已取得的证据 Lane。

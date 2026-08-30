@@ -12,11 +12,11 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - GitHub Release @viewcompose/ai-tooling 0.2.0 at ai-tooling-v0.2.0
+  - GitHub Release @viewcompose/ai-tooling 0.3.0 at ai-tooling-v0.3.0
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
-  - Codex, Claude Code, and Cursor project profiles verified 2026-08-30
+  - Codex, Claude Code, and Cursor project profiles verified 2026-08-31
 verification_commands:
   - npm --prefix tools/ai run verify:phase3-agent-clients
   - ./gradlew verifyAiDistribution
@@ -42,7 +42,7 @@ Install the exact release from GitHub:
 
 ```bash
 npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.2.0/viewcompose-ai-tooling-0.2.0.tgz
+  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.3.0/viewcompose-ai-tooling-0.3.0.tgz
 ```
 
 Then run this from the root of the Android project and choose one client:
@@ -70,23 +70,21 @@ do not install Gradle or align their project's AGP/Kotlin versions. A Node versi
 recommended when the system-wide npm prefix is not writable; do not use `sudo` merely to install the
 tooling.
 
-### Framework-version boundary in `0.2.0`
+### Exact framework-version binding in `0.3.0`
 
-Release `0.2.0` does not inspect or bind the ViewCompose dependency versions in an existing project.
-Its Knowledge Bundle describes one exact `current-source` revision, while its deep-evidence Harness
-uses a fixed set of released Maven artifacts. Those identities are deterministic but do not prove
-that the knowledge matches an arbitrary older project. Do not install or upgrade to `0.2.0` merely
-because it is the newest tooling Release, and do not treat a successful static lookup as version
-compatibility.
-
-The next package implementation is now version-bound: it reads the project's exact independently
-versioned `com.viewcompose` coordinates without executing project Gradle logic, selects only a
-released Knowledge Pack whose Artifact-version profile matches that subset, and writes the selected
+`init` reads the project's independently versioned `com.viewcompose` coordinates without executing
+project Gradle logic. It accepts exact literals, used entries from the default
+`libs.versions.toml`, and dependency lock records. It selects only a released Knowledge Pack whose
+Artifact-version profile matches every detected dependency, then writes the content-addressed
 profile ID into the MCP environment before installing Skills. Retrieval, validation, compilation,
-and generated Preview then use that same profile. Versions that are unresolved, conflicting,
-unsupported, or hidden behind arbitrary build logic fail before any project write. This behavior is
-not retroactive for the already-published `0.2.0`, and automatic Release download and migration are
-not public until their integrity and rollback gates pass.
+and generated Preview all load that same bundle.
+
+A project without a ViewCompose dependency is a new-project case and selects the Release's newest
+stable profile. Dynamic, conflicting, unsupported, or otherwise unresolved versions—including a
+ViewCompose import without dependency identity—fail before any project write. The tool does not
+silently change framework dependencies. The first `0.3.0` profile represents the current published
+Artifact vector; an older version vector remains unchanged until a Release explicitly carries its
+matching profile.
 
 ## Confirm the installation
 
@@ -146,14 +144,16 @@ Try this first request in the selected Agent:
 
 ## Deep evidence execution boundary
 
-Release `0.2.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
+Release `0.3.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
 artifacts from Maven Central. A packaged content-addressed harness owns Gradle 9.3.1, AGP 9.1.1,
 Kotlin 2.2.10, Android 36, JVM target 11, and the allowlisted ViewCompose/Preview coordinates. The
 consumer project root is a read-only authorization boundary: the tooling does not execute its
 wrapper, settings, plugins, tasks, or build scripts and does not add files to the project.
 
 The first deep-evidence request may download the pinned Gradle distribution and Maven dependencies.
-Later requests use the integrity-checked cache under the operating system's user cache directory.
+It remains bounded by a five-minute execution window. Later requests use the integrity-checked cache
+under the operating system's user cache directory, and compatible tooling upgrades retain the same
+execution-cache namespace when the Knowledge, Harness, source, and lane fingerprints are unchanged.
 Package installation itself remains script-free and offline-capable; model-provider network access
 is never required.
 
@@ -167,12 +167,26 @@ rendering is a later, explicitly isolated capability.
 
 ## Upgrade or remove
 
-`0.2.0` has no automatic, version-aware upgrade command. Do not replace it with a newer package
-until that Release explicitly declares a framework profile matching the project's exact ViewCompose
-Artifact versions. When an explicitly verified migration is necessary, use the currently installed
-executable to remove the exact old project integration, install the pinned compatible GitHub
-Release, and run `init` again. This preserves conflict detection across Skill and configuration
-changes but is not a substitute for profile matching.
+Check, download, and migrate to the newest compatible tooling Release with one command:
+
+```bash
+viewcompose-agent upgrade --client <codex|claude-code|cursor> \
+  --project-root "$(pwd -P)"
+```
+
+The command detects the project versions first and inspects only immutable `ai-tooling-v<semver>`
+Releases. It skips newer Releases whose framework profiles do not match, verifies the selected
+Release's exact three-Asset inventory, supported contract majors, sidecar Manifest, `SHA256SUMS`,
+archive size, and SHA-256, and installs the Package into a content-addressed user-cache directory.
+It never follows a global `latest` pointer.
+
+The old Package remains available while the upgrader replaces only the exact managed MCP entry and
+unchanged canonical Skill bytes. A private recovery journal rolls back an interrupted migration;
+user-edited content or an unknown MCP owner stops before replacement. `no-compatible-update` is a
+successful no-op: it does not change the installed integration or the project's framework
+dependencies. The globally installed bootstrap command can diagnose, upgrade, or remove the active
+side-by-side Package by following its verified managed MCP entry, so every later compatible upgrade
+uses the same command.
 
 Remove the current project integration:
 
@@ -191,7 +205,7 @@ npm uninstall --global @viewcompose/ai-tooling
 
 ## Integrity and troubleshooting
 
-The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.2.0)
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.3.0)
 contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
 checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
 Attestations for all three assets. See GitHub's
@@ -203,6 +217,9 @@ for an optional independent provenance check.
 | `viewcompose-agent` is not found | Confirm Node 24.19 or newer and that npm's global binary directory is on `PATH`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
 | `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
+| `upgrade` returns `no-compatible-update` | Keep the current integration. No published tooling Release contains an exact framework profile for this project yet. Do not install a global-latest package as a workaround. |
+| `upgrade` cannot resolve or finds conflicting ViewCompose versions | Replace dynamic or indirect declarations with exact coordinates, or add consistent dependency locks. The command intentionally leaves the current integration unchanged. |
+| `upgrade` reports changed managed configuration or Skills | Review and preserve the user edits before retrying. The upgrader replaces only the exact bytes installed by ViewCompose. |
 | The client does not show the MCP server | Run the client-specific check above, approve project configuration when required, then restart or reload the client. |
 | Compile or Preview reports `VC-AI-PROJECT-ROOT-MISMATCH` | Run `init` from the physical project root and keep that project path available to the Agent process. |
 | A credential is requested | Stop. ViewCompose needs no model-provider credential and never accepts one in MCP arguments or project configuration. |

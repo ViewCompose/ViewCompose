@@ -603,14 +603,14 @@ The public consumer installs the pinned GitHub asset directly, without a checkou
 
 ```bash
 npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.2.0/viewcompose-ai-tooling-0.2.0.tgz
+  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.3.0/viewcompose-ai-tooling-0.3.0.tgz
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.2.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.3.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
@@ -621,16 +621,18 @@ checkout. Compile-mode `validate_code` and the compile/render/compare modes owne
 screenshot generation use the packaged Gradle 9.3.1 harness, exact released ViewCompose Maven
 coordinates, AGP 9.1.1, Kotlin 2.2.10, Android 36, and JVM target 11. JDK 17 or 21 and SDK platform 36
 are host prerequisites. The first request may resolve the pinned Gradle distribution and Maven
-dependencies; subsequent requests use the integrity-checked OS user cache. The consumer root is
-read-only and its wrapper, settings, plugins, tasks, and build scripts are never executed. Direct
+dependencies within one fixed five-minute execution window; subsequent requests use the
+integrity-checked OS user cache. That execution-cache root is stable across compatible tooling
+upgrades, while each entry remains content-addressed by its Knowledge, Harness, source, and lane
+identity. The consumer root is read-only and its wrapper, settings, plugins, tasks, and build
+scripts are never executed. Direct
 `render_preview` and `diagnose_layout` still require a separately allowlisted fixed target; generated
 XML and screenshot results expose their own Preview and layout-diagnosis evidence. The package never
 searches arbitrary parent directories or silently upgrades static evidence.
 
-Release `0.2.0` still packages `current-source` knowledge and does not inspect a consumer project's
-independently versioned ViewCompose dependencies. Its fixed Harness coordinates prove only the
-compile/render lane they execute; they do not convert the current-source Knowledge Bundle into a
-released project profile. Never infer compatibility for that already-published package.
+Release `0.2.0` packaged only `current-source` knowledge and remains historical evidence; never
+infer released-project compatibility for it. Release `0.3.0` carries explicit released framework
+profiles and makes the selected profile part of every project-bound MCP process identity.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and
@@ -638,7 +640,7 @@ dependency lock records; distinguishes a dependency-free project from imports wi
 identity; and returns `resolved`, `empty`, `unresolved`, or `conflict` without executing consumer
 Gradle.
 
-The next package now generates a consumer-selectable `released` Knowledge Pack from immutable
+The package generates a consumer-selectable `released` Knowledge Pack from immutable
 per-Artifact publication history. Its content-addressed framework profile records 38 published
 coordinates; 30 own machine-readable API knowledge. `viewcompose-agent init` detects the consumer
 Artifact subset before any project write, selects only an exact released profile, and stores
@@ -646,8 +648,12 @@ Artifact subset before any project write, selects only an exact released profile
 analysis, generated Kotlin compilation, and generated Preview requests then load that same bundle.
 An empty project selects the index's newest stable profile; unresolved, conflicting, and unsupported
 dependencies fail before configuration or Skill bytes change. Source-bound contributor profiles
-select `current-source` explicitly. Automatic Release discovery and transactional package migration
-remain disabled until their candidate-integrity and rollback gates pass.
+select `current-source` explicitly. `viewcompose-agent upgrade` detects the project before Release
+selection, skips incompatible newer versions, verifies the immutable Release inventory, supported
+contract majors, Manifest, `SHA256SUMS`, archive size, and SHA-256, installs to a content-addressed
+side-by-side directory, and migrates exact managed configuration plus unchanged Skill bytes with a
+recoverable journal. An injected interruption rolls back the old integration, while an unsupported
+project or user-edited surface fails before replacement.
 
 Tags matching `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
 the tag against the frozen release contract, repeats the complete distribution gate from a clean
@@ -684,8 +690,22 @@ and exact-pixel denominators. Relative to the unbound `current-source` package, 
 framework-compatibility evidence with **no material Android runtime behavior change**. The pack uses
 one release anchor only after proving that every included Artifact's `src/main` Git tree is identical
 to its own recorded release revision; it does not yet cover every historical version vector or
-custom dependency-resolution scheme. The next action is checksummed matching-Release discovery and
-side-by-side transactional upgrade.
+custom dependency-resolution scheme. Checksummed matching-Release discovery and side-by-side
+transactional upgrade are now implemented by `viewcompose-agent upgrade`:
+candidate discovery selects by exact project profile before tooling SemVer, installation is
+content-addressed, and the MCP/Skill migration is recoverable. Historical profile coverage remains
+explicit rather than inferred; a project with no matching released profile receives a successful
+no-op and retains its current integration.
+
+On 2026-08-31, the completed version-bound upgrade slice passed 304/304 Node tests, 12/12 focused
+upgrade/client cases, 2/2 reproducible Packages, 3/3 installed Agent profiles, 18/18 exact Skill
+copies, 2/2 MCP protocol versions, 3/3 Release assets, and every retained compile, generated Preview,
+layout, screenshot, and exact-pixel denominator. The JDK 21 root gate completed 194 tasks in 1 minute
+58 seconds (172 executed, 22 up-to-date). This is **improved** compatible-upgrade and release
+evidence with **no material Android runtime behavior change**. The first transition to an empty
+stable execution cache exceeded the earlier 120- and 180-second limits before a later complete gate
+passed; the fixed five-minute bound is accepted for first-use downloads, but clean-host latency and
+published GitHub attestations remain external tag-workflow evidence.
 
 ## Version lanes
 

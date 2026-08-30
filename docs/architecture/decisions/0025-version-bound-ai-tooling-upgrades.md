@@ -19,6 +19,8 @@ evidence:
   - tools/ai/contracts/framework-profile-index.schema.json
   - tools/ai/contracts/examples/framework-compatibility-profile.json
   - tools/ai/generated/released/index.json
+  - tools/ai/scripts/tooling-upgrade.mjs
+  - tools/ai/scripts/agent-client-integration.mjs
   - ./gradlew verifyAiToolingContracts
 ---
 
@@ -129,6 +131,7 @@ isolation, and evidence contract.
 4. Candidate-resolution tests prove exact subset matching, same-profile runtime upgrades, older
    profile retention, no-candidate behavior, checksum failure, and contract-major rejection.
 5. Installed-package tests reproduce success, conflict, interruption, rollback, and recovery for
-   Codex, Claude Code, and Cursor before the public `upgrade` command is enabled.
+   Codex, Claude Code, and Cursor. Release `0.3.0` enables the public `upgrade` command only after
+   those tests pass.
 6. Public documentation must distinguish the currently installed runtime version, active framework
    profile, Knowledge Bundle fingerprint, and achieved evidence lane.

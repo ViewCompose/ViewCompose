@@ -35,8 +35,8 @@ completion:
   - XML, Compose, screenshot, and Figma paths share one explicit Design IR, preserve provenance and unsupported semantics, and never silently invent application behavior.
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
-last_verified: 2026-08-30
-next_action: Generate the first exact released Knowledge Pack and project Artifact profile, then allow upgrade discovery only for Releases whose profile matches the consumer project.
+last_verified: 2026-08-31
+next_action: Publish and attest ai-tooling-v0.3.0 after merge, then extend released-profile coverage only from immutable framework publication history.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -87,15 +87,14 @@ Agent profiles without a ViewCompose checkout. Arbitrary
 consumer source discovery, consumer dependency mirroring, manifest merging, custom plugins, Gradle
 task selection, application execution, device deployment, and source writes remain outside v1.
 
-Version-bound upgrades are now the active Phase 6A prerequisite. The public `0.2.0` package proves
-deterministic `current-source` knowledge and a released-Maven Harness separately, but does not prove
-that its knowledge matches an arbitrary consumer dependency set. ADR-0025 and framework
-compatibility profile v1 therefore prohibit a global-latest upgrade. The implementation order is:
-generate released knowledge from immutable per-artifact release revisions; derive the exact
-Artifact profile; detect exact consumer versions without executing consumer Gradle; publish the
-profile with the checksummed Release; and only then transactionally migrate MCP and unchanged
-Skills to the newest matching tooling Release. Dynamic, unresolved, conflicting, or unsupported
-versions retain the previous integration.
+The version-bound Phase 6A prerequisite is now implemented for Release `0.3.0`. Initialization and
+upgrade detect exact consumer versions without executing consumer Gradle and select only a Released
+Knowledge Pack generated from immutable per-Artifact publication revisions. The public upgrader
+searches immutable Releases for the newest exact profile match, verifies the three-Asset inventory,
+contract majors, Manifest, checksum list, archive size, and SHA-256, installs the candidate
+side-by-side, and transactionally migrates the managed MCP entry plus unchanged Skills. It never
+uses global tooling recency as a framework compatibility signal. Dynamic, unresolved, conflicting,
+unsupported, or unrepresented historical version vectors retain the previous integration.
 
 Acceptance ran on macOS with JDK 17 and Android SDK 36. The first released-Maven Kotlin smoke
 compiled in 28,958 ms; the integrity-verified repeat returned in 31 ms. This changes the previous
@@ -107,7 +106,7 @@ comparison, and 1/1 exact RGBA comparison. The cached login Preview and layout c
 in approximately 4.3 seconds with 32/32 checks and a clean five-node diagnosis. These are local
 cold/warm functional measurements, not a cross-platform latency guarantee; dependency mirrors,
 machine load, and first-use downloads remain limitations. The next release action is to publish and
-attest `ai-tooling-v0.2.0`, then retain these denominators in CI.
+attest `ai-tooling-v0.3.0`, then retain these denominators in CI.
 The same cache-root correction was propagated through the internal screenshot-repair evidence
 chain. Its unchanged candidate passed 6/6 released-artifact gates with zero mismatched pixels; the
 typed `Welcome` → `Hello` candidate passed compilation, rendering, semantics, and structure while
@@ -349,10 +348,9 @@ the detector is downstream Node tooling and never invokes Gradle.
 
 The evidence is local macOS filesystem coverage. It does not resolve custom catalog names,
 arbitrary Kotlin/Groovy variables, convention plugins, composite-build dependency substitution,
-or a live Gradle graph, and it does not yet select or install a Release. Those inputs fail closed.
-The next action is checksummed matching-Release discovery and side-by-side transactional migration;
-the exact Released Knowledge Pack and runtime binding described below now give the detector a
-trustworthy local candidate.
+or a live Gradle graph. Those inputs fail closed. The exact Released Knowledge Pack, runtime
+binding, checksummed Release discovery, and side-by-side migration described below now give the
+detector a trustworthy candidate without broadening its read-only boundary.
 
 ### Implementation evidence — released Knowledge Pack and runtime binding
 
@@ -376,8 +374,54 @@ runtime behavior change**.
 The accepted pack represents the newest published Artifact vector and does not yet cover every
 historical vector. Projects with unsupported older versions, custom catalog names, arbitrary build
 variables, convention plugins, or conflicting evidence fail before mutation. Release discovery,
-download integrity, side-by-side installation, migration rollback, and recovery remain the next
-action; no public `upgrade` command is enabled by this acceptance step.
+download integrity, side-by-side installation, migration rollback, and recovery are implemented by
+the following acceptance step; unsupported projects still receive no knowledge substitution.
+
+### Implementation evidence — compatible Release upgrade and recovery
+
+Release `0.3.0` exposes one public `viewcompose-agent upgrade` command. Candidate discovery first
+classifies the physical consumer project, then scans immutable `ai-tooling-v<semver>` Releases and
+selects the highest tooling version containing an exact matching framework profile. A newer
+incompatible Release is skipped rather than installed. The selected Release must declare exactly
+the Tarball, sidecar Manifest, and checksum list; all three downloads, the archive size and SHA-256,
+every installed Package byte, and supported contract majors are verified before project mutation.
+
+The Package installs into a content-addressed side-by-side user-cache directory. Migration accepts
+only the exact previously managed MCP entry and canonical Skill bytes, stages replacements and
+backups in their destination filesystems, and records path/hash-only recovery state. An interruption
+before commit rolls back; an interruption after commit finishes cleanup on the next lifecycle
+command. The original globally installed Bootstrap follows the verified managed MCP entry so
+`doctor`, later upgrades, and `uninstall` operate on the active side-by-side Package.
+
+On 2026-08-31, Node 25.6.0 passed 12/12 focused upgrade and client-integration cases: 3/3 client
+migrations, 3/3 injected interruption rollbacks, 1/1 newer-incompatible Release skip with older
+compatible selection, 1/1 unsupported/no-candidate family, 1/1 checksum-tampering rejection, and
+1/1 successful orchestration/no-op family, 1/1 GitHub redirect/inventory/path-denial family, and 1/1
+exact installed-Package inventory check. Relative to manual replacement or a global-latest installer,
+this is **improved** framework compatibility and recovery with **no material Android runtime
+behavior change**. The evidence uses mocked Release downloads plus real filesystem validation; the
+complete installed distribution exercises npm's offline Package lifecycle separately. The
+tag-triggered GitHub workflow and published attestations remain the next external release evidence.
+
+The execution cache now has a contract-versioned root rather than a tooling-version root, while
+every request remains content-addressed by Knowledge, Harness, source, and lane fingerprints. This
+allows a compatible Runtime upgrade to reuse deep evidence without treating stale output as a hit.
+The first local transition to the new empty root was **mixed** cold-start evidence: a 120-second
+compile request and then a 180-second Preview request cancelled after safely persisting partial
+Gradle output; the subsequent complete installed gate passed in 135 seconds. Deep requests now use
+one fixed five-minute ceiling. This is not a clean-host latency guarantee; the tag-triggered Linux
+gate must still prove a fresh-cache Release build, and later work should reduce cold compilation
+rather than further expanding the bound.
+
+The final local acceptance used Node 25.6.0 and Corretto 21.0.6. It passed 304/304 AI-tooling tests,
+27/27 schemas, 2/2 reproducible Packages, 1/1 offline install/uninstall lifecycle, 1/1 SPDX/license
+inventory, 3/3 installed Agent profiles, 18/18 exact Skill copies, 2/2 MCP protocol versions, the
+released-artifact Kotlin/XML/Screenshot compile lanes, generated Preview and layout comparisons,
+and exact RGBA comparison. The root gate passed 194 tasks in 1 minute 58 seconds, with 172 executed
+and 22 up-to-date; it also accepted Documentation Governance V2, documentation structure,
+development-tooling isolation, Released Knowledge freshness, and all 3 Release assets. The result
+is **improved** release readiness with **no material Android runtime behavior change**. Hosted clean
+Linux execution and GitHub attestations remain `inconclusive` until the immutable tag workflow runs.
 
 ## Maven release changesets
 
