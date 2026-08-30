@@ -1,0 +1,128 @@
+#!/usr/bin/env node
+import {createHash} from 'node:crypto';
+import {lstat, readFile, readdir} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {assertSchemaValue} from './schema-validator.mjs';
+
+const aiRoot = fileURLToPath(new URL('../', import.meta.url));
+const repositoryRoot = resolve(aiRoot, '../..');
+
+function sha256(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+async function readJson(path) {
+  return JSON.parse(await readFile(path, 'utf8'));
+}
+
+function assertIncludes(text, expected, label) {
+  if (!text.includes(expected)) throw new Error(`AI tooling release workflow is missing ${label}.`);
+}
+
+function verifyWorkflow(workflow, contract) {
+  const requiredFragments = [
+    ['tags:\n      - "ai-tooling-v*"', 'the immutable AI tooling tag trigger'],
+    ['contents: write', 'contents write permission'],
+    ['id-token: write', 'OIDC token permission'],
+    ['attestations: write', 'artifact attestation permission'],
+    ['actions/checkout@v7', 'the pinned checkout action'],
+    ['fetch-depth: 0', 'complete tag history'],
+    ['actions/setup-node@v7', 'the pinned Node setup action'],
+    ['node-version: "24.19.0"', 'the pinned Node runtime'],
+    ['actions/attest-build-provenance@v3', 'GitHub build provenance'],
+    ['./gradlew verifyAiToolingRelease --stacktrace', 'the release quality gate'],
+    ['--verify-tag', 'tag existence verification'],
+    ['gh release view "$GITHUB_REF_NAME"', 'existing-release rejection'],
+  ];
+  for (const [fragment, label] of requiredFragments) assertIncludes(workflow, fragment, label);
+  for (const asset of contract.assets) {
+    assertIncludes(workflow, `tools/ai/build/distribution/${asset}`, `release asset ${asset}`);
+  }
+  if (/cancel-in-progress:\s*true/u.test(workflow)) {
+    throw new Error('AI tooling release workflow must not cancel an in-progress immutable release.');
+  }
+  if (/\b(?:latest|main)\b.*viewcompose-ai-tooling/u.test(workflow)) {
+    throw new Error('AI tooling release workflow must not publish a mutable package selector.');
+  }
+}
+
+async function verifyAssets(contract, distributionRoot) {
+  const names = (await readdir(distributionRoot)).sort();
+  const expected = [...contract.assets].sort();
+  if (JSON.stringify(names) !== JSON.stringify(expected)) {
+    throw new Error(`Release asset inventory drifted: expected ${expected.join(', ')}.`);
+  }
+  const checksumText = await readFile(resolve(distributionRoot, 'SHA256SUMS'), 'utf8');
+  const checksums = new Map(
+    checksumText.trim().split('\n').map((line) => {
+      const match = /^([a-f0-9]{64})  ([^/]+)$/u.exec(line);
+      if (!match) throw new Error(`Malformed release checksum line: ${line}`);
+      return [match[2], match[1]];
+    }),
+  );
+  for (const asset of contract.assets.filter((name) => name !== 'SHA256SUMS')) {
+    const path = resolve(distributionRoot, asset);
+    const metadata = await lstat(path);
+    if (!metadata.isFile() || metadata.isSymbolicLink()) {
+      throw new Error(`Release asset is not a regular file: ${asset}`);
+    }
+    const digest = sha256(await readFile(path));
+    if (checksums.get(asset) !== digest) throw new Error(`Release checksum drifted for ${asset}.`);
+  }
+  if (checksums.size !== contract.assets.length - 1) {
+    throw new Error('Release checksum inventory contains an unexpected asset.');
+  }
+}
+
+export async function verifyAiToolingRelease({
+  tag,
+  workflowText,
+  distributionRoot = resolve(aiRoot, 'build/distribution'),
+  checkAssets = true,
+} = {}) {
+  const [schema, contract, packageContract, workflow] = await Promise.all([
+    readJson(resolve(aiRoot, 'contracts/ai-tooling-release.schema.json')),
+    readJson(resolve(aiRoot, 'contracts/examples/ai-tooling-release.json')),
+    readJson(resolve(aiRoot, 'evaluation/fixtures/distribution/package-contract.json')),
+    workflowText === undefined
+      ? readFile(resolve(repositoryRoot, '.github/workflows/ai-tooling-release.yml'), 'utf8')
+      : workflowText,
+  ]);
+  assertSchemaValue(contract, schema, 'AI tooling release example');
+  if (
+    packageContract.package.name !== contract.package.name ||
+    packageContract.package.version !== contract.package.version
+  ) {
+    throw new Error('GitHub Release identity drifted from the distribution package contract.');
+  }
+  if (tag !== undefined && tag !== contract.package.tag) {
+    throw new Error(`Release tag ${tag} does not match frozen tag ${contract.package.tag}.`);
+  }
+  verifyWorkflow(workflow, contract);
+  if (checkAssets) await verifyAssets(contract, distributionRoot);
+  return {tag: contract.package.tag, assets: contract.assets.length};
+}
+
+function parseArguments(tokens) {
+  let tag;
+  for (let index = 0; index < tokens.length; index += 2) {
+    if (tokens[index] !== '--tag' || tokens[index + 1] === undefined || tag !== undefined) {
+      throw new Error('Usage: verify-ai-tooling-release.mjs [--tag <ai-tooling-vX.Y.Z>]');
+    }
+    tag = tokens[index + 1];
+  }
+  return {tag};
+}
+
+const entryPath = process.argv[1] ? resolve(process.argv[1]) : '';
+if (entryPath === fileURLToPath(import.meta.url)) {
+  verifyAiToolingRelease(parseArguments(process.argv.slice(2))).then((result) => {
+    process.stdout.write(
+      `Verified ViewCompose AI tooling release ${result.tag}: ${result.assets}/${result.assets} assets.\n`,
+    );
+  }).catch((error) => {
+    process.stderr.write(`ViewCompose AI tooling release verification failed: ${error.message}\n`);
+    process.exitCode = 1;
+  });
+}
