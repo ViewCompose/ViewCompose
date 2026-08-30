@@ -21,6 +21,7 @@
     "screenshotRepairAuthorization": 1,
     "screenshotRepairHostGrant": 1,
     "screenshotRepairExecutionOutcome": 1,
+    "screenshotRepairAppliedResultHandoff": 1,
     "evaluationCorpus": 1,
     "metricContract": 1
   },

@@ -37,6 +37,7 @@
     "verify:phase5-screenshot-repair-proposer": "node scripts/verify-phase5-screenshot-repair-proposer.mjs",
     "verify:phase5-screenshot-repair-authorization": "node scripts/verify-phase5-screenshot-repair-authorization.mjs",
     "verify:phase5-screenshot-repair-host-grant": "node scripts/verify-phase5-screenshot-repair-host-grant.mjs",
-    "verify:phase5-screenshot-repair-execution-outcome": "node scripts/verify-phase5-screenshot-repair-execution-outcome.mjs"
+    "verify:phase5-screenshot-repair-execution-outcome": "node scripts/verify-phase5-screenshot-repair-execution-outcome.mjs",
+    "verify:phase5-screenshot-repair-applied-result-handoff": "node scripts/verify-phase5-screenshot-repair-applied-result-handoff.mjs"
   }
 }

@@ -434,6 +434,15 @@ patch re-execution. This reference store provides deterministic local durability
 receipt authentication, multi-host consensus, arbitrary-filesystem portability, or a production
 recovery service.
 
+Applied-result handoff v1 is implemented internally without public activation. It retains only the
+exact process-local Design IR produced by a successful attended patch when the original trusted
+host also supplies direct read-only reconciliation. Before delivery it reopens and exactly
+revalidates the durable terminal record, then returns one immutable content-addressed receipt beside
+the same frozen Design IR object. Successful delivery clears the retained result reference and is
+single use under concurrency. Serialized outcomes or host handles, non-applied states, receipt or
+result drift, non-durable hosts, duplicate delivery, result persistence, application source writes,
+and public CLI/MCP repair remain rejected.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -452,6 +461,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-repair-proposer
 npm --prefix tools/ai run verify:phase5-screenshot-repair-authorization
 npm --prefix tools/ai run verify:phase5-screenshot-repair-host-grant
 npm --prefix tools/ai run verify:phase5-screenshot-repair-execution-outcome
+npm --prefix tools/ai run verify:phase5-screenshot-repair-applied-result-handoff
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
@@ -466,6 +476,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-repair-execution-outcome
 ./gradlew verifyAiScreenshotRepairAuthorization
 ./gradlew verifyAiScreenshotRepairHostGrant
 ./gradlew verifyAiScreenshotRepairExecutionOutcome
+./gradlew verifyAiScreenshotRepairAppliedResultHandoff
 ```
 
 The preferred protocol follows the

@@ -1238,6 +1238,39 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairAppliedResultHandoff") {
+            group = "verification"
+            description =
+                "Verifies the durable receipt and exact in-memory applied-result handoff boundary."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-applied-result-handoff")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/screenshot-repair-applied-result-handoff.schema.json",
+                        "contracts/screenshot-repair-execution-outcome.schema.json",
+                        "contracts/screenshot-repair-host-grant.schema.json",
+                        "contracts/screenshot-repair.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-applied-result-handoff-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair-proposer-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization-validation.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-decision.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/design-ir-repair-patch.mjs",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-repair-execution-adapter.mjs",
+                        "scripts/screenshot-repair-host-grant-adapter.mjs",
+                        "scripts/screenshot-repair-terminal-store.mjs",
+                        "scripts/verify-phase5-screenshot-repair-applied-result-handoff.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

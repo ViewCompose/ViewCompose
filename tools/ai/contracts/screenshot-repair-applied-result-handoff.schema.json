@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-repair-applied-result-handoff-v1.schema.json",
+  "title": "ViewCompose screenshot repair applied-result handoff v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "lineage",
+    "delivery",
+    "handoffFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "screenshot-repair-applied-result-handoff"},
+    "status": {"const": "delivered"},
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcomeFingerprint",
+        "outcomeReceipt",
+        "reservationReceipt",
+        "hostTrustDomainId",
+        "inputDesignIrFingerprint",
+        "changeFingerprint",
+        "resultDesignIrFingerprint",
+        "patchOutputFingerprint"
+      ],
+      "properties": {
+        "outcomeFingerprint": {"$ref": "#/$defs/sha256"},
+        "outcomeReceipt": {"$ref": "#/$defs/sha256"},
+        "reservationReceipt": {"$ref": "#/$defs/sha256"},
+        "hostTrustDomainId": {"$ref": "#/$defs/stableId"},
+        "inputDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "changeFingerprint": {"$ref": "#/$defs/sha256"},
+        "resultDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "patchOutputFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "terminalOutcome",
+        "terminalReceiptRevalidated",
+        "exactInMemoryObject",
+        "singleUse",
+        "persistentResultStorage",
+        "persistentSourceWrite",
+        "publicToolMode",
+        "providerCalls",
+        "toolNetworkAccess",
+        "logs"
+      ],
+      "properties": {
+        "source": {"const": "retained-in-memory-applied-result"},
+        "terminalOutcome": {"const": "durable-reconciled"},
+        "terminalReceiptRevalidated": {"const": true},
+        "exactInMemoryObject": {"const": true},
+        "singleUse": {"const": true},
+        "persistentResultStorage": {"const": false},
+        "persistentSourceWrite": {"const": false},
+        "publicToolMode": {"const": false},
+        "providerCalls": {"const": false},
+        "toolNetworkAccess": {"const": false},
+        "logs": {"const": "fingerprints-only"}
+      }
+    },
+    "handoffFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}
