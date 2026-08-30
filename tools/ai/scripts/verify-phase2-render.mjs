@@ -1,6 +1,5 @@
 import {realpathSync} from 'node:fs';
 import {readFile} from 'node:fs/promises';
-import {homedir} from 'node:os';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {executeBoundedProcess} from './bounded-process.mjs';
@@ -9,8 +8,7 @@ import {repositoryRoot} from './tool-core.mjs';
 
 const evaluationRoot = fileURLToPath(new URL('../evaluation/', import.meta.url));
 const sourceRoot = realpathSync(repositoryRoot());
-const sourceExecutionRoot = resolve(sourceRoot, 'build/ai/source-preview');
-const gradleUserHome = process.env.GRADLE_USER_HOME ?? resolve(homedir(), '.gradle');
+const sourceRequestCacheRoot = resolve(sourceRoot, 'build/ai/source-preview/requests');
 const corpus = JSON.parse(await readFile(resolve(evaluationRoot, 'corpus.json'), 'utf8'));
 const cases = corpus.cases.filter((entry) => entry.phase === 2 && entry.category === 'render');
 
@@ -31,9 +29,9 @@ for (const testCase of cases) {
     projectRoot: sourceRoot,
     harnessRoot: sourceRoot,
     repository: sourceRoot,
-    executionRoot: sourceExecutionRoot,
-    gradleUserHome,
-    requestCacheRoot: resolve(sourceExecutionRoot, 'requests'),
+    projectCacheDir: null,
+    gradleUserHome: null,
+    requestCacheRoot: sourceRequestCacheRoot,
     runProcess: async (plan, limits) => {
       const execution = await executeBoundedProcess(plan, limits);
       if (

@@ -239,7 +239,7 @@ function pngDimensions(buffer) {
 
 function gradlePlan({
   harnessRoot,
-  executionRoot,
+  projectCacheDir,
   gradleUserHome,
   requestCacheRoot,
   javaHome,
@@ -266,10 +266,8 @@ function gradlePlan({
       '--no-configuration-cache',
       '--max-workers=2',
       '--console=plain',
-      '--project-cache-dir',
-      resolve(executionRoot, 'gradle/project-cache'),
-      '--gradle-user-home',
-      gradleUserHome,
+      ...(projectCacheDir === null ? [] : ['--project-cache-dir', projectCacheDir]),
+      ...(gradleUserHome === null ? [] : ['--gradle-user-home', gradleUserHome]),
     ],
   };
 }
@@ -517,6 +515,7 @@ export async function renderPreview({
   harnessRoot = executionHarnessRoot(),
   repository = toolCacheRoot(),
   executionRoot = repository,
+  projectCacheDir = resolve(executionRoot, 'gradle/project-cache'),
   gradleUserHome = resolve(executionRoot, 'gradle/user-home'),
   requestCacheRoot = resolve(repository, 'preview/requests'),
   targets = SUPPORTED_PREVIEW_TARGETS,
@@ -627,7 +626,7 @@ export async function renderPreview({
   const discovery = await runProcess(
     gradlePlan({
       harnessRoot,
-      executionRoot,
+      projectCacheDir,
       gradleUserHome,
       requestCacheRoot,
       javaHome: effectiveJavaHome,
@@ -760,7 +759,7 @@ export async function renderPreview({
   const render = await runProcess(
     gradlePlan({
       harnessRoot,
-      executionRoot,
+      projectCacheDir,
       gradleUserHome,
       requestCacheRoot,
       javaHome: effectiveJavaHome,
