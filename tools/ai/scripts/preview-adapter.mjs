@@ -240,6 +240,7 @@ function pngDimensions(buffer) {
 function gradlePlan({
   harnessRoot,
   executionRoot,
+  gradleUserHome,
   requestCacheRoot,
   javaHome,
   androidSdk,
@@ -268,7 +269,7 @@ function gradlePlan({
       '--project-cache-dir',
       resolve(executionRoot, 'gradle/project-cache'),
       '--gradle-user-home',
-      resolve(executionRoot, 'gradle/user-home'),
+      gradleUserHome,
     ],
   };
 }
@@ -515,6 +516,8 @@ export async function renderPreview({
   projectRoot = process.env.VIEWCOMPOSE_PROJECT_ROOT,
   harnessRoot = executionHarnessRoot(),
   repository = toolCacheRoot(),
+  executionRoot = repository,
+  gradleUserHome = resolve(executionRoot, 'gradle/user-home'),
   requestCacheRoot = resolve(repository, 'preview/requests'),
   targets = SUPPORTED_PREVIEW_TARGETS,
 } = {}) {
@@ -624,7 +627,8 @@ export async function renderPreview({
   const discovery = await runProcess(
     gradlePlan({
       harnessRoot,
-      executionRoot: repository,
+      executionRoot,
+      gradleUserHome,
       requestCacheRoot,
       javaHome: effectiveJavaHome,
       androidSdk,
@@ -756,7 +760,8 @@ export async function renderPreview({
   const render = await runProcess(
     gradlePlan({
       harnessRoot,
-      executionRoot: repository,
+      executionRoot,
+      gradleUserHome,
       requestCacheRoot,
       javaHome: effectiveJavaHome,
       androidSdk,

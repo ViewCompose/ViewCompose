@@ -1,10 +1,16 @@
+import {realpathSync} from 'node:fs';
 import {readFile} from 'node:fs/promises';
+import {homedir} from 'node:os';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {executeBoundedProcess} from './bounded-process.mjs';
 import {renderPreview} from './preview-adapter.mjs';
+import {repositoryRoot} from './tool-core.mjs';
 
 const evaluationRoot = fileURLToPath(new URL('../evaluation/', import.meta.url));
+const sourceRoot = realpathSync(repositoryRoot());
+const sourceExecutionRoot = resolve(sourceRoot, 'build/ai/source-preview');
+const gradleUserHome = process.env.GRADLE_USER_HOME ?? resolve(homedir(), '.gradle');
 const corpus = JSON.parse(await readFile(resolve(evaluationRoot, 'corpus.json'), 'utf8'));
 const cases = corpus.cases.filter((entry) => entry.phase === 2 && entry.category === 'render');
 
@@ -22,6 +28,12 @@ for (const testCase of cases) {
     capabilityIds: testCase.expected.capabilityIds ?? [],
     requestId: testCase.id,
   }, {
+    projectRoot: sourceRoot,
+    harnessRoot: sourceRoot,
+    repository: sourceRoot,
+    executionRoot: sourceExecutionRoot,
+    gradleUserHome,
+    requestCacheRoot: resolve(sourceExecutionRoot, 'requests'),
     runProcess: async (plan, limits) => {
       const execution = await executeBoundedProcess(plan, limits);
       if (
@@ -38,7 +50,7 @@ for (const testCase of cases) {
   });
   if (result.status !== 'success') {
     const redactedRoots = [
-      fileURLToPath(new URL('../../../', import.meta.url)),
+      sourceRoot,
       process.env.JAVA_HOME,
       process.env.HOME,
     ].filter((root) => typeof root === 'string' && root.length > 0);
