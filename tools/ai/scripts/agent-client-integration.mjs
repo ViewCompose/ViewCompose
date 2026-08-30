@@ -63,11 +63,12 @@ function tomlString(value) {
   return JSON.stringify(value);
 }
 
-function expectedServerDefinition(sourceRoot, {
+function expectedServerDefinition(projectRoot, {
+  sourceRoot,
   nodeExecutable = process.execPath,
   mcpServerPath = defaultMcpServerPath,
 } = {}) {
-  if (!isAbsolute(nodeExecutable) || !isAbsolute(mcpServerPath)) {
+  if (!isAbsolute(nodeExecutable) || !isAbsolute(mcpServerPath) || !isAbsolute(projectRoot)) {
     throw new Error('Configuration paths must be absolute.');
   }
   if (sourceRoot !== undefined && !isAbsolute(sourceRoot)) {
@@ -76,13 +77,16 @@ function expectedServerDefinition(sourceRoot, {
   return {
     command: nodeExecutable,
     args: [mcpServerPath],
-    ...(sourceRoot === undefined ? {} : {env: {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot}}),
+    env: {
+      VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+      ...(sourceRoot === undefined ? {} : {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot}),
+    },
   };
 }
 
-export function renderAgentClientConfig(client, sourceRoot, options = {}) {
+export function renderAgentClientConfig(client, projectRoot, options = {}) {
   const profile = profileFor(client);
-  const server = expectedServerDefinition(sourceRoot, options);
+  const server = expectedServerDefinition(projectRoot, options);
   if (profile.configFormat === 'toml') {
     const lines = [
       '[mcp_servers.viewcompose]',
@@ -90,13 +94,14 @@ export function renderAgentClientConfig(client, sourceRoot, options = {}) {
       `args = [${tomlString(server.args[0])}]`,
       '',
     ];
-    if (server.env) {
-      lines.push(
-        '[mcp_servers.viewcompose.env]',
+    lines.push(
+      '[mcp_servers.viewcompose.env]',
+      `VIEWCOMPOSE_PROJECT_ROOT = ${tomlString(server.env.VIEWCOMPOSE_PROJECT_ROOT)}`,
+      ...(server.env.VIEWCOMPOSE_SOURCE_ROOT === undefined ? [] : [
         `VIEWCOMPOSE_SOURCE_ROOT = ${tomlString(server.env.VIEWCOMPOSE_SOURCE_ROOT)}`,
-        '',
-      );
-    }
+      ]),
+      '',
+    );
     return lines.join('\n');
   }
   return `${JSON.stringify({mcpServers: {viewcompose: server}}, null, 2)}\n`;
@@ -288,8 +293,11 @@ function equalJson(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function managedTomlBlock(sourceRoot, options) {
-  return `${managedTomlStart}\n${renderAgentClientConfig('codex', sourceRoot, options)}${managedTomlEnd}\n`;
+function managedTomlBlock(projectRoot, sourceRoot, options) {
+  return `${managedTomlStart}\n${renderAgentClientConfig('codex', projectRoot, {
+    ...options,
+    sourceRoot,
+  })}${managedTomlEnd}\n`;
 }
 
 function parseJsonObject(text, relativePath) {
@@ -318,7 +326,7 @@ async function prepareConfigOperation({profile, root, sourceRoot, options = {}, 
   const original = metadata ? await readFile(target, 'utf8') : undefined;
   const mode = metadata ? metadata.mode & 0o777 : 0o644;
   if (profile.configFormat === 'json') {
-    const server = expectedServerDefinition(sourceRoot, options);
+    const server = expectedServerDefinition(root, {...options, sourceRoot});
     const document = original === undefined ? {} : parseJsonObject(original, profile.configPath);
     const existing = document.mcpServers?.viewcompose;
     if (action === 'install') {
@@ -356,7 +364,7 @@ async function prepareConfigOperation({profile, root, sourceRoot, options = {}, 
     };
   }
 
-  const block = managedTomlBlock(sourceRoot, options);
+  const block = managedTomlBlock(root, sourceRoot, options);
   const text = original ?? '';
   const hasSection = /^\s*\[mcp_servers\.viewcompose(?:\.env)?\]\s*$/mu.test(text);
   const occurrences = text.split(block).length - 1;
@@ -440,7 +448,7 @@ export async function initializeAgentClient({
     schemaVersion: 1,
     client: prepared.profile.id,
     projectRoot: prepared.root,
-    mode: canonicalSourceRoot === undefined ? 'standalone' : 'source-bound',
+    mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
     config: {path: prepared.profile.configPath, status: configChanged ? 'installed' : 'unchanged'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -481,9 +489,9 @@ export async function diagnoseAgentClient({
     schemaVersion: 1,
     client: prepared.profile.id,
     projectRoot: prepared.root,
-    mode: canonicalSourceRoot === undefined ? 'standalone' : 'source-bound',
+    mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
     status: ready
-      ? canonicalSourceRoot === undefined ? 'standalone-ready' : 'source-bound-ready'
+      ? canonicalSourceRoot === undefined ? 'project-bound-ready' : 'source-bound-ready'
       : 'repair-required',
     config: {
       path: prepared.profile.configPath,
@@ -501,7 +509,7 @@ export async function diagnoseAgentClient({
     capabilities: {
       knowledgeAndGeneration: ready ? 'ready' : 'repair-required',
       compilationPreviewAndLayout: canonicalSourceRoot === undefined
-        ? 'source-root-required'
+        ? ready ? 'project-bound-ready' : 'repair-required'
         : ready ? 'source-bound-ready' : 'repair-required',
     },
   };
@@ -557,7 +565,7 @@ export async function uninstallAgentClient({
     schemaVersion: 1,
     client: prepared.profile.id,
     projectRoot: prepared.root,
-    mode: canonicalSourceRoot === undefined ? 'standalone' : 'source-bound',
+    mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
     config: {path: prepared.profile.configPath, status: configChanged ? 'removed' : 'absent'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -572,7 +580,7 @@ function parseCommandLine(arguments_) {
   if (!['config', 'install-skills', 'init', 'doctor', 'uninstall'].includes(command)) {
     throw new Error(
       'Usage: viewcompose-agent <config|install-skills|init|doctor|uninstall> ' +
-      '--client <codex|claude-code|cursor> [--project-root <absolute-path>] ' +
+      '--client <codex|claude-code|cursor> --project-root <absolute-path> ' +
       '[--source-root <absolute-path>]',
     );
   }
@@ -588,7 +596,7 @@ function parseCommandLine(arguments_) {
     if (Object.hasOwn(values, key)) throw new Error(`Duplicate option ${option}.`);
     values[key] = value;
   }
-  const required = command === 'config' ? ['client'] : ['client', 'project-root'];
+  const required = ['client', 'project-root'];
   const allowed = command === 'install-skills'
     ? new Set(required)
     : new Set([...required, 'source-root']);
@@ -603,7 +611,11 @@ async function main() {
   const {command, values} = parseCommandLine(process.argv.slice(2));
   if (command === 'config') {
     const sourceRoot = await canonicalSourceRootOrUndefined(values['source-root']);
-    process.stdout.write(renderAgentClientConfig(values.client, sourceRoot));
+    const projectRoot = await requireCanonicalDirectory(
+      values['project-root'],
+      'Consumer project root',
+    );
+    process.stdout.write(renderAgentClientConfig(values.client, projectRoot, {sourceRoot}));
     return;
   }
   const arguments_ = {

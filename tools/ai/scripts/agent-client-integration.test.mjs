@@ -18,34 +18,48 @@ const sourceRoot = resolve(aiRoot, '../..');
 test('renders deterministic standalone and source-bound configuration for every client', () => {
   const nodeExecutable = '/opt/viewcompose/node';
   const mcpServerPath = '/opt/viewcompose/mcp-server.mjs';
-  const standaloneCodex = renderAgentClientConfig('codex', undefined, {nodeExecutable, mcpServerPath});
+  const projectRoot = '/workspace/app';
+  const standaloneCodex = renderAgentClientConfig('codex', projectRoot, {
+    nodeExecutable,
+    mcpServerPath,
+  });
   assert.equal(standaloneCodex, [
     '[mcp_servers.viewcompose]',
     `command = "${nodeExecutable}"`,
     `args = ["${mcpServerPath}"]`,
     '',
+    '[mcp_servers.viewcompose.env]',
+    `VIEWCOMPOSE_PROJECT_ROOT = "${projectRoot}"`,
+    '',
   ].join('\n'));
-  const codex = renderAgentClientConfig('codex', sourceRoot, {nodeExecutable, mcpServerPath});
+  const codex = renderAgentClientConfig('codex', projectRoot, {
+    sourceRoot,
+    nodeExecutable,
+    mcpServerPath,
+  });
   assert.equal(codex, [
     '[mcp_servers.viewcompose]',
     `command = "${nodeExecutable}"`,
     `args = ["${mcpServerPath}"]`,
     '',
     '[mcp_servers.viewcompose.env]',
+    `VIEWCOMPOSE_PROJECT_ROOT = "${projectRoot}"`,
     `VIEWCOMPOSE_SOURCE_ROOT = "${sourceRoot}"`,
     '',
   ].join('\n'));
 
   for (const client of ['claude-code', 'cursor']) {
-    const standalone = JSON.parse(renderAgentClientConfig(client, undefined, {
+    const standalone = JSON.parse(renderAgentClientConfig(client, projectRoot, {
       nodeExecutable,
       mcpServerPath,
     }));
     assert.deepEqual(standalone.mcpServers.viewcompose, {
       command: nodeExecutable,
       args: [mcpServerPath],
+      env: {VIEWCOMPOSE_PROJECT_ROOT: projectRoot},
     });
-    const config = JSON.parse(renderAgentClientConfig(client, sourceRoot, {
+    const config = JSON.parse(renderAgentClientConfig(client, projectRoot, {
+      sourceRoot,
       nodeExecutable,
       mcpServerPath,
     }));
@@ -54,12 +68,15 @@ test('renders deterministic standalone and source-bound configuration for every 
         viewcompose: {
           command: nodeExecutable,
           args: [mcpServerPath],
-          env: {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot},
+          env: {
+            VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+            VIEWCOMPOSE_SOURCE_ROOT: sourceRoot,
+          },
         },
       },
     });
   }
-  assert.throws(() => renderAgentClientConfig('unknown', sourceRoot), /Unknown client/u);
+  assert.throws(() => renderAgentClientConfig('unknown', projectRoot), /Unknown client/u);
 });
 
 test('initializes, diagnoses, and uninstalls standalone integrations transactionally', async () => {
@@ -89,7 +106,7 @@ test('initializes, diagnoses, and uninstalls standalone integrations transaction
         nodeExecutable,
         mcpServerPath,
       });
-      assert.equal(first.mode, 'standalone');
+      assert.equal(first.mode, 'project-bound');
       assert.equal(first.config.status, 'installed');
       assert.ok(first.skills.installed.length > 0);
 
@@ -100,9 +117,9 @@ test('initializes, diagnoses, and uninstalls standalone integrations transaction
         nodeExecutable,
         mcpServerPath,
       });
-      assert.equal(doctor.status, 'standalone-ready');
+      assert.equal(doctor.status, 'project-bound-ready');
       assert.equal(doctor.capabilities.knowledgeAndGeneration, 'ready');
-      assert.equal(doctor.capabilities.compilationPreviewAndLayout, 'source-root-required');
+      assert.equal(doctor.capabilities.compilationPreviewAndLayout, 'project-bound-ready');
 
       const second = await initializeAgentClient({
         client,

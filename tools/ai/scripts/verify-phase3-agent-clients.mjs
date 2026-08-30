@@ -35,7 +35,7 @@ function verifyProfileContract(contract) {
       client.config.format !== profile.configFormat ||
       client.config.projectPath !== profile.configPath ||
       client.skills.projectPath !== profile.skillRoot ||
-      client.config.standaloneArguments[2] !== client.id ||
+      client.config.projectBoundArguments[2] !== client.id ||
       client.config.sourceBoundArguments[2] !== client.id ||
       client.lifecycle.initArguments[2] !== client.id ||
       client.lifecycle.doctorArguments[2] !== client.id ||
@@ -43,11 +43,13 @@ function verifyProfileContract(contract) {
     ) {
       throw new Error(`Agent client profile drifted for ${client.id}.`);
     }
-    const standalone = renderAgentClientConfig(client.id, undefined, {
+    const projectRoot = '/workspace/viewcompose-consumer';
+    const standalone = renderAgentClientConfig(client.id, projectRoot, {
       nodeExecutable: process.execPath,
       mcpServerPath,
     });
-    const sourceBound = renderAgentClientConfig(client.id, sourceRoot, {
+    const sourceBound = renderAgentClientConfig(client.id, projectRoot, {
+      sourceRoot,
       nodeExecutable: process.execPath,
       mcpServerPath,
     });
@@ -57,14 +59,16 @@ function verifyProfileContract(contract) {
       if (
         standaloneParsed.mcpServers?.viewcompose?.command !== process.execPath ||
         standaloneParsed.mcpServers?.viewcompose?.args?.[0] !== mcpServerPath ||
-        standaloneParsed.mcpServers?.viewcompose?.env !== undefined ||
+        standaloneParsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !== projectRoot ||
         parsed.mcpServers?.viewcompose?.command !== process.execPath ||
         parsed.mcpServers?.viewcompose?.args?.[0] !== mcpServerPath ||
+        parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !== projectRoot ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_SOURCE_ROOT !== sourceRoot
       ) throw new Error(`Generated JSON MCP configuration drifted for ${client.id}.`);
     } else if (
       !standalone.includes('[mcp_servers.viewcompose]') ||
-      standalone.includes('[mcp_servers.viewcompose.env]') ||
+      !standalone.includes('[mcp_servers.viewcompose.env]') ||
+      !standalone.includes(JSON.stringify(projectRoot)) ||
       !sourceBound.includes('[mcp_servers.viewcompose.env]') ||
       !sourceBound.includes(JSON.stringify(mcpServerPath)) ||
       !sourceBound.includes(JSON.stringify(sourceRoot))
@@ -98,7 +102,7 @@ export async function verifyAgentClientIntegration() {
         mcpServerPath,
       });
       if (
-        first.mode !== 'standalone' ||
+        first.mode !== 'project-bound' ||
         first.config.status !== 'installed' ||
         JSON.stringify(first.skills.installed) !== JSON.stringify(manifest.skills.map((skill) => skill.id)) ||
         first.skills.unchanged.length !== 0
@@ -116,8 +120,8 @@ export async function verifyAgentClientIntegration() {
         mcpServerPath,
       });
       if (
-        doctor.status !== 'standalone-ready' ||
-        doctor.capabilities.compilationPreviewAndLayout !== 'source-root-required'
+        doctor.status !== 'project-bound-ready' ||
+        doctor.capabilities.compilationPreviewAndLayout !== 'project-bound-ready'
       ) throw new Error(`Standalone doctor evidence drifted for ${client.id}.`);
       const second = await initializeAgentClient({
         client: client.id,
