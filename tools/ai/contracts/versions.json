@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "contracts": {
+    "agentClientIntegration": 1,
     "knowledgeBundleManifest": 1,
     "toolEnvelope": 1,
     "designIr": 1,

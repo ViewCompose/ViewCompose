@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze and implement a content-addressed applied-result handoff that retains and revalidates the exact in-memory Design IR only after a committed terminal receipt, while keeping application source writes and public activation disabled.
+next_action: Resume the content-addressed applied-result handoff that retains and revalidates the exact in-memory Design IR only after a committed terminal receipt, while keeping application source writes and public activation disabled.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -53,6 +53,10 @@ dual-era stdio MCP, deterministic Preview layout diagnosis, and five foundationa
 workflows are complete. The reproducible local distribution, offline lifecycle, SPDX/license
 inventory, installed compile example, and protocol compatibility gates complete the Phase 3
 foundation.
+The missing consumer setup boundary is now also complete: the offline package exposes one
+`viewcompose-agent` command with deterministic project profiles for Codex, Claude Code, and Cursor,
+installs the six canonical Skills into each client's standard project root, and verifies installed
+configuration, exact Skill bytes, idempotence, conflict/path safety, and both MCP protocol versions.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
@@ -178,6 +182,67 @@ direct trusted-host callback. Production host integration, persistent source out
 result storage, and public activation remain off. A local file-backed reference store now durably
 publishes private terminal receipts, returns identical writes idempotently, rejects conflicts
 without overwrite, and reopens receipts for read-only reconciliation without patch re-execution.
+
+## Contract freeze — common AI agent onboarding v1
+
+The next foundation slice interrupts the deeper screenshot-repair handoff because the accepted
+MCP and Agent Skills distribution is protocol-neutral but has no supported consumer setup route.
+The first onboarding contract is limited to Codex, Claude Code, and Cursor. Their current official
+documentation accepts local STDIO MCP servers and standard `SKILL.md` workflows, but each client
+uses a different project configuration or Skill discovery path.
+
+`agent-client-integration-v1` freezes three ordered profiles, exact official documentation sources,
+project-scoped MCP configuration paths, standard Skill roots, invocation prefixes, verification
+actions, the current package identity, and both supported protocol versions. One installed
+`viewcompose-agent` executable will generate deterministic configuration without editing a client
+file and will copy the six canonical Skills only into an explicit absolute consumer-project root.
+Existing different Skill bytes, symbolic-link boundaries, implicit home-directory installation,
+and unknown clients fail closed. The package continues to open no network connection and does not
+configure, authenticate, or launch a proprietary client.
+
+Acceptance requires 3/3 schema-valid deterministic profiles, exact installed Skill bytes for all
+three layouts, idempotent reinstall, conflict and path-safety rejection, two reproducible package
+builds, offline installation and uninstallation, and both frozen MCP handshakes from the installed
+server. CI does not authenticate or automate proprietary client binaries, so the public matrix
+must describe this as configuration and protocol evidence rather than vendor end-to-end
+certification. A top-level bilingual AI Integration chapter and both project READMEs must expose
+the complete setup and client-owned final connection checks. The previously planned
+content-addressed applied-result handoff resumes only after this missing consumer foundation is
+accepted.
+
+## Accepted implementation — common AI agent onboarding v1
+
+The 2026-08-30 implementation closes the frozen consumer foundation with one dependency-free
+`viewcompose-agent` executable. `config` emits but never writes the exact Codex TOML or Claude
+Code/Cursor JSON fragment and binds the installed MCP server plus an explicit physical
+`VIEWCOMPOSE_SOURCE_ROOT`. `install-skills` accepts only one explicit physical consumer-project
+root, copies all six canonical `SKILL.md` files into `.agents/skills` or `.claude/skills`, returns
+identical reinstall results, and rejects unknown clients, relative roots, symbolic links, and
+different existing bytes without overwrite. It infers no home directory, opens no network
+connection, and does not configure, authenticate, or launch a proprietary client.
+
+The dedicated source gate passed 3/3 deterministic profiles, 18/18 exact Skill copies, 3/3
+idempotent reinstalls, and 3/3 conflict/path-safety rejections. The complete Node suite passed
+270/270 tests. The installed-distribution gate passed two byte-identical package builds, one
+offline install/uninstall lifecycle, one SPDX/license inventory, all three installed profiles,
+18/18 installed Skill comparisons, both MCP protocol handshakes, and the existing compile,
+Preview, semantic/geometry, and exact-pixel denominators on JDK 21. `verifyAiAgentClients` and the
+quality-build test suite also pass. The new top-level bilingual AI Integration chapter publishes
+the complete installation and client-owned final checks; CI still does not claim authenticated
+vendor-binary end-to-end certification.
+
+The first two-route chapter candidate passed all functional site checks but exceeded the 46.9 MiB
+non-API ceiling. Consolidating overview and setup into one route produced 49,238,608 bytes versus
+the last accepted 49,042,390-byte output: `+196,218` bytes (`+0.4001%`), a **regressed** size result.
+The reviewed 47.1 MiB ceiling leaves 149,321.6 bytes of headroom. This is local uncompressed-output
+evidence, not transfer-size, runtime, or vendor-client evidence. The next documentation action is
+to hold the ceiling and reuse this route until structural recovery creates measured capacity.
+
+This is **improved** consumer discoverability, repeatability, path safety, and protocol confidence
+with **no material Android runtime behavior change**. All implementation remains in downstream
+development tooling and documentation, so no published Maven artifact or publication input changed
+and no new Maven release changeset is required. The previously frozen applied-result handoff is
+again the next action.
 
 ## Maven release changesets
 
@@ -3294,8 +3359,9 @@ gates rather than leaving them qualitative:
 Each phase updates the relevant active documents in the same implementation slice:
 
 - architecture and ADRs own boundaries, isolation, versioning, trust, and IR decisions;
-- `docs/tooling/` owns installation, operation, security, validation modes, MCP/CLI reference,
-  troubleshooting, and evidence interpretation;
+- `docs/ai/` owns user-facing Agent installation, MCP/Skill setup, client support, and first-use
+  troubleshooting; `docs/tooling/` owns implementation operation, security, validation modes,
+  MCP/CLI reference, and evidence interpretation;
 - `docs/modules/` owns any separately published artifact's dependency, API, compatibility, and
   operational contract;
 - `docs/migration/` owns XML and Compose supported subsets, semantic differences, generated output,

@@ -129,6 +129,24 @@
       "environment": "checked-in client-neutral skill manifest against the frozen workflow set"
     },
     {
+      "id": "client-integration.profile-completeness",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "Codex, Claude Code, and Cursor configuration profiles reviewed against official documentation"
+    },
+    {
+      "id": "client-integration.skill-byte-parity",
+      "phase": 3,
+      "measure": "sha256_mismatch_count",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "skills",
+      "environment": "project-scoped client Skill installation compared with the packaged canonical SKILL.md files"
+    },
+    {
       "id": "distribution.reproducible-package",
       "phase": 3,
       "measure": "sha256_mismatch_count",

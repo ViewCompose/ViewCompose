@@ -3,6 +3,7 @@
   "locale": "zh-CN",
   "required": [
     "README.md",
+    "ai/README.md",
     "architecture/decisions/0001-hosted-documentation-platform.md",
     "architecture/decisions/0002-five-layer-runtime-module-architecture.md",
     "architecture/decisions/0003-public-package-ownership-and-platform-handles.md",

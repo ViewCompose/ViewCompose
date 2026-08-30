@@ -11,7 +11,7 @@ version_lane: version-agnostic
 capability_ids: []
 artifact_ids: []
 sample_ids: []
-workflow: Route readers and maintainers from one canonical entrance to the current Tutorial, Guide, Architecture, Migration, Module, Tooling, and Project owners.
+workflow: Route readers and maintainers from one canonical entrance to the current AI Integration, Tutorial, Guide, Architecture, Migration, Module, Tooling, and Project owners.
 validation:
   - ./gradlew verifyDocumentationStructure
   - cd website && npm run build
@@ -39,7 +39,8 @@ historical evidence only.
 | Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual |
 | Look up an application-facing entry | [Capability Reference](https://docs.viewcompose.com/reference/) → [versioned API/KDoc](https://docs.viewcompose.com/api/) → the owning module manual |
 | Build with a feature | Select the relevant document under [Guides](#guides) |
-| Work with AI, previews, or performance | [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt) → [local tooling contract](../tools/ai/README.md) → [Preview](./tooling/preview.md) → [Diagnostics](./tooling/diagnostics.md) → [Performance](./tooling/performance.md) |
+| Connect an AI agent | [AI Integration](./ai/README.md) |
+| Work with previews, diagnostics, or performance | [Preview](./tooling/preview.md) → [Diagnostics](./tooling/diagnostics.md) → [Performance](./tooling/performance.md) |
 | Contribute a change | [Development workflow](./project/workflow.md) → [Documentation governance](./project/documentation-governance.md) |
 | Prepare a release | [Publishing](./project/publishing.md) → [Capability verification](./project/capability-verification.md) |
 | Restore project context | [Roadmap](./project/roadmap.md) and the active document for the affected area; do not start from archived plans |
@@ -114,11 +115,17 @@ component, integration, host, and tooling entries by user capability. Its counts
 routes are freshness-gated. Use the [versioned API Reference](https://docs.viewcompose.com/api/) for exhaustive signatures and
 KDoc/Javadoc, then follow the entry's module-manual link for artifact contracts.
 
+## AI Integration
+
+Machine-readable reference, local MCP tools, standard Agent Skills, and executable evidence:
+
+- [AI Integration overview](./ai/README.md)
+- [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt)
+
 ## Tooling
 
 Development-time tooling, inspection, and performance:
 
-- [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt) ([local contract](../tools/ai/README.md))
 - [Preview](./tooling/preview.md)
 - [Diagnostics](./tooling/diagnostics.md)
 - [Performance](./tooling/performance.md)

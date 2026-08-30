@@ -280,6 +280,7 @@ async function verifySchemas(versions) {
   assertUnique(ids, 'JSON Schema IDs');
 
   const contractSchemas = {
+    agentClientIntegration: 'agent-client-integration.schema.json',
     knowledgeBundleManifest: 'knowledge-bundle-manifest.schema.json',
     toolEnvelope: 'tool-envelope.schema.json',
     designIr: 'design-ir.schema.json',
@@ -373,6 +374,7 @@ async function verifyMcpProtocol() {
 
 async function verifyExamples(schemas) {
   const examples = [
+    ['agent-client-integration.json', 'agent-client-integration.schema.json'],
     ['knowledge-bundle-manifest.json', 'knowledge-bundle-manifest.schema.json'],
     ['tool-request.json', 'tool-envelope.schema.json'],
     ['tool-result.json', 'tool-envelope.schema.json'],

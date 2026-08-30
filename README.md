@@ -19,6 +19,7 @@
 
 <p align="center">
   <a href="https://docs.viewcompose.com/tutorials/getting-started">Get started</a> ·
+  <a href="https://docs.viewcompose.com/ai">AI integration</a> ·
   <a href="./docs/README.md">Documentation</a> ·
   <a href="https://central.sonatype.com/artifact/com.viewcompose/viewcompose-host-android">Maven Central</a> ·
   <a href="https://plugins.jetbrains.com/plugin/33290-viewcompose-preview">Android Studio plugin</a> ·
@@ -147,6 +148,17 @@ See [Publishing](docs/project/publishing.md) for the complete artifact and versi
 
 Module versions are intentionally independent. Depending on a feature does not require adopting
 unrelated ViewCompose modules or moving the entire project on one atomic release train.
+
+## AI integration
+
+ViewCompose exposes a versioned AI Reference, 13 local stdio MCP tools, six standard Agent Skills,
+and executable validation from static checks through compilation, allowlisted Preview rendering,
+and structured comparison. The framework provides facts and evidence; the coding client continues
+to own the model, credentials, conversation, and user-authorized source changes.
+
+The current local distribution has verified project profiles for Codex, Claude Code, and Cursor.
+Follow [AI Integration](./docs/ai/README.md) to build the package, install the Skills, add the
+project MCP configuration, and perform each client's final connection check.
 
 ## ViewCompose Preview for Android Studio
 

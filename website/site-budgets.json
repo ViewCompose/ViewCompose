@@ -1,6 +1,6 @@
 {
   "maxBuildSeconds": 120,
-  "maxNonApiOutputMiB": 46.9,
+  "maxNonApiOutputMiB": 47.1,
   "maxAverageApiVersionMiB": 4.5,
   "maxApiVersionMiB": 24,
   "maxApiRoutingOverheadMiB": 1,

@@ -1,0 +1,8 @@
+{
+  "label": "AI 接入",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "ai/README"
+  }
+}

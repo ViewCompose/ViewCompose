@@ -31,3 +31,20 @@ test('reports constants, duplicate array values, patterns, and additional proper
   assert.ok(violations.some((item) => item.includes('does not match')));
   assert.ok(violations.some((item) => item.includes('unexpected property')));
 });
+
+test('supports allOf and fixed prefixItems contracts', () => {
+  const fixedTupleSchema = {
+    type: 'array',
+    prefixItems: [
+      {type: 'string'},
+      {allOf: [{type: 'number'}, {minimum: 1}]},
+    ],
+    items: false,
+  };
+
+  assert.deepEqual(validateSchemaValue(['profile', 1], fixedTupleSchema), []);
+  assert.ok(validateSchemaValue(['profile', 0], fixedTupleSchema).some((item) =>
+    item.includes('below 1')));
+  assert.ok(validateSchemaValue(['profile', 1, true], fixedTupleSchema).some((item) =>
+    item.includes('outside the accepted prefix')));
+});

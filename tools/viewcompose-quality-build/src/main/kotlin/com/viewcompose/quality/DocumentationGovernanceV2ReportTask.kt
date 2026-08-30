@@ -1599,6 +1599,8 @@ internal object DocumentationGovernanceV2Reporter {
 
     private fun expectedDocumentType(path: String): String? = when {
             path == "docs/README.md" || path == "docs/modules/README.md" -> "project"
+            path.startsWith("docs/ai/") -> "tooling"
+            "/ai/" in path && path.startsWith("website/i18n/") -> "tooling"
             path.startsWith("docs/tutorials/") -> "tutorial"
             "/tutorials/" in path && path.startsWith("website/i18n/") -> "tutorial"
             path.startsWith("docs/guides/") -> "guide"
