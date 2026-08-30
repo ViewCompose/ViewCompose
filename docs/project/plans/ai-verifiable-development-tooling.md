@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze how an accepted regression baseline is supplied and explicitly authorized before binding the internal rollback proposer to any public repair workflow.
+next_action: Implement the frozen authorization validator against complete baseline, candidate, proposal, and exact-reference evidence while keeping repair execution and reviewer trust external.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -126,6 +126,9 @@ strictly better baseline. The real `Hello` regression emits the frozen `Welcome`
 patch passes the typed applier plus all six source-bound gates with zero mismatched pixels. Novel
 repair inference and public CLI/MCP activation remain off until accepted baseline provenance and
 explicit authorization are separately frozen.
+
+That v1 authorization boundary is now frozen with two purpose-bound human attestations and exact
+content-address binding. Its validator and every execution mode remain off.
 
 ## Maven release changesets
 
@@ -2666,6 +2669,49 @@ baseline becomes trusted, that arbitrary localized pixels reveal causality, nove
 perceptual equivalence, or safe unattended repair. The next prerequisite is an explicit contract
 for accepted baseline provenance and human authorization before any CLI/MCP repair workflow can
 bind this internal proposer to the orchestrator.
+
+### Contract evidence — human baseline acceptance and rollback authorization
+
+Screenshot repair authorization v1 freezes the trust handoff that must precede any executable
+repair workflow. One baseline-acceptance attestation binds an identified reviewer and receipt to the
+exact baseline evidence fingerprint, a 40- or 64-hex immutable Git commit, an exact-evidence-only
+scope, and completed visual and semantic review. A separate repair-approval attestation binds an
+identified approver and receipt to the exact current candidate evidence, proposal, and typed change
+fingerprints for one application with unattended execution disabled. The enclosing record also
+binds baseline/current Design IR identities and the canonical exact pixel-reference identity.
+
+The policy denies credentials, provider calls, network access, non-metadata logs, authorization
+reuse, and more than one application. It deliberately treats reviewer trust and pre-application
+revocation as host responsibilities. Receipt values are purpose-bound opaque content addresses,
+not signatures: v1 does not authenticate a person or receipt, decide that a source revision or
+baseline is trustworthy, or turn a successful proposal into authorization. Public repair mode and
+execution authorization both remain false.
+
+The frozen real record accepts baseline evidence
+`ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a` at source revision
+`a2faf25dc206b428936a42b3d0872007371592b3`, approves current evidence
+`e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068`, proposal
+`47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68`, and change
+`7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945`, and binds exact-reference
+fingerprint `43673bdc72302871a3d4106704a2cf17357f0c1a459ee8bf8892749275859064`. Its authorization
+fingerprint is `ba359be06ef055db9ca32d7724dfe256b2d53a44aacbdec0f781d5825343cb46`.
+
+The contract verifier passes 1/1 human-attested record, 10/10 invalid denominators, and 1/1
+cancelled denominator. Invalid classes freeze baseline, candidate, proposal, change, and exact
+pixel-reference lineage drift; movable source revisions; missing reviewers; unattended execution;
+authorization-integrity drift; and credential-shaped fields. Phase 0 now verifies 19 schemas, and
+Node 25.6.0 passes 239/239 AI-tooling tests. The dependency-free package contains 71 files and
+1,891,779 declared bytes; its 339,834-byte archive has SHA-256
+`6a5ad34cf5b9ad18cfda2f10ef365b44ccc3c9b877fddb3d5055e24695953d1e`. Relative to the proposer
+package, the authorization contract adds one file, 5,674 declared bytes (+0.30%), and 882 archive
+bytes (+0.26%), with no runtime dependency or public tool mode.
+
+This is **improved** trust-boundary clarity and exact authorization lineage with **no material
+Android runtime behavior change**. It is a contract, not authenticated identity infrastructure or
+an executable repair grant. The next action is to implement a validator that consumes the complete
+baseline evidence, current evidence, proposal, and authorization record, reproduces every available
+identity and binding, and still leaves receipt trust, revocation, and actual execution with the
+host.
 
 ### Implementation evidence — bounded XML to Design IR
 

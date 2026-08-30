@@ -373,6 +373,16 @@ baseline `Welcome` patch, which then passes the typed applier and all six source
 zero mismatched pixels. This remains an internal verifier capability; no CLI/MCP repair mode is
 activated.
 
+Screenshot repair authorization v1 is contract-frozen before that internal capability can enter an
+execution workflow. It requires two separate purpose-bound attestations: an identified reviewer
+accepts one exact baseline evidence fingerprint at one immutable Git commit after visual and
+semantic review, and an identified approver binds one exact proposal, current evidence, and change
+fingerprint to a single application with unattended execution disabled. The same record also binds
+the canonical pixel-reference identity and denies credentials, provider calls, network access, and
+non-metadata logs. Review receipt values are opaque content addresses; v1 does not authenticate a
+person or receipt, decide whether the baseline is trustworthy, or provide revocation. Those remain
+host responsibilities, so the contract does not activate repair execution by itself.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -388,6 +398,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-pixel-comparison
 npm --prefix tools/ai run verify:phase5-screenshot-repair
 npm --prefix tools/ai run verify:phase5-screenshot-repair-candidate
 npm --prefix tools/ai run verify:phase5-screenshot-repair-proposer
+npm --prefix tools/ai run verify:phase5-screenshot-repair-authorization
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
@@ -399,6 +410,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-repair-proposer
 ./gradlew verifyAiScreenshotRepair
 ./gradlew verifyAiScreenshotRepairCandidate
 ./gradlew verifyAiScreenshotRepairProposer
+./gradlew verifyAiScreenshotRepairAuthorization
 ```
 
 The preferred protocol follows the

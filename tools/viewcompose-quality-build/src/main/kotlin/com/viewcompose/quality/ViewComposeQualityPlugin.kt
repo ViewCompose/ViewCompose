@@ -1103,6 +1103,27 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairAuthorization") {
+            group = "verification"
+            description =
+                "Verifies human baseline acceptance and single-use rollback authorization."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-authorization")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-repair-authorization.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-authorization-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization.json",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/verify-phase5-screenshot-repair-authorization.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

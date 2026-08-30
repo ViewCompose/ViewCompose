@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-repair-authorization",
+  "input": {
+    "baselineEvidenceFingerprint": "ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a",
+    "candidateEvidenceFingerprint": "e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068",
+    "baselineDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "candidateDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+    "pixelReferenceFingerprint": "43673bdc72302871a3d4106704a2cf17357f0c1a459ee8bf8892749275859064",
+    "proposalFingerprint": "47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68",
+    "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945"
+  },
+  "baselineAcceptance": {
+    "mode": "human-baseline-acceptance",
+    "reviewerId": "fixture-baseline-reviewer",
+    "reviewReceipt": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "approvedPurpose": "screenshot-regression-baseline",
+    "approvedEvidenceFingerprint": "ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a",
+    "sourceRevisionKind": "git-commit",
+    "sourceRevision": "a2faf25dc206b428936a42b3d0872007371592b3",
+    "acceptanceScope": "exact-evidence-only",
+    "visualReviewCompleted": true,
+    "semanticReviewCompleted": true
+  },
+  "repairApproval": {
+    "mode": "human-repair-approval",
+    "reviewerId": "fixture-repair-approver",
+    "reviewReceipt": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "approvedPurpose": "apply-screenshot-regression-rollback",
+    "approvedProposalFingerprint": "47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68",
+    "approvedCandidateEvidenceFingerprint": "e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068",
+    "approvedChangeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
+    "applicationCount": 1,
+    "unattendedExecution": false
+  },
+  "policy": {
+    "version": 1,
+    "mode": "single-property-regression-rollback",
+    "baselineTrust": "explicit-human-attestation",
+    "proposalBinding": "exact-content-address",
+    "application": "single-use",
+    "reviewerTrust": "external-host-responsibility",
+    "receiptAuthentication": "not-claimed",
+    "providerCalls": false,
+    "networkAccess": false,
+    "credentialInput": false,
+    "logs": "metadata-only"
+  },
+  "authorizationFingerprint": "ba359be06ef055db9ca32d7724dfe256b2d53a44aacbdec0f781d5825343cb46"
+}

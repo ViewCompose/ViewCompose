@@ -17,6 +17,7 @@
     "screenshotRepair": 2,
     "screenshotRepairCandidateEvidence": 1,
     "screenshotRepairProposal": 1,
+    "screenshotRepairAuthorization": 1,
     "evaluationCorpus": 1,
     "metricContract": 1
   },
