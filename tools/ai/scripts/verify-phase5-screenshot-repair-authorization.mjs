@@ -4,6 +4,13 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {fingerprintRepairValue} from './repair-orchestrator.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
+import {
+  evaluateScreenshotRepairCandidateWithEvidence,
+} from './screenshot-repair-candidate-evaluator.mjs';
+import {
+  validateScreenshotRepairAuthorization,
+} from './screenshot-repair-authorization-validator.mjs';
+import {proposeScreenshotRepair} from './screenshot-repair-proposer.mjs';
 
 const visualRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = resolve(visualRoot, 'screenshot-repair-authorization-contract.json');
@@ -29,9 +36,9 @@ function assertContract(contract, schema) {
       'screenshot-repair-authorization-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-frozen' ||
+    contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
-    contract.activation?.implementation !== false ||
+    contract.activation?.implementation !== true ||
     contract.activation?.executionAuthorized !== false
   ) {
     throw new Error('Screenshot repair authorization activation boundary changed');
@@ -68,7 +75,9 @@ function assertContract(contract, schema) {
     schema.properties?.schemaVersion?.const !== 1 ||
     schema.properties?.repairApproval?.properties?.applicationCount?.const !== 1 ||
     schema.properties?.repairApproval?.properties?.unattendedExecution?.const !== false ||
-    schema.properties?.policy?.properties?.receiptAuthentication?.const !== 'not-claimed'
+    schema.properties?.policy?.properties?.receiptAuthentication?.const !== 'not-claimed' ||
+    schema.$defs?.validationResult?.properties?.policy?.properties?.executionAuthorized?.const !==
+      false
   ) {
     throw new Error('Screenshot repair authorization claim or schema boundary changed');
   }
@@ -106,7 +115,148 @@ function assertAuthorization(authorization, schema, expectedFingerprint) {
   }
 }
 
-export async function verifyPhase5ScreenshotRepairAuthorization() {
+function resealAuthorization(value) {
+  const result = structuredClone(value);
+  delete result.authorizationFingerprint;
+  result.authorizationFingerprint = fingerprintRepairValue(result);
+  return result;
+}
+
+function mutateAuthorization(authorization, mutation) {
+  const changed = structuredClone(authorization);
+  const other = 'f'.repeat(64);
+  if (mutation === 'baseline-evidence-mismatch') {
+    changed.input.baselineEvidenceFingerprint = other;
+    changed.baselineAcceptance.approvedEvidenceFingerprint = other;
+  } else if (mutation === 'candidate-evidence-mismatch') {
+    changed.input.candidateEvidenceFingerprint = other;
+    changed.repairApproval.approvedCandidateEvidenceFingerprint = other;
+  } else if (mutation === 'proposal-mismatch') {
+    changed.input.proposalFingerprint = other;
+    changed.repairApproval.approvedProposalFingerprint = other;
+  } else if (mutation === 'change-mismatch') {
+    changed.input.changeFingerprint = other;
+    changed.repairApproval.approvedChangeFingerprint = other;
+  } else if (mutation === 'pixel-reference-mismatch') {
+    changed.input.pixelReferenceFingerprint = other;
+  } else if (mutation === 'movable-source-revision') {
+    changed.baselineAcceptance.sourceRevision = 'main';
+  } else if (mutation === 'missing-reviewer') {
+    delete changed.baselineAcceptance.reviewerId;
+  } else if (mutation === 'unattended-execution') {
+    changed.repairApproval.unattendedExecution = true;
+  } else if (mutation === 'changed-authorization-fingerprint') {
+    changed.authorizationFingerprint = other;
+    return changed;
+  } else if (mutation === 'credential-shaped-field') {
+    changed.apiKey = 'forbidden-not-a-real-secret';
+  } else {
+    throw new Error(`Unknown authorization mutation: ${mutation}`);
+  }
+  return resealAuthorization(changed);
+}
+
+async function verifyRealAuthorization(contract, schema, authorization) {
+  const repairContract = await readJson(resolve(visualRoot, 'screenshot-repair-contract.json'));
+  const fixtures = repairContract.candidateEvaluatorFixtures;
+  const [resolutionResult, generationRequest, previewRequest, referenceRequest, referenceResult] =
+    await Promise.all([
+      fixtures.resolutionResult,
+      fixtures.generationRequest,
+      fixtures.previewRequest,
+      fixtures.pixelReferenceRequest,
+      fixtures.pixelReferenceResult,
+    ].map((path) => readJson(resolve(visualRoot, path))));
+  const patch = await readJson(resolve(
+    visualRoot,
+    fixtures.cases.find((item) => item.id === 'title-text-pixel-mismatch').patch,
+  ));
+  const input = {
+    resolutionResult,
+    generationRequest,
+    previewBindings: previewRequest.bindings,
+    pixelReference: {request: referenceRequest, result: referenceResult},
+  };
+  const limits = {maxSourceBytes: 262144, timeoutMs: 120000, maxOutputBytes: 1048576};
+  const baseline = await evaluateScreenshotRepairCandidateWithEvidence(input, {
+    requestId: 'verify-screenshot-authorization-baseline',
+    limits,
+  });
+  const candidate = await evaluateScreenshotRepairCandidateWithEvidence({...input, patch}, {
+    requestId: 'verify-screenshot-authorization-candidate',
+    limits,
+  });
+  const proposal = await proposeScreenshotRepair({
+    baselineEvidence: baseline.evidence,
+    candidateEvidence: candidate.evidence,
+  });
+  const arguments_ = {
+    baselineEvidence: baseline.evidence,
+    candidateEvidence: candidate.evidence,
+    proposal,
+    authorization,
+  };
+  const validated = await validateScreenshotRepairAuthorization(arguments_);
+  const fixture = contract.supportedFixtures[0];
+  if (
+    validateSchemaValue(validated, schema.$defs.validationResult, schema).length > 0 ||
+    validated.status !== 'validated' ||
+    validated.reason !== 'exact-attestation-bindings' ||
+    validated.policy.executionAuthorized !== false ||
+    validated.validationFingerprint !== fixture.expectedValidationFingerprint
+  ) {
+    throw new Error(
+      'Real screenshot repair authorization validation changed: ' + JSON.stringify({
+        status: validated.status,
+        reason: validated.reason,
+        input: validated.input,
+        proposal: {status: proposal.status, reason: proposal.reason},
+        baselineGates: baseline.evaluation.gates,
+        baselineDiagnostics: baseline.evidence?.diagnostics,
+        candidateGates: candidate.evaluation.gates,
+        candidateDiagnostics: candidate.evidence?.diagnostics,
+        validationFingerprint: validated.validationFingerprint,
+      }),
+    );
+  }
+  const invalidCodes = [];
+  for (const denominator of contract.invalidFixtures) {
+    const result = await validateScreenshotRepairAuthorization({
+      ...arguments_,
+      authorization: mutateAuthorization(authorization, denominator.mutation),
+    });
+    if (
+      result.status !== 'invalid' ||
+      result.diagnostics.length !== 1 ||
+      result.diagnostics[0].code !== denominator.expectedCode ||
+      result.policy.executionAuthorized !== false
+    ) {
+      throw new Error(`Authorization denominator changed: ${denominator.mutation}`);
+    }
+    invalidCodes.push(result.diagnostics[0].code);
+  }
+  const controller = new AbortController();
+  controller.abort();
+  const cancelled = await validateScreenshotRepairAuthorization(arguments_, {
+    signal: controller.signal,
+  });
+  if (
+    cancelled.status !== 'cancelled' ||
+    cancelled.diagnostics[0]?.code !== contract.cancelledFixtures[0].expectedCode ||
+    cancelled.policy.executionAuthorized !== false
+  ) {
+    throw new Error('Screenshot repair authorization cancellation changed');
+  }
+  return {
+    evaluatedCandidates: 2,
+    validatedAttestations: 1,
+    invalidAttestations: invalidCodes.length,
+    cancelledAttestations: 1,
+    validationFingerprint: validated.validationFingerprint,
+  };
+}
+
+export async function verifyPhase5ScreenshotRepairAuthorization({evaluateReal = true} = {}) {
   const [contract, schema] = await Promise.all([readJson(contractPath), readJson(schemaPath)]);
   assertContract(contract, schema);
   if (
@@ -128,12 +278,14 @@ export async function verifyPhase5ScreenshotRepairAuthorization() {
   ) {
     throw new Error('Screenshot repair authorization fail-closed classifications changed');
   }
+  const real = evaluateReal ? await verifyRealAuthorization(contract, schema, authorization) : null;
   return {
-    implementation: false,
+    implementation: true,
     authorizedFixtures: 1,
     invalidDenominators: 10,
     cancelledDenominators: 1,
     authorizationFingerprint: authorization.authorizationFingerprint,
+    real,
   };
 }
 
@@ -143,7 +295,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(
         `Verified screenshot repair authorization contract: ${summary.authorizedFixtures}/1 ` +
           `human-attested authorization, ${summary.invalidDenominators}/10 invalid, and ` +
-          `${summary.cancelledDenominators}/1 cancelled denominators; implementation remains off.`,
+          `${summary.cancelledDenominators}/1 cancelled denominators; real validation reproduced ` +
+          `${summary.real.invalidAttestations}/10 fail-closed outcomes with execution disabled.`,
       );
     })
     .catch((error) => {

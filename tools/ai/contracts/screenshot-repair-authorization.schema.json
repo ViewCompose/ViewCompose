@@ -125,6 +125,125 @@
     "authorizationFingerprint": {"$ref": "#/$defs/sha256"}
   },
   "$defs": {
+    "validationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "status",
+        "reason",
+        "policy",
+        "input",
+        "authorization",
+        "diagnostics",
+        "validationFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "status": {"enum": ["validated", "invalid", "cancelled"]},
+        "reason": {
+          "enum": [
+            "exact-attestation-bindings",
+            "input-invalid",
+            "integrity-mismatch",
+            "lineage-mismatch",
+            "proposal-not-eligible",
+            "cancelled"
+          ]
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "validation",
+            "executionAuthorized",
+            "reviewerTrust",
+            "receiptAuthentication",
+            "providerCalls",
+            "networkAccess"
+          ],
+          "properties": {
+            "version": {"const": 1},
+            "validation": {"const": "exact-content-address-only"},
+            "executionAuthorized": {"const": false},
+            "reviewerTrust": {"const": "external-host-responsibility"},
+            "receiptAuthentication": {"const": "not-claimed"},
+            "providerCalls": {"const": false},
+            "networkAccess": {"const": false}
+          }
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baselineEvidenceFingerprint",
+            "candidateEvidenceFingerprint",
+            "proposalFingerprint",
+            "authorizationFingerprint"
+          ],
+          "properties": {
+            "baselineEvidenceFingerprint": {"$ref": "#/$defs/nullableSha256"},
+            "candidateEvidenceFingerprint": {"$ref": "#/$defs/nullableSha256"},
+            "proposalFingerprint": {"$ref": "#/$defs/nullableSha256"},
+            "authorizationFingerprint": {"$ref": "#/$defs/nullableSha256"}
+          }
+        },
+        "authorization": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "baselineReviewerId",
+                "baselineReviewReceipt",
+                "sourceRevision",
+                "repairReviewerId",
+                "repairReviewReceipt",
+                "applicationCount",
+                "unattendedExecution"
+              ],
+              "properties": {
+                "baselineReviewerId": {"$ref": "#/$defs/stableId"},
+                "baselineReviewReceipt": {"$ref": "#/$defs/sha256"},
+                "sourceRevision": {"$ref": "#/$defs/gitRevision"},
+                "repairReviewerId": {"$ref": "#/$defs/stableId"},
+                "repairReviewReceipt": {"$ref": "#/$defs/sha256"},
+                "applicationCount": {"const": 1},
+                "unattendedExecution": {"const": false}
+              }
+            }
+          ]
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "validationFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^VC-AI-REPAIR-AUTHORIZATION-[A-Z0-9-]+$"
+        },
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "nullableSha256": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/sha256"}
+      ]
+    },
     "stableId": {
       "type": "string",
       "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"

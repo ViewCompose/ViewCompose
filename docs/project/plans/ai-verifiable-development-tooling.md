@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen authorization validator against complete baseline, candidate, proposal, and exact-reference evidence while keeping repair execution and reviewer trust external.
+next_action: Freeze the host-owned receipt-authentication, revocation, and single-use consumption interface required before a validated attestation may become an executable repair grant.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -128,7 +128,8 @@ repair inference and public CLI/MCP activation remain off until accepted baselin
 explicit authorization are separately frozen.
 
 That v1 authorization boundary is now frozen with two purpose-bound human attestations and exact
-content-address binding. Its validator and every execution mode remain off.
+content-address binding. Its internal validator now reproduces all available evidence and proposal
+bindings while fixing `executionAuthorized` to false; every execution mode remains off.
 
 ## Maven release changesets
 
@@ -2707,11 +2708,47 @@ package, the authorization contract adds one file, 5,674 declared bytes (+0.30%)
 bytes (+0.26%), with no runtime dependency or public tool mode.
 
 This is **improved** trust-boundary clarity and exact authorization lineage with **no material
-Android runtime behavior change**. It is a contract, not authenticated identity infrastructure or
-an executable repair grant. The next action is to implement a validator that consumes the complete
-baseline evidence, current evidence, proposal, and authorization record, reproduces every available
-identity and binding, and still leaves receipt trust, revocation, and actual execution with the
-host.
+Android runtime behavior change**. At the contract-only boundary it was not authenticated identity
+infrastructure or an executable repair grant; the implementation below closes deterministic
+validation while deliberately leaving both limitations in place.
+
+### Implementation evidence — exact repair authorization validation
+
+The packaged internal validator now consumes the complete baseline evidence, current evidence,
+proposal, and authorization record. It validates the authorization and proposal schemas, byte
+ceiling, typed patch, canonical fingerprints, immutable source-revision syntax, and distinct
+purpose-bound receipts. It then re-runs the bounded proposer over the supplied evidence. Only an
+exactly reproduced proposal may proceed to binding checks for baseline/current evidence, their
+Design IR identities, canonical exact-reference identity, proposal, typed change, both reviewer
+attestations, single-application limit, and unattended-execution denial.
+
+The result is separately content-addressed and distinguishes `validated`, `invalid`, and
+`cancelled`. Even a validated result carries `executionAuthorized: false`, external reviewer trust,
+and unclaimed receipt authentication. The validator never applies the patch, contacts a provider or
+network, accepts credentials, authenticates a person, checks host revocation state, or consumes an
+authorization. Thus deterministic structural validation cannot silently become an execution grant.
+
+The real source-bound gate evaluates the exact baseline and `Hello` regression, reproduces proposal
+`47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68`, validates authorization
+`ba359be06ef055db9ca32d7724dfe256b2d53a44aacbdec0f781d5825343cb46`, and emits validation
+fingerprint `8c60e3e4ffc772f44df9e7408b4fd21ba0bd578cfb537558f57d0626594db957` with execution disabled.
+The same run executes all 10 invalid mutations and one pre-validation cancellation: evidence,
+proposal, change, and pixel-reference drift stay distinct from schema and authorization-integrity
+failures.
+
+Node 25.6.0 passes 243/243 AI-tooling tests, including deterministic validation replay, schema-valid
+result identity, integrity versus lineage classification, ineligible proposal rejection, and
+cancellation before proposal reproduction. Phase 0 remains at 19 schemas. The dependency-free
+offline package now contains 72 files and 1,904,153 declared bytes; its 341,652-byte archive has
+SHA-256 `5d155668d634a10da8a18cd843e5146f321c710043492c405edd82b1a4b3c649`. Relative to the
+contract package, the validator adds one file, 12,374 declared bytes (+0.65%), and 1,818 archive
+bytes (+0.53%), with no runtime dependency or public tool mode.
+
+This is **improved** authorization integrity, proposal reproducibility, and claim separation with
+**no material Android runtime behavior change**. Reviewer authentication, receipt revocation,
+cross-process single-use consumption, patch execution, and public CLI/MCP activation remain
+unclaimed. The next prerequisite is to freeze the host interface that would authenticate and
+consume a validated attestation exactly once before any executable repair grant can exist.
 
 ### Implementation evidence — bounded XML to Design IR
 
