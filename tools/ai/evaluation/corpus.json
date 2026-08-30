@@ -202,6 +202,23 @@
       "metricIds": ["workflow.contract-completeness"]
     },
     {
+      "id": "client-integration.common-agent-profiles",
+      "phase": 3,
+      "category": "protocol",
+      "input": {
+        "kind": "fixture",
+        "fixture": "../contracts/examples/agent-client-integration.json"
+      },
+      "expected": {
+        "outcome": "pass",
+        "evidenceLevel": "static"
+      },
+      "metricIds": [
+        "client-integration.profile-completeness",
+        "client-integration.skill-byte-parity"
+      ]
+    },
+    {
       "id": "distribution.local-offline-package",
       "phase": 3,
       "category": "packaging",

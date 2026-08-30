@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze and implement a content-addressed applied-result handoff that retains and revalidates the exact in-memory Design IR only after a committed terminal receipt, while keeping application source writes and public activation disabled.
+next_action: Implement the frozen Codex, Claude Code, and Cursor onboarding profiles, project-scoped Agent Skill installation, installed-package verification, and bilingual public setup route before returning to the applied-result handoff.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -178,6 +178,32 @@ direct trusted-host callback. Production host integration, persistent source out
 result storage, and public activation remain off. A local file-backed reference store now durably
 publishes private terminal receipts, returns identical writes idempotently, rejects conflicts
 without overwrite, and reopens receipts for read-only reconciliation without patch re-execution.
+
+## Contract freeze — common AI agent onboarding v1
+
+The next foundation slice interrupts the deeper screenshot-repair handoff because the accepted
+MCP and Agent Skills distribution is protocol-neutral but has no supported consumer setup route.
+The first onboarding contract is limited to Codex, Claude Code, and Cursor. Their current official
+documentation accepts local STDIO MCP servers and standard `SKILL.md` workflows, but each client
+uses a different project configuration or Skill discovery path.
+
+`agent-client-integration-v1` freezes three ordered profiles, exact official documentation sources,
+project-scoped MCP configuration paths, standard Skill roots, invocation prefixes, verification
+actions, the current package identity, and both supported protocol versions. One installed
+`viewcompose-agent` executable will generate deterministic configuration without editing a client
+file and will copy the six canonical Skills only into an explicit absolute consumer-project root.
+Existing different Skill bytes, symbolic-link boundaries, implicit home-directory installation,
+and unknown clients fail closed. The package continues to open no network connection and does not
+configure, authenticate, or launch a proprietary client.
+
+Acceptance requires 3/3 schema-valid deterministic profiles, exact installed Skill bytes for all
+three layouts, idempotent reinstall, conflict and path-safety rejection, two reproducible package
+builds, offline installation and uninstallation, and both frozen MCP handshakes from the installed
+server. CI does not authenticate or automate proprietary client binaries, so the public matrix
+must describe this as configuration and protocol evidence rather than vendor end-to-end
+certification. A bilingual tooling page and both project READMEs must expose the complete setup and
+client-owned final connection checks. The previously planned content-addressed applied-result
+handoff resumes only after this missing consumer foundation is accepted.
 
 ## Maven release changesets
 

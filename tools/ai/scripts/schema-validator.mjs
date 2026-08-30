@@ -53,6 +53,9 @@ export function validateSchemaValue(value, schema, rootSchema = schema, path = '
   }
 
   const violations = [];
+  for (const candidate of schema.allOf ?? []) {
+    violations.push(...validateSchemaValue(value, candidate, rootSchema, path));
+  }
   if (schema.type && !typeMatches(value, schema.type)) {
     return [`${path}: expected ${schema.type}, found ${Array.isArray(value) ? 'array' : typeof value}`];
   }
@@ -97,8 +100,19 @@ export function validateSchemaValue(value, schema, rootSchema = schema, path = '
         violations.push(`${path}: array items must be unique`);
       }
     }
-    if (schema.items) {
-      value.forEach((item, index) => {
+    const prefixLength = schema.prefixItems?.length ?? 0;
+    schema.prefixItems?.forEach((itemSchema, index) => {
+      if (index < value.length) {
+        violations.push(
+          ...validateSchemaValue(value[index], itemSchema, rootSchema, `${path}[${index}]`),
+        );
+      }
+    });
+    if (schema.items === false && value.length > prefixLength) {
+      violations.push(`${path}: array has items outside the accepted prefix`);
+    } else if (schema.items && schema.items !== true) {
+      value.slice(prefixLength).forEach((item, offset) => {
+        const index = prefixLength + offset;
         violations.push(...validateSchemaValue(item, schema.items, rootSchema, `${path}[${index}]`));
       });
     }

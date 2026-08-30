@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewcompose.com/schemas/ai/agent-client-integration-v1.schema.json",
+  "title": "ViewCompose AI agent client integration contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "profileSetId",
+    "lastVerified",
+    "package",
+    "evidence",
+    "clients"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "profileSetId": {"const": "viewcompose-agent-clients-v1"},
+    "lastVerified": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "transport",
+        "mcpExecutable",
+        "clientExecutable",
+        "sourceRootVariable"
+      ],
+      "properties": {
+        "name": {"const": "@viewcompose/ai-tooling"},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "transport": {"const": "stdio"},
+        "mcpExecutable": {"const": "viewcompose-mcp"},
+        "clientExecutable": {"const": "viewcompose-agent"},
+        "sourceRootVariable": {"const": "VIEWCOMPOSE_SOURCE_ROOT"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "officialConfigurationReviewed",
+        "deterministicProfileCount",
+        "protocolVersions",
+        "vendorBinaryAutomation",
+        "limitation"
+      ],
+      "properties": {
+        "officialConfigurationReviewed": {"const": true},
+        "deterministicProfileCount": {"const": 3},
+        "protocolVersions": {
+          "type": "array",
+          "prefixItems": [
+            {"const": "2026-07-28"},
+            {"const": "2025-11-25"}
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "vendorBinaryAutomation": {"const": false},
+        "limitation": {"type": "string", "minLength": 40, "maxLength": 400}
+      }
+    },
+    "clients": {
+      "type": "array",
+      "prefixItems": [
+        {"$ref": "#/$defs/codex"},
+        {"$ref": "#/$defs/claudeCode"},
+        {"$ref": "#/$defs/cursor"}
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  },
+  "$defs": {
+    "documentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mcp", "skills"],
+      "properties": {
+        "mcp": {"type": "string", "format": "uri", "pattern": "^https://"},
+        "skills": {"type": "string", "format": "uri", "pattern": "^https://"}
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "projectPath", "generatorArguments", "verification"],
+      "properties": {
+        "format": {"enum": ["json", "toml"]},
+        "projectPath": {
+          "type": "string",
+          "pattern": "^(\\.codex/config\\.toml|\\.mcp\\.json|\\.cursor/mcp\\.json)$"
+        },
+        "generatorArguments": {
+          "type": "array",
+          "prefixItems": [
+            {"const": "config"},
+            {"const": "--client"},
+            {"enum": ["codex", "claude-code", "cursor"]},
+            {"const": "--source-root"},
+            {"const": "<absolute-viewcompose-source-root>"}
+          ],
+          "items": false,
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "verification": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 2, "maxLength": 80},
+          "minItems": 2,
+          "maxItems": 3,
+          "uniqueItems": true
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["standard", "projectPath", "installArguments", "invocationPrefix"],
+      "properties": {
+        "standard": {"const": "agent-skills"},
+        "projectPath": {
+          "enum": [".agents/skills", ".claude/skills"]
+        },
+        "installArguments": {
+          "type": "array",
+          "prefixItems": [
+            {"const": "install-skills"},
+            {"const": "--client"},
+            {"enum": ["codex", "claude-code", "cursor"]},
+            {"const": "--project-root"},
+            {"const": "<absolute-consumer-project-root>"}
+          ],
+          "items": false,
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "invocationPrefix": {"enum": ["$", "/"]}
+      }
+    },
+    "clientBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "config", "skills", "officialDocumentation"],
+      "properties": {
+        "id": {"enum": ["codex", "claude-code", "cursor"]},
+        "displayName": {"enum": ["Codex", "Claude Code", "Cursor"]},
+        "config": {"$ref": "#/$defs/config"},
+        "skills": {"$ref": "#/$defs/skills"},
+        "officialDocumentation": {"$ref": "#/$defs/documentation"}
+      }
+    },
+    "codex": {
+      "allOf": [
+        {"$ref": "#/$defs/clientBase"},
+        {
+          "properties": {
+            "id": {"const": "codex"},
+            "displayName": {"const": "Codex"}
+          }
+        }
+      ]
+    },
+    "claudeCode": {
+      "allOf": [
+        {"$ref": "#/$defs/clientBase"},
+        {
+          "properties": {
+            "id": {"const": "claude-code"},
+            "displayName": {"const": "Claude Code"}
+          }
+        }
+      ]
+    },
+    "cursor": {
+      "allOf": [
+        {"$ref": "#/$defs/clientBase"},
+        {
+          "properties": {
+            "id": {"const": "cursor"},
+            "displayName": {"const": "Cursor"}
+          }
+        }
+      ]
+    }
+  }
+}

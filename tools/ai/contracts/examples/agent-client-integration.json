@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "profileSetId": "viewcompose-agent-clients-v1",
+  "lastVerified": "2026-08-30",
+  "package": {
+    "name": "@viewcompose/ai-tooling",
+    "version": "0.1.0",
+    "transport": "stdio",
+    "mcpExecutable": "viewcompose-mcp",
+    "clientExecutable": "viewcompose-agent",
+    "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT"
+  },
+  "evidence": {
+    "officialConfigurationReviewed": true,
+    "deterministicProfileCount": 3,
+    "protocolVersions": ["2026-07-28", "2025-11-25"],
+    "vendorBinaryAutomation": false,
+    "limitation": "CI validates generated configuration, installed Skill bytes, and both frozen MCP protocol handshakes; it does not authenticate or automate proprietary client binaries."
+  },
+  "clients": [
+    {
+      "id": "codex",
+      "displayName": "Codex",
+      "config": {
+        "format": "toml",
+        "projectPath": ".codex/config.toml",
+        "generatorArguments": [
+          "config",
+          "--client",
+          "codex",
+          "--source-root",
+          "<absolute-viewcompose-source-root>"
+        ],
+        "verification": ["codex mcp list", "/mcp", "/skills"]
+      },
+      "skills": {
+        "standard": "agent-skills",
+        "projectPath": ".agents/skills",
+        "installArguments": [
+          "install-skills",
+          "--client",
+          "codex",
+          "--project-root",
+          "<absolute-consumer-project-root>"
+        ],
+        "invocationPrefix": "$"
+      },
+      "officialDocumentation": {
+        "mcp": "https://developers.openai.com/codex/mcp/",
+        "skills": "https://learn.chatgpt.com/docs/build-skills"
+      }
+    },
+    {
+      "id": "claude-code",
+      "displayName": "Claude Code",
+      "config": {
+        "format": "json",
+        "projectPath": ".mcp.json",
+        "generatorArguments": [
+          "config",
+          "--client",
+          "claude-code",
+          "--source-root",
+          "<absolute-viewcompose-source-root>"
+        ],
+        "verification": ["claude mcp list", "claude mcp get viewcompose", "/mcp"]
+      },
+      "skills": {
+        "standard": "agent-skills",
+        "projectPath": ".claude/skills",
+        "installArguments": [
+          "install-skills",
+          "--client",
+          "claude-code",
+          "--project-root",
+          "<absolute-consumer-project-root>"
+        ],
+        "invocationPrefix": "/"
+      },
+      "officialDocumentation": {
+        "mcp": "https://code.claude.com/docs/en/mcp",
+        "skills": "https://code.claude.com/docs/en/skills"
+      }
+    },
+    {
+      "id": "cursor",
+      "displayName": "Cursor",
+      "config": {
+        "format": "json",
+        "projectPath": ".cursor/mcp.json",
+        "generatorArguments": [
+          "config",
+          "--client",
+          "cursor",
+          "--source-root",
+          "<absolute-viewcompose-source-root>"
+        ],
+        "verification": ["Cursor Settings > Tools & MCP", "Agent > Available Tools"]
+      },
+      "skills": {
+        "standard": "agent-skills",
+        "projectPath": ".agents/skills",
+        "installArguments": [
+          "install-skills",
+          "--client",
+          "cursor",
+          "--project-root",
+          "<absolute-consumer-project-root>"
+        ],
+        "invocationPrefix": "/"
+      },
+      "officialDocumentation": {
+        "mcp": "https://docs.cursor.com/context/model-context-protocol",
+        "skills": "https://cursor.com/docs/skills"
+      }
+    }
+  ]
+}
