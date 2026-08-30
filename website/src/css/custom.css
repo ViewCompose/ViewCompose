@@ -29,7 +29,12 @@
   --ifm-footer-background-color: #11130f;
 }
 
-.navbar {
+.navbar::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
 

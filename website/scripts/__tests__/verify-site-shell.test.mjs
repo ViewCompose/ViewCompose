@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {analyzeSiteShellPages} from '../verify-site-shell.mjs';
+import {
+  analyzeSiteShellPages,
+  analyzeSiteShellStyles,
+} from '../verify-site-shell.mjs';
 
 const homepage = (themeStorageKey, body = '<main>Documentation</main>') => `
 <!doctype html>
@@ -59,4 +62,25 @@ test('rejects a locale-prefixed social card URL', () => {
 
   assert.equal(result.violations.length, 1);
   assert.match(result.violations[0], /social card must use/u);
+});
+
+test('rejects navbar styles that confine the fixed mobile sidebar', () => {
+  const violations = analyzeSiteShellStyles({
+    'assets/css/styles.css': '.navbar { backdrop-filter: blur(16px); }',
+  });
+
+  assert.equal(violations.length, 1);
+  assert.match(violations[0], /\.navbar must not set backdrop-filter/u);
+});
+
+test('allows visual effects on a navbar pseudo-element', () => {
+  const violations = analyzeSiteShellStyles({
+    'assets/css/styles.css': [
+      '.navbar::before { backdrop-filter: blur(16px); }',
+      '.navbar:before{-webkit-backdrop-filter:blur(16px)}',
+      '.navbar__inner { transform: translateZ(0); }',
+    ].join('\n'),
+  });
+
+  assert.deepEqual(violations, []);
 });
