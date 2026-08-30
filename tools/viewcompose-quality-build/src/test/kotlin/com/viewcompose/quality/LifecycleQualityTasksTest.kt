@@ -76,6 +76,7 @@ class LifecycleQualityTasksTest {
                 "verifyAiConsumerWorkflows",
                 "verifyAiAgentClients",
                 "verifyAiDistribution",
+                "verifyAiToolingRelease",
                 "verifyAiDesignIr",
                 "verifyAiXmlProjectContext",
                 "verifyAiXmlLayoutDependencies",

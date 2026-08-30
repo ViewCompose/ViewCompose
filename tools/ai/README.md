@@ -533,35 +533,48 @@ entrypoint limit.
 
 ## Common AI agent onboarding
 
-The local package exposes one client-neutral onboarding command for Codex, Claude Code, and Cursor.
-After installing the distribution, generate the project configuration fragment without editing a
-client file:
+The package exposes one client-neutral lifecycle command for Codex, Claude Code, and Cursor. The
+primary consumer path is one transactional project operation:
 
 ```bash
-viewcompose-agent config --client <codex|claude-code|cursor> \
-  --source-root <physical-absolute-viewcompose-source-root>
-```
-
-Merge the output into `.codex/config.toml`, `.mcp.json`, or `.cursor/mcp.json` as reported by the
-selected profile. Install the six canonical `SKILL.md` workflows into an explicit consumer project:
-
-```bash
-viewcompose-agent install-skills --client <codex|claude-code|cursor> \
+viewcompose-agent init --client <codex|claude-code|cursor> \
   --project-root <physical-absolute-consumer-project-root>
 ```
 
-Codex and Cursor use `.agents/skills`; Claude Code uses `.claude/skills`. Installation is
-idempotent only for exact canonical bytes and refuses conflicts, relative roots, symbolic-link
-boundaries, unknown clients, home-directory inference, and implicit file replacement. The command
-does not configure, authenticate, or launch a proprietary client and opens no network connection.
-Run its dedicated gate with:
+`init` merges only the `viewcompose` MCP entry into `.codex/config.toml`, `.mcp.json`, or
+`.cursor/mcp.json` and copies the six exact canonical `SKILL.md` files. Codex and Cursor use
+`.agents/skills`; Claude Code uses `.claude/skills`. All configuration and Skill surfaces are
+preflighted before writes; atomic configuration replacement and Skill rollback prevent a partial
+install. Existing unrelated JSON/TOML content is preserved. Exact reinitialization is idempotent,
+while invalid JSON, conflicting MCP definitions or Skill bytes, relative roots, symbolic-link
+boundaries, unknown clients, and implicit home-directory selection fail closed.
+
+Inspect the installed state and its honest capability boundary with:
+
+```bash
+viewcompose-agent doctor --client <codex|claude-code|cursor> \
+  --project-root <physical-absolute-consumer-project-root>
+```
+
+The default result is `standalone-ready`; it marks knowledge and generation ready while compilation,
+Preview, and layout diagnosis remain `source-root-required`. A contributor can request the existing
+current-source enhancement explicitly with `init ... --source-root <physical-checkout>`. The
+standalone MCP configuration contains no `VIEWCOMPOSE_SOURCE_ROOT` entry and the installed package
+does not infer a source checkout from parent directories.
+
+`uninstall` removes only an exact package-owned MCP definition and exact canonical Skill bytes. It
+preserves unrelated configuration and fails closed after user edits. `config` and `install-skills`
+remain lower-level compatibility commands; they are not the public quick-start path. None of these
+commands authenticates or launches a proprietary client or opens a network connection.
+
+Run the dedicated gate with:
 
 ```bash
 npm --prefix tools/ai run verify:phase3-agent-clients
 ./gradlew verifyAiAgentClients
 ```
 
-## Local distribution
+## Release distribution
 
 Build the dependency-free npm tarball and its deterministic sidecars with:
 
@@ -582,6 +595,14 @@ MCP protocol versions with:
 ```bash
 JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase3-distribution
 ./gradlew verifyAiDistribution
+./gradlew verifyAiToolingRelease
+```
+
+The public consumer installs the pinned GitHub asset directly, without a checkout or build:
+
+```bash
+npm install --global --ignore-scripts \
+  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.1.0/viewcompose-ai-tooling-0.1.0.tgz
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
@@ -607,10 +628,28 @@ revision to be present in that checkout's Git ancestry and rejects missing wrapp
 symbolic-link replacements, and mismatched history before Gradle. The package never searches
 arbitrary parent directories or silently converts static evidence into compiled/rendered evidence.
 
-The checked-in package is a local artifact rather than an npm-registry publication. `SHA256SUMS` is
-an unsigned integrity record; artifact signing and public-registry release policy remain Phase 6
-operations work. The package layout follows npm's local tarball installation contract, and its SBOM
-uses the [SPDX 2.3 specification](https://spdx.github.io/spdx-spec/v2.3/).
+Tags matching `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
+the tag against the frozen release contract, repeats the complete distribution gate from a clean
+checkout, refuses an existing Release, creates GitHub build-provenance attestations for the exact
+tarball, manifest, and checksum list, and then publishes those three assets. It never publishes a
+mutable `latest` selector and requires no npm-registry account. The package layout follows npm's
+tarball installation contract, and its SBOM uses the
+[SPDX 2.3 specification](https://spdx.github.io/spdx-spec/v2.3/).
+
+### Release-gate acceptance evidence
+
+On 2026-08-30, the first cold `prepareAiPreviewLane` run changed from 0/1 successful executions
+(missing producer JAR) to 1/1 after declaring the exact transformed classpath inputs: 184 tasks,
+170 executed, 14 up-to-date, and 23 seconds. That is a `+100` percentage-point normalized cold-start
+change and is **improved**. The subsequent complete release gate passed 186 tasks (3 executed and
+183 up-to-date) in 3 minutes 28 seconds. It reproduced 2/2 packages, completed 1/1 isolated offline
+install/uninstall lifecycle, verified 3/3 installed Agent profiles and 18/18 Skill copies, exercised
+2/2 MCP protocol versions, and retained compile, Preview, layout, screenshot, and XML evidence.
+
+The first result measures a local macOS cold producer graph; the complete gate reused those newly
+built Android artifacts, so neither number predicts a hosted Linux runner's uncached duration.
+Conclusion: **improved** cold release readiness with no material runtime behavior change. Next
+action: require the tag-triggered Linux workflow and verify the published Release attestations.
 
 ## Version lanes
 

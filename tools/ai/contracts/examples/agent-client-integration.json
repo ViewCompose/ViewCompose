@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "profileSetId": "viewcompose-agent-clients-v1",
+  "schemaVersion": 2,
+  "profileSetId": "viewcompose-agent-clients-v2",
   "lastVerified": "2026-08-30",
   "package": {
     "name": "@viewcompose/ai-tooling",
@@ -13,9 +13,13 @@
   "evidence": {
     "officialConfigurationReviewed": true,
     "deterministicProfileCount": 3,
+    "sourceFreeStandaloneProfiles": 3,
+    "maxPrimaryCommands": 2,
+    "manualConfigurationEdits": 0,
+    "transactionalProjectWrites": true,
     "protocolVersions": ["2026-07-28", "2025-11-25"],
     "vendorBinaryAutomation": false,
-    "limitation": "CI validates generated configuration, installed Skill bytes, and both frozen MCP protocol handshakes; it does not authenticate or automate proprietary client binaries."
+    "limitation": "CI validates generated configuration, transactional lifecycle behavior, exact Skill bytes, and both frozen MCP protocol handshakes; it does not authenticate or automate proprietary client binaries."
   },
   "clients": [
     {
@@ -24,26 +28,15 @@
       "config": {
         "format": "toml",
         "projectPath": ".codex/config.toml",
-        "generatorArguments": [
-          "config",
-          "--client",
-          "codex",
-          "--source-root",
-          "<absolute-viewcompose-source-root>"
-        ],
+        "standaloneArguments": ["config", "--client", "codex"],
+        "sourceBoundArguments": ["config", "--client", "codex", "--source-root", "<absolute-viewcompose-source-root>"],
         "verification": ["codex mcp list", "/mcp", "/skills"]
       },
-      "skills": {
-        "standard": "agent-skills",
-        "projectPath": ".agents/skills",
-        "installArguments": [
-          "install-skills",
-          "--client",
-          "codex",
-          "--project-root",
-          "<absolute-consumer-project-root>"
-        ],
-        "invocationPrefix": "$"
+      "skills": {"standard": "agent-skills", "projectPath": ".agents/skills", "invocationPrefix": "$"},
+      "lifecycle": {
+        "initArguments": ["init", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
+        "doctorArguments": ["doctor", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
+        "uninstallArguments": ["uninstall", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"]
       },
       "officialDocumentation": {
         "mcp": "https://developers.openai.com/codex/mcp/",
@@ -56,26 +49,15 @@
       "config": {
         "format": "json",
         "projectPath": ".mcp.json",
-        "generatorArguments": [
-          "config",
-          "--client",
-          "claude-code",
-          "--source-root",
-          "<absolute-viewcompose-source-root>"
-        ],
+        "standaloneArguments": ["config", "--client", "claude-code"],
+        "sourceBoundArguments": ["config", "--client", "claude-code", "--source-root", "<absolute-viewcompose-source-root>"],
         "verification": ["claude mcp list", "claude mcp get viewcompose", "/mcp"]
       },
-      "skills": {
-        "standard": "agent-skills",
-        "projectPath": ".claude/skills",
-        "installArguments": [
-          "install-skills",
-          "--client",
-          "claude-code",
-          "--project-root",
-          "<absolute-consumer-project-root>"
-        ],
-        "invocationPrefix": "/"
+      "skills": {"standard": "agent-skills", "projectPath": ".claude/skills", "invocationPrefix": "/"},
+      "lifecycle": {
+        "initArguments": ["init", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
+        "doctorArguments": ["doctor", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
+        "uninstallArguments": ["uninstall", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"]
       },
       "officialDocumentation": {
         "mcp": "https://code.claude.com/docs/en/mcp",
@@ -88,26 +70,15 @@
       "config": {
         "format": "json",
         "projectPath": ".cursor/mcp.json",
-        "generatorArguments": [
-          "config",
-          "--client",
-          "cursor",
-          "--source-root",
-          "<absolute-viewcompose-source-root>"
-        ],
+        "standaloneArguments": ["config", "--client", "cursor"],
+        "sourceBoundArguments": ["config", "--client", "cursor", "--source-root", "<absolute-viewcompose-source-root>"],
         "verification": ["Cursor Settings > Tools & MCP", "Agent > Available Tools"]
       },
-      "skills": {
-        "standard": "agent-skills",
-        "projectPath": ".agents/skills",
-        "installArguments": [
-          "install-skills",
-          "--client",
-          "cursor",
-          "--project-root",
-          "<absolute-consumer-project-root>"
-        ],
-        "invocationPrefix": "/"
+      "skills": {"standard": "agent-skills", "projectPath": ".agents/skills", "invocationPrefix": "/"},
+      "lifecycle": {
+        "initArguments": ["init", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
+        "doctorArguments": ["doctor", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
+        "uninstallArguments": ["uninstall", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"]
       },
       "officialDocumentation": {
         "mcp": "https://docs.cursor.com/context/model-context-protocol",

@@ -27,6 +27,8 @@ const packageContractPath = fileURLToPath(
 const sourcePaths = Object.freeze([
   'contracts/agent-client-integration.schema.json',
   'contracts/examples/agent-client-integration.json',
+  'contracts/ai-tooling-release.schema.json',
+  'contracts/examples/ai-tooling-release.json',
   'contracts/design-ir.schema.json',
   'contracts/generated-preview-request.schema.json',
   'contracts/layout-comparison.schema.json',

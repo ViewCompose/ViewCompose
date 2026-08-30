@@ -657,6 +657,24 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiToolingRelease") {
+            group = "verification"
+            description =
+                "Verifies the immutable GitHub Release workflow and exact AI distribution assets."
+            dependsOn("verifyAiDistribution")
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:release")
+            inputs.files(
+                project.rootDir.resolve(".github/workflows/ai-tooling-release.yml"),
+                project.rootDir.resolve("tools/ai/contracts/ai-tooling-release.schema.json"),
+                project.rootDir.resolve("tools/ai/contracts/examples/ai-tooling-release.json"),
+                project.rootDir.resolve(
+                    "tools/ai/evaluation/fixtures/distribution/package-contract.json",
+                ),
+                project.rootDir.resolve("tools/ai/scripts/verify-ai-tooling-release.mjs"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("verifyAiDesignIr") {
             group = "verification"
             description =

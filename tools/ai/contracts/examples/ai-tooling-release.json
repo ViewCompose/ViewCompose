@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "viewcompose-ai-tooling-github-release-v1",
+  "repository": "ViewCompose/ViewCompose",
+  "workflowPath": ".github/workflows/ai-tooling-release.yml",
+  "package": {
+    "name": "@viewcompose/ai-tooling",
+    "version": "0.1.0",
+    "tag": "ai-tooling-v0.1.0",
+    "tagPattern": "ai-tooling-v<semver>",
+    "immutable": true
+  },
+  "assets": ["viewcompose-ai-tooling-0.1.0.tgz", "manifest.json", "SHA256SUMS"],
+  "provenance": {
+    "provider": "github-artifact-attestations",
+    "attestationRequired": true,
+    "checksumAlgorithm": "SHA-256"
+  },
+  "installation": {
+    "source": "github-release",
+    "buildFromSourceRequired": false,
+    "sourceCheckoutRequiredForStandalone": false,
+    "manualConfigurationEdits": 0,
+    "maxPrimaryCommands": 2,
+    "pinnedVersionRequired": true
+  }
+}

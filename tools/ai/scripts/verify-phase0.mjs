@@ -281,6 +281,7 @@ async function verifySchemas(versions) {
 
   const contractSchemas = {
     agentClientIntegration: 'agent-client-integration.schema.json',
+    aiToolingRelease: 'ai-tooling-release.schema.json',
     knowledgeBundleManifest: 'knowledge-bundle-manifest.schema.json',
     toolEnvelope: 'tool-envelope.schema.json',
     designIr: 'design-ir.schema.json',
@@ -377,6 +378,7 @@ async function verifyMcpProtocol() {
 async function verifyExamples(schemas) {
   const examples = [
     ['agent-client-integration.json', 'agent-client-integration.schema.json'],
+    ['ai-tooling-release.json', 'ai-tooling-release.schema.json'],
     ['knowledge-bundle-manifest.json', 'knowledge-bundle-manifest.schema.json'],
     ['tool-request.json', 'tool-envelope.schema.json'],
     ['tool-result.json', 'tool-envelope.schema.json'],

@@ -42,6 +42,8 @@
       "third-party-licenses.json",
       "contracts/agent-client-integration.schema.json",
       "contracts/examples/agent-client-integration.json",
+      "contracts/ai-tooling-release.schema.json",
+      "contracts/examples/ai-tooling-release.json",
       "contracts/mcp-protocol.json",
       "contracts/design-ir.schema.json",
       "contracts/generated-preview-request.schema.json",

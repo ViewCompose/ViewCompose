@@ -1,35 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://viewcompose.com/schemas/ai/agent-client-integration-v1.schema.json",
-  "title": "ViewCompose AI agent client integration contract v1",
+  "$id": "https://viewcompose.com/schemas/ai/agent-client-integration-v2.schema.json",
+  "title": "ViewCompose AI agent client integration contract v2",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schemaVersion",
-    "profileSetId",
-    "lastVerified",
-    "package",
-    "evidence",
-    "clients"
-  ],
+  "required": ["schemaVersion", "profileSetId", "lastVerified", "package", "evidence", "clients"],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "profileSetId": {"const": "viewcompose-agent-clients-v1"},
-    "lastVerified": {
-      "type": "string",
-      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
-    },
+    "schemaVersion": {"const": 2},
+    "profileSetId": {"const": "viewcompose-agent-clients-v2"},
+    "lastVerified": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name",
-        "version",
-        "transport",
-        "mcpExecutable",
-        "clientExecutable",
-        "sourceRootVariable"
-      ],
+      "required": ["name", "version", "transport", "mcpExecutable", "clientExecutable", "sourceRootVariable"],
       "properties": {
         "name": {"const": "@viewcompose/ai-tooling"},
         "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
@@ -45,6 +28,10 @@
       "required": [
         "officialConfigurationReviewed",
         "deterministicProfileCount",
+        "sourceFreeStandaloneProfiles",
+        "maxPrimaryCommands",
+        "manualConfigurationEdits",
+        "transactionalProjectWrites",
         "protocolVersions",
         "vendorBinaryAutomation",
         "limitation"
@@ -52,27 +39,24 @@
       "properties": {
         "officialConfigurationReviewed": {"const": true},
         "deterministicProfileCount": {"const": 3},
+        "sourceFreeStandaloneProfiles": {"const": 3},
+        "maxPrimaryCommands": {"const": 2},
+        "manualConfigurationEdits": {"const": 0},
+        "transactionalProjectWrites": {"const": true},
         "protocolVersions": {
           "type": "array",
-          "prefixItems": [
-            {"const": "2026-07-28"},
-            {"const": "2025-11-25"}
-          ],
+          "prefixItems": [{"const": "2026-07-28"}, {"const": "2025-11-25"}],
           "items": false,
           "minItems": 2,
           "maxItems": 2
         },
         "vendorBinaryAutomation": {"const": false},
-        "limitation": {"type": "string", "minLength": 40, "maxLength": 400}
+        "limitation": {"type": "string", "minLength": 40, "maxLength": 500}
       }
     },
     "clients": {
       "type": "array",
-      "prefixItems": [
-        {"$ref": "#/$defs/codex"},
-        {"$ref": "#/$defs/claudeCode"},
-        {"$ref": "#/$defs/cursor"}
-      ],
+      "prefixItems": [{"$ref": "#/$defs/codex"}, {"$ref": "#/$defs/claudeCode"}, {"$ref": "#/$defs/cursor"}],
       "items": false,
       "minItems": 3,
       "maxItems": 3
@@ -88,17 +72,34 @@
         "skills": {"type": "string", "format": "uri", "pattern": "^https://"}
       }
     },
+    "lifecycleCommand": {
+      "type": "array",
+      "prefixItems": [
+        {"enum": ["init", "doctor", "uninstall"]},
+        {"const": "--client"},
+        {"enum": ["codex", "claude-code", "cursor"]},
+        {"const": "--project-root"},
+        {"const": "<absolute-consumer-project-root>"}
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
     "config": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["format", "projectPath", "generatorArguments", "verification"],
+      "required": ["format", "projectPath", "standaloneArguments", "sourceBoundArguments", "verification"],
       "properties": {
         "format": {"enum": ["json", "toml"]},
-        "projectPath": {
-          "type": "string",
-          "pattern": "^(\\.codex/config\\.toml|\\.mcp\\.json|\\.cursor/mcp\\.json)$"
+        "projectPath": {"type": "string", "pattern": "^(\\.codex/config\\.toml|\\.mcp\\.json|\\.cursor/mcp\\.json)$"},
+        "standaloneArguments": {
+          "type": "array",
+          "prefixItems": [{"const": "config"}, {"const": "--client"}, {"enum": ["codex", "claude-code", "cursor"]}],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
         },
-        "generatorArguments": {
+        "sourceBoundArguments": {
           "type": "array",
           "prefixItems": [
             {"const": "config"},
@@ -123,72 +124,38 @@
     "skills": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["standard", "projectPath", "installArguments", "invocationPrefix"],
+      "required": ["standard", "projectPath", "invocationPrefix"],
       "properties": {
         "standard": {"const": "agent-skills"},
-        "projectPath": {
-          "enum": [".agents/skills", ".claude/skills"]
-        },
-        "installArguments": {
-          "type": "array",
-          "prefixItems": [
-            {"const": "install-skills"},
-            {"const": "--client"},
-            {"enum": ["codex", "claude-code", "cursor"]},
-            {"const": "--project-root"},
-            {"const": "<absolute-consumer-project-root>"}
-          ],
-          "items": false,
-          "minItems": 5,
-          "maxItems": 5
-        },
+        "projectPath": {"enum": [".agents/skills", ".claude/skills"]},
         "invocationPrefix": {"enum": ["$", "/"]}
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initArguments", "doctorArguments", "uninstallArguments"],
+      "properties": {
+        "initArguments": {"$ref": "#/$defs/lifecycleCommand"},
+        "doctorArguments": {"$ref": "#/$defs/lifecycleCommand"},
+        "uninstallArguments": {"$ref": "#/$defs/lifecycleCommand"}
       }
     },
     "clientBase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "displayName", "config", "skills", "officialDocumentation"],
+      "required": ["id", "displayName", "config", "skills", "lifecycle", "officialDocumentation"],
       "properties": {
         "id": {"enum": ["codex", "claude-code", "cursor"]},
         "displayName": {"enum": ["Codex", "Claude Code", "Cursor"]},
         "config": {"$ref": "#/$defs/config"},
         "skills": {"$ref": "#/$defs/skills"},
+        "lifecycle": {"$ref": "#/$defs/lifecycle"},
         "officialDocumentation": {"$ref": "#/$defs/documentation"}
       }
     },
-    "codex": {
-      "allOf": [
-        {"$ref": "#/$defs/clientBase"},
-        {
-          "properties": {
-            "id": {"const": "codex"},
-            "displayName": {"const": "Codex"}
-          }
-        }
-      ]
-    },
-    "claudeCode": {
-      "allOf": [
-        {"$ref": "#/$defs/clientBase"},
-        {
-          "properties": {
-            "id": {"const": "claude-code"},
-            "displayName": {"const": "Claude Code"}
-          }
-        }
-      ]
-    },
-    "cursor": {
-      "allOf": [
-        {"$ref": "#/$defs/clientBase"},
-        {
-          "properties": {
-            "id": {"const": "cursor"},
-            "displayName": {"const": "Cursor"}
-          }
-        }
-      ]
-    }
+    "codex": {"allOf": [{"$ref": "#/$defs/clientBase"}, {"properties": {"id": {"const": "codex"}, "displayName": {"const": "Codex"}}}]},
+    "claudeCode": {"allOf": [{"$ref": "#/$defs/clientBase"}, {"properties": {"id": {"const": "claude-code"}, "displayName": {"const": "Claude Code"}}}]},
+    "cursor": {"allOf": [{"$ref": "#/$defs/clientBase"}, {"properties": {"id": {"const": "cursor"}, "displayName": {"const": "Cursor"}}}]}
   }
 }

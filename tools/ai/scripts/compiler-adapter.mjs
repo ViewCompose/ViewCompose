@@ -370,8 +370,12 @@ export async function compileKotlin({
       requestId,
       status: 'unsupported',
       code: 'VC-AI-SOURCE-ROOT-MISMATCH',
-      message: 'The configured ViewCompose source root does not contain the packaged framework identity.',
-      nextAction: 'Select a matching ViewCompose checkout with the required Gradle wrapper.',
+      message: sourceRoot.reason === 'source-root-unavailable'
+        ? 'Compilation requires an explicitly bound ViewCompose source checkout in this release.'
+        : 'The configured ViewCompose source root does not contain the packaged framework identity.',
+      nextAction: sourceRoot.reason === 'source-root-unavailable'
+        ? 'Run viewcompose-agent init again with --source-root pointing to a matching ViewCompose checkout.'
+        : 'Select a matching ViewCompose checkout with the required Gradle wrapper.',
       elapsedMs: performance.now() - started,
     });
   }

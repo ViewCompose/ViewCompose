@@ -120,6 +120,26 @@ if (requestKey != null) {
 tasks.register("prepareAiPreviewLane") {
     group = "verification"
     description = "Resolve the fixed generated-Preview compilation and render classpaths."
+    // Resolving a configuration inside doLast does not add its producing project tasks to this
+    // task graph. Declaring the exact classpaths as inputs keeps a cold release checkout complete.
+    fun artifactFiles(configurationName: String, artifactType: String) =
+        configurations.getByName(configurationName).incoming.artifactView {
+            attributes.attribute(
+                ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE,
+                artifactType,
+            )
+        }.files
+    inputs.files(
+        artifactFiles("debugCompileClasspath", "android-classes-jar"),
+        artifactFiles("debugRuntimeClasspath", "android-classes-jar"),
+        artifactFiles("debugRuntimeClasspath", "android-res"),
+        artifactFiles("debugRuntimeClasspath", "android-assets"),
+        artifactFiles("debugRuntimeClasspath", "android-symbol-with-package-name"),
+        artifactFiles("viewComposePreviewDebugRunnerClasspath", "android-classes-jar"),
+        configurations.named("viewComposePreviewWorkerHost"),
+        configurations.named("viewComposePreviewLayoutlibRuntime"),
+        configurations.named("viewComposePreviewLayoutlibResources"),
+    )
     doLast {
         fun resolveArtifacts(configurationName: String, artifactType: String) =
             configurations.getByName(configurationName).incoming.artifactView {
