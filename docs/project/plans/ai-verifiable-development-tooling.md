@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: After the first attested GitHub Release is published, freeze the released-artifact and explicitly authorized consumer-project execution contract for compilation, Preview, and layout diagnosis before resuming richer AI capabilities.
+next_action: Implement and accept the frozen consumer-project execution v1 contract with the packaged Maven-backed harness, all three Agent profiles, and source-free compile, generated Preview, and layout-diagnosis evidence.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -76,6 +76,17 @@ contracts are implemented: all three clients pass standalone `init`, `doctor`, i
 and exact `uninstall`; the cold release gate builds the complete Preview producer graph; and the tag
 workflow verifies, attests, and publishes the three assets without a mutable selector. This does not
 yet claim released-artifact compilation or consumer-project Preview readiness.
+The next Phase 6A boundary is now frozen as consumer-project execution v1. `viewcompose-agent init`
+must bind the physical consumer root into the installed MCP process, but that root remains a
+read-only authorization boundary: the tooling never executes the consumer wrapper, settings,
+plugins, tasks, or build scripts. A packaged content-addressed Gradle harness owns execution and
+selects only fixed Maven Central coordinates, Gradle 8.13, AGP 8.13.2, Kotlin 2.0.21, Android 36,
+JVM target 11, and JDK 17/21. The first deep-evidence request may visibly resolve the pinned Gradle
+distribution and Maven dependencies; later requests may use the verified tool-owned cache.
+Compilation, generated Preview, and generated-screen layout diagnosis must pass from all three
+installed Agent profiles without a ViewCompose checkout before this boundary is accepted. Arbitrary
+consumer source discovery, consumer dependency mirroring, manifest merging, custom plugins, Gradle
+task selection, application execution, device deployment, and source writes remain outside v1.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The

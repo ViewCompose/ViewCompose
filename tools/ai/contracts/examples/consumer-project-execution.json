@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-consumer-project-execution-v1",
+  "toolingRelease": {
+    "package": "@viewcompose/ai-tooling",
+    "version": "0.2.0",
+    "knowledgeLane": "current-source"
+  },
+  "authorization": {
+    "projectRootVariable": "VIEWCOMPOSE_PROJECT_ROOT",
+    "source": "viewcompose-agent-init-project-root",
+    "physicalAbsoluteDirectory": true,
+    "readOnlyInputs": true,
+    "executesConsumerBuildLogic": false,
+    "acceptsCallerBuildSelection": false
+  },
+  "execution": {
+    "owner": "installed-ai-tooling",
+    "harness": "packaged-content-addressed-gradle-project",
+    "javaFeatures": [17, 21],
+    "gradle": "8.13",
+    "agp": "8.13.2",
+    "kotlin": "2.0.21",
+    "compileSdk": 36,
+    "jvmTarget": 11,
+    "dependencyResolution": "online-first-use",
+    "consumerWrites": false
+  },
+  "artifacts": [
+    {
+      "id": "viewcompose-ui-foundation",
+      "coordinate": "com.viewcompose:viewcompose-ui-foundation",
+      "version": "0.1.0-alpha02",
+      "repository": "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "id": "viewcompose-material3-android",
+      "coordinate": "com.viewcompose:viewcompose-material3-android",
+      "version": "0.1.0-alpha02",
+      "repository": "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "id": "viewcompose-preview-core",
+      "coordinate": "com.viewcompose:viewcompose-preview-core",
+      "version": "0.1.0-alpha03",
+      "repository": "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "id": "viewcompose-preview-gradle-plugin",
+      "coordinate": "com.viewcompose:viewcompose-preview-gradle-plugin",
+      "version": "0.1.0-alpha03",
+      "repository": "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "id": "viewcompose-preview-runner",
+      "coordinate": "com.viewcompose:viewcompose-preview-runner",
+      "version": "0.1.0-alpha05",
+      "repository": "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "id": "viewcompose-preview-worker-host",
+      "coordinate": "com.viewcompose:viewcompose-preview-worker-host",
+      "version": "0.1.0-alpha03",
+      "repository": "https://repo.maven.apache.org/maven2"
+    }
+  ],
+  "capabilities": [
+    "validate_code:compile",
+    "convert_xml_to_viewcompose:compile",
+    "convert_xml_to_viewcompose:render",
+    "generate_screenshot_viewcompose:compile",
+    "generate_screenshot_viewcompose:render",
+    "generated_preview:layout_diagnosis"
+  ],
+  "evidence": {
+    "requiredProjectProfiles": 3,
+    "executesConsumerGradle": false,
+    "sourceCheckoutRequired": false,
+    "firstUseNetworkVisible": true,
+    "limitations": [
+      "The first compiled or rendered request may download the pinned Gradle distribution and Maven dependencies.",
+      "The fixed lane accepts generated or explicitly submitted bounded source, not arbitrary consumer Gradle tasks or plugins.",
+      "Android SDK platform 36 and a local JDK 17 or 21 remain host prerequisites for compiled and rendered evidence."
+    ]
+  }
+}

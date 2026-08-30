@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewcompose.com/schemas/ai/consumer-project-execution-v1.schema.json",
+  "title": "ViewCompose AI consumer project execution contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "toolingRelease",
+    "authorization",
+    "execution",
+    "artifacts",
+    "capabilities",
+    "evidence"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "contractId": {"const": "viewcompose-consumer-project-execution-v1"},
+    "toolingRelease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "version", "knowledgeLane"],
+      "properties": {
+        "package": {"const": "@viewcompose/ai-tooling"},
+        "version": {"const": "0.2.0"},
+        "knowledgeLane": {"const": "current-source"}
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "projectRootVariable",
+        "source",
+        "physicalAbsoluteDirectory",
+        "readOnlyInputs",
+        "executesConsumerBuildLogic",
+        "acceptsCallerBuildSelection"
+      ],
+      "properties": {
+        "projectRootVariable": {"const": "VIEWCOMPOSE_PROJECT_ROOT"},
+        "source": {"const": "viewcompose-agent-init-project-root"},
+        "physicalAbsoluteDirectory": {"const": true},
+        "readOnlyInputs": {"const": true},
+        "executesConsumerBuildLogic": {"const": false},
+        "acceptsCallerBuildSelection": {"const": false}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "harness",
+        "javaFeatures",
+        "gradle",
+        "agp",
+        "kotlin",
+        "compileSdk",
+        "jvmTarget",
+        "dependencyResolution",
+        "consumerWrites"
+      ],
+      "properties": {
+        "owner": {"const": "installed-ai-tooling"},
+        "harness": {"const": "packaged-content-addressed-gradle-project"},
+        "javaFeatures": {
+          "type": "array",
+          "items": {"enum": [17, 21]},
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "gradle": {"const": "8.13"},
+        "agp": {"const": "8.13.2"},
+        "kotlin": {"const": "2.0.21"},
+        "compileSdk": {"const": 36},
+        "jvmTarget": {"const": 11},
+        "dependencyResolution": {"enum": ["online-first-use", "verified-cache"]},
+        "consumerWrites": {"const": false}
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/artifact"},
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true
+    },
+    "capabilities": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "validate_code:compile"},
+        {"const": "convert_xml_to_viewcompose:compile"},
+        {"const": "convert_xml_to_viewcompose:render"},
+        {"const": "generate_screenshot_viewcompose:compile"},
+        {"const": "generate_screenshot_viewcompose:render"},
+        {"const": "generated_preview:layout_diagnosis"}
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requiredProjectProfiles",
+        "executesConsumerGradle",
+        "sourceCheckoutRequired",
+        "firstUseNetworkVisible",
+        "limitations"
+      ],
+      "properties": {
+        "requiredProjectProfiles": {"const": 3},
+        "executesConsumerGradle": {"const": false},
+        "sourceCheckoutRequired": {"const": false},
+        "firstUseNetworkVisible": {"const": true},
+        "limitations": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 30, "maxLength": 400},
+          "minItems": 3,
+          "maxItems": 8,
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "coordinate", "version", "repository"],
+      "properties": {
+        "id": {
+          "enum": [
+            "viewcompose-ui-foundation",
+            "viewcompose-material3-android",
+            "viewcompose-preview-core",
+            "viewcompose-preview-gradle-plugin",
+            "viewcompose-preview-runner",
+            "viewcompose-preview-worker-host"
+          ]
+        },
+        "coordinate": {"type": "string", "pattern": "^com\\.viewcompose:viewcompose-[a-z0-9-]+$"},
+        "version": {"type": "string", "pattern": "^0\\.1\\.0-alpha[0-9]{2}$"},
+        "repository": {"const": "https://repo.maven.apache.org/maven2"}
+      }
+    }
+  }
+}
