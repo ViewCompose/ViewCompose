@@ -491,7 +491,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.supportedGoldens} zero-iteration convergence, ` +
           `${summary.patchGoldens}/${summary.patchGoldens} typed patch golden, and ` +
           `${summary.candidateEvaluatorGoldens}/${summary.candidateEvaluatorGoldens} ` +
-          `source-bound candidate evaluations, and ` +
+          `released-artifact candidate evaluations, and ` +
           `${summary.failClosedDenominators}/${summary.failClosedDenominators} ` +
           `fail-closed denominators; repair fingerprint ${summary.repairFingerprint}.`,
       );
