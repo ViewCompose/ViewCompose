@@ -423,6 +423,16 @@ development-tooling isolation, Released Knowledge freshness, and all 3 Release a
 is **improved** release readiness with **no material Android runtime behavior change**. Hosted clean
 Linux execution and GitHub attestations remain `inconclusive` until the immutable tag workflow runs.
 
+The first hosted #260 `qaQuick` run exposed a clean-checkout defect in that result: Released
+Knowledge verification attempted to inspect every immutable Artifact source revision, but assumed
+those commit objects already existed in the pull-request checkout. The job correctly failed at
+`verifyAiReleasedKnowledgePack` when the shallow clone lacked revision `143b09ac`. The verifier now
+checks each exact 40-character release SHA, fetches only a missing immutable object from `origin`,
+then retains the same commit-timestamp and `src/main` tree comparisons. The focused suite passes
+4/4 cases, including missing-object acquisition and no-fetch reuse, and the complete Released
+Knowledge Pack still reproduces profile `895ed1e5`. This is **improved** clean-checkout
+reproducibility without relaxing framework-version matching; the next evidence is the hosted rerun.
+
 ## Maven release changesets
 
 - `release/changes/20260829-preview-worker-jvm21-resolution.json`

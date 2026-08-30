@@ -76,6 +76,29 @@ async function git(args, root = repositoryRoot) {
   return stdout.trim();
 }
 
+export async function ensureReleaseRevisionAvailable(
+  revision,
+  {root = repositoryRoot, runGit = git} = {},
+) {
+  const commit = `${revision}^{commit}`;
+  try {
+    await runGit(['cat-file', '-e', commit], root);
+    return;
+  } catch {
+    // Pull only the immutable release object needed by the verifier. Pull-request checkouts are
+    // intentionally shallow, while release profiles must still compare every artifact tree.
+  }
+  try {
+    await runGit(['fetch', '--no-tags', '--depth=1', 'origin', revision], root);
+    await runGit(['cat-file', '-e', commit], root);
+  } catch (error) {
+    throw new Error(
+      `Unable to load released source revision ${revision} from origin: ${error.message}`,
+      {cause: error},
+    );
+  }
+}
+
 async function releaseAnchor(revisions) {
   const unique = [...new Set(revisions)].sort();
   const dated = await Promise.all(unique.map(async (revision) => ({
@@ -151,6 +174,9 @@ export async function buildReleasedKnowledgePack() {
   });
   if (artifacts.length === 0 || !artifacts.some((artifact) => artifact.knowledgeIncluded)) {
     throw new Error('Released Knowledge Pack has no published artifact knowledge.');
+  }
+  for (const revision of [...new Set(artifacts.map((artifact) => artifact.sourceRevision))].sort()) {
+    await ensureReleaseRevisionAvailable(revision);
   }
   const anchorRevision = await releaseAnchor(artifacts.map((artifact) => artifact.sourceRevision));
   await verifyArtifactTrees(artifacts, anchorRevision);

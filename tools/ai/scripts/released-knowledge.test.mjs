@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {buildReleasedKnowledgePack, parseProperties} from './released-knowledge.mjs';
+import {
+  buildReleasedKnowledgePack,
+  ensureReleaseRevisionAvailable,
+  parseProperties,
+} from './released-knowledge.mjs';
 
 test('builds the exact consumer-selectable released Knowledge Pack and Artifact profile', async () => {
   const first = await buildReleasedKnowledgePack();
@@ -25,4 +29,36 @@ test('builds the exact consumer-selectable released Knowledge Pack and Artifact 
 test('rejects duplicate and malformed release properties', () => {
   assert.throws(() => parseProperties('value=one\nvalue=two\n'), /Duplicate release property/u);
   assert.throws(() => parseProperties('missing-separator\n'), /Malformed release property/u);
+});
+
+test('loads an exact missing release revision for shallow checkouts', async () => {
+  const revision = 'a'.repeat(40);
+  const calls = [];
+  let fetched = false;
+  const runGit = async (argumentsList, root) => {
+    calls.push({argumentsList, root});
+    if (argumentsList[0] === 'cat-file' && !fetched) throw new Error('missing object');
+    if (argumentsList[0] === 'fetch') fetched = true;
+    return '';
+  };
+
+  await ensureReleaseRevisionAvailable(revision, {root: '/checkout', runGit});
+
+  assert.deepEqual(calls, [
+    {argumentsList: ['cat-file', '-e', `${revision}^{commit}`], root: '/checkout'},
+    {
+      argumentsList: ['fetch', '--no-tags', '--depth=1', 'origin', revision],
+      root: '/checkout',
+    },
+    {argumentsList: ['cat-file', '-e', `${revision}^{commit}`], root: '/checkout'},
+  ]);
+});
+
+test('does not fetch a release revision that is already available', async () => {
+  const revision = 'b'.repeat(40);
+  const calls = [];
+  await ensureReleaseRevisionAvailable(revision, {
+    runGit: async (argumentsList) => calls.push(argumentsList),
+  });
+  assert.deepEqual(calls, [['cat-file', '-e', `${revision}^{commit}`]]);
 });
