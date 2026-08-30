@@ -610,6 +610,28 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiAgentClients") {
+            group = "verification"
+            description =
+                "Verifies common AI agent MCP profiles and project-scoped Skill installation."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-agent-clients")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/agent-client-integration.schema.json",
+                        "contracts/examples/agent-client-integration.json",
+                        "evaluation/metrics.json",
+                        "scripts/agent-client-integration.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/verify-phase3-agent-clients.mjs",
+                        "skills/**/*.json",
+                        "skills/**/SKILL.md",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("verifyAiDistribution") {
             group = "verification"
             description =

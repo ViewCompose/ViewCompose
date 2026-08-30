@@ -520,6 +520,36 @@ The gate checks the frozen six-workflow denominator, known tool names, evidence 
 skill paths and frontmatter, safety boundaries, path containment, provider neutrality, and a 16 KiB
 entrypoint limit.
 
+## Common AI agent onboarding
+
+The local package exposes one client-neutral onboarding command for Codex, Claude Code, and Cursor.
+After installing the distribution, generate the project configuration fragment without editing a
+client file:
+
+```bash
+viewcompose-agent config --client <codex|claude-code|cursor> \
+  --source-root <physical-absolute-viewcompose-source-root>
+```
+
+Merge the output into `.codex/config.toml`, `.mcp.json`, or `.cursor/mcp.json` as reported by the
+selected profile. Install the six canonical `SKILL.md` workflows into an explicit consumer project:
+
+```bash
+viewcompose-agent install-skills --client <codex|claude-code|cursor> \
+  --project-root <physical-absolute-consumer-project-root>
+```
+
+Codex and Cursor use `.agents/skills`; Claude Code uses `.claude/skills`. Installation is
+idempotent only for exact canonical bytes and refuses conflicts, relative roots, symbolic-link
+boundaries, unknown clients, home-directory inference, and implicit file replacement. The command
+does not configure, authenticate, or launch a proprietary client and opens no network connection.
+Run its dedicated gate with:
+
+```bash
+npm --prefix tools/ai run verify:phase3-agent-clients
+./gradlew verifyAiAgentClients
+```
+
 ## Local distribution
 
 Build the dependency-free npm tarball and its deterministic sidecars with:
@@ -530,8 +560,9 @@ npm --prefix tools/ai run package:distribution
 
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
 exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the thirteen-tool CLI/MCP core,
-six consumer skills, the immutable Knowledge Bundle, an SPDX 2.3 package record, the MIT license,
-and a reviewed empty runtime-dependency license inventory. It intentionally contains no
+the `viewcompose-agent` onboarding command, six consumer skills, the immutable Knowledge Bundle, an
+SPDX 2.3 package record, the MIT license, and a reviewed empty runtime-dependency license inventory.
+It intentionally contains no
 `node_modules`, Gradle project, Android SDK, JDK, provider adapter, network listener, or model.
 
 Verify reproducibility, inventory, offline lifecycle, installed CLI compilation, and both supported

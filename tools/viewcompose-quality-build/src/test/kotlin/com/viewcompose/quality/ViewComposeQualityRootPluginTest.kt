@@ -131,6 +131,7 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(project.tasks.getByName("verifyAiMcp") is Exec)
         assertTrue(project.tasks.getByName("verifyAiLayoutDiagnosis") is Exec)
         assertTrue(project.tasks.getByName("verifyAiConsumerWorkflows") is Exec)
+        assertTrue(project.tasks.getByName("verifyAiAgentClients") is Exec)
         val verifyAiDistribution = project.tasks.getByName("verifyAiDistribution")
         assertTrue(verifyAiDistribution is Exec)
         assertTrue(

@@ -1,7 +1,17 @@
 #!/usr/bin/env node
 import {createHash} from 'node:crypto';
 import {execFile, spawn} from 'node:child_process';
-import {access, lstat, mkdtemp, readFile, rm} from 'node:fs/promises';
+import {
+  access,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {promisify} from 'node:util';
@@ -260,6 +270,126 @@ async function verifyInstalledFiles(packageRoot, manifest) {
       throw new Error(`Installed package integrity failed for ${file.path}.`);
     }
   }
+}
+
+async function runAgentCommand(agent, arguments_) {
+  const result = await execFileAsync(agent, arguments_, {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+    maxBuffer: 1024 * 1024,
+  });
+  if (result.stderr !== '') throw new Error('Installed agent integration command emitted stderr.');
+  return result.stdout;
+}
+
+async function expectAgentFailure(agent, arguments_, pattern) {
+  try {
+    await runAgentCommand(agent, arguments_);
+  } catch (error) {
+    if (pattern.test(`${error.stderr ?? ''}\n${error.message ?? ''}`)) return;
+    throw error;
+  }
+  throw new Error(`Installed agent integration command unexpectedly succeeded: ${arguments_.join(' ')}`);
+}
+
+async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
+  const [profiles, skills, canonicalSourceRoot] = await Promise.all([
+    readJson(resolve(packageRoot, 'contracts/examples/agent-client-integration.json')),
+    readJson(resolve(packageRoot, 'skills/manifest.json')),
+    realpath(repositoryRoot),
+  ]);
+  const installedMcp = await realpath(resolve(packageRoot, 'scripts/mcp-server.mjs'));
+  for (const profile of profiles.clients) {
+    const config = await runAgentCommand(agent, [
+      'config',
+      '--client',
+      profile.id,
+      '--source-root',
+      canonicalSourceRoot,
+    ]);
+    if (profile.config.format === 'json') {
+      const parsed = JSON.parse(config);
+      if (
+        parsed.mcpServers?.viewcompose?.command !== process.execPath ||
+        parsed.mcpServers?.viewcompose?.args?.[0] !== installedMcp ||
+        parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_SOURCE_ROOT !== canonicalSourceRoot
+      ) throw new Error(`Installed ${profile.id} configuration does not bind the packaged MCP server.`);
+    } else if (
+      !config.includes('[mcp_servers.viewcompose]') ||
+      !config.includes('[mcp_servers.viewcompose.env]') ||
+      !config.includes(JSON.stringify(installedMcp)) ||
+      !config.includes(JSON.stringify(canonicalSourceRoot))
+    ) {
+      throw new Error('Installed Codex configuration does not bind the packaged MCP server.');
+    }
+
+    const projectRoot = resolve(temporaryRoot, `agent-${profile.id}`);
+    await mkdir(projectRoot);
+    const first = JSON.parse(await runAgentCommand(agent, [
+      'install-skills',
+      '--client',
+      profile.id,
+      '--project-root',
+      await realpath(projectRoot),
+    ]));
+    if (first.installed.length !== skills.skills.length || first.unchanged.length !== 0) {
+      throw new Error(`Installed ${profile.id} Skill installation was incomplete.`);
+    }
+    for (const skill of skills.skills) {
+      const actual = await readFile(resolve(projectRoot, profile.skills.projectPath, skill.id, 'SKILL.md'));
+      const expected = await readFile(resolve(packageRoot, skill.path));
+      if (!actual.equals(expected)) throw new Error(`Installed ${profile.id}/${skill.id} bytes drifted.`);
+    }
+    const second = JSON.parse(await runAgentCommand(agent, [
+      'install-skills',
+      '--client',
+      profile.id,
+      '--project-root',
+      await realpath(projectRoot),
+    ]));
+    if (second.installed.length !== 0 || second.unchanged.length !== skills.skills.length) {
+      throw new Error(`Installed ${profile.id} Skill reinstall was not idempotent.`);
+    }
+  }
+
+  const conflictRoot = resolve(temporaryRoot, 'agent-conflict');
+  await mkdir(conflictRoot);
+  const conflictInstall = JSON.parse(await runAgentCommand(agent, [
+    'install-skills',
+    '--client',
+    'codex',
+    '--project-root',
+    await realpath(conflictRoot),
+  ]));
+  await writeFile(
+    resolve(conflictRoot, conflictInstall.skillRoot, conflictInstall.installed[0], 'SKILL.md'),
+    'conflict\n',
+  );
+  await expectAgentFailure(agent, [
+    'install-skills',
+    '--client',
+    'codex',
+    '--project-root',
+    await realpath(conflictRoot),
+  ], /Refusing to overwrite conflicting Skill bytes/u);
+  await expectAgentFailure(agent, [
+    'install-skills',
+    '--client',
+    'codex',
+    '--project-root',
+    'relative',
+  ], /absolute path/u);
+  const physicalRoot = resolve(temporaryRoot, 'agent-physical');
+  const linkedRoot = resolve(temporaryRoot, 'agent-linked');
+  await mkdir(physicalRoot);
+  await symlink(physicalRoot, linkedRoot, 'dir');
+  await expectAgentFailure(agent, [
+    'install-skills',
+    '--client',
+    'cursor',
+    '--project-root',
+    linkedRoot,
+  ], /symbolic link/u);
 }
 
 async function verifyInventory(packageRoot, contract) {
@@ -1109,10 +1239,12 @@ async function main() {
     });
     const packageRoot = resolve(npmRootOutput.trim(), '@viewcompose/ai-tooling');
     const cli = resolve(prefix, 'bin/viewcompose-ai');
+    const agent = resolve(prefix, 'bin/viewcompose-agent');
     const mcp = resolve(prefix, 'bin/viewcompose-mcp');
-    await Promise.all([access(cli), access(mcp), access(packageRoot)]);
+    await Promise.all([access(cli), access(agent), access(mcp), access(packageRoot)]);
     await verifyInstalledFiles(packageRoot, primary.manifest);
     await verifyInventory(packageRoot, contract);
+    await verifyInstalledAgentClients(agent, packageRoot, temporaryRoot);
     const compileFingerprints = await verifyCliFlow(
       cli,
       knowledge,
@@ -1142,13 +1274,14 @@ async function main() {
       maxBuffer: 4 * 1024 * 1024,
     });
     uninstalled = true;
-    if (await exists(cli) || await exists(mcp) || await exists(packageRoot)) {
+    if (await exists(cli) || await exists(agent) || await exists(mcp) || await exists(packageRoot)) {
       throw new Error('Offline uninstallation left package or executable entries behind.');
     }
 
     process.stdout.write(
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
+      `3/3 installed agent profiles with 18/18 exact Skill copies, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
       `prepared screenshot ${compileFingerprints.screenshot}, ` +
       `validated screenshot inference ${compileFingerprints.screenshotInference}, ` +

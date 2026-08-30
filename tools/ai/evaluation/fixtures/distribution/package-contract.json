@@ -32,7 +32,7 @@
       "viewcompose-review",
       "viewcompose-validate"
     ],
-    "executables": ["viewcompose-ai", "viewcompose-mcp"],
+    "executables": ["viewcompose-ai", "viewcompose-agent", "viewcompose-mcp"],
     "requiredPaths": [
       "LICENSE",
       "README.md",
@@ -40,6 +40,8 @@
       "package.json",
       "sbom.spdx.json",
       "third-party-licenses.json",
+      "contracts/agent-client-integration.schema.json",
+      "contracts/examples/agent-client-integration.json",
       "contracts/mcp-protocol.json",
       "contracts/design-ir.schema.json",
       "contracts/generated-preview-request.schema.json",
@@ -68,6 +70,7 @@
       "generated/current-source/samples.jsonl",
       "generated/current-source/symbols.jsonl",
       "scripts/ai-tool.mjs",
+      "scripts/agent-client-integration.mjs",
       "scripts/bounded-process.mjs",
       "scripts/compiler-adapter.mjs",
       "scripts/design-ir-to-kotlin.mjs",

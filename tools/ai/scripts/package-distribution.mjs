@@ -25,6 +25,8 @@ const packageContractPath = fileURLToPath(
   new URL('../evaluation/fixtures/distribution/package-contract.json', import.meta.url),
 );
 const sourcePaths = Object.freeze([
+  'contracts/agent-client-integration.schema.json',
+  'contracts/examples/agent-client-integration.json',
   'contracts/design-ir.schema.json',
   'contracts/generated-preview-request.schema.json',
   'contracts/layout-comparison.schema.json',
@@ -53,6 +55,7 @@ const sourcePaths = Object.freeze([
   'generated/current-source/samples.jsonl',
   'generated/current-source/symbols.jsonl',
   'scripts/ai-tool.mjs',
+  'scripts/agent-client-integration.mjs',
   'scripts/bounded-process.mjs',
   'scripts/compiler-adapter.mjs',
   'scripts/design-ir-to-kotlin.mjs',
@@ -139,6 +142,7 @@ async function packageMetadata(contract) {
     engines: {node: contract.package.nodeEngine},
     bin: {
       'viewcompose-ai': 'scripts/ai-tool.mjs',
+      'viewcompose-agent': 'scripts/agent-client-integration.mjs',
       'viewcompose-mcp': 'scripts/mcp-server.mjs',
     },
     dependencies: {},
@@ -271,6 +275,7 @@ async function prepareStaging(stagingRoot, contract) {
     json(licenseInventory(contract)),
   );
   await chmod(resolve(stagingRoot, 'scripts/ai-tool.mjs'), 0o755);
+  await chmod(resolve(stagingRoot, 'scripts/agent-client-integration.mjs'), 0o755);
   await chmod(resolve(stagingRoot, 'scripts/mcp-server.mjs'), 0o755);
 }
 
