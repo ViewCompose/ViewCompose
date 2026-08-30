@@ -70,10 +70,10 @@ test('rejects navbar styles that confine the fixed mobile sidebar', () => {
   });
 
   assert.equal(violations.length, 1);
-  assert.match(violations[0], /\.navbar must not set backdrop-filter/u);
+  assert.match(violations[0], /\.navbar and its pseudo-elements must not set backdrop-filter/u);
 });
 
-test('allows visual effects on a navbar pseudo-element', () => {
+test('rejects compositing effects on navbar pseudo-elements', () => {
   const violations = analyzeSiteShellStyles({
     'assets/css/styles.css': [
       '.navbar::before { backdrop-filter: blur(16px); }',
@@ -82,5 +82,7 @@ test('allows visual effects on a navbar pseudo-element', () => {
     ].join('\n'),
   });
 
-  assert.deepEqual(violations, []);
+  assert.equal(violations.length, 2);
+  assert.match(violations[0], /cover in-flow mobile controls/u);
+  assert.match(violations[1], /cover in-flow mobile controls/u);
 });

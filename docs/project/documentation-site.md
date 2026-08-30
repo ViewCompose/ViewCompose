@@ -174,8 +174,10 @@ namespace, so switching languages preserves the reader's light or dark color-mod
 rejects the removed standalone Maven-coordinate banner on either homepage. The same gate inspects
 the final bundled stylesheets and rejects filters, transforms, containment, or related properties
 on the `.navbar` root because they would confine Docusaurus's fixed mobile sidebar and backdrop to
-the navbar height. Visual effects belong on a pseudo-element or another node that is not an ancestor
-of those fixed layers.
+the navbar height. The same restriction applies to navbar pseudo-elements: browser-specific
+compositing can paint a positioned filter layer above the in-flow menu toggle and brand while
+leaving the positioned search input visible. The navbar therefore uses its ordinary background
+without a blur layer.
 
 ## Released versions and aliases
 
