@@ -3,21 +3,22 @@ import test from 'node:test';
 import {verifyPhase4GeneratedPreview} from './verify-phase4-generated-preview.mjs';
 
 const loginExpected = Object.freeze({
-  request: 'd70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d',
+  request: 'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
   kotlin: '6c4f6dafef9e0b4808eefab440d14e331b1a3b55bc8becff7a05d3669cc73be1',
   wrapper: '8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821',
-  build: '87affa2585fc27354049e780b24c00e7d6ea5181e7b9b65af6d8a88e7d5ed08d',
-  output: '6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab',
-  png: 'e1efebaffa1efc19052a3fb1be33a8aa3fd670073a6330e976cd1be4082bb7fe',
-  tree: 'd0373c8499b9d46f9cafa98a04c6f30d41a8ec69743a5ada35496ba0e2e05e85',
+  build: '761d759c682110d9702f169c7b885a30ac77e3821401a22c21629c508760e18c',
+  output: 'f92cfa3f26a76a3955064f0beea0971400c62e0393889273de1e7a96dc09e995',
+  png: 'adea48c351d08a9949694173cba497f530389cd3891f8312c4cfef08c01b5540',
+  tree: 'ad1665ecd9f6d7e2f7f97b25b338454f32b79ee7bcd0405f81b089a557969536',
   variant: 'generated-xml-loginview-abee9c74',
   sourceLine: 22,
   capabilityIds: ['foundation.components', 'modifier.layout'],
-  imageBytes: 38919,
+  imageBytes: 37608,
   treeBytes: 202604,
+  treeStructure: {vnodeCount: 5, mountedNodeCount: 5, maxVNodeDepth: 3, maxMountedDepth: 3},
   assets: [],
   designIr: 'a938f6c0bd8333e195414353766d7e577bbcab0584c219cf4d123869192964d4',
-  comparison: 'fed14c0d17ef19b3f5fe22652f9d3f2314d5383fec0ce6b5c42bb0c873c21c12',
+  comparison: 'a9507e2e496a5d43fe7be925b16e6abe4646a219fb3ede78f0b3f4238f966ebd',
   comparisonSummary: {
     designNodes: 4,
     mappedNodes: 4,
@@ -38,7 +39,7 @@ const loginExpected = Object.freeze({
     },
     {
       id: 'id:title', key: 'title', kind: 'text', wrapperDepth: 0,
-      bounds: [42, 42, 568, 97],
+      bounds: [42, 42, 456, 85],
       checks: [
         'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
         'semantic.visibility', 'semantic.text', 'geometry.containment',
@@ -46,7 +47,7 @@ const loginExpected = Object.freeze({
     },
     {
       id: 'id:email', key: 'email', kind: 'text-field', wrapperDepth: 1,
-      bounds: [42, 97, 1037, 244],
+      bounds: [42, 85, 1037, 232],
       checks: [
         'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
         'semantic.role', 'semantic.visibility', 'geometry.width.match-parent',
@@ -55,7 +56,7 @@ const loginExpected = Object.freeze({
     },
     {
       id: 'id:submit', key: 'submit', kind: 'button', wrapperDepth: 0,
-      bounds: [42, 244, 1037, 370],
+      bounds: [42, 232, 1037, 358],
       checks: [
         'identity.key', 'structure.parent', 'structure.sibling-order', 'semantic.kind',
         'semantic.role', 'semantic.visibility', 'semantic.text',
@@ -66,13 +67,13 @@ const loginExpected = Object.freeze({
 });
 
 const profileExpected = Object.freeze({
-  request: 'ce0fc5b926e8a243d2cf5b32a568911899e19d329e07ad9698e5f90c6b2976ef',
+  request: '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26',
   kotlin: '15b15098e92b62bc9730ab7b3f2bde7715596f22069490a18b1e7830ff92ad35',
   wrapper: '461d7c9e7b9898b9b9f7373775fa10c8a180097664627b442d36a8b2abd2a4b2',
-  build: '76b256d15f1801358b009127e50467c5936af8b99714f6895e06dddef7a7b990',
-  output: '31fb45a13a4d35badee2cf61ce7760a0540b60ed2e0def2d3e3910cfdb4268f5',
-  png: 'bb130675ac0de5df6ad6ff93ded020cbe93704a80030301da3a2d57a56b9cd3f',
-  tree: '58bbd8da9df6295da2419dc85bf4c7d4636419f8022237740b694966763b31e9',
+  build: '7a5e1e105705669c6e103cf101533c8417bbba5f5acace9316d5dbc1d4b7e46a',
+  output: 'f91bc14f5830c5707157dd0a683fbc48612beee755333e44c7f6b55a13788369',
+  png: '3e5437e7fc53f3d3d5235df1287b3ea0fc5d93a86350b7abbcbe26ab3beaef11',
+  tree: '5b174559d469bc65e63edfb3e0ba91e476e31d3039486faacaa452a89d0368d8',
   variant: 'generated-xml-profilecardview-abee9c74',
   sourceLine: 23,
   capabilityIds: [
@@ -81,8 +82,9 @@ const profileExpected = Object.freeze({
     'modifier.drawing',
     'modifier.layout',
   ],
-  imageBytes: 15217,
+  imageBytes: 15218,
   treeBytes: 120988,
+  treeStructure: {vnodeCount: 3, mountedNodeCount: 3, maxVNodeDepth: 2, maxMountedDepth: 2},
   assets: [{
     resourceName: 'vc_ai_4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5',
     bytes: 70,
@@ -91,7 +93,7 @@ const profileExpected = Object.freeze({
     heightPx: 1,
   }],
   designIr: '8a860b20a34b87d0eae3918f12d1968e3653e0fe46da0cceffa68f70e9c25b09',
-  comparison: '073a3e2dfdcbfec55e952d19296bd66008cde09bc8d2a259c4b0fb3b9badb200',
+  comparison: '7410eb175279e971e035612ee40c19e3247f1bc4ffb520ec95490d25008079bb',
   comparisonSummary: {
     designNodes: 3,
     mappedNodes: 3,
@@ -156,15 +158,16 @@ function rendered(expected, cache = 'miss') {
     evidence: {
       level: 'compared',
       cache,
-      compilerLane: 'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11',
-      renderLane: 'current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1',
+      compilerLane:
+        'released-maven/jdk-17-or-21/gradle-9.3.1/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11',
+      renderLane: 'released-maven/preview-protocol-1/paparazzi-2.0.0-alpha02/layoutlib-15.2.3',
       outputFingerprint: expected.comparison,
     },
     diagnostics: [],
     data: {
       preview: {
         targetId: 'tools.ai.GeneratedXmlPreview',
-        modulePath: ':tools:ai-preview-harness',
+        modulePath: ':preview',
         buildVariant: 'debug',
         buildFingerprint: expected.build,
         previewId: 'generatedpreviewkt-generatedxmlpreview-8ccd5bd7b4eb',
@@ -180,7 +183,7 @@ function rendered(expected, cache = 'miss') {
         },
         capabilityIds: expected.capabilityIds,
         source: {
-          path: `build/ai/preview/requests/${expected.request}/input/GeneratedPreview.kt`,
+          path: `preview/requests/${expected.request}/input/GeneratedPreview.kt`,
           line: expected.sourceLine,
           column: 1,
         },
@@ -199,6 +202,10 @@ function rendered(expected, cache = 'miss') {
           pngSha256: expected.png,
           renderTreeSha256: expected.tree,
           assets: expected.assets,
+        },
+        layoutDiagnosis: {
+          summary: {clean: true, actionableCount: 0},
+          structure: expected.treeStructure,
         },
       },
       comparison: {

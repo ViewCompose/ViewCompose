@@ -13,6 +13,7 @@ import {
 } from 'node:fs/promises';
 import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {detectAndroidSdk, detectJavaRuntime} from './tool-core.mjs';
 
 const defaultAiRoot = fileURLToPath(new URL('../', import.meta.url));
 const defaultMcpServerPath = fileURLToPath(new URL('./mcp-server.mjs', import.meta.url));
@@ -63,11 +64,12 @@ function tomlString(value) {
   return JSON.stringify(value);
 }
 
-function expectedServerDefinition(sourceRoot, {
+function expectedServerDefinition(projectRoot, {
+  sourceRoot,
   nodeExecutable = process.execPath,
   mcpServerPath = defaultMcpServerPath,
 } = {}) {
-  if (!isAbsolute(nodeExecutable) || !isAbsolute(mcpServerPath)) {
+  if (!isAbsolute(nodeExecutable) || !isAbsolute(mcpServerPath) || !isAbsolute(projectRoot)) {
     throw new Error('Configuration paths must be absolute.');
   }
   if (sourceRoot !== undefined && !isAbsolute(sourceRoot)) {
@@ -76,13 +78,16 @@ function expectedServerDefinition(sourceRoot, {
   return {
     command: nodeExecutable,
     args: [mcpServerPath],
-    ...(sourceRoot === undefined ? {} : {env: {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot}}),
+    env: {
+      VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+      ...(sourceRoot === undefined ? {} : {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot}),
+    },
   };
 }
 
-export function renderAgentClientConfig(client, sourceRoot, options = {}) {
+export function renderAgentClientConfig(client, projectRoot, options = {}) {
   const profile = profileFor(client);
-  const server = expectedServerDefinition(sourceRoot, options);
+  const server = expectedServerDefinition(projectRoot, options);
   if (profile.configFormat === 'toml') {
     const lines = [
       '[mcp_servers.viewcompose]',
@@ -90,13 +95,14 @@ export function renderAgentClientConfig(client, sourceRoot, options = {}) {
       `args = [${tomlString(server.args[0])}]`,
       '',
     ];
-    if (server.env) {
-      lines.push(
-        '[mcp_servers.viewcompose.env]',
+    lines.push(
+      '[mcp_servers.viewcompose.env]',
+      `VIEWCOMPOSE_PROJECT_ROOT = ${tomlString(server.env.VIEWCOMPOSE_PROJECT_ROOT)}`,
+      ...(server.env.VIEWCOMPOSE_SOURCE_ROOT === undefined ? [] : [
         `VIEWCOMPOSE_SOURCE_ROOT = ${tomlString(server.env.VIEWCOMPOSE_SOURCE_ROOT)}`,
-        '',
-      );
-    }
+      ]),
+      '',
+    );
     return lines.join('\n');
   }
   return `${JSON.stringify({mcpServers: {viewcompose: server}}, null, 2)}\n`;
@@ -288,8 +294,11 @@ function equalJson(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function managedTomlBlock(sourceRoot, options) {
-  return `${managedTomlStart}\n${renderAgentClientConfig('codex', sourceRoot, options)}${managedTomlEnd}\n`;
+function managedTomlBlock(projectRoot, sourceRoot, options) {
+  return `${managedTomlStart}\n${renderAgentClientConfig('codex', projectRoot, {
+    ...options,
+    sourceRoot,
+  })}${managedTomlEnd}\n`;
 }
 
 function parseJsonObject(text, relativePath) {
@@ -318,7 +327,7 @@ async function prepareConfigOperation({profile, root, sourceRoot, options = {}, 
   const original = metadata ? await readFile(target, 'utf8') : undefined;
   const mode = metadata ? metadata.mode & 0o777 : 0o644;
   if (profile.configFormat === 'json') {
-    const server = expectedServerDefinition(sourceRoot, options);
+    const server = expectedServerDefinition(root, {...options, sourceRoot});
     const document = original === undefined ? {} : parseJsonObject(original, profile.configPath);
     const existing = document.mcpServers?.viewcompose;
     if (action === 'install') {
@@ -356,7 +365,7 @@ async function prepareConfigOperation({profile, root, sourceRoot, options = {}, 
     };
   }
 
-  const block = managedTomlBlock(sourceRoot, options);
+  const block = managedTomlBlock(root, sourceRoot, options);
   const text = original ?? '';
   const hasSection = /^\s*\[mcp_servers\.viewcompose(?:\.env)?\]\s*$/mu.test(text);
   const occurrences = text.split(block).length - 1;
@@ -440,7 +449,7 @@ export async function initializeAgentClient({
     schemaVersion: 1,
     client: prepared.profile.id,
     projectRoot: prepared.root,
-    mode: canonicalSourceRoot === undefined ? 'standalone' : 'source-bound',
+    mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
     config: {path: prepared.profile.configPath, status: configChanged ? 'installed' : 'unchanged'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -457,6 +466,8 @@ export async function diagnoseAgentClient({
   aiRoot = defaultAiRoot,
   nodeExecutable = process.execPath,
   mcpServerPath = defaultMcpServerPath,
+  detectJava = detectJavaRuntime,
+  detectSdk = detectAndroidSdk,
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
@@ -476,14 +487,21 @@ export async function diagnoseAgentClient({
   const missing = prepared.operations.filter((item) => item.status === 'missing').map((item) => item.id);
   const conflicts = prepared.operations.filter((item) => item.status === 'conflict').map((item) => item.id);
   const skillsStatus = conflicts.length > 0 ? 'conflict' : missing.length > 0 ? 'missing' : 'ready';
-  const ready = configStatus === 'ready' && skillsStatus === 'ready';
+  const configurationReady = configStatus === 'ready' && skillsStatus === 'ready';
+  const java = detectJava();
+  const androidSdk = detectSdk(36);
+  const hostReady = [17, 21].includes(java?.feature) && androidSdk?.apiLevel === 36;
+  const ready = configurationReady && hostReady;
+  const readyStatus = canonicalSourceRoot === undefined
+    ? 'project-bound-ready'
+    : 'source-bound-ready';
   return {
     schemaVersion: 1,
     client: prepared.profile.id,
     projectRoot: prepared.root,
-    mode: canonicalSourceRoot === undefined ? 'standalone' : 'source-bound',
-    status: ready
-      ? canonicalSourceRoot === undefined ? 'standalone-ready' : 'source-bound-ready'
+    mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
+    status: ready ? readyStatus : configurationReady
+      ? 'host-prerequisites-required'
       : 'repair-required',
     config: {
       path: prepared.profile.configPath,
@@ -499,10 +517,19 @@ export async function diagnoseAgentClient({
       conflicts,
     },
     capabilities: {
-      knowledgeAndGeneration: ready ? 'ready' : 'repair-required',
-      compilationPreviewAndLayout: canonicalSourceRoot === undefined
-        ? 'source-root-required'
-        : ready ? 'source-bound-ready' : 'repair-required',
+      knowledgeAndGeneration: configurationReady ? 'ready' : 'repair-required',
+      compilationPreviewAndLayout: ready ? readyStatus : configurationReady
+        ? 'host-prerequisites-required'
+        : 'repair-required',
+    },
+    host: {
+      status: hostReady ? 'ready' : 'prerequisites-required',
+      java: java && [17, 21].includes(java.feature)
+        ? {status: 'ready', feature: java.feature, home: java.javaHome}
+        : {status: 'required', acceptedFeatures: [17, 21]},
+      androidSdk: androidSdk?.apiLevel === 36
+        ? {status: 'ready', apiLevel: 36, root: androidSdk.root}
+        : {status: 'required', apiLevel: 36},
     },
   };
 }
@@ -557,7 +584,7 @@ export async function uninstallAgentClient({
     schemaVersion: 1,
     client: prepared.profile.id,
     projectRoot: prepared.root,
-    mode: canonicalSourceRoot === undefined ? 'standalone' : 'source-bound',
+    mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
     config: {path: prepared.profile.configPath, status: configChanged ? 'removed' : 'absent'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -572,7 +599,7 @@ function parseCommandLine(arguments_) {
   if (!['config', 'install-skills', 'init', 'doctor', 'uninstall'].includes(command)) {
     throw new Error(
       'Usage: viewcompose-agent <config|install-skills|init|doctor|uninstall> ' +
-      '--client <codex|claude-code|cursor> [--project-root <absolute-path>] ' +
+      '--client <codex|claude-code|cursor> --project-root <absolute-path> ' +
       '[--source-root <absolute-path>]',
     );
   }
@@ -588,7 +615,7 @@ function parseCommandLine(arguments_) {
     if (Object.hasOwn(values, key)) throw new Error(`Duplicate option ${option}.`);
     values[key] = value;
   }
-  const required = command === 'config' ? ['client'] : ['client', 'project-root'];
+  const required = ['client', 'project-root'];
   const allowed = command === 'install-skills'
     ? new Set(required)
     : new Set([...required, 'source-root']);
@@ -603,7 +630,11 @@ async function main() {
   const {command, values} = parseCommandLine(process.argv.slice(2));
   if (command === 'config') {
     const sourceRoot = await canonicalSourceRootOrUndefined(values['source-root']);
-    process.stdout.write(renderAgentClientConfig(values.client, sourceRoot));
+    const projectRoot = await requireCanonicalDirectory(
+      values['project-root'],
+      'Consumer project root',
+    );
+    process.stdout.write(renderAgentClientConfig(values.client, projectRoot, {sourceRoot}));
     return;
   }
   const arguments_ = {
@@ -621,7 +652,7 @@ async function main() {
     : command === 'doctor' ? diagnoseAgentClient : uninstallAgentClient;
   const result = await operation(arguments_);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-  if (command === 'doctor' && result.status === 'repair-required') process.exitCode = 1;
+  if (command === 'doctor' && !result.status.endsWith('-ready')) process.exitCode = 1;
 }
 
 const entryPath = process.argv[1] ? realpathSync(resolve(process.argv[1])) : '';

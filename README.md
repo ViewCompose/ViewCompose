@@ -154,11 +154,12 @@ unrelated ViewCompose modules or moving the entire project on one atomic release
 ViewCompose publishes a versioned AI Reference, 13 local stdio MCP tools, and six standard Agent
 Skills as an installable GitHub Release. Codex, Claude Code, and Cursor can be connected to a new or
 existing Android project with one package-install command and one transactional project-init
-command—no ViewCompose checkout, local build, provider key, or manual configuration edit is needed
-for standalone knowledge, generation, static validation, and project analysis.
+command—no ViewCompose checkout, local package build, provider key, or manual configuration edit is
+needed for knowledge, generation, validation, or project analysis.
 
-Compilation, Preview, and rendered layout diagnosis remain an explicitly reported source-bound
-enhancement in `0.1.0`; static evidence is never presented as compiled or rendered evidence. Follow
+Release `0.2.0` also carries an isolated harness that compiles against released Maven artifacts and
+renders and diagnoses tool-generated screens without executing the consumer project's Gradle build.
+Static evidence is never presented as compiled or rendered evidence. Follow
 [AI Integration](./docs/ai/README.md) for the two-command setup, `doctor`, capability boundary,
 client checks, upgrades, and safe removal.
 

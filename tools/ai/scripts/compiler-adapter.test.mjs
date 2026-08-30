@@ -16,6 +16,10 @@ const validSource = `
   import com.viewcompose.ui.foundation.UiTreeBuilder
   fun UiTreeBuilder.example() { Text("Ready") }
 `;
+const fixedExecution = Object.freeze({
+  projectRoot: process.cwd(),
+  androidSdk: Object.freeze({root: '/fixed/android-sdk', apiLevel: 36}),
+});
 
 async function successfulCompiler(plan) {
   await mkdir(plan.classesDirectory, {recursive: true});
@@ -44,7 +48,7 @@ test('request keys cover source, artifact allowlist, lane, and bundle identity',
   });
   assert.match(first, /^[a-f0-9]{64}$/u);
   assert.notEqual(first, second);
-  assert.match(COMPILER_LANE, /jdk-21.*agp-9\.1\.1.*kotlin-2\.2\.10/u);
+  assert.match(COMPILER_LANE, /released-maven.*jdk-17-or-21.*agp-9\.1\.1.*kotlin-2\.2\.10/u);
 });
 
 test('compiles in the fixed plan and accepts only an integrity-verified cache hit', async () => {
@@ -56,7 +60,13 @@ test('compiles in the fixed plan and accepts only an integrity-verified cache hi
     capturedPlan = plan;
     return successfulCompiler(plan);
   };
-  const options = {cacheRoot, javaFeature: 21, javaHome: '/fixed/jdk-21', runCompiler};
+  const options = {
+    ...fixedExecution,
+    cacheRoot,
+    javaFeature: 21,
+    javaHome: '/fixed/jdk-21',
+    runCompiler,
+  };
   try {
     const first = await compileKotlin({source: validSource}, options);
     assert.equal(first.status, 'success');
@@ -64,9 +74,9 @@ test('compiles in the fixed plan and accepts only an integrity-verified cache hi
     assert.equal(first.evidence.cache, 'miss');
     assert.match(first.evidence.outputFingerprint, /^[a-f0-9]{64}$/u);
     assert.equal(executions, 1);
-    assert.ok(capturedPlan.args.includes('--offline'));
+    assert.equal(capturedPlan.args.includes('--offline'), false);
     assert.ok(capturedPlan.args.includes('--no-daemon'));
-    assert.ok(capturedPlan.args.includes(':tools:ai-compiler-harness:compileAiSnippet'));
+    assert.ok(capturedPlan.args.includes(':compiler:compileAiSnippet'));
     assert.equal(capturedPlan.args.some((argument) => argument.includes(validSource)), false);
 
     const second = await compileKotlin({source: validSource}, options);
@@ -91,7 +101,12 @@ test('rejects static failures and artifacts outside the fixed compiler classpath
     executions += 1;
     return successfulCompiler(plan);
   };
-  const common = {javaFeature: 21, javaHome: '/fixed/jdk-21', runCompiler};
+  const common = {
+    ...fixedExecution,
+    javaFeature: 21,
+    javaHome: '/fixed/jdk-21',
+    runCompiler,
+  };
   const staticFailure = await compileKotlin({
     source: `
       package example
@@ -122,6 +137,7 @@ test('rejects static failures and artifacts outside the fixed compiler classpath
 test('rejects unsafe or unbounded compiler inputs before process execution', async () => {
   let executions = 0;
   const options = {
+    ...fixedExecution,
     javaFeature: 21,
     javaHome: '/fixed/jdk-21',
     runCompiler: async (plan) => {
@@ -146,6 +162,7 @@ test('rejects symbolic links in content-addressed class output', async () => {
   const cacheRoot = await mkdtemp(join(tmpdir(), 'viewcompose-ai-compiler-symlink-'));
   try {
     const result = await compileKotlin({source: validSource}, {
+      ...fixedExecution,
       cacheRoot,
       javaFeature: 21,
       javaHome: '/fixed/jdk-21',
@@ -177,6 +194,7 @@ test('normalizes source compiler errors without exposing the request directory',
       source: 'package example\nfun example() { Imaginary() }\n',
       path: 'src/main/java/example/Example.kt',
     }, {
+      ...fixedExecution,
       cacheRoot,
       javaFeature: 21,
       javaHome: '/fixed/jdk-21',
@@ -205,6 +223,7 @@ test('returns stable timeout and cancellation outcomes', async () => {
   const cacheRoot = await mkdtemp(join(tmpdir(), 'viewcompose-ai-compiler-limits-'));
   try {
     const timedOut = await compileKotlin({source: validSource}, {
+      ...fixedExecution,
       cacheRoot,
       javaFeature: 21,
       javaHome: '/fixed/jdk-21',
@@ -222,6 +241,7 @@ test('returns stable timeout and cancellation outcomes', async () => {
     assert.equal(timedOut.diagnostics[0].code, 'VC-AI-COMPILER-TIMEOUT');
 
     const cancelled = await compileKotlin({source: `${validSource}\n`}, {
+      ...fixedExecution,
       cacheRoot,
       javaFeature: 21,
       javaHome: '/fixed/jdk-21',
@@ -277,6 +297,7 @@ test('identical in-flight content-addressed requests do not compile concurrently
     releaseCompiler = resolvePromise;
   });
   const options = {
+    ...fixedExecution,
     cacheRoot,
     javaFeature: 21,
     javaHome: '/fixed/jdk-21',

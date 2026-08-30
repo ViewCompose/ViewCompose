@@ -1,11 +1,14 @@
 import {spawnSync} from 'node:child_process';
+import {existsSync, realpathSync} from 'node:fs';
 import {lstat, readFile} from 'node:fs/promises';
+import {homedir, platform} from 'node:os';
 import {isAbsolute, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const aiRoot = fileURLToPath(new URL('../', import.meta.url));
 const repository = resolve(aiRoot, '../..');
 export const SOURCE_ROOT_ENVIRONMENT_VARIABLE = 'VIEWCOMPOSE_SOURCE_ROOT';
+export const PROJECT_ROOT_ENVIRONMENT_VARIABLE = 'VIEWCOMPOSE_PROJECT_ROOT';
 const manifestPath = fileURLToPath(
   new URL('../generated/current-source/manifest.json', import.meta.url),
 );
@@ -19,6 +22,19 @@ export function loadKnowledgeManifest() {
 
 export function aiToolingRoot() {
   return aiRoot;
+}
+
+export function executionHarnessRoot() {
+  return resolve(aiRoot, 'harness');
+}
+
+export function toolCacheRoot() {
+  const base = platform() === 'darwin'
+    ? resolve(homedir(), 'Library/Caches')
+    : process.env.XDG_CACHE_HOME && isAbsolute(process.env.XDG_CACHE_HOME)
+      ? resolve(process.env.XDG_CACHE_HOME)
+      : resolve(homedir(), '.cache');
+  return resolve(base, 'viewcompose/ai-tooling/0.2.0');
 }
 
 export function repositoryRoot() {
@@ -70,18 +86,96 @@ export async function verifyConfiguredSourceRoot(root = repositoryRoot()) {
   return {matched: true, mode: configured ? 'configured' : 'inferred'};
 }
 
-export function detectJavaFeature(javaHome = process.env.JAVA_HOME) {
-  if (!javaHome) return null;
-  const executable = resolve(javaHome, 'bin/java');
+export async function verifyConfiguredProjectRoot(
+  root = process.env[PROJECT_ROOT_ENVIRONMENT_VARIABLE],
+) {
+  if (
+    typeof root !== 'string' ||
+    root.length === 0 ||
+    root.length > 4096 ||
+    root.includes('\0') ||
+    !isAbsolute(root)
+  ) {
+    return {matched: false, reason: 'project-root-unavailable'};
+  }
+  const absolute = resolve(root);
+  const metadata = await lstat(absolute).catch((error) => {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  });
+  if (!metadata?.isDirectory() || metadata.isSymbolicLink()) {
+    return {matched: false, reason: 'project-root-unsafe'};
+  }
+  let canonical;
+  try {
+    canonical = realpathSync(absolute);
+  } catch {
+    return {matched: false, reason: 'project-root-unsafe'};
+  }
+  if (canonical !== absolute) return {matched: false, reason: 'project-root-unsafe'};
+  return {matched: true, root: absolute};
+}
+
+function javaRuntime(executable) {
   const result = spawnSync(executable, ['-XshowSettings:properties', '-version'], {
     encoding: 'utf8',
   });
   if (result.error || result.status !== 0) return null;
   const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
   const version = /\bjava\.version\s*=\s*([^\s]+)/u.exec(output)?.[1];
-  if (!version) return null;
+  const javaHome = /\bjava\.home\s*=\s*([^\r\n]+)/u.exec(output)?.[1]?.trim();
+  if (!version || !javaHome || !isAbsolute(javaHome)) return null;
   const feature = Number.parseInt(version.startsWith('1.') ? version.split('.')[1] : version, 10);
-  return Number.isInteger(feature) ? feature : null;
+  if (!Number.isInteger(feature)) return null;
+  return {feature, javaHome: realpathSync(javaHome)};
+}
+
+export function detectJavaRuntime(javaHome = process.env.JAVA_HOME) {
+  const candidates = [
+    javaHome,
+    process.env.STUDIO_JDK,
+    platform() === 'darwin' ? '/Applications/Android Studio.app/Contents/jbr/Contents/Home' : null,
+    resolve(homedir(), '.sdkman/candidates/java/current'),
+  ].filter((candidate) => typeof candidate === 'string' && candidate.length > 0);
+  for (const candidate of [...new Set(candidates)]) {
+    const executable = resolve(candidate, 'bin/java');
+    if (!existsSync(executable)) continue;
+    try {
+      const runtime = javaRuntime(executable);
+      if (runtime) return runtime;
+    } catch {
+      // Continue through deterministic local candidates before consulting PATH.
+    }
+  }
+  try {
+    return javaRuntime('java');
+  } catch {
+    return null;
+  }
+}
+
+export function detectAndroidSdk(apiLevel = 36) {
+  const candidates = [
+    process.env.ANDROID_HOME,
+    process.env.ANDROID_SDK_ROOT,
+    platform() === 'darwin' ? resolve(homedir(), 'Library/Android/sdk') : null,
+    resolve(homedir(), 'Android/Sdk'),
+  ].filter((candidate) => typeof candidate === 'string' && candidate.length > 0);
+  for (const candidate of [...new Set(candidates)]) {
+    if (!isAbsolute(candidate)) continue;
+    const androidJar = resolve(candidate, `platforms/android-${apiLevel}/android.jar`);
+    if (!existsSync(androidJar)) continue;
+    try {
+      return {root: realpathSync(candidate), apiLevel};
+    } catch {
+      // Ignore a disappearing or non-canonical candidate.
+    }
+  }
+  return null;
+}
+
+export function detectJavaFeature(javaHome = process.env.JAVA_HOME) {
+  return detectJavaRuntime(javaHome)?.feature ?? null;
 }
 
 export function diagnostic({

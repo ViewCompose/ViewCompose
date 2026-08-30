@@ -1,19 +1,23 @@
 import {createHash} from 'node:crypto';
+import {existsSync} from 'node:fs';
 import {lstat, readFile} from 'node:fs/promises';
 import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {executeBoundedProcess} from './bounded-process.mjs';
 import {
-  detectJavaFeature,
+  detectAndroidSdk,
+  detectJavaRuntime,
   diagnostic,
+  executionHarnessRoot,
   repositoryRoot,
+  toolCacheRoot,
   toolResult,
-  verifyConfiguredSourceRoot,
+  verifyConfiguredProjectRoot,
 } from './tool-core.mjs';
 
 export const PREVIEW_COMPILER_LANE =
-  'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11';
+  'released-maven/jdk-17-or-21/gradle-9.3.1/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11';
 export const RENDER_LANE =
-  'current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1';
+  'released-maven/preview-protocol-1/paparazzi-2.0.0-alpha02/layoutlib-15.2.3';
 export const DEFAULT_PREVIEW_LIMITS = Object.freeze({
   timeoutMs: 120_000,
   maxOutputBytes: 1024 * 1024,
@@ -233,20 +237,37 @@ function pngDimensions(buffer) {
   return {width, height};
 }
 
-function gradlePlan(repository, javaHome, args) {
+function gradlePlan({
+  harnessRoot,
+  projectCacheDir,
+  gradleUserHome,
+  requestCacheRoot,
+  javaHome,
+  androidSdk,
+  args,
+}) {
+  const packagedWrapper = resolve(harnessRoot, 'gradlew');
   return {
-    executable: resolve(repository, 'gradlew'),
-    cwd: repository,
+    executable: existsSync(packagedWrapper) ? packagedWrapper : resolve(repositoryRoot(), 'gradlew'),
+    cwd: harnessRoot,
+    env: {
+      ...process.env,
+      JAVA_HOME: javaHome,
+      ANDROID_HOME: androidSdk.root,
+      ANDROID_SDK_ROOT: androidSdk.root,
+    },
     args: [
       ...args,
+      `-PviewComposeAiPreviewRequestCacheRoot=${requestCacheRoot}`,
       `-Dorg.gradle.java.home=${javaHome}`,
       '-Dorg.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8',
-      '--offline',
       '--no-daemon',
       '--no-build-cache',
       '--no-configuration-cache',
       '--max-workers=2',
       '--console=plain',
+      ...(projectCacheDir === null ? [] : ['--project-cache-dir', projectCacheDir]),
+      ...(gradleUserHome === null ? [] : ['--gradle-user-home', gradleUserHome]),
     ],
   };
 }
@@ -487,9 +508,16 @@ export async function renderPreview({
   signal,
 } = {}, {
   runProcess = executeBoundedProcess,
-  javaFeature = detectJavaFeature(),
-  javaHome = process.env.JAVA_HOME,
-  repository = repositoryRoot(),
+  javaFeature,
+  javaHome,
+  androidSdk = detectAndroidSdk(36),
+  projectRoot = process.env.VIEWCOMPOSE_PROJECT_ROOT,
+  harnessRoot = executionHarnessRoot(),
+  repository = toolCacheRoot(),
+  executionRoot = repository,
+  projectCacheDir = resolve(executionRoot, 'gradle/project-cache'),
+  gradleUserHome = resolve(executionRoot, 'gradle/user-home'),
+  requestCacheRoot = resolve(repository, 'preview/requests'),
   targets = SUPPORTED_PREVIEW_TARGETS,
 } = {}) {
   const started = performance.now();
@@ -559,30 +587,34 @@ export async function renderPreview({
       elapsedMs: performance.now() - started,
     });
   }
-  if (javaFeature !== 21 || !javaHome) {
+  const detectedJava = javaFeature === undefined || javaHome === undefined
+    ? detectJavaRuntime(javaHome)
+    : null;
+  const effectiveJavaFeature = javaFeature ?? detectedJava?.feature;
+  const effectiveJavaHome = javaHome ?? detectedJava?.javaHome;
+  if (![17, 21].includes(effectiveJavaFeature) || !effectiveJavaHome || !androidSdk) {
     return previewFailure({
       requestId,
       status: 'unsupported',
       level: 'static',
       code: 'VC-AI-PREVIEW-LANE-MISMATCH',
-      message: `The ${RENDER_LANE} render lane requires JAVA_HOME to resolve JDK 21.`,
-      nextAction: 'Select the pinned JDK 21 lane before rendering.',
+      message: `The ${RENDER_LANE} render lane requires JDK 17 or 21 and Android SDK 36.`,
+      nextAction: 'Install Android SDK platform 36 and expose a local JDK 17 or 21.',
       elapsedMs: performance.now() - started,
     });
   }
-  const sourceRoot = await verifyConfiguredSourceRoot(repository);
-  if (!sourceRoot.matched) {
+  const authorizedProjectRoot = projectRoot ?? (
+    runProcess === executeBoundedProcess ? undefined : repository
+  );
+  const consumerProject = await verifyConfiguredProjectRoot(authorizedProjectRoot);
+  if (!consumerProject.matched) {
     return previewFailure({
       requestId,
       status: 'unsupported',
       level: 'static',
-      code: 'VC-AI-SOURCE-ROOT-MISMATCH',
-      message: sourceRoot.reason === 'source-root-unavailable'
-        ? 'Preview rendering and layout diagnosis require an explicitly bound ViewCompose source checkout in this release.'
-        : 'The configured ViewCompose source root does not contain the packaged framework identity.',
-      nextAction: sourceRoot.reason === 'source-root-unavailable'
-        ? 'Run viewcompose-agent init again with --source-root pointing to a matching ViewCompose checkout.'
-        : 'Select a matching ViewCompose checkout with the required Gradle wrapper.',
+      code: 'VC-AI-PROJECT-ROOT-MISMATCH',
+      message: 'Preview rendering requires the physical consumer project root bound by viewcompose-agent init.',
+      nextAction: 'Run viewcompose-agent init from the physical root of the consumer Android project.',
       elapsedMs: performance.now() - started,
     });
   }
@@ -592,7 +624,15 @@ export async function renderPreview({
   const catalogPath = resolve(artifactRoot, 'descriptors.json');
   const remainingTimeout = () => limits.timeoutMs - Math.round(performance.now() - started);
   const discovery = await runProcess(
-    gradlePlan(repository, javaHome, [target.discoveryTask, ...gradleArguments]),
+    gradlePlan({
+      harnessRoot,
+      projectCacheDir,
+      gradleUserHome,
+      requestCacheRoot,
+      javaHome: effectiveJavaHome,
+      androidSdk,
+      args: [target.discoveryTask, ...gradleArguments],
+    }),
     {...limits, timeoutMs: Math.max(1, remainingTimeout()), signal},
   );
   const discoveryFailure = processFailure(
@@ -717,12 +757,20 @@ export async function renderPreview({
   }
 
   const render = await runProcess(
-    gradlePlan(repository, javaHome, [
-      target.renderTask,
-      ...gradleArguments,
-      `-PviewComposePreviewId=${selection.descriptor.id}`,
-      `-PviewComposePreviewVariantId=${selection.variant.id}`,
-    ]),
+    gradlePlan({
+      harnessRoot,
+      projectCacheDir,
+      gradleUserHome,
+      requestCacheRoot,
+      javaHome: effectiveJavaHome,
+      androidSdk,
+      args: [
+        target.renderTask,
+        ...gradleArguments,
+        `-PviewComposePreviewId=${selection.descriptor.id}`,
+        `-PviewComposePreviewVariantId=${selection.variant.id}`,
+      ],
+    }),
     {...limits, timeoutMs: Math.max(1, remainingTimeout()), signal},
   );
   if (render.cancelled || render.timedOut || render.truncated || render.spawnError) {

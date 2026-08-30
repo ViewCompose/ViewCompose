@@ -69,7 +69,7 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
-            tools/ai/build/distribution/viewcompose-ai-tooling-0.1.0.tgz
+            tools/ai/build/distribution/viewcompose-ai-tooling-0.2.0.tgz
             tools/ai/build/distribution/manifest.json
             tools/ai/build/distribution/SHA256SUMS
 
@@ -78,10 +78,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            tools/ai/build/distribution/viewcompose-ai-tooling-0.1.0.tgz \
+            tools/ai/build/distribution/viewcompose-ai-tooling-0.2.0.tgz \
             tools/ai/build/distribution/manifest.json \
             tools/ai/build/distribution/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
-            --title "ViewCompose AI tooling 0.1.0" \
+            --title "ViewCompose AI tooling 0.2.0" \
             --generate-notes

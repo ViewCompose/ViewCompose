@@ -146,7 +146,11 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(project.tasks.getByName("verifyAiXmlProjectContext") is Exec)
         assertTrue(project.tasks.getByName("verifyAiXmlLayoutDependencies") is Exec)
         assertTrue(project.tasks.getByName("verifyAiXmlMigration") is Exec)
-        assertTrue(project.tasks.getByName("verifyAiGeneratedPreview") is Exec)
+        val verifyAiGeneratedPreview = project.tasks.getByName("verifyAiGeneratedPreview") as Exec
+        assertEquals(
+            repository.canonicalPath,
+            verifyAiGeneratedPreview.environment["VIEWCOMPOSE_PROJECT_ROOT"],
+        )
         assertTrue(project.tasks.getByName("verifyAiScreenshotPreprocessing") is Exec)
         assertTrue(project.tasks.getByName("verifyAiScreenshotInference") is Exec)
         assertTrue(project.tasks.getByName("verifyAiScreenshotResolution") is Exec)

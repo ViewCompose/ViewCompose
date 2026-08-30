@@ -11,7 +11,7 @@ import {
   SCREENSHOT_RESOLUTION_RESULT_SCHEMA,
 } from './screenshot-generation-contract.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
-import {repositoryRoot} from './tool-core.mjs';
+import {toolCacheRoot} from './tool-core.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/u;
 const ZERO_FINGERPRINT = '0'.repeat(64);
@@ -310,7 +310,7 @@ async function evaluateCandidateCore({
 } = {}, {
   requestId = 'screenshot-repair-candidate',
   limits,
-  repository = repositoryRoot(),
+  repository = toolCacheRoot(),
   signal,
   applyPatch = applyDesignIrRepairPatch,
   generate = generateScreenshotViewCompose,

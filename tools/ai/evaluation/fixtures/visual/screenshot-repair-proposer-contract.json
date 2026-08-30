@@ -72,8 +72,8 @@
   "supportedFixtures": [
     {
       "id": "single-localized-property-regression",
-      "baselineEvidenceFingerprint": "924f462673b39e8c9f00352f3517144d433894fde5d4985e20f62f448925babf",
-      "candidateEvidenceFingerprint": "f2b2b21f846ff99024fcb8a4d6bee129697da8b387802c6c086254febc47484c",
+      "baselineEvidenceFingerprint": "9660c0fa52128c829885ce226858e9db6cda87f9a86ec349421ee42b14dc48b9",
+      "candidateEvidenceFingerprint": "f5d313cbf24308fcd3091de36eeda27ad20946b067f7c0ece94ad65ba8fd45cd",
       "expectedReason": "strict-pixel-regression-rollback",
       "expectedTarget": {
         "nodeId": "wireframe-title",
@@ -82,8 +82,8 @@
         "name": "text",
         "candidateValueFingerprint": "2d5a9d124f9e9914656016180d61fd19bd01b5215788700dbf90d4a808e78f34",
         "baselineValueFingerprint": "468d5410ab849597bef869faf5a61fe632a374832339a132f6a6c5b9e87b2998",
-        "localizationFingerprint": "ea2e12feed785c158153515b02ec4bfb70d83658a322357a37d499782e3a1f7b",
-        "attributedMismatchedPixels": 2267
+        "localizationFingerprint": "ad1e1e4c1f6acdc3b7d7d9a40b671b882c63a2e71c55eb11f627afbe7af935fc",
+        "attributedMismatchedPixels": 1516
       },
       "expectedPatch": {
         "schemaVersion": 1,
@@ -98,9 +98,9 @@
         ],
         "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945"
       },
-      "expectedProposalFingerprint": "2d77def7c5582719c648797d4aaaf3ae551e92a0c4cb7f1d7eb60dbdaba2aeee",
-      "expectedRollbackEvaluationFingerprint": "f578f63fdd13e394a9f346df3abb2e07cb7af6b9173a088371d6efb0e6cfbefc",
-      "expectedRollbackEvidenceFingerprint": "03fdfb3842445be2762cba76993950682d4ead25e737d3f1ab5c5d05f160990e"
+      "expectedProposalFingerprint": "f407aa353cb219f36e98922d83bd178196402ac93fac47088cff1685ef7cf44f",
+      "expectedRollbackEvaluationFingerprint": "70c8774d32e03d75d91ea66cf1b055747f94a84230147432aa682c14429bcd22",
+      "expectedRollbackEvidenceFingerprint": "65de1792b924bc7750dcd26fbe9fa2c23f5997a5d14379b0e22f1f7a102bf610"
     }
   ],
   "noEligibleFixtures": [

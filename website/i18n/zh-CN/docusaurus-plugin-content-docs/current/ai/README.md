@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 5db2d8fd2de9d1479ee0234fe7ff47213765f8126f8e42dd9ed54385b97c3b37
+translation_source_hash: 1b8c54cfb738c3114542e1af29d594f53539b2f694ca214c957cc5a640aa72ea
 translation_status: current
 ---
 
@@ -10,8 +10,8 @@ translation_status: current
 
 ViewCompose 把机器可读 API Reference、13 个本地 MCP 工具和 6 个 Agent Skill 作为一个
 可安装的 GitHub Release 发布。开发者只需两条命令，就能让 Codex、Claude Code 或 Cursor
-接入全新或已有 Android Project。Standalone Workflow 不要求 ViewCompose Checkout、本地构建
-Package、Provider Key，也不要求手动编辑 MCP 配置。
+接入全新或已有 Android Project。即使要执行 Kotlin 编译和生成页面的 Preview 证据，也不要求
+ViewCompose Checkout、本地构建 Package、Provider Key 或手动编辑 MCP 配置。
 
 Coding Client 仍然负责模型、Credential、对话和用户授权的源码修改。ViewCompose 只提供确定性的
 框架事实、生成工具与明确的验证证据，既不内置也不连接模型 Provider。
@@ -22,7 +22,7 @@ Coding Client 仍然负责模型、Credential、对话和用户授权的源码�
 
 ```bash
 npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.1.0/viewcompose-ai-tooling-0.1.0.tgz
+  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.2.0/viewcompose-ai-tooling-0.2.0.tgz
 ```
 
 然后在 Android Project 根目录执行，并选择一个客户端：
@@ -42,8 +42,11 @@ viewcompose-agent init --client <codex|claude-code|cursor> \
 | Claude Code | `.mcp.json` | `.claude/skills` |
 | Cursor | `.cursor/mcp.json` | `.agents/skills` |
 
-Standalone Path 唯一的运行时前提是 Node.js 24.19.0 或更高版本。如果系统级 npm Prefix
-不可写，建议使用 Node Version Manager；不要仅仅为了安装工具而使用 `sudo`。
+API 查询、生成、静态验证和 Project 分析只要求 Node.js 24.19.0 或更高版本。若要取得编译、
+渲染和比对证据，还需要 JDK 17 或 21，以及 Android SDK Platform 36。Release 已携带 Gradle
+9.3.1 Wrapper 与固定 Build Harness，用户无需安装 Gradle，也无需让现有 Project 的 AGP/Kotlin
+版本与工具链对齐。如果系统级 npm Prefix 不可写，建议使用 Node Version Manager；不要仅仅
+为了安装工具而使用 `sudo`。
 
 ## 确认安装状态
 
@@ -54,9 +57,10 @@ viewcompose-agent doctor --client <codex|claude-code|cursor> \
   --project-root "$(pwd -P)"
 ```
 
-`standalone-ready` 表示 MCP Entry 与全部 Skill 都和已安装 Release 一致。报告还会把
-`knowledgeAndGeneration` 与 `compilationPreviewAndLayout` 分开，因此不会把尚不可用的深层证据
-误报为成功。
+`project-bound-ready` 表示 MCP Entry 与全部 Skill 都和已安装 Release 一致，物理 Project 根目录
+已绑定，并且已满足深层证据所需的 JDK/Android SDK 前提。报告会分别列出
+`knowledgeAndGeneration`、`compilationPreviewAndLayout` 和 Host 前提，因此不会把不可用的证据
+Lane 误报为成功。
 
 继续完成客户端侧连接检查：
 
@@ -77,12 +81,14 @@ Protocol 握手。它不会自动控制或登录专有客户端 Binary，因此�
 
 ## 无需 ViewCompose 源码即可使用的能力
 
-Standalone Mode 支持：
+安装后的 Project-bound Mode 支持：
 
 - 精确 API、Component、Sample 与排序后的 Capability 检索；
-- Kotlin 静态验证，以及有界、只读的 Android Project 分析；
+- Kotlin 静态验证与基于已发布 Artifact 的编译验证，以及有界、只读的 Android Project 分析；
 - 从粘贴的 XML 或显式限定的 Project Resource 生成 ViewCompose；
+- 对 XML 生成页面执行编译、Preview 渲染、语义/几何比对与结构化布局诊断；
 - Screenshot 预处理、Inference 验证与类型化 Resolution，以及 ViewCompose Kotlin 生成；
+- 对 Screenshot 生成页面执行编译、Preview 渲染、语义比对，以及符合条件时的精确 Pixel 比对；
 - API 查询、页面创建、XML 转换、Review、验证和布局调试共 6 个 Workflow；每个 Workflow
   只保留实际取得的证据等级。
 
@@ -94,25 +100,23 @@ Standalone Mode 支持：
 > 使用 ViewCompose 创建一个 Material 3 登录页面。编写前先检索准确 API 和已编译 Sample，
 > 执行当前可用的全部验证 Lane，并报告已取得的证据等级以及不可用的更深层 Lane。
 
-## 当前编译、Preview 与布局诊断边界
+## 深层证据执行边界
 
-在 Release `0.1.0` 中，Compile Mode `validate_code`、Preview 渲染和渲染后的布局诊断仍然针对
-匹配的 ViewCompose Source Checkout 执行。它们需要 JDK 21、仓库固定的 Android/Gradle Lane
-与精确的 Knowledge Bundle Revision。这是增强模式，不是安装或使用 Standalone 工具的前提。
+Release `0.2.0` 使用 Maven Central 中的精确 ViewCompose Artifact 编译生成 Kotlin，并渲染生成
+页面。Package 内的 Content-addressed Harness 固定使用 Gradle 9.3.1、AGP 9.1.1、Kotlin
+2.2.10、Android 36、JVM Target 11 和 Allowlist 中的 ViewCompose/Preview Coordinate。Consumer
+Project 根目录只是只读授权边界：工具不会执行它的 Wrapper、Settings、Plugin、Task 或 Build
+Script，也不会向 Project 写入文件。
 
-如果已有该 Checkout，可以把 Standalone 接入替换为 Source-bound 接入：
+第一次请求深层证据时，工具可能下载固定 Gradle Distribution 与 Maven Dependency；后续请求会
+使用操作系统用户缓存目录中的完整性校验 Cache。Package 安装本身仍然无脚本且支持 Offline；整个
+流程也不需要模型 Provider 的网络访问。
 
-```bash
-viewcompose-agent uninstall --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
-viewcompose-agent init --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)" \
-  --source-root <physical-absolute-viewcompose-source-root>
-```
-
-下一条工具边界会在用户显式授权的 Consumer Project 中，使用已发布 ViewCompose Maven Artifact
-执行编译、Preview 与布局诊断。在该契约及其 Smoke Project 通过前，Release 会以
-`VC-AI-SOURCE-ROOT-MISMATCH` 关闭失败，不会静默把静态证据升级为更深层证据。
+`validate_code` 的 Compile Mode 接收有界 Kotlin Snippet。XML 与 Screenshot 生成工具只执行自己
+确定性生成的源码，依次编译、渲染、重新打开精确 PNG 与 Render Tree，并在返回证据前附加布局诊断。
+XML Render Mode 还会比对声明的语义与几何；符合资格的 Screenshot Reference 可以继续进行精确
+RGBA 比对。直接调用 `render_preview` 和 `diagnose_layout` 仍只适用于另行 Allowlist 的固定 Target，
+不能作为任意现有 Application Code 的证据。渲染现有 Application UI 属于后续需要单独隔离的能力。
 
 ## 升级或删除
 
@@ -135,7 +139,7 @@ npm uninstall --global @viewcompose/ai-tooling
 
 ## 完整性与故障排查
 
-[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.1.0)
+[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.2.0)
 包含 Tarball、`manifest.json` 与 `SHA256SUMS`。发布 Workflow 会构建 Package 两次、检查精确
 Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创建 GitHub Artifact Attestation。
 如需独立校验 Provenance，请参考 GitHub 的
@@ -145,8 +149,9 @@ Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创�
 | --- | --- |
 | 找不到 `viewcompose-agent` | 确认 Node 版本不低于 24.19，并且 npm 全局 Binary 目录已加入 `PATH`。 |
 | `doctor` 报告 `repair-required` | 只有现有文件未修改时才重新运行 `init`；否则先检查报告中的冲突。 |
+| `doctor` 报告 `host-prerequisites-required` | 安装 JDK 17 或 21 与 Android SDK Platform 36 后重新运行 `doctor`；无需另装 Gradle。 |
 | 客户端未显示 MCP Server | 执行上面的客户端检查，按要求批准 Project 配置，再重启或 Reload 客户端。 |
-| 编译或 Preview 报告 `VC-AI-SOURCE-ROOT-MISMATCH` | 保留真实的静态证据继续工作，或者显式安装 Source-bound 增强模式。 |
+| 编译或 Preview 报告 `VC-AI-PROJECT-ROOT-MISMATCH` | 从物理 Project 根目录运行 `init`，并确保 Agent Process 仍可访问该路径。 |
 | 出现 Credential 请求 | 立即停止。ViewCompose 不需要模型 Provider Credential，也不会在 MCP 参数或 Project 配置中接收它。 |
 
 贡献者内部说明见 [AI 工具契约](https://github.com/ViewCompose/ViewCompose/blob/main/tools/ai/README.md)

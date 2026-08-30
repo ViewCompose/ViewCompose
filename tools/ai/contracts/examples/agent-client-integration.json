@@ -1,13 +1,14 @@
 {
-  "schemaVersion": 2,
-  "profileSetId": "viewcompose-agent-clients-v2",
+  "schemaVersion": 3,
+  "profileSetId": "viewcompose-agent-clients-v3",
   "lastVerified": "2026-08-30",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "transport": "stdio",
     "mcpExecutable": "viewcompose-mcp",
     "clientExecutable": "viewcompose-agent",
+    "projectRootVariable": "VIEWCOMPOSE_PROJECT_ROOT",
     "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT"
   },
   "evidence": {
@@ -28,8 +29,8 @@
       "config": {
         "format": "toml",
         "projectPath": ".codex/config.toml",
-        "standaloneArguments": ["config", "--client", "codex"],
-        "sourceBoundArguments": ["config", "--client", "codex", "--source-root", "<absolute-viewcompose-source-root>"],
+        "projectBoundArguments": ["config", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
+        "sourceBoundArguments": ["config", "--client", "codex", "--project-root", "<absolute-consumer-project-root>", "--source-root", "<absolute-viewcompose-source-root>"],
         "verification": ["codex mcp list", "/mcp", "/skills"]
       },
       "skills": {"standard": "agent-skills", "projectPath": ".agents/skills", "invocationPrefix": "$"},
@@ -49,8 +50,8 @@
       "config": {
         "format": "json",
         "projectPath": ".mcp.json",
-        "standaloneArguments": ["config", "--client", "claude-code"],
-        "sourceBoundArguments": ["config", "--client", "claude-code", "--source-root", "<absolute-viewcompose-source-root>"],
+        "projectBoundArguments": ["config", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
+        "sourceBoundArguments": ["config", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>", "--source-root", "<absolute-viewcompose-source-root>"],
         "verification": ["claude mcp list", "claude mcp get viewcompose", "/mcp"]
       },
       "skills": {"standard": "agent-skills", "projectPath": ".claude/skills", "invocationPrefix": "/"},
@@ -70,8 +71,8 @@
       "config": {
         "format": "json",
         "projectPath": ".cursor/mcp.json",
-        "standaloneArguments": ["config", "--client", "cursor"],
-        "sourceBoundArguments": ["config", "--client", "cursor", "--source-root", "<absolute-viewcompose-source-root>"],
+        "projectBoundArguments": ["config", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
+        "sourceBoundArguments": ["config", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>", "--source-root", "<absolute-viewcompose-source-root>"],
         "verification": ["Cursor Settings > Tools & MCP", "Agent > Available Tools"]
       },
       "skills": {"standard": "agent-skills", "projectPath": ".agents/skills", "invocationPrefix": "/"},

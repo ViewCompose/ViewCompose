@@ -282,6 +282,7 @@ async function verifySchemas(versions) {
   const contractSchemas = {
     agentClientIntegration: 'agent-client-integration.schema.json',
     aiToolingRelease: 'ai-tooling-release.schema.json',
+    consumerProjectExecution: 'consumer-project-execution.schema.json',
     knowledgeBundleManifest: 'knowledge-bundle-manifest.schema.json',
     toolEnvelope: 'tool-envelope.schema.json',
     designIr: 'design-ir.schema.json',
@@ -379,6 +380,7 @@ async function verifyExamples(schemas) {
   const examples = [
     ['agent-client-integration.json', 'agent-client-integration.schema.json'],
     ['ai-tooling-release.json', 'ai-tooling-release.schema.json'],
+    ['consumer-project-execution.json', 'consumer-project-execution.schema.json'],
     ['knowledge-bundle-manifest.json', 'knowledge-bundle-manifest.schema.json'],
     ['tool-request.json', 'tool-envelope.schema.json'],
     ['tool-result.json', 'tool-envelope.schema.json'],
@@ -949,15 +951,15 @@ async function verifyGeneratedPreview(schemas) {
     ]) ||
     contract.activation?.tool !== 'convert_xml_to_viewcompose' ||
     contract.activation?.mode !== 'render' ||
-    contract.activation?.sourceLane !== 'current-source'
+    contract.activation?.sourceLane !== 'released-maven'
   ) {
     throw new Error('Generated Preview must extend the exact XML, Preview, and request contracts');
   }
   if (
-    contract.execution?.harnessModule !== ':tools:ai-preview-harness' ||
+    contract.execution?.harnessModule !== ':preview' ||
     contract.execution?.readInspectedProject !== false ||
     contract.execution?.executeInspectedProjectBuildLogic !== false ||
-    contract.execution?.networkAccess !== false ||
+    contract.execution?.networkAccess !== 'first-use dependency resolution only' ||
     contract.execution?.followSymbolicLinks !== false ||
     contract.execution?.callerSelectedGradleTask !== false ||
     contract.execution?.callerSelectedDependency !== false ||

@@ -181,9 +181,9 @@ async function verifyRealRollback(contract, schema) {
     !same(proposal.target, fixture.expectedTarget) ||
     !same(proposal.patch, fixture.expectedPatch) ||
     proposal.proposalFingerprint !== fixture.expectedProposalFingerprint ||
-    candidate.evaluation.gates[5].mismatchedPixels !== 3345
+    candidate.evaluation.gates[5].mismatchedPixels !== 2221
   ) {
-    throw new Error('Real source-bound screenshot repair proposal changed');
+    throw new Error('Real released-artifact screenshot repair proposal changed');
   }
 
   const currentResolution = structuredClone(resolutionResult);
@@ -208,7 +208,9 @@ async function verifyRealRollback(contract, schema) {
     rollback.evidence.evidenceFingerprint !== fixture.expectedRollbackEvidenceFingerprint ||
     !same(rollback.evidence.designIr, baseline.evidence.designIr)
   ) {
-    throw new Error('Proposed rollback did not pass the complete source-bound six-gate evaluator');
+    throw new Error(
+      'Proposed rollback did not pass the complete released-artifact six-gate evaluator',
+    );
   }
   return {
     evaluatedCandidates: 3,

@@ -12,10 +12,10 @@
     "networkAccess": false
   },
   "input": {
-    "baselineEvidenceFingerprint": "924f462673b39e8c9f00352f3517144d433894fde5d4985e20f62f448925babf",
-    "candidateEvidenceFingerprint": "f2b2b21f846ff99024fcb8a4d6bee129697da8b387802c6c086254febc47484c",
-    "proposalFingerprint": "2d77def7c5582719c648797d4aaaf3ae551e92a0c4cb7f1d7eb60dbdaba2aeee",
-    "authorizationFingerprint": "7ee3a6296b55b6ae58585ffba93527dcd49d372e6a3daf403eb9f95ce02ad859"
+    "baselineEvidenceFingerprint": "9660c0fa52128c829885ce226858e9db6cda87f9a86ec349421ee42b14dc48b9",
+    "candidateEvidenceFingerprint": "f5d313cbf24308fcd3091de36eeda27ad20946b067f7c0ece94ad65ba8fd45cd",
+    "proposalFingerprint": "f407aa353cb219f36e98922d83bd178196402ac93fac47088cff1685ef7cf44f",
+    "authorizationFingerprint": "b85294c2284c3e42d495507e5223981c72c3251235ffa0a7be7b24664190d7f3"
   },
   "authorization": {
     "baselineReviewerId": "fixture-baseline-reviewer",
@@ -27,5 +27,5 @@
     "unattendedExecution": false
   },
   "diagnostics": [],
-  "validationFingerprint": "ef6ee08150a287d334c799ca30c4b0d4bb3aa8d94839fd143bf30071ecd00b1f"
+  "validationFingerprint": "6bc9958632a7e5efaea9bdec8a06d5cd310125dd670b9e366b9c23d1f5752285"
 }

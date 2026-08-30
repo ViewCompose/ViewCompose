@@ -10,19 +10,22 @@ target and configuration.
 
 ## Exact version and evidence
 
-1. Call `render_preview` for the exact allowlisted target and requested bounded configuration.
-   Rendering an unrelated target is not evidence for the affected layout.
-2. Call `diagnose_layout` for that same target and configuration. Use its source-aware bounds,
-   clipping ancestor, text metrics, severity, and output fingerprint; do not parse an arbitrary tree
-   path supplied by the caller.
+1. Identify the evidence owner. For an XML- or screenshot-generated screen, call its generation tool
+   in render/compare mode and use the returned `preview.layoutDiagnosis`; the installed package owns
+   that generated source and its content-addressed target. Call `render_preview` and
+   `diagnose_layout` directly only when the request names an exact separately allowlisted fixed
+   target. Rendering an unrelated or arbitrary application target is not evidence.
+2. Use only the accepted result's source-aware bounds, clipping ancestor, text metrics, severity,
+   structure, and output fingerprint. Do not parse an arbitrary tree path supplied by the caller.
 3. Explain only the returned structured facts. Intentional clipping and ellipsis remain facts to
    confirm, not automatic defects. A clean result does not prove overlap, accessibility, touch
    target, design intent, or pixel similarity.
 4. If the user asks for a fix, resolve the affected API with `get_component_reference` and
    `get_sample`, make the smallest in-scope change, then use `validate_code` compile mode before
-   rendering and diagnosing the same target again.
+   rendering and diagnosing the same generated or fixed target again.
 5. Deliver before/after render fingerprints, diagnostic codes, source locations, configuration,
-   and any remaining limitation. The maximum evidence is rendered, never compared.
+   and any remaining limitation. Report `compared` only when the owning XML/screenshot workflow
+   returned comparison evidence; direct fixed-target diagnosis reaches `rendered`.
 
 ## Stop and authority
 

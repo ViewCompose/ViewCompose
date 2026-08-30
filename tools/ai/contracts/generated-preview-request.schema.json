@@ -74,10 +74,10 @@
       "required": ["compiler", "render"],
       "properties": {
         "compiler": {
-          "const": "current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11"
+          "const": "released-maven/jdk-17-or-21/gradle-9.3.1/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11"
         },
         "render": {
-          "const": "current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1"
+          "const": "released-maven/preview-protocol-1/paparazzi-2.0.0-alpha02/layoutlib-15.2.3"
         }
       }
     }

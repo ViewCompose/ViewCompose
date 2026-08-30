@@ -1719,6 +1719,14 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 ),
             )
         }
+        project.tasks.withType(Exec::class.java).configureEach {
+            // Repository verification is an explicit trusted-host boundary. Binding the physical
+            // root here keeps cold CI execution equivalent to project-bound consumer tooling while
+            // the adapters continue to reject unbound public compile and render requests.
+            if (name.startsWith("verifyAi")) {
+                environment("VIEWCOMPOSE_PROJECT_ROOT", project.rootDir.canonicalPath)
+            }
+        }
         project.registerLifecycleQualityTasks(extension)
         project.registerNavigationCoverageTasks(extension)
         project.registerNavigationBenchmarkTraceContractTask(extension)
