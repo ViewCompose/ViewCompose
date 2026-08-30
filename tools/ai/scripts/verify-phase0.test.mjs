@@ -4,7 +4,7 @@ import {resolveFixturePath, verifyPhase0} from './verify-phase0.mjs';
 
 test('accepts the checked-in Phase 0 contracts and evaluation corpus', async () => {
   const summary = await verifyPhase0();
-  assert.equal(summary.schemas, 26);
+  assert.equal(summary.schemas, 27);
   assert.equal(summary.reservedCapabilities, 5);
   assert.equal(summary.metrics, 66);
   assert.equal(summary.cases, 74);

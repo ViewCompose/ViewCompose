@@ -16,10 +16,12 @@ invariants:
   - Consumer 依赖版本无法解析或互相冲突时，必须保持现有接入不变并失败关闭。
 evidence:
   - tools/ai/contracts/framework-compatibility-profile.schema.json
+  - tools/ai/contracts/framework-profile-index.schema.json
   - tools/ai/contracts/examples/framework-compatibility-profile.json
+  - tools/ai/generated/released/index.json
   - ./gradlew verifyAiToolingContracts
 translation_source: architecture/decisions/0025-version-bound-ai-tooling-upgrades.md
-translation_source_hash: 1c0b848e9d9213cc502b53a814d6fa60cdfeb539e638da3a4992d65ae0bcd5f4
+translation_source_hash: 183c99f00e71fbfa8749dc35cab8964605462b62368ccbf22739d8748d1428a1
 translation_status: current
 ---
 
@@ -49,7 +51,8 @@ ViewCompose 不能为此使用一个虚构的统一框架版本。每个已发�
    Consumer Project 匹配候选框架 Profile 时才能切换生效 Pack。
 2. 每个可供 Consumer 选择的框架 Profile 都记录各 ViewCompose Coordinate、精确版本、不可变的
    40 位发布 Revision、Knowledge Bundle Fingerprint，以及编译/渲染 Harness 使用的精确 Maven
-   Coordinate。Profile ID 由这些规范数据按内容寻址产生。
+   Coordinate。为避免循环身份，Profile ID 只由规范 Artifact Vector 与 Harness 身份按内容寻址
+   产生；生成后的 Profile 再把该 ID 与 Knowledge Bundle Fingerprint 绑定。
 3. 只有从记录的 Artifact 发布 Revision 生成的 `released` Knowledge Pack 才能供 Consumer
    选择。`current-source` Bundle 仍适用于精确源码 Checkout 和贡献者 Workflow，但绝不会被推断为
    代表已发布 Consumer Project。

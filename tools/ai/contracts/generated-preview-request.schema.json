@@ -19,8 +19,8 @@
       "additionalProperties": false,
       "required": ["versionLane", "identity", "bundleFingerprint"],
       "properties": {
-        "versionLane": { "const": "current-source" },
-        "identity": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "versionLane": { "enum": ["current-source", "released"] },
+        "identity": { "type": "string", "pattern": "^[a-f0-9]{40}(?:[a-f0-9]{24})?$" },
         "bundleFingerprint": { "$ref": "#/$defs/sha256" }
       }
     },

@@ -1,0 +1,64 @@
+{
+  "bundleFingerprint": "9ee4560b30f2d26378314d5b8c8acf20343662f5a8c1d5bfc0442944c4d09660",
+  "counts": {
+    "artifacts": 30,
+    "capabilities": 70,
+    "rules": 10,
+    "samples": 187,
+    "symbols": 531
+  },
+  "files": [
+    {
+      "bytes": 9148,
+      "mediaType": "application/json",
+      "path": "artifacts.json",
+      "sha256": "e0e30ae91872c625af4c75736de59dd00d612cd0311f9bc2e0525ea0d45e3b2e"
+    },
+    {
+      "bytes": 122221,
+      "mediaType": "application/json",
+      "path": "capabilities.json",
+      "sha256": "ec43fed8113d35770b24f9ff5f3520009de6e628a03f282a38fc2a9212af1f0c"
+    },
+    {
+      "bytes": 622258,
+      "mediaType": "application/x-ndjson",
+      "path": "symbols.jsonl",
+      "sha256": "2db2040e39c084b84fafb669880a847fff1278cd57e7ae939f55420037973aef"
+    },
+    {
+      "bytes": 186766,
+      "mediaType": "application/x-ndjson",
+      "path": "samples.jsonl",
+      "sha256": "4f24cec3ef071befe55e0821ed87f28dcb7d58cb42fd310300daf5d268ac1347"
+    },
+    {
+      "bytes": 4387,
+      "mediaType": "application/json",
+      "path": "rules.json",
+      "sha256": "0e9b735194bde7cb0328b9c3f9e51f54c3e10e2ce5edf0ecfcfa81715df6f099"
+    },
+    {
+      "bytes": 2843,
+      "mediaType": "text/plain",
+      "path": "llms.txt",
+      "sha256": "74263ce013403f4c95eb120147a80eed6067ce2ca477b8356230620dd4648d4f"
+    },
+    {
+      "bytes": 168943,
+      "mediaType": "text/plain",
+      "path": "llms-full.txt",
+      "sha256": "8683c90365bc1e8dbd6a4003c13c3b704e7afbd9d20e62a5ffbd28cd45826fd0"
+    }
+  ],
+  "framework": {
+    "identity": "895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064",
+    "versionLane": "released"
+  },
+  "generatorVersion": "1.0.0+445d68268972",
+  "schemaVersion": 1,
+  "source": {
+    "capabilityFingerprint": "defaf7b0480192de9502ab87169a452fa43344313f5d73e1acf2275521dc761f",
+    "revision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71"
+  }
+}

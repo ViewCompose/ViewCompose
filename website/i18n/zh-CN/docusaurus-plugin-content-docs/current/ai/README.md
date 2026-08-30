@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 01e29b4a44155398a5b1d126fe1348483a26cd370476b1e6cd6f9248472ddeed
+translation_source_hash: 66706628b2699968d946fe91340cd10dbcef8ec40fa15baa13703498ea33879a
 translation_status: current
 ---
 
@@ -55,11 +55,12 @@ Bundle 描述一个精确 `current-source` Revision，而深层证据 Harness �
 Artifact。两类身份各自确定，但不能证明知识适用于任意旧 Project。不要仅因为 `0.2.0` 是最新工具
 Release 就安装或升级到它，也不要把成功的静态查询视为版本兼容证明。
 
-下一版升级契约会绑定框架版本：它不会执行 Project Gradle Logic，而是读取 Project 中独立版本化的
-精确 `com.viewcompose` Coordinate；只选择 Released Knowledge Pack 与该 Artifact-version 子集
-匹配的 Release；遇到无法解析、互相冲突或不支持的版本时保留现有接入。在该门禁发布前，面向已有
-Project 的生成代码必须通过当前可用的 Compile Lane 并接受正常开发者 Review；编译仍不能证明每项
-语义契约。
+下一版 Package 的实现现已绑定框架版本：它不会执行 Project Gradle Logic，而是读取 Project 中
+独立版本化的精确 `com.viewcompose` Coordinate；只选择 Artifact-version Profile 与该子集匹配的
+Released Knowledge Pack；并在安装 Skill 前把所选 Profile ID 写入 MCP Environment。后续检索、
+验证、编译与 Generated Preview 都使用同一 Profile。无法解析、互相冲突、不支持或隐藏在任意 Build
+Logic 后的版本，会在任何 Project 写入前失败。该行为不会追溯改变已经发布的 `0.2.0`；在完整性与
+Rollback 门禁通过前，自动下载 Release 和迁移仍不会作为公共能力开放。
 
 ## 确认安装状态
 

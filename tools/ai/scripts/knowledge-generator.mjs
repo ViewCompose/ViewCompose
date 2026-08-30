@@ -1,8 +1,9 @@
-import {execFileSync} from 'node:child_process';
+import {execFile, execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {mkdir, readFile, readdir, writeFile} from 'node:fs/promises';
 import {dirname, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {promisify} from 'node:util';
 
 const modulePath = fileURLToPath(import.meta.url);
 const scriptDirectory = dirname(modulePath);
@@ -10,18 +11,10 @@ export const aiRoot = resolve(scriptDirectory, '..');
 export const repositoryRoot = resolve(aiRoot, '../..');
 export const generatedDirectory = resolve(aiRoot, 'generated/current-source');
 export const hostedLlmsPath = resolve(repositoryRoot, 'website/static/llms.txt');
-const capabilityRecordDirectory = resolve(
-  repositoryRoot,
-  'docs/project/records/documentation-governance-v2/capabilities',
-);
-const sampleRecordDirectory = resolve(
-  repositoryRoot,
-  'docs/project/records/documentation-governance-v2/samples',
-);
-const capabilityReferencePath = resolve(
-  repositoryRoot,
-  'website/src/data/capability-reference.json',
-);
+const execFileAsync = promisify(execFile);
+const capabilityRecordPath = 'docs/project/records/documentation-governance-v2/capabilities';
+const sampleRecordPath = 'docs/project/records/documentation-governance-v2/samples';
+const capabilityReferencePath = 'website/src/data/capability-reference.json';
 const rulesPath = resolve(aiRoot, 'knowledge/rules.json');
 const generatorBaseVersion = '1.0.0';
 
@@ -56,6 +49,70 @@ async function readJson(path) {
 async function readJsonDirectory(path) {
   const names = (await readdir(path)).filter((name) => name.endsWith('.json')).sort();
   return Promise.all(names.map((name) => readJson(resolve(path, name))));
+}
+
+function safeRepositoryPath(path) {
+  if (
+    typeof path !== 'string' ||
+    path.length === 0 ||
+    path.startsWith('/') ||
+    path.split('/').some((segment) => segment === '' || segment === '.' || segment === '..')
+  ) {
+    throw new Error(`Knowledge source path is unsafe: ${path}`);
+  }
+  return path;
+}
+
+export function fileKnowledgeSourceProvider(root = repositoryRoot) {
+  const sourceRoot = resolve(root);
+  return Object.freeze({
+    async readText(path) {
+      return readFile(resolve(sourceRoot, safeRepositoryPath(path)), 'utf8');
+    },
+    async readJsonDirectory(path) {
+      return readJsonDirectory(resolve(sourceRoot, safeRepositoryPath(path)));
+    },
+  });
+}
+
+export async function gitRevisionKnowledgeSourceProvider(
+  revision,
+  {root = repositoryRoot} = {},
+) {
+  if (!/^[a-f0-9]{40}$/u.test(revision)) {
+    throw new Error(`Knowledge source revision is invalid: ${revision}`);
+  }
+  const repository = resolve(root);
+  const {stdout: resolvedRevision} = await execFileAsync(
+    'git',
+    ['rev-parse', '--verify', `${revision}^{commit}`],
+    {cwd: repository, encoding: 'utf8', maxBuffer: 1024 * 1024},
+  );
+  if (resolvedRevision.trim() !== revision) {
+    throw new Error(`Knowledge source revision is not exact: ${revision}`);
+  }
+  async function gitText(path) {
+    const safePath = safeRepositoryPath(path);
+    const {stdout} = await execFileAsync(
+      'git',
+      ['show', `${revision}:${safePath}`],
+      {cwd: repository, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024},
+    );
+    return stdout;
+  }
+  return Object.freeze({
+    readText: gitText,
+    async readJsonDirectory(path) {
+      const safePath = safeRepositoryPath(path);
+      const {stdout} = await execFileAsync(
+        'git',
+        ['ls-tree', '--name-only', `${revision}:${safePath}`],
+        {cwd: repository, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024},
+      );
+      const names = stdout.trim().split('\n').filter((name) => name.endsWith('.json')).sort();
+      return Promise.all(names.map((name) => gitText(`${safePath}/${name}`).then(JSON.parse)));
+    },
+  });
 }
 
 function normalizeWhitespace(value) {
@@ -320,17 +377,23 @@ async function generatorVersion() {
   return `${generatorBaseVersion}+${sha256(await readFile(modulePath)).slice(0, 12)}`;
 }
 
-function compactLlms({sourceRevision, capabilityReference, rules}) {
+function compactLlms({sourceRevision, capabilityReference, rules, versionLane, frameworkIdentity, bundlePath}) {
   const groups = capabilityReference.groups
     .map((group) => `- ${group.groupId}: ${group.entryCount} entries`)
     .join('\n');
   const coreRules = rules.slice(0, 6).map((rule) => `- ${rule.code}: ${rule.summary}`).join('\n');
+  const versionIdentity = versionLane === 'current-source'
+    ? `- Lane: current-source\n- Source revision: ${sourceRevision}\n`
+    : `- Lane: ${versionLane}\n- Framework identity: ${frameworkIdentity}\n` +
+      `- Source revision: ${sourceRevision}\n`;
+  const generationScope = versionLane === 'current-source'
+    ? 'Select an exact version lane, retrieve capability and sample IDs, generate only current symbols, '
+    : 'Select this exact version lane, retrieve capability and sample IDs, generate only its symbols, ';
   return `# ViewCompose\n\n` +
     `> Declarative Kotlin UI for Android that renders native Views. Use exact published APIs and ` +
     `validate generated code before delivery.\n\n` +
     `## Version and source\n\n` +
-    `- Lane: current-source\n` +
-    `- Source revision: ${sourceRevision}\n` +
+    versionIdentity +
     `- Capability fingerprint: ${capabilityReference.summary.sourceFingerprint}\n` +
     `- Entries: ${capabilityReference.summary.entryCount}\n` +
     `- Capabilities: ${capabilityReference.capabilities.length}\n` +
@@ -339,8 +402,8 @@ function compactLlms({sourceRevision, capabilityReference, rules}) {
     `- Documentation: https://docs.viewcompose.com/documentation/\n` +
     `- Capability Reference: https://docs.viewcompose.com/reference/\n` +
     `- Versioned API/KDoc: https://docs.viewcompose.com/api/\n` +
-    `- Local structured bundle: tools/ai/generated/current-source/manifest.json\n` +
-    `- Full machine guide: tools/ai/generated/current-source/llms-full.txt\n\n` +
+    `- Local structured bundle: ${bundlePath}/manifest.json\n` +
+    `- Full machine guide: ${bundlePath}/llms-full.txt\n\n` +
     `## Evidence contract\n\n` +
     `Knowledge, static, compiled, rendered, and compared are cumulative evidence levels. A symbol ` +
     `match is not compilation; compilation is not rendering; visual similarity cannot override ` +
@@ -348,7 +411,7 @@ function compactLlms({sourceRevision, capabilityReference, rules}) {
     `## Core rules\n\n${coreRules}\n\n` +
     `## Capability groups\n\n${groups}\n\n` +
     `## Agent workflow\n\n` +
-    `Select an exact version lane, retrieve capability and sample IDs, generate only current symbols, ` +
+    generationScope +
     `run static validation, compile in the tool-owned harness, render supported UI through Preview, ` +
     `and return the deepest evidence that passed. MCP and converters are not part of Phase 1.\n`;
 }
@@ -378,10 +441,18 @@ function fullLlms({compact, capabilities, symbols, samples}) {
 
 export async function buildKnowledgeBundle(options = {}) {
   const sourceRevision = options.sourceRevision ?? currentGitRevision();
+  const versionLane = options.versionLane ?? 'current-source';
+  const frameworkIdentity = options.frameworkIdentity ?? sourceRevision;
+  const bundlePath = options.bundlePath ?? 'tools/ai/generated/current-source';
+  const sourceProvider = options.sourceProvider ?? fileKnowledgeSourceProvider();
+  const artifactFilter = options.artifactFilter ? new Set(options.artifactFilter) : null;
+  const artifactVersions = options.artifactVersions instanceof Map
+    ? options.artifactVersions
+    : new Map(Object.entries(options.artifactVersions ?? {}));
   const [capabilityReference, capabilityRecords, sampleRecords, rulesDocument] = await Promise.all([
-    readJson(capabilityReferencePath),
-    readJsonDirectory(capabilityRecordDirectory),
-    readJsonDirectory(sampleRecordDirectory),
+    sourceProvider.readText(capabilityReferencePath).then(JSON.parse),
+    sourceProvider.readJsonDirectory(capabilityRecordPath),
+    sourceProvider.readJsonDirectory(sampleRecordPath),
     readJson(rulesPath),
   ]);
   const recordByCapability = new Map(
@@ -391,16 +462,22 @@ export async function buildKnowledgeBundle(options = {}) {
   for (const record of capabilityRecords) {
     for (const symbol of record.symbols) symbolRecordById.set(symbol.symbol_id, symbol);
   }
+  const selectedCapabilityIds = new Set(
+    capabilityRecords
+      .filter((record) => artifactFilter === null || artifactFilter.has(record.artifact))
+      .map((record) => record.capability_id),
+  );
   const sourceCache = new Map();
   async function sourceText(path) {
     if (!sourceCache.has(path)) {
-      sourceCache.set(path, await readFile(resolve(repositoryRoot, path), 'utf8'));
+      sourceCache.set(path, await sourceProvider.readText(path));
     }
     return sourceCache.get(path);
   }
 
   const referenceEntries = capabilityReference.groups
     .flatMap((group) => group.entries)
+    .filter((entry) => artifactFilter === null || artifactFilter.has(entry.artifact))
     .sort((left, right) => left.symbol.localeCompare(right.symbol));
   const symbols = [];
   for (const entry of referenceEntries) {
@@ -442,7 +519,9 @@ export async function buildKnowledgeBundle(options = {}) {
   }
 
   const samples = [];
-  for (const record of sampleRecords.sort((left, right) => left.sample_id.localeCompare(right.sample_id))) {
+  for (const record of sampleRecords
+    .filter((record) => artifactFilter === null || selectedCapabilityIds.has(record.capability_id))
+    .sort((left, right) => left.sample_id.localeCompare(right.sample_id))) {
     if (record.sample_class === 'compiled-region') {
       const source = await sourceText(record.source);
       const region = extractRegion(source, record.region);
@@ -453,7 +532,7 @@ export async function buildKnowledgeBundle(options = {}) {
         language: record.language,
         capabilityId: record.capability_id,
         documentIds: [...record.document_ids].sort(),
-        versionLane: record.version_lane,
+        versionLane: versionLane === 'released' ? 'released' : record.version_lane,
         source: {path: record.source, region: record.region, line: region.line},
         buildTarget: record.build_target,
         code: region.code,
@@ -467,7 +546,7 @@ export async function buildKnowledgeBundle(options = {}) {
         language: record.language,
         capabilityId: record.capability_id,
         documentIds: [...record.document_ids].sort(),
-        versionLane: record.version_lane,
+        versionLane: versionLane === 'released' ? 'released' : record.version_lane,
         reason: record.reason,
         visibleExplanation: record.visible_explanation,
       });
@@ -475,6 +554,7 @@ export async function buildKnowledgeBundle(options = {}) {
   }
 
   const capabilities = capabilityReference.capabilities
+    .filter((referenceCapability) => selectedCapabilityIds.has(referenceCapability.capabilityId))
     .map((referenceCapability) => {
       const record = recordByCapability.get(referenceCapability.capabilityId);
       if (!record) throw new Error(`Missing capability record ${referenceCapability.capabilityId}`);
@@ -497,10 +577,52 @@ export async function buildKnowledgeBundle(options = {}) {
     .sort((left, right) => left.capabilityId.localeCompare(right.capabilityId));
 
   const artifacts = capabilityReference.artifacts
-    .map((artifact) => ({schemaVersion: 1, ...artifact}))
+    .filter((artifact) => artifactFilter === null || artifactFilter.has(artifact.artifact))
+    .map((artifact) => {
+      const version = artifactVersions.get(artifact.artifact);
+      return {
+        schemaVersion: 1,
+        ...artifact,
+        ...(version === undefined ? {} : {
+          version,
+          versionState: 'released',
+          apiReference: `/api/${artifact.artifact}/${version}/`,
+          moduleManual: `/modules/${artifact.artifact}/${version}/`,
+        }),
+      };
+    })
     .sort((left, right) => left.artifact.localeCompare(right.artifact));
   const rules = [...rulesDocument.rules].sort((left, right) => left.code.localeCompare(right.code));
-  const compact = compactLlms({sourceRevision, capabilityReference, rules});
+  const selectedReference = {
+    ...capabilityReference,
+    artifacts,
+    capabilities: capabilityReference.capabilities
+      .filter((capability) => selectedCapabilityIds.has(capability.capabilityId)),
+    groups: capabilityReference.groups.map((group) => {
+      const entries = group.entries.filter(
+        (entry) => artifactFilter === null || artifactFilter.has(entry.artifact),
+      );
+      return {...group, entryCount: entries.length, entries};
+    }).filter((group) => group.entries.length > 0),
+    summary: {
+      ...capabilityReference.summary,
+      artifactCount: artifacts.length,
+      entryCount: referenceEntries.length,
+    },
+  };
+  const capabilityFingerprint = versionLane === 'current-source'
+    ? capabilityReference.summary.sourceFingerprint
+    : sha256(capabilities.map((capability) =>
+      `${capability.capabilityId}\0${capability.artifactId}\0${capability.symbolIds.join(',')}\n`).join(''));
+  selectedReference.summary.sourceFingerprint = capabilityFingerprint;
+  const compact = compactLlms({
+    sourceRevision,
+    capabilityReference: selectedReference,
+    rules,
+    versionLane,
+    frameworkIdentity,
+    bundlePath,
+  });
   const full = fullLlms({compact, capabilities, symbols, samples});
   const files = new Map([
     ['artifacts.json', stableJson({schemaVersion: 1, artifacts})],
@@ -527,10 +649,10 @@ export async function buildKnowledgeBundle(options = {}) {
   const manifest = {
     schemaVersion: 1,
     generatorVersion: await generatorVersion(),
-    framework: {versionLane: 'current-source', identity: sourceRevision},
+    framework: {versionLane, identity: frameworkIdentity},
     source: {
       revision: sourceRevision,
-      capabilityFingerprint: capabilityReference.summary.sourceFingerprint,
+      capabilityFingerprint,
     },
     files: metadata,
     counts: {
@@ -542,17 +664,23 @@ export async function buildKnowledgeBundle(options = {}) {
     },
     bundleFingerprint,
   };
-  return {manifest, files, hostedLlms: compact, symbols, samples, capabilities};
+  return {manifest, files, hostedLlms: compact, symbols, samples, capabilities, artifacts, rules};
 }
 
-export async function writeKnowledgeBundle(bundle, outputDirectory = generatedDirectory) {
+export async function writeKnowledgeBundle(
+  bundle,
+  outputDirectory = generatedDirectory,
+  {writeHosted = outputDirectory === generatedDirectory} = {},
+) {
   await mkdir(outputDirectory, {recursive: true});
   for (const [path, content] of bundle.files) {
     await writeFile(resolve(outputDirectory, path), content);
   }
   await writeFile(resolve(outputDirectory, 'manifest.json'), stableJson(bundle.manifest));
-  await mkdir(dirname(hostedLlmsPath), {recursive: true});
-  await writeFile(hostedLlmsPath, bundle.hostedLlms);
+  if (writeHosted) {
+    await mkdir(dirname(hostedLlmsPath), {recursive: true});
+    await writeFile(hostedLlmsPath, bundle.hostedLlms);
+  }
 }
 
 export async function verifyKnowledgeBundle(outputDirectory = generatedDirectory) {

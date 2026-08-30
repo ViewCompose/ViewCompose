@@ -108,6 +108,9 @@ const npmEnvironment = Object.freeze({
   npm_config_registry: 'http://127.0.0.1:9',
   npm_config_update_notifier: 'false',
 });
+const currentSourceKnowledgeEnvironment = Object.freeze({
+  VIEWCOMPOSE_FRAMEWORK_PROFILE: 'current-source',
+});
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -185,7 +188,9 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
     },
     arguments: arguments_,
   };
-  const result = await runStreaming(executable, JSON.stringify(request), {env});
+  const result = await runStreaming(executable, JSON.stringify(request), {
+    env: {...currentSourceKnowledgeEnvironment, ...env},
+  });
   if (result.stderr !== '') throw new Error('Installed CLI emitted unexpected stderr.');
   return JSON.parse(result.stdout);
 }
@@ -194,7 +199,7 @@ function runMcp(executable, messages, {timeoutMs = 180_000, env = {}} = {}) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(executable, [], {
       cwd: repositoryRoot,
-      env: {...process.env, ...env},
+      env: {...process.env, ...currentSourceKnowledgeEnvironment, ...env},
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     const expectedResponses = messages.filter((message) => message.id !== undefined).length;
@@ -327,9 +332,12 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
         standalone.mcpServers?.viewcompose?.args?.[0] !== installedMcp ||
         standalone.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !==
           canonicalProjectRoot ||
+        standalone.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_FRAMEWORK_PROFILE !==
+          '895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064' ||
         parsed.mcpServers?.viewcompose?.command !== process.execPath ||
         parsed.mcpServers?.viewcompose?.args?.[0] !== installedMcp ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !== canonicalProjectRoot ||
+        parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_FRAMEWORK_PROFILE !== 'current-source' ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_SOURCE_ROOT !== canonicalSourceRoot
       ) throw new Error(`Installed ${profile.id} configuration does not bind the packaged MCP server.`);
     } else if (

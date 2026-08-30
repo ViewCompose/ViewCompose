@@ -18,6 +18,7 @@ const schemaPath = resolve(aiRoot, 'contracts/agent-client-integration.schema.js
 const examplePath = resolve(aiRoot, 'contracts/examples/agent-client-integration.json');
 const mcpServerPath = resolve(aiRoot, 'scripts/mcp-server.mjs');
 const sourceRoot = resolve(aiRoot, '../..');
+const releasedProfile = '895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064';
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
@@ -45,6 +46,7 @@ function verifyProfileContract(contract) {
     }
     const projectRoot = '/workspace/viewcompose-consumer';
     const standalone = renderAgentClientConfig(client.id, projectRoot, {
+      frameworkProfile: releasedProfile,
       nodeExecutable: process.execPath,
       mcpServerPath,
     });
@@ -60,9 +62,11 @@ function verifyProfileContract(contract) {
         standaloneParsed.mcpServers?.viewcompose?.command !== process.execPath ||
         standaloneParsed.mcpServers?.viewcompose?.args?.[0] !== mcpServerPath ||
         standaloneParsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !== projectRoot ||
+        standaloneParsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_FRAMEWORK_PROFILE !== releasedProfile ||
         parsed.mcpServers?.viewcompose?.command !== process.execPath ||
         parsed.mcpServers?.viewcompose?.args?.[0] !== mcpServerPath ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !== projectRoot ||
+        parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_FRAMEWORK_PROFILE !== 'current-source' ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_SOURCE_ROOT !== sourceRoot
       ) throw new Error(`Generated JSON MCP configuration drifted for ${client.id}.`);
     } else if (

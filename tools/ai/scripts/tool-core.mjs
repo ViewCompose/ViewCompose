@@ -4,19 +4,33 @@ import {lstat, readFile} from 'node:fs/promises';
 import {homedir, platform} from 'node:os';
 import {isAbsolute, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {
+  activeFrameworkProfile,
+  activeKnowledgePath,
+  FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE,
+} from './framework-profile-selection.mjs';
 
 const aiRoot = fileURLToPath(new URL('../', import.meta.url));
 const repository = resolve(aiRoot, '../..');
 export const SOURCE_ROOT_ENVIRONMENT_VARIABLE = 'VIEWCOMPOSE_SOURCE_ROOT';
 export const PROJECT_ROOT_ENVIRONMENT_VARIABLE = 'VIEWCOMPOSE_PROJECT_ROOT';
-const manifestPath = fileURLToPath(
-  new URL('../generated/current-source/manifest.json', import.meta.url),
-);
+export {FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE};
+const manifestPath = activeKnowledgePath('manifest.json');
 
 let manifestPromise;
 
 export function loadKnowledgeManifest() {
-  manifestPromise ??= readFile(manifestPath, 'utf8').then(JSON.parse);
+  manifestPromise ??= readFile(manifestPath, 'utf8').then((text) => {
+    const manifest = JSON.parse(text);
+    const selected = activeFrameworkProfile();
+    if (
+      manifest.framework?.versionLane !== selected.versionLane ||
+      (selected.versionLane === 'released' && manifest.framework?.identity !== selected.profileId)
+    ) {
+      throw new Error('Active Knowledge Bundle differs from the selected framework profile.');
+    }
+    return manifest;
+  });
   return manifestPromise;
 }
 

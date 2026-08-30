@@ -350,8 +350,34 @@ the detector is downstream Node tooling and never invokes Gradle.
 The evidence is local macOS filesystem coverage. It does not resolve custom catalog names,
 arbitrary Kotlin/Groovy variables, convention plugins, composite-build dependency substitution,
 or a live Gradle graph, and it does not yet select or install a Release. Those inputs fail closed.
-The next action is the exact Released Knowledge Pack and generated compatibility profile that give
-the detector a trustworthy candidate to match.
+The next action is checksummed matching-Release discovery and side-by-side transactional migration;
+the exact Released Knowledge Pack and runtime binding described below now give the detector a
+trustworthy local candidate.
+
+### Implementation evidence — released Knowledge Pack and runtime binding
+
+On 2026-08-31, Node 25.6.0 reproduced one consumer-selectable profile twice from immutable
+publication inputs. It contains 38 exact published Artifact identities, 30 knowledge-owning
+Artifacts, 70 capabilities, 531 symbols, 187 samples, and 10 rules. The content-addressed profile is
+`895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064`; its released Knowledge
+Bundle fingerprint is
+`9ee4560b30f2d26378314d5b8c8acf20343662f5a8c1d5bfc0442944c4d09660`. The generator rejects
+publication metadata absent from immutable history and accepts its newest source anchor only after
+every included Artifact's recorded release `src/main` tree is byte-identical at that anchor.
+
+Project-bound `init` now selects that profile before any write and persists its ID in the MCP
+environment. Retrieval, static validation, project analysis, compilation, and generated Preview all
+load the selected Bundle; source-bound contributor setups explicitly retain `current-source`.
+The installed-package gate passed 2/2 reproducible packages, 3/3 Agent profiles, 18/18 exact Skill
+copies, 2/2 MCP versions, and the existing compile, generated Preview, XML, layout, screenshot, and
+pixel-comparison denominators. This is **improved** version compatibility with **no material Android
+runtime behavior change**.
+
+The accepted pack represents the newest published Artifact vector and does not yet cover every
+historical vector. Projects with unsupported older versions, custom catalog names, arbitrary build
+variables, convention plugins, or conflicting evidence fail before mutation. Release discovery,
+download integrity, side-by-side installation, migration rollback, and recovery remain the next
+action; no public `upgrade` command is enabled by this acceptance step.
 
 ## Maven release changesets
 

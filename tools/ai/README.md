@@ -630,16 +630,24 @@ searches arbitrary parent directories or silently upgrades static evidence.
 Release `0.2.0` still packages `current-source` knowledge and does not inspect a consumer project's
 independently versioned ViewCompose dependencies. Its fixed Harness coordinates prove only the
 compile/render lane they execute; they do not convert the current-source Knowledge Bundle into a
-released project profile. The framework compatibility profile v1 contract therefore blocks a
-global-latest upgrade until an exact released Knowledge Pack, read-only project Artifact profile,
-and matching release metadata are available. Unresolved or conflicting versions must preserve the
-old integration rather than guessing.
+released project profile. Never infer compatibility for that already-published package.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and
 dependency lock records; distinguishes a dependency-free project from imports with missing
 identity; and returns `resolved`, `empty`, `unresolved`, or `conflict` without executing consumer
-Gradle. It is packaged for the later upgrader but is not a public standalone command in `0.2.0`.
+Gradle.
+
+The next package now generates a consumer-selectable `released` Knowledge Pack from immutable
+per-Artifact publication history. Its content-addressed framework profile records 38 published
+coordinates; 30 own machine-readable API knowledge. `viewcompose-agent init` detects the consumer
+Artifact subset before any project write, selects only an exact released profile, and stores
+`VIEWCOMPOSE_FRAMEWORK_PROFILE` in the MCP entry. Knowledge retrieval, static validation, project
+analysis, generated Kotlin compilation, and generated Preview requests then load that same bundle.
+An empty project selects the index's newest stable profile; unresolved, conflicting, and unsupported
+dependencies fail before configuration or Skill bytes change. Source-bound contributor profiles
+select `current-source` explicitly. Automatic Release discovery and transactional package migration
+remain disabled until their candidate-integrity and rollback gates pass.
 
 Tags matching `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
 the tag against the frozen release contract, repeats the complete distribution gate from a clean
@@ -663,6 +671,21 @@ The first result measures a local macOS cold producer graph; the complete gate r
 built Android artifacts, so neither number predicts a hosted Linux runner's uncached duration.
 Conclusion: **improved** cold release readiness with no material runtime behavior change. Next
 action: require the tag-triggered Linux workflow and verify the published Release attestations.
+
+On 2026-08-31, Node 25.6.0 reproduced the first released profile twice with 38 published Artifact
+identities, 30 knowledge-owning Artifacts, 70 capabilities, 531 symbols, 187 samples, and 10 rules.
+The profile ID is
+`895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064`; its Knowledge Bundle
+fingerprint is
+`9ee4560b30f2d26378314d5b8c8acf20343662f5a8c1d5bfc0442944c4d09660`. The installed-distribution
+gate then passed 2/2 reproducible builds, 3/3 exact version-bound Agent profiles, 18/18 Skill copies,
+2/2 MCP protocol versions, and the existing compile, generated Preview, XML, layout, screenshot,
+and exact-pixel denominators. Relative to the unbound `current-source` package, this is **improved**
+framework-compatibility evidence with **no material Android runtime behavior change**. The pack uses
+one release anchor only after proving that every included Artifact's `src/main` Git tree is identical
+to its own recorded release revision; it does not yet cover every historical version vector or
+custom dependency-resolution scheme. The next action is checksummed matching-Release discovery and
+side-by-side transactional upgrade.
 
 ## Version lanes
 

@@ -14,12 +14,14 @@ import {
 
 const aiRoot = await realpath(new URL('../', import.meta.url));
 const sourceRoot = resolve(aiRoot, '../..');
+const releasedProfile = '895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064';
 
 test('renders deterministic standalone and source-bound configuration for every client', () => {
   const nodeExecutable = '/opt/viewcompose/node';
   const mcpServerPath = '/opt/viewcompose/mcp-server.mjs';
   const projectRoot = '/workspace/app';
   const standaloneCodex = renderAgentClientConfig('codex', projectRoot, {
+    frameworkProfile: releasedProfile,
     nodeExecutable,
     mcpServerPath,
   });
@@ -30,6 +32,7 @@ test('renders deterministic standalone and source-bound configuration for every 
     '',
     '[mcp_servers.viewcompose.env]',
     `VIEWCOMPOSE_PROJECT_ROOT = "${projectRoot}"`,
+    `VIEWCOMPOSE_FRAMEWORK_PROFILE = "${releasedProfile}"`,
     '',
   ].join('\n'));
   const codex = renderAgentClientConfig('codex', projectRoot, {
@@ -44,19 +47,24 @@ test('renders deterministic standalone and source-bound configuration for every 
     '',
     '[mcp_servers.viewcompose.env]',
     `VIEWCOMPOSE_PROJECT_ROOT = "${projectRoot}"`,
+    'VIEWCOMPOSE_FRAMEWORK_PROFILE = "current-source"',
     `VIEWCOMPOSE_SOURCE_ROOT = "${sourceRoot}"`,
     '',
   ].join('\n'));
 
   for (const client of ['claude-code', 'cursor']) {
     const standalone = JSON.parse(renderAgentClientConfig(client, projectRoot, {
+      frameworkProfile: releasedProfile,
       nodeExecutable,
       mcpServerPath,
     }));
     assert.deepEqual(standalone.mcpServers.viewcompose, {
       command: nodeExecutable,
       args: [mcpServerPath],
-      env: {VIEWCOMPOSE_PROJECT_ROOT: projectRoot},
+      env: {
+        VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+        VIEWCOMPOSE_FRAMEWORK_PROFILE: releasedProfile,
+      },
     });
     const config = JSON.parse(renderAgentClientConfig(client, projectRoot, {
       sourceRoot,
@@ -70,6 +78,7 @@ test('renders deterministic standalone and source-bound configuration for every 
           args: [mcpServerPath],
           env: {
             VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+            VIEWCOMPOSE_FRAMEWORK_PROFILE: 'current-source',
             VIEWCOMPOSE_SOURCE_ROOT: sourceRoot,
           },
         },
@@ -243,6 +252,18 @@ test('rejects conflicts, relative roots, symbolic-link roots, and unknown client
       installAgentClientSkills({client: 'codex', projectRoot: 'relative', aiRoot}),
       /absolute path/u,
     );
+    const incompatibleRoot = resolve(temporary, 'incompatible-framework');
+    await mkdir(incompatibleRoot);
+    await writeFile(
+      resolve(incompatibleRoot, 'build.gradle.kts'),
+      'dependencies { implementation("com.viewcompose:viewcompose-ui-foundation:0.0.0-unsupported") }\n',
+    );
+    await assert.rejects(
+      initializeAgentClient({client: 'codex', projectRoot: incompatibleRoot, aiRoot}),
+      /No released framework profile matches/u,
+    );
+    await assert.rejects(readFile(resolve(incompatibleRoot, '.codex/config.toml')), /ENOENT/u);
+    await assert.rejects(readFile(resolve(incompatibleRoot, '.agents/skills')), /ENOENT|EISDIR/u);
     const physicalRoot = resolve(temporary, 'physical');
     const linkedRoot = resolve(temporary, 'linked');
     await mkdir(physicalRoot);

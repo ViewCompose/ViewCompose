@@ -14,6 +14,12 @@ import {
 import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {detectAndroidSdk, detectJavaRuntime} from './tool-core.mjs';
+import {detectFrameworkProjectProfile} from './framework-project-profile.mjs';
+import {
+  CURRENT_SOURCE_PROFILE,
+  FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE,
+  selectReleasedFrameworkProfile,
+} from './framework-profile-selection.mjs';
 
 const defaultAiRoot = fileURLToPath(new URL('../', import.meta.url));
 const defaultMcpServerPath = fileURLToPath(new URL('./mcp-server.mjs', import.meta.url));
@@ -66,6 +72,7 @@ function tomlString(value) {
 
 function expectedServerDefinition(projectRoot, {
   sourceRoot,
+  frameworkProfile,
   nodeExecutable = process.execPath,
   mcpServerPath = defaultMcpServerPath,
 } = {}) {
@@ -75,11 +82,22 @@ function expectedServerDefinition(projectRoot, {
   if (sourceRoot !== undefined && !isAbsolute(sourceRoot)) {
     throw new Error('Configuration paths must be absolute.');
   }
+  const selectedProfile = frameworkProfile ?? (sourceRoot === undefined ? undefined : CURRENT_SOURCE_PROFILE);
+  if (
+    selectedProfile === undefined ||
+    (selectedProfile !== CURRENT_SOURCE_PROFILE && !/^[a-f0-9]{64}$/u.test(selectedProfile))
+  ) {
+    throw new Error('Project-bound configuration requires one exact released framework profile.');
+  }
+  if (sourceRoot !== undefined && selectedProfile !== CURRENT_SOURCE_PROFILE) {
+    throw new Error('Source-bound configuration requires the current-source framework profile.');
+  }
   return {
     command: nodeExecutable,
     args: [mcpServerPath],
     env: {
       VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+      [FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE]: selectedProfile,
       ...(sourceRoot === undefined ? {} : {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot}),
     },
   };
@@ -98,6 +116,9 @@ export function renderAgentClientConfig(client, projectRoot, options = {}) {
     lines.push(
       '[mcp_servers.viewcompose.env]',
       `VIEWCOMPOSE_PROJECT_ROOT = ${tomlString(server.env.VIEWCOMPOSE_PROJECT_ROOT)}`,
+      `${FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE} = ${tomlString(
+        server.env[FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE],
+      )}`,
       ...(server.env.VIEWCOMPOSE_SOURCE_ROOT === undefined ? [] : [
         `VIEWCOMPOSE_SOURCE_ROOT = ${tomlString(server.env.VIEWCOMPOSE_SOURCE_ROOT)}`,
       ]),
@@ -135,6 +156,18 @@ async function canonicalSourceRootOrUndefined(sourceRoot) {
   return sourceRoot === undefined
     ? undefined
     : requireCanonicalDirectory(sourceRoot, 'ViewCompose source root');
+}
+
+async function resolveFrameworkBinding({root, sourceRoot, aiRoot}) {
+  if (sourceRoot !== undefined) {
+    return Object.freeze({
+      profileId: CURRENT_SOURCE_PROFILE,
+      versionLane: 'current-source',
+      projectProfile: null,
+    });
+  }
+  const projectProfile = await detectFrameworkProjectProfile({projectRoot: root});
+  return selectReleasedFrameworkProfile(projectProfile, {aiRoot});
 }
 
 async function assertSafePath(root, relativePath, {leafKind = 'any'} = {}) {
@@ -320,14 +353,21 @@ function parseJsonObject(text, relativePath) {
   return parsed;
 }
 
-async function prepareConfigOperation({profile, root, sourceRoot, options = {}, action = 'install'}) {
+async function prepareConfigOperation({
+  profile,
+  root,
+  sourceRoot,
+  frameworkProfile,
+  options = {},
+  action = 'install',
+}) {
   await assertSafePath(root, profile.configPath, {leafKind: 'file'});
   const target = resolve(root, profile.configPath);
   const metadata = await metadataOrNull(target);
   const original = metadata ? await readFile(target, 'utf8') : undefined;
   const mode = metadata ? metadata.mode & 0o777 : 0o644;
   if (profile.configFormat === 'json') {
-    const server = expectedServerDefinition(root, {...options, sourceRoot});
+    const server = expectedServerDefinition(root, {...options, sourceRoot, frameworkProfile});
     const document = original === undefined ? {} : parseJsonObject(original, profile.configPath);
     const existing = document.mcpServers?.viewcompose;
     if (action === 'install') {
@@ -365,7 +405,7 @@ async function prepareConfigOperation({profile, root, sourceRoot, options = {}, 
     };
   }
 
-  const block = managedTomlBlock(root, sourceRoot, options);
+  const block = managedTomlBlock(root, sourceRoot, {...options, frameworkProfile});
   const text = original ?? '';
   const hasSection = /^\s*\[mcp_servers\.viewcompose(?:\.env)?\]\s*$/mu.test(text);
   const occurrences = text.split(block).length - 1;
@@ -428,11 +468,17 @@ export async function initializeAgentClient({
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
+  const framework = await resolveFrameworkBinding({
+    root: prepared.root,
+    sourceRoot: canonicalSourceRoot,
+    aiRoot,
+  });
   assertNoSkillConflicts(prepared.operations);
   const config = await prepareConfigOperation({
     profile: prepared.profile,
     root: prepared.root,
     sourceRoot: canonicalSourceRoot,
+    frameworkProfile: framework.profileId,
     options: {nodeExecutable, mcpServerPath},
   });
   let configChanged = false;
@@ -450,6 +496,11 @@ export async function initializeAgentClient({
     client: prepared.profile.id,
     projectRoot: prepared.root,
     mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
+    framework: {
+      versionLane: framework.versionLane,
+      profileId: framework.profileId,
+      projectStatus: framework.projectProfile?.status ?? 'source-bound',
+    },
     config: {path: prepared.profile.configPath, status: configChanged ? 'installed' : 'unchanged'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -473,11 +524,18 @@ export async function diagnoseAgentClient({
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
   let configStatus = 'conflict';
   let configDetail;
+  let framework;
   try {
+    framework = await resolveFrameworkBinding({
+      root: prepared.root,
+      sourceRoot: canonicalSourceRoot,
+      aiRoot,
+    });
     const config = await prepareConfigOperation({
       profile: prepared.profile,
       root: prepared.root,
       sourceRoot: canonicalSourceRoot,
+      frameworkProfile: framework.profileId,
       options: {nodeExecutable, mcpServerPath},
     });
     configStatus = config.status === 'ready' ? 'ready' : 'missing';
@@ -500,6 +558,12 @@ export async function diagnoseAgentClient({
     client: prepared.profile.id,
     projectRoot: prepared.root,
     mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
+    framework: framework ? {
+      status: 'compatible',
+      versionLane: framework.versionLane,
+      profileId: framework.profileId,
+      projectStatus: framework.projectProfile?.status ?? 'source-bound',
+    } : {status: 'incompatible', detail: configDetail},
     status: ready ? readyStatus : configurationReady
       ? 'host-prerequisites-required'
       : 'repair-required',
@@ -555,11 +619,17 @@ export async function uninstallAgentClient({
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
+  const framework = await resolveFrameworkBinding({
+    root: prepared.root,
+    sourceRoot: canonicalSourceRoot,
+    aiRoot,
+  });
   assertNoSkillConflicts(prepared.operations);
   const config = await prepareConfigOperation({
     profile: prepared.profile,
     root: prepared.root,
     sourceRoot: canonicalSourceRoot,
+    frameworkProfile: framework.profileId,
     options: {nodeExecutable, mcpServerPath},
     action: 'uninstall',
   });
@@ -585,6 +655,7 @@ export async function uninstallAgentClient({
     client: prepared.profile.id,
     projectRoot: prepared.root,
     mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
+    framework: {versionLane: framework.versionLane, profileId: framework.profileId},
     config: {path: prepared.profile.configPath, status: configChanged ? 'removed' : 'absent'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -634,7 +705,15 @@ async function main() {
       values['project-root'],
       'Consumer project root',
     );
-    process.stdout.write(renderAgentClientConfig(values.client, projectRoot, {sourceRoot}));
+    const framework = await resolveFrameworkBinding({
+      root: projectRoot,
+      sourceRoot,
+      aiRoot: defaultAiRoot,
+    });
+    process.stdout.write(renderAgentClientConfig(values.client, projectRoot, {
+      sourceRoot,
+      frameworkProfile: framework.profileId,
+    }));
     return;
   }
   const arguments_ = {

@@ -16,7 +16,9 @@ invariants:
   - Unresolved or conflicting consumer dependency versions fail closed without changing the installed integration.
 evidence:
   - tools/ai/contracts/framework-compatibility-profile.schema.json
+  - tools/ai/contracts/framework-profile-index.schema.json
   - tools/ai/contracts/examples/framework-compatibility-profile.json
+  - tools/ai/generated/released/index.json
   - ./gradlew verifyAiToolingContracts
 ---
 
@@ -50,8 +52,9 @@ owns its version and immutable source revision, so compatibility is a set of exa
    matches the candidate framework profile.
 2. Every consumer-selectable framework profile records each supported ViewCompose coordinate,
    exact version, immutable 40-character release revision, Knowledge Bundle fingerprint, and the
-   exact Maven coordinates used by the compile/render Harness. The profile ID is content-addressed
-   from this canonical data.
+   exact Maven coordinates used by the compile/render Harness. To avoid a circular identity, the
+   profile ID is content-addressed from the canonical Artifact vector and Harness identity; the
+   resulting profile then binds that ID to the generated Knowledge Bundle fingerprint.
 3. Only a `released` Knowledge Pack generated from the recorded artifact release revisions may be
    consumer-selectable. A `current-source` bundle remains valid for an exact source checkout and
    contributor workflows, but it is never inferred to represent a released consumer project.

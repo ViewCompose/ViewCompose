@@ -636,7 +636,10 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             group = "verification"
             description =
                 "Builds and verifies the installable offline ViewCompose AI distribution."
-            dependsOn(":tools:ai-preview-harness:prepareAiPreviewLane")
+            dependsOn(
+                ":tools:ai-preview-harness:prepareAiPreviewLane",
+                "verifyAiReleasedKnowledgePack",
+            )
             workingDir(project.rootDir.resolve("tools/ai"))
             commandLine("npm", "run", "verify:phase3-distribution")
             inputs.files(
@@ -1325,6 +1328,30 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             outputs.dir(project.rootDir.resolve("tools/ai/generated/current-source"))
             outputs.file(project.rootDir.resolve("website/static/llms.txt"))
         }
+        project.tasks.register<Exec>("generateAiReleasedKnowledgePack") {
+            group = "documentation"
+            description =
+                "Generates the consumer-selectable Knowledge Pack for exact published artifacts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "generate:released-knowledge")
+            inputs.files(
+                project.rootDir.resolve("gradle/viewcompose-publishing.properties"),
+                project.rootDir.resolve("gradle/viewcompose-documentation-releases.properties"),
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+                project.rootDir.resolve(
+                    "tools/ai/contracts/framework-compatibility-profile.schema.json",
+                ),
+                project.rootDir.resolve("tools/ai/contracts/framework-profile-index.schema.json"),
+                project.rootDir.resolve(
+                    "tools/ai/contracts/examples/consumer-project-execution.json",
+                ),
+                project.rootDir.resolve("tools/ai/knowledge/rules.json"),
+                project.rootDir.resolve("tools/ai/scripts/generate-released-knowledge.mjs"),
+                project.rootDir.resolve("tools/ai/scripts/knowledge-generator.mjs"),
+                project.rootDir.resolve("tools/ai/scripts/released-knowledge.mjs"),
+            )
+            outputs.dir(project.rootDir.resolve("tools/ai/generated/released"))
+        }
         project.tasks.register<Exec>("verifyAiKnowledgeBundle") {
             group = "verification"
             description =
@@ -1354,6 +1381,30 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("website/src/data/capability-reference.json"),
                 project.fileTree(project.rootDir.resolve("tools/ai/generated/current-source")),
                 project.rootDir.resolve("website/static/llms.txt"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiReleasedKnowledgePack") {
+            group = "verification"
+            description =
+                "Verifies exact published-artifact profiles and released Knowledge Pack freshness."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:released-knowledge")
+            inputs.files(
+                project.rootDir.resolve("gradle/viewcompose-publishing.properties"),
+                project.rootDir.resolve("gradle/viewcompose-documentation-releases.properties"),
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+                project.rootDir.resolve(
+                    "tools/ai/contracts/framework-compatibility-profile.schema.json",
+                ),
+                project.rootDir.resolve("tools/ai/contracts/framework-profile-index.schema.json"),
+                project.rootDir.resolve(
+                    "tools/ai/contracts/examples/consumer-project-execution.json",
+                ),
+                project.rootDir.resolve("tools/ai/knowledge/rules.json"),
+                project.rootDir.resolve("tools/ai/scripts/generate-released-knowledge.mjs"),
+                project.rootDir.resolve("tools/ai/scripts/knowledge-generator.mjs"),
+                project.rootDir.resolve("tools/ai/scripts/released-knowledge.mjs"),
+                project.fileTree(project.rootDir.resolve("tools/ai/generated/released")),
             )
         }
         project.tasks.register<Exec>("verifyDocumentLanguages") {

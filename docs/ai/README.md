@@ -79,12 +79,14 @@ that the knowledge matches an arbitrary older project. Do not install or upgrade
 because it is the newest tooling Release, and do not treat a successful static lookup as version
 compatibility.
 
-The next upgrade contract is version-bound: it will read the project's exact independently
-versioned `com.viewcompose` coordinates without executing project Gradle logic, select only a
-Release whose released Knowledge Pack matches that Artifact-version subset, and retain the existing
-integration when versions are unresolved, conflicting, or unsupported. Until that gate ships,
-generated code for an existing project must pass the available compile lane and receive normal
-developer review; compilation still cannot prove every semantic contract.
+The next package implementation is now version-bound: it reads the project's exact independently
+versioned `com.viewcompose` coordinates without executing project Gradle logic, selects only a
+released Knowledge Pack whose Artifact-version profile matches that subset, and writes the selected
+profile ID into the MCP environment before installing Skills. Retrieval, validation, compilation,
+and generated Preview then use that same profile. Versions that are unresolved, conflicting,
+unsupported, or hidden behind arbitrary build logic fail before any project write. This behavior is
+not retroactive for the already-published `0.2.0`, and automatic Release download and migration are
+not public until their integrity and rollback gates pass.
 
 ## Confirm the installation
 
