@@ -360,6 +360,16 @@ and callers receive clones rather
 than mutable session state. Candidate proposal remains an injected internal boundary; no MCP/CLI
 caller can activate repair yet.
 
+Screenshot repair proposal v1 is contract-frozen but not implemented. Its first eligible mode is
+deliberately limited to rolling one changed `properties` field back to the exact typed value in an
+integrity-verified, strictly better baseline candidate. The current candidate must pass safety,
+compilation, render, semantics, and structure; fail exact pixels on the same denominator; localize
+at least one mismatched pixel to the changed node; and differ from the baseline in exactly that one
+non-expression field. Localization alone never supplies a value. Novel mismatches, multiple field
+changes, unlocalized changes, modifier/structure/behavior changes, and caller-supplied targets
+return no eligible proposal. Every eventual patch remains subject to the existing typed applier and
+six-gate evaluator, and no CLI/MCP repair mode is activated.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -374,6 +384,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-comparison
 npm --prefix tools/ai run verify:phase5-screenshot-pixel-comparison
 npm --prefix tools/ai run verify:phase5-screenshot-repair
 npm --prefix tools/ai run verify:phase5-screenshot-repair-candidate
+npm --prefix tools/ai run verify:phase5-screenshot-repair-proposer
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference

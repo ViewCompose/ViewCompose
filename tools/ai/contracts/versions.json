@@ -16,6 +16,7 @@
     "screenshotPixelLocalization": 1,
     "screenshotRepair": 2,
     "screenshotRepairCandidateEvidence": 1,
+    "screenshotRepairProposal": 1,
     "evaluationCorpus": 1,
     "metricContract": 1
   },

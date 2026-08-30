@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze a bounded deterministic proposer eligibility and proposal contract over accepted candidate evidence before implementing patch selection.
+next_action: Implement the frozen single-property regression rollback proposer and verify its emitted patch through the existing six-gate evaluator.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -128,7 +128,9 @@ It deliberately does not infer repair values from pixel locations. Real source-b
 mutated candidates now reproduce their localization, candidate-evidence, and six-gate fingerprints
 from an empty Preview harness; the public exact comparison/localization path also passes through the
 installed package. The next step is to freeze which structured findings may enter a bounded
-deterministic proposer without guessing or claiming perceptual or cross-device equivalence.
+deterministic proposer without guessing or claiming perceptual or cross-device equivalence. That
+rollback-only v1 boundary is now frozen; implementation remains off until the input-evidence and
+fail-closed denominators are wired to executable tests.
 
 ## Maven release changesets
 
@@ -2576,6 +2578,40 @@ not prove that an attributed node caused every changed pixel, that a mismatch re
 a valid modifier/value patch, or that exact pixels express perceptual or design quality. The next
 action is to define a bounded proposer eligibility policy over these accepted structured facts,
 then emit only typed Design IR patches that can be verified by the existing six-gate loop.
+
+### Contract evidence — rollback-only screenshot repair proposer
+
+The screenshot repair proposal v1 contract freezes the first evidence-to-patch boundary without
+pretending that pixel localization supplies a target value. It accepts two complete,
+integrity-verified candidate evidence records: a current candidate that passes safety through
+structure but fails exact pixels, and a prior baseline with the same lineage and pixel denominator
+that has strictly fewer mismatches and no larger maximum channel delta. The records must differ in
+exactly one existing non-expression `properties` field, and the current localization must attribute
+at least one mismatched pixel to that node. Only the exact typed baseline value may become one
+`replace-field` operation. Caller targets, OCR/vision guesses, modifier and structure changes,
+behavior/state/semantics changes, multiple differences, and novel mismatches have no eligible
+proposal. Public repair activation remains false, and every eventual patch must re-enter the typed
+applier and complete six-gate evaluator.
+
+The frozen real denominator maps the accepted `Hello` regression back to the exact baseline
+`Welcome` value with change fingerprint
+`7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945` and proposal
+fingerprint `47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68`. Six no-change
+denominators cover an already exact candidate, an earlier failed gate, a non-improving baseline,
+multiple differences, an unlocalized changed node, and localization without a baseline value
+difference. Two invalid denominators cover evidence-integrity and lineage drift, and cancellation
+has its own result. The contract verifier passes 1/1 supported rollback, 6/6 no-change, 2/2 invalid,
+and 1/1 cancelled cases while explicitly reporting `implementation: false`.
+
+Phase 0 now verifies 18 schemas, and Node 25.6.0 passes 231/231 AI-tooling tests. The
+dependency-free package contains 69 files and 1,863,534 declared bytes; its 334,488-byte archive
+has SHA-256 `3facf1c0273e6a4a4cf309f9c66d9c8679abdf9c29e1bac3bed0e394e541d549`. Relative to the
+localization package, the frozen proposal schema and guidance add one file, 5,563 declared bytes
+(+0.30%), and 885 archive bytes (+0.27%), with no runtime dependency or provider boundary. This is
+**improved** repair-scope honesty, deterministic rollback eligibility, and fail-closed coverage with
+**no material Android runtime behavior change**. It does not yet prove executable proposal output
+or end-to-end rollback convergence. The next action is to implement exactly this boundary and run
+the emitted patch through the real source-bound evaluator.
 
 ### Implementation evidence — bounded XML to Design IR
 

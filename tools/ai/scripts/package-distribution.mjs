@@ -37,6 +37,7 @@ const sourcePaths = Object.freeze([
   'contracts/screenshot-preprocessing.schema.json',
   'contracts/screenshot-repair.schema.json',
   'contracts/screenshot-repair-candidate-evidence.schema.json',
+  'contracts/screenshot-repair-proposal.schema.json',
   'contracts/tool-envelope.schema.json',
   'contracts/xml-project-context.schema.json',
   'contracts/xml-layout-dependencies.schema.json',
