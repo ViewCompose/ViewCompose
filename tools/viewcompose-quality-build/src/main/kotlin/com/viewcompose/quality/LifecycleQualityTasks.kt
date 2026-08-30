@@ -21,6 +21,32 @@ internal fun Project.registerLifecycleQualityTasks(extension: ViewComposeQuality
         dependsOn("verifyDemoLocalizedVisibleCopy")
         dependsOn("verifyDesignSystemIsolation")
         dependsOn("verifyUiFoundationPlatformBoundary")
+        dependsOn("verifyAiToolingContracts")
+        dependsOn("verifyAiKnowledgeBundle")
+        dependsOn("verifyAiStaticTooling")
+        dependsOn("verifyAiRetrieval")
+        dependsOn("verifyAiMcp")
+        dependsOn("verifyAiLayoutDiagnosis")
+        dependsOn("verifyAiConsumerWorkflows")
+        dependsOn("verifyAiDistribution")
+        dependsOn("verifyAiDesignIr")
+        dependsOn("verifyAiXmlProjectContext")
+        dependsOn("verifyAiXmlLayoutDependencies")
+        dependsOn("verifyAiXmlMigration")
+        dependsOn("verifyAiGeneratedPreview")
+        dependsOn("verifyAiScreenshotPreprocessing")
+        dependsOn("verifyAiScreenshotInference")
+        dependsOn("verifyAiScreenshotResolution")
+        dependsOn("verifyAiScreenshotGeneration")
+        dependsOn("verifyAiScreenshotRender")
+        dependsOn("verifyAiScreenshotComparison")
+        dependsOn("verifyAiScreenshotPixelComparison")
+        dependsOn("verifyAiScreenshotRepair")
+        dependsOn("verifyAiScreenshotRepairCandidate")
+        dependsOn("verifyAiScreenshotRepairProposer")
+        dependsOn("verifyAiScreenshotRepairAuthorization")
+        dependsOn("verifyAiScreenshotRepairHostGrant")
+        dependsOn("verifyAiScreenshotRepairExecutionOutcome")
         dependsOn("verifyDocumentationStructure")
         dependsOn("verifyDslApiContracts")
         dependsOn("verifyMigrationPairedSamples")
@@ -99,6 +125,7 @@ internal fun Project.registerLifecycleQualityTasks(extension: ViewComposeQuality
         description = "Run static-runner tests and preview snapshot verification."
         dependsOn("publishViewComposeToLocalRepository")
         dependsOn(
+            ":samples:counter:prepareAiPreviewLane",
             ":samples:counter:verifyCounterPreview",
             ":viewcompose-preview-core:test",
             ":viewcompose-preview-runner:testDebugUnitTest",

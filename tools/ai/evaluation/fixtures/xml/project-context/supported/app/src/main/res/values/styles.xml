@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="BasePanel">
+        <item name="android:padding">@dimen/screen_padding</item>
+    </style>
+    <style name="LoginPanel" parent="@style/BasePanel">
+        <item name="android:orientation">vertical</item>
+    </style>
+    <style name="LoginTitle">
+        <item name="android:text">@string/login_title</item>
+    </style>
+</resources>

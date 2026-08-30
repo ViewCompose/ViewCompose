@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/generated-preview-request-v1.schema.json",
+  "title": "ViewCompose generated Preview request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "framework",
+    "generatedSource",
+    "bindings",
+    "configuration",
+    "lanes"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["versionLane", "identity", "bundleFingerprint"],
+      "properties": {
+        "versionLane": { "const": "current-source" },
+        "identity": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "bundleFingerprint": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "generatedSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packageName",
+        "functionName",
+        "kotlinFingerprint",
+        "artifactIds",
+        "declaredBindings"
+      ],
+      "properties": {
+        "packageName": { "const": "generated.viewcompose" },
+        "sourceKind": { "enum": ["android-xml", "screenshot"] },
+        "functionName": { "$ref": "#/$defs/kotlinIdentifier" },
+        "kotlinFingerprint": { "$ref": "#/$defs/sha256" },
+        "artifactIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableId" }
+        },
+        "declaredBindings": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/declaredBinding" }
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/stringBinding" },
+          { "$ref": "#/$defs/textFieldStateBinding" },
+          { "$ref": "#/$defs/imageSourceBinding" },
+          { "$ref": "#/$defs/unitCallbackBinding" },
+          { "$ref": "#/$defs/booleanCallbackBinding" },
+          { "$ref": "#/$defs/imeActionCallbackBinding" }
+        ]
+      }
+    },
+    "configuration": { "$ref": "#/$defs/configuration" },
+    "lanes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler", "render"],
+      "properties": {
+        "compiler": {
+          "const": "current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11"
+        },
+        "render": {
+          "const": "current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{0,127}$"
+    },
+    "kotlinIdentifier": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]{0,127}$"
+    },
+    "bindingParameter": {
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9]{0,127}$"
+    },
+    "bindingSource": {
+      "type": "string",
+      "pattern": "^(?:@(string|drawable)/[a-z][a-z0-9_]*|[a-z][A-Za-z0-9]*)$"
+    },
+    "declaredBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parameter", "source", "type"],
+      "properties": {
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "type": {
+          "enum": [
+            "String",
+            "TextFieldState",
+            "ImageSource",
+            "() -> Unit",
+            "(Boolean) -> Unit",
+            "(TextFieldImeAction) -> Boolean"
+          ]
+        }
+      }
+    },
+    "stringBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "value"],
+      "properties": {
+        "kind": { "const": "string" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "value": { "type": "string", "maxLength": 16384 }
+      }
+    },
+    "textFieldStateBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "initialText"],
+      "properties": {
+        "kind": { "const": "text-field-state" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "initialText": { "type": "string", "maxLength": 16384 }
+      }
+    },
+    "imageSourceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source"],
+      "properties": {
+        "kind": { "const": "image-source" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": {
+          "type": "string",
+          "pattern": "^@drawable/[a-z][a-z0-9_]*$"
+        },
+        "asset": { "$ref": "#/$defs/embeddedPngAsset" }
+      }
+    },
+    "unitCallbackBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "behavior"],
+      "properties": {
+        "kind": { "const": "unit-callback" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "behavior": { "const": "no-op" }
+      }
+    },
+    "booleanCallbackBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "behavior"],
+      "properties": {
+        "kind": { "const": "boolean-callback" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "behavior": { "const": "no-op" }
+      }
+    },
+    "imeActionCallbackBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameter", "source", "returnValue"],
+      "properties": {
+        "kind": { "const": "ime-action-callback" },
+        "parameter": { "$ref": "#/$defs/bindingParameter" },
+        "source": { "$ref": "#/$defs/bindingSource" },
+        "returnValue": { "type": "boolean" }
+      }
+    },
+    "embeddedPngAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mediaType",
+        "encoding",
+        "data",
+        "bytes",
+        "sha256",
+        "widthPx",
+        "heightPx"
+      ],
+      "properties": {
+        "mediaType": { "const": "image/png" },
+        "encoding": { "const": "base64" },
+        "data": {
+          "type": "string",
+          "maxLength": 699052,
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 524288 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "widthPx": { "type": "integer", "minimum": 1, "maximum": 1024 },
+        "heightPx": { "type": "integer", "minimum": 1, "maximum": 1024 }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "widthDp",
+        "heightDp",
+        "density",
+        "fontScale",
+        "localeTag",
+        "layoutDirection",
+        "theme",
+        "apiLevel"
+      ],
+      "properties": {
+        "widthDp": { "type": "integer", "minimum": 1, "maximum": 2000 },
+        "heightDp": { "enum": [-1] },
+        "density": { "type": "number", "minimum": 0.5, "maximum": 8 },
+        "fontScale": { "type": "number", "minimum": 0.5, "maximum": 3 },
+        "localeTag": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "pattern": "^[A-Za-z0-9-]+$"
+        },
+        "layoutDirection": { "enum": ["Ltr", "Rtl"] },
+        "theme": { "enum": ["Light", "Dark"] },
+        "apiLevel": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "integer", "minimum": 1, "maximum": 1000 }
+          ]
+        }
+      }
+    }
+  }
+}

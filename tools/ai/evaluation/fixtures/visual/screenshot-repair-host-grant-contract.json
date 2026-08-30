@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-repair-host-grant-v1",
+  "requiresContracts": [
+    "screenshot-repair-authorization-v1",
+    "screenshot-repair-host-grant-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "implemented-internal",
+    "publicRepairMode": false,
+    "implementation": true,
+    "executionAuthorized": false
+  },
+  "boundary": {
+    "request": "exact validated authorization, evidence, proposal, change, reference, Design IR, and baseline source identities",
+    "decision": "trusted host callback only; serialized caller decisions have no authority",
+    "authentication": "host authenticates both reviewer identities and purpose-bound review receipts",
+    "revocation": "host checks both receipts immediately before reservation",
+    "consumption": "host durably reserves exactly one application attempt atomically",
+    "failure": "a reserved attempt is terminal even when patch application fails",
+    "credentials": "out-of-band host transport only",
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "unattendedExecution": false,
+    "logs": "fingerprints-only"
+  },
+  "policy": {
+    "maxAttempts": 1,
+    "authorizationReuse": false,
+    "retryAfterReservationFailure": false,
+    "decisionTransport": "trusted-host-callback-only",
+    "callerSuppliedDecision": false,
+    "hostState": "durable",
+    "publicActivation": false
+  },
+  "diagnosticCodes": [
+    "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID",
+    "VC-AI-REPAIR-HOST-GRANT-INTEGRITY-MISMATCH",
+    "VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH",
+    "VC-AI-REPAIR-HOST-GRANT-AUTHENTICATION-FAILED",
+    "VC-AI-REPAIR-HOST-GRANT-REVOKED",
+    "VC-AI-REPAIR-HOST-GRANT-ALREADY-CONSUMED",
+    "VC-AI-REPAIR-HOST-GRANT-POLICY-DENIED",
+    "VC-AI-REPAIR-HOST-GRANT-HOST-FAILED",
+    "VC-AI-REPAIR-HOST-GRANT-CANCELLED"
+  ],
+  "claims": {
+    "checked": [
+      "grant request binds the exact structurally validated authorization and repair lineage",
+      "granted decision binds authenticated principals and review receipts to the original reviewers",
+      "both review receipts are active immediately before one durable atomic reservation",
+      "one reservation permits one exact attended attempt and cannot be retried or reused"
+    ],
+    "notClaimed": [
+      "local verification of host identity, authentication receipts, or revocation checks",
+      "authority for a decision loaded from a file, stdin, CLI argument, MCP argument, or network payload",
+      "a production durable host store, authenticated host integration, source-writing patch executor, or recovery workflow",
+      "public or unattended screenshot repair execution"
+    ]
+  },
+  "supportedFixtures": [
+    {
+      "id": "authenticated-active-atomic-single-use-grant",
+      "request": "screenshot-repair/rollback.host-grant-request.json",
+      "decision": "screenshot-repair/rollback.host-grant-decision.json",
+      "authorization": "screenshot-repair/rollback.authorization.json",
+      "validation": "screenshot-repair/rollback.authorization-validation.json",
+      "expectedRequestFingerprint": "0fe314890a50871229e3fc221cb0bad0fc8a84e4f7fe0e76916a9294cd2aa47a",
+      "expectedDecisionFingerprint": "eeda387f022b57254f73abcd22eda6181ef60fd4963d5bee9b64e9ea07a2969d"
+    }
+  ],
+  "invalidFixtures": [
+    {"mutation": "validation-fingerprint-mismatch", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH"},
+    {"mutation": "changed-request-fingerprint", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INTEGRITY-MISMATCH"},
+    {"mutation": "decision-request-mismatch", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH"},
+    {"mutation": "trust-domain-mismatch", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH"},
+    {"mutation": "baseline-principal-mismatch", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH"},
+    {"mutation": "repair-receipt-mismatch", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH"},
+    {"mutation": "duplicate-baseline-purpose", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "revoked-receipt-in-grant", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "non-atomic-reservation", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "second-attempt", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "authorization-reuse", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "retry-after-failure", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "unattended-execution", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "caller-supplied-decision", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "credential-shaped-field", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INPUT-INVALID"},
+    {"mutation": "change-mismatch", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-LINEAGE-MISMATCH"},
+    {"mutation": "changed-decision-fingerprint", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-INTEGRITY-MISMATCH"}
+  ],
+  "deniedFixtures": [
+    {"reason": "authentication-failed", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-AUTHENTICATION-FAILED"},
+    {"reason": "receipt-revoked", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-REVOKED"},
+    {"reason": "already-consumed", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-ALREADY-CONSUMED"},
+    {"reason": "policy-denied", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-POLICY-DENIED"},
+    {"reason": "host-failed", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-HOST-FAILED"}
+  ],
+  "cancelledFixtures": [
+    {"reason": "cancelled", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-CANCELLED"}
+  ]
+}

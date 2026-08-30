@@ -1,0 +1,6 @@
+{
+  "projectRoot": "/workspace/sample",
+  "requestedOperation": "execute-project-gradle",
+  "requestedCommand": "./gradlew tasks",
+  "expectedDecision": "reject-use-tool-owned-harness"
+}

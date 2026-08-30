@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "designIr": {
+    "documentId": "login",
+    "sourceFingerprint": "46c32add24ea96aa36cd5631a1b3a4bd885dd79595499b9b696e741b5366852a",
+    "irFingerprint": "51b8a69a45b73e2ba0522a6ab2ebe7cbb13708dfd2caeb52391c00b90503b453"
+  },
+  "render": {
+    "requestFingerprint": "d70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d",
+    "outputFingerprint": "6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab",
+    "renderTreeFingerprint": "d0373c8499b9d46f9cafa98a04c6f30d41a8ec69743a5ada35496ba0e2e05e85",
+    "viewport": {"widthPx": 1079, "heightPx": 2339},
+    "density": 2.625,
+    "fontScale": 1,
+    "localeTag": "en-US",
+    "layoutDirection": "Ltr"
+  },
+  "policy": {
+    "version": 1,
+    "nodeIdentity": "exact-normalized-key",
+    "semanticHost": "identity-or-allowlisted-single-child-wrapper",
+    "resourceValues": "exact-preview-binding-source",
+    "dpRounding": "nearest-integer-px",
+    "geometryTolerancePx": 0,
+    "hiddenGeometry": "not-applicable-only-for-gone"
+  },
+  "summary": {
+    "designNodes": 1,
+    "mappedNodes": 1,
+    "requiredChecks": 2,
+    "passedChecks": 2,
+    "failedChecks": 0,
+    "notApplicableChecks": 0
+  },
+  "nodes": [
+    {
+      "designNodeId": "xml:0",
+      "designPath": ["xml:0"],
+      "identityKey": "xml:0",
+      "identityRenderNodeId": "node-5",
+      "semanticRenderNodeId": "node-5",
+      "expectedKind": "column",
+      "actualKind": "column",
+      "wrapperDepth": 0,
+      "bounds": {"left": 0, "top": 0, "right": 1079, "bottom": 2339},
+      "checks": [
+        {
+          "id": "identity.key",
+          "category": "identity",
+          "status": "passed",
+          "expected": "xml:0",
+          "actual": "xml:0"
+        },
+        {
+          "id": "semantic.kind",
+          "category": "semantic",
+          "status": "passed",
+          "expected": "column",
+          "actual": "column"
+        }
+      ]
+    }
+  ],
+  "findings": [],
+  "comparisonFingerprint": "2340b0ba63162ff0e2d758c6d7795fe57c007a4fc57199803418eb7b40d2ad71"
+}

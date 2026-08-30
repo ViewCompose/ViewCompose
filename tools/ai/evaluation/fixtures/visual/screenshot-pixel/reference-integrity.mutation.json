@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "operation": "replace-reference-output-sha256",
+  "value": "0000000000000000000000000000000000000000000000000000000000000000",
+  "expectedDiagnosticCodes": ["VC-AI-PIXEL-REFERENCE-INTEGRITY-MISMATCH"]
+}

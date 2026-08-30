@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-repair-execution-outcome",
+  "status": "indeterminate",
+  "reason": "executor-crashed",
+  "lineage": {
+    "hostGrantDecisionFingerprint": "eeda387f022b57254f73abcd22eda6181ef60fd4963d5bee9b64e9ea07a2969d",
+    "hostGrantRequestFingerprint": "0fe314890a50871229e3fc221cb0bad0fc8a84e4f7fe0e76916a9294cd2aa47a",
+    "authorizationFingerprint": "7ee3a6296b55b6ae58585ffba93527dcd49d372e6a3daf403eb9f95ce02ad859",
+    "proposalFingerprint": "2d77def7c5582719c648797d4aaaf3ae551e92a0c4cb7f1d7eb60dbdaba2aeee",
+    "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
+    "inputDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+    "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
+    "hostTrustDomainId": "fixture-repair-host"
+  },
+  "attempt": {
+    "reservationState": "consumed",
+    "attemptNumber": 1,
+    "maxAttempts": 1,
+    "terminal": true,
+    "reuseAllowed": false,
+    "retryAllowed": false,
+    "attendedExecution": true
+  },
+  "executor": {
+    "executorId": "fixture-typed-design-ir-executor",
+    "executorBuildFingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+    "patchMode": "typed-design-ir-in-memory",
+    "persistentSourceWrite": false,
+    "publicToolMode": false,
+    "callerSuppliedOutcome": false,
+    "credentialInput": false,
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "logs": "fingerprints-only"
+  },
+  "effect": {
+    "state": "unknown",
+    "resultDesignIrFingerprint": null,
+    "patchOutputFingerprint": null,
+    "outputExposed": false
+  },
+  "receipt": {
+    "issuerTrustDomainId": "fixture-repair-host",
+    "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
+    "terminalState": "recorded",
+    "outcomeTransport": "trusted-host-callback-only",
+    "outcomeReceipt": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "diagnostics": [
+    {
+      "code": "VC-AI-REPAIR-EXECUTION-EFFECT-UNKNOWN",
+      "severity": "error",
+      "message": "The reserved attempt ended without proof of whether an effect was committed.",
+      "nextAction": "Reconcile externally without executing again; this authorization remains terminal."
+    }
+  ],
+  "outcomeFingerprint": "07a84b0fd14d03bdac6fb8c8270eac2a6f9c6c48abeb4bf0ee098f1a78a4e977"
+}

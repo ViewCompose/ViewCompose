@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "subsetId": "android-xml-layout-v1",
+  "source": {
+    "format": "Android layout XML",
+    "encoding": "UTF-8",
+    "androidNamespace": "http://schemas.android.com/apk/res/android",
+    "networkAccess": false,
+    "allowDoctype": false,
+    "allowEntities": false
+  },
+  "limits": {
+    "maxInputBytes": 262144,
+    "maxDepth": 32,
+    "maxNodes": 500,
+    "maxAttributesPerNode": 64,
+    "maxUnsupportedFragments": 1000
+  },
+  "elements": [
+    {
+      "source": "LinearLayout",
+      "targetByAttribute": {
+        "attribute": "android:orientation",
+        "default": "horizontal",
+        "values": {
+          "horizontal": "row",
+          "vertical": "column"
+        }
+      },
+      "children": "ordered"
+    },
+    {
+      "source": "TextView",
+      "target": "text",
+      "children": "none"
+    },
+    {
+      "source": "EditText",
+      "target": "text-field",
+      "children": "none"
+    },
+    {
+      "source": "Button",
+      "target": "button",
+      "children": "none"
+    }
+  ],
+  "attributes": {
+    "commonRequired": [
+      "android:layout_width",
+      "android:layout_height"
+    ],
+    "commonOptional": [
+      "android:id"
+    ],
+    "byElement": {
+      "LinearLayout": [
+        "android:orientation",
+        "android:padding"
+      ],
+      "TextView": [
+        "android:text"
+      ],
+      "EditText": [
+        "android:hint",
+        "android:inputType"
+      ],
+      "Button": [
+        "android:text"
+      ]
+    },
+    "values": {
+      "android:id": "@+id/name or @id/name",
+      "android:layout_width": "match_parent, wrap_content, or non-negative integer dp",
+      "android:layout_height": "match_parent, wrap_content, or non-negative integer dp",
+      "android:orientation": "horizontal or vertical",
+      "android:padding": "non-negative integer dp",
+      "android:text": "literal or unqualified @string/name",
+      "android:hint": "literal or unqualified @string/name",
+      "android:inputType": "text, textEmailAddress, textPassword, or number"
+    }
+  },
+  "normalization": {
+    "nodeIdentity": "android id name when present, otherwise deterministic source path",
+    "attributeOrder": "contract order",
+    "modifierOrder": ["size", "padding"],
+    "resourceOrder": "first source occurrence then resource name",
+    "lineEndings": "LF",
+    "trailingNewline": true
+  },
+  "codeGeneration": {
+    "packageName": "generated.viewcompose",
+    "functionName": "PascalCase source basename plus View",
+    "stringResourceStrategy": "caller String parameter preserving the source resource name in the migration report",
+    "literalStringStrategy": "escaped Kotlin literal",
+    "textFieldStateStrategy": "required caller-owned TextFieldState parameter derived from android id",
+    "idStrategy": "stable ViewCompose key using the Android id name",
+    "absentClickStrategy": "omit onClick and never invent behavior",
+    "compileArtifacts": ["viewcompose-ui-foundation"]
+  },
+  "unsupportedPolicy": {
+    "status": "unsupported",
+    "emitKotlin": false,
+    "preserveSource": true,
+    "localizeEveryFragment": true,
+    "callSiteAnalysis": "outside XML-only input and always reported as a migration limitation"
+  },
+  "diagnosticCodes": [
+    "VC-AI-XML-ATTRIBUTE-UNSUPPORTED",
+    "VC-AI-XML-CUSTOM-VIEW-UNSUPPORTED",
+    "VC-AI-XML-DATA-BINDING-UNSUPPORTED",
+    "VC-AI-XML-DOCTYPE-UNSUPPORTED",
+    "VC-AI-XML-DUPLICATE-ID",
+    "VC-AI-XML-ELEMENT-UNSUPPORTED",
+    "VC-AI-XML-ENTITY-UNSUPPORTED",
+    "VC-AI-XML-LIMIT",
+    "VC-AI-XML-MALFORMED",
+    "VC-AI-XML-NAMESPACE-UNSUPPORTED",
+    "VC-AI-XML-REQUIRED-ATTRIBUTE",
+    "VC-AI-XML-VALUE-UNSUPPORTED"
+  ],
+  "supportedFixtures": [
+    {
+      "source": "login.xml",
+      "goldenIr": "login.design-ir.json",
+      "goldenKotlin": "login.viewcompose.kt",
+      "expectedNodes": 4,
+      "expectedResources": [
+        "string/email_hint",
+        "string/login_action",
+        "string/login_title"
+      ],
+      "expectedStateBindings": ["emailState"],
+      "expectedResourceParameters": ["loginTitle", "emailHint", "loginAction"],
+      "expectedFunction": "LoginView"
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "source": "custom-view.xml",
+      "diagnosticCodes": ["VC-AI-XML-CUSTOM-VIEW-UNSUPPORTED"]
+    },
+    {
+      "source": "data-binding.xml",
+      "diagnosticCodes": ["VC-AI-XML-DATA-BINDING-UNSUPPORTED"]
+    },
+    {
+      "source": "unsupported-attribute.xml",
+      "diagnosticCodes": ["VC-AI-XML-ATTRIBUTE-UNSUPPORTED"]
+    }
+  ]
+}

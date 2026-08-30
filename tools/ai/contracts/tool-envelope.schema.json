@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/tool-envelope-v1.schema.json",
+  "title": "ViewCompose AI tool request and result envelope v1",
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/result" }
+  ],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "requestId", "tool", "framework", "limits", "arguments"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "request" },
+        "requestId": { "$ref": "#/$defs/stableId" },
+        "tool": { "$ref": "#/$defs/stableId" },
+        "framework": { "$ref": "#/$defs/framework" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["timeoutMs", "maxInputBytes", "maxOutputBytes"],
+          "properties": {
+            "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 120000 },
+            "maxInputBytes": { "type": "integer", "minimum": 1, "maximum": 4194304 },
+            "maxOutputBytes": { "type": "integer", "minimum": 1, "maximum": 16777216 }
+          }
+        },
+        "arguments": { "type": "object" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "tool",
+        "status",
+        "framework",
+        "evidence",
+        "diagnostics",
+        "elapsedMs",
+        "truncated"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "result" },
+        "requestId": { "$ref": "#/$defs/stableId" },
+        "tool": { "$ref": "#/$defs/stableId" },
+        "status": { "enum": ["success", "invalid", "unsupported", "failed", "cancelled", "limited"] },
+        "framework": { "$ref": "#/$defs/framework" },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["level", "bundleFingerprint", "cache"],
+          "properties": {
+            "level": { "enum": ["knowledge", "static", "compiled", "rendered", "compared"] },
+            "bundleFingerprint": { "$ref": "#/$defs/sha256" },
+            "cache": { "enum": ["miss", "hit", "bypassed"] },
+            "compilerLane": { "type": "string" },
+            "renderLane": { "type": "string" },
+            "outputFingerprint": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/diagnostic" }
+        },
+        "data": {},
+        "elapsedMs": { "type": "integer", "minimum": 0 },
+        "truncated": { "type": "boolean" }
+      }
+    },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["versionLane", "identity"],
+      "properties": {
+        "versionLane": { "enum": ["current-source", "released"] },
+        "identity": { "type": "string", "minLength": 7 }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": { "pattern": "^VC-AI-[A-Z0-9-]+$", "type": "string" },
+        "severity": { "enum": ["info", "warning", "error"] },
+        "message": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "nextAction": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "artifactId": { "type": "string" },
+        "capabilityId": { "type": "string" },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "startLine", "startColumn"],
+          "properties": {
+            "path": { "type": "string" },
+            "startLine": { "type": "integer", "minimum": 1 },
+            "startColumn": { "type": "integer", "minimum": 1 },
+            "endLine": { "type": "integer", "minimum": 1 },
+            "endColumn": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

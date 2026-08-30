@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "kind": "result",
+  "status": "resolved",
+  "requestFingerprint": "a88e3bba78ea817a197c042d4cbd23f7da518915005092c449513107f410c29b",
+  "input": {
+    "validationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab",
+    "inferenceResultFingerprint": "62694a1787a531bf68f9794c1a54630082e5d8f8fe7ee5becf3214c2ab107a09",
+    "designIrFingerprint": "585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a"
+  },
+  "authorization": {
+    "mode": "human-resolution",
+    "reviewerId": "fixture-reviewer",
+    "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444",
+    "approvedPurpose": "resolve-screenshot-inference",
+    "approvedValidationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab",
+    "sourceInspectionCompleted": true,
+    "providerExecution": false,
+    "networkAccess": false,
+    "logs": "metadata-only"
+  },
+  "designIr": {
+    "schemaVersion": 1,
+    "documentId": "screenshot-wireframe",
+    "source": {
+      "kind": "screenshot",
+      "identity": "preprocessed:58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
+      "fingerprint": "db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3"
+    },
+    "roots": [
+      {
+        "id": "wireframe-root",
+        "kind": "column",
+        "properties": [
+          {
+            "name": "orientation",
+            "value": {"kind": "enum", "type": "axis", "value": "vertical"}
+          }
+        ],
+        "modifiers": [],
+        "semantics": [
+          {
+            "name": "accessibilityLabelSource",
+            "value": {"kind": "enum", "type": "accessibility-label-source", "value": "none"}
+          },
+          {"name": "traversalIndex", "value": {"kind": "literal", "value": 0}},
+          {"name": "decorative", "value": {"kind": "literal", "value": false}}
+        ],
+        "events": [],
+        "state": [],
+        "children": [
+          {
+            "id": "wireframe-title",
+            "kind": "text",
+            "properties": [
+              {"name": "text", "value": {"kind": "literal", "value": "Welcome"}}
+            ],
+            "modifiers": [],
+            "semantics": [
+              {
+                "name": "accessibilityLabelSource",
+                "value": {
+                  "kind": "enum",
+                  "type": "accessibility-label-source",
+                  "value": "visible-text"
+                }
+              },
+              {"name": "traversalIndex", "value": {"kind": "literal", "value": 1}},
+              {"name": "decorative", "value": {"kind": "literal", "value": false}}
+            ],
+            "events": [],
+            "state": [],
+            "children": [],
+            "provenance": {
+              "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+              "sourceSpan": "pixels:2,2,8,2",
+              "confidence": 0.9,
+              "decision": "A compact high-contrast horizontal region is structurally text-like; its content is not observable."
+            }
+          },
+          {
+            "id": "wireframe-field",
+            "kind": "text-field",
+            "properties": [
+              {"name": "hint", "value": {"kind": "literal", "value": "Email address"}},
+              {
+                "name": "inputType",
+                "value": {
+                  "kind": "enum",
+                  "type": "android-input-type",
+                  "value": "textEmailAddress"
+                }
+              }
+            ],
+            "modifiers": [],
+            "semantics": [
+              {
+                "name": "role",
+                "value": {"kind": "enum", "type": "semantic-role", "value": "text-field"}
+              },
+              {
+                "name": "accessibilityLabelSource",
+                "value": {
+                  "kind": "enum",
+                  "type": "accessibility-label-source",
+                  "value": "field-label"
+                }
+              },
+              {"name": "traversalIndex", "value": {"kind": "literal", "value": 2}},
+              {"name": "decorative", "value": {"kind": "literal", "value": false}}
+            ],
+            "events": [
+              {"kind": "keyboard-action", "binding": "onEmailSubmit", "status": "resolved"}
+            ],
+            "state": [
+              {
+                "name": "text",
+                "value": {"kind": "binding", "name": "emailState", "status": "resolved"}
+              }
+            ],
+            "children": [],
+            "provenance": {
+              "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+              "sourceSpan": "pixels:2,7,12,5",
+              "confidence": 0.85,
+              "decision": "The outlined region is consistent with an input field, but purpose, text, state, and behavior need confirmation."
+            }
+          },
+          {
+            "id": "wireframe-button",
+            "kind": "button",
+            "properties": [
+              {"name": "text", "value": {"kind": "literal", "value": "Continue"}}
+            ],
+            "modifiers": [],
+            "semantics": [
+              {
+                "name": "role",
+                "value": {"kind": "enum", "type": "semantic-role", "value": "button"}
+              },
+              {
+                "name": "accessibilityLabelSource",
+                "value": {
+                  "kind": "enum",
+                  "type": "accessibility-label-source",
+                  "value": "visible-text"
+                }
+              },
+              {"name": "traversalIndex", "value": {"kind": "literal", "value": 3}},
+              {"name": "decorative", "value": {"kind": "literal", "value": false}}
+            ],
+            "events": [
+              {"kind": "click", "binding": "onContinue", "status": "resolved"}
+            ],
+            "state": [],
+            "children": [],
+            "provenance": {
+              "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+              "sourceSpan": "pixels:2,15,12,5",
+              "confidence": 0.9,
+              "decision": "The filled high-emphasis region is structurally button-like; label and click behavior are unresolved."
+            }
+          }
+        ],
+        "provenance": {
+          "sourceId": "screenshot:db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+          "sourceSpan": "pixels:0,0,16,24",
+          "confidence": 0.98,
+          "decision": "The three vertically ordered regions form one column-like screen root."
+        }
+      }
+    ],
+    "unsupported": []
+  },
+  "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+  "resolutionRecords": [
+    {
+      "questionId": "question-title-text",
+      "category": "content",
+      "requiredAction": "human-answer",
+      "decisionKind": "set-fields",
+      "targetNodeIds": ["wireframe-title"],
+      "resolvedUnsupportedCodes": ["VC-AI-SCREENSHOT-TEXT-UNRESOLVED"],
+      "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "questionId": "question-field-purpose",
+      "category": "content",
+      "requiredAction": "human-answer",
+      "decisionKind": "set-fields",
+      "targetNodeIds": ["wireframe-field"],
+      "resolvedUnsupportedCodes": ["VC-AI-SCREENSHOT-CONTENT-UNRESOLVED"],
+      "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "questionId": "question-field-behavior",
+      "category": "behavior",
+      "requiredAction": "source-inspection",
+      "decisionKind": "set-events",
+      "targetNodeIds": ["wireframe-field"],
+      "resolvedUnsupportedCodes": ["VC-AI-SCREENSHOT-BEHAVIOR-UNRESOLVED"],
+      "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "questionId": "question-button-text",
+      "category": "content",
+      "requiredAction": "human-answer",
+      "decisionKind": "set-fields",
+      "targetNodeIds": ["wireframe-button"],
+      "resolvedUnsupportedCodes": ["VC-AI-SCREENSHOT-TEXT-UNRESOLVED"],
+      "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "questionId": "question-button-behavior",
+      "category": "behavior",
+      "requiredAction": "source-inspection",
+      "decisionKind": "set-events",
+      "targetNodeIds": ["wireframe-button"],
+      "resolvedUnsupportedCodes": ["VC-AI-SCREENSHOT-BEHAVIOR-UNRESOLVED"],
+      "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "questionId": "question-accessibility",
+      "category": "accessibility",
+      "requiredAction": "human-answer",
+      "decisionKind": "accessibility-review",
+      "targetNodeIds": [
+        "wireframe-root",
+        "wireframe-title",
+        "wireframe-field",
+        "wireframe-button"
+      ],
+      "resolvedUnsupportedCodes": ["VC-AI-SCREENSHOT-ACCESSIBILITY-UNRESOLVED"],
+      "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  ],
+  "remainingQuestionIds": [],
+  "summary": {
+    "answeredQuestions": 6,
+    "remainingQuestions": 0,
+    "resolvedUnsupportedSemantics": 6,
+    "remainingUnsupportedSemantics": 0,
+    "placeholderBindings": 0,
+    "codeGenerationAllowed": true
+  },
+  "diagnostics": [],
+  "resultFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee"
+}

@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "contextId": "android-xml-project-context-v1:styled_login",
+  "layout": {
+    "path": "app/src/main/res/layout/styled_login.xml",
+    "resourceName": "styled_login",
+    "fingerprint": "90c8d07b510c09179b87dd5fdcfe51d3401aad82b67b9b1112b064b4c0d54687"
+  },
+  "resourceRoots": [
+    {
+      "path": "app/src/main/res",
+      "precedence": 0
+    }
+  ],
+  "sourceRoots": ["app/src/main/java"],
+  "resources": [
+    {
+      "reference": "@dimen/screen_padding",
+      "type": "dimen",
+      "name": "screen_padding",
+      "status": "resolved",
+      "definitions": [
+        {
+          "path": "app/src/main/res/values/dimens.xml",
+          "startLine": 3,
+          "qualifiers": [],
+          "selected": true,
+          "value": {
+            "kind": "dimension",
+            "value": 16,
+            "unit": "dp"
+          }
+        }
+      ],
+      "effectiveValue": {
+        "kind": "dimension",
+        "value": 16,
+        "unit": "dp"
+      }
+    },
+    {
+      "reference": "@string/email_hint",
+      "type": "string",
+      "name": "email_hint",
+      "status": "preserved",
+      "definitions": [
+        {
+          "path": "app/src/main/res/values/strings.xml",
+          "startLine": 4,
+          "qualifiers": [],
+          "selected": true,
+          "value": {
+            "kind": "string",
+            "value": "Email address"
+          }
+        }
+      ],
+      "effectiveValue": {
+        "kind": "string",
+        "value": "Email address"
+      }
+    },
+    {
+      "reference": "@string/login_action",
+      "type": "string",
+      "name": "login_action",
+      "status": "preserved",
+      "definitions": [
+        {
+          "path": "app/src/main/res/values/strings.xml",
+          "startLine": 5,
+          "qualifiers": [],
+          "selected": true,
+          "value": {
+            "kind": "string",
+            "value": "Sign in"
+          }
+        }
+      ],
+      "effectiveValue": {
+        "kind": "string",
+        "value": "Sign in"
+      }
+    },
+    {
+      "reference": "@string/login_title",
+      "type": "string",
+      "name": "login_title",
+      "status": "preserved",
+      "definitions": [
+        {
+          "path": "app/src/main/res/values/strings.xml",
+          "startLine": 3,
+          "qualifiers": [],
+          "selected": true,
+          "value": {
+            "kind": "string",
+            "value": "Welcome"
+          }
+        }
+      ],
+      "effectiveValue": {
+        "kind": "string",
+        "value": "Welcome"
+      }
+    }
+  ],
+  "styles": [
+    {
+      "reference": "@style/LoginPanel",
+      "name": "LoginPanel",
+      "chain": ["BasePanel", "LoginPanel"],
+      "items": [
+        {
+          "attribute": "android:orientation",
+          "value": {
+            "kind": "enum",
+            "type": "orientation",
+            "value": "vertical"
+          },
+          "definedBy": "LoginPanel",
+          "startLine": 7
+        },
+        {
+          "attribute": "android:padding",
+          "value": {
+            "kind": "resource",
+            "reference": "@dimen/screen_padding",
+            "type": "dimen",
+            "name": "screen_padding"
+          },
+          "definedBy": "BasePanel",
+          "startLine": 4
+        }
+      ]
+    },
+    {
+      "reference": "@style/LoginTitle",
+      "name": "LoginTitle",
+      "chain": ["LoginTitle"],
+      "items": [
+        {
+          "attribute": "android:text",
+          "value": {
+            "kind": "resource",
+            "reference": "@string/login_title",
+            "type": "string",
+            "name": "login_title"
+          },
+          "definedBy": "LoginTitle",
+          "startLine": 10
+        }
+      ]
+    }
+  ],
+  "callSites": [
+    {
+      "kind": "layout-reference",
+      "target": "layout/styled_login",
+      "path": "app/src/main/java/com/example/LoginActivity.kt",
+      "startLine": 12,
+      "startColumn": 24,
+      "language": "kotlin",
+      "evidence": "exact-symbol",
+      "confidence": "exact",
+      "snippetFingerprint": "619f46274f5355f8a588ad7f9d9493a774168cf443da7a20c0418710ddd20fef",
+      "migrationAction": "replace-inflation"
+    },
+    {
+      "kind": "id-reference",
+      "target": "id/email",
+      "path": "app/src/main/java/com/example/LoginActivity.kt",
+      "startLine": 13,
+      "startColumn": 44,
+      "language": "kotlin",
+      "evidence": "exact-symbol",
+      "confidence": "exact",
+      "snippetFingerprint": "7ed29d3b44587c13a5643d63edaa760193e52fc62649c0cbc2890e74ad0a00cf",
+      "migrationAction": "reconnect-binding"
+    },
+    {
+      "kind": "id-reference",
+      "target": "id/login_button",
+      "path": "app/src/main/java/com/example/LoginActivity.kt",
+      "startLine": 14,
+      "startColumn": 43,
+      "language": "kotlin",
+      "evidence": "exact-symbol",
+      "confidence": "exact",
+      "snippetFingerprint": "c03e278996bb4ac03fd55e6aaf626d0a0bc762eeee9d75cfe591a9112929cb12",
+      "migrationAction": "reconnect-binding"
+    },
+    {
+      "kind": "view-binding-reference",
+      "target": "layout/styled_login",
+      "path": "app/src/main/java/com/example/LoginActivity.kt",
+      "startLine": 15,
+      "startColumn": 23,
+      "language": "kotlin",
+      "evidence": "binding-convention",
+      "confidence": "candidate",
+      "snippetFingerprint": "196c33c824f44727271f27d4e0a2bd57618e6efb53aea4e1f251cf0840eaa437",
+      "migrationAction": "reconnect-binding"
+    },
+    {
+      "kind": "listener-registration",
+      "target": "id/login_button",
+      "path": "app/src/main/java/com/example/LoginActivity.kt",
+      "startLine": 16,
+      "startColumn": 16,
+      "language": "kotlin",
+      "evidence": "bounded-lexical",
+      "confidence": "candidate",
+      "snippetFingerprint": "9cd68ec632a82c983b728943eb4a82828e5bd6e5da0b46d385aad26c36d9faf4",
+      "migrationAction": "reconnect-listener"
+    },
+    {
+      "kind": "imperative-mutation",
+      "target": "id/title",
+      "path": "app/src/main/java/com/example/LoginActivity.kt",
+      "startLine": 17,
+      "startColumn": 9,
+      "language": "kotlin",
+      "evidence": "binding-convention",
+      "confidence": "candidate",
+      "snippetFingerprint": "4df3a765ca57e677c31b37e991e5cd8e9d753096dbabae49afaa6e1ff268c1b9",
+      "migrationAction": "review-mutation"
+    },
+    {
+      "kind": "resource-reference",
+      "target": "string/login_title",
+      "path": "app/src/main/java/com/example/LoginActivity.kt",
+      "startLine": 17,
+      "startColumn": 40,
+      "language": "kotlin",
+      "evidence": "exact-symbol",
+      "confidence": "exact",
+      "snippetFingerprint": "4df3a765ca57e677c31b37e991e5cd8e9d753096dbabae49afaa6e1ff268c1b9",
+      "migrationAction": "preserve-resource"
+    }
+  ],
+  "coverage": {
+    "resourceFiles": 3,
+    "sourceFiles": 1,
+    "scannedBytes": 2297,
+    "resourceResolution": "explicit-roots-only",
+    "callSiteAnalysis": "bounded-lexical",
+    "completeness": "not-proven",
+    "executedProjectBuildLogic": false,
+    "networkAccess": false
+  },
+  "limitations": [
+    "agp-variant-merge-not-executed",
+    "dynamic-and-generated-call-sites-not-proven",
+    "qualified-resource-selection-not-proven",
+    "semantic-listener-and-mutation-ownership-not-proven"
+  ],
+  "fingerprint": "f635c856eab177a37aa29f1eb14bd096ca76e8dc0e3a99892574b00f2c90a14e"
+}

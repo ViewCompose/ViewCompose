@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-repair-host-grant-request",
+  "input": {
+    "validationFingerprint": "ef6ee08150a287d334c799ca30c4b0d4bb3aa8d94839fd143bf30071ecd00b1f",
+    "authorizationFingerprint": "7ee3a6296b55b6ae58585ffba93527dcd49d372e6a3daf403eb9f95ce02ad859",
+    "baselineEvidenceFingerprint": "924f462673b39e8c9f00352f3517144d433894fde5d4985e20f62f448925babf",
+    "candidateEvidenceFingerprint": "f2b2b21f846ff99024fcb8a4d6bee129697da8b387802c6c086254febc47484c",
+    "candidateDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+    "pixelReferenceFingerprint": "1df87bf9bc879ba5d809b1c9e3c5a4a051a1f4fa088ef3b5ec6edf7e648790e4",
+    "proposalFingerprint": "2d77def7c5582719c648797d4aaaf3ae551e92a0c4cb7f1d7eb60dbdaba2aeee",
+    "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
+    "baselineSourceRevision": "a2faf25dc206b428936a42b3d0872007371592b3"
+  },
+  "hostBoundary": {
+    "trustDomainId": "fixture-repair-host",
+    "decisionTransport": "trusted-host-callback-only",
+    "identityAuthentication": "host-authenticates-both-reviewers",
+    "receiptAuthentication": "host-authenticates-both-review-receipts",
+    "revocationCheck": "immediately-before-atomic-reservation",
+    "consumption": "atomic-single-use-reservation",
+    "durableState": "host-owned",
+    "credentialTransport": "out-of-band"
+  },
+  "policy": {
+    "maxAttempts": 1,
+    "reuseAllowed": false,
+    "retryAfterReservationFailure": false,
+    "unattendedExecution": false,
+    "publicToolMode": false,
+    "callerSuppliedDecision": false,
+    "credentialInput": false,
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "logs": "fingerprints-only"
+  },
+  "requestFingerprint": "0fe314890a50871229e3fc221cb0bad0fc8a84e4f7fe0e76916a9294cd2aa47a"
+}

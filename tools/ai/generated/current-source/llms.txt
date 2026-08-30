@@ -1,0 +1,55 @@
+# ViewCompose
+
+> Declarative Kotlin UI for Android that renders native Views. Use exact published APIs and validate generated code before delivery.
+
+## Version and source
+
+- Lane: current-source
+- Source revision: 78127e51cd740ccdbd58d326e05426caf4e49795
+- Capability fingerprint: 2f97d77ce237ec69e1e17e094140b4d071b6f4e4167edf35bb866af0e6a9d2d5
+- Entries: 540
+- Capabilities: 82
+- Artifacts: 31
+
+## Canonical references
+
+- Documentation: https://docs.viewcompose.com/documentation/
+- Capability Reference: https://docs.viewcompose.com/reference/
+- Versioned API/KDoc: https://docs.viewcompose.com/api/
+- Local structured bundle: tools/ai/generated/current-source/manifest.json
+- Full machine guide: tools/ai/generated/current-source/llms-full.txt
+
+## Evidence contract
+
+Knowledge, static, compiled, rendered, and compared are cumulative evidence levels. A symbol match is not compilation; compilation is not rendering; visual similarity cannot override semantics, accessibility, unsupported content, or security failure.
+
+## Core rules
+
+- VC-AI-A11Y-IMAGE-DESCRIPTION: A meaningful Image or Icon requires a content description. Null is reserved for content that is deliberately decorative.
+- VC-AI-A11Y-TOUCH-TARGET: Interactive output must preserve the design-system touch-target contract and cannot use visual bounds as the only interaction bound.
+- VC-AI-ANDROID-VIEW-COMMIT: Non-replayable native operations belong in AndroidView.onCommit or another documented commit boundary, not in replayable update work.
+- VC-AI-ARTIFACT-REQUIRED: Every generated symbol must resolve to the exact owning artifact and version lane; aggregate artifacts are not assumed.
+- VC-AI-EVIDENCE-DEPTH: Knowledge, static, compiled, rendered, and compared results are cumulative and cannot be promoted by inference.
+- VC-AI-LIFECYCLE-PAIRED-WORK: Use the lifecycle-aware Flow and paired effect APIs for threshold-bound work; do not branch once on a non-observable lifecycle snapshot.
+
+## Capability groups
+
+- layout: 31 entries
+- appearance: 24 entries
+- input: 21 entries
+- gesture: 8 entries
+- animation: 8 entries
+- content: 10 entries
+- actions: 15 entries
+- collections: 6 entries
+- feedback: 16 entries
+- navigation: 6 entries
+- design-systems: 8 entries
+- integrations: 175 entries
+- android-interop: 58 entries
+- tooling: 130 entries
+- general: 24 entries
+
+## Agent workflow
+
+Select an exact version lane, retrieve capability and sample IDs, generate only current symbols, run static validation, compile in the tool-owned harness, render supported UI through Preview, and return the deepest evidence that passed. MCP and converters are not part of Phase 1.

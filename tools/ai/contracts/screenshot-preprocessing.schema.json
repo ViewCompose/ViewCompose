@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-preprocessing-v1.schema.json",
+  "title": "ViewCompose screenshot preprocessing v1",
+  "oneOf": [
+    {"$ref": "#/$defs/request"},
+    {"$ref": "#/$defs/result"}
+  ],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "source",
+        "screenshot",
+        "interpretation",
+        "privacy",
+        "output"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "request"},
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["identity"],
+          "properties": {
+            "identity": {"type": "string", "minLength": 1, "maxLength": 1024}
+          }
+        },
+        "screenshot": {"$ref": "#/$defs/pngAsset"},
+        "interpretation": {"$ref": "#/$defs/interpretation"},
+        "privacy": {"$ref": "#/$defs/privacyRequest"},
+        "output": {"$ref": "#/$defs/outputRequest"}
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "requestFingerprint",
+        "input",
+        "output",
+        "transformations",
+        "privacy",
+        "diagnostics",
+        "outputFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "result"},
+        "status": {"const": "success"},
+        "requestFingerprint": {"$ref": "#/$defs/sha256"},
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sha256", "widthPx", "heightPx"],
+          "properties": {
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "widthPx": {"type": "integer", "minimum": 1, "maximum": 4096},
+            "heightPx": {"type": "integer", "minimum": 1, "maximum": 4096}
+          }
+        },
+        "output": {"$ref": "#/$defs/pngAsset"},
+        "transformations": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 66,
+          "items": {"$ref": "#/$defs/transformation"}
+        },
+        "privacy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "redactionsApplied",
+            "providerTransfer",
+            "inputPersisted",
+            "logs"
+          ],
+          "properties": {
+            "redactionsApplied": {"type": "integer", "minimum": 0, "maximum": 64},
+            "providerTransfer": {"const": false},
+            "inputPersisted": {"const": false},
+            "logs": {"const": "metadata-only"}
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "outputFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "pngAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mediaType",
+        "encoding",
+        "data",
+        "bytes",
+        "sha256",
+        "widthPx",
+        "heightPx"
+      ],
+      "properties": {
+        "mediaType": {"const": "image/png"},
+        "encoding": {"const": "base64"},
+        "data": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 1747628,
+          "pattern": "^[A-Za-z0-9+/]+={0,2}$"
+        },
+        "bytes": {"type": "integer", "minimum": 33, "maximum": 1310720},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "widthPx": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "heightPx": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "density",
+        "fontScale",
+        "localeTag",
+        "layoutDirection",
+        "colorSpace",
+        "alphaMode",
+        "orientation",
+        "systemBars",
+        "crop"
+      ],
+      "properties": {
+        "density": {"type": "number", "minimum": 0.1, "maximum": 16},
+        "fontScale": {"type": "number", "minimum": 0.1, "maximum": 8},
+        "localeTag": {"type": "string", "minLength": 1, "maxLength": 128},
+        "layoutDirection": {"enum": ["Ltr", "Rtl"]},
+        "colorSpace": {"const": "sRGB"},
+        "alphaMode": {"const": "straight"},
+        "orientation": {"const": "upright"},
+        "systemBars": {"$ref": "#/$defs/insets"},
+        "crop": {"$ref": "#/$defs/rectangle"}
+      }
+    },
+    "privacyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review",
+        "providerTransfer",
+        "persistInput",
+        "logs",
+        "redactions"
+      ],
+      "properties": {
+        "review": {"const": "complete"},
+        "providerTransfer": {"const": false},
+        "persistInput": {"const": false},
+        "logs": {"const": "metadata-only"},
+        "redactions": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/redaction"}
+        }
+      }
+    },
+    "outputRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mediaType", "resize", "stripMetadata", "maxWidthPx", "maxHeightPx"],
+      "properties": {
+        "mediaType": {"const": "image/png"},
+        "resize": {"const": "none"},
+        "stripMetadata": {"const": true},
+        "maxWidthPx": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "maxHeightPx": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rectangle", "reason", "replacement"],
+      "properties": {
+        "rectangle": {"$ref": "#/$defs/rectangle"},
+        "reason": {"const": "user-specified-sensitive"},
+        "replacement": {"const": "#000000ff"}
+      }
+    },
+    "transformation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "rectangle"],
+          "properties": {
+            "kind": {"const": "crop"},
+            "rectangle": {"$ref": "#/$defs/rectangle"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "rectangle", "replacement"],
+          "properties": {
+            "kind": {"const": "redact"},
+            "rectangle": {"$ref": "#/$defs/rectangle"},
+            "replacement": {"const": "#000000ff"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": {"const": "strip-metadata"}
+          }
+        }
+      ]
+    },
+    "insets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leftPx", "topPx", "rightPx", "bottomPx"],
+      "properties": {
+        "leftPx": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "topPx": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "rightPx": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "bottomPx": {"type": "integer", "minimum": 0, "maximum": 4096}
+      }
+    },
+    "rectangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "y": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "width": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "height": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-SCREENSHOT-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

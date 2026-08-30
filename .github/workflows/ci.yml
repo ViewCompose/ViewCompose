@@ -143,6 +143,14 @@ jobs:
           qaQuick
           --stacktrace
 
+      - name: Verify pinned AI compiler corpus
+        if: >-
+          !cancelled() &&
+          (steps.affected.outcome == 'success' || steps.complete.outcome == 'success')
+        run: |
+          ./gradlew :tools:ai-compiler-harness:prepareAiCompilerLane
+          npm --prefix tools/ai run verify:phase2-compile
+
       - name: Report qaQuick execution mode
         if: always()
         env:
@@ -251,6 +259,25 @@ jobs:
       - name: Run qaPreview
         run: ./gradlew qaPreview --stacktrace
 
+      - name: Verify AI Preview render corpus
+        run: npm --prefix tools/ai run verify:phase2-render
+
+      - name: Print AI Preview failure diagnostics
+        if: failure()
+        run: |
+          worker_log="samples/counter/build/viewcompose-preview/debug/worker/worker.log"
+          if [[ -f "$worker_log" ]]; then
+            echo "ViewCompose Preview worker log:"
+            tail -n 200 "$worker_log"
+          else
+            echo "ViewCompose Preview worker log was not produced."
+          fi
+          shopt -s globstar nullglob
+          for response in samples/counter/build/viewcompose-preview/debug/render-cache/**/response.json; do
+            echo "ViewCompose Preview structured response: $response"
+            sed -n '1,240p' "$response"
+          done
+
       - name: Upload qaPreview failure reports
         if: failure()
         uses: actions/upload-artifact@v7
@@ -263,6 +290,8 @@ jobs:
             viewcompose-preview/build/reports/paparazzi/
             viewcompose-preview/build/reports/tests/testDebugUnitTest/
             viewcompose-preview/build/test-results/testDebugUnitTest/
+            samples/counter/build/viewcompose-preview/debug/worker/worker.log
+            samples/counter/build/viewcompose-preview/debug/render-cache/**/response.json
 
   qaPreview:
     name: qaPreview

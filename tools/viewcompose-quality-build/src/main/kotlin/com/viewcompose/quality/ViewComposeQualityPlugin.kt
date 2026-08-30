@@ -492,6 +492,797 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("website/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiToolingContracts") {
+            group = "verification"
+            description =
+                "Verifies provider-neutral AI tooling schemas, metrics, and evaluation fixtures."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include("**/*.json", "**/*.mjs", "**/*.kt", "**/*.xml", "**/*.md")
+                },
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiStaticTooling") {
+            group = "verification"
+            description =
+                "Verifies deterministic AI static validation and read-only project analysis."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase2-static")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/**/*.json",
+                        "evaluation/**/*.json",
+                        "evaluation/**/*.kt",
+                        "generated/current-source/**/*.json",
+                        "generated/current-source/**/*.jsonl",
+                        "scripts/**/*.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiRetrieval") {
+            group = "verification"
+            description =
+                "Verifies deterministic Knowledge Bundle retrieval ranking and ownership evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-retrieval")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "evaluation/corpus.json",
+                        "evaluation/metrics.json",
+                        "generated/current-source/**/*.json",
+                        "generated/current-source/**/*.jsonl",
+                        "scripts/knowledge-retriever.mjs",
+                        "scripts/verify-phase3-retrieval.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiMcp") {
+            group = "verification"
+            description =
+                "Verifies stdio MCP protocol compatibility, tool discovery, and CLI parity."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-mcp")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/mcp-protocol.json",
+                        "contracts/tool-envelope.schema.json",
+                        "generated/current-source/**/*.json",
+                        "generated/current-source/**/*.jsonl",
+                        "scripts/ai-tool.mjs",
+                        "scripts/knowledge-retriever.mjs",
+                        "scripts/mcp-server.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase3-mcp.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiLayoutDiagnosis") {
+            group = "verification"
+            description =
+                "Verifies exact deterministic diagnosis over accepted Preview layout evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-layout")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "evaluation/corpus.json",
+                        "evaluation/metrics.json",
+                        "evaluation/fixtures/render/**/*.json",
+                        "scripts/layout-diagnoser.mjs",
+                        "scripts/preview-adapter.mjs",
+                        "scripts/verify-phase3-layout.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiConsumerWorkflows") {
+            group = "verification"
+            description =
+                "Verifies client-neutral ViewCompose consumer skills and evidence workflows."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-workflows")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "evaluation/fixtures/workflows/**/*.json",
+                        "evaluation/metrics.json",
+                        "skills/**/*.json",
+                        "skills/**/SKILL.md",
+                        "scripts/consumer-workflows.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/verify-phase3-workflows.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiDistribution") {
+            group = "verification"
+            description =
+                "Builds and verifies the installable offline ViewCompose AI distribution."
+            dependsOn(":tools:ai-preview-harness:prepareAiPreviewLane")
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase3-distribution")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/mcp-protocol.json",
+                        "contracts/tool-envelope.schema.json",
+                        "evaluation/fixtures/distribution/package-contract.json",
+                        "evaluation/fixtures/kotlin/foundation-profile-summary-valid.kt",
+                        "evaluation/fixtures/visual/**",
+                        "generated/current-source/**",
+                        "scripts/*.mjs",
+                        "skills/**",
+                        "README.md",
+                    )
+                },
+                project.rootDir.resolve("LICENSE"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiDesignIr") {
+            group = "verification"
+            description =
+                "Verifies deterministic Android XML conversion to the frozen Design IR subset."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-design-ir")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "evaluation/fixtures/xml/**",
+                        "scripts/schema-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-design-ir.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiXmlProjectContext") {
+            group = "verification"
+            description =
+                "Verifies bounded Android XML resource, style, and call-site project context."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-project-context")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/xml-project-context.schema.json",
+                        "evaluation/fixtures/xml/project-context/**",
+                        "evaluation/fixtures/xml/project-context-contract.json",
+                        "evaluation/metrics.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-project-context.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-project-context.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiXmlLayoutDependencies") {
+            group = "verification"
+            description =
+                "Verifies bounded Android XML layout dependency graphs and include/merge expansion."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-layout-dependencies")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/xml-layout-dependencies.schema.json",
+                        "contracts/xml-project-context.schema.json",
+                        "evaluation/fixtures/xml/layout-dependencies/**",
+                        "evaluation/fixtures/xml/layout-dependency-contract.json",
+                        "evaluation/metrics.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-to-kotlin.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-layout-dependencies.mjs",
+                        "scripts/xml-migration.mjs",
+                        "scripts/xml-project-context.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-layout-dependencies.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+                project.rootDir.resolve("tools/ai-compiler-harness/build.gradle.kts"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiXmlMigration") {
+            group = "verification"
+            description =
+                "Generates and hermetically compiles the frozen XML-to-ViewCompose Kotlin golden."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-xml")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "evaluation/fixtures/xml/**",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-to-kotlin.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-xml.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+                project.rootDir.resolve("tools/ai-compiler-harness/build.gradle.kts"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiGeneratedPreview") {
+            group = "verification"
+            description =
+                "Compiles and renders the frozen XML-generated ViewCompose Preview evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase4-generated-preview")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "contracts/layout-comparison.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "contracts/tool-envelope.schema.json",
+                        "evaluation/fixtures/xml/generated-preview/**",
+                        "evaluation/fixtures/xml/generated-preview-contract.json",
+                        "evaluation/fixtures/xml/login.*",
+                        "evaluation/metrics.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/design-ir-to-kotlin.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/preview-adapter.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/xml-migration.mjs",
+                        "scripts/xml-to-design-ir.mjs",
+                        "scripts/verify-phase4-generated-preview.mjs",
+                    )
+                },
+                project.rootDir.resolve("settings.gradle.kts"),
+                project.rootDir.resolve("tools/ai/package.json"),
+                project.rootDir.resolve("tools/ai-preview-harness/build.gradle.kts"),
+                project.rootDir.resolve("tools/ai-preview-harness/src/main/AndroidManifest.xml"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotPreprocessing") {
+            group = "verification"
+            description =
+                "Verifies deterministic screenshot integrity, crop, redaction, privacy, and transport evidence."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "contracts/tool-envelope.schema.json",
+                        "evaluation/fixtures/visual/screenshot/**",
+                        "evaluation/fixtures/visual/screenshot-preprocessing-contract.json",
+                        "scripts/ai-tool.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-preprocessing.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotInference") {
+            group = "verification"
+            description =
+                "Verifies screenshot-to-Design-IR lineage, evidence, uncertainty, and consent contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-inference")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/examples/screenshot-preprocessing-request.json",
+                        "contracts/examples/screenshot-preprocessing-result.json",
+                        "contracts/screenshot-design-inference.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "evaluation/fixtures/visual/screenshot/**",
+                        "evaluation/fixtures/visual/screenshot-inference/**",
+                        "evaluation/fixtures/visual/screenshot-inference-contract.json",
+                        "evaluation/fixtures/visual/screenshot-preprocessing-contract.json",
+                        "generated/current-source/manifest.json",
+                        "scripts/knowledge-retriever.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-inference-contract.mjs",
+                        "scripts/screenshot-inference-validator.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase0.mjs",
+                        "scripts/verify-phase5-screenshot-inference.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotResolution") {
+            group = "verification"
+            description =
+                "Verifies typed human answers, exact screenshot-inference lineage, and code-generation eligibility."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-resolution")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/screenshot-design-inference.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "evaluation/fixtures/visual/screenshot-inference/**",
+                        "evaluation/fixtures/visual/screenshot-inference-contract.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/**",
+                        "evaluation/fixtures/visual/screenshot-resolution-contract.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-inference-contract.mjs",
+                        "scripts/screenshot-resolution-adapter.mjs",
+                        "scripts/screenshot-resolution-contract.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-resolution.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotGeneration") {
+            group = "verification"
+            description =
+                "Verifies resolved screenshot Design IR to Kotlin mapping and hermetic compilation."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-generation")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "evaluation/fixtures/visual/screenshot-generation/**",
+                        "evaluation/fixtures/visual/screenshot-kotlin-generation-contract.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "generated/current-source/**",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-design-ir-to-kotlin.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-catalog.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-generation.mjs",
+                    )
+                },
+                project.rootDir.resolve("settings.gradle.kts"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotRender") {
+            group = "verification"
+            description =
+                "Verifies screenshot-generated Preview lineage and safe callback binding contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-render")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/generated-preview-request.schema.json",
+                        "evaluation/fixtures/visual/screenshot-generated-preview-contract.json",
+                        "evaluation/fixtures/visual/screenshot-generation/wireframe.*",
+                        "evaluation/fixtures/visual/screenshot-render/**",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/verify-phase5-screenshot-render.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotComparison") {
+            group = "verification"
+            description =
+                "Verifies screenshot semantic and structural geometry comparison contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-comparison")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "evaluation/fixtures/visual/screenshot-compare/**",
+                        "evaluation/fixtures/visual/screenshot-layout-comparison-contract.json",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/schema-validator.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/layout-comparator.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
+                        "scripts/verify-phase5-screenshot-comparison.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotPixelComparison") {
+            group = "verification"
+            description =
+                "Verifies screenshot pixel-reference eligibility and exact comparison contracts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-pixel-comparison")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-pixel-comparison.schema.json",
+                        "contracts/screenshot-pixel-localization.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "evaluation/fixtures/visual/screenshot-layout-comparison-contract.json",
+                        "evaluation/fixtures/visual/screenshot-pixel-comparison-contract.json",
+                        "evaluation/fixtures/visual/screenshot-pixel/**",
+                        "evaluation/fixtures/visual/screenshot/inference-wireframe.*",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/layout-comparator.mjs",
+                        "scripts/pixel-comparator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-design-ir-to-kotlin.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-pixel-comparison.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotRepair") {
+            group = "verification"
+            description =
+                "Verifies bounded screenshot repair ordering, convergence, and fail-closed behavior."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-repair.schema.json",
+                        "contracts/screenshot-repair-candidate-evidence.schema.json",
+                        "contracts/design-ir.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/**",
+                        "evaluation/fixtures/visual/screenshot-pixel/render-one-channel.mutation.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/design-ir-repair-patch.mjs",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/verify-phase5-screenshot-repair.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairCandidate") {
+            group = "verification"
+            description =
+                "Verifies repaired screenshot candidates through compile, render, layout, and pixels."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-candidate")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "contracts/layout-comparison.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "contracts/screenshot-pixel-comparison.schema.json",
+                        "contracts/screenshot-pixel-localization.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "contracts/screenshot-repair-candidate-evidence.schema.json",
+                        "contracts/screenshot-repair.schema.json",
+                        "evaluation/fixtures/visual/screenshot-generation/wireframe.request.json",
+                        "evaluation/fixtures/visual/screenshot-pixel/pixel-reference.*.json",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "evaluation/fixtures/visual/screenshot-repair-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/**",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-repair-patch.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/layout-comparator.mjs",
+                        "scripts/pixel-comparator.mjs",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-design-ir-to-kotlin.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/screenshot-repair-candidate-evaluator.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-repair-candidate.mjs",
+                    )
+                },
+                project.rootDir.resolve("settings.gradle.kts"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairProposer") {
+            group = "verification"
+            description =
+                "Verifies rollback-only screenshot proposals and six-gate source-bound replay."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-proposer")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "contracts/layout-comparison.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "contracts/screenshot-pixel-comparison.schema.json",
+                        "contracts/screenshot-pixel-localization.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "contracts/screenshot-repair-candidate-evidence.schema.json",
+                        "contracts/screenshot-repair-proposal.schema.json",
+                        "contracts/screenshot-repair.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-proposer-contract.json",
+                        "evaluation/fixtures/visual/screenshot-generation/wireframe.request.json",
+                        "evaluation/fixtures/visual/screenshot-pixel/pixel-reference.*.json",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "evaluation/fixtures/visual/screenshot-repair-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/**",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-repair-patch.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/layout-comparator.mjs",
+                        "scripts/pixel-comparator.mjs",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-design-ir-to-kotlin.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/screenshot-repair-candidate-evaluator.mjs",
+                        "scripts/screenshot-repair-proposer.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-repair-proposer.mjs",
+                    )
+                },
+                project.rootDir.resolve("settings.gradle.kts"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairAuthorization") {
+            group = "verification"
+            description =
+                "Verifies human baseline acceptance and single-use rollback authorization."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-authorization")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "contracts/layout-comparison.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "contracts/screenshot-pixel-comparison.schema.json",
+                        "contracts/screenshot-pixel-localization.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
+                        "contracts/screenshot-repair-authorization.schema.json",
+                        "contracts/screenshot-repair-candidate-evidence.schema.json",
+                        "contracts/screenshot-repair-proposal.schema.json",
+                        "contracts/screenshot-repair.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-authorization-contract.json",
+                        "evaluation/fixtures/visual/screenshot-generation/wireframe.request.json",
+                        "evaluation/fixtures/visual/screenshot-pixel/pixel-reference.*.json",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "evaluation/fixtures/visual/screenshot-repair-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/**",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-repair-patch.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/layout-comparator.mjs",
+                        "scripts/pixel-comparator.mjs",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-design-ir-to-kotlin.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/screenshot-repair-authorization-validator.mjs",
+                        "scripts/screenshot-repair-candidate-evaluator.mjs",
+                        "scripts/screenshot-repair-proposer.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
+                        "scripts/verify-phase5-screenshot-repair-authorization.mjs",
+                    )
+                },
+                project.rootDir.resolve("settings.gradle.kts"),
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairHostGrant") {
+            group = "verification"
+            description =
+                "Verifies host authentication, revocation, and atomic single-use grant boundaries."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-host-grant")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-repair-host-grant.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-host-grant-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization-validation.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-decision.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-request.json",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-repair-host-grant-adapter.mjs",
+                        "scripts/verify-phase5-screenshot-repair-host-grant.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairExecutionOutcome") {
+            group = "verification"
+            description =
+                "Verifies terminal, non-retryable screenshot repair outcome receipts."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-execution-outcome")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/design-ir.schema.json",
+                        "contracts/screenshot-repair-execution-outcome.schema.json",
+                        "contracts/screenshot-repair-host-grant.schema.json",
+                        "contracts/screenshot-repair.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-execution-outcome-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair-proposer-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.execution-*.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization-validation.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-decision.json",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "scripts/design-ir-repair-patch.mjs",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-repair-execution-adapter.mjs",
+                        "scripts/screenshot-repair-host-grant-adapter.mjs",
+                        "scripts/screenshot-repair-terminal-store.mjs",
+                        "scripts/verify-phase5-screenshot-repair-execution-outcome.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("generateAiKnowledgeBundle") {
+            group = "documentation"
+            description =
+                "Generates the versioned AI Knowledge Bundle and compact hosted llms.txt."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "generate:knowledge")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai/contracts")) {
+                    include("**/*.json")
+                },
+                project.fileTree(project.rootDir.resolve("tools/ai/knowledge")) {
+                    include("**/*.json")
+                },
+                project.fileTree(project.rootDir.resolve("tools/ai/scripts")) {
+                    include("knowledge-generator.mjs", "generate-knowledge.mjs")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/capabilities",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/samples",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                extension.sourceSetDirectories,
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+            )
+            outputs.dir(project.rootDir.resolve("tools/ai/generated/current-source"))
+            outputs.file(project.rootDir.resolve("website/static/llms.txt"))
+        }
+        project.tasks.register<Exec>("verifyAiKnowledgeBundle") {
+            group = "verification"
+            description =
+                "Verifies AI Knowledge Bundle determinism, source completeness, and freshness."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:knowledge")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include("contracts/**/*.json", "knowledge/**/*.json", "scripts/**/*.mjs")
+                    exclude("scripts/**/*.test.mjs")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/capabilities",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "docs/project/records/documentation-governance-v2/samples",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+                extension.sourceSetDirectories,
+                project.rootDir.resolve("website/src/data/capability-reference.json"),
+                project.fileTree(project.rootDir.resolve("tools/ai/generated/current-source")),
+                project.rootDir.resolve("website/static/llms.txt"),
+            )
+        }
         project.tasks.register<Exec>("verifyDocumentLanguages") {
             group = "verification"
             description =

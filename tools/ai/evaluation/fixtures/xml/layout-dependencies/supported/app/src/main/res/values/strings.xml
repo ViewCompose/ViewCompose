@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="edit_profile">Edit profile</string>
+    <string name="footer_label">Signed in</string>
+    <string name="profile_photo">Profile photo</string>
+    <string name="profile_title">Account</string>
+</resources>

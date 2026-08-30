@@ -25,6 +25,9 @@ Detailed plan pages remain repository-only drafts linked from this index because
 temporary contributor execution state rather than user guidance. They do not enter the public
 site, search index, or sitemap.
 
+- [AI-verifiable development tooling](./ai-verifiable-development-tooling.md) —
+  Phases 0--1 are complete; Phase 2 adds validation, isolated compile/Preview evidence, and bounded
+  project analysis before protocol or converter work.
 - [Pull-request gate scaling and build-logic modularization](./pull-request-gate-scaling-and-build-logic-modularization.md) —
   split the 2,582-line root gate implementation into compiled, testable build logic, then add
   conservative pull-request impact selection, verified immutable-API caching, and affected-module

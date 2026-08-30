@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "documentId": "login",
+  "source": {
+    "kind": "android-xml",
+    "identity": "tools/ai/evaluation/fixtures/xml/login.xml",
+    "fingerprint": "46c32add24ea96aa36cd5631a1b3a4bd885dd79595499b9b696e741b5366852a"
+  },
+  "roots": [
+    {
+      "id": "xml:0",
+      "kind": "column",
+      "properties": [
+        {
+          "name": "orientation",
+          "value": { "kind": "enum", "type": "linear-orientation", "value": "vertical" }
+        }
+      ],
+      "modifiers": [
+        {
+          "kind": "size",
+          "arguments": [
+            { "name": "width", "value": { "kind": "layout-dimension", "value": "match-parent" } },
+            { "name": "height", "value": { "kind": "layout-dimension", "value": "match-parent" } }
+          ]
+        },
+        {
+          "kind": "padding",
+          "arguments": [
+            { "name": "all", "value": { "kind": "dimension", "value": 16, "unit": "dp" } }
+          ]
+        }
+      ],
+      "semantics": [],
+      "events": [],
+      "state": [],
+      "children": [
+        {
+          "id": "id:title",
+          "kind": "text",
+          "properties": [
+            {
+              "name": "text",
+              "value": { "kind": "resource", "resourceType": "string", "name": "login_title" }
+            }
+          ],
+          "modifiers": [
+            {
+              "kind": "size",
+              "arguments": [
+                { "name": "width", "value": { "kind": "layout-dimension", "value": "wrap-content" } },
+                { "name": "height", "value": { "kind": "layout-dimension", "value": "wrap-content" } }
+              ]
+            }
+          ],
+          "semantics": [],
+          "events": [],
+          "state": [],
+          "children": [],
+          "provenance": {
+            "sourceId": "@id/title",
+            "sourceSpan": "tools/ai/evaluation/fixtures/xml/login.xml:8",
+            "confidence": 1,
+            "decision": "Map TextView to Text and preserve its string resource as a caller binding."
+          }
+        },
+        {
+          "id": "id:email",
+          "kind": "text-field",
+          "properties": [
+            {
+              "name": "hint",
+              "value": { "kind": "resource", "resourceType": "string", "name": "email_hint" }
+            },
+            {
+              "name": "inputType",
+              "value": { "kind": "enum", "type": "android-input-type", "value": "textEmailAddress" }
+            }
+          ],
+          "modifiers": [
+            {
+              "kind": "size",
+              "arguments": [
+                { "name": "width", "value": { "kind": "layout-dimension", "value": "match-parent" } },
+                { "name": "height", "value": { "kind": "layout-dimension", "value": "wrap-content" } }
+              ]
+            }
+          ],
+          "semantics": [
+            {
+              "name": "role",
+              "value": { "kind": "enum", "type": "semantic-role", "value": "text-field" }
+            }
+          ],
+          "events": [],
+          "state": [
+            {
+              "name": "text",
+              "value": { "kind": "binding", "name": "emailState", "status": "placeholder" }
+            }
+          ],
+          "children": [],
+          "provenance": {
+            "sourceId": "@id/email",
+            "sourceSpan": "tools/ai/evaluation/fixtures/xml/login.xml:14",
+            "confidence": 1,
+            "decision": "Map EditText to TextField with caller-owned state and the Email input profile."
+          }
+        },
+        {
+          "id": "id:submit",
+          "kind": "button",
+          "properties": [
+            {
+              "name": "text",
+              "value": { "kind": "resource", "resourceType": "string", "name": "login_action" }
+            }
+          ],
+          "modifiers": [
+            {
+              "kind": "size",
+              "arguments": [
+                { "name": "width", "value": { "kind": "layout-dimension", "value": "match-parent" } },
+                { "name": "height", "value": { "kind": "layout-dimension", "value": "wrap-content" } }
+              ]
+            }
+          ],
+          "semantics": [
+            {
+              "name": "role",
+              "value": { "kind": "enum", "type": "semantic-role", "value": "button" }
+            }
+          ],
+          "events": [],
+          "state": [],
+          "children": [],
+          "provenance": {
+            "sourceId": "@id/submit",
+            "sourceSpan": "tools/ai/evaluation/fixtures/xml/login.xml:21",
+            "confidence": 1,
+            "decision": "Map Button to Button without inventing an absent click listener."
+          }
+        }
+      ],
+      "provenance": {
+        "sourceId": "LinearLayout[0]",
+        "sourceSpan": "tools/ai/evaluation/fixtures/xml/login.xml:2",
+        "confidence": 1,
+        "decision": "Map a vertical LinearLayout to Column and preserve size and padding."
+      }
+    }
+  ],
+  "unsupported": []
+}

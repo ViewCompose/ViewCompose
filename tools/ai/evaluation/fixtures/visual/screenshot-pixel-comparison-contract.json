@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-pixel-comparison-v1",
+  "requiresContracts": [
+    "screenshot-preprocessing-v1",
+    "viewcompose-screenshot-layout-comparison-v1",
+    "screenshot-pixel-comparison-v1",
+    "screenshot-pixel-localization-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "implemented",
+    "publicPixelCompareMode": true,
+    "implementation": true,
+    "localizationStatus": "implemented",
+    "successEvidence": "compared",
+    "failureEvidence": "rendered"
+  },
+  "input": {
+    "referenceRequest": "the exact reviewed screenshot preprocessing request",
+    "referenceResult": "the exact canonical screenshot preprocessing result",
+    "semanticComparison": "the accepted semantic and structural comparison result",
+    "renderedPng": "the contained PNG artifact from the same accepted Preview evidence",
+    "callerSuppliedPolicy": false,
+    "callerSuppliedArtifactPath": false
+  },
+  "eligibility": {
+    "preprocessingLineage": "request and result canonical fingerprints must match",
+    "referenceIntegrity": "embedded input and canonical output PNG identities must verify",
+    "semanticEvidence": "passed exact semantic comparison from the same render is required",
+    "redactions": "none",
+    "dimensions": "exact output and render dimensions",
+    "configuration": [
+      "density",
+      "fontScale",
+      "localeTag",
+      "layoutDirection",
+      "colorSpace",
+      "alphaMode",
+      "orientation",
+      "systemBars",
+      "crop"
+    ],
+    "crop": "full rendered viewport",
+    "dimensionTolerancePx": 0
+  },
+  "policy": {
+    "colorSpace": "sRGB",
+    "alphaMode": "straight",
+    "coordinateSpace": "exact-cropped-viewport",
+    "redactions": "none",
+    "semanticEvidenceRequired": true,
+    "dimensionTolerancePx": 0,
+    "channelTolerance": 0,
+    "aggregateScore": false
+  },
+  "localizationPolicy": {
+    "ownership": "deepest-containing-design-node",
+    "bounds": "left-top-inclusive-right-bottom-exclusive",
+    "tieBreak": "deepest-path-then-design-node-id",
+    "unassigned": "retained-separately",
+    "aggregateScore": false
+  },
+  "metrics": [
+    "totalPixels",
+    "comparedPixels",
+    "mismatchedPixels",
+    "exactPixelRatio",
+    "meanAbsoluteErrorRgba",
+    "rootMeanSquareErrorRgba",
+    "maxChannelDelta"
+  ],
+  "claims": {
+    "checked": [
+      "exact decoded RGBA equality after strict eligibility checks",
+      "per-channel absolute and squared error over the full viewport",
+      "content-addressed reference and render PNG identity",
+      "bounded mismatch bounds and deepest-node attribution without patch inference"
+    ],
+    "notClaimed": [
+      "perceptual similarity",
+      "cross-device, cross-renderer, or cross-font equivalence",
+      "animation, interaction, state transition, or motion behavior",
+      "design intent or aesthetic quality",
+      "automatic source repair",
+      "repair values inferred from mismatch location",
+      "pixel parity for redacted or configuration-mismatched references"
+    ]
+  },
+  "limits": {
+    "maxCompressedBytesPerPng": 1310720,
+    "maxDecodedBytesPerPng": 16777216,
+    "maxDimensionPx": 4096,
+    "maxPixels": 4194304,
+    "maxPngChunks": 128,
+    "maxFindings": 1000
+  },
+  "diagnosticCodes": [
+    "VC-AI-PIXEL-INPUT-INVALID",
+    "VC-AI-PIXEL-REFERENCE-INTEGRITY-MISMATCH",
+    "VC-AI-PIXEL-PREPROCESSING-MISMATCH",
+    "VC-AI-PIXEL-SEMANTIC-EVIDENCE-REQUIRED",
+    "VC-AI-PIXEL-CONFIGURATION-MISMATCH",
+    "VC-AI-PIXEL-REDACTION-UNSUPPORTED",
+    "VC-AI-PIXEL-IMAGE-INTEGRITY-MISMATCH",
+    "VC-AI-PIXEL-DIMENSION-MISMATCH",
+    "VC-AI-PIXEL-MISMATCH",
+    "VC-AI-PIXEL-CANCELLED",
+    "VC-AI-PIXEL-LIMIT"
+  ],
+  "lineage": {
+    "referenceRequest": "screenshot-pixel/pixel-reference.request.json",
+    "referenceRequestFingerprint": "06ded39bf3588193305ba1574c43ca3a6b6d0ff9c4cd19ec3e12eb75afdefefd",
+    "referenceResult": "screenshot-pixel/pixel-reference.result.json",
+    "referenceOutputFingerprint": "e874a198d57e64645472dc11dac8e82df35e11117869dd616d33c93a311eb091",
+    "referencePngFingerprint": "69ac5adde66e6f5725a0258987f7f635cb7be333839536f06c0ae6a2ff0596e2",
+    "pixelGenerationRequest": "screenshot-pixel/wireframe.generation-request.json",
+    "pixelGenerationRequestFingerprint": "53287747971524763ed8114e59c65f5d284b27e23acaff83db4203c95fed1858",
+    "pixelGenerationReportFingerprint": "ef8428bca1dee88772f8c63ab7a9f7a8385357963039559f9456e15beab75fdd",
+    "semanticComparisonContract": "screenshot-layout-comparison-contract.json",
+    "semanticComparisonFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
+    "previewRequest": "screenshot-render/wireframe.preview-request.json",
+    "previewRequestFingerprint": "f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408",
+    "renderOutputFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
+    "renderPngFingerprint": "072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd"
+  },
+  "supportedFixtures": [
+    {
+      "status": "implemented",
+      "source": "canonicalized screenshot render reference",
+      "expectedComparisonFingerprint": "6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f",
+      "viewport": {"widthPx": 1079, "heightPx": 2339},
+      "configuration": {
+        "density": 2.625,
+        "fontScale": 1,
+        "localeTag": "en-US",
+        "layoutDirection": "Ltr",
+        "colorSpace": "sRGB",
+        "alphaMode": "straight",
+        "orientation": "upright",
+        "systemBars": {"leftPx": 0, "topPx": 0, "rightPx": 0, "bottomPx": 0},
+        "crop": {"x": 0, "y": 0, "width": 1079, "height": 2339}
+      },
+      "expectedMetrics": {
+        "totalPixels": 2523781,
+        "comparedPixels": 2523781,
+        "mismatchedPixels": 0,
+        "exactPixelRatio": 1,
+        "meanAbsoluteErrorRgba": 0,
+        "rootMeanSquareErrorRgba": 0,
+        "maxChannelDelta": 0
+      },
+      "expectedLocalization": {
+        "status": "exact",
+        "mismatchedPixels": 0,
+        "mismatchBounds": null,
+        "attributions": 0,
+        "unassignedMismatchedPixels": 0,
+        "localizationFingerprint": "af49f39cacbbaa7e5590f6e23cafa7b48766a2e2d1aace4cf42e1947cc0b4f71"
+      }
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "mutation": "screenshot-pixel/configuration-redaction.mutation.json",
+      "diagnosticCodes": [
+        "VC-AI-PIXEL-CONFIGURATION-MISMATCH",
+        "VC-AI-PIXEL-REDACTION-UNSUPPORTED"
+      ]
+    },
+    {
+      "mutation": "screenshot-pixel/missing-semantic.mutation.json",
+      "diagnosticCodes": ["VC-AI-PIXEL-SEMANTIC-EVIDENCE-REQUIRED"]
+    },
+    {
+      "mutation": "screenshot-pixel/reference-integrity.mutation.json",
+      "diagnosticCodes": ["VC-AI-PIXEL-REFERENCE-INTEGRITY-MISMATCH"]
+    },
+    {
+      "mutation": "screenshot-pixel/render-one-channel.mutation.json",
+      "diagnosticCodes": ["VC-AI-PIXEL-MISMATCH"]
+    }
+  ]
+}

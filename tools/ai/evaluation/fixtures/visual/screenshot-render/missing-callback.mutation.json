@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-render/wireframe.preview-request.json",
+  "operation": "remove-binding",
+  "parameter": "onEmailSubmit",
+  "expectedDiagnostic": "VC-AI-PREVIEW-BINDING-MISSING"
+}

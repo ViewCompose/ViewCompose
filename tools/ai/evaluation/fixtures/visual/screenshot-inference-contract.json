@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-design-inference-v1",
+  "requiresContracts": [
+    "screenshot-preprocessing-v1",
+    "design-ir-v1",
+    "screenshot-design-inference-v1"
+  ],
+  "activation": {
+    "tool": "infer_screenshot_design",
+    "status": "contract-frozen",
+    "publicTool": false,
+    "evidence": "static"
+  },
+  "validation": {
+    "tool": "validate_screenshot_inference",
+    "status": "implemented",
+    "publicTool": true,
+    "mode": "offline-import",
+    "providerExecution": false,
+    "networkAccess": false,
+    "expectedValidationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab"
+  },
+  "execution": {
+    "providerExecution": false,
+    "networkAccess": false,
+    "credentialsAccepted": false,
+    "providerSelected": false
+  },
+  "lineage": {
+    "acceptedInput": "prepare_screenshot-output-only",
+    "callerPathAllowed": false,
+    "callerUrlAllowed": false,
+    "callerUriAllowed": false,
+    "requestFingerprint": "sha256-canonical-json",
+    "resultFingerprint": "sha256-canonical-json-without-resultFingerprint",
+    "approvedInputFingerprint": "exact-preprocessing-output-fingerprint",
+    "screenshotIdentity": "exact-preprocessing-output-asset",
+    "designIrSourceIdentity": "preprocessed-output-fingerprint",
+    "designIrSourceFingerprint": "screenshot-sha256"
+  },
+  "inferencePolicy": {
+    "designIrSchemaVersion": 1,
+    "allowedNodeKinds": ["box", "button", "column", "image", "row", "text", "text-field"],
+    "behaviorInference": "forbidden",
+    "expressionInference": "forbidden",
+    "resourceInference": "placeholder-only",
+    "textInference": "observed-or-unresolved",
+    "accessibilityInference": "observed-or-unresolved",
+    "minimumAcceptedConfidence": 0.8,
+    "unresolvedBelowConfidence": true,
+    "confidenceAggregation": "none",
+    "codeGenerationWithBlockingQuestions": false
+  },
+  "provenance": {
+    "evidenceRecordsPerNode": 1,
+    "sourceRegionWithinScreenshot": true,
+    "evidenceNodeIdMatchesDesignIrNodeId": true,
+    "evidenceRegionMatchesSourceSpan": true,
+    "sourceSpanFormat": "pixels:x,y,width,height",
+    "sourceId": "screenshot:<sha256>",
+    "assessmentDimensionsUniquePerNode": true,
+    "nodeKindsRestrictedToRequestAllowlist": true
+  },
+  "authorization": {
+    "humanGolden": {
+      "privacyReviewRequired": true,
+      "redactionsVerified": true,
+      "providerTransfer": false,
+      "networkAccess": false,
+      "inputPersistence": false,
+      "outputPersistence": false,
+      "logs": "metadata-only"
+    },
+    "providerAdapter": {
+      "status": "future",
+      "explicitProviderIdRequired": true,
+      "consentReceiptRequired": true,
+      "consentBoundToExactInput": true,
+      "approvedPurpose": "screenshot-to-design-ir",
+      "retentionReviewRequired": true,
+      "rawRequestPersistence": false,
+      "rawResponsePersistence": false,
+      "immutableModelIdentityRequired": true
+    }
+  },
+  "result": {
+    "humanAndProviderProducersSeparated": true,
+    "providerRequestFingerprintRequired": true,
+    "providerResponseFingerprintRequired": true,
+    "incompleteWhenBlockingQuestionsRemain": true,
+    "allUnresolvedQuestionsForbidDefaults": true,
+    "allUnsupportedSemanticsBlocked": true
+  },
+  "limits": {
+    "maxNodes": 1000,
+    "maxDepth": 64,
+    "maxEvidenceRecords": 1000,
+    "maxUnresolvedQuestions": 1000,
+    "maxAlternativesPerNode": 3
+  },
+  "diagnosticCodes": [
+    "VC-AI-SCREENSHOT-INFERENCE-INPUT-INVALID",
+    "VC-AI-SCREENSHOT-INFERENCE-LINEAGE-MISMATCH",
+    "VC-AI-SCREENSHOT-INFERENCE-CONSENT-REQUIRED",
+    "VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED",
+    "VC-AI-SCREENSHOT-INFERENCE-PROVIDER-NOT-CONFIGURED",
+    "VC-AI-SCREENSHOT-INFERENCE-PREPROCESSING-FAILED",
+    "VC-AI-SCREENSHOT-INFERENCE-EVIDENCE-INCOMPLETE",
+    "VC-AI-SCREENSHOT-INFERENCE-REGION-INVALID",
+    "VC-AI-SCREENSHOT-INFERENCE-CONFIDENCE-UNRESOLVED",
+    "VC-AI-SCREENSHOT-INFERENCE-BEHAVIOR-FORBIDDEN",
+    "VC-AI-SCREENSHOT-INFERENCE-CODEGEN-BLOCKED",
+    "VC-AI-SCREENSHOT-INFERENCE-LIMIT",
+    "VC-AI-SCREENSHOT-INFERENCE-CANCELLED",
+    "VC-AI-SCREENSHOT-INFERENCE-UNRESOLVED"
+  ],
+  "supportedFixtures": [
+    {
+      "request": "screenshot-inference/wireframe.request.json",
+      "result": "screenshot-inference/wireframe.result.json",
+      "status": "contract-frozen",
+      "expectedRequestFingerprint": "083ac8d466d75c617184b6961e35228f9b53c117e381320fb265c3b97ee2dc2d",
+      "expectedResultFingerprint": "62694a1787a531bf68f9794c1a54630082e5d8f8fe7ee5becf3214c2ab107a09",
+      "expectedValidationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab",
+      "expectedDesignIrFingerprint": "585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a",
+      "expectedNodes": 4,
+      "expectedEvidenceRecords": 4,
+      "expectedUnresolvedQuestions": 6,
+      "expectedBlockingQuestions": 6,
+      "expectedUnsupportedSemantics": 6,
+      "expectedStatus": "incomplete",
+      "expectedCodeGenerationAllowed": false
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "mutation": "screenshot-inference/provider-without-consent.mutation.json",
+      "schemaValid": false,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-INFERENCE-CONSENT-REQUIRED"]
+    },
+    {
+      "mutation": "screenshot-inference/credential-input.mutation.json",
+      "schemaValid": false,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-INFERENCE-CREDENTIAL-DENIED"]
+    },
+    {
+      "mutation": "screenshot-inference/changed-preprocessing-fingerprint.mutation.json",
+      "schemaValid": true,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-INFERENCE-LINEAGE-MISMATCH"]
+    }
+  ]
+}

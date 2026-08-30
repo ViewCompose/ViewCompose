@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "framework": {
+    "versionLane": "current-source",
+    "identity": "78127e51cd740ccdbd58d326e05426caf4e49795",
+    "bundleFingerprint": "e23da5d9835d00dd31eda167152a875ebefa3f519b992874635113eed5a9a537"
+  },
+  "generatedSource": {
+    "packageName": "generated.viewcompose",
+    "functionName": "ProfileCardView",
+    "kotlinFingerprint": "15b15098e92b62bc9730ab7b3f2bde7715596f22069490a18b1e7830ff92ad35",
+    "artifactIds": ["viewcompose-ui-foundation"],
+    "declaredBindings": [
+      { "parameter": "profileAvatar", "source": "@drawable/profile_avatar", "type": "ImageSource" },
+      { "parameter": "profilePhoto", "source": "@string/profile_photo", "type": "String" },
+      { "parameter": "statusLabel", "source": "@string/status_label", "type": "String" }
+    ]
+  },
+  "bindings": [
+    {
+      "kind": "image-source",
+      "parameter": "profileAvatar",
+      "source": "@drawable/profile_avatar"
+    },
+    {
+      "kind": "string",
+      "parameter": "profilePhoto",
+      "source": "@string/profile_photo",
+      "value": "Profile photo"
+    },
+    {
+      "kind": "string",
+      "parameter": "statusLabel",
+      "source": "@string/status_label",
+      "value": "Available"
+    }
+  ],
+  "configuration": {
+    "widthDp": 411,
+    "heightDp": -1,
+    "density": 2.625,
+    "fontScale": 1,
+    "localeTag": "en-US",
+    "layoutDirection": "Ltr",
+    "theme": "Light",
+    "apiLevel": null
+  },
+  "lanes": {
+    "compiler": "current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11",
+    "render": "current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1"
+  }
+}

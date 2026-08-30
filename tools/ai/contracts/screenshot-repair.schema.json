@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-repair-v2.schema.json",
+  "title": "ViewCompose bounded screenshot repair result v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "policy",
+    "initial",
+    "iterations",
+    "final",
+    "termination",
+    "findings",
+    "repairFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "status": {"enum": ["converged", "incomplete", "blocked", "cancelled"]},
+    "policy": {"$ref": "#/$defs/policy"},
+    "initial": {"$ref": "#/$defs/candidateEvaluation"},
+    "iterations": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {"$ref": "#/$defs/iteration"}
+    },
+    "final": {"$ref": "#/$defs/candidateEvaluation"},
+    "termination": {"$ref": "#/$defs/termination"},
+    "findings": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "repairFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maxIterations",
+        "gateOrder",
+        "candidateMutation",
+        "noOscillation",
+        "noRegression",
+        "strictImprovement",
+        "aggregateScore",
+        "networkAccess",
+        "providerCalls",
+        "executeInspectedProjectBuildLogic"
+      ],
+      "properties": {
+        "version": {"const": 2},
+        "maxIterations": {"const": 5},
+        "gateOrder": {
+          "const": [
+            "safety",
+            "compilation",
+            "render",
+            "semantics",
+            "structure",
+            "exact-pixels"
+          ]
+        },
+        "candidateMutation": {"const": "typed-design-ir-patches-only"},
+        "noOscillation": {"const": true},
+        "noRegression": {"const": true},
+        "strictImprovement": {"const": true},
+        "aggregateScore": {"const": false},
+        "networkAccess": {"const": false},
+        "providerCalls": {"const": false},
+        "executeInspectedProjectBuildLogic": {"const": false}
+      }
+    },
+    "candidateEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidateFingerprint", "designIrFingerprint", "gates", "evaluationFingerprint"],
+      "properties": {
+        "candidateFingerprint": {"$ref": "#/$defs/sha256"},
+        "designIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "gates": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/safetyGate"},
+              {"$ref": "#/$defs/compilationGate"},
+              {"$ref": "#/$defs/renderGate"},
+              {"$ref": "#/$defs/semanticsGate"},
+              {"$ref": "#/$defs/structureGate"},
+              {"$ref": "#/$defs/pixelGate"}
+            ]
+          }
+        },
+        "evaluationFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "safetyGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "passedChecks", "totalChecks", "evidenceFingerprint"],
+      "properties": {
+        "name": {"const": "safety"},
+        "status": {"enum": ["passed", "failed", "not-run"]},
+        "passedChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "totalChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "compilationGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "passedChecks", "totalChecks", "evidenceFingerprint"],
+      "properties": {
+        "name": {"const": "compilation"},
+        "status": {"enum": ["passed", "failed", "not-run"]},
+        "passedChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "totalChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "renderGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "passedChecks", "totalChecks", "evidenceFingerprint"],
+      "properties": {
+        "name": {"const": "render"},
+        "status": {"enum": ["passed", "failed", "not-run"]},
+        "passedChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "totalChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "semanticsGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "passedChecks", "totalChecks", "evidenceFingerprint"],
+      "properties": {
+        "name": {"const": "semantics"},
+        "status": {"enum": ["passed", "failed", "not-run"]},
+        "passedChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "totalChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "structureGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "passedChecks", "totalChecks", "evidenceFingerprint"],
+      "properties": {
+        "name": {"const": "structure"},
+        "status": {"enum": ["passed", "failed", "not-run"]},
+        "passedChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "totalChecks": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "pixelGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "status",
+        "comparedPixels",
+        "mismatchedPixels",
+        "maxChannelDelta",
+        "evidenceFingerprint"
+      ],
+      "properties": {
+        "name": {"const": "exact-pixels"},
+        "status": {"enum": ["passed", "failed", "not-run"]},
+        "comparedPixels": {"type": "integer", "minimum": 0, "maximum": 4194304},
+        "mismatchedPixels": {"type": "integer", "minimum": 0, "maximum": 4194304},
+        "maxChannelDelta": {"type": "integer", "minimum": 0, "maximum": 255},
+        "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "iteration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "iteration",
+        "reasonCode",
+        "changeFingerprint",
+        "beforeCandidateFingerprint",
+        "candidate",
+        "disposition"
+      ],
+      "properties": {
+        "iteration": {"type": "integer", "minimum": 1, "maximum": 5},
+        "reasonCode": {
+          "enum": [
+            "safety",
+            "compilation",
+            "render",
+            "semantics",
+            "structure",
+            "exact-pixels"
+          ]
+        },
+        "changeFingerprint": {"$ref": "#/$defs/sha256"},
+        "beforeCandidateFingerprint": {"$ref": "#/$defs/sha256"},
+        "candidate": {"$ref": "#/$defs/candidateEvaluation"},
+        "disposition": {
+          "enum": [
+            "accepted",
+            "rejected-regression",
+            "rejected-oscillation",
+            "rejected-no-improvement"
+          ]
+        }
+      }
+    },
+    "termination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "iterationCount", "acceptedCandidates", "rejectedCandidates"],
+      "properties": {
+        "reason": {
+          "enum": [
+            "initial-pass",
+            "exact-pass",
+            "no-eligible-change",
+            "max-iterations",
+            "regression",
+            "oscillation",
+            "safety-failure",
+            "input-invalid",
+            "cancelled"
+          ]
+        },
+        "iterationCount": {"type": "integer", "minimum": 0, "maximum": 5},
+        "acceptedCandidates": {"type": "integer", "minimum": 0, "maximum": 5},
+        "rejectedCandidates": {"type": "integer", "minimum": 0, "maximum": 5}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-REPAIR-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

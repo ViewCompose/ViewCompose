@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-resolution/wireframe.result.json",
+  "operation": "replace-event-kind",
+  "nodeId": "wireframe-button",
+  "from": "click",
+  "value": "long-click",
+  "expectedDiagnostic": "VC-AI-SCREENSHOT-GENERATION-UNSUPPORTED"
+}

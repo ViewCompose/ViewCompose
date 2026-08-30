@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "graphId": "android-xml-layout-dependencies-v1:screen",
+  "root": "@layout/screen",
+  "nodes": [
+    {
+      "reference": "@layout/screen",
+      "path": "app/src/main/res/layout/screen.xml",
+      "fingerprint": "201687c3de26a7d1b1db5140df08462bd6a9045b23c16b537c51f2c5ca97ad3a",
+      "rootKind": "layout",
+      "resourceRootPrecedence": 0
+    },
+    {
+      "reference": "@layout/profile_header",
+      "path": "app/src/main/res/layout/profile_header.xml",
+      "fingerprint": "d9eb155587978a49fd75c141323344cd3f55dddcc75c1ff7de6a71932b82faca",
+      "rootKind": "layout",
+      "resourceRootPrecedence": 0
+    },
+    {
+      "reference": "@layout/profile_actions",
+      "path": "app/src/main/res/layout/profile_actions.xml",
+      "fingerprint": "dfe981c22c8cd0674a3e530dcce857ced4b99be7cf79381149f94f936b50c717",
+      "rootKind": "merge",
+      "resourceRootPrecedence": 0
+    }
+  ],
+  "edges": [
+    {
+      "from": "@layout/screen",
+      "to": "@layout/profile_header",
+      "source": {
+        "path": "app/src/main/res/layout/screen.xml",
+        "startLine": 7,
+        "startColumn": 5
+      }
+    },
+    {
+      "from": "@layout/screen",
+      "to": "@layout/profile_actions",
+      "source": {
+        "path": "app/src/main/res/layout/screen.xml",
+        "startLine": 8,
+        "startColumn": 5
+      }
+    }
+  ],
+  "coverage": {
+    "layoutFiles": 3,
+    "expandedIncludes": 2,
+    "selection": "ordered-explicit-resource-roots-default-layout-only",
+    "completeness": "explicit-roots-only",
+    "executedProjectBuildLogic": false,
+    "networkAccess": false
+  },
+  "fingerprint": "4c68c81d99d2fd062c0756c0bff7a55a38953c6e38699797b66b8ea24cac0169"
+}

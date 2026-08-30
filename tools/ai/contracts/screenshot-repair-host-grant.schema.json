@@ -1,0 +1,354 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-repair-host-grant-v1.schema.json",
+  "title": "ViewCompose screenshot repair host grant v1",
+  "oneOf": [
+    {"$ref": "#/$defs/request"},
+    {"$ref": "#/$defs/grantedDecision"},
+    {"$ref": "#/$defs/nonGrantDecision"}
+  ],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "input",
+        "hostBoundary",
+        "policy",
+        "requestFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-host-grant-request"},
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "validationFingerprint",
+            "authorizationFingerprint",
+            "baselineEvidenceFingerprint",
+            "candidateEvidenceFingerprint",
+            "candidateDesignIrFingerprint",
+            "pixelReferenceFingerprint",
+            "proposalFingerprint",
+            "changeFingerprint",
+            "baselineSourceRevision"
+          ],
+          "properties": {
+            "validationFingerprint": {"$ref": "#/$defs/sha256"},
+            "authorizationFingerprint": {"$ref": "#/$defs/sha256"},
+            "baselineEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+            "candidateEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+            "candidateDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+            "pixelReferenceFingerprint": {"$ref": "#/$defs/sha256"},
+            "proposalFingerprint": {"$ref": "#/$defs/sha256"},
+            "changeFingerprint": {"$ref": "#/$defs/sha256"},
+            "baselineSourceRevision": {"$ref": "#/$defs/gitRevision"}
+          }
+        },
+        "hostBoundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "trustDomainId",
+            "decisionTransport",
+            "identityAuthentication",
+            "receiptAuthentication",
+            "revocationCheck",
+            "consumption",
+            "durableState",
+            "credentialTransport"
+          ],
+          "properties": {
+            "trustDomainId": {"$ref": "#/$defs/stableId"},
+            "decisionTransport": {"const": "trusted-host-callback-only"},
+            "identityAuthentication": {"const": "host-authenticates-both-reviewers"},
+            "receiptAuthentication": {"const": "host-authenticates-both-review-receipts"},
+            "revocationCheck": {"const": "immediately-before-atomic-reservation"},
+            "consumption": {"const": "atomic-single-use-reservation"},
+            "durableState": {"const": "host-owned"},
+            "credentialTransport": {"const": "out-of-band"}
+          }
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxAttempts",
+            "reuseAllowed",
+            "retryAfterReservationFailure",
+            "unattendedExecution",
+            "publicToolMode",
+            "callerSuppliedDecision",
+            "credentialInput",
+            "providerCalls",
+            "toolNetworkAccess",
+            "logs"
+          ],
+          "properties": {
+            "maxAttempts": {"const": 1},
+            "reuseAllowed": {"const": false},
+            "retryAfterReservationFailure": {"const": false},
+            "unattendedExecution": {"const": false},
+            "publicToolMode": {"const": false},
+            "callerSuppliedDecision": {"const": false},
+            "credentialInput": {"const": false},
+            "providerCalls": {"const": false},
+            "toolNetworkAccess": {"const": false},
+            "logs": {"const": "fingerprints-only"}
+          }
+        },
+        "requestFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "grantedDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "requestFingerprint",
+        "trustDomainId",
+        "authentication",
+        "revocationChecks",
+        "reservation",
+        "grant",
+        "policy",
+        "diagnostics",
+        "decisionFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-host-grant-decision"},
+        "status": {"const": "granted"},
+        "requestFingerprint": {"$ref": "#/$defs/sha256"},
+        "trustDomainId": {"$ref": "#/$defs/stableId"},
+        "authentication": {"$ref": "#/$defs/authenticationSet"},
+        "revocationChecks": {"$ref": "#/$defs/revocationSet"},
+        "reservation": {"$ref": "#/$defs/reservation"},
+        "grant": {"$ref": "#/$defs/grant"},
+        "policy": {"$ref": "#/$defs/decisionPolicy"},
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 0,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "decisionFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "nonGrantDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "reason",
+        "requestFingerprint",
+        "trustDomainId",
+        "executionAuthorized",
+        "policy",
+        "diagnostics",
+        "decisionFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-host-grant-decision"},
+        "status": {"enum": ["denied", "cancelled"]},
+        "reason": {
+          "enum": [
+            "authentication-failed",
+            "receipt-revoked",
+            "already-consumed",
+            "policy-denied",
+            "host-failed",
+            "input-invalid",
+            "cancelled"
+          ]
+        },
+        "requestFingerprint": {"$ref": "#/$defs/nullableSha256"},
+        "trustDomainId": {"$ref": "#/$defs/stableId"},
+        "executionAuthorized": {"const": false},
+        "policy": {"$ref": "#/$defs/decisionPolicy"},
+        "diagnostics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "decisionFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "authenticationSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baselineAcceptance", "repairApproval"],
+      "properties": {
+        "baselineAcceptance": {"$ref": "#/$defs/baselineAuthentication"},
+        "repairApproval": {"$ref": "#/$defs/repairAuthentication"}
+      }
+    },
+    "baselineAuthentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "principalId",
+        "reviewReceipt",
+        "status",
+        "authenticationReceipt"
+      ],
+      "properties": {
+        "purpose": {"const": "baseline-acceptance"},
+        "principalId": {"$ref": "#/$defs/stableId"},
+        "reviewReceipt": {"$ref": "#/$defs/sha256"},
+        "status": {"const": "authenticated"},
+        "authenticationReceipt": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "repairAuthentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "principalId",
+        "reviewReceipt",
+        "status",
+        "authenticationReceipt"
+      ],
+      "properties": {
+        "purpose": {"const": "repair-approval"},
+        "principalId": {"$ref": "#/$defs/stableId"},
+        "reviewReceipt": {"$ref": "#/$defs/sha256"},
+        "status": {"const": "authenticated"},
+        "authenticationReceipt": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "revocationSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baselineAcceptance", "repairApproval"],
+      "properties": {
+        "baselineAcceptance": {"$ref": "#/$defs/baselineRevocationCheck"},
+        "repairApproval": {"$ref": "#/$defs/repairRevocationCheck"}
+      }
+    },
+    "baselineRevocationCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose", "reviewReceipt", "status", "checkReceipt"],
+      "properties": {
+        "purpose": {"const": "baseline-acceptance"},
+        "reviewReceipt": {"$ref": "#/$defs/sha256"},
+        "status": {"const": "active"},
+        "checkReceipt": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "repairRevocationCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose", "reviewReceipt", "status", "checkReceipt"],
+      "properties": {
+        "purpose": {"const": "repair-approval"},
+        "reviewReceipt": {"$ref": "#/$defs/sha256"},
+        "status": {"const": "active"},
+        "checkReceipt": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "reservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "state",
+        "attemptNumber",
+        "maxAttempts",
+        "reuseAllowed",
+        "retryAfterFailure",
+        "reservationReceipt"
+      ],
+      "properties": {
+        "mode": {"const": "atomic-single-use-reservation"},
+        "state": {"const": "reserved"},
+        "attemptNumber": {"const": 1},
+        "maxAttempts": {"const": 1},
+        "reuseAllowed": {"const": false},
+        "retryAfterFailure": {"const": false},
+        "reservationReceipt": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validationFingerprint",
+        "authorizationFingerprint",
+        "candidateEvidenceFingerprint",
+        "proposalFingerprint",
+        "changeFingerprint",
+        "targetDesignIrFingerprint",
+        "executionAuthorized",
+        "unattendedExecution"
+      ],
+      "properties": {
+        "validationFingerprint": {"$ref": "#/$defs/sha256"},
+        "authorizationFingerprint": {"$ref": "#/$defs/sha256"},
+        "candidateEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "proposalFingerprint": {"$ref": "#/$defs/sha256"},
+        "changeFingerprint": {"$ref": "#/$defs/sha256"},
+        "targetDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "executionAuthorized": {"const": true},
+        "unattendedExecution": {"const": false}
+      }
+    },
+    "decisionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decisionTransport",
+        "callerSuppliedDecision",
+        "credentialInput",
+        "providerCalls",
+        "toolNetworkAccess",
+        "logs"
+      ],
+      "properties": {
+        "decisionTransport": {"const": "trusted-host-callback-only"},
+        "callerSuppliedDecision": {"const": false},
+        "credentialInput": {"const": false},
+        "providerCalls": {"const": false},
+        "toolNetworkAccess": {"const": false},
+        "logs": {"const": "fingerprints-only"}
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-REPAIR-HOST-GRANT-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "nullableSha256": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/sha256"}
+      ]
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "gitRevision": {
+      "type": "string",
+      "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

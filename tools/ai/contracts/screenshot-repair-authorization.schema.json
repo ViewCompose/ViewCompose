@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-repair-authorization-v1.schema.json",
+  "title": "ViewCompose screenshot repair authorization v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "input",
+    "baselineAcceptance",
+    "repairApproval",
+    "policy",
+    "authorizationFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "screenshot-repair-authorization"},
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineEvidenceFingerprint",
+        "candidateEvidenceFingerprint",
+        "baselineDesignIrFingerprint",
+        "candidateDesignIrFingerprint",
+        "pixelReferenceFingerprint",
+        "proposalFingerprint",
+        "changeFingerprint"
+      ],
+      "properties": {
+        "baselineEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "candidateEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "baselineDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "candidateDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "pixelReferenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "proposalFingerprint": {"$ref": "#/$defs/sha256"},
+        "changeFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "baselineAcceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "reviewerId",
+        "reviewReceipt",
+        "approvedPurpose",
+        "approvedEvidenceFingerprint",
+        "sourceRevisionKind",
+        "sourceRevision",
+        "acceptanceScope",
+        "visualReviewCompleted",
+        "semanticReviewCompleted"
+      ],
+      "properties": {
+        "mode": {"const": "human-baseline-acceptance"},
+        "reviewerId": {"$ref": "#/$defs/stableId"},
+        "reviewReceipt": {"$ref": "#/$defs/sha256"},
+        "approvedPurpose": {"const": "screenshot-regression-baseline"},
+        "approvedEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "sourceRevisionKind": {"const": "git-commit"},
+        "sourceRevision": {"$ref": "#/$defs/gitRevision"},
+        "acceptanceScope": {"const": "exact-evidence-only"},
+        "visualReviewCompleted": {"const": true},
+        "semanticReviewCompleted": {"const": true}
+      }
+    },
+    "repairApproval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "reviewerId",
+        "reviewReceipt",
+        "approvedPurpose",
+        "approvedProposalFingerprint",
+        "approvedCandidateEvidenceFingerprint",
+        "approvedChangeFingerprint",
+        "applicationCount",
+        "unattendedExecution"
+      ],
+      "properties": {
+        "mode": {"const": "human-repair-approval"},
+        "reviewerId": {"$ref": "#/$defs/stableId"},
+        "reviewReceipt": {"$ref": "#/$defs/sha256"},
+        "approvedPurpose": {"const": "apply-screenshot-regression-rollback"},
+        "approvedProposalFingerprint": {"$ref": "#/$defs/sha256"},
+        "approvedCandidateEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "approvedChangeFingerprint": {"$ref": "#/$defs/sha256"},
+        "applicationCount": {"const": 1},
+        "unattendedExecution": {"const": false}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "baselineTrust",
+        "proposalBinding",
+        "application",
+        "reviewerTrust",
+        "receiptAuthentication",
+        "providerCalls",
+        "networkAccess",
+        "credentialInput",
+        "logs"
+      ],
+      "properties": {
+        "version": {"const": 1},
+        "mode": {"const": "single-property-regression-rollback"},
+        "baselineTrust": {"const": "explicit-human-attestation"},
+        "proposalBinding": {"const": "exact-content-address"},
+        "application": {"const": "single-use"},
+        "reviewerTrust": {"const": "external-host-responsibility"},
+        "receiptAuthentication": {"const": "not-claimed"},
+        "providerCalls": {"const": false},
+        "networkAccess": {"const": false},
+        "credentialInput": {"const": false},
+        "logs": {"const": "metadata-only"}
+      }
+    },
+    "authorizationFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "validationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "status",
+        "reason",
+        "policy",
+        "input",
+        "authorization",
+        "diagnostics",
+        "validationFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "status": {"enum": ["validated", "invalid", "cancelled"]},
+        "reason": {
+          "enum": [
+            "exact-attestation-bindings",
+            "input-invalid",
+            "integrity-mismatch",
+            "lineage-mismatch",
+            "proposal-not-eligible",
+            "cancelled"
+          ]
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "validation",
+            "executionAuthorized",
+            "reviewerTrust",
+            "receiptAuthentication",
+            "providerCalls",
+            "networkAccess"
+          ],
+          "properties": {
+            "version": {"const": 1},
+            "validation": {"const": "exact-content-address-only"},
+            "executionAuthorized": {"const": false},
+            "reviewerTrust": {"const": "external-host-responsibility"},
+            "receiptAuthentication": {"const": "not-claimed"},
+            "providerCalls": {"const": false},
+            "networkAccess": {"const": false}
+          }
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baselineEvidenceFingerprint",
+            "candidateEvidenceFingerprint",
+            "proposalFingerprint",
+            "authorizationFingerprint"
+          ],
+          "properties": {
+            "baselineEvidenceFingerprint": {"$ref": "#/$defs/nullableSha256"},
+            "candidateEvidenceFingerprint": {"$ref": "#/$defs/nullableSha256"},
+            "proposalFingerprint": {"$ref": "#/$defs/nullableSha256"},
+            "authorizationFingerprint": {"$ref": "#/$defs/nullableSha256"}
+          }
+        },
+        "authorization": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "baselineReviewerId",
+                "baselineReviewReceipt",
+                "sourceRevision",
+                "repairReviewerId",
+                "repairReviewReceipt",
+                "applicationCount",
+                "unattendedExecution"
+              ],
+              "properties": {
+                "baselineReviewerId": {"$ref": "#/$defs/stableId"},
+                "baselineReviewReceipt": {"$ref": "#/$defs/sha256"},
+                "sourceRevision": {"$ref": "#/$defs/gitRevision"},
+                "repairReviewerId": {"$ref": "#/$defs/stableId"},
+                "repairReviewReceipt": {"$ref": "#/$defs/sha256"},
+                "applicationCount": {"const": 1},
+                "unattendedExecution": {"const": false}
+              }
+            }
+          ]
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "validationFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^VC-AI-REPAIR-AUTHORIZATION-[A-Z0-9-]+$"
+        },
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "nullableSha256": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/sha256"}
+      ]
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "gitRevision": {
+      "type": "string",
+      "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Align Preview worker dependency resolution with the JDK 21 and Layoutlib lane, and bind persistent process reuse to one exact build input identity for deterministic renders.",
+  "changes": [
+    {
+      "artifact": "viewcompose-preview-gradle-plugin",
+      "impact": "fix"
+    }
+  ]
+}

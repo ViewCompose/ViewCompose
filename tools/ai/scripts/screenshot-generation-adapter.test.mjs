@@ -1,0 +1,284 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import test from 'node:test';
+import {generateScreenshotViewCompose} from './screenshot-generation-adapter.mjs';
+
+const resolutionPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json',
+  import.meta.url,
+);
+const requestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-generation/wireframe.request.json',
+  import.meta.url,
+);
+const previewRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json',
+  import.meta.url,
+);
+const pixelReferenceRequestPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.request.json',
+  import.meta.url,
+);
+const pixelReferenceResultPath = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.result.json',
+  import.meta.url,
+);
+
+async function readJson(path) {
+  return JSON.parse(await readFile(path, 'utf8'));
+}
+
+async function arguments_(mode = 'compile') {
+  const [resolutionResult, generationRequest] = await Promise.all([
+    readJson(resolutionPath),
+    readJson(requestPath),
+  ]);
+  generationRequest.mode = mode;
+  return {resolutionResult, generationRequest};
+}
+
+test('returns static screenshot Kotlin without invoking compilation in generate mode', async () => {
+  let compiles = 0;
+  const result = await generateScreenshotViewCompose(await arguments_('generate'), {
+    requestId: 'screenshot-generate',
+    compile: async () => {
+      compiles += 1;
+      throw new Error('compile must not run');
+    },
+  });
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'static');
+  assert.equal(result.data.kotlinFingerprint,
+    '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9');
+  assert.equal(result.data.generationReport.verification.compilation, 'required');
+  assert.equal(compiles, 0);
+});
+
+test('passes only generated source and fixed selections to the compiler', async () => {
+  let invocation;
+  const result = await generateScreenshotViewCompose(await arguments_(), {
+    requestId: 'screenshot-compile',
+    limits: {maxSourceBytes: 262144, timeoutMs: 120000, maxOutputBytes: 1048576},
+    compile: async (value) => {
+      invocation = value;
+      return {
+        status: 'success',
+        evidence: {
+          level: 'compiled',
+          cache: 'miss',
+          compilerLane: 'jdk21-kotlin-2.3.10-source',
+          outputFingerprint: 'b'.repeat(64),
+        },
+        diagnostics: [],
+        data: {classes: 1},
+        truncated: false,
+      };
+    },
+  });
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compiled');
+  assert.equal(result.evidence.outputFingerprint, 'b'.repeat(64));
+  assert.deepEqual(invocation.artifactIds, ['viewcompose-ui-foundation']);
+  assert.deepEqual(invocation.capabilityIds, ['foundation.components']);
+  assert.match(invocation.source, /onKeyboardAction = onEmailSubmit/u);
+  assert.equal(invocation.path, 'generated/viewcompose/ScreenshotWireframeView.kt');
+});
+
+test('retains generated evidence when hermetic compilation fails', async () => {
+  const result = await generateScreenshotViewCompose(await arguments_(), {
+    compile: async () => ({
+      status: 'failed',
+      evidence: {level: 'compiled', cache: 'bypassed', compilerLane: 'test'},
+      diagnostics: [{code: 'VC-AI-COMPILER-ERROR', severity: 'error', message: 'failed'}],
+      data: {classes: 0},
+      truncated: false,
+    }),
+  });
+  assert.equal(result.status, 'failed');
+  assert.equal(result.evidence.level, 'compiled');
+  assert.ok(result.data.kotlin.includes('ScreenshotWireframeView'));
+  assert.equal(result.diagnostics[0].code, 'VC-AI-COMPILER-ERROR');
+});
+
+test('source-binds generated screenshot Kotlin before returning rendered evidence', async () => {
+  const input = await arguments_('render');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  let invocation;
+  const result = await generateScreenshotViewCompose(input, {
+    requestId: 'screenshot-render',
+    limits: {timeoutMs: 120000, maxOutputBytes: 1048576},
+    render: async (value) => {
+      invocation = value;
+      return {
+        status: 'success',
+        evidence: {
+          level: 'rendered',
+          cache: 'miss',
+          compilerLane: 'preview-compiler',
+          renderLane: 'preview-renderer',
+          outputFingerprint: 'd'.repeat(64),
+        },
+        diagnostics: [],
+        data: {
+          targetId: 'tools.ai.GeneratedScreenshotPreview',
+          generatedPreview: {requestFingerprint: 'e'.repeat(64)},
+        },
+        truncated: false,
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.renderLane, 'preview-renderer');
+  assert.equal(result.data.preview.targetId, 'tools.ai.GeneratedScreenshotPreview');
+  assert.equal(invocation.generationReport.target.functionName, 'ScreenshotWireframeView');
+  assert.deepEqual(invocation.previewBindings, input.previewBindings);
+  assert.match(invocation.generatedKotlin, /onKeyboardAction = onEmailSubmit/u);
+});
+
+test('upgrades an exact screenshot render to compared evidence', async () => {
+  const input = await arguments_('compare');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  let compared;
+  const result = await generateScreenshotViewCompose(input, {
+    requestId: 'screenshot-compare',
+    render: async () => ({
+      status: 'success',
+      evidence: {
+        level: 'rendered',
+        cache: 'hit',
+        compilerLane: 'preview-compiler',
+        renderLane: 'preview-renderer',
+        outputFingerprint: 'd'.repeat(64),
+      },
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'e'.repeat(64)}},
+      truncated: false,
+    }),
+    compare: async (value) => {
+      compared = value;
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {comparisonFingerprint: 'f'.repeat(64)},
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compared');
+  assert.equal(result.evidence.outputFingerprint, 'f'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(compared.designIr.documentId, 'screenshot-wireframe');
+  assert.deepEqual(compared.previewBindings, input.previewBindings);
+  assert.equal(compared.previewEvidence.outputFingerprint, 'd'.repeat(64));
+});
+
+test('retains rendered identity when screenshot comparison fails', async () => {
+  const input = await arguments_('compare');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  const result = await generateScreenshotViewCompose(input, {
+    render: async () => ({
+      status: 'success',
+      evidence: {
+        level: 'rendered',
+        cache: 'miss',
+        compilerLane: 'preview-compiler',
+        renderLane: 'preview-renderer',
+        outputFingerprint: 'd'.repeat(64),
+      },
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'e'.repeat(64)}},
+      truncated: false,
+    }),
+    compare: async () => ({
+      status: 'failed',
+      evidenceLevel: 'rendered',
+      diagnostics: [{
+        code: 'VC-AI-COMPARE-SEMANTIC-MISMATCH',
+        severity: 'error',
+        message: 'mismatch',
+      }],
+      comparison: {comparisonFingerprint: 'f'.repeat(64)},
+    }),
+  });
+
+  assert.equal(result.status, 'failed');
+  assert.equal(result.evidence.level, 'rendered');
+  assert.equal(result.evidence.outputFingerprint, 'd'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(result.diagnostics[0].code, 'VC-AI-COMPARE-SEMANTIC-MISMATCH');
+});
+
+test('compares pixels only after the exact screenshot layout passes', async () => {
+  const input = await arguments_('compare-pixels');
+  input.previewBindings = (await readJson(previewRequestPath)).bindings;
+  input.pixelReference = {
+    request: await readJson(pixelReferenceRequestPath),
+    result: await readJson(pixelReferenceResultPath),
+  };
+  let pixelInvocation;
+  const result = await generateScreenshotViewCompose(input, {
+    requestId: 'screenshot-compare-pixels',
+    render: async () => ({
+      status: 'success',
+      evidence: {
+        level: 'rendered',
+        cache: 'hit',
+        compilerLane: 'preview-compiler',
+        renderLane: 'preview-renderer',
+        outputFingerprint: 'd'.repeat(64),
+      },
+      diagnostics: [],
+      data: {generatedPreview: {requestFingerprint: 'e'.repeat(64)}},
+      truncated: false,
+    }),
+    compare: async () => ({
+      status: 'success',
+      evidenceLevel: 'compared',
+      diagnostics: [],
+      comparison: {comparisonFingerprint: 'f'.repeat(64)},
+    }),
+    comparePixels: async (value) => {
+      pixelInvocation = value;
+      return {
+        status: 'success',
+        evidenceLevel: 'compared',
+        diagnostics: [],
+        comparison: {
+          comparisonFingerprint: 'a'.repeat(64),
+          metrics: {mismatchedPixels: 0},
+        },
+        localization: {
+          localizationFingerprint: 'b'.repeat(64),
+          mismatchedPixels: 0,
+        },
+      };
+    },
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.evidence.level, 'compared');
+  assert.equal(result.evidence.outputFingerprint, 'a'.repeat(64));
+  assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(result.data.pixelComparison.metrics.mismatchedPixels, 0);
+  assert.equal(result.data.pixelLocalization.localizationFingerprint, 'b'.repeat(64));
+  assert.equal(
+    pixelInvocation.referenceResult.outputFingerprint,
+    input.pixelReference.result.outputFingerprint,
+  );
+  assert.equal(pixelInvocation.semanticComparison.comparisonFingerprint, 'f'.repeat(64));
+  assert.equal(pixelInvocation.previewEvidence.outputFingerprint, 'd'.repeat(64));
+});
+
+test('honors cancellation before screenshot generation', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  const result = await generateScreenshotViewCompose(await arguments_('generate'), {
+    signal: controller.signal,
+  });
+  assert.equal(result.status, 'cancelled');
+  assert.equal(result.diagnostics[0].code, 'VC-AI-SCREENSHOT-GENERATION-CANCELLED');
+});

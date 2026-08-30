@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/layout-comparison-v1.schema.json",
+  "title": "ViewCompose generated layout comparison v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "designIr",
+    "render",
+    "policy",
+    "summary",
+    "nodes",
+    "findings",
+    "comparisonFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["passed", "failed"]},
+    "designIr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "sourceFingerprint", "irFingerprint"],
+      "properties": {
+        "documentId": {"$ref": "#/$defs/stableId"},
+        "sourceFingerprint": {"$ref": "#/$defs/sha256"},
+        "irFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestFingerprint",
+        "outputFingerprint",
+        "renderTreeFingerprint",
+        "viewport",
+        "density",
+        "fontScale",
+        "localeTag",
+        "layoutDirection"
+      ],
+      "properties": {
+        "requestFingerprint": {"$ref": "#/$defs/sha256"},
+        "outputFingerprint": {"$ref": "#/$defs/sha256"},
+        "renderTreeFingerprint": {"$ref": "#/$defs/sha256"},
+        "viewport": {"$ref": "#/$defs/boundsSize"},
+        "density": {"type": "number", "minimum": 0.1, "maximum": 16},
+        "fontScale": {"type": "number", "minimum": 0.1, "maximum": 8},
+        "localeTag": {"type": "string", "minLength": 1, "maxLength": 128},
+        "layoutDirection": {"enum": ["Ltr", "Rtl"]}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "nodeIdentity",
+        "semanticHost",
+        "resourceValues",
+        "dpRounding",
+        "geometryTolerancePx",
+        "hiddenGeometry"
+      ],
+      "properties": {
+        "version": {"const": 1},
+        "nodeIdentity": {"const": "exact-normalized-key"},
+        "semanticHost": {"const": "identity-or-allowlisted-single-child-wrapper"},
+        "resourceValues": {"const": "exact-preview-binding-source"},
+        "dpRounding": {"const": "nearest-integer-px"},
+        "geometryTolerancePx": {"const": 0},
+        "hiddenGeometry": {"const": "not-applicable-only-for-gone"}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "designNodes",
+        "mappedNodes",
+        "requiredChecks",
+        "passedChecks",
+        "failedChecks",
+        "notApplicableChecks"
+      ],
+      "properties": {
+        "designNodes": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "mappedNodes": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "requiredChecks": {"type": "integer", "minimum": 0, "maximum": 32000},
+        "passedChecks": {"type": "integer", "minimum": 0, "maximum": 32000},
+        "failedChecks": {"type": "integer", "minimum": 0, "maximum": 32000},
+        "notApplicableChecks": {"type": "integer", "minimum": 0, "maximum": 32000}
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {"$ref": "#/$defs/node"}
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "comparisonFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "designNodeId",
+        "designPath",
+        "identityKey",
+        "identityRenderNodeId",
+        "semanticRenderNodeId",
+        "expectedKind",
+        "actualKind",
+        "wrapperDepth",
+        "bounds",
+        "checks"
+      ],
+      "properties": {
+        "designNodeId": {"$ref": "#/$defs/stableId"},
+        "designPath": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/stableId"}
+        },
+        "identityKey": {"$ref": "#/$defs/stableId"},
+        "identityRenderNodeId": {"$ref": "#/$defs/stableId"},
+        "semanticRenderNodeId": {"$ref": "#/$defs/stableId"},
+        "expectedKind": {"$ref": "#/$defs/stableId"},
+        "actualKind": {"$ref": "#/$defs/stableId"},
+        "wrapperDepth": {"type": "integer", "minimum": 0, "maximum": 1},
+        "bounds": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/bounds"}
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/check"}
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "category", "status", "expected", "actual"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "category": {"enum": ["identity", "structure", "semantic", "geometry"]},
+        "status": {"enum": ["passed", "failed", "not-applicable"]},
+        "expected": {"type": "string", "maxLength": 4096},
+        "actual": {"type": "string", "maxLength": 4096}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-COMPARE-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "designNodeId": {"$ref": "#/$defs/stableId"},
+        "checkId": {"$ref": "#/$defs/stableId"},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left", "top", "right", "bottom"],
+      "properties": {
+        "left": {"type": "integer", "minimum": 0, "maximum": 65536},
+        "top": {"type": "integer", "minimum": 0, "maximum": 65536},
+        "right": {"type": "integer", "minimum": 0, "maximum": 65536},
+        "bottom": {"type": "integer", "minimum": 0, "maximum": 65536}
+      }
+    },
+    "boundsSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widthPx", "heightPx"],
+      "properties": {
+        "widthPx": {"type": "integer", "minimum": 1, "maximum": 65536},
+        "heightPx": {"type": "integer", "minimum": 1, "maximum": 65536}
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

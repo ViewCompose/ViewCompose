@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Welcome</string>
+    <string name="email_hint">Email address</string>
+    <string name="login_action">Sign in</string>
+</resources>

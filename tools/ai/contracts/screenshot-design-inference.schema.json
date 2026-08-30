@@ -1,0 +1,451 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-design-inference-v1.schema.json",
+  "title": "ViewCompose screenshot-to-Design-IR inference v1",
+  "oneOf": [
+    {"$ref": "#/$defs/request"},
+    {"$ref": "#/$defs/result"}
+  ],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "source",
+        "screenshot",
+        "interpretation",
+        "intent",
+        "policy",
+        "authorization"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "request"},
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "preprocessingRequestFingerprint",
+            "preprocessingOutputFingerprint"
+          ],
+          "properties": {
+            "preprocessingRequestFingerprint": {"$ref": "#/$defs/sha256"},
+            "preprocessingOutputFingerprint": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        "screenshot": {"$ref": "#/$defs/pngAsset"},
+        "interpretation": {"$ref": "#/$defs/interpretation"},
+        "intent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "target", "userRequirements"],
+          "properties": {
+            "operation": {"const": "screenshot-to-design-ir"},
+            "target": {"const": "ViewCompose"},
+            "userRequirements": {"type": "string", "maxLength": 8192}
+          }
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "designIrSchemaVersion",
+            "frameworkVersionLane",
+            "frameworkIdentity",
+            "allowedNodeKinds",
+            "minimumAcceptedConfidence",
+            "unresolvedBelowConfidence",
+            "behaviorInference",
+            "resourceInference",
+            "textInference",
+            "accessibilityInference",
+            "maxNodes",
+            "maxDepth"
+          ],
+          "properties": {
+            "designIrSchemaVersion": {"const": 1},
+            "frameworkVersionLane": {"enum": ["current-source", "released"]},
+            "frameworkIdentity": {"type": "string", "minLength": 7, "maxLength": 128},
+            "allowedNodeKinds": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "items": {
+                "enum": ["box", "button", "column", "image", "row", "text", "text-field"]
+              }
+            },
+            "minimumAcceptedConfidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "unresolvedBelowConfidence": {"const": true},
+            "behaviorInference": {"const": "forbidden"},
+            "resourceInference": {"const": "placeholder-only"},
+            "textInference": {"const": "observed-or-unresolved"},
+            "accessibilityInference": {"const": "observed-or-unresolved"},
+            "maxNodes": {"type": "integer", "minimum": 1, "maximum": 1000},
+            "maxDepth": {"type": "integer", "minimum": 1, "maximum": 64}
+          }
+        },
+        "authorization": {"$ref": "#/$defs/authorization"}
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "requestFingerprint",
+        "input",
+        "producer",
+        "designIr",
+        "nodeEvidence",
+        "unresolvedQuestions",
+        "summary",
+        "diagnostics",
+        "resultFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "result"},
+        "status": {"enum": ["complete", "incomplete"]},
+        "requestFingerprint": {"$ref": "#/$defs/sha256"},
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "preprocessingOutputFingerprint",
+            "screenshotSha256",
+            "widthPx",
+            "heightPx"
+          ],
+          "properties": {
+            "preprocessingOutputFingerprint": {"$ref": "#/$defs/sha256"},
+            "screenshotSha256": {"$ref": "#/$defs/sha256"},
+            "widthPx": {"type": "integer", "minimum": 1, "maximum": 4096},
+            "heightPx": {"type": "integer", "minimum": 1, "maximum": 4096}
+          }
+        },
+        "producer": {"$ref": "#/$defs/producer"},
+        "designIr": {"type": "object"},
+        "nodeEvidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "items": {"$ref": "#/$defs/nodeEvidence"}
+        },
+        "unresolvedQuestions": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"$ref": "#/$defs/unresolvedQuestion"}
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nodes",
+            "evidenceRecords",
+            "unresolvedQuestions",
+            "blockingQuestions",
+            "unsupportedSemantics",
+            "confidenceAggregation",
+            "codeGenerationAllowed"
+          ],
+          "properties": {
+            "nodes": {"type": "integer", "minimum": 1, "maximum": 1000},
+            "evidenceRecords": {"type": "integer", "minimum": 1, "maximum": 1000},
+            "unresolvedQuestions": {"type": "integer", "minimum": 0, "maximum": 1000},
+            "blockingQuestions": {"type": "integer", "minimum": 0, "maximum": 1000},
+            "unsupportedSemantics": {"type": "integer", "minimum": 0, "maximum": 1000},
+            "confidenceAggregation": {"const": "none"},
+            "codeGenerationAllowed": {"type": "boolean"}
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "resultFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "authorization": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "privacyReview",
+            "redactionsVerified",
+            "approvedInputFingerprint",
+            "providerTransfer",
+            "networkAccess",
+            "inputPersistence",
+            "outputPersistence",
+            "logs"
+          ],
+          "properties": {
+            "mode": {"const": "human-golden"},
+            "privacyReview": {"const": "complete"},
+            "redactionsVerified": {"const": true},
+            "approvedInputFingerprint": {"$ref": "#/$defs/sha256"},
+            "providerTransfer": {"const": false},
+            "networkAccess": {"const": false},
+            "inputPersistence": {"const": false},
+            "outputPersistence": {"const": false},
+            "logs": {"const": "metadata-only"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "privacyReview",
+            "redactionsVerified",
+            "approvedInputFingerprint",
+            "providerTransfer",
+            "networkAccess",
+            "providerId",
+            "consentReceipt",
+            "consentInputFingerprint",
+            "approvedPurpose",
+            "retentionReview",
+            "inputPersistence",
+            "outputPersistence",
+            "logs"
+          ],
+          "properties": {
+            "mode": {"const": "provider-adapter"},
+            "privacyReview": {"const": "complete"},
+            "redactionsVerified": {"const": true},
+            "approvedInputFingerprint": {"$ref": "#/$defs/sha256"},
+            "providerTransfer": {"const": true},
+            "networkAccess": {"const": true},
+            "providerId": {"$ref": "#/$defs/stableId"},
+            "consentReceipt": {"$ref": "#/$defs/sha256"},
+            "consentInputFingerprint": {"$ref": "#/$defs/sha256"},
+            "approvedPurpose": {"const": "screenshot-to-design-ir"},
+            "retentionReview": {"const": "complete"},
+            "inputPersistence": {"const": false},
+            "outputPersistence": {"const": false},
+            "logs": {"const": "metadata-only"}
+          }
+        }
+      ]
+    },
+    "producer": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "identity", "networkAccess", "providerTransfer"],
+          "properties": {
+            "kind": {"const": "human-golden"},
+            "identity": {"$ref": "#/$defs/stableId"},
+            "networkAccess": {"const": false},
+            "providerTransfer": {"const": false}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "providerId",
+            "adapterVersion",
+            "modelId",
+            "modelVersion",
+            "providerRequestFingerprint",
+            "providerResponseFingerprint",
+            "networkAccess",
+            "providerTransfer"
+          ],
+          "properties": {
+            "kind": {"const": "provider-adapter"},
+            "providerId": {"$ref": "#/$defs/stableId"},
+            "adapterVersion": {"type": "string", "minLength": 1, "maxLength": 128},
+            "modelId": {"type": "string", "minLength": 1, "maxLength": 256},
+            "modelVersion": {"type": "string", "minLength": 1, "maxLength": 256},
+            "providerRequestFingerprint": {"$ref": "#/$defs/sha256"},
+            "providerResponseFingerprint": {"$ref": "#/$defs/sha256"},
+            "networkAccess": {"const": true},
+            "providerTransfer": {"const": true}
+          }
+        }
+      ]
+    },
+    "nodeEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "sourceRegion", "observations", "assessments", "decision"],
+      "properties": {
+        "nodeId": {"$ref": "#/$defs/stableId"},
+        "sourceRegion": {"$ref": "#/$defs/rectangle"},
+        "observations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["asset", "content", "geometry", "semantics", "structure", "style"]
+          }
+        },
+        "assessments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {"$ref": "#/$defs/assessment"}
+        },
+        "alternatives": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {"$ref": "#/$defs/alternative"}
+        },
+        "decision": {"type": "string", "minLength": 1, "maxLength": 2048}
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "confidence", "basis", "decision"],
+      "properties": {
+        "dimension": {
+          "enum": ["asset", "content", "geometry", "semantics", "structure", "style"]
+        },
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "basis": {
+          "enum": ["caller-supplied", "human-annotated", "not-observed", "pixel-observed"]
+        },
+        "decision": {"type": "string", "minLength": 1, "maxLength": 2048}
+      }
+    },
+    "alternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "confidence", "reason"],
+      "properties": {
+        "kind": {"$ref": "#/$defs/stableId"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 2048}
+      }
+    },
+    "unresolvedQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "question",
+        "blocking",
+        "requiredAction",
+        "forbiddenDefault"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "nodeId": {"$ref": "#/$defs/stableId"},
+        "sourceRegion": {"$ref": "#/$defs/rectangle"},
+        "category": {
+          "enum": [
+            "accessibility",
+            "asset",
+            "behavior",
+            "content",
+            "layout",
+            "semantics",
+            "state",
+            "style"
+          ]
+        },
+        "question": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "blocking": {"type": "boolean"},
+        "requiredAction": {
+          "enum": ["asset-supply", "human-answer", "source-inspection"]
+        },
+        "forbiddenDefault": {"const": true}
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "density",
+        "fontScale",
+        "localeTag",
+        "layoutDirection",
+        "colorSpace",
+        "alphaMode",
+        "orientation"
+      ],
+      "properties": {
+        "density": {"type": "number", "minimum": 0.1, "maximum": 16},
+        "fontScale": {"type": "number", "minimum": 0.1, "maximum": 8},
+        "localeTag": {"type": "string", "minLength": 1, "maxLength": 128},
+        "layoutDirection": {"enum": ["Ltr", "Rtl"]},
+        "colorSpace": {"const": "sRGB"},
+        "alphaMode": {"const": "straight"},
+        "orientation": {"const": "upright"}
+      }
+    },
+    "pngAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mediaType",
+        "encoding",
+        "data",
+        "bytes",
+        "sha256",
+        "widthPx",
+        "heightPx"
+      ],
+      "properties": {
+        "mediaType": {"const": "image/png"},
+        "encoding": {"const": "base64"},
+        "data": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 1747628,
+          "pattern": "^[A-Za-z0-9+/]+={0,2}$"
+        },
+        "bytes": {"type": "integer", "minimum": 33, "maximum": 1310720},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "widthPx": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "heightPx": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "rectangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "y": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "width": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "height": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-SCREENSHOT-INFERENCE-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

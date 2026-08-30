@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-pixel-localization-v1.schema.json",
+  "title": "ViewCompose screenshot pixel localization v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "pixelComparisonFingerprint",
+    "viewport",
+    "policy",
+    "mismatchedPixels",
+    "mismatchBounds",
+    "attributions",
+    "unassignedMismatchedPixels",
+    "localizationFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["exact", "mismatch"]},
+    "pixelComparisonFingerprint": {"$ref": "#/$defs/sha256"},
+    "viewport": {"$ref": "#/$defs/size"},
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "ownership",
+        "bounds",
+        "tieBreak",
+        "unassigned",
+        "aggregateScore"
+      ],
+      "properties": {
+        "version": {"const": 1},
+        "ownership": {"const": "deepest-containing-design-node"},
+        "bounds": {"const": "left-top-inclusive-right-bottom-exclusive"},
+        "tieBreak": {"const": "deepest-path-then-design-node-id"},
+        "unassigned": {"const": "retained-separately"},
+        "aggregateScore": {"const": false}
+      }
+    },
+    "mismatchedPixels": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4194304
+    },
+    "mismatchBounds": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/rectangle"}
+      ]
+    },
+    "attributions": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {"$ref": "#/$defs/attribution"}
+    },
+    "unassignedMismatchedPixels": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4194304
+    },
+    "localizationFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "designNodeId",
+        "designPath",
+        "nodeBounds",
+        "mismatchedPixels",
+        "mismatchBounds"
+      ],
+      "properties": {
+        "designNodeId": {"$ref": "#/$defs/stableId"},
+        "designPath": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/stableId"}
+        },
+        "nodeBounds": {"$ref": "#/$defs/rectangle"},
+        "mismatchedPixels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4194304
+        },
+        "mismatchBounds": {"$ref": "#/$defs/rectangle"}
+      }
+    },
+    "rectangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "y": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "width": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "height": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widthPx", "heightPx"],
+      "properties": {
+        "widthPx": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "heightPx": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

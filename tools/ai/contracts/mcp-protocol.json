@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "transport": "stdio",
+  "specification": "https://modelcontextprotocol.io/specification/2026-07-28",
+  "preferredVersion": "2026-07-28",
+  "supportedVersions": [
+    "2026-07-28",
+    "2025-11-25"
+  ],
+  "server": {
+    "name": "viewcompose-ai",
+    "title": "ViewCompose AI",
+    "version": "0.1.0"
+  },
+  "limits": {
+    "maxMessageBytes": 4194304,
+    "maxConcurrentRequests": 4
+  },
+  "compatibility": {
+    "modern": "per-request-metadata",
+    "legacy": "initialize-handshake",
+    "implicitVersionDowngrade": false,
+    "unknownFields": "reject-where-schema-defined"
+  }
+}

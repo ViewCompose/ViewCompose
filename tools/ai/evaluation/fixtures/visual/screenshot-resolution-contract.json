@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-inference-resolution-v1",
+  "requiresContracts": [
+    "design-ir-v1",
+    "screenshot-design-inference-v1",
+    "screenshot-inference-resolution-v1"
+  ],
+  "activation": {
+    "tool": "resolve_screenshot_inference",
+    "status": "implemented",
+    "publicTool": true,
+    "evidence": "static",
+    "generationImplementation": false
+  },
+  "execution": {
+    "providerExecution": false,
+    "networkAccess": false,
+    "credentialsAccepted": false,
+    "executableSourceAccepted": false,
+    "resourceGuessing": false
+  },
+  "lineage": {
+    "acceptedInput": "validated-screenshot-inference-only",
+    "validationFingerprint": "exact",
+    "inferenceResultFingerprint": "exact",
+    "designIrFingerprint": "exact",
+    "authorizationBoundToValidationFingerprint": true,
+    "questionId": "exact-imported-question",
+    "questionNode": "exact-imported-node",
+    "questionRegion": "exact-imported-region",
+    "requestFingerprint": "sha256-canonical-json",
+    "resultFingerprint": "sha256-canonical-json-without-resultFingerprint"
+  },
+  "answerPolicy": {
+    "allBlockingQuestionsRequired": true,
+    "duplicateAnswers": "forbidden",
+    "unknownQuestions": "forbidden",
+    "requiredActionMustMatch": true,
+    "content": {
+      "decisionKind": "set-fields",
+      "allowedCollections": ["properties", "state"],
+      "allowedValues": ["binding", "enum", "literal"],
+      "expressions": false,
+      "resources": false
+    },
+    "behavior": {
+      "decisionKind": "set-events",
+      "allowedEvents": ["click", "focus-change", "keyboard-action"],
+      "bindingOnly": true,
+      "callbackSource": false
+    },
+    "accessibility": {
+      "decisionKind": "accessibility-review",
+      "allNodesCovered": true,
+      "rolesExplicit": true,
+      "labelSourceExplicit": true,
+      "traversalOrderExplicit": true,
+      "decorativeDecisionExplicit": true
+    }
+  },
+  "resolutionPolicy": {
+    "preserveScreenshotProvenance": true,
+    "accessibilityReviewPersistedInDesignIr": true,
+    "resolveOnlyQuestionBoundUnsupportedSemantics": true,
+    "unansweredQuestionsRemainBlocking": true,
+    "unresolvedUnsupportedSemanticsRemainBlocked": true,
+    "placeholderBindingsRemainBlocked": true,
+    "codeGenerationEligibility": {
+      "remainingBlockingQuestions": 0,
+      "remainingUnsupportedSemantics": 0,
+      "placeholderBindings": 0,
+      "schemaValidDesignIr": true
+    },
+    "compilationClaim": false,
+    "renderClaim": false,
+    "visualParityClaim": false
+  },
+  "authorization": {
+    "mode": "human-resolution",
+    "reviewerIdentityRequired": true,
+    "reviewReceiptRequired": true,
+    "approvedPurpose": "resolve-screenshot-inference",
+    "sourceInspectionRequiredForBehavior": true,
+    "providerExecution": false,
+    "networkAccess": false,
+    "logs": "metadata-only"
+  },
+  "limits": {
+    "maxAnswers": 1000,
+    "maxFieldDecisionsPerAnswer": 16,
+    "maxEventDecisionsPerAnswer": 8,
+    "maxAccessibilityNodes": 1000
+  },
+  "diagnosticCodes": [
+    "VC-AI-SCREENSHOT-RESOLUTION-INPUT-INVALID",
+    "VC-AI-SCREENSHOT-RESOLUTION-LINEAGE-MISMATCH",
+    "VC-AI-SCREENSHOT-RESOLUTION-COVERAGE-INCOMPLETE",
+    "VC-AI-SCREENSHOT-RESOLUTION-QUESTION-MISMATCH",
+    "VC-AI-SCREENSHOT-RESOLUTION-EXECUTABLE-DENIED",
+    "VC-AI-SCREENSHOT-RESOLUTION-DECISION-UNSUPPORTED",
+    "VC-AI-SCREENSHOT-RESOLUTION-UNSUPPORTED-REMAINS",
+    "VC-AI-SCREENSHOT-RESOLUTION-CODEGEN-BLOCKED",
+    "VC-AI-SCREENSHOT-RESOLUTION-LIMIT",
+    "VC-AI-SCREENSHOT-RESOLUTION-CANCELLED"
+  ],
+  "supportedFixtures": [
+    {
+      "request": "screenshot-resolution/wireframe.request.json",
+      "result": "screenshot-resolution/wireframe.result.json",
+      "status": "implemented",
+      "expectedRequestFingerprint": "a88e3bba78ea817a197c042d4cbd23f7da518915005092c449513107f410c29b",
+      "expectedResultFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
+      "expectedInputDesignIrFingerprint": "585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a",
+      "expectedResolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+      "expectedAnsweredQuestions": 6,
+      "expectedResolutionRecords": 6,
+      "expectedResolvedUnsupportedSemantics": 6,
+      "expectedRemainingQuestions": 0,
+      "expectedRemainingUnsupportedSemantics": 0,
+      "expectedPlaceholderBindings": 0,
+      "expectedResolvedEvents": 2,
+      "expectedResolvedSemanticRoles": 2,
+      "expectedResolvedAccessibilityFields": 14,
+      "expectedCodeGenerationAllowed": true
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "mutation": "screenshot-resolution/missing-answer.mutation.json",
+      "schemaValid": true,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-RESOLUTION-COVERAGE-INCOMPLETE"]
+    },
+    {
+      "mutation": "screenshot-resolution/expression-injection.mutation.json",
+      "schemaValid": false,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-RESOLUTION-EXECUTABLE-DENIED"]
+    },
+    {
+      "mutation": "screenshot-resolution/lineage-mismatch.mutation.json",
+      "schemaValid": true,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-RESOLUTION-LINEAGE-MISMATCH"]
+    }
+  ]
+}

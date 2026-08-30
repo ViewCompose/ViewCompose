@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-repair-candidate-evidence-v1.schema.json",
+  "title": "ViewCompose screenshot repair candidate evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "lineage",
+    "candidateEvaluation",
+    "designIr",
+    "diagnostics",
+    "layoutComparison",
+    "pixelComparison",
+    "pixelLocalization",
+    "evidenceFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["complete", "short-circuited"]},
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseResolutionResultFingerprint",
+        "candidateResolutionResultFingerprint",
+        "inputDesignIrFingerprint",
+        "candidateDesignIrFingerprint",
+        "changeFingerprint"
+      ],
+      "properties": {
+        "baseResolutionResultFingerprint": {"$ref": "#/$defs/sha256"},
+        "candidateResolutionResultFingerprint": {"$ref": "#/$defs/sha256"},
+        "inputDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "candidateDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "changeFingerprint": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/sha256"}
+          ]
+        }
+      }
+    },
+    "candidateEvaluation": {"type": "object"},
+    "designIr": {"type": "object"},
+    "diagnostics": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate", "codes"],
+        "properties": {
+          "gate": {
+            "enum": [
+              "safety",
+              "compilation",
+              "render",
+              "semantics",
+              "structure",
+              "exact-pixels"
+            ]
+          },
+          "codes": {
+            "type": "array",
+            "maxItems": 100,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^VC-AI-[A-Z0-9-]+$"}
+          }
+        }
+      }
+    },
+    "layoutComparison": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object"}
+      ]
+    },
+    "pixelComparison": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object"}
+      ]
+    },
+    "pixelLocalization": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object"}
+      ]
+    },
+    "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

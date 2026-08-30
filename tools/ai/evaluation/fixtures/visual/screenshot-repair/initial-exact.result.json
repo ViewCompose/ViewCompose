@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 2,
+  "status": "converged",
+  "policy": {
+    "version": 2,
+    "maxIterations": 5,
+    "gateOrder": [
+      "safety",
+      "compilation",
+      "render",
+      "semantics",
+      "structure",
+      "exact-pixels"
+    ],
+    "candidateMutation": "typed-design-ir-patches-only",
+    "noOscillation": true,
+    "noRegression": true,
+    "strictImprovement": true,
+    "aggregateScore": false,
+    "networkAccess": false,
+    "providerCalls": false,
+    "executeInspectedProjectBuildLogic": false
+  },
+  "initial": {
+    "candidateFingerprint": "1207f03eb49f9e5a7c8b8277ee6262f2eb1e35e1f17f101ac8b4f912c2c63107",
+    "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "gates": [
+      {
+        "name": "safety",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee"
+      },
+      {
+        "name": "compilation",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67"
+      },
+      {
+        "name": "render",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076"
+      },
+      {
+        "name": "semantics",
+        "status": "passed",
+        "passedChecks": 12,
+        "totalChecks": 12,
+        "evidenceFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd"
+      },
+      {
+        "name": "structure",
+        "status": "passed",
+        "passedChecks": 15,
+        "totalChecks": 15,
+        "evidenceFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd"
+      },
+      {
+        "name": "exact-pixels",
+        "status": "passed",
+        "comparedPixels": 2523781,
+        "mismatchedPixels": 0,
+        "maxChannelDelta": 0,
+        "evidenceFingerprint": "6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f"
+      }
+    ],
+    "evaluationFingerprint": "7515312f2b01b502956a9b0eef6d0e233a002ae30ccbcebf125582ec973beeb9"
+  },
+  "iterations": [],
+  "final": {
+    "candidateFingerprint": "1207f03eb49f9e5a7c8b8277ee6262f2eb1e35e1f17f101ac8b4f912c2c63107",
+    "designIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "gates": [
+      {
+        "name": "safety",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee"
+      },
+      {
+        "name": "compilation",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67"
+      },
+      {
+        "name": "render",
+        "status": "passed",
+        "passedChecks": 1,
+        "totalChecks": 1,
+        "evidenceFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076"
+      },
+      {
+        "name": "semantics",
+        "status": "passed",
+        "passedChecks": 12,
+        "totalChecks": 12,
+        "evidenceFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd"
+      },
+      {
+        "name": "structure",
+        "status": "passed",
+        "passedChecks": 15,
+        "totalChecks": 15,
+        "evidenceFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd"
+      },
+      {
+        "name": "exact-pixels",
+        "status": "passed",
+        "comparedPixels": 2523781,
+        "mismatchedPixels": 0,
+        "maxChannelDelta": 0,
+        "evidenceFingerprint": "6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f"
+      }
+    ],
+    "evaluationFingerprint": "7515312f2b01b502956a9b0eef6d0e233a002ae30ccbcebf125582ec973beeb9"
+  },
+  "termination": {
+    "reason": "initial-pass",
+    "iterationCount": 0,
+    "acceptedCandidates": 0,
+    "rejectedCandidates": 0
+  },
+  "findings": [],
+  "repairFingerprint": "e851cb37943ce42df9fa91a30cf36f73a99e2b59e5fd74cd0b061a5a4c444858"
+}

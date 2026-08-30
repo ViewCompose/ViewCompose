@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-generation/wireframe.request.json",
+  "operation": "replace-resolved-design-ir-fingerprint",
+  "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "expectedDiagnostic": "VC-AI-SCREENSHOT-GENERATION-LINEAGE-MISMATCH"
+}

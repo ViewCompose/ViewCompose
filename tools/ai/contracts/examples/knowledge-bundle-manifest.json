@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "generatorVersion": "1.0.0",
+  "framework": {
+    "versionLane": "current-source",
+    "identity": "0123456789abcdef"
+  },
+  "source": {
+    "revision": "0123456789abcdef",
+    "capabilityFingerprint": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "files": [
+    {
+      "path": "artifacts.json",
+      "mediaType": "application/json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 2
+    },
+    {
+      "path": "capabilities.json",
+      "mediaType": "application/json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 2
+    },
+    {
+      "path": "symbols.jsonl",
+      "mediaType": "application/x-ndjson",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 0
+    },
+    {
+      "path": "samples.jsonl",
+      "mediaType": "application/x-ndjson",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 0
+    },
+    {
+      "path": "rules.json",
+      "mediaType": "application/json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 2
+    },
+    {
+      "path": "llms.txt",
+      "mediaType": "text/plain",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 0
+    }
+  ],
+  "counts": {
+    "artifacts": 0,
+    "capabilities": 0,
+    "symbols": 0,
+    "samples": 0,
+    "rules": 0
+  },
+  "bundleFingerprint": "0000000000000000000000000000000000000000000000000000000000000000"
+}

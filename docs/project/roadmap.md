@@ -135,6 +135,10 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 35. `viewcompose-shadow-android` provides ordered outer layers, foreground inner layers, bounded
     raster caches, an experimental RenderNode backend, and structured diagnostics. `Auto` remains
     ExactBitmap based on the first release-mode benchmark.
+36. AI-verifiable tooling Phases 0--1 freeze version, security, evaluation, and evidence contracts,
+    then publish a freshness-gated 30-artifact/537-symbol Knowledge Bundle and compact `llms.txt`.
+    [Phase 2](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)
+    owns static validation, isolated compile/Preview evidence, and bounded project analysis.
 
 ### 2.2 Demo and verification
 
@@ -192,6 +196,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | Diagnostics | Correlated render sessions and Studio inspector, bounded production failure aggregation, render/layout trees, per-node patches, Locals, recomposition reasons, source navigation, request-driven real-View highlighting, finite sampled composition/reconciliation/binding timing, and accepted idle/request/Release isolation budgets | No active expansion; any continuous observer, new timing domain, or broader device contract requires a newly attributed plan and ADR-backed inactive-path evidence |
 | UI Testing | Core instrumentation plus P1 focus/keyboard, nested-scroll, and rollback cases | Multi-API, TV, ChromeOS, overlay host, and theme assertions |
 | Developer Preview | Compose Preview, Paparazzi, and Studio plugin with static render, source linkage, diagnostics, bounded cache, and incremental refresh | More domains and Dark/Tablet snapshots |
+| AI-verifiable development tooling | Phases 0--1: frozen contracts/evaluation and freshness-gated Knowledge Bundle/`llms.txt`; later services and converters do not exist yet | [Phase 2](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md): validation, isolated compile/Preview evidence, and bounded analysis |
 | ConstraintLayout | Alpha DSL plus classified reconciliation, typed chain/wrap/physical-direction APIs, typed Grid, declarative CircularFlow, exact helper/rollback/lifecycle coverage, pairwise visual acceptance, API 24/33/36 device coverage, and a stable-row-safe released/candidate/direct matrix | The [archived parity/performance expansion](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md) completed Phases 0--4 with **no material change** release safety and no whole-frame optimization win. Keep MotionScene/MotionLayout out of scope; require a new attributed plan for multi-OEM performance or any additional parity work |
 | Animation | Core/DSL layers, physical spring/decay/results, shared generic and seekable Transition, full AnimatedContent and rich visibility transforms, animateContentSize/animateBounds, navigation-aware shared motion, raw Android interop, and request-driven read-only timeline tooling | The [archived Animation capability expansion](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md) completed Phases 0–7 with bounded ownership and `no material change` release-safety conclusions. Keep MotionLayout, continuous profiling, and live-device mutation unscheduled until a new attributed requirement is approved |
 | Gesture | Policy core, DSL, dispatcher, nested scroll, structured cancellation, and tap/drag/anchored/transform support | Third-party native scrollers and real-device multi-touch |
