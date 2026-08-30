@@ -199,7 +199,7 @@ async function main() {
     `Verified ViewCompose AI agent clients: ${result.profiles}/3 profiles, ` +
     `${result.installedSkillComparisons}/${result.installedSkillComparisons} exact Skill copies, ` +
     `${result.idempotentReinstalls}/3 idempotent reinstalls, and ` +
-    `${result.standaloneDoctors}/3 standalone doctors, ` +
+    `${result.standaloneDoctors}/3 project-bound doctors, ` +
     `${result.cleanUninstalls}/3 clean uninstalls, and ` +
     `${result.safetyRejections}/3 safety rejections.\n`,
   );

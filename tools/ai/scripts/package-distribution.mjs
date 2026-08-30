@@ -288,6 +288,20 @@ async function fileManifest(root) {
   return entries.sort((left, right) => left.path.localeCompare(right.path));
 }
 
+async function removeSupersededArchives(outputRoot, retainedName) {
+  for (const name of await readdir(outputRoot)) {
+    if (name === retainedName || !/^viewcompose-ai-tooling-[0-9]+\.[0-9]+\.[0-9]+\.tgz$/u.test(name)) {
+      continue;
+    }
+    const path = resolve(outputRoot, name);
+    const metadata = await lstat(path);
+    if (!metadata.isFile() || metadata.isSymbolicLink()) {
+      throw new Error(`Superseded distribution archive is unsafe: ${name}`);
+    }
+    await rm(path);
+  }
+}
+
 async function prepareStaging(stagingRoot, contract) {
   const knowledge = await readJson(resolve(aiRoot, 'generated/current-source/manifest.json'));
   const protocol = await readJson(resolve(aiRoot, 'contracts/mcp-protocol.json'));
@@ -397,6 +411,7 @@ export async function createDistribution({
     ].join('\n') + '\n';
     const temporaryChecksums = resolve(workRoot, 'SHA256SUMS');
     await writeFile(temporaryChecksums, checksums);
+    await removeSupersededArchives(absoluteOutput, archiveName);
     await rm(archivePath, {force: true});
     await rm(manifestPath, {force: true});
     await rm(checksumsPath, {force: true});

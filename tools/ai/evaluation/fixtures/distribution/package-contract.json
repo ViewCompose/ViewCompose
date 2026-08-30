@@ -172,8 +172,6 @@
     ],
     "projectBoundModes": [
       "validate_code:compile",
-      "render_preview",
-      "diagnose_layout",
       "convert_xml_to_viewcompose:compile",
       "convert_xml_to_viewcompose:render",
       "generate_screenshot_viewcompose:compile",
@@ -181,6 +179,8 @@
       "generate_screenshot_viewcompose:compare",
       "generate_screenshot_viewcompose:compare-pixels"
     ],
+    "fixedTargetModes": ["render_preview", "diagnose_layout"],
+    "fixedTargetAvailability": "separately-allowlisted-target-required",
     "projectRootVariable": "VIEWCOMPOSE_PROJECT_ROOT",
     "optionalSourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
     "hostPrerequisites": {

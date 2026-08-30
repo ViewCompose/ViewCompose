@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, readFile, rm} from 'node:fs/promises';
+import {mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import test from 'node:test';
@@ -36,4 +36,18 @@ test('creates an exact reproducible dependency-free npm distribution', async () 
 
 test('rejects a broad distribution output target', async () => {
   await assert.rejects(createDistribution({outputRoot: resolve('/')}), /dedicated non-root/u);
+});
+
+test('removes only a regular superseded generated archive', async () => {
+  const root = await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-package-upgrade-'));
+  try {
+    const output = resolve(root, 'distribution');
+    await createDistribution({outputRoot: output});
+    await writeFile(resolve(output, 'viewcompose-ai-tooling-0.1.0.tgz'), 'superseded');
+    const current = await createDistribution({outputRoot: output});
+    await assert.rejects(readFile(resolve(output, 'viewcompose-ai-tooling-0.1.0.tgz')), /ENOENT/u);
+    assert.ok((await readFile(current.archivePath)).length > 0);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
 });
