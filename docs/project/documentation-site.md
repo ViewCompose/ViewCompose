@@ -171,7 +171,11 @@ API accessibility review rather than weakening this gate.
 
 The site-shell verifier requires both locale homepages to use one explicit browser-storage
 namespace, so switching languages preserves the reader's light or dark color-mode choice. It also
-rejects the removed standalone Maven-coordinate banner on either homepage.
+rejects the removed standalone Maven-coordinate banner on either homepage. The same gate inspects
+the final bundled stylesheets and rejects filters, transforms, containment, or related properties
+on the `.navbar` root because they would confine Docusaurus's fixed mobile sidebar and backdrop to
+the navbar height. Visual effects belong on a pseudo-element or another node that is not an ancestor
+of those fixed layers.
 
 ## Released versions and aliases
 
