@@ -1,9 +1,12 @@
+import {realpathSync} from 'node:fs';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {compileKotlin} from './compiler-adapter.mjs';
+import {repositoryRoot} from './tool-core.mjs';
 
 const evaluationRoot = fileURLToPath(new URL('../evaluation/', import.meta.url));
+const sourceRoot = realpathSync(repositoryRoot());
 const corpus = JSON.parse(await readFile(resolve(evaluationRoot, 'corpus.json'), 'utf8'));
 const cases = corpus.cases.filter(
   (entry) => entry.phase === 2 && entry.category === 'compilation',
@@ -18,6 +21,8 @@ for (const testCase of cases) {
     path: testCase.input.fixture,
     capabilityIds: testCase.expected.capabilityIds ?? [],
     requestId: testCase.id,
+  }, {
+    projectRoot: sourceRoot,
   });
   if (result.status !== 'success') {
     throw new Error(
