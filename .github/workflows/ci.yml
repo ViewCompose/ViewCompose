@@ -98,7 +98,7 @@ jobs:
       - name: Install Android SDK components
         run: |
           yes | sdkmanager --licenses > /dev/null
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager "platform-tools" "platforms;android-36" "platforms;android-37" "build-tools;36.0.0"
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
@@ -246,7 +246,7 @@ jobs:
       - name: Install Android SDK components
         run: |
           yes | sdkmanager --licenses > /dev/null
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager "platform-tools" "platforms;android-36" "platforms;android-37" "build-tools;36.0.0"
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
@@ -262,6 +262,22 @@ jobs:
       - name: Verify AI Preview render corpus
         run: npm --prefix tools/ai run verify:phase2-render
 
+      - name: Print AI Preview failure diagnostics
+        if: failure()
+        run: |
+          worker_log="samples/counter/build/viewcompose-preview/debug/worker/worker.log"
+          if [[ -f "$worker_log" ]]; then
+            echo "ViewCompose Preview worker log:"
+            tail -n 200 "$worker_log"
+          else
+            echo "ViewCompose Preview worker log was not produced."
+          fi
+          shopt -s globstar nullglob
+          for response in samples/counter/build/viewcompose-preview/debug/render-cache/**/response.json; do
+            echo "ViewCompose Preview structured response: $response"
+            sed -n '1,240p' "$response"
+          done
+
       - name: Upload qaPreview failure reports
         if: failure()
         uses: actions/upload-artifact@v7
@@ -274,6 +290,8 @@ jobs:
             viewcompose-preview/build/reports/paparazzi/
             viewcompose-preview/build/reports/tests/testDebugUnitTest/
             viewcompose-preview/build/test-results/testDebugUnitTest/
+            samples/counter/build/viewcompose-preview/debug/worker/worker.log
+            samples/counter/build/viewcompose-preview/debug/render-cache/**/response.json
 
   qaPreview:
     name: qaPreview

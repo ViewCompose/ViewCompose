@@ -608,6 +608,17 @@ build evidence; a future dedicated route must recover its measured capacity firs
   removed without changing routes, APIs, or the budget. This single warm local build does not
   establish hosted latency; the next action is CI exact-cache and hosted-route verification.
 
+- **2026-08-30, AI-tooling pull-request budget recovery:** the first hosted #253 site build
+  produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB limit. Losslessly
+  re-encoding the single 1200-by-630 social-card PNG retained byte-identical decoded RGB pixels
+  while reducing it from 761,036 to 608,989 bytes (`-152,047`, `-20.0%`). The same-corpus local
+  rebuild then audited 528 pages, produced 49,042,390 non-API bytes with 135,824 bytes of
+  headroom, and completed the Docusaurus portion in `29.3 s`. The result is **improved**: the
+  route, content, image pixels, API history, and budget remain unchanged while one deployed
+  representation is smaller. Hosted and local Node/platform output differs, so the total
+  203,546-byte build delta is not attributed solely to the image; the next action is the hosted
+  rerun, which must independently remain below the same ceiling.
+
 Git history preserves earlier Paging and site checkpoints. They do not authorize deleting current
 contracts, raising the limit without evidence, or re-expanding completed copies.
 
