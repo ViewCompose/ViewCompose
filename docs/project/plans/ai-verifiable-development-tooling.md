@@ -3139,6 +3139,17 @@ registration. The full installed-package gate remains at 2/2 reproducible builds
 install/uninstall lifecycle, both MCP protocol versions, all three Agent profiles, and the existing
 compiled/rendered/compared screenshot and XML lanes.
 
+The isolated root `qaQuick` acceptance passed 2,310 actionable tasks: 2,107 executed and 203
+up-to-date, in 16 minutes 11 seconds. The comparison context is the immediately preceding
+common-agent onboarding acceptance at 2,309 tasks, 2,061 executed, 248 up-to-date, and 10 minutes 51
+seconds. This adds one task (`+0.0433%`); elapsed time increases by 5 minutes 20 seconds (`+49.16%`)
+while the isolated worktree executes 46 more tasks because it has a colder output cache. The timing
+is therefore not a performance comparison. The accepted functional conclusion is **no material
+change** across the repository gate: every task completed and the new handoff gate added no failure.
+The evidence is one isolated macOS/JDK 21 run rather than a clean Linux or device measurement. The
+next action remains the frozen production-host and source-application transaction boundary, with no
+source write or public repair activation inferred from this result.
+
 This is **improved** durable-result correlation, output integrity, authority isolation, and replay
 resistance with **no material Android runtime behavior change**. The evidence is local reference-
 store and synthetic-host evidence; it does not authenticate production reviewers or receipts,
