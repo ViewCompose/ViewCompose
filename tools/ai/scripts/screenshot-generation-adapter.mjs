@@ -5,7 +5,14 @@ import {compareGeneratedLayout} from './layout-comparator.mjs';
 import {compareScreenshotPixels} from './pixel-comparator.mjs';
 import {diagnostic, toolResult} from './tool-core.mjs';
 
-function generatedData(generated, compilation, preview, comparison, pixelComparison) {
+function generatedData(
+  generated,
+  compilation,
+  preview,
+  comparison,
+  pixelComparison,
+  pixelLocalization,
+) {
   return Object.fromEntries(Object.entries({
     kotlin: generated?.kotlin,
     generationReport: generated?.report,
@@ -14,6 +21,7 @@ function generatedData(generated, compilation, preview, comparison, pixelCompari
     preview,
     comparison,
     pixelComparison,
+    pixelLocalization,
   }).filter(([, value]) => value !== undefined));
 }
 
@@ -141,6 +149,7 @@ export async function generateScreenshotViewCompose(arguments_, {
         preview.data,
         compared.comparison,
         pixelCompared.comparison,
+        pixelCompared.localization,
       ),
       elapsedMs: performance.now() - started,
       cache: preview.evidence.cache,

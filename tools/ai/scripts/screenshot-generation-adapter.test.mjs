@@ -251,6 +251,10 @@ test('compares pixels only after the exact screenshot layout passes', async () =
           comparisonFingerprint: 'a'.repeat(64),
           metrics: {mismatchedPixels: 0},
         },
+        localization: {
+          localizationFingerprint: 'b'.repeat(64),
+          mismatchedPixels: 0,
+        },
       };
     },
   });
@@ -260,6 +264,7 @@ test('compares pixels only after the exact screenshot layout passes', async () =
   assert.equal(result.evidence.outputFingerprint, 'a'.repeat(64));
   assert.equal(result.data.comparison.comparisonFingerprint, 'f'.repeat(64));
   assert.equal(result.data.pixelComparison.metrics.mismatchedPixels, 0);
+  assert.equal(result.data.pixelLocalization.localizationFingerprint, 'b'.repeat(64));
   assert.equal(
     pixelInvocation.referenceResult.outputFingerprint,
     input.pixelReference.result.outputFingerprint,

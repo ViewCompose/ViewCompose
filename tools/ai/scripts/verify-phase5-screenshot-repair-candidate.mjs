@@ -17,6 +17,7 @@ const schemaPaths = Object.freeze({
   designIr: new URL('design-ir.schema.json', contractRoot),
   layout: new URL('layout-comparison.schema.json', contractRoot),
   pixels: new URL('screenshot-pixel-comparison.schema.json', contractRoot),
+  localization: new URL('screenshot-pixel-localization.schema.json', contractRoot),
 });
 const gateOrder = Object.freeze([
   'safety',
@@ -46,6 +47,21 @@ function evidenceDiagnosticCodes(evidence) {
   return [...new Set(evidence.diagnostics.flatMap((item) => item.codes))].sort();
 }
 
+function localizationSummary(localization) {
+  return {
+    status: localization.status,
+    mismatchedPixels: localization.mismatchedPixels,
+    mismatchBounds: localization.mismatchBounds,
+    attributions: localization.attributions.map((item) => ({
+      designNodeId: item.designNodeId,
+      mismatchedPixels: item.mismatchedPixels,
+      mismatchBounds: item.mismatchBounds,
+    })),
+    unassignedMismatchedPixels: localization.unassignedMismatchedPixels,
+    localizationFingerprint: localization.localizationFingerprint,
+  };
+}
+
 function assertCandidateEvidence({fixture, evidence, evaluation, resolutionResult, patch}, schemas) {
   if (evidence === null) {
     throw new Error(`${fixture.id}: accepted candidate did not retain evidence`);
@@ -70,6 +86,14 @@ function assertCandidateEvidence({fixture, evidence, evaluation, resolutionResul
     undefined,
     `${fixture.id}: retained pixel comparison`,
   );
+  assertValid(
+    evidence.pixelLocalization,
+    schemas.localization,
+    undefined,
+    `${fixture.id}: retained pixel localization`,
+  );
+  const unsignedLocalization = structuredClone(evidence.pixelLocalization);
+  delete unsignedLocalization.localizationFingerprint;
   const unsigned = structuredClone(evidence);
   delete unsigned.evidenceFingerprint;
   if (
@@ -81,6 +105,11 @@ function assertCandidateEvidence({fixture, evidence, evaluation, resolutionResul
     evidence.lineage.inputDesignIrFingerprint !== resolutionResult.designIrFingerprint ||
     evidence.lineage.candidateDesignIrFingerprint !== evaluation.designIrFingerprint ||
     evidence.lineage.changeFingerprint !== (patch?.changeFingerprint ?? null) ||
+    evidence.pixelLocalization.pixelComparisonFingerprint !==
+      evidence.pixelComparison.comparisonFingerprint ||
+    evidence.pixelLocalization.localizationFingerprint !==
+      fingerprintRepairValue(unsignedLocalization) ||
+    !same(localizationSummary(evidence.pixelLocalization), fixture.expectedLocalization) ||
     !same(evidence.diagnostics.map((item) => item.gate), gateOrder) ||
     !same(evidenceDiagnosticCodes(evidence), fixture.expectedEvidenceDiagnosticCodes)
   ) {
@@ -182,6 +211,8 @@ export async function verifyPhase5ScreenshotRepairCandidate() {
     patchedMismatchedPixels: results[1].evaluation.gates[5].mismatchedPixels,
     patchedEvaluationFingerprint: results[1].evaluation.evaluationFingerprint,
     evidenceFingerprints: results.map((result) => result.evidence.evidenceFingerprint),
+    localizationFingerprints:
+      results.map((result) => result.evidence.pixelLocalization.localizationFingerprint),
   };
 }
 

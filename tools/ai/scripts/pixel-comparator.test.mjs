@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import test from 'node:test';
 import {compareScreenshotPixels} from './pixel-comparator.mjs';
+import {canonicalJson} from './screenshot-contract.mjs';
 import {decodeScreenshotPng, encodeScreenshotPng} from './screenshot-preprocessor.mjs';
 
 const fixtureRoot = new URL('../evaluation/fixtures/visual/screenshot-pixel/', import.meta.url);
@@ -77,6 +78,12 @@ function semanticComparison(preview, evidence) {
   return result;
 }
 
+function resealSemanticComparison(comparison) {
+  delete comparison.comparisonFingerprint;
+  comparison.comparisonFingerprint = sha256(JSON.stringify(comparison));
+  return comparison;
+}
+
 async function testInput(repository, imageBytes) {
   const imagePath = resolve(repository, 'artifacts/render.png');
   await mkdir(resolve(repository, 'artifacts'), {recursive: true});
@@ -137,6 +144,16 @@ test('compares every eligible RGBA pixel with separate exact metrics', async () 
       rootMeanSquareErrorRgba: 0,
       maxChannelDelta: 0,
     });
+    assert.equal(first.localization.status, 'exact');
+    assert.equal(first.localization.pixelComparisonFingerprint,
+      first.comparison.comparisonFingerprint);
+    assert.equal(first.localization.mismatchedPixels, 0);
+    assert.equal(first.localization.mismatchBounds, null);
+    assert.deepEqual(first.localization.attributions, []);
+    assert.equal(first.localization.unassignedMismatchedPixels, 0);
+    const unsigned = structuredClone(first.localization);
+    delete unsigned.localizationFingerprint;
+    assert.equal(first.localization.localizationFingerprint, sha256(canonicalJson(unsigned)));
   } finally {
     await rm(repository, {recursive: true, force: true});
   }
@@ -157,6 +174,62 @@ test('reports a one-pixel RGBA mismatch without an aggregate score', async () =>
     assert.equal(result.comparison.metrics.mismatchedPixels, 1);
     assert.equal(result.comparison.metrics.maxChannelDelta, 1);
     assert.equal(Object.hasOwn(result.comparison.metrics, 'score'), false);
+    assert.equal(result.localization.status, 'mismatch');
+    assert.deepEqual(result.localization.mismatchBounds, {x: 0, y: 0, width: 1, height: 1});
+    assert.equal(result.localization.unassignedMismatchedPixels, 0);
+    assert.deepEqual(result.localization.attributions, [{
+      designNodeId: 'pixel-root',
+      designPath: ['pixel-root'],
+      nodeBounds: {x: 0, y: 0, width: 1079, height: 2339},
+      mismatchedPixels: 1,
+      mismatchBounds: {x: 0, y: 0, width: 1, height: 1},
+    }]);
+  } finally {
+    await rm(repository, {recursive: true, force: true});
+  }
+});
+
+test('attributes overlapping pixels to the deepest containing Design IR node', async () => {
+  const repository = await mkdtemp(resolve(tmpdir(), 'viewcompose-pixel-deepest-'));
+  try {
+    const referenceRequest = await readJson(new URL('pixel-reference.request.json', fixtureRoot));
+    const pixels = decodeScreenshotPng(referenceRequest.screenshot);
+    pixels[0] ^= 1;
+    const input = await testInput(repository, encodeScreenshotPng(pixels, 1079, 2339));
+    const child = structuredClone(input.semanticComparison.nodes[0]);
+    child.designNodeId = 'pixel-child';
+    child.designPath = ['pixel-root', 'pixel-child'];
+    child.identityKey = 'pixel-child';
+    child.identityRenderNodeId = 'pixel-child';
+    child.semanticRenderNodeId = 'pixel-child';
+    child.bounds = {left: 0, top: 0, right: 1, bottom: 1};
+    input.semanticComparison.nodes.push(child);
+    input.semanticComparison.summary.designNodes = 2;
+    input.semanticComparison.summary.mappedNodes = 2;
+    input.semanticComparison.summary.requiredChecks = 2;
+    input.semanticComparison.summary.passedChecks = 2;
+    resealSemanticComparison(input.semanticComparison);
+    const result = await compareScreenshotPixels(input, {repository});
+    assert.equal(result.localization.attributions.length, 1);
+    assert.equal(result.localization.attributions[0].designNodeId, 'pixel-child');
+    assert.equal(result.localization.attributions[0].mismatchedPixels, 1);
+  } finally {
+    await rm(repository, {recursive: true, force: true});
+  }
+});
+
+test('retains mismatched pixels outside every mapped node as unassigned', async () => {
+  const repository = await mkdtemp(resolve(tmpdir(), 'viewcompose-pixel-unassigned-'));
+  try {
+    const referenceRequest = await readJson(new URL('pixel-reference.request.json', fixtureRoot));
+    const pixels = decodeScreenshotPng(referenceRequest.screenshot);
+    pixels[0] ^= 1;
+    const input = await testInput(repository, encodeScreenshotPng(pixels, 1079, 2339));
+    input.semanticComparison.nodes[0].bounds = {left: 1, top: 0, right: 1079, bottom: 2339};
+    resealSemanticComparison(input.semanticComparison);
+    const result = await compareScreenshotPixels(input, {repository});
+    assert.deepEqual(result.localization.attributions, []);
+    assert.equal(result.localization.unassignedMismatchedPixels, 1);
   } finally {
     await rm(repository, {recursive: true, force: true});
   }

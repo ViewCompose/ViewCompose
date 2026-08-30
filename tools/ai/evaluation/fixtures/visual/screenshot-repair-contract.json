@@ -4,6 +4,7 @@
   "requiresContracts": [
     "viewcompose-screenshot-layout-comparison-v1",
     "viewcompose-screenshot-pixel-comparison-v1",
+    "screenshot-pixel-localization-v1",
     "screenshot-repair-v2",
     "screenshot-repair-candidate-evidence-v1"
   ],
@@ -15,6 +16,7 @@
     "typedPatchApplier": true,
     "candidateEvaluator": true,
     "candidateEvidenceRecord": true,
+    "candidatePixelLocalization": true,
     "successEvidence": "compared",
     "incompleteEvidence": "rendered"
   },
@@ -64,6 +66,7 @@
       "strict improvement at the first failing gate before candidate acceptance",
       "source-bound compile and render evidence for each evaluated candidate",
       "content-addressed candidate evidence excludes generated source and image bytes",
+      "candidate evidence retains bounded exact-pixel mismatch localization",
       "pixel evidence cannot override safety, compilation, render, semantic, or structural failure"
     ],
     "notClaimed": [
@@ -129,7 +132,7 @@
         "expectedCandidateFingerprint": "1f8f98ebbcbe0bcf51366b5d96ba033e7bab46a0220a8c165c9cc19e2ab6d135",
         "expectedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
         "expectedEvaluationFingerprint": "aae65dcd1f23d3fec65dc3955c3bbec7e5f80b2c1cf85f4a2d997ca0e2845e06",
-        "expectedEvidenceFingerprint": "9325dcf8955a3edc492226a8b45da4825eaa08d132e15f7f142597d6a58fccec",
+        "expectedEvidenceFingerprint": "ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a",
         "expectedEvidenceDiagnosticCodes": [],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "passed"],
         "expectedGateEvidence": [
@@ -145,6 +148,14 @@
           "comparedPixels": 2523781,
           "mismatchedPixels": 0,
           "maxChannelDelta": 0
+        },
+        "expectedLocalization": {
+          "status": "exact",
+          "mismatchedPixels": 0,
+          "mismatchBounds": null,
+          "attributions": [],
+          "unassignedMismatchedPixels": 0,
+          "localizationFingerprint": "214c69da3a51a1ad521d3e605c681ab8d42e3787526fe95703b7399c80042716"
         }
       },
       {
@@ -152,23 +163,42 @@
         "patch": "screenshot-repair/title-text.patch.json",
         "expectedCandidateFingerprint": "a49828e84181500d5c9bd3955943a2bd24de0b4f9b7870afffbd72529813367c",
         "expectedDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
-        "expectedEvaluationFingerprint": "8f0a65ef59dfe39b42aa25342994ae22cdbb5cede1cffcfaa0d6cadfa95586d9",
-        "expectedEvidenceFingerprint": "26ff69bf21775b201d840668b5facf1d0041b553083bcd113008e769c157aa3b",
+        "expectedEvaluationFingerprint": "eb13a486a59f4eda09679d729fc48e2c6e584e1c054c6870b3e1fed213e61dff",
+        "expectedEvidenceFingerprint": "e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068",
         "expectedEvidenceDiagnosticCodes": ["VC-AI-PIXEL-MISMATCH"],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "failed"],
         "expectedGateEvidence": [
           "ea77e571ae5977da628cdb40f12d83f664c2ed43b9375c42743ecd574098c219",
           "873adf9b2512743396344bf9fbcf13b7dde73851c4cca41d1337e35c4100764a",
-          "ccc203334e1592e6d8cf87a77fcfd1362a68e7fed7afd7b2f16dbbe89012de77",
-          "35731da025fe9ba40a3b178b81b38638068719e64f2ec67060011c367b52a0bc",
-          "35731da025fe9ba40a3b178b81b38638068719e64f2ec67060011c367b52a0bc",
-          "9b23d77f5fba1e86ddfff471db9d151e7ae7ee93cb70d6cc4d59b9638254753c"
+          "d0e567db8bcc9ee28287f8dc7e54818fcae7c6a9892e0c8e8daae089546dc7ce",
+          "d1e9d2a3059747ec8ae962a65ba3ee48cf3f776b5f609e7228eaa316de50b5a8",
+          "d1e9d2a3059747ec8ae962a65ba3ee48cf3f776b5f609e7228eaa316de50b5a8",
+          "c17608c374490416670cb0de2740ad859fffccfd725223b428ca5396245a9e5b"
         ],
         "expectedChecks": [1, 1, 1, 12, 15],
         "expectedPixels": {
           "comparedPixels": 2523781,
-          "mismatchedPixels": 5102,
+          "mismatchedPixels": 3345,
           "maxChannelDelta": 217
+        },
+        "expectedLocalization": {
+          "status": "mismatch",
+          "mismatchedPixels": 3345,
+          "mismatchBounds": {"x": 1, "y": 8, "width": 198, "height": 37},
+          "attributions": [
+            {
+              "designNodeId": "wireframe-title",
+              "mismatchedPixels": 2267,
+              "mismatchBounds": {"x": 1, "y": 8, "width": 111, "height": 37}
+            },
+            {
+              "designNodeId": "wireframe-root",
+              "mismatchedPixels": 1078,
+              "mismatchBounds": {"x": 112, "y": 18, "width": 87, "height": 27}
+            }
+          ],
+          "unassignedMismatchedPixels": 0,
+          "localizationFingerprint": "05ee59a64778fb9ca3727aa81cc6b27965ceb6cd4de86b906e558d493db28433"
         }
       }
     ]

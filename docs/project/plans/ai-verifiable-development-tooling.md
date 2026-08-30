@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement exact pixel mismatch localization and Design IR node attribution before a bounded deterministic proposer consumes candidate evidence.
+next_action: Freeze a bounded deterministic proposer eligibility and proposal contract over accepted candidate evidence before implementing patch selection.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -122,10 +122,13 @@ comparison establishes conformance of generated code to its candidate IR; it can
 that IR should change to match the reference image. Exact pixel findings currently retain only
 aggregate mismatch metrics. Therefore the next prerequisite is a separate localization result
 with bounded global mismatch bounds, deepest-containing Design IR node attribution, stable
-tie-breaking, and explicit unassigned pixels. The v1 contract is frozen, but implementation is not
-yet claimed. It deliberately does not infer repair values from pixel locations. Only after this
-evidence exists can a bounded deterministic proposer consume accepted findings without guessing or
-claiming perceptual or cross-device equivalence.
+tie-breaking, and explicit unassigned pixels. The v1 implementation now emits that separate
+content-addressed result from the same bounded RGBA traversal and retains it in candidate evidence.
+It deliberately does not infer repair values from pixel locations. Real source-bound exact and
+mutated candidates now reproduce their localization, candidate-evidence, and six-gate fingerprints
+from an empty Preview harness; the public exact comparison/localization path also passes through the
+installed package. The next step is to freeze which structured findings may enter a bounded
+deterministic proposer without guessing or claiming perceptual or cross-device equivalence.
 
 ## Maven release changesets
 
@@ -2521,6 +2524,58 @@ Layoutlib setup instead of risking process-cache contamination. Application runt
 unchanged. Any later attempt to recover cross-build warm reuse must first pass the same cold-start,
 screenshot-to-XML pixel and render-tree denominator. The next action returns to the bounded
 deterministic screenshot repair proposer.
+
+### Implementation evidence — exact pixel localization and Design IR attribution
+
+The exact RGBA comparator now emits a separate screenshot pixel-localization v1 result without
+changing the existing pixel-comparison v1 fingerprint or replacing its independent metrics. The
+same bounded pixel traversal records the global mismatch rectangle and assigns each changed pixel
+to the deepest mapped Design IR node whose render bounds contain it. Coordinates use left/top
+inclusive and right/bottom exclusive viewport bounds; equal-depth overlaps use stable node-ID
+ordering, and pixels outside all mapped nodes remain in a separate unassigned denominator. The
+result binds the exact pixel-comparison fingerprint and is content-addressed over canonical JSON.
+It contains no generated source or image bytes and derives no repair value from location.
+
+The real 1079×2339 source-bound denominator again evaluates the unchanged candidate and the typed
+`Welcome` → `Hello` candidate under density 2.625, `en-US`, LTR, and the light theme. The unchanged
+candidate remains an exact 2,523,781-pixel pass with localization fingerprint
+`214c69da3a51a1ad521d3e605c681ab8d42e3787526fe95703b7399c80042716`. The changed candidate
+has 3,345 mismatched pixels (0.1325%) with maximum channel delta 217 and localization fingerprint
+`05ee59a64778fb9ca3727aa81cc6b27965ceb6cd4de86b906e558d493db28433`. Its global mismatch
+rectangle is `(1, 8, 198 × 37)`: 2,267 pixels are attributed to `wireframe-title` within
+`(1, 8, 111 × 37)`, 1,078 spill into the containing `wireframe-root` within
+`(112, 18, 87 × 27)`, and zero are unassigned. The candidate evidence fingerprints are
+`ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a` for the exact input and
+`e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068` for the changed input.
+
+The prior 5,102-pixel result belongs to the earlier Preview worker/build context. After exact-build
+worker isolation and fresh local Gradle state, the current 3,345-pixel result was reproduced once
+with existing outputs and again after deleting only the ignored Preview harness build directory.
+The absolute difference is -1,757 pixels (-34.44%), but it is **not** interpreted as a visual
+improvement because the evidence context changed; the new pair of matching runs establishes the
+current golden. One intervening attempt failed at the render gate with `No space left on device`.
+It was rejected as **inconclusive** host-capacity evidence, sufficient space was restored by
+removing only stale Gradle 8.13 daemon logs, and the same empty-harness run then passed. Host volume
+headroom remains an operational limitation for future clean render lanes.
+
+Node 25.6.0 passes 230/230 AI-tooling tests, including exact localization, one-pixel attribution,
+deepest-node overlap, and explicit unassigned-pixel cases. The dedicated pixel gate passes 1/1
+exact result, 1/1 stable cache replay, and 4/4 fail-closed denominators. The candidate gate passes
+2/2 real candidates in both warm and empty-harness runs. The full installed distribution passes
+2/2 byte-reproducible package builds, offline install/uninstall, SPDX/license inventory, both MCP
+protocol eras, the packaged screenshot localization path, and all subsequent XML compile/render/
+comparison flows. The dependency-free package now contains 68 files and 1,857,971 declared bytes;
+its 333,603-byte archive has SHA-256
+`d610f4f5af7b78469a24c4fde7b18928c9d96ed908ddbfb9afc8164e9d694795`. Relative to the prior
+candidate-evidence package, localization adds one file, 9,930 declared bytes (+0.54%), and 2,040
+archive bytes (+0.62%), with no runtime dependency or provider boundary.
+
+This result is **improved** visual-failure localization, candidate traceability, deterministic
+ownership, and installed-tool parity with **no material Android runtime behavior change**. It does
+not prove that an attributed node caused every changed pixel, that a mismatch rectangle determines
+a valid modifier/value patch, or that exact pixels express perceptual or design quality. The next
+action is to define a bounded proposer eligibility policy over these accepted structured facts,
+then emit only typed Design IR patches that can be verified by the existing six-gate loop.
 
 ### Implementation evidence — bounded XML to Design IR
 

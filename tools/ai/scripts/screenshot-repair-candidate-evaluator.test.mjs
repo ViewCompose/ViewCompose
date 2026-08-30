@@ -35,6 +35,7 @@ const fingerprints = Object.freeze({
   render: '3'.repeat(64),
   layout: '4'.repeat(64),
   pixels: '5'.repeat(64),
+  localization: '6'.repeat(64),
 });
 
 function input(patch) {
@@ -114,6 +115,11 @@ function pixelResult(mismatchedPixels = 0) {
         maxChannelDelta: mismatchedPixels === 0 ? 0 : 7,
       },
     },
+    localization: {
+      localizationFingerprint: fingerprints.localization,
+      mismatchedPixels,
+      attributions: [],
+    },
   };
 }
 
@@ -163,6 +169,8 @@ test('returns one bounded content-addressed evidence record without source or im
   assert.equal(result.evidence.diagnostics.length, 6);
   assert.equal(result.evidence.layoutComparison.comparisonFingerprint, fingerprints.layout);
   assert.equal(result.evidence.pixelComparison.comparisonFingerprint, fingerprints.pixels);
+  assert.equal(result.evidence.pixelLocalization.localizationFingerprint,
+    fingerprints.localization);
   const copy = structuredClone(result.evidence);
   delete copy.evidenceFingerprint;
   assert.equal(result.evidence.evidenceFingerprint, fingerprintRepairValue(copy));

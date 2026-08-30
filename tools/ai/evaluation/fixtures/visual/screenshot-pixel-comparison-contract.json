@@ -12,7 +12,7 @@
     "status": "implemented",
     "publicPixelCompareMode": true,
     "implementation": true,
-    "localizationStatus": "contract-frozen",
+    "localizationStatus": "implemented",
     "successEvidence": "compared",
     "failureEvidence": "rendered"
   },
@@ -155,7 +155,8 @@
         "mismatchedPixels": 0,
         "mismatchBounds": null,
         "attributions": 0,
-        "unassignedMismatchedPixels": 0
+        "unassignedMismatchedPixels": 0,
+        "localizationFingerprint": "214c69da3a51a1ad521d3e605c681ab8d42e3787526fe95703b7399c80042716"
       }
     }
   ],

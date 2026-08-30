@@ -79,6 +79,7 @@ function sealCandidateEvidence({
   diagnosticsByGate,
   layoutComparison,
   pixelComparison,
+  pixelLocalization,
 }) {
   const evidence = {
     schemaVersion: 1,
@@ -100,6 +101,7 @@ function sealCandidateEvidence({
     })),
     layoutComparison: layoutComparison === undefined ? null : structuredClone(layoutComparison),
     pixelComparison: pixelComparison === undefined ? null : structuredClone(pixelComparison),
+    pixelLocalization: pixelLocalization === undefined ? null : structuredClone(pixelLocalization),
   };
   if (Buffer.byteLength(JSON.stringify(evidence), 'utf8') > MAX_EVIDENCE_BYTES) {
     throw new ScreenshotRepairCandidateEvaluationError(
@@ -388,6 +390,7 @@ async function evaluateCandidateCore({
   const diagnosticsByGate = new Map(GATE_ORDER.map((gate) => [gate, []]));
   let layoutComparison;
   let pixelComparison;
+  let pixelLocalization;
   const finish = () => {
     const evaluation = sealRepairEvaluation({
       candidateFingerprint: identity,
@@ -406,6 +409,7 @@ async function evaluateCandidateCore({
         diagnosticsByGate,
         layoutComparison,
         pixelComparison,
+        pixelLocalization,
       }),
     };
   };
@@ -496,6 +500,7 @@ async function evaluateCandidateCore({
   }, {repository, signal});
   throwIfCancelled(signal);
   pixelComparison = pixelCompared?.comparison;
+  pixelLocalization = pixelCompared?.localization;
   diagnosticsByGate.set('exact-pixels', diagnosticCodes(pixelCompared));
   gates.push(exactPixelGate(pixelCompared));
   return finish();

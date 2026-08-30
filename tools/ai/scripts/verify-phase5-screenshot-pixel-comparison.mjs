@@ -53,7 +53,7 @@ function assertContract(contract, schema, localizationSchema) {
     contract.activation?.status !== 'implemented' ||
     contract.activation?.publicPixelCompareMode !== true ||
     contract.activation?.implementation !== true ||
-    contract.activation?.localizationStatus !== 'contract-frozen' ||
+    contract.activation?.localizationStatus !== 'implemented' ||
     contract.activation?.successEvidence !== 'compared' ||
     contract.activation?.failureEvidence !== 'rendered'
   ) {
@@ -244,6 +244,8 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
       mismatchBounds: null,
       attributions: 0,
       unassignedMismatchedPixels: 0,
+      localizationFingerprint:
+        '214c69da3a51a1ad521d3e605c681ab8d42e3787526fe95703b7399c80042716',
     })
   ) {
     throw new Error('Screenshot pixel reference lineage or exact denominator changed');
@@ -288,7 +290,7 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
         !same(mutation.expectedLocalization, {
           status: 'mismatch',
           mismatchBounds: {x: 0, y: 0, width: 1, height: 1},
-          designNodeId: 'pixel-root',
+          designNodeId: 'wireframe-title',
           attributedMismatchedPixels: 1,
           unassignedMismatchedPixels: 0,
         })
@@ -332,6 +334,9 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
       limits: {maxSourceBytes: 2_000_000, timeoutMs: 120_000, maxOutputBytes: 2_000_000},
     });
     const comparison = first.data?.pixelComparison;
+    const localization = first.data?.pixelLocalization;
+    const unsignedLocalization = structuredClone(localization);
+    if (unsignedLocalization !== undefined) delete unsignedLocalization.localizationFingerprint;
     if (
       first.status !== 'success' ||
       first.evidence?.level !== 'compared' ||
@@ -346,6 +351,18 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
       comparison?.reference?.outputFingerprint !== contract.lineage.referenceOutputFingerprint ||
       comparison?.render?.outputFingerprint !== contract.lineage.renderOutputFingerprint ||
       !same(comparison?.metrics, fixture.expectedMetrics) ||
+      validateSchemaValue(localization, localizationSchema).length > 0 ||
+      localization?.pixelComparisonFingerprint !== comparison?.comparisonFingerprint ||
+      localization?.localizationFingerprint !==
+        sha256(canonicalJson(unsignedLocalization)) ||
+      localization?.localizationFingerprint !==
+        fixture.expectedLocalization.localizationFingerprint ||
+      localization?.status !== fixture.expectedLocalization.status ||
+      localization?.mismatchedPixels !== fixture.expectedLocalization.mismatchedPixels ||
+      localization?.mismatchBounds !== fixture.expectedLocalization.mismatchBounds ||
+      localization?.attributions?.length !== fixture.expectedLocalization.attributions ||
+      localization?.unassignedMismatchedPixels !==
+        fixture.expectedLocalization.unassignedMismatchedPixels ||
       comparison?.findings?.length !== 0 ||
       first.diagnostics?.length !== 0
     ) {
@@ -361,7 +378,8 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
       second.status !== 'success' ||
       second.evidence?.cache !== 'hit' ||
       second.evidence?.outputFingerprint !== fixture.expectedComparisonFingerprint ||
-      !same(second.data?.pixelComparison, comparison)
+      !same(second.data?.pixelComparison, comparison) ||
+      !same(second.data?.pixelLocalization, localization)
     ) {
       throw new Error('Screenshot pixel comparison cache replay changed');
     }
@@ -444,7 +462,20 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
         mismatch.comparison?.metrics?.mismatchedPixels !==
           mismatchMutation.expectedMetrics.mismatchedPixels ||
         mismatch.comparison?.metrics?.maxChannelDelta !==
-          mismatchMutation.expectedMetrics.maxChannelDelta
+          mismatchMutation.expectedMetrics.maxChannelDelta ||
+        validateSchemaValue(mismatch.localization, localizationSchema).length > 0 ||
+        mismatch.localization?.status !== mismatchMutation.expectedLocalization.status ||
+        !same(
+          mismatch.localization?.mismatchBounds,
+          mismatchMutation.expectedLocalization.mismatchBounds,
+        ) ||
+        mismatch.localization?.attributions?.length !== 1 ||
+        mismatch.localization?.attributions?.[0]?.designNodeId !==
+          mismatchMutation.expectedLocalization.designNodeId ||
+        mismatch.localization?.attributions?.[0]?.mismatchedPixels !==
+          mismatchMutation.expectedLocalization.attributedMismatchedPixels ||
+        mismatch.localization?.unassignedMismatchedPixels !==
+          mismatchMutation.expectedLocalization.unassignedMismatchedPixels
       ) {
         throw new Error('Screenshot one-channel pixel mismatch did not fail exactly');
       }
@@ -459,6 +490,7 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
     compared,
     cacheHits,
     comparisonFingerprint: fixture.expectedComparisonFingerprint,
+    localizationFingerprint: fixture.expectedLocalization.localizationFingerprint,
     referenceOutputFingerprint: referenceResult.outputFingerprint,
   };
 }

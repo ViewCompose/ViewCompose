@@ -323,6 +323,11 @@ crop, exact dimensions and device configuration, and a passing semantic/structur
 the same render. It reopens the contained rendered PNG, verifies its byte identity, strictly decodes
 both images as bounded non-interlaced 8-bit RGBA, and reports exact pixel ratio, mismatched pixels,
 RGBA mean absolute error, RGBA root mean square error, and maximum channel delta separately. The
+same zero-tolerance pass emits a separate content-addressed localization result with the global
+mismatch bounds, deepest-containing Design IR node ownership, stable depth/ID tie-breaking, and
+an explicit count for pixels outside every mapped node. Bounds use left/top inclusive and
+right/bottom exclusive viewport coordinates. Localization does not infer a source patch or repair
+value from a pixel position. The
 checked-in 16×24 inference wireframe is intentionally ineligible because it does not share the
 1079×2339 render viewport or density and contains a redaction. No aggregate or perceptual
 similarity score is produced.
@@ -349,8 +354,9 @@ patched IR to a content-addressed generation request, runs the hermetic compiler
 Preview as separate gates, categorizes semantic versus structural checks from the accepted render,
 and enters exact pixels only after both categories pass. Each accepted candidate is also retained
 inside one evaluator session as a bounded, immutable, content-addressed evidence record containing
-the exact Design IR, candidate evaluation, gate diagnostic codes, and structured layout/pixel
-comparisons. The record excludes generated Kotlin and PNG bytes, and callers receive clones rather
+the exact Design IR, candidate evaluation, gate diagnostic codes, structured layout/pixel
+comparisons, and bounded pixel localization. The record excludes generated Kotlin and PNG bytes,
+and callers receive clones rather
 than mutable session state. Candidate proposal remains an injected internal boundary; no MCP/CLI
 caller can activate repair yet.
 

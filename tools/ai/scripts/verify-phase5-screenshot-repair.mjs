@@ -128,6 +128,7 @@ function assertContract(contract, schema) {
     !same(contract.requiresContracts, [
       'viewcompose-screenshot-layout-comparison-v1',
       'viewcompose-screenshot-pixel-comparison-v1',
+      'screenshot-pixel-localization-v1',
       'screenshot-repair-v2',
       'screenshot-repair-candidate-evidence-v1',
     ]) ||
@@ -137,7 +138,8 @@ function assertContract(contract, schema) {
     contract.activation?.implementation !== true ||
     contract.activation?.typedPatchApplier !== true ||
     contract.activation?.candidateEvaluator !== true ||
-    contract.activation?.candidateEvidenceRecord !== true
+    contract.activation?.candidateEvidenceRecord !== true ||
+    contract.activation?.candidatePixelLocalization !== true
   ) {
     throw new Error('Screenshot repair activation boundary changed');
   }
@@ -205,6 +207,9 @@ function assertContract(contract, schema) {
     ) ||
     !contract.claims?.checked?.includes(
       'content-addressed candidate evidence excludes generated source and image bytes',
+    ) ||
+    !contract.claims?.checked?.includes(
+      'candidate evidence retains bounded exact-pixel mismatch localization',
     ) ||
     !contract.claims?.checked?.includes(
       'pixel evidence cannot override safety, compilation, render, semantic, or structural failure',

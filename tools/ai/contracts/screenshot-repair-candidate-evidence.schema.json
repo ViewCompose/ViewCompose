@@ -13,6 +13,7 @@
     "diagnostics",
     "layoutComparison",
     "pixelComparison",
+    "pixelLocalization",
     "evidenceFingerprint"
   ],
   "properties": {
@@ -78,6 +79,12 @@
       ]
     },
     "pixelComparison": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object"}
+      ]
+    },
+    "pixelLocalization": {
       "oneOf": [
         {"type": "null"},
         {"type": "object"}

@@ -7,6 +7,10 @@ import {decodeScreenshotPng, prepareScreenshot} from './screenshot-preprocessor.
 import {diagnostic, repositoryRoot} from './tool-core.mjs';
 
 const pixelSchemaPath = new URL('../contracts/screenshot-pixel-comparison.schema.json', import.meta.url);
+const localizationSchemaPath = new URL(
+  '../contracts/screenshot-pixel-localization.schema.json',
+  import.meta.url,
+);
 const layoutSchemaPath = new URL('../contracts/layout-comparison.schema.json', import.meta.url);
 const MAX_COMPRESSED_BYTES = 1_310_720;
 const MAX_PIXELS = 4_194_304;
@@ -22,12 +26,22 @@ const POLICY = Object.freeze({
   channelTolerance: 0,
   aggregateScore: false,
 });
+const LOCALIZATION_POLICY = Object.freeze({
+  version: 1,
+  ownership: 'deepest-containing-design-node',
+  bounds: 'left-top-inclusive-right-bottom-exclusive',
+  tieBreak: 'deepest-path-then-design-node-id',
+  unassigned: 'retained-separately',
+  aggregateScore: false,
+});
+const LOCALIZATION_TILE_SIZE = 64;
 
 let schemasPromise;
 
 function loadSchemas() {
   schemasPromise ??= Promise.all([
     readFile(pixelSchemaPath, 'utf8').then(JSON.parse),
+    readFile(localizationSchemaPath, 'utf8').then(JSON.parse),
     readFile(layoutSchemaPath, 'utf8').then(JSON.parse),
   ]);
   return schemasPromise;
@@ -161,13 +175,107 @@ function rounded(value) {
   return Number(value.toFixed(12));
 }
 
-function comparePixels(referencePixels, renderPixels, signal) {
+function extendBounds(bounds, x, y) {
+  if (bounds === null) return {minX: x, minY: y, maxX: x, maxY: y};
+  if (x < bounds.minX) bounds.minX = x;
+  if (y < bounds.minY) bounds.minY = y;
+  if (x > bounds.maxX) bounds.maxX = x;
+  if (y > bounds.maxY) bounds.maxY = y;
+  return bounds;
+}
+
+function rectangle(bounds) {
+  if (bounds === null) return null;
+  return {
+    x: bounds.minX,
+    y: bounds.minY,
+    width: bounds.maxX - bounds.minX + 1,
+    height: bounds.maxY - bounds.minY + 1,
+  };
+}
+
+function compareNodePriority(left, right) {
+  const depth = right.designPath.length - left.designPath.length;
+  if (depth !== 0) return depth;
+  if (left.designNodeId < right.designNodeId) return -1;
+  if (left.designNodeId > right.designNodeId) return 1;
+  return 0;
+}
+
+function attributionIndex(nodes, widthPx, heightPx) {
+  const candidates = nodes
+    .filter((node) => isObject(node?.bounds))
+    .map((node) => ({
+      designNodeId: node.designNodeId,
+      designPath: [...node.designPath],
+      nodeBounds: {
+        x: Math.max(0, Math.min(widthPx, node.bounds.left)),
+        y: Math.max(0, Math.min(heightPx, node.bounds.top)),
+        width: Math.max(
+          0,
+          Math.min(widthPx, node.bounds.right) -
+            Math.max(0, Math.min(widthPx, node.bounds.left)),
+        ),
+        height: Math.max(
+          0,
+          Math.min(heightPx, node.bounds.bottom) -
+            Math.max(0, Math.min(heightPx, node.bounds.top)),
+        ),
+      },
+      mismatchedPixels: 0,
+      mismatchBounds: null,
+    }))
+    .filter((node) => node.nodeBounds.width > 0 && node.nodeBounds.height > 0)
+    .sort(compareNodePriority);
+  const columns = Math.ceil(widthPx / LOCALIZATION_TILE_SIZE);
+  const rows = Math.ceil(heightPx / LOCALIZATION_TILE_SIZE);
+  const tiles = Array.from({length: columns * rows}, () => []);
+  for (const candidate of candidates) {
+    const left = Math.floor(candidate.nodeBounds.x / LOCALIZATION_TILE_SIZE);
+    const top = Math.floor(candidate.nodeBounds.y / LOCALIZATION_TILE_SIZE);
+    const right = Math.floor(
+      (candidate.nodeBounds.x + candidate.nodeBounds.width - 1) / LOCALIZATION_TILE_SIZE,
+    );
+    const bottom = Math.floor(
+      (candidate.nodeBounds.y + candidate.nodeBounds.height - 1) / LOCALIZATION_TILE_SIZE,
+    );
+    for (let tileY = top; tileY <= bottom; tileY += 1) {
+      for (let tileX = left; tileX <= right; tileX += 1) {
+        tiles[tileY * columns + tileX].push(candidate);
+      }
+    }
+  }
+  return {candidates, columns, tiles};
+}
+
+function containingNode(index, x, y) {
+  const tileX = Math.floor(x / LOCALIZATION_TILE_SIZE);
+  const tileY = Math.floor(y / LOCALIZATION_TILE_SIZE);
+  for (const candidate of index.tiles[tileY * index.columns + tileX]) {
+    const bounds = candidate.nodeBounds;
+    if (
+      x >= bounds.x &&
+      y >= bounds.y &&
+      x < bounds.x + bounds.width &&
+      y < bounds.y + bounds.height
+    ) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
+function comparePixels(referencePixels, renderPixels, widthPx, heightPx, nodes, signal) {
   if (referencePixels.length !== renderPixels.length || referencePixels.length % 4 !== 0) {
     throw new Error('DIMENSION');
   }
   const totalPixels = referencePixels.length / 4;
   if (totalPixels < 1 || totalPixels > MAX_PIXELS) throw new Error('LIMIT');
+  if (widthPx * heightPx !== totalPixels) throw new Error('DIMENSION');
+  const index = attributionIndex(nodes, widthPx, heightPx);
   let mismatchedPixels = 0;
+  let unassignedMismatchedPixels = 0;
+  let mismatchBounds = null;
   let absoluteError = 0;
   let squaredError = 0;
   let maxChannelDelta = 0;
@@ -181,17 +289,46 @@ function comparePixels(referencePixels, renderPixels, signal) {
       squaredError += delta * delta;
       if (delta > maxChannelDelta) maxChannelDelta = delta;
     }
-    if (mismatch) mismatchedPixels += 1;
+    if (mismatch) {
+      const pixelIndex = offset / 4;
+      const x = pixelIndex % widthPx;
+      const y = Math.floor(pixelIndex / widthPx);
+      mismatchedPixels += 1;
+      mismatchBounds = extendBounds(mismatchBounds, x, y);
+      const owner = containingNode(index, x, y);
+      if (owner === undefined) {
+        unassignedMismatchedPixels += 1;
+      } else {
+        owner.mismatchedPixels += 1;
+        owner.mismatchBounds = extendBounds(owner.mismatchBounds, x, y);
+      }
+    }
   }
   const channels = totalPixels * 4;
   return {
-    totalPixels,
-    comparedPixels: totalPixels,
-    mismatchedPixels,
-    exactPixelRatio: rounded((totalPixels - mismatchedPixels) / totalPixels),
-    meanAbsoluteErrorRgba: rounded(absoluteError / channels),
-    rootMeanSquareErrorRgba: rounded(Math.sqrt(squaredError / channels)),
-    maxChannelDelta,
+    metrics: {
+      totalPixels,
+      comparedPixels: totalPixels,
+      mismatchedPixels,
+      exactPixelRatio: rounded((totalPixels - mismatchedPixels) / totalPixels),
+      meanAbsoluteErrorRgba: rounded(absoluteError / channels),
+      rootMeanSquareErrorRgba: rounded(Math.sqrt(squaredError / channels)),
+      maxChannelDelta,
+    },
+    localization: {
+      mismatchedPixels,
+      mismatchBounds: rectangle(mismatchBounds),
+      attributions: index.candidates
+        .filter((candidate) => candidate.mismatchedPixels > 0)
+        .map((candidate) => ({
+          designNodeId: candidate.designNodeId,
+          designPath: candidate.designPath,
+          nodeBounds: candidate.nodeBounds,
+          mismatchedPixels: candidate.mismatchedPixels,
+          mismatchBounds: rectangle(candidate.mismatchBounds),
+        })),
+      unassignedMismatchedPixels,
+    },
   };
 }
 
@@ -206,7 +343,7 @@ export async function compareScreenshotPixels({
   signal,
   prepare = prepareScreenshot,
 } = {}) {
-  const [pixelSchema, layoutSchema] = await loadSchemas();
+  const [pixelSchema, localizationSchema, layoutSchema] = await loadSchemas();
   if (signal?.aborted) {
     return oneFailure(
       'VC-AI-PIXEL-CANCELLED',
@@ -339,9 +476,16 @@ export async function compareScreenshotPixels({
     );
   }
 
-  let metrics;
+  let comparedPixels;
   try {
-    metrics = comparePixels(referencePixels, renderPixels, signal);
+    comparedPixels = comparePixels(
+      referencePixels,
+      renderPixels,
+      preview.image.widthPx,
+      preview.image.heightPx,
+      semanticComparison.nodes,
+      signal,
+    );
   } catch (error) {
     if (error.message === 'CANCELLED') {
       return oneFailure(
@@ -358,6 +502,7 @@ export async function compareScreenshotPixels({
       error.message === 'LIMIT' ? 'limited' : 'failed',
     );
   }
+  const metrics = comparedPixels.metrics;
 
   const findings = metrics.mismatchedPixels === 0 ? [] : [{
     code: 'VC-AI-PIXEL-MISMATCH',
@@ -391,11 +536,22 @@ export async function compareScreenshotPixels({
     findings,
   };
   comparison.comparisonFingerprint = compactFingerprint(comparison);
-  const violations = validateSchemaValue(comparison, pixelSchema);
-  if (violations.length > 0) {
+  const localization = {
+    schemaVersion: 1,
+    status: metrics.mismatchedPixels === 0 ? 'exact' : 'mismatch',
+    pixelComparisonFingerprint: comparison.comparisonFingerprint,
+    viewport: {widthPx: preview.image.widthPx, heightPx: preview.image.heightPx},
+    policy: {...LOCALIZATION_POLICY},
+    ...comparedPixels.localization,
+  };
+  localization.localizationFingerprint = sha256(canonicalJson(localization));
+  const comparisonViolations = validateSchemaValue(comparison, pixelSchema);
+  const localizationViolations = validateSchemaValue(localization, localizationSchema);
+  if (comparisonViolations.length > 0 || localizationViolations.length > 0) {
+    const violations = [...comparisonViolations, ...localizationViolations];
     return oneFailure(
       'VC-AI-PIXEL-INPUT-INVALID',
-      `Screenshot pixel comparison result violates schema v1: ${violations.slice(0, 3).join('; ')}`,
+      `Screenshot pixel evidence violates schema v1: ${violations.slice(0, 3).join('; ')}`,
       'Repair the deterministic pixel comparator before accepting its output.',
     );
   }
@@ -404,5 +560,6 @@ export async function compareScreenshotPixels({
     evidenceLevel: comparison.status === 'passed' ? 'compared' : 'rendered',
     diagnostics: findings.map((finding) => diagnostic(finding)),
     comparison,
+    localization,
   };
 }

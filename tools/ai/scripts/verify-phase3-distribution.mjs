@@ -516,7 +516,15 @@ async function verifyCliFlow(
     pixelComparedScreenshot.data?.pixelComparison?.comparisonFingerprint !==
       expectedPixelComparison.expectedComparisonFingerprint ||
     JSON.stringify(pixelComparedScreenshot.data?.pixelComparison?.metrics) !==
-      JSON.stringify(expectedPixelComparison.expectedMetrics)
+      JSON.stringify(expectedPixelComparison.expectedMetrics) ||
+    pixelComparedScreenshot.data?.pixelLocalization?.pixelComparisonFingerprint !==
+      expectedPixelComparison.expectedComparisonFingerprint ||
+    pixelComparedScreenshot.data?.pixelLocalization?.localizationFingerprint !==
+      expectedPixelComparison.expectedLocalization.localizationFingerprint ||
+    pixelComparedScreenshot.data?.pixelLocalization?.status !==
+      expectedPixelComparison.expectedLocalization.status ||
+    pixelComparedScreenshot.data?.pixelLocalization?.attributions?.length !==
+      expectedPixelComparison.expectedLocalization.attributions
   ) {
     throw new Error(
       'Installed CLI did not compare the eligible screenshot pixels exactly: ' +
@@ -529,6 +537,7 @@ async function verifyCliFlow(
         pixelFingerprint:
           pixelComparedScreenshot.data?.pixelComparison?.comparisonFingerprint,
         metrics: pixelComparedScreenshot.data?.pixelComparison?.metrics,
+        localization: pixelComparedScreenshot.data?.pixelLocalization,
         image: pixelComparedScreenshot.data?.preview?.image,
       }),
     );
