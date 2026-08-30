@@ -128,7 +128,7 @@ export async function loadReleasedFrameworkProfiles({aiRoot = defaultAiRoot} = {
   return Object.freeze({index, profiles});
 }
 
-function exactSubsetMatch(projectArtifacts, profile) {
+export function frameworkProfileMatchesProject(projectArtifacts, profile) {
   const versions = new Map(profile.artifacts.map((artifact) => [artifact.coordinate, artifact.version]));
   return projectArtifacts.every((artifact) => versions.get(artifact.coordinate) === artifact.version);
 }
@@ -146,7 +146,8 @@ export async function selectReleasedFrameworkProfile(projectProfile, options = {
   const inventory = await loadReleasedFrameworkProfiles(options);
   const candidates = projectProfile.status === 'empty'
     ? inventory.profiles
-    : inventory.profiles.filter(({profile}) => exactSubsetMatch(projectProfile.artifacts, profile));
+    : inventory.profiles.filter(({profile}) =>
+      frameworkProfileMatchesProject(projectProfile.artifacts, profile));
   const selected = candidates.find(({profile}) => profile.profileId === inventory.index.defaultProfileId) ??
     candidates[0];
   if (!selected) {

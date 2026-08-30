@@ -48,7 +48,10 @@ export function toolCacheRoot() {
     : process.env.XDG_CACHE_HOME && isAbsolute(process.env.XDG_CACHE_HOME)
       ? resolve(process.env.XDG_CACHE_HOME)
       : resolve(homedir(), '.cache');
-  return resolve(base, 'viewcompose/ai-tooling/0.2.0');
+  // Cache entries already include the Knowledge, source, lane, and Harness fingerprints. Keep the
+  // root stable across tooling releases so a compatible runtime upgrade does not redownload or
+  // rebuild unchanged deep-evidence inputs.
+  return resolve(base, 'viewcompose/ai-tooling/execution-v1');
 }
 
 export function repositoryRoot() {

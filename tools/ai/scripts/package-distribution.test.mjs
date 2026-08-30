@@ -33,8 +33,13 @@ test('creates an exact reproducible dependency-free npm distribution', async () 
     assert.ok(wrapperEntry?.bytes > 0);
     assert.ok(executionContract?.bytes > 0);
     assert.ok(releasedManifest?.bytes > 0);
-    assert.equal(first.manifest.frameworkProfile.consumerSelectable, true);
-    assert.equal(first.manifest.frameworkProfile.knowledge.versionLane, 'released');
+    assert.equal(first.manifest.schemaVersion, 2);
+    assert.equal(first.manifest.frameworkProfiles[0].consumerSelectable, true);
+    assert.equal(first.manifest.frameworkProfiles[0].knowledge.versionLane, 'released');
+    assert.equal(
+      first.manifest.frameworkProfileIndex.defaultProfileId,
+      first.manifest.frameworkProfiles[0].profileId,
+    );
     assert.equal(first.manifest.files.some((entry) => entry.path.includes('node_modules')), false);
   } finally {
     await rm(root, {recursive: true, force: true});

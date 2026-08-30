@@ -127,7 +127,7 @@ async function exists(path) {
   });
 }
 
-function runStreaming(executable, input, {env = {}, timeoutMs = 180_000} = {}) {
+function runStreaming(executable, input, {env = {}, timeoutMs = 360_000} = {}) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(executable, [], {
       cwd: repositoryRoot,
@@ -181,7 +181,7 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
         ['compile', 'render', 'compare', 'compare-pixels'].includes(arguments_.mode) ||
         ['compile', 'render', 'compare', 'compare-pixels']
           .includes(arguments_.generationRequest?.mode)
-        ? 120_000
+        ? 300_000
         : 10_000,
       maxInputBytes: 4 * 1024 * 1024,
       maxOutputBytes: 1024 * 1024,
@@ -195,7 +195,7 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
   return JSON.parse(result.stdout);
 }
 
-function runMcp(executable, messages, {timeoutMs = 180_000, env = {}} = {}) {
+function runMcp(executable, messages, {timeoutMs = 360_000, env = {}} = {}) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(executable, [], {
       cwd: repositoryRoot,
@@ -600,7 +600,16 @@ async function verifyCliFlow(
     compiledScreenshot.data?.generationReport?.reportFingerprint !==
       '91da4ff1eaf1f4d2fb0f8c73d8816d2c91030510ff00730ee96abe80f0efa319'
   ) {
-    throw new Error('Installed CLI did not compile the frozen screenshot Kotlin golden.');
+    throw new Error(
+      'Installed CLI did not compile the frozen screenshot Kotlin golden: ' +
+      JSON.stringify({
+        status: compiledScreenshot.status,
+        evidence: compiledScreenshot.evidence,
+        diagnosticCodes: compiledScreenshot.diagnostics?.map((item) => item.code),
+        kotlinFingerprint: compiledScreenshot.data?.kotlinFingerprint,
+        reportFingerprint: compiledScreenshot.data?.generationReport?.reportFingerprint,
+      }),
+    );
   }
   const [renderGenerationRequest, screenshotPreviewRequest] = await Promise.all([
     readJson(screenshotRenderGenerationRequestPath),

@@ -35,6 +35,7 @@ const sourcePaths = Object.freeze([
   'contracts/examples/framework-compatibility-profile.json',
   'contracts/framework-profile-index.schema.json',
   'contracts/examples/framework-profile-index.json',
+  'contracts/versions.json',
   'contracts/ai-tooling-release.schema.json',
   'contracts/examples/ai-tooling-release.json',
   'contracts/design-ir.schema.json',
@@ -117,6 +118,7 @@ const sourcePaths = Object.freeze([
   'scripts/static-validator.mjs',
   'scripts/tool-catalog.mjs',
   'scripts/tool-core.mjs',
+  'scripts/tooling-upgrade.mjs',
   'scripts/xml-migration.mjs',
   'scripts/xml-layout-dependencies.mjs',
   'scripts/xml-project-context.mjs',
@@ -216,6 +218,19 @@ function distributionMetadata(contract, knowledge, releasedKnowledge, profile, p
       transport: protocol.transport,
     },
   };
+}
+
+async function releasedProfileMetadata() {
+  const index = await readJson(resolve(aiRoot, 'generated/released/index.json'));
+  const profiles = await Promise.all(index.profiles.map((entry) =>
+    readJson(resolve(aiRoot, 'generated/released', entry.profilePath))));
+  if (
+    !profiles.some((profile) => profile.profileId === index.defaultProfileId) ||
+    profiles.some((profile, position) => profile.profileId !== index.profiles[position].profileId)
+  ) {
+    throw new Error('Released framework profile sidecar inventory is inconsistent.');
+  }
+  return {index, profiles};
 }
 
 function spdxDocument(contract, knowledge) {
@@ -420,10 +435,17 @@ export async function createDistribution({
     const archivePath = resolve(absoluteOutput, archiveName);
     const manifestPath = resolve(absoluteOutput, 'manifest.json');
     const checksumsPath = resolve(absoluteOutput, 'SHA256SUMS');
+    const releasedProfiles = await releasedProfileMetadata();
     const manifest = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       package: contract.package,
-      frameworkProfile: await readJson(resolve(aiRoot, releasedBundleRoot, 'profile.json')),
+      compatibility: {
+        agentClientIntegration: 4,
+        frameworkCompatibilityProfile: 1,
+        frameworkProfileIndex: 1,
+      },
+      frameworkProfileIndex: releasedProfiles.index,
+      frameworkProfiles: releasedProfiles.profiles,
       archive: {
         path: archiveName,
         bytes: archive.length,

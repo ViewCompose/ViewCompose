@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "format": "npm-tgz",
     "nodeEngine": ">=24.19.0",
     "license": "MIT",
@@ -48,6 +48,7 @@
       "contracts/examples/framework-compatibility-profile.json",
       "contracts/framework-profile-index.schema.json",
       "contracts/examples/framework-profile-index.json",
+      "contracts/versions.json",
       "contracts/ai-tooling-release.schema.json",
       "contracts/examples/ai-tooling-release.json",
       "contracts/mcp-protocol.json",
@@ -134,6 +135,7 @@
       "scripts/static-validator.mjs",
       "scripts/tool-catalog.mjs",
       "scripts/tool-core.mjs",
+      "scripts/tooling-upgrade.mjs",
       "scripts/xml-migration.mjs",
       "scripts/xml-layout-dependencies.mjs",
       "scripts/xml-project-context.mjs",
@@ -199,6 +201,16 @@
     "fixedTargetAvailability": "separately-allowlisted-target-required",
     "projectRootVariable": "VIEWCOMPOSE_PROJECT_ROOT",
     "optionalSourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
+    "frameworkProfileVariable": "VIEWCOMPOSE_FRAMEWORK_PROFILE",
+    "upgrade": {
+      "command": "viewcompose-agent upgrade",
+      "maxPrimaryCommands": 1,
+      "releaseSource": "immutable-github-releases",
+      "projectSelection": "exact-declared-artifact-version-subset",
+      "packageInstallation": "content-addressed-side-by-side",
+      "projectMigration": "recoverable-config-and-skills-transaction",
+      "globalLatestAllowed": false
+    },
     "hostPrerequisites": {
       "node": ">=24.19.0",
       "javaFeatures": [17, 21],

@@ -30,12 +30,12 @@ export const COMPILER_LANE =
 export const SUPPORTED_COMPILER_ARTIFACTS = Object.freeze(['viewcompose-ui-foundation']);
 export const DEFAULT_COMPILER_LIMITS = Object.freeze({
   maxSourceBytes: 1024 * 1024,
-  timeoutMs: 120_000,
+  timeoutMs: 300_000,
   maxOutputBytes: 1024 * 1024,
 });
 const HARD_COMPILER_LIMITS = Object.freeze({
   maxSourceBytes: 4 * 1024 * 1024,
-  timeoutMs: 180_000,
+  timeoutMs: 300_000,
   maxOutputBytes: 2 * 1024 * 1024,
 });
 const MAX_CLASS_FILES = 10_000;

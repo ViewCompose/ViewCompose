@@ -26,6 +26,14 @@ async function readJson(path) {
 
 function verifyProfileContract(contract) {
   const ids = Object.keys(AGENT_CLIENT_PROFILES);
+  if (
+    contract.package.frameworkProfileVariable !== 'VIEWCOMPOSE_FRAMEWORK_PROFILE' ||
+    contract.evidence.transactionalUpgrade !== true ||
+    contract.evidence.versionBoundProfiles !== true ||
+    contract.evidence.maxUpgradeCommands !== 1
+  ) {
+    throw new Error('Version-bound Agent upgrade contract drifted.');
+  }
   if (JSON.stringify(contract.clients.map((client) => client.id)) !== JSON.stringify(ids)) {
     throw new Error('Agent client order or membership drifted from the executable profiles.');
   }
@@ -40,6 +48,7 @@ function verifyProfileContract(contract) {
       client.config.sourceBoundArguments[2] !== client.id ||
       client.lifecycle.initArguments[2] !== client.id ||
       client.lifecycle.doctorArguments[2] !== client.id ||
+      client.lifecycle.upgradeArguments[2] !== client.id ||
       client.lifecycle.uninstallArguments[2] !== client.id
     ) {
       throw new Error(`Agent client profile drifted for ${client.id}.`);

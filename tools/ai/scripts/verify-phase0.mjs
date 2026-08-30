@@ -1033,7 +1033,7 @@ async function verifyGeneratedPreview(schemas) {
     maxProcessOutputBytes: 2 * 1024 * 1024,
     maxImageBytes: 16 * 1024 * 1024,
     maxRenderTreeBytes: 8 * 1024 * 1024,
-    timeoutMs: 120_000,
+    timeoutMs: 300_000,
     maxConcurrentRequests: 1,
   })) {
     const value = contract.limits?.[name];
