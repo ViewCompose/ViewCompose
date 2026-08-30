@@ -614,6 +614,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             group = "verification"
             description =
                 "Builds and verifies the installable offline ViewCompose AI distribution."
+            dependsOn(":tools:ai-preview-harness:prepareAiPreviewLane")
             workingDir(project.rootDir.resolve("tools/ai"))
             commandLine("npm", "run", "verify:phase3-distribution")
             inputs.files(

@@ -140,6 +140,7 @@ class LifecycleQualityTasksTest {
         assertEquals(
             setOf(
                 "publishViewComposeToLocalRepository",
+                ":samples:counter:prepareAiPreviewLane",
                 ":samples:counter:verifyCounterPreview",
                 ":viewcompose-preview-core:test",
                 ":viewcompose-preview-runner:testDebugUnitTest",

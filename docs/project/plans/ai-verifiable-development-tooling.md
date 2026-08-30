@@ -107,6 +107,24 @@ installed-package verification.
 
 Last verified: 2026-08-30.
 
+The 2026-08-30 clean hosted-runner audit exposed that the documented Preview preparation boundary
+did not resolve the Android variant-specific runner classpath used by the later offline Gradle
+process. The fixed lane now prepares compile/runtime class jars, resources, assets, packaged
+symbols, the variant runner, worker host, and both Layoutlib archives for the counter and generated
+Preview targets. `qaPreview` owns counter preparation after local Maven publication, while the
+installed-distribution gate owns generated-harness preparation; the actual CLI/MCP processes still
+run with `--offline` and cannot fill a missing cache. On JDK 21, both preparation tasks resolved
+successfully. A clean counter output then passed `qaPreview` in 39 seconds and the independent
+offline render produced a cache miss in 29,920 ms with a 1079×2339, 25,755-byte PNG, a 121,271-byte
+render tree, zero diagnostics, and unchanged aggregate fingerprint
+`bb7eba4f51d1aa4f788b0991b7c8635815d6943c374978b685f92619420841d0`. This is **improved**
+reproducibility with **no material runtime behavior change**: dependency acquisition is explicit
+before the hermetic boundary, and generated UI, Preview protocol, pixels, and Android artifacts are
+unchanged. The installed-distribution gate then passed in 1 minute 29 seconds, including 2/2
+reproducible packages, offline install/uninstall, both MCP protocols, compiled screenshot and XML
+denominators, three generated Preview results, semantic comparison, and exact pixel comparison.
+The next acceptance action is the clean Linux hosted rerun of both `qaQuick` and `qaPreview`.
+
 The screenshot semantic and structural comparison and the separate exact RGBA comparison are now
 implemented. Pixel comparison admits only canonical, zero-redaction, full-viewport references
 whose dimensions, density, font scale, locale, layout direction, color space, alpha mode,

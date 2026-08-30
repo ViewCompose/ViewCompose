@@ -1,3 +1,5 @@
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -51,6 +53,46 @@ dependencies {
 val counterPreviewCatalog = layout.buildDirectory.file(
     "viewcompose-preview/debug/descriptors.json",
 )
+
+tasks.register("prepareAiPreviewLane") {
+    group = "verification"
+    description = "Resolve the fixed counter Preview classpaths before offline AI rendering."
+    dependsOn(":publishViewComposeToLocalRepository")
+    doLast {
+        fun resolveArtifacts(configurationName: String, artifactType: String) =
+            configurations.getByName(configurationName).incoming.artifactView {
+                attributes.attribute(
+                    ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE,
+                    artifactType,
+                )
+            }.files.files
+
+        val runtimeClassJars = resolveArtifacts("debugRuntimeClasspath", "android-classes-jar")
+        require(runtimeClassJars.isNotEmpty()) {
+            "The fixed counter Preview runtime classpath resolved no class jars."
+        }
+        resolveArtifacts("debugCompileClasspath", "android-classes-jar")
+        resolveArtifacts("debugRuntimeClasspath", "android-res")
+        resolveArtifacts("debugRuntimeClasspath", "android-assets")
+        resolveArtifacts("debugRuntimeClasspath", "android-symbol-with-package-name")
+        val runnerClassJars = resolveArtifacts(
+            "viewComposePreviewDebugRunnerClasspath",
+            "android-classes-jar",
+        )
+        require(runnerClassJars.isNotEmpty()) {
+            "The fixed counter Preview runner classpath resolved no class jars."
+        }
+        listOf(
+            "viewComposePreviewWorkerHost",
+            "viewComposePreviewLayoutlibRuntime",
+            "viewComposePreviewLayoutlibResources",
+        ).forEach { configurationName ->
+            require(configurations.getByName(configurationName).files.isNotEmpty()) {
+                "The fixed counter Preview configuration '$configurationName' resolved no files."
+            }
+        }
+    }
+}
 
 tasks.register("verifyCounterPreview") {
     group = "verification"

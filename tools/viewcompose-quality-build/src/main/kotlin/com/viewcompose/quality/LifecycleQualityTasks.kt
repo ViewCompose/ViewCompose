@@ -125,6 +125,7 @@ internal fun Project.registerLifecycleQualityTasks(extension: ViewComposeQuality
         description = "Run static-runner tests and preview snapshot verification."
         dependsOn("publishViewComposeToLocalRepository")
         dependsOn(
+            ":samples:counter:prepareAiPreviewLane",
             ":samples:counter:verifyCounterPreview",
             ":viewcompose-preview-core:test",
             ":viewcompose-preview-runner:testDebugUnitTest",

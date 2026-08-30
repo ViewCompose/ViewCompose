@@ -83,12 +83,17 @@ class output is re-fingerprinted before reuse, and timeouts, cancellation, outpu
 diagnostics, and cache poisoning use stable result codes. Android resource fixtures and additional
 artifact lanes remain unsupported in this slice.
 
-After the repository Preview lane is prepared, run the Phase 2 render corpus with:
+Prepare the repository Preview lane and run the Phase 2 render corpus with:
 
 ```bash
 ./gradlew qaPreview
 npm --prefix tools/ai run verify:phase2-render
 ```
+
+`qaPreview` resolves the fixed counter target's Android runtime, worker-host, and variant-specific
+runner classpaths before the separate verifier enters offline Gradle. The
+generated-Preview distribution gate applies the same preparation boundary to
+`:tools:ai-preview-harness`; neither offline tool invocation may fill a missing dependency cache.
 
 The first render lane supports the compiled `samples.counter.CounterPreview` target, its declared
 light/dark variants, and the catalog's fixed viewport, density, font scale, locale, and layout

@@ -131,7 +131,13 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(project.tasks.getByName("verifyAiMcp") is Exec)
         assertTrue(project.tasks.getByName("verifyAiLayoutDiagnosis") is Exec)
         assertTrue(project.tasks.getByName("verifyAiConsumerWorkflows") is Exec)
-        assertTrue(project.tasks.getByName("verifyAiDistribution") is Exec)
+        val verifyAiDistribution = project.tasks.getByName("verifyAiDistribution")
+        assertTrue(verifyAiDistribution is Exec)
+        assertTrue(
+            verifyAiDistribution.dependsOn.contains(
+                ":tools:ai-preview-harness:prepareAiPreviewLane",
+            ),
+        )
         assertTrue(project.tasks.getByName("verifyAiDesignIr") is Exec)
         assertTrue(project.tasks.getByName("verifyAiXmlProjectContext") is Exec)
         assertTrue(project.tasks.getByName("verifyAiXmlLayoutDependencies") is Exec)

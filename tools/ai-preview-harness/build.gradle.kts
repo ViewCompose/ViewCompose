@@ -1,4 +1,5 @@
 import java.nio.file.Files
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 
 plugins {
     alias(libs.plugins.android.application)
@@ -120,14 +121,37 @@ tasks.register("prepareAiPreviewLane") {
     group = "verification"
     description = "Resolve the fixed generated-Preview compilation and render classpaths."
     doLast {
-        require(configurations.getByName("debugRuntimeClasspath").files.isNotEmpty()) {
-            "The fixed generated-Preview runtime classpath resolved no files."
+        fun resolveArtifacts(configurationName: String, artifactType: String) =
+            configurations.getByName(configurationName).incoming.artifactView {
+                attributes.attribute(
+                    ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE,
+                    artifactType,
+                )
+            }.files.files
+
+        val runtimeClassJars = resolveArtifacts("debugRuntimeClasspath", "android-classes-jar")
+        require(runtimeClassJars.isNotEmpty()) {
+            "The fixed generated-Preview runtime classpath resolved no class jars."
         }
-        require(configurations.getByName("viewComposePreviewWorkerHost").files.isNotEmpty()) {
-            "The fixed generated-Preview worker-host classpath resolved no files."
+        resolveArtifacts("debugCompileClasspath", "android-classes-jar")
+        resolveArtifacts("debugRuntimeClasspath", "android-res")
+        resolveArtifacts("debugRuntimeClasspath", "android-assets")
+        resolveArtifacts("debugRuntimeClasspath", "android-symbol-with-package-name")
+        val runnerClassJars = resolveArtifacts(
+            "viewComposePreviewDebugRunnerClasspath",
+            "android-classes-jar",
+        )
+        require(runnerClassJars.isNotEmpty()) {
+            "The fixed generated-Preview runner classpath resolved no class jars."
         }
-        require(configurations.getByName("viewComposePreviewRunner").files.isNotEmpty()) {
-            "The fixed generated-Preview runner classpath resolved no files."
+        listOf(
+            "viewComposePreviewWorkerHost",
+            "viewComposePreviewLayoutlibRuntime",
+            "viewComposePreviewLayoutlibResources",
+        ).forEach { configurationName ->
+            require(configurations.getByName(configurationName).files.isNotEmpty()) {
+                "The fixed generated-Preview configuration '$configurationName' resolved no files."
+            }
         }
     }
 }
