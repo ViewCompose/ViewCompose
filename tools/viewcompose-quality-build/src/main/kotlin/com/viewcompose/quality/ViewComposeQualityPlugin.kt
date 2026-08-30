@@ -1158,6 +1158,28 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairHostGrant") {
+            group = "verification"
+            description =
+                "Verifies host authentication, revocation, and atomic single-use grant boundaries."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-host-grant")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-repair-host-grant.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-host-grant-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-decision.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-request.json",
+                        "scripts/repair-orchestrator.mjs",
+                        "scripts/schema-validator.mjs",
+                        "scripts/verify-phase5-screenshot-repair-host-grant.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

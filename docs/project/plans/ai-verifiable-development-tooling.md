@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze the host-owned receipt-authentication, revocation, and single-use consumption interface required before a validated attestation may become an executable repair grant.
+next_action: Implement an isolated trusted-host callback adapter and durable single-use test host that reject serialized caller decisions while keeping patch execution and public activation disabled.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -130,6 +130,9 @@ explicit authorization are separately frozen.
 That v1 authorization boundary is now frozen with two purpose-bound human attestations and exact
 content-address binding. Its internal validator now reproduces all available evidence and proposal
 bindings while fixing `executionAuthorized` to false; every execution mode remains off.
+The following host-grant lifecycle is now contract-frozen: only a trusted host callback may
+authenticate both reviewer receipts, check revocation, and atomically reserve one terminal repair
+attempt. The host adapter, durable store, patch executor, and public activation remain off.
 
 ## Maven release changesets
 
@@ -2747,8 +2750,52 @@ bytes (+0.53%), with no runtime dependency or public tool mode.
 This is **improved** authorization integrity, proposal reproducibility, and claim separation with
 **no material Android runtime behavior change**. Reviewer authentication, receipt revocation,
 cross-process single-use consumption, patch execution, and public CLI/MCP activation remain
-unclaimed. The next prerequisite is to freeze the host interface that would authenticate and
-consume a validated attestation exactly once before any executable repair grant can exist.
+unclaimed. At that implementation boundary, the next prerequisite was the host interface that
+would authenticate and consume a validated attestation exactly once; the contract below now freezes
+that interface without implementing it.
+
+### Contract evidence — trusted host repair grant lifecycle
+
+Screenshot repair host grant v1 freezes that dynamic trust interface as a content-addressed request
+and a separate host decision. The request binds validation, authorization, baseline/current
+evidence, candidate Design IR, exact pixel reference, proposal, typed change, and immutable baseline
+source revision identities. It also requires a named trust domain, out-of-band credential transport,
+fingerprint-only logs, no tool-owned provider or network call, attended execution, and no public
+tool mode.
+
+A structurally granted decision must arrive through `trusted-host-callback-only`. It contains two
+purpose-distinct authenticated principals and review receipts, two active revocation checks made
+immediately before reservation, and one durable `atomic-single-use-reservation`. Attempt number and
+maximum attempts are both one; reuse, retry after failure, caller-supplied decisions, credential
+input, and unattended execution are all forbidden. The exact validation, authorization, candidate
+evidence, proposal, change, and target Design IR identities are rebound into the grant. Reserving an
+attempt is terminal even when a later patch application fails, avoiding a check-then-write reuse
+window.
+
+The checked-in request fingerprint is
+`ab8134e2be383dbe8c2b376aceb172d2132f0268e0c4870999a682c9fc660dbd`; its synthetic granted
+decision fingerprint is
+`8f5953ee7fec99c15d446d3adb1877ef1dd95a2ff5dbffbab27de119d6974c2e`. The word
+`synthetic` is material: a JSON file cannot authenticate its own host provenance. The contract
+explicitly gives no authority to a decision loaded from a file, stdin, CLI argument, MCP argument,
+or network payload. Only a future trusted callback boundary can supply such authority.
+
+The contract verifier passes 1/1 structurally valid synthetic grant, 17/17 invalid denominators,
+4/4 denied decisions, and 1/1 cancelled decision. It keeps authentication failure, revocation,
+already-consumed state, policy denial, integrity drift, lineage drift, and malformed input distinct.
+Phase 0 now verifies 20 schemas, and Node 25.6.0 passes 244/244 AI-tooling tests. The
+dependency-free offline package contains 73 files and 1,916,933 declared bytes; its 343,045-byte
+archive has SHA-256 `684f8991f1d4e9856dd099c170f818b3d20b9514d9edc0e0bf4bd3270c5dda25`.
+Relative to the authorization-validator package, the host-grant contract adds one file, 12,780
+declared bytes (+0.67%), and 1,393 archive bytes (+0.41%), with no runtime dependency or public tool
+mode.
+
+This is **improved** dynamic trust-boundary precision and fail-closed single-use semantics with
+**no material Android runtime behavior change**. It does not implement or locally verify host
+identity, authentication receipts, revocation checks, durable reservation, patch application,
+failure recovery, or public execution. The next prerequisite is an isolated callback adapter plus
+a deterministic durable test host that prove serialized caller decisions cannot enter this trust
+boundary and the same authorization cannot be reserved twice.
 
 ### Implementation evidence — bounded XML to Design IR
 

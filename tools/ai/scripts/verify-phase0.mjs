@@ -292,6 +292,7 @@ async function verifySchemas(versions) {
     screenshotRepairCandidateEvidence: 'screenshot-repair-candidate-evidence.schema.json',
     screenshotRepairProposal: 'screenshot-repair-proposal.schema.json',
     screenshotRepairAuthorization: 'screenshot-repair-authorization.schema.json',
+    screenshotRepairHostGrant: 'screenshot-repair-host-grant.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };

@@ -386,6 +386,16 @@ attestations and their content addresses, and returns a separate validation resu
 authenticate a person or receipt, decide whether the baseline is trustworthy, provide revocation,
 or execute the patch. Those remain host responsibilities.
 
+Screenshot repair host grant v1 freezes the next trust boundary without implementing it. A grant
+request binds the exact validated authorization, evidence, proposal, change, pixel reference,
+candidate Design IR, and immutable baseline source revision. Only a decision delivered by a
+trusted host callback may authenticate both reviewers and receipts, check both receipts for
+revocation immediately before use, and durably reserve one atomic application attempt. A reserved
+attempt cannot be reused or retried even when application fails. The checked-in granted decision
+is a synthetic contract fixture, not a trusted grant. Decisions loaded from files, stdin, CLI or
+MCP arguments, or network payloads have no authority; credentials remain out of band. The host
+store, callback transport, patch executor, and public repair mode remain unimplemented.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -402,6 +412,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-repair
 npm --prefix tools/ai run verify:phase5-screenshot-repair-candidate
 npm --prefix tools/ai run verify:phase5-screenshot-repair-proposer
 npm --prefix tools/ai run verify:phase5-screenshot-repair-authorization
+npm --prefix tools/ai run verify:phase5-screenshot-repair-host-grant
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
