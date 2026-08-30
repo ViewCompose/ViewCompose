@@ -3212,6 +3212,12 @@ source-bound until the next Phase 6A contract binds an exact released Knowledge 
 coordinates and an explicitly authorized consumer project. That consumer-project execution
 contract is the next action.
 
+Source-bound Preview verification also requires complete Git history in hosted CI. The generated
+Knowledge Bundle records an immutable source revision, and that revision must resolve as an
+ancestor of the checkout before Gradle execution is allowed. Therefore `qaPreviewWork` uses
+`fetch-depth: 0`; a shallow synthetic pull-request merge checkout is not accepted as framework
+identity evidence, and the runtime verifier remains fail-closed rather than weakening this check.
+
 The final isolated-worktree `qaQuick` acceptance passed 2,311 tasks: 2,078 executed, 233 up-to-date,
 and 15 minutes 12 seconds. The comparison context is the immediately preceding accepted full
 onboarding run recorded above at 2,309 tasks, 2,061 executed, 248 up-to-date, and 10 minutes 51
