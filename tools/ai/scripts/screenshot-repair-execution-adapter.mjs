@@ -15,12 +15,18 @@ const outcomeSchemaPath = new URL(
   '../contracts/screenshot-repair-execution-outcome.schema.json',
   import.meta.url,
 );
+const handoffSchemaPath = new URL(
+  '../contracts/screenshot-repair-applied-result-handoff.schema.json',
+  import.meta.url,
+);
+const designIrSchemaPath = new URL('../contracts/design-ir.schema.json', import.meta.url);
 const MAX_INPUT_BYTES = 1_048_576;
 const MAX_OUTCOME_BYTES = 65_536;
 const SHA256 = /^[a-f0-9]{64}$/u;
 const STABLE_ID = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/u;
 const EXECUTOR_ID = 'viewcompose-internal-typed-design-ir-v1';
 const trustedOutcomeHosts = new WeakMap();
+const retainedAppliedResults = new WeakMap();
 
 let schemasPromise;
 let executorBuildFingerprintPromise;
@@ -29,7 +35,14 @@ function loadSchemas() {
   schemasPromise ??= Promise.all([
     readFile(hostGrantSchemaPath, 'utf8').then(JSON.parse),
     readFile(outcomeSchemaPath, 'utf8').then(JSON.parse),
-  ]).then(([hostGrant, outcome]) => ({hostGrant, outcome}));
+    readFile(handoffSchemaPath, 'utf8').then(JSON.parse),
+    readFile(designIrSchemaPath, 'utf8').then(JSON.parse),
+  ]).then(([hostGrant, outcome, handoff, designIr]) => ({
+    hostGrant,
+    outcome,
+    handoff,
+    designIr,
+  }));
   return schemasPromise;
 }
 
@@ -65,6 +78,12 @@ function same(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function deepFreeze(value) {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
+}
+
 function diagnostic(code, severity, message, nextAction) {
   return {code, severity, message, nextAction};
 }
@@ -79,8 +98,22 @@ export class ScreenshotRepairExecutionBoundaryError extends Error {
   }
 }
 
+export class ScreenshotRepairAppliedResultHandoffError extends Error {
+  constructor(code, message, {retryHandoff = false} = {}) {
+    super(message);
+    this.name = 'ScreenshotRepairAppliedResultHandoffError';
+    this.code = code;
+    this.retryExecution = false;
+    this.retryHandoff = retryHandoff;
+  }
+}
+
 function rejectBoundary(code, message, options) {
   throw new ScreenshotRepairExecutionBoundaryError(code, message, options);
+}
+
+function rejectHandoff(code, message, options) {
+  throw new ScreenshotRepairAppliedResultHandoffError(code, message, options);
 }
 
 function grantValid(grant, schema, trustDomainId) {
@@ -265,12 +298,20 @@ function hostOutcomeMatches(outcome, draft, schema) {
   return same(withoutReceipt, draft);
 }
 
-export function createTrustedScreenshotRepairOutcomeHost({trustDomainId, record} = {}) {
-  if (!STABLE_ID.test(trustDomainId ?? '') || typeof record !== 'function') {
+export function createTrustedScreenshotRepairOutcomeHost({
+  trustDomainId,
+  record,
+  reconcile,
+} = {}) {
+  if (
+    !STABLE_ID.test(trustDomainId ?? '') ||
+    typeof record !== 'function' ||
+    (reconcile !== undefined && typeof reconcile !== 'function')
+  ) {
     throw new TypeError('A stable trust domain and direct terminal-record callback are required.');
   }
   const handle = Object.freeze({trustDomainId});
-  trustedOutcomeHosts.set(handle, {record});
+  trustedOutcomeHosts.set(handle, {record, reconcile});
   return handle;
 }
 
@@ -316,6 +357,7 @@ export async function executeTrustedScreenshotRepair(input, {host, signal} = {})
   }
   const common = commonOutcome(input.grantDecision, await executorBuildFingerprint());
   let draft;
+  let appliedResult;
   if (signal?.aborted) {
     draft = cancelledDraft(common);
   } else if (input.patch?.changeFingerprint !== input.grantDecision.grant.changeFingerprint) {
@@ -327,6 +369,7 @@ export async function executeTrustedScreenshotRepair(input, {host, signal} = {})
         expectedDesignIrFingerprint: input.grantDecision.grant.targetDesignIrFingerprint,
         patch: input.patch,
       }, {signal});
+      appliedResult = result;
       draft = signal?.aborted ? cancelledDraft(common) : appliedDraft(common, result);
     } catch (error) {
       if (signal?.aborted || error?.code === 'VC-AI-REPAIR-CANCELLED') {
@@ -348,5 +391,169 @@ export async function executeTrustedScreenshotRepair(input, {host, signal} = {})
   if (!hostOutcomeMatches(outcome, draft, schemas.outcome)) {
     return unrecordedResult(common, 'terminal-receipt-invalid');
   }
-  return structuredClone(outcome);
+  const returnedOutcome = deepFreeze(structuredClone(outcome));
+  if (
+    returnedOutcome.status === 'applied' &&
+    appliedResult !== undefined &&
+    typeof hostImplementation.reconcile === 'function' &&
+    appliedResult.designIrFingerprint === returnedOutcome.effect.resultDesignIrFingerprint &&
+    appliedResult.outputFingerprint === returnedOutcome.effect.patchOutputFingerprint
+  ) {
+    retainedAppliedResults.set(returnedOutcome, {
+      state: 'available',
+      host,
+      designIr: deepFreeze(appliedResult.designIr),
+      designIrFingerprint: appliedResult.designIrFingerprint,
+      patchOutputFingerprint: appliedResult.outputFingerprint,
+    });
+  }
+  return returnedOutcome;
+}
+
+function handoffReceipt(outcome) {
+  const receipt = {
+    schemaVersion: 1,
+    kind: 'screenshot-repair-applied-result-handoff',
+    status: 'delivered',
+    lineage: {
+      outcomeFingerprint: outcome.outcomeFingerprint,
+      outcomeReceipt: outcome.receipt.outcomeReceipt,
+      reservationReceipt: outcome.lineage.reservationReceipt,
+      hostTrustDomainId: outcome.lineage.hostTrustDomainId,
+      inputDesignIrFingerprint: outcome.lineage.inputDesignIrFingerprint,
+      changeFingerprint: outcome.lineage.changeFingerprint,
+      resultDesignIrFingerprint: outcome.effect.resultDesignIrFingerprint,
+      patchOutputFingerprint: outcome.effect.patchOutputFingerprint,
+    },
+    delivery: {
+      source: 'retained-in-memory-applied-result',
+      terminalOutcome: 'durable-reconciled',
+      terminalReceiptRevalidated: true,
+      exactInMemoryObject: true,
+      singleUse: true,
+      persistentResultStorage: false,
+      persistentSourceWrite: false,
+      publicToolMode: false,
+      providerCalls: false,
+      toolNetworkAccess: false,
+      logs: 'fingerprints-only',
+    },
+  };
+  receipt.handoffFingerprint = fingerprintRepairValue(receipt);
+  return receipt;
+}
+
+function appliedOutcomeValid(outcome, schema, retained, trustDomainId) {
+  return encodedWithinLimit(outcome, MAX_OUTCOME_BYTES) &&
+    validateSchemaValue(outcome, schema).length === 0 &&
+    outcome.status === 'applied' &&
+    outcome.effect.state === 'committed' &&
+    outcome.outcomeFingerprint === fingerprintWithout(outcome, 'outcomeFingerprint') &&
+    outcome.lineage.hostTrustDomainId === trustDomainId &&
+    outcome.effect.resultDesignIrFingerprint === retained.designIrFingerprint &&
+    outcome.effect.patchOutputFingerprint === retained.patchOutputFingerprint &&
+    receiptValid(outcome, outcome);
+}
+
+export async function handoffTrustedScreenshotRepairAppliedResult(outcome, {host} = {}) {
+  const retained = outcome !== null && typeof outcome === 'object'
+    ? retainedAppliedResults.get(outcome)
+    : undefined;
+  if (!retained) {
+    rejectHandoff(
+      'VC-AI-REPAIR-HANDOFF-AUTHORITY-INVALID',
+      'Handoff requires the exact live applied-outcome object returned by attended execution.',
+    );
+  }
+  if (retained.state === 'delivered') {
+    rejectHandoff(
+      'VC-AI-REPAIR-HANDOFF-ALREADY-DELIVERED',
+      'The exact applied Design IR has already been delivered.',
+    );
+  }
+  if (retained.state === 'in-progress') {
+    rejectHandoff(
+      'VC-AI-REPAIR-HANDOFF-IN-PROGRESS',
+      'The exact applied Design IR already has an in-progress handoff.',
+    );
+  }
+  const hostImplementation = host !== null && typeof host === 'object'
+    ? trustedOutcomeHosts.get(host)
+    : undefined;
+  if (
+    host !== retained.host ||
+    !hostImplementation ||
+    typeof hostImplementation.reconcile !== 'function'
+  ) {
+    rejectHandoff(
+      'VC-AI-REPAIR-HANDOFF-HOST-UNTRUSTED',
+      'Handoff requires the original trusted host and its direct reconciliation callback.',
+    );
+  }
+
+  retained.state = 'in-progress';
+  try {
+    const schemas = await loadSchemas();
+    if (!appliedOutcomeValid(outcome, schemas.outcome, retained, host.trustDomainId)) {
+      rejectHandoff(
+        'VC-AI-REPAIR-HANDOFF-TERMINAL-OUTCOME-INVALID',
+        'The live terminal outcome no longer proves the exact committed result.',
+      );
+    }
+    let durableOutcome;
+    try {
+      durableOutcome = await hostImplementation.reconcile(
+        outcome.lineage.reservationReceipt,
+      );
+    } catch {
+      rejectHandoff(
+        'VC-AI-REPAIR-HANDOFF-DURABLE-RECEIPT-UNAVAILABLE',
+        'The trusted host could not reopen the terminal record.',
+        {retryHandoff: true},
+      );
+    }
+    if (durableOutcome === null || durableOutcome === undefined) {
+      rejectHandoff(
+        'VC-AI-REPAIR-HANDOFF-DURABLE-RECEIPT-UNAVAILABLE',
+        'The trusted host has no durable terminal record for this reservation.',
+        {retryHandoff: true},
+      );
+    }
+    if (
+      !appliedOutcomeValid(durableOutcome, schemas.outcome, retained, host.trustDomainId) ||
+      !same(durableOutcome, outcome)
+    ) {
+      rejectHandoff(
+        'VC-AI-REPAIR-HANDOFF-DURABLE-RECEIPT-MISMATCH',
+        'The reopened terminal record does not exactly match the accepted applied outcome.',
+      );
+    }
+    if (
+      validateSchemaValue(retained.designIr, schemas.designIr).length > 0 ||
+      fingerprintRepairValue(retained.designIr) !== retained.designIrFingerprint
+    ) {
+      rejectHandoff(
+        'VC-AI-REPAIR-HANDOFF-RESULT-INTEGRITY-MISMATCH',
+        'The retained in-memory Design IR no longer matches the committed result identity.',
+      );
+    }
+    const receipt = handoffReceipt(outcome);
+    if (
+      !encodedWithinLimit(receipt, MAX_OUTCOME_BYTES) ||
+      validateSchemaValue(receipt, schemas.handoff).length > 0 ||
+      receipt.handoffFingerprint !== fingerprintWithout(receipt, 'handoffFingerprint')
+    ) {
+      rejectHandoff(
+        'VC-AI-REPAIR-HANDOFF-RESULT-INTEGRITY-MISMATCH',
+        'The applied-result handoff receipt could not reproduce its contract identity.',
+      );
+    }
+    const designIr = retained.designIr;
+    retained.state = 'delivered';
+    retained.designIr = undefined;
+    return deepFreeze({receipt, designIr});
+  } catch (error) {
+    if (retained.state === 'in-progress') retained.state = 'available';
+    throw error;
+  }
 }

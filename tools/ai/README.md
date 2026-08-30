@@ -434,12 +434,14 @@ patch re-execution. This reference store provides deterministic local durability
 receipt authentication, multi-host consensus, arbitrary-filesystem portability, or a production
 recovery service.
 
-Applied-result handoff v1 is contract-frozen but not implemented. It will retain only the exact
-process-local Design IR produced by a successful attended patch, re-read and revalidate the durable
-terminal record through the same trusted host before delivery, and return one content-addressed
-receipt beside that exact frozen object. Serialized outcomes or host handles, non-applied states,
-receipt drift, concurrent duplicate delivery, result persistence, application source writes, and
-public CLI/MCP repair remain rejected by contract.
+Applied-result handoff v1 is implemented internally without public activation. It retains only the
+exact process-local Design IR produced by a successful attended patch when the original trusted
+host also supplies direct read-only reconciliation. Before delivery it reopens and exactly
+revalidates the durable terminal record, then returns one immutable content-addressed receipt beside
+the same frozen Design IR object. Successful delivery clears the retained result reference and is
+single use under concurrency. Serialized outcomes or host handles, non-applied states, receipt or
+result drift, non-durable hosts, duplicate delivery, result persistence, application source writes,
+and public CLI/MCP repair remain rejected.
 
 Run the local MCP server and its protocol/parity gate with:
 

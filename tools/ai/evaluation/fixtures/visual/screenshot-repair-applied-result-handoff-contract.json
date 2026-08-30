@@ -7,8 +7,8 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-frozen",
-    "implementation": false,
+    "status": "implemented-internal",
+    "implementation": true,
     "publicRepairMode": false,
     "persistentSourceWrite": false
   },

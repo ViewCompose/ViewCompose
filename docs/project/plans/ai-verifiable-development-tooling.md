@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen content-addressed applied-result handoff, retaining and delivering the exact in-memory Design IR only after durable terminal-receipt reconciliation while application source writes and public activation remain disabled.
+next_action: Freeze the production-host and source-application transaction boundary that must follow the internal applied-result handoff, without enabling application source writes or public screenshot repair before authentication, precondition, rollback, and crash-consistency contracts exist.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -61,7 +61,12 @@ The resumed screenshot-repair lane now has a frozen applied-result handoff contr
 exact process-local execution outcome and original trusted host, re-reads the durable terminal
 record before delivery, binds one content-addressed handoff receipt to the complete result lineage,
 and permits only one delivery of the exact frozen in-memory Design IR. Implementation, result
-persistence, application source writes, and public repair activation remain off at this freeze.
+persistence, application source writes, and public repair activation remained off at that freeze.
+The internal implementation now meets the frozen denominator against the durable reference store:
+it retains only a validated applied result, reopens the terminal record, returns the exact frozen
+Design IR beside an immutable handoff receipt, clears its retained reference after delivery, and
+rejects serialized authority, receipt drift, concurrent duplicates, and replay. Result persistence,
+production-host authentication, source writes, and public activation remain off.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
@@ -3103,6 +3108,45 @@ Node 25.6.0. This is **improved** output-lineage and delivery safety with **no m
 runtime behavior change**. It does not implement handoff, persist the applied Design IR, write or
 roll back application source, authenticate a production receipt, or activate CLI/MCP repair. The
 next action is the isolated process-local implementation against the durable reference store.
+
+### Implementation evidence — content-addressed applied-result handoff
+
+The attended executor now retains its exact typed-patch Design IR only when the validated outcome is
+`applied`, the effect is `committed`, both output identities match the patcher result, and the
+original trusted host registered a direct reconciliation callback. The authority is attached to the
+exact frozen outcome object in a private process-local weak registry. Ordinary in-memory receipt
+hosts, non-applied states, structured clones, reconstructed JSON, and another host handle receive no
+handoff authority.
+
+Handoff marks the retained result in progress before its first asynchronous operation, preventing a
+second concurrent consumer. It revalidates the live outcome, reads the terminal record again by the
+exact reservation receipt, and requires the reopened outcome to reproduce its schema, content
+address, trust domain, committed identities, and complete accepted bytes. The retained Design IR
+then passes Design IR v1 and exact fingerprint validation again. The returned immutable envelope
+contains one content-addressed receipt and the same frozen in-memory object; successful delivery
+clears the registry's Design IR reference. A failed read may retry handoff without retrying execution,
+while receipt drift, result drift, replay, and a concurrent request remain fail-closed.
+
+On 2026-08-30, Node 25.6.0 passed 276/276 AI-tooling tests. The dedicated verifier reports 1/1
+successful handoff, 1/1 durable re-read, 1/1 exact frozen-object delivery, 0/0 accepted serialized
+authorities, 0/0 delivered non-applied results, 0/0 accepted mismatched receipts, 0/0 replays, and
+exactly 1/2 successful concurrent requests. Phase 0 remains at 23 schemas. The dependency-free
+offline package contains 81 files and 2,022,193 declared bytes; its 362,591-byte archive has SHA-256
+`a5dbd013cf2a8a382d32a01c104418ff40675fef27519bc66bd51c57d074e473`. Relative to the contract
+package, implementation changes only existing packaged adapters: `+7,373` declared bytes
+(`+0.366%`) and `+1,408` archive bytes (`+0.390%`), with no runtime dependency or executable tool
+registration. The full installed-package gate remains at 2/2 reproducible builds, 1/1 offline
+install/uninstall lifecycle, both MCP protocol versions, all three Agent profiles, and the existing
+compiled/rendered/compared screenshot and XML lanes.
+
+This is **improved** durable-result correlation, output integrity, authority isolation, and replay
+resistance with **no material Android runtime behavior change**. The evidence is local reference-
+store and synthetic-host evidence; it does not authenticate production reviewers or receipts,
+persist the Design IR across process restart, transactionally update application source, provide
+rollback or crash recovery for source changes, or activate repair through CLI/MCP. No published
+Maven artifact, publication input, public/protected framework API, or application process changed,
+so no Maven release changeset or module-manual update is required. The next prerequisite is a frozen
+production-host and source-application transaction boundary before any write or public activation.
 
 ### Implementation evidence — bounded XML to Design IR
 

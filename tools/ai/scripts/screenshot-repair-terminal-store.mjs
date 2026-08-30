@@ -292,7 +292,11 @@ export async function createFileBackedScreenshotRepairTerminalStore({
   };
 
   return Object.freeze({
-    host: createTrustedScreenshotRepairOutcomeHost({trustDomainId, record}),
+    host: createTrustedScreenshotRepairOutcomeHost({
+      trustDomainId,
+      record,
+      reconcile: readTerminalOutcome,
+    }),
     readTerminalOutcome,
   });
 }
