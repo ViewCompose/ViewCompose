@@ -76,11 +76,10 @@ plugin versions are independent.
 - Run plugin unit/functional tests and worker-reuse verification when discovery, classpaths, or
   Layoutlib compatibility inputs change.
 
-The repository AI Preview harness compiles against Android 37 while the existing framework matrix
-still exercises Android 36. Hosted `qaQuick` and `qaPreview` runners therefore install both SDK
-platforms before invoking the fixed JDK 21 render lane. On failure, `qaPreview` prints the last 200
-worker-log lines and retains the worker log and structured render responses for seven days; these
-diagnostics support root-cause analysis and do not turn a failed render into accepted evidence.
+Hosted `qaQuick` and `qaPreview` retain the stable Android 36 SDK setup before invoking the fixed
+JDK 21 render lane. On failure, `qaPreview` prints the last 200 worker-log lines and retains the
+worker log and structured render responses for seven days; these diagnostics support root-cause
+analysis and do not turn a failed render into accepted evidence.
 
 The 2026-08-29 dependency-resolution acceptance reproduced the former JVM 17 consumer/JVM 21 worker
 mismatch with the published local worker artifact and then exposed a stale 15.2.3 native Layoutlib

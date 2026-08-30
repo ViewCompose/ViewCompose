@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-gradle-plugin/README.md
-translation_source_hash: 0841fa50483f638210b16aa7c0ea323f7eabe2304005cac939b1a020a67f4de4
+translation_source_hash: 408308054c04bf11e1795b34d8944ede6f81a9286b249953e40196921a19d920
 translation_status: current
 ---
 
@@ -57,8 +57,7 @@ Marketplace 安装 `ViewCompose Preview`。IDE 与 Gradle 插件独立版本化�
 - Discovery、Classpath 或 Layoutlib Compatibility Input 变化时运行 Plugin Unit/Functional Test 与
   Worker Reuse 验证。
 
-仓库 AI Preview Harness 使用 Android 37 编译，现有 Framework Matrix 仍覆盖 Android 36。因此
-托管 `qaQuick` 与 `qaPreview` Runner 会同时安装两个 SDK Platform，再调用固定的 JDK 21 Render
+托管 `qaQuick` 与 `qaPreview` 会保留稳定的 Android 36 SDK Setup，再调用固定的 JDK 21 Render
 Lane。失败时，`qaPreview` 会打印 Worker Log 最后 200 行，并把 Worker Log 和结构化 Render
 Response 保留七天；这些 Diagnostic 只用于根因分析，不会把失败 Render 升级为已接受证据。
 
