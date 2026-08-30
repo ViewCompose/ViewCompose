@@ -142,13 +142,14 @@ implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 
 ## AI 接入
 
-ViewCompose 提供版本化 AI Reference、13 个本地 stdio MCP 工具、6 个标准 Agent Skill，以及从
-静态检查、编译、Allowlist Preview 渲染到结构化比较的可执行验证。框架负责事实与证据；Coding
-Client 继续负责模型、Credential、对话和用户授权的源码修改。
+ViewCompose 把版本化 AI Reference、13 个本地 stdio MCP 工具和 6 个标准 Agent Skill 作为
+可安装的 GitHub Release 发布。Codex、Claude Code 和 Cursor 只需一条 Package 安装命令与一条
+事务化 Project Init 命令，就能接入全新或已有 Android Project；Standalone 模式下的知识检索、
+生成、静态验证和 Project 分析不要求 ViewCompose Checkout、本地构建、Provider Key 或手动改配置。
 
-当前本地 Distribution 已验证 Codex、Claude Code 和 Cursor 的项目 Profile。按照
-[AI 接入](./docs/ai/README.md)即可构建 Package、安装 Skill、添加项目 MCP 配置，并完成各客户端
-自己的最终连接检查。
+在 `0.1.0` 中，编译、Preview 和渲染后的布局诊断仍是明确报告的 Source-bound 增强能力；静态证据
+绝不会被描述成已编译或已渲染证据。请阅读 [AI 接入](./docs/ai/README.md)了解两条命令安装、
+`doctor`、能力边界、客户端检查、升级和安全删除。
 
 ## ViewCompose Preview Android Studio 插件
 

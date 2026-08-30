@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Complete the zero-friction public AI-tooling distribution and transactional Agent onboarding slice, then freeze the released-artifact and explicitly authorized consumer-project boundary for compilation, Preview, and layout diagnosis before resuming richer AI capabilities.
+next_action: After the first attested GitHub Release is published, freeze the released-artifact and explicitly authorized consumer-project execution contract for compilation, Preview, and layout diagnosis before resuming richer AI capabilities.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -72,7 +72,10 @@ the ViewCompose checkout from all three standalone MCP profiles, caps the public
 installation plus one project initialization command, and requires transactional configuration and
 Skill writes with zero manual edits. A separate GitHub Release contract binds the first package to
 an immutable tag, three exact assets, SHA-256, and GitHub build-provenance attestations. These
-contracts do not yet claim released-artifact compilation or consumer-project Preview readiness.
+contracts are implemented: all three clients pass standalone `init`, `doctor`, idempotent re-entry,
+and exact `uninstall`; the cold release gate builds the complete Preview producer graph; and the tag
+workflow verifies, attests, and publishes the three assets without a mutable selector. This does not
+yet claim released-artifact compilation or consumer-project Preview readiness.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
@@ -3165,7 +3168,7 @@ Maven artifact, publication input, public/protected framework API, or applicatio
 so no Maven release changeset or module-manual update is required. The next prerequisite is a frozen
 production-host and source-application transaction boundary before any write or public activation.
 
-### Contract evidence — zero-friction public distribution and Agent onboarding
+### Accepted implementation — zero-friction public distribution and Agent onboarding
 
 Agent client integration v2 makes source-free standalone operation the default for Codex, Claude
 Code, and Cursor. Each profile retains an explicit source-bound configuration only for contributor
@@ -3190,11 +3193,24 @@ gate, reproduce the package contract, create GitHub artifact attestations, and p
 `latest` installation URL. Users install the exact release asset; they do not clone ViewCompose or
 run the distribution packager.
 
-This is a contract freeze only. It changes no Maven artifact, Android runtime, application source,
-or public screenshot-repair activation. Compilation, Preview, and layout diagnosis stay visibly
+The implementation passes 3/3 standalone client profiles, 18/18 exact Skill copies, 3/3 idempotent
+re-entry checks, 3/3 `standalone-ready` doctor checks, 3/3 clean uninstalls, and 3/3 path/conflict
+safety rejections. The installed distribution gate reproduces 2/2 packages, completes 1/1 offline
+install/uninstall lifecycle, and exercises 2/2 MCP protocol versions. The cold Preview lane changed
+from 0/1 successful runs to 1/1 (`+100` percentage points) after declaring the exact transformed
+classpath inputs; it completed 184 tasks (170 executed, 14 up-to-date) in 23 seconds. The complete
+release gate then passed 186 tasks (3 executed, 183 up-to-date) in 3 minutes 28 seconds. This is
+**improved** cold release readiness, onboarding cost, lifecycle safety, and evidence honesty with
+**no material Android runtime behavior change**.
+
+The cold-run evidence is one local macOS/JDK 21 producer graph, while the complete gate reused its
+new Android outputs; neither time predicts a clean hosted Linux runner. Publication and attestation
+remain unaccepted until the first tag-triggered workflow succeeds. The implementation changes no
+Maven artifact, Android runtime, application source, or public screenshot-repair activation, so no
+Maven release changeset is required. Compilation, Preview, and layout diagnosis stay visibly
 source-bound until the next Phase 6A contract binds an exact released Knowledge Bundle to Maven
-coordinates or an explicitly authorized consumer project. The next action is the transactional
-Agent lifecycle implementation and tag-gated release workflow.
+coordinates and an explicitly authorized consumer project. That consumer-project execution
+contract is the next action.
 
 ### Implementation evidence — bounded XML to Design IR
 

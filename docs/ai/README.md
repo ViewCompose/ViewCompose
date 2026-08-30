@@ -12,32 +12,48 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - Current-source @viewcompose/ai-tooling 0.1.0 local distribution
-  - Node.js 24.19.0 or newer; JDK 21 or newer for compile and Preview evidence
+  - GitHub Release @viewcompose/ai-tooling 0.1.0 at ai-tooling-v0.1.0
+  - Node.js 24.19.0 or newer
   - MCP 2026-07-28 and 2025-11-25 over local stdio
   - Codex, Claude Code, and Cursor project profiles verified 2026-08-30
 verification_commands:
   - npm --prefix tools/ai run verify:phase3-agent-clients
-  - ./gradlew verifyAiAgentClients
   - ./gradlew verifyAiDistribution
-lifecycle: Update when a supported client format, Skill path, package contract, tool set, or evidence boundary changes.
+  - ./gradlew verifyAiToolingRelease
+lifecycle: Update when a supported client format, Skill path, package release, tool set, or evidence boundary changes.
 ---
 
 # AI Integration
 
-ViewCompose gives AI agents a machine-readable reference, 13 local MCP tools, six standard Agent
-Skills, and executable validation so they can retrieve real APIs and verify generated code instead
-of guessing symbols. The coding client owns the model, credentials, conversation, and requested
-source edits; ViewCompose owns deterministic facts, local tools, evidence, and safety boundaries.
+ViewCompose ships a machine-readable API reference, 13 local MCP tools, and six Agent Skills as one
+installable GitHub Release. A developer can connect Codex, Claude Code, or Cursor to a new or
+existing Android project with two commands. No ViewCompose checkout, package build, provider key,
+or manual MCP configuration edit is required for the standalone workflow.
 
-:::warning Current-source tooling
+The coding client still owns the model, credentials, conversation, and user-authorized source
+changes. ViewCompose supplies deterministic framework facts, generation tools, and explicit
+validation evidence; it never embeds or contacts a model provider.
 
-`@viewcompose/ai-tooling` is currently built locally from a ViewCompose checkout and is not
-published to an npm registry.
+## Install in two commands
 
-:::
+Install the exact release from GitHub:
 
-## Supported clients and evidence
+```bash
+npm install --global --ignore-scripts \
+  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.1.0/viewcompose-ai-tooling-0.1.0.tgz
+```
+
+Then run this from the root of the Android project and choose one client:
+
+```bash
+viewcompose-agent init --client <codex|claude-code|cursor> \
+  --project-root "$(pwd -P)"
+```
+
+`init` transactionally merges the `viewcompose` MCP entry and installs all six canonical Skills.
+It preserves unrelated settings, is idempotent for exact installed content, and refuses invalid
+JSON, relative or symbolic-link roots, and conflicting configuration or Skill bytes. A failure does
+not leave a partially installed integration.
 
 | Client | Project MCP configuration | Skill root |
 | --- | --- | --- |
@@ -45,104 +61,121 @@ published to an npm registry.
 | Claude Code | `.mcp.json` | `.claude/skills` |
 | Cursor | `.cursor/mcp.json` | `.agents/skills` |
 
-CI verifies deterministic configuration, exact installed Skill bytes, offline package lifecycle,
-and both MCP protocol handshakes. It does not authenticate proprietary client binaries, so final
-client connection checks remain explicit below. Other compatible clients may adapt the stdio
-server manually but are not yet in the supported matrix.
+Node.js 24.19.0 or newer is the only runtime prerequisite for this standalone path. A Node version
+manager is recommended when the system-wide npm prefix is not writable; do not use `sudo` merely to
+install the tooling.
 
-Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A found symbol is
-not compiled code; compiled code is not a rendered screen; rendering is not visual parity. Retain
-only the highest level actually returned and its limitations.
+## Confirm the installation
 
-## 1. Build and install the local package
-
-Use physical absolute paths. JDK 21 and the repository Android SDK are needed only for compile or
-Preview evidence.
+Run the same client choice from the project root:
 
 ```bash
-export VIEWCOMPOSE_SOURCE_ROOT="$(pwd -P)"
-export VIEWCOMPOSE_AI_PREFIX="$VIEWCOMPOSE_SOURCE_ROOT/tools/ai/build/agent-install"
-
-npm --prefix tools/ai run package:distribution
-npm install --global --prefix "$VIEWCOMPOSE_AI_PREFIX" --offline --ignore-scripts \
-  "$VIEWCOMPOSE_SOURCE_ROOT/tools/ai/build/distribution/viewcompose-ai-tooling-0.1.0.tgz"
-export PATH="$VIEWCOMPOSE_AI_PREFIX/bin:$PATH"
+viewcompose-agent doctor --client <codex|claude-code|cursor> \
+  --project-root "$(pwd -P)"
 ```
 
-The prefix is an ignored tool-owned build directory. The `PATH` update affects the current shell.
+`standalone-ready` means the MCP entry and every Skill match the installed release. The report also
+separates `knowledgeAndGeneration` from `compilationPreviewAndLayout`, so an unavailable deeper
+evidence lane is never reported as successful.
 
-## 2. Install the project Skills
+Complete the client-side connection check:
 
-From the Android consumer project:
+- **Codex:** run `codex mcp list`, then inspect `/mcp` and `/skills`; start with
+  `$viewcompose-api-reference`. See the official [MCP](https://developers.openai.com/codex/mcp/)
+  and [Agent Skills](https://learn.chatgpt.com/docs/build-skills) documentation.
+- **Claude Code:** approve the project `.mcp.json` if prompted, run `claude mcp list` and
+  `claude mcp get viewcompose`, then inspect `/mcp`; start with
+  `/viewcompose-api-reference`. See the official [MCP](https://code.claude.com/docs/en/mcp) and
+  [Skills](https://code.claude.com/docs/en/skills) documentation.
+- **Cursor:** open **Cursor Settings > Tools & MCP**, confirm `viewcompose`, inspect
+  **Agent > Available Tools**, and start with `/viewcompose-api-reference`. See the official
+  [MCP](https://docs.cursor.com/context/model-context-protocol) and
+  [Skills](https://cursor.com/docs/skills) documentation.
 
-```bash
-export VIEWCOMPOSE_CONSUMER_ROOT="$(pwd -P)"
+CI verifies generated client configuration, transactional lifecycle behavior, exact Skill bytes,
+the installed package, and both MCP protocol handshakes. It does not automate or authenticate
+proprietary client binaries, so the checks above remain visible user steps.
 
-# Choose exactly one client.
-viewcompose-agent install-skills --client <codex|claude-code|cursor> \
-  --project-root "$VIEWCOMPOSE_CONSUMER_ROOT"
-```
+## What works without ViewCompose source
 
-The installer copies all six canonical `SKILL.md` files. Exact reinstalls are idempotent; unknown
-clients, relative roots, symbolic links, and different existing bytes fail without overwrite.
+Standalone mode supports:
 
-## 3. Add the MCP configuration
+- exact API, component, sample, and ranked capability retrieval;
+- static Kotlin validation and bounded read-only Android project analysis;
+- Android XML-to-ViewCompose generation from pasted XML or explicitly scoped project resources;
+- screenshot preprocessing, inference validation and typed resolution, and ViewCompose Kotlin
+  generation;
+- the six workflows for API lookup, screen creation, XML conversion, review, validation, and layout
+  debugging, with each workflow retaining the evidence level it actually obtained.
 
-Generate but do not automatically write the selected project fragment:
+Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A static result
+does not prove compilation, and generated Kotlin does not prove rendering or visual parity.
 
-```bash
-viewcompose-agent config --client <codex|claude-code|cursor> \
-  --source-root "$VIEWCOMPOSE_SOURCE_ROOT"
-```
-
-Merge the output into the client's configuration path in the table, preserving unrelated settings.
-
-### Codex
-
-Run `codex mcp list`, then use `/mcp` and `/skills` in the consumer project. Invoke
-`$viewcompose-api-reference` for a read-only first check. See the official
-[MCP](https://developers.openai.com/codex/mcp/) and
-[Agent Skills](https://learn.chatgpt.com/docs/build-skills) documentation.
-
-### Claude Code
-
-Approve the project `.mcp.json` when prompted, run `claude mcp list` and
-`claude mcp get viewcompose`, then use `/mcp` and `/viewcompose-api-reference`. See the official
-[MCP](https://code.claude.com/docs/en/mcp) and
-[Agent Skills](https://code.claude.com/docs/en/skills) documentation.
-
-### Cursor
-
-Open **Cursor Settings > Tools & MCP**, confirm `viewcompose`, check **Agent > Available Tools**,
-and invoke `/viewcompose-api-reference`. See the official
-[MCP](https://docs.cursor.com/context/model-context-protocol) and
-[Agent Skills](https://cursor.com/docs/skills) documentation.
-
-## 4. Run a verified first request
+Try this first request in the selected Agent:
 
 > Use ViewCompose to create a Material 3 login screen. Retrieve the exact APIs and compiled samples
-> first, validate the generated Kotlin by compilation, and render only if the target is covered.
+> before writing, run every validation lane currently available, and report the achieved evidence
+> level and any unavailable deeper lane.
 
-The agent should retrieve before writing, run `validate_code`, and report the actual evidence. The
-six Skills also cover screen creation, bounded XML conversion, read-only review, layout debugging,
-and validation without granting extra project-write authority.
+## Current compile, Preview, and layout boundary
 
-## Troubleshooting and removal
+In release `0.1.0`, compile-mode `validate_code`, Preview rendering, and rendered layout diagnosis
+still execute against a matching ViewCompose source checkout. They require JDK 21, the repository's
+pinned Android/Gradle lane, and the exact Knowledge Bundle revision. This is an enhancement mode,
+not a prerequisite for installing or using the standalone tools.
 
-| Symptom | Check |
-| --- | --- |
-| MCP or Skill is missing | Regenerate and merge the project profile, check the table's Skill root, then restart or reload the client. |
-| Installation reports a conflict | Review and explicitly reconcile the existing file; the installer never overwrites different bytes. |
-| Compile or Preview fails | Use JDK 21 and keep `VIEWCOMPOSE_SOURCE_ROOT` on the physical checkout; `knowledge` or `static` evidence does not prove compilation. |
-| A credential is requested | ViewCompose needs no provider credential. Never place one in MCP arguments or project configuration. |
-
-Remove the local package with:
+If that checkout is available, replace a standalone integration with a source-bound one:
 
 ```bash
-npm uninstall --global --prefix "$VIEWCOMPOSE_AI_PREFIX" --offline --ignore-scripts \
-  @viewcompose/ai-tooling
+viewcompose-agent uninstall --client <codex|claude-code|cursor> \
+  --project-root "$(pwd -P)"
+viewcompose-agent init --client <codex|claude-code|cursor> \
+  --project-root "$(pwd -P)" \
+  --source-root <physical-absolute-viewcompose-source-root>
 ```
 
-This intentionally leaves project configuration and Skill folders for manual review. Contributor
-internals are documented in the [local AI tooling contract](../../tools/ai/README.md) and the active
-[AI-verifiable tooling plan](../project/plans/ai-verifiable-development-tooling.md).
+The next tooling boundary will run compilation, Preview, and layout diagnosis in an explicitly
+authorized consumer project using released ViewCompose Maven artifacts. Until that contract and its
+smoke projects pass, the release fails closed with `VC-AI-SOURCE-ROOT-MISMATCH` instead of silently
+upgrading static evidence.
+
+## Upgrade or remove
+
+Before changing package versions, use the currently installed executable to remove the exact old
+project integration. Then install the new pinned GitHub Release and run `init` again. This preserves
+conflict detection across Skill and configuration changes.
+
+Remove the current project integration:
+
+```bash
+viewcompose-agent uninstall --client <codex|claude-code|cursor> \
+  --project-root "$(pwd -P)"
+```
+
+The command removes only the exact ViewCompose MCP entry and canonical Skill bytes; unrelated client
+settings and files remain. If either managed surface was edited, removal fails for review rather
+than deleting user content. Remove the global package separately:
+
+```bash
+npm uninstall --global @viewcompose/ai-tooling
+```
+
+## Integrity and troubleshooting
+
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.1.0)
+contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
+checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
+Attestations for all three assets. See GitHub's
+[artifact attestation verification guide](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)
+for an optional independent provenance check.
+
+| Symptom | Action |
+| --- | --- |
+| `viewcompose-agent` is not found | Confirm Node 24.19 or newer and that npm's global binary directory is on `PATH`. |
+| `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
+| The client does not show the MCP server | Run the client-specific check above, approve project configuration when required, then restart or reload the client. |
+| Compile or Preview reports `VC-AI-SOURCE-ROOT-MISMATCH` | Continue with honest static evidence, or explicitly install the source-bound enhancement mode. |
+| A credential is requested | Stop. ViewCompose needs no model-provider credential and never accepts one in MCP arguments or project configuration. |
+
+Contributor internals are documented in the [AI tooling contract](../../tools/ai/README.md) and the
+active [AI-verifiable tooling plan](../project/plans/ai-verifiable-development-tooling.md).
