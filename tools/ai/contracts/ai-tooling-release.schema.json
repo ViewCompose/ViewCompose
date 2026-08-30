@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewcompose.com/schemas/ai/ai-tooling-release-v1.schema.json",
+  "title": "ViewCompose AI tooling GitHub Release contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "releaseId", "repository", "workflowPath", "package", "assets", "provenance", "installation"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "releaseId": {"const": "viewcompose-ai-tooling-github-release-v1"},
+    "repository": {"const": "ViewCompose/ViewCompose"},
+    "workflowPath": {"const": ".github/workflows/ai-tooling-release.yml"},
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "tag", "tagPattern", "immutable"],
+      "properties": {
+        "name": {"const": "@viewcompose/ai-tooling"},
+        "version": {"const": "0.1.0"},
+        "tag": {"const": "ai-tooling-v0.1.0"},
+        "tagPattern": {"const": "ai-tooling-v<semver>"},
+        "immutable": {"const": true}
+      }
+    },
+    "assets": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "viewcompose-ai-tooling-0.1.0.tgz"},
+        {"const": "manifest.json"},
+        {"const": "SHA256SUMS"}
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "attestationRequired", "checksumAlgorithm"],
+      "properties": {
+        "provider": {"const": "github-artifact-attestations"},
+        "attestationRequired": {"const": true},
+        "checksumAlgorithm": {"const": "SHA-256"}
+      }
+    },
+    "installation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "buildFromSourceRequired",
+        "sourceCheckoutRequiredForStandalone",
+        "manualConfigurationEdits",
+        "maxPrimaryCommands",
+        "pinnedVersionRequired"
+      ],
+      "properties": {
+        "source": {"const": "github-release"},
+        "buildFromSourceRequired": {"const": false},
+        "sourceCheckoutRequiredForStandalone": {"const": false},
+        "manualConfigurationEdits": {"const": 0},
+        "maxPrimaryCommands": {"const": 2},
+        "pinnedVersionRequired": {"const": true}
+      }
+    }
+  }
+}

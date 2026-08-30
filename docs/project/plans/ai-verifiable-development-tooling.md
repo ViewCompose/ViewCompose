@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze the production-host and source-application transaction boundary that must follow the internal applied-result handoff, without enabling application source writes or public screenshot repair before authentication, precondition, rollback, and crash-consistency contracts exist.
+next_action: Complete the zero-friction public AI-tooling distribution and transactional Agent onboarding slice, then freeze the released-artifact and explicitly authorized consumer-project boundary for compilation, Preview, and layout diagnosis before resuming richer AI capabilities.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -67,6 +67,12 @@ it retains only a validated applied result, reopens the terminal record, returns
 Design IR beside an immutable handoff receipt, clears its retained reference after delivery, and
 rejects serialized authority, receipt drift, concurrent duplicates, and replay. Result persistence,
 production-host authentication, source writes, and public activation remain off.
+Consumer onboarding is now the higher-priority Phase 6A lane. Its frozen v2 client contract removes
+the ViewCompose checkout from all three standalone MCP profiles, caps the public path at one package
+installation plus one project initialization command, and requires transactional configuration and
+Skill writes with zero manual edits. A separate GitHub Release contract binds the first package to
+an immutable tag, three exact assets, SHA-256, and GitHub build-provenance attestations. These
+contracts do not yet claim released-artifact compilation or consumer-project Preview readiness.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
@@ -3158,6 +3164,37 @@ rollback or crash recovery for source changes, or activate repair through CLI/MC
 Maven artifact, publication input, public/protected framework API, or application process changed,
 so no Maven release changeset or module-manual update is required. The next prerequisite is a frozen
 production-host and source-application transaction boundary before any write or public activation.
+
+### Contract evidence — zero-friction public distribution and Agent onboarding
+
+Agent client integration v2 makes source-free standalone operation the default for Codex, Claude
+Code, and Cursor. Each profile retains an explicit source-bound configuration only for contributor
+or legacy full-evidence lanes. The public lifecycle owns `init`, `doctor`, and `uninstall`; one
+explicit `init` command must transactionally merge the exact installed MCP entry and six canonical
+Skills into a physical absolute consumer project. Exact re-entry is idempotent. Unknown clients,
+relative or symbolic-link roots, malformed configuration, different existing MCP ownership, and
+different Skill bytes fail without partial writes. `uninstall` may remove only bytes and one MCP
+entry that still reproduce the installed package identity.
+
+The onboarding denominator is 3/3 deterministic profiles, 3/3 source-free standalone profiles,
+zero manual configuration edits, no more than two primary commands from package installation to an
+initialized project, exact Skill bytes, transactional rollback, an idempotent second initialization,
+and a `doctor` result that distinguishes `standalone-ready` from unavailable source-bound evidence.
+Client proprietary binaries, credentials, authentication, and UI automation remain outside the
+package boundary.
+
+AI tooling GitHub Release v1 binds `@viewcompose/ai-tooling` `0.1.0` to immutable tag
+`ai-tooling-v0.1.0` and exactly three downloadable assets: the npm tarball, `manifest.json`, and
+`SHA256SUMS`. The release workflow must build from the tagged commit, pass the installed package
+gate, reproduce the package contract, create GitHub artifact attestations, and publish no mutable
+`latest` installation URL. Users install the exact release asset; they do not clone ViewCompose or
+run the distribution packager.
+
+This is a contract freeze only. It changes no Maven artifact, Android runtime, application source,
+or public screenshot-repair activation. Compilation, Preview, and layout diagnosis stay visibly
+source-bound until the next Phase 6A contract binds an exact released Knowledge Bundle to Maven
+coordinates or an explicitly authorized consumer project. The next action is the transactional
+Agent lifecycle implementation and tag-gated release workflow.
 
 ### Implementation evidence — bounded XML to Design IR
 
