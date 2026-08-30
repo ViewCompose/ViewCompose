@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-repair-authorization-v1",
+  "requiresContracts": [
+    "screenshot-repair-candidate-evidence-v1",
+    "screenshot-repair-proposal-v1",
+    "screenshot-repair-authorization-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "implemented-internal",
+    "publicRepairMode": false,
+    "implementation": true,
+    "executionAuthorized": false
+  },
+  "boundary": {
+    "baseline": "one exact evidence fingerprint accepted by an identified human reviewer at one immutable source revision",
+    "proposal": "one exact proposal, candidate evidence, and typed change fingerprint approved for one application",
+    "pixelReference": "one canonical exact-reference identity shared by baseline and candidate",
+    "reviewers": "explicit identities; separation of duties is not required by v1",
+    "receipts": "two distinct purpose-bound opaque attestations whose authentication belongs to the host",
+    "credentials": false,
+    "providerCalls": false,
+    "networkAccess": false,
+    "unattendedExecution": false,
+    "logs": "metadata-only"
+  },
+  "policy": {
+    "maxApplications": 1,
+    "baselineAcceptanceScope": "exact-evidence-only",
+    "proposalBinding": "exact-content-address",
+    "sourceRevision": "immutable-git-commit",
+    "reviewerTrust": "external-host-responsibility",
+    "receiptAuthentication": "not-claimed",
+    "authorizationReuse": false,
+    "authorizationRevocation": "host-owned-before-application"
+  },
+  "diagnosticCodes": [
+    "VC-AI-REPAIR-AUTHORIZATION-INPUT-INVALID",
+    "VC-AI-REPAIR-AUTHORIZATION-INTEGRITY-MISMATCH",
+    "VC-AI-REPAIR-AUTHORIZATION-LINEAGE-MISMATCH",
+    "VC-AI-REPAIR-AUTHORIZATION-CANCELLED"
+  ],
+  "claims": {
+    "checked": [
+      "baseline acceptance binds reviewer, receipt, exact evidence, and immutable source revision",
+      "repair approval binds reviewer, receipt, proposal, current evidence, and change identity",
+      "one authorization permits at most one exact application",
+      "authorization records reject credentials, provider calls, network access, and unattended execution"
+    ],
+    "notClaimed": [
+      "cryptographic authentication of reviewer identity or receipt",
+      "trustworthiness of the accepted baseline or source revision",
+      "automatic authorization from a successful proposal",
+      "public repair execution, revocation service, or multi-user policy"
+    ]
+  },
+  "supportedFixtures": [
+    {
+      "id": "human-accepted-single-use-rollback",
+      "authorization": "screenshot-repair/rollback.authorization.json",
+      "expectedAuthorizationFingerprint": "adbffdf1900072ad257969d8ac00d4d0706990040ba893c6ac09e910d5cb6633",
+      "expectedValidationFingerprint": "8de21c6df22f608bbb2ca290e27b569e10eb0f60f88fa5efdcbb62544f52abb1"
+    }
+  ],
+  "invalidFixtures": [
+    {"mutation": "baseline-evidence-mismatch", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-LINEAGE-MISMATCH"},
+    {"mutation": "candidate-evidence-mismatch", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-LINEAGE-MISMATCH"},
+    {"mutation": "proposal-mismatch", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-LINEAGE-MISMATCH"},
+    {"mutation": "change-mismatch", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-LINEAGE-MISMATCH"},
+    {"mutation": "pixel-reference-mismatch", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-LINEAGE-MISMATCH"},
+    {"mutation": "movable-source-revision", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-INPUT-INVALID"},
+    {"mutation": "missing-reviewer", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-INPUT-INVALID"},
+    {"mutation": "unattended-execution", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-INPUT-INVALID"},
+    {"mutation": "changed-authorization-fingerprint", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-INTEGRITY-MISMATCH"},
+    {"mutation": "credential-shaped-field", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-INPUT-INVALID"}
+  ],
+  "cancelledFixtures": [
+    {"mutation": "cancel-before-validation", "expectedCode": "VC-AI-REPAIR-AUTHORIZATION-CANCELLED"}
+  ]
+}

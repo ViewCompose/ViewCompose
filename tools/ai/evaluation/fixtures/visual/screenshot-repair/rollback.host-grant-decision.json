@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-repair-host-grant-decision",
+  "status": "granted",
+  "requestFingerprint": "1f47b20bbd1d7f300b906146978fbad84d690e04c44317327f8a5c7629d63faa",
+  "trustDomainId": "fixture-repair-host",
+  "authentication": {
+    "baselineAcceptance": {
+      "purpose": "baseline-acceptance",
+      "principalId": "fixture-baseline-reviewer",
+      "reviewReceipt": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "status": "authenticated",
+      "authenticationReceipt": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "repairApproval": {
+      "purpose": "repair-approval",
+      "principalId": "fixture-repair-approver",
+      "reviewReceipt": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "status": "authenticated",
+      "authenticationReceipt": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  },
+  "revocationChecks": {
+    "baselineAcceptance": {
+      "purpose": "baseline-acceptance",
+      "reviewReceipt": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "status": "active",
+      "checkReceipt": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "repairApproval": {
+      "purpose": "repair-approval",
+      "reviewReceipt": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "status": "active",
+      "checkReceipt": "4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  },
+  "reservation": {
+    "mode": "atomic-single-use-reservation",
+    "state": "reserved",
+    "attemptNumber": 1,
+    "maxAttempts": 1,
+    "reuseAllowed": false,
+    "retryAfterFailure": false,
+    "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555"
+  },
+  "grant": {
+    "validationFingerprint": "8de21c6df22f608bbb2ca290e27b569e10eb0f60f88fa5efdcbb62544f52abb1",
+    "authorizationFingerprint": "adbffdf1900072ad257969d8ac00d4d0706990040ba893c6ac09e910d5cb6633",
+    "candidateEvidenceFingerprint": "8e9be5c9a547cbfa11ff13fb6629788f3cb2cf737fba686d22a5de4a2f7996ef",
+    "proposalFingerprint": "a4e9a7462b3d7bbef163984f915444f3efce4586fd272573a4f30afcc28f7545",
+    "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
+    "targetDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+    "executionAuthorized": true,
+    "unattendedExecution": false
+  },
+  "policy": {
+    "decisionTransport": "trusted-host-callback-only",
+    "callerSuppliedDecision": false,
+    "credentialInput": false,
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "logs": "fingerprints-only"
+  },
+  "diagnostics": [],
+  "decisionFingerprint": "7503f19297663da468e481d319180e67fc7dd9815920013b542cdb9241ba203d"
+}

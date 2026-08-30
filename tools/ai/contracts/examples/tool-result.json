@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "result",
+  "requestId": "request-1",
+  "tool": "get_api_reference",
+  "status": "success",
+  "framework": {
+    "versionLane": "current-source",
+    "identity": "0123456789abcdef"
+  },
+  "evidence": {
+    "level": "knowledge",
+    "bundleFingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+    "cache": "miss"
+  },
+  "diagnostics": [],
+  "data": {
+    "capabilityId": "modifier.layout"
+  },
+  "elapsedMs": 4,
+  "truncated": false
+}

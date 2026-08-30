@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "kind": "result",
+  "status": "success",
+  "requestFingerprint": "e9db4c486dbcaa59cd214b557cca19fb4878f66eb668f9b94cbd14a4ca6dd77f",
+  "input": {
+    "sha256": "ff96bfc58337301e15ff1515d39a2653a855a46ef74e50f8884889cd28f21cc0",
+    "widthPx": 4,
+    "heightPx": 4
+  },
+  "output": {
+    "mediaType": "image/png",
+    "encoding": "base64",
+    "data": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAMUlEQVR42mP4z8DwHwwZ/oMBAwNIAIZBAiASIdjwn0FAweC/Q0DC/4KGCf8XbDjwHwATMx9HF4sbGwAAAABJRU5ErkJggg==",
+    "bytes": 106,
+    "sha256": "201c08259fb2891c57c3f85e0f9e1157ad9df9ae8303c4f8d679735cf2850b99",
+    "widthPx": 4,
+    "heightPx": 4
+  },
+  "transformations": [
+    {
+      "kind": "crop",
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 4,
+        "height": 4
+      }
+    },
+    {
+      "kind": "redact",
+      "rectangle": {
+        "x": 1,
+        "y": 1,
+        "width": 2,
+        "height": 2
+      },
+      "replacement": "#000000ff"
+    },
+    {
+      "kind": "strip-metadata"
+    }
+  ],
+  "privacy": {
+    "redactionsApplied": 1,
+    "providerTransfer": false,
+    "inputPersisted": false,
+    "logs": "metadata-only"
+  },
+  "diagnostics": [],
+  "outputFingerprint": "74d3e3190dca4157d07cefd51f9a3a809094dad93785cef3c327f566a6e832b1"
+}

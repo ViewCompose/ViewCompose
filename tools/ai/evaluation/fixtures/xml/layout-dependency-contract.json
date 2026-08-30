@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "contractId": "android-xml-layout-dependencies-v1",
+  "requiresSubsetIds": ["android-xml-layout-v1", "android-xml-layout-v2"],
+  "activation": "explicit-project-input-only",
+  "execution": {
+    "readOnly": true,
+    "networkAccess": false,
+    "executeProjectBuildLogic": false,
+    "followSymbolicLinks": false,
+    "automaticVariantSelection": false
+  },
+  "selection": {
+    "layoutReference": "unqualified @layout/name",
+    "directories": ["layout"],
+    "qualifiedLayouts": "inventory-only",
+    "resourceRootPrecedence": "first declared root wins",
+    "duplicateAtSamePrecedence": "fail closed"
+  },
+  "include": {
+    "allowedAttributes": ["layout"],
+    "preserveIncludedRoot": true,
+    "overrideAttributes": false,
+    "sourceOnlyInput": "fail closed"
+  },
+  "merge": {
+    "activation": "included-root-only",
+    "allowedAttributes": ["xmlns:android"],
+    "expansion": "splice ordered children into include position",
+    "standaloneRoot": "fail closed"
+  },
+  "provenance": {
+    "nodeSource": "originating layout path and original one-based line",
+    "includeSource": "including layout path and original one-based position",
+    "rawSourceInOutput": false,
+    "fingerprint": "sha256 of canonical JSON root, nodes, and edges"
+  },
+  "limits": {
+    "maxLayoutFiles": 64,
+    "maxIncludeDepth": 16,
+    "maxIncludeEdges": 256,
+    "maxExpandedBytes": 1048576
+  },
+  "diagnosticCodes": [
+    "VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED",
+    "VC-AI-XML-INCLUDE-CYCLE",
+    "VC-AI-XML-LAYOUT-DEPENDENCY-LIMIT",
+    "VC-AI-XML-LAYOUT-MISSING",
+    "VC-AI-XML-MERGE-ROOT-UNSUPPORTED",
+    "VC-AI-XML-PROJECT-CONTEXT-REQUIRED"
+  ],
+  "supportedFixtures": [
+    {
+      "projectRoot": "layout-dependencies/supported",
+      "layoutPath": "app/src/main/res/layout/screen.xml",
+      "resourceRoots": ["app/src/main/res"],
+      "sourceRoots": [],
+      "files": [
+        "app/src/main/res/layout/profile_actions.xml",
+        "app/src/main/res/layout/profile_header.xml",
+        "app/src/main/res/layout/screen.xml",
+        "app/src/main/res/values/strings.xml"
+      ],
+      "goldenGraph": "layout-dependencies/screen.dependencies.json",
+      "expectedLayoutFiles": 3,
+      "expectedIncludes": 2,
+      "expectedOutputNodes": 6,
+      "expectedResources": [
+        "drawable/profile_avatar",
+        "string/edit_profile",
+        "string/footer_label",
+        "string/profile_photo",
+        "string/profile_title"
+      ],
+      "expectedFunction": "ScreenView"
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "kind": "project",
+      "projectRoot": "layout-dependencies/cycle",
+      "layoutPath": "app/src/main/res/layout/a.xml",
+      "resourceRoots": ["app/src/main/res"],
+      "files": [
+        "app/src/main/res/layout/a.xml",
+        "app/src/main/res/layout/b.xml"
+      ],
+      "diagnosticCodes": ["VC-AI-XML-INCLUDE-CYCLE"]
+    },
+    {
+      "kind": "source",
+      "source": "layout-dependencies/supported/app/src/main/res/layout/screen.xml",
+      "diagnosticCodes": ["VC-AI-XML-PROJECT-CONTEXT-REQUIRED"]
+    }
+  ]
+}

@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-generated-layout-comparison-v1",
+  "requiresContracts": [
+    "design-ir-v1",
+    "viewcompose-generated-preview-v1",
+    "viewcompose-preview-protocol-v1",
+    "layout-comparison-v1"
+  ],
+  "activation": {
+    "tool": "convert_xml_to_viewcompose",
+    "mode": "render",
+    "successEvidence": "compared",
+    "failureEvidence": "rendered"
+  },
+  "input": {
+    "designIr": "the exact normalized IR generated in the current conversion request",
+    "previewRequest": "the exact content-addressed generated Preview request",
+    "renderTree": "the contained artifact from the accepted generated Preview result",
+    "callerSuppliedDesignIr": false,
+    "callerSuppliedRenderTree": false,
+    "callerSuppliedPolicy": false
+  },
+  "integrity": {
+    "designIrFingerprint": "SHA-256 of canonical compact JSON",
+    "previewRequestFingerprint": "must equal generated Preview evidence",
+    "renderTreeFingerprint": "reopen and verify the exact declared artifact before comparison",
+    "outputFingerprint": "must equal generated Preview evidence",
+    "followSymbolicLinks": false,
+    "absolutePathsInPublicResult": false,
+    "networkAccess": false,
+    "executeInspectedProjectBuildLogic": false
+  },
+  "identity": {
+    "designNodeIdToKey": "strip one leading id: prefix; preserve every other Design IR id exactly",
+    "keyMultiplicity": "exactly one virtual node",
+    "nativeNodeIdentity": "exact virtual nodeId",
+    "extraAuthoredKeys": "fail comparison",
+    "frameworkRootWithoutNodeId": "ignored",
+    "syntheticNodes": "fail comparison unless allowlisted by semanticHostWrappers"
+  },
+  "semanticHostWrappers": [
+    {
+      "designKind": "text-field",
+      "identityRenderKind": "column",
+      "semanticRenderKind": "text-field",
+      "maxDepth": 1,
+      "requirements": [
+        "exactly one child",
+        "child key is absent",
+        "identity and semantic host bounds are equal"
+      ]
+    }
+  ],
+  "kindMapping": {
+    "box": "box",
+    "button": "button",
+    "column": "column",
+    "image": "image",
+    "text": "text",
+    "text-field": "text-field"
+  },
+  "semantics": {
+    "resourceResolution": "only exact string Preview bindings with the same source identity",
+    "checked": [
+      "kind",
+      "declared parent and child order",
+      "visible text",
+      "content description",
+      "declared semantic role",
+      "visibility"
+    ],
+    "notClaimed": [
+      "text-field placeholder when absent from render-tree properties",
+      "state ownership or mutations",
+      "event behavior",
+      "focus traversal",
+      "complete accessibility behavior",
+      "style or pixel similarity"
+    ]
+  },
+  "geometry": {
+    "coordinateSpace": "render-tree integer pixels in the accepted screenshot viewport",
+    "dpConversion": "round(value * density) to nearest integer pixel",
+    "tolerancePx": 0,
+    "checked": [
+      "exact dp width and height",
+      "root match-parent width and height",
+      "child match-parent width inside declared parent padding",
+      "uniform padding anchor and trailing inset where observable",
+      "parent containment",
+      "column sibling order"
+    ],
+    "wrapContent": "record actual bounds but do not claim a target size",
+    "gone": "require GONE and zero or absent visible bounds; size checks are not applicable",
+    "notClaimed": [
+      "perceptual or pixel similarity",
+      "typography metrics",
+      "color",
+      "draw order",
+      "touch target",
+      "multiple device configurations"
+    ]
+  },
+  "evidence": {
+    "schema": "layout-comparison-v1",
+    "passLevel": "compared",
+    "mismatchLevel": "rendered",
+    "allRequiredChecksMustPass": true,
+    "oneAggregateScore": false,
+    "categories": ["identity", "structure", "semantic", "geometry"],
+    "comparisonFingerprint": "SHA-256 of canonical compact result without comparisonFingerprint"
+  },
+  "limits": {
+    "maxDesignNodes": 1000,
+    "maxVirtualNodes": 2000,
+    "maxNativeNodes": 4000,
+    "maxDepth": 64,
+    "maxRenderTreeBytes": 8388608,
+    "maxChecksPerNode": 128,
+    "maxFindings": 1000,
+    "maxWrapperDepth": 1
+  },
+  "diagnosticCodes": [
+    "VC-AI-COMPARE-INPUT-INVALID",
+    "VC-AI-COMPARE-DESIGN-IR-MISMATCH",
+    "VC-AI-COMPARE-RENDER-EVIDENCE-MISMATCH",
+    "VC-AI-COMPARE-RENDER-TREE-INVALID",
+    "VC-AI-COMPARE-NODE-MISSING",
+    "VC-AI-COMPARE-NODE-AMBIGUOUS",
+    "VC-AI-COMPARE-KIND-MISMATCH",
+    "VC-AI-COMPARE-STRUCTURE-MISMATCH",
+    "VC-AI-COMPARE-SEMANTIC-MISMATCH",
+    "VC-AI-COMPARE-GEOMETRY-MISMATCH",
+    "VC-AI-COMPARE-LIMIT"
+  ],
+  "supportedFixtures": [
+    {
+      "status": "implemented",
+      "source": "login.xml",
+      "designIr": "login.design-ir.json",
+      "comparisonPath": "res/layout/login.xml",
+      "previewRequest": "generated-preview/login.preview-request.json",
+      "expectedDesignIrFingerprint": "51b8a69a45b73e2ba0522a6ab2ebe7cbb13708dfd2caeb52391c00b90503b453",
+      "expectedComparedDesignIrFingerprint": "a938f6c0bd8333e195414353766d7e577bbcab0584c219cf4d123869192964d4",
+      "expectedRequestFingerprint": "d70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d",
+      "acceptedOutputFingerprint": "6d2c8a5296db8cc95e5201092e40532f371f1d95621acd7bad343c913b4b9bab",
+      "acceptedRenderTreeFingerprint": "d0373c8499b9d46f9cafa98a04c6f30d41a8ec69743a5ada35496ba0e2e05e85",
+      "expectedComparisonFingerprint": "fed14c0d17ef19b3f5fe22652f9d3f2314d5383fec0ce6b5c42bb0c873c21c12",
+      "viewport": {"widthPx": 1079, "heightPx": 2339},
+      "expectedSummary": {
+        "designNodes": 4,
+        "mappedNodes": 4,
+        "requiredChecks": 32,
+        "passedChecks": 32,
+        "failedChecks": 0,
+        "notApplicableChecks": 0
+      },
+      "expectedNodes": [
+        {
+          "designNodeId": "xml:0",
+          "identityKey": "xml:0",
+          "identityRenderKind": "column",
+          "semanticRenderKind": "column",
+          "wrapperDepth": 0,
+          "bounds": [0, 0, 1079, 2339],
+          "checkIds": [
+            "identity.key",
+            "structure.parent",
+            "structure.children",
+            "semantic.kind",
+            "semantic.visibility",
+            "geometry.width.match-parent",
+            "geometry.height.match-parent",
+            "geometry.padding.all"
+          ]
+        },
+        {
+          "designNodeId": "id:title",
+          "identityKey": "title",
+          "identityRenderKind": "text",
+          "semanticRenderKind": "text",
+          "wrapperDepth": 0,
+          "bounds": [42, 42, 568, 97],
+          "checkIds": [
+            "identity.key",
+            "structure.parent",
+            "structure.sibling-order",
+            "semantic.kind",
+            "semantic.visibility",
+            "semantic.text",
+            "geometry.containment"
+          ]
+        },
+        {
+          "designNodeId": "id:email",
+          "identityKey": "email",
+          "identityRenderKind": "column",
+          "semanticRenderKind": "text-field",
+          "wrapperDepth": 1,
+          "bounds": [42, 97, 1037, 244],
+          "checkIds": [
+            "identity.key",
+            "structure.parent",
+            "structure.sibling-order",
+            "semantic.kind",
+            "semantic.role",
+            "semantic.visibility",
+            "geometry.width.match-parent",
+            "geometry.containment"
+          ]
+        },
+        {
+          "designNodeId": "id:submit",
+          "identityKey": "submit",
+          "identityRenderKind": "button",
+          "semanticRenderKind": "button",
+          "wrapperDepth": 0,
+          "bounds": [42, 244, 1037, 370],
+          "checkIds": [
+            "identity.key",
+            "structure.parent",
+            "structure.sibling-order",
+            "semantic.kind",
+            "semantic.role",
+            "semantic.visibility",
+            "semantic.text",
+            "geometry.width.match-parent",
+            "geometry.containment"
+          ]
+        }
+      ]
+    },
+    {
+      "status": "implemented",
+      "source": "profile-card.xml",
+      "designIr": "profile-card.design-ir.json",
+      "comparisonPath": "res/layout/profile-card.xml",
+      "previewRequest": "generated-preview/image-binding.preview-request.json",
+      "expectedDesignIrFingerprint": "385e442fe7919dd30363c3532a674f8307cda53ff2ad7227edaa6dffb32a33f3",
+      "expectedComparedDesignIrFingerprint": "8a860b20a34b87d0eae3918f12d1968e3653e0fe46da0cceffa68f70e9c25b09",
+      "expectedRequestFingerprint": "ce0fc5b926e8a243d2cf5b32a568911899e19d329e07ad9698e5f90c6b2976ef",
+      "acceptedOutputFingerprint": "31fb45a13a4d35badee2cf61ce7760a0540b60ed2e0def2d3e3910cfdb4268f5",
+      "acceptedRenderTreeFingerprint": "58bbd8da9df6295da2419dc85bf4c7d4636419f8022237740b694966763b31e9",
+      "expectedComparisonFingerprint": "073a3e2dfdcbfec55e952d19296bd66008cde09bc8d2a259c4b0fb3b9badb200",
+      "viewport": {"widthPx": 1079, "heightPx": 2339},
+      "expectedSummary": {
+        "designNodes": 3,
+        "mappedNodes": 3,
+        "requiredChecks": 24,
+        "passedChecks": 24,
+        "failedChecks": 0,
+        "notApplicableChecks": 1
+      },
+      "expectedNodes": [
+        {
+          "designNodeId": "id:profile_card",
+          "identityKey": "profile_card",
+          "identityRenderKind": "box",
+          "semanticRenderKind": "box",
+          "wrapperDepth": 0,
+          "bounds": [0, 0, 1079, 420],
+          "checkIds": [
+            "identity.key",
+            "structure.parent",
+            "structure.children",
+            "semantic.kind",
+            "semantic.visibility",
+            "geometry.width.match-parent",
+            "geometry.height.dp",
+            "geometry.padding.all"
+          ]
+        },
+        {
+          "designNodeId": "id:avatar",
+          "identityKey": "avatar",
+          "identityRenderKind": "image",
+          "semanticRenderKind": "image",
+          "wrapperDepth": 0,
+          "bounds": [42, 42, 294, 294],
+          "checkIds": [
+            "identity.key",
+            "structure.parent",
+            "structure.sibling-order",
+            "semantic.kind",
+            "semantic.role",
+            "semantic.visibility",
+            "semantic.content-description",
+            "geometry.width.dp",
+            "geometry.height.dp",
+            "geometry.containment"
+          ]
+        },
+        {
+          "designNodeId": "id:status",
+          "identityKey": "status",
+          "identityRenderKind": "text",
+          "semanticRenderKind": "text",
+          "wrapperDepth": 0,
+          "bounds": [0, 0, 0, 0],
+          "checkIds": [
+            "identity.key",
+            "structure.parent",
+            "structure.sibling-order",
+            "semantic.kind",
+            "semantic.visibility",
+            "semantic.text",
+            "geometry.hidden"
+          ]
+        }
+      ]
+    }
+  ],
+  "unsupportedDenominators": [
+    {
+      "mutation": "change canonical Design IR after generation",
+      "diagnosticCodes": ["VC-AI-COMPARE-DESIGN-IR-MISMATCH"]
+    },
+    {
+      "mutation": "change render-tree bytes or declared fingerprint",
+      "diagnosticCodes": ["VC-AI-COMPARE-RENDER-EVIDENCE-MISMATCH"]
+    },
+    {
+      "mutation": "duplicate one normalized authored key",
+      "diagnosticCodes": ["VC-AI-COMPARE-NODE-AMBIGUOUS"]
+    },
+    {
+      "mutation": "change one mapped semantic kind",
+      "diagnosticCodes": ["VC-AI-COMPARE-KIND-MISMATCH"]
+    },
+    {
+      "mutation": "move one exact-dp node by one pixel",
+      "diagnosticCodes": ["VC-AI-COMPARE-GEOMETRY-MISMATCH"]
+    }
+  ]
+}

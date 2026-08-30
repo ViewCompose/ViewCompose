@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "kind": "report",
+  "requestFingerprint": "5ebbcec395b2ffbd2c53919149ddd1f9cc3070edf862da2e7795f02ea0dfe0e2",
+  "input": {
+    "resolutionResultFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
+    "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603"
+  },
+  "target": {
+    "language": "kotlin",
+    "packageName": "generated.viewcompose",
+    "functionName": "ScreenshotWireframeView",
+    "artifactIds": ["viewcompose-ui-foundation"],
+    "capabilityIds": ["foundation.components"]
+  },
+  "bindings": {
+    "states": [
+      {
+        "source": "emailState",
+        "parameter": "emailState",
+        "type": "TextFieldState",
+        "status": "resolved",
+        "nodeIds": ["wireframe-field"]
+      }
+    ],
+    "events": [
+      {
+        "source": "onEmailSubmit",
+        "parameter": "onEmailSubmit",
+        "event": "keyboard-action",
+        "type": "(TextFieldImeAction) -> Boolean",
+        "status": "resolved",
+        "nodeIds": ["wireframe-field"]
+      },
+      {
+        "source": "onContinue",
+        "parameter": "onContinue",
+        "event": "click",
+        "type": "() -> Unit",
+        "status": "resolved",
+        "nodeIds": ["wireframe-button"]
+      }
+    ]
+  },
+  "accessibility": {
+    "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444",
+    "nodes": [
+      {
+        "nodeId": "wireframe-root",
+        "role": "none",
+        "labelSource": "none",
+        "traversalIndex": 0,
+        "decorative": false,
+        "emission": {
+          "role": "not-applicable",
+          "label": "none",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      },
+      {
+        "nodeId": "wireframe-title",
+        "role": "none",
+        "labelSource": "visible-text",
+        "traversalIndex": 1,
+        "decorative": false,
+        "emission": {
+          "role": "not-applicable",
+          "label": "visible-text",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      },
+      {
+        "nodeId": "wireframe-field",
+        "role": "text-field",
+        "labelSource": "field-label",
+        "traversalIndex": 2,
+        "decorative": false,
+        "emission": {
+          "role": "component-default",
+          "label": "component-placeholder",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      },
+      {
+        "nodeId": "wireframe-button",
+        "role": "button",
+        "labelSource": "visible-text",
+        "traversalIndex": 3,
+        "decorative": false,
+        "emission": {
+          "role": "component-default",
+          "label": "visible-text",
+          "traversal": "hierarchy-order",
+          "decorative": "default-visible"
+        }
+      }
+    ],
+    "traversal": {
+      "mode": "hierarchy-order",
+      "explicitModifier": false,
+      "orderedNodeIds": [
+        "wireframe-root",
+        "wireframe-title",
+        "wireframe-field",
+        "wireframe-button"
+      ],
+      "reviewRequired": true
+    }
+  },
+  "callSiteReview": {
+    "required": true,
+    "items": [
+      "Retain caller ownership and restoration policy for every TextFieldState parameter.",
+      "Keep keyboard, focus, and click callbacks synchronous with their documented renderer-thread contracts.",
+      "Verify structural accessibility traversal and labels on the target Android API levels before integration.",
+      "Render and compare the generated screen before claiming screenshot visual parity."
+    ]
+  },
+  "verification": {
+    "generation": "deterministic",
+    "compilation": "required",
+    "rendering": "not-claimed",
+    "visualComparison": "not-claimed"
+  },
+  "kotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
+  "reportFingerprint": "91da4ff1eaf1f4d2fb0f8c73d8816d2c91030510ff00730ee96abe80f0efa319"
+}

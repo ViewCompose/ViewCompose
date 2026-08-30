@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-repair-execution-outcome-v1",
+  "requiresContracts": [
+    "screenshot-repair-authorization-v1",
+    "screenshot-repair-host-grant-v1",
+    "screenshot-repair-execution-outcome-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "implemented-internal",
+    "publicRepairMode": false,
+    "implementation": true,
+    "executionAuthorized": false
+  },
+  "boundary": {
+    "input": "one exact granted decision delivered directly by the trusted host callback",
+    "attempt": "the reserved attempt is consumed exactly once and is terminal for every outcome",
+    "success": "only applied plus committed may expose exact result and patch-output fingerprints",
+    "failure": "failed and cancelled expose no output and cannot retry the authorization",
+    "crash": "unknown effects become an indeterminate terminal record and cannot be executed again",
+    "receipt": "the trusted host records one outcome receipt bound to the reservation and full lineage",
+    "patchMode": "typed Design IR in memory only; persistent source writes remain forbidden",
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "unattendedExecution": false,
+    "logs": "fingerprints-only"
+  },
+  "policy": {
+    "maxAttempts": 1,
+    "grantReuse": false,
+    "retryAfterAnyOutcome": false,
+    "outcomeTransport": "trusted-host-callback-only",
+    "callerSuppliedOutcome": false,
+    "indeterminateHandling": "terminal-no-reexecution",
+    "publicActivation": false
+  },
+  "referenceStore": {
+    "status": "implemented-internal",
+    "directoryMode": "0700",
+    "recordMode": "0600",
+    "publication": "fsync-complete-temporary-then-atomic-hard-link",
+    "sameDraft": "return-exact-existing-outcome",
+    "conflictingDraft": "reject-without-overwrite",
+    "reconciliation": "read-only-by-reservation-receipt",
+    "reexecutePatch": false
+  },
+  "diagnosticCodes": [
+    "VC-AI-REPAIR-EXECUTION-INPUT-INVALID",
+    "VC-AI-REPAIR-EXECUTION-INTEGRITY-MISMATCH",
+    "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH",
+    "VC-AI-REPAIR-EXECUTION-ATTEMPT-POLICY-VIOLATION",
+    "VC-AI-REPAIR-EXECUTION-OUTCOME-INVALID",
+    "VC-AI-REPAIR-EXECUTION-RECEIPT-INVALID",
+    "VC-AI-REPAIR-EXECUTION-PATCH-FAILED",
+    "VC-AI-REPAIR-EXECUTION-CANCELLED",
+    "VC-AI-REPAIR-EXECUTION-EFFECT-UNKNOWN"
+  ],
+  "storeDiagnosticCodes": [
+    "VC-AI-REPAIR-TERMINAL-STORE-ROOT-INVALID",
+    "VC-AI-REPAIR-TERMINAL-STORE-ROOT-UNSAFE",
+    "VC-AI-REPAIR-TERMINAL-STORE-RESERVATION-INVALID",
+    "VC-AI-REPAIR-TERMINAL-STORE-INPUT-INVALID",
+    "VC-AI-REPAIR-TERMINAL-STORE-RECEIPT-COLLISION",
+    "VC-AI-REPAIR-TERMINAL-STORE-RECORD-CORRUPT",
+    "VC-AI-REPAIR-TERMINAL-STORE-CONFLICT"
+  ],
+  "claims": {
+    "checked": [
+      "every terminal outcome binds the exact grant, request, authorization, proposal, change, Design IR, reservation, and trust domain",
+      "every outcome consumes attempt one of one and forbids reuse or retry",
+      "only an applied committed outcome exposes content-addressed output identities",
+      "failed and cancelled outcomes prove no committed output while indeterminate outcomes make no effect claim",
+      "the terminal receipt is host-issued, purpose-bound to the same reservation, and distinct from the reservation receipt",
+      "the local reference store publishes only complete private records, returns identical drafts idempotently, and never overwrites a conflict"
+    ],
+    "notClaimed": [
+      "a production durable terminal store, source-writing executor, or recovery workflow",
+      "atomic persistence across patch effect and terminal receipt",
+      "authentication of a production host outcome receipt",
+      "automatic rollback or recovery after an indeterminate effect",
+      "persistent application source changes or public repair execution"
+    ]
+  },
+  "supportedFixtures": [
+    {
+      "id": "applied-committed",
+      "file": "screenshot-repair/rollback.execution-applied.json",
+      "expectedStatus": "applied",
+      "expectedEffectState": "committed",
+      "expectedOutcomeFingerprint": "cc9fbc5f8eb1796ac55e5c8258ae68c4b588d3680b160975abf57b6390977ffc"
+    },
+    {
+      "id": "failed-not-committed",
+      "file": "screenshot-repair/rollback.execution-failed.json",
+      "expectedStatus": "failed",
+      "expectedEffectState": "not-committed",
+      "expectedOutcomeFingerprint": "04f54652798f41e8983faeaff35bbf4186536ce4239e09be3f084c848e04667e"
+    },
+    {
+      "id": "cancelled-not-committed",
+      "file": "screenshot-repair/rollback.execution-cancelled.json",
+      "expectedStatus": "cancelled",
+      "expectedEffectState": "not-committed",
+      "expectedOutcomeFingerprint": "3dc1a992828e88d8c942853a9f53ce47ebe28a14e25e79da923fcdd7f0eb0591"
+    },
+    {
+      "id": "crashed-effect-indeterminate",
+      "file": "screenshot-repair/rollback.execution-indeterminate.json",
+      "expectedStatus": "indeterminate",
+      "expectedEffectState": "unknown",
+      "expectedOutcomeFingerprint": "496fa9c0efcedcc547d603a76947cf7fd89eedccc9c4803f698e1ab5aba857d0"
+    }
+  ],
+  "invalidFixtures": [
+    {"mutation": "changed-outcome-fingerprint", "expectedCode": "VC-AI-REPAIR-EXECUTION-INTEGRITY-MISMATCH"},
+    {"mutation": "host-grant-decision-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "host-grant-request-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "authorization-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "proposal-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "change-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "input-design-ir-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "reservation-lineage-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "trust-domain-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-LINEAGE-MISMATCH"},
+    {"mutation": "second-attempt", "expectedCode": "VC-AI-REPAIR-EXECUTION-ATTEMPT-POLICY-VIOLATION"},
+    {"mutation": "non-terminal-attempt", "expectedCode": "VC-AI-REPAIR-EXECUTION-ATTEMPT-POLICY-VIOLATION"},
+    {"mutation": "retry-allowed", "expectedCode": "VC-AI-REPAIR-EXECUTION-ATTEMPT-POLICY-VIOLATION"},
+    {"mutation": "unattended-execution", "expectedCode": "VC-AI-REPAIR-EXECUTION-ATTEMPT-POLICY-VIOLATION"},
+    {"mutation": "persistent-source-write", "expectedCode": "VC-AI-REPAIR-EXECUTION-INPUT-INVALID"},
+    {"mutation": "public-tool-mode", "expectedCode": "VC-AI-REPAIR-EXECUTION-INPUT-INVALID"},
+    {"mutation": "caller-supplied-outcome", "expectedCode": "VC-AI-REPAIR-EXECUTION-INPUT-INVALID"},
+    {"mutation": "applied-without-output", "expectedCode": "VC-AI-REPAIR-EXECUTION-OUTCOME-INVALID"},
+    {"mutation": "failed-exposes-output", "expectedCode": "VC-AI-REPAIR-EXECUTION-OUTCOME-INVALID"},
+    {"mutation": "cancelled-committed", "expectedCode": "VC-AI-REPAIR-EXECUTION-OUTCOME-INVALID"},
+    {"mutation": "indeterminate-claims-output", "expectedCode": "VC-AI-REPAIR-EXECUTION-OUTCOME-INVALID"},
+    {"mutation": "receipt-issuer-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-RECEIPT-INVALID"},
+    {"mutation": "receipt-reservation-mismatch", "expectedCode": "VC-AI-REPAIR-EXECUTION-RECEIPT-INVALID"},
+    {"mutation": "receipt-reuses-reservation", "expectedCode": "VC-AI-REPAIR-EXECUTION-RECEIPT-INVALID"},
+    {"mutation": "raw-design-ir-output", "expectedCode": "VC-AI-REPAIR-EXECUTION-INPUT-INVALID"}
+  ]
+}

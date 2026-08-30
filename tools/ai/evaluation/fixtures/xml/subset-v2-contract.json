@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "subsetId": "android-xml-layout-v2",
+  "baseSubsetId": "android-xml-layout-v1",
+  "source": {
+    "format": "Android layout XML",
+    "encoding": "UTF-8",
+    "networkAccess": false,
+    "allowDoctype": false,
+    "allowEntities": false
+  },
+  "limits": {
+    "maxInputBytes": 262144,
+    "maxDepth": 32,
+    "maxNodes": 500,
+    "maxAttributesPerNode": 64,
+    "maxUnsupportedFragments": 1000
+  },
+  "addedElements": [
+    {
+      "source": "FrameLayout",
+      "target": "box",
+      "children": "ordered-overlay"
+    },
+    {
+      "source": "ImageView",
+      "target": "image",
+      "children": "none"
+    }
+  ],
+  "addedAttributes": {
+    "commonOptional": ["android:visibility"],
+    "byElement": {
+      "FrameLayout": ["android:padding"],
+      "ImageView": [
+        "android:src",
+        "android:contentDescription",
+        "android:scaleType"
+      ]
+    },
+    "values": {
+      "android:visibility": "visible, invisible, or gone",
+      "android:src": "unqualified @drawable/name",
+      "android:contentDescription": "non-empty literal, unqualified @string/name, or explicit @null for decorative content",
+      "android:scaleType": "fitCenter, centerCrop, fitXY, or centerInside"
+    }
+  },
+  "normalization": {
+    "modifierOrder": ["size", "padding", "visibility"],
+    "drawableResourceStrategy": "caller ImageSource parameter preserving @drawable identity",
+    "contentDescriptionStrategy": "required Image parameter unless explicit @null marks decorative content",
+    "imageScaleMapping": {
+      "fitCenter": "fit",
+      "centerCrop": "crop",
+      "fitXY": "fill-bounds",
+      "centerInside": "inside"
+    },
+    "visibleStrategy": "omit redundant visibility modifier",
+    "lineEndings": "LF",
+    "trailingNewline": true
+  },
+  "codeGeneration": {
+    "packageName": "generated.viewcompose",
+    "functionName": "PascalCase source basename plus View",
+    "drawableResourceType": "ImageSource",
+    "stringResourceType": "String",
+    "compileArtifacts": ["viewcompose-ui-foundation"]
+  },
+  "unsupportedPolicy": {
+    "status": "unsupported",
+    "emitKotlin": false,
+    "preserveSource": true,
+    "localizeEveryFragment": true,
+    "missingImageDescription": "fail closed until the source explicitly declares text or @null"
+  },
+  "diagnosticCodes": ["VC-AI-XML-ACCESSIBILITY-REQUIRED"],
+  "supportedFixtures": [
+    {
+      "source": "profile-card.xml",
+      "goldenIr": "profile-card.design-ir.json",
+      "goldenKotlin": "profile-card.viewcompose.kt",
+      "expectedNodes": 3,
+      "expectedResources": [
+        "drawable/profile_avatar",
+        "string/profile_photo",
+        "string/status_label"
+      ],
+      "expectedStateBindings": [],
+      "expectedBindings": [
+        {"parameter": "profileAvatar", "type": "ImageSource"},
+        {"parameter": "profilePhoto", "type": "String"},
+        {"parameter": "statusLabel", "type": "String"}
+      ],
+      "expectedFunction": "ProfileCardView"
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "source": "image-missing-description.xml",
+      "diagnosticCodes": ["VC-AI-XML-ACCESSIBILITY-REQUIRED"]
+    }
+  ]
+}

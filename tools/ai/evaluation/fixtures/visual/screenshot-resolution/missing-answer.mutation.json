@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-resolution/wireframe.request.json",
+  "operation": "remove-answer",
+  "questionId": "question-button-behavior",
+  "expectedSchemaValid": true,
+  "expectedDiagnostic": "VC-AI-SCREENSHOT-RESOLUTION-COVERAGE-INCOMPLETE"
+}

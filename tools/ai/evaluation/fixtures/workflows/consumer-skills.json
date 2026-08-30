@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "workflowSetId": "viewcompose-consumer-skills-v1",
+  "versionLane": "current-source",
+  "sharedInvariants": [
+    "select-exact-framework-identity",
+    "retrieve-before-writing",
+    "never-fabricate-api",
+    "never-upgrade-evidence-implicitly",
+    "stop-on-repeated-diagnostic-without-new-evidence",
+    "preserve-user-mutation-authority"
+  ],
+  "workflows": [
+    {
+      "id": "viewcompose-api-reference",
+      "requiredTools": [
+        "get_api_reference",
+        "get_component_reference",
+        "search_component",
+        "get_sample"
+      ],
+      "conditionalTools": [],
+      "minimumEvidence": "knowledge",
+      "maximumEvidence": "knowledge",
+      "mutationPolicy": "read-only"
+    },
+    {
+      "id": "viewcompose-create-screen",
+      "requiredTools": [
+        "search_component",
+        "get_component_reference",
+        "get_sample",
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "analyze_project",
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "minimumEvidence": "compiled",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "user-requested-project-writes"
+    },
+    {
+      "id": "viewcompose-convert-xml",
+      "requiredTools": [
+        "convert_xml_to_viewcompose",
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "analyze_project",
+        "get_component_reference",
+        "get_sample",
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "minimumEvidence": "compiled",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "user-requested-project-writes"
+    },
+    {
+      "id": "viewcompose-review",
+      "requiredTools": [
+        "get_api_reference",
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "get_component_reference",
+        "get_sample",
+        "analyze_project"
+      ],
+      "minimumEvidence": "static",
+      "maximumEvidence": "compiled",
+      "mutationPolicy": "read-only-unless-fix-requested"
+    },
+    {
+      "id": "viewcompose-debug-layout",
+      "requiredTools": [
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "conditionalTools": [
+        "get_component_reference",
+        "get_sample",
+        "validate_code"
+      ],
+      "minimumEvidence": "rendered",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "read-only-unless-fix-requested"
+    },
+    {
+      "id": "viewcompose-validate",
+      "requiredTools": [
+        "validate_code"
+      ],
+      "conditionalTools": [
+        "render_preview",
+        "diagnose_layout"
+      ],
+      "minimumEvidence": "compiled",
+      "maximumEvidence": "rendered",
+      "mutationPolicy": "read-only"
+    }
+  ]
+}

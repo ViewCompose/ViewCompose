@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-repair-proposer-v1",
+  "requiresContracts": [
+    "design-ir-v1",
+    "screenshot-pixel-localization-v1",
+    "screenshot-repair-v2",
+    "screenshot-repair-candidate-evidence-v1",
+    "screenshot-repair-proposal-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "implemented-internal",
+    "publicRepairMode": false,
+    "implementation": true,
+    "mode": "single-property-regression-rollback"
+  },
+  "input": {
+    "baselineEvidence": "one schema-valid previously evaluated candidate record; completion is required for proposal eligibility",
+    "candidateEvidence": "one schema-valid current candidate record; completion is required for proposal eligibility",
+    "callerSuppliedPatch": false,
+    "callerSuppliedTargetValue": false,
+    "pixelOrVisionInferredValue": false
+  },
+  "eligibility": {
+    "sharedLineage": [
+      "baseResolutionResultFingerprint",
+      "inputDesignIrFingerprint"
+    ],
+    "pixelReference": "identical request, output, PNG, viewport, and interpretation identity",
+    "evidenceIntegrity": "both evidence fingerprints and every self-contained retained nested fingerprint reproduce; opaque upstream identities are compared but not recomputed",
+    "candidateGate": "safety through structure passed and exact-pixels failed",
+    "baselineGate": "same exact-pixel denominator with strictly fewer mismatched pixels and no larger maximum channel delta",
+    "difference": "exactly one existing properties field has a different non-expression typed value",
+    "localization": "the changed Design IR node has at least one attributed mismatched pixel",
+    "targetValue": "the exact typed value retained by baseline Design IR",
+    "revalidation": "every emitted patch must still pass the existing patch applier and six-gate evaluator"
+  },
+  "policy": {
+    "maxOperations": 1,
+    "eligibleOperations": ["replace-field"],
+    "eligibleCollections": ["properties"],
+    "maxDesignNodes": 1000,
+    "maxEvidenceBytes": 16777216,
+    "valueInference": false,
+    "providerCalls": false,
+    "networkAccess": false,
+    "executeInspectedProjectBuildLogic": false,
+    "aggregateScore": false
+  },
+  "diagnosticCodes": [
+    "VC-AI-REPAIR-PROPOSAL-NONE",
+    "VC-AI-REPAIR-PROPOSAL-INPUT-INVALID",
+    "VC-AI-REPAIR-PROPOSAL-CANCELLED"
+  ],
+  "claims": {
+    "checked": [
+      "rollback target values come only from an integrity-verified better baseline",
+      "one changed properties field on one pixel-attributed node",
+      "same exact-pixel denominator and strict mismatch improvement",
+      "no inferred value from pixel location, OCR, vision, or layout findings",
+      "typed patch remains subject to the complete six-gate evaluator"
+    ],
+    "notClaimed": [
+      "repair of a novel screenshot mismatch without a better baseline",
+      "text, color, dimension, modifier, resource, structure, behavior, or accessibility inference",
+      "causality between an attributed node and every changed pixel",
+      "public automatic repair mode",
+      "perceptual similarity or arbitrary source repair"
+    ]
+  },
+  "supportedFixtures": [
+    {
+      "id": "single-localized-property-regression",
+      "baselineEvidenceFingerprint": "c7b35e4aee0883e10e76f68f2b11e9a06b22df9dd5d7d79b45ecf00469597770",
+      "candidateEvidenceFingerprint": "8e9be5c9a547cbfa11ff13fb6629788f3cb2cf737fba686d22a5de4a2f7996ef",
+      "expectedReason": "strict-pixel-regression-rollback",
+      "expectedTarget": {
+        "nodeId": "wireframe-title",
+        "designPath": ["wireframe-root", "wireframe-title"],
+        "collection": "properties",
+        "name": "text",
+        "candidateValueFingerprint": "2d5a9d124f9e9914656016180d61fd19bd01b5215788700dbf90d4a808e78f34",
+        "baselineValueFingerprint": "468d5410ab849597bef869faf5a61fe632a374832339a132f6a6c5b9e87b2998",
+        "localizationFingerprint": "3a92d471b5380ad0287ed4b524ebca7886be9c50f106ffd1fe621ca4ffbce4f9",
+        "attributedMismatchedPixels": 2267
+      },
+      "expectedPatch": {
+        "schemaVersion": 1,
+        "operations": [
+          {
+            "op": "replace-field",
+            "nodeId": "wireframe-title",
+            "collection": "properties",
+            "name": "text",
+            "value": {"kind": "literal", "value": "Welcome"}
+          }
+        ],
+        "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945"
+      },
+      "expectedProposalFingerprint": "a4e9a7462b3d7bbef163984f915444f3efce4586fd272573a4f30afcc28f7545",
+      "expectedRollbackEvaluationFingerprint": "9bc3d6ab5824ede6670514878432d8d00ef3c95597682ea78a643980bd5fe9ef",
+      "expectedRollbackEvidenceFingerprint": "e1f0c5e18fdb514ede1a24d89549cd6c8d53443d818079982e14c30ac822f8cd"
+    }
+  ],
+  "noEligibleFixtures": [
+    {"mutation": "candidate-already-exact", "expectedReason": "candidate-already-exact"},
+    {"mutation": "earlier-gate-failed", "expectedReason": "earlier-gate-failed"},
+    {"mutation": "baseline-not-better", "expectedReason": "baseline-not-strictly-better"},
+    {
+      "mutation": "multiple-properties-differ",
+      "expectedReason": "no-single-localized-property-difference"
+    },
+    {
+      "mutation": "changed-node-not-localized",
+      "expectedReason": "no-single-localized-property-difference"
+    },
+    {
+      "mutation": "localization-without-baseline-value-difference",
+      "expectedReason": "no-single-localized-property-difference"
+    }
+  ],
+  "invalidFixtures": [
+    {"mutation": "changed-evidence-fingerprint", "expectedReason": "input-invalid"},
+    {"mutation": "lineage-mismatch", "expectedReason": "evidence-lineage-mismatch"}
+  ],
+  "cancelledFixtures": [
+    {"mutation": "cancel-before-validation", "expectedReason": "cancelled"}
+  ]
+}

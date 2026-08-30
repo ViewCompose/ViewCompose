@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "operation": "swap-root-children",
+  "rootId": "wireframe-root",
+  "leftNodeId": "wireframe-field",
+  "rightNodeId": "wireframe-button",
+  "expectedDiagnostic": "VC-AI-COMPARE-STRUCTURE-MISMATCH"
+}

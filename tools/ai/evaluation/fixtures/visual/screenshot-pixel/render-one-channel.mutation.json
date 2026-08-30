@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "operation": "xor-render-channel",
+  "pixelIndex": 0,
+  "channel": "red",
+  "value": 1,
+  "expectedDiagnosticCodes": ["VC-AI-PIXEL-MISMATCH"],
+  "expectedMetrics": {
+    "mismatchedPixels": 1,
+    "maxChannelDelta": 1
+  },
+  "expectedLocalization": {
+    "status": "mismatch",
+    "mismatchBounds": {"x": 0, "y": 0, "width": 1, "height": 1},
+    "designNodeId": "wireframe-title",
+    "attributedMismatchedPixels": 1,
+    "unassignedMismatchedPixels": 0
+  }
+}

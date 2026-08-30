@@ -1,0 +1,22 @@
+{
+  "projectRoot": "/workspace/sample",
+  "readOnly": true,
+  "files": [
+    "settings.gradle.kts",
+    "app/build.gradle.kts",
+    "app/src/main/java/example/LoginScreen.kt"
+  ],
+  "limits": {
+    "maxFiles": 1000,
+    "maxBytes": 4194304,
+    "timeoutMs": 10000
+  },
+  "excluded": [
+    ".git",
+    ".gradle",
+    "build",
+    "local.properties",
+    "*.jks",
+    "*.keystore"
+  ]
+}

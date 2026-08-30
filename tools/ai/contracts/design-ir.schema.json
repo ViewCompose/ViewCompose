@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/design-ir-v1.schema.json",
+  "title": "ViewCompose tooling Design IR v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "documentId", "source", "roots", "unsupported"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "documentId": { "$ref": "#/$defs/stableId" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identity", "fingerprint"],
+      "properties": {
+        "kind": { "enum": ["prompt", "android-xml", "compose", "screenshot", "figma"] },
+        "identity": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "fingerprint": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "unsupported": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": { "$ref": "#/$defs/unsupported" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "properties", "modifiers", "semantics", "events", "state", "children", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "kind": { "$ref": "#/$defs/stableId" },
+        "properties": { "$ref": "#/$defs/fields" },
+        "modifiers": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "arguments"],
+            "properties": {
+              "kind": { "$ref": "#/$defs/stableId" },
+              "arguments": { "$ref": "#/$defs/fields" }
+            }
+          }
+        },
+        "semantics": { "$ref": "#/$defs/fields" },
+        "events": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "binding", "status"],
+            "properties": {
+              "kind": { "$ref": "#/$defs/stableId" },
+              "binding": { "$ref": "#/$defs/stableId" },
+              "status": { "enum": ["resolved", "placeholder", "unsupported"] }
+            }
+          }
+        },
+        "state": { "$ref": "#/$defs/fields" },
+        "children": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": { "$ref": "#/$defs/node" }
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value"],
+        "properties": {
+          "name": { "$ref": "#/$defs/stableId" },
+          "value": { "$ref": "#/$defs/value" }
+        }
+      }
+    },
+    "value": {
+      "oneOf": [
+        { "$ref": "#/$defs/literalValue" },
+        { "$ref": "#/$defs/resourceValue" },
+        { "$ref": "#/$defs/dimensionValue" },
+        { "$ref": "#/$defs/layoutDimensionValue" },
+        { "$ref": "#/$defs/enumValue" },
+        { "$ref": "#/$defs/bindingValue" },
+        { "$ref": "#/$defs/expressionValue" }
+      ]
+    },
+    "literalValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "const": "literal" },
+        "value": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "boolean" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "resourceValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "resourceType", "name"],
+      "properties": {
+        "kind": { "const": "resource" },
+        "resourceType": { "$ref": "#/$defs/stableId" },
+        "name": { "$ref": "#/$defs/stableId" },
+        "package": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "dimensionValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value", "unit"],
+      "properties": {
+        "kind": { "const": "dimension" },
+        "value": { "type": "number" },
+        "unit": { "enum": ["dp", "sp", "px"] }
+      }
+    },
+    "layoutDimensionValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "const": "layout-dimension" },
+        "value": { "enum": ["match-parent", "wrap-content"] }
+      }
+    },
+    "enumValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "type", "value"],
+      "properties": {
+        "kind": { "const": "enum" },
+        "type": { "$ref": "#/$defs/stableId" },
+        "value": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "bindingValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "status"],
+      "properties": {
+        "kind": { "const": "binding" },
+        "name": { "$ref": "#/$defs/stableId" },
+        "status": { "enum": ["resolved", "placeholder", "unsupported"] }
+      }
+    },
+    "expressionValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "language", "source"],
+      "properties": {
+        "kind": { "const": "expression" },
+        "language": { "$ref": "#/$defs/stableId" },
+        "source": { "type": "string", "minLength": 1, "maxLength": 16384 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "sourceSpan", "confidence", "decision"],
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "sourceSpan": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "decision": { "type": "string", "minLength": 1, "maxLength": 2048 }
+      }
+    },
+    "unsupported": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "sourceSpan", "code", "reason", "preservedSource", "disposition"],
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "sourceSpan": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "code": { "pattern": "^VC-AI-[A-Z0-9-]+$", "type": "string" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "preservedSource": { "type": "string", "maxLength": 16384 },
+        "disposition": { "enum": ["preserved", "blocked"] }
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

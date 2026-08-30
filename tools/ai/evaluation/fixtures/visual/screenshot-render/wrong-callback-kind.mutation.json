@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-render/wireframe.preview-request.json",
+  "operation": "replace-binding-kind",
+  "parameter": "onEmailSubmit",
+  "value": {
+    "kind": "unit-callback",
+    "behavior": "no-op"
+  },
+  "expectedDiagnostic": "VC-AI-PREVIEW-GENERATED-SOURCE-MISMATCH"
+}

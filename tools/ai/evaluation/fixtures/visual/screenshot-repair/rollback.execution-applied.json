@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-repair-execution-outcome",
+  "status": "applied",
+  "reason": "patch-applied",
+  "lineage": {
+    "hostGrantDecisionFingerprint": "7503f19297663da468e481d319180e67fc7dd9815920013b542cdb9241ba203d",
+    "hostGrantRequestFingerprint": "1f47b20bbd1d7f300b906146978fbad84d690e04c44317327f8a5c7629d63faa",
+    "authorizationFingerprint": "adbffdf1900072ad257969d8ac00d4d0706990040ba893c6ac09e910d5cb6633",
+    "proposalFingerprint": "a4e9a7462b3d7bbef163984f915444f3efce4586fd272573a4f30afcc28f7545",
+    "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
+    "inputDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+    "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
+    "hostTrustDomainId": "fixture-repair-host"
+  },
+  "attempt": {
+    "reservationState": "consumed",
+    "attemptNumber": 1,
+    "maxAttempts": 1,
+    "terminal": true,
+    "reuseAllowed": false,
+    "retryAllowed": false,
+    "attendedExecution": true
+  },
+  "executor": {
+    "executorId": "fixture-typed-design-ir-executor",
+    "executorBuildFingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+    "patchMode": "typed-design-ir-in-memory",
+    "persistentSourceWrite": false,
+    "publicToolMode": false,
+    "callerSuppliedOutcome": false,
+    "credentialInput": false,
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "logs": "fingerprints-only"
+  },
+  "effect": {
+    "state": "committed",
+    "resultDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "patchOutputFingerprint": "14af86b8e37dd5e15342fa30734de678f7c2ef2f942e01e4de91d033547be7ca",
+    "outputExposed": true
+  },
+  "receipt": {
+    "issuerTrustDomainId": "fixture-repair-host",
+    "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
+    "terminalState": "recorded",
+    "outcomeTransport": "trusted-host-callback-only",
+    "outcomeReceipt": "7777777777777777777777777777777777777777777777777777777777777777"
+  },
+  "diagnostics": [],
+  "outcomeFingerprint": "cc9fbc5f8eb1796ac55e5c8258ae68c4b588d3680b160975abf57b6390977ffc"
+}

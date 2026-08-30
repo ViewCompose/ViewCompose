@@ -97,6 +97,17 @@ class ViewComposePreviewGradlePluginFunctionalTest {
                         workerMainClass.set("sample.FakePreviewWorkerHost")
                     }
                 }
+
+                tasks.register("verifyPreviewWorkerJvm") {
+                    doLast {
+                        def target = configurations.viewComposePreviewWorkerHost.attributes
+                            .getAttribute(
+                                org.gradle.api.attributes.java.TargetJvmVersion
+                                    .TARGET_JVM_VERSION_ATTRIBUTE
+                            )
+                        assert target == 21 : "Expected Preview worker JVM 21, got ${'$'}target"
+                    }
+                }
                 """.trimIndent(),
             )
         }
@@ -232,6 +243,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
                 "--stacktrace",
                 ":app:discoverDebugViewComposePreviews",
                 ":app:assembleRelease",
+                ":app:verifyPreviewWorkerJvm",
             )
             .withPluginClasspath()
             .build()
@@ -243,6 +255,10 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         assertEquals(
             TaskOutcome.SUCCESS,
             result.task(":app:assembleRelease")?.outcome,
+        )
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            result.task(":app:verifyPreviewWorkerJvm")?.outcome,
         )
         val output = project.resolve("app/build/viewcompose-preview/debug")
         val manifest = PreviewProtocolJson.decodeBuildManifest(

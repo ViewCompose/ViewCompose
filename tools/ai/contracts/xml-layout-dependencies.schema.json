@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/xml-layout-dependencies-v1.schema.json",
+  "title": "ViewCompose Android XML layout dependency graph v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "graphId", "root", "nodes", "edges", "coverage", "fingerprint"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "graphId": { "$ref": "#/$defs/stableId" },
+    "root": { "$ref": "#/$defs/layoutReference" },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reference", "path", "fingerprint", "rootKind", "resourceRootPrecedence"],
+        "properties": {
+          "reference": { "$ref": "#/$defs/layoutReference" },
+          "path": { "$ref": "#/$defs/projectPath" },
+          "fingerprint": { "$ref": "#/$defs/sha256" },
+          "rootKind": { "enum": ["layout", "merge"] },
+          "resourceRootPrecedence": { "type": "integer", "minimum": 0, "maximum": 15 }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "source"],
+        "properties": {
+          "from": { "$ref": "#/$defs/layoutReference" },
+          "to": { "$ref": "#/$defs/layoutReference" },
+          "source": { "$ref": "#/$defs/sourcePosition" }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layoutFiles", "expandedIncludes", "selection", "completeness", "executedProjectBuildLogic", "networkAccess"],
+      "properties": {
+        "layoutFiles": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "expandedIncludes": { "type": "integer", "minimum": 0, "maximum": 256 },
+        "selection": { "const": "ordered-explicit-resource-roots-default-layout-only" },
+        "completeness": { "const": "explicit-roots-only" },
+        "executedProjectBuildLogic": { "const": false },
+        "networkAccess": { "const": false }
+      }
+    },
+    "fingerprint": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "layoutReference": {
+      "type": "string",
+      "pattern": "^@layout/[A-Za-z][A-Za-z0-9_]*$"
+    },
+    "sourcePosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "startLine", "startColumn"],
+      "properties": {
+        "path": { "$ref": "#/$defs/projectPath" },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "startColumn": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "projectPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

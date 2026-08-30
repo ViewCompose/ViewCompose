@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-repair-proposal-v1.schema.json",
+  "title": "ViewCompose screenshot repair proposal v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "policy",
+    "input",
+    "reason",
+    "target",
+    "patch",
+    "diagnostics",
+    "proposalFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["proposed", "no-eligible-change", "invalid", "cancelled"]},
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "targetValueSource",
+        "currentGate",
+        "requiredPriorGates",
+        "baselineImprovement",
+        "localization",
+        "maxOperations",
+        "eligibleCollections",
+        "valueInference",
+        "providerCalls",
+        "networkAccess"
+      ],
+      "properties": {
+        "version": {"const": 1},
+        "mode": {"const": "single-property-regression-rollback"},
+        "targetValueSource": {"const": "accepted-baseline-design-ir"},
+        "currentGate": {"const": "exact-pixels"},
+        "requiredPriorGates": {
+          "const": ["safety", "compilation", "render", "semantics", "structure"]
+        },
+        "baselineImprovement": {
+          "const": "same-denominator-strictly-fewer-mismatched-pixels"
+        },
+        "localization": {"const": "changed-node-must-be-attributed"},
+        "maxOperations": {"const": 1},
+        "eligibleCollections": {"const": ["properties"]},
+        "valueInference": {"const": false},
+        "providerCalls": {"const": false},
+        "networkAccess": {"const": false}
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baselineEvidenceFingerprint", "candidateEvidenceFingerprint"],
+      "properties": {
+        "baselineEvidenceFingerprint": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+        },
+        "candidateEvidenceFingerprint": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+        }
+      }
+    },
+    "reason": {
+      "enum": [
+        "strict-pixel-regression-rollback",
+        "candidate-already-exact",
+        "earlier-gate-failed",
+        "baseline-not-strictly-better",
+        "evidence-lineage-mismatch",
+        "no-single-localized-property-difference",
+        "input-invalid",
+        "cancelled"
+      ]
+    },
+    "target": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nodeId",
+            "designPath",
+            "collection",
+            "name",
+            "candidateValueFingerprint",
+            "baselineValueFingerprint",
+            "localizationFingerprint",
+            "attributedMismatchedPixels"
+          ],
+          "properties": {
+            "nodeId": {"$ref": "#/$defs/stableId"},
+            "designPath": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {"$ref": "#/$defs/stableId"}
+            },
+            "collection": {"const": "properties"},
+            "name": {"$ref": "#/$defs/stableId"},
+            "candidateValueFingerprint": {"$ref": "#/$defs/sha256"},
+            "baselineValueFingerprint": {"$ref": "#/$defs/sha256"},
+            "localizationFingerprint": {"$ref": "#/$defs/sha256"},
+            "attributedMismatchedPixels": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        }
+      ]
+    },
+    "patch": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object"}
+      ]
+    },
+    "diagnostics": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {"$ref": "#/$defs/diagnostic"}
+    },
+    "proposalFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-REPAIR-PROPOSAL-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-resolution/wireframe.request.json",
+  "operation": "replace-field-value",
+  "questionId": "question-title-text",
+  "fieldName": "text",
+  "value": {
+    "kind": "expression",
+    "language": "kotlin",
+    "source": "loadTitle()"
+  },
+  "expectedSchemaValid": false,
+  "expectedDiagnostic": "VC-AI-SCREENSHOT-RESOLUTION-EXECUTABLE-DENIED"
+}

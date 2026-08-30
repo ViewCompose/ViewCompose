@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "kind": "request",
+  "input": {
+    "validationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab",
+    "inferenceResultFingerprint": "62694a1787a531bf68f9794c1a54630082e5d8f8fe7ee5becf3214c2ab107a09",
+    "designIrFingerprint": "585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a"
+  },
+  "authorization": {
+    "mode": "human-resolution",
+    "reviewerId": "fixture-reviewer",
+    "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444",
+    "approvedPurpose": "resolve-screenshot-inference",
+    "approvedValidationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab",
+    "sourceInspectionCompleted": true,
+    "providerExecution": false,
+    "networkAccess": false,
+    "logs": "metadata-only"
+  },
+  "policy": {
+    "requireAllBlockingQuestions": true,
+    "expressions": "forbidden",
+    "resourceGuessing": "forbidden",
+    "executableSource": false,
+    "allowedDecisionKinds": [
+      "accessibility-review",
+      "set-events",
+      "set-fields"
+    ]
+  },
+  "answers": [
+    {
+      "questionId": "question-title-text",
+      "nodeId": "wireframe-title",
+      "sourceRegion": {"x": 2, "y": 2, "width": 8, "height": 2},
+      "category": "content",
+      "requiredAction": "human-answer",
+      "decision": {
+        "kind": "set-fields",
+        "fields": [
+          {
+            "collection": "properties",
+            "name": "text",
+            "value": {"kind": "literal", "value": "Welcome"}
+          }
+        ]
+      }
+    },
+    {
+      "questionId": "question-field-purpose",
+      "nodeId": "wireframe-field",
+      "sourceRegion": {"x": 2, "y": 7, "width": 12, "height": 5},
+      "category": "content",
+      "requiredAction": "human-answer",
+      "decision": {
+        "kind": "set-fields",
+        "fields": [
+          {
+            "collection": "properties",
+            "name": "hint",
+            "value": {"kind": "literal", "value": "Email address"}
+          },
+          {
+            "collection": "properties",
+            "name": "inputType",
+            "value": {
+              "kind": "enum",
+              "type": "android-input-type",
+              "value": "textEmailAddress"
+            }
+          },
+          {
+            "collection": "state",
+            "name": "text",
+            "value": {"kind": "binding", "name": "emailState", "status": "resolved"}
+          }
+        ]
+      }
+    },
+    {
+      "questionId": "question-field-behavior",
+      "nodeId": "wireframe-field",
+      "sourceRegion": {"x": 2, "y": 7, "width": 12, "height": 5},
+      "category": "behavior",
+      "requiredAction": "source-inspection",
+      "decision": {
+        "kind": "set-events",
+        "events": [
+          {"kind": "keyboard-action", "binding": "onEmailSubmit", "status": "resolved"}
+        ]
+      }
+    },
+    {
+      "questionId": "question-button-text",
+      "nodeId": "wireframe-button",
+      "sourceRegion": {"x": 2, "y": 15, "width": 12, "height": 5},
+      "category": "content",
+      "requiredAction": "human-answer",
+      "decision": {
+        "kind": "set-fields",
+        "fields": [
+          {
+            "collection": "properties",
+            "name": "text",
+            "value": {"kind": "literal", "value": "Continue"}
+          }
+        ]
+      }
+    },
+    {
+      "questionId": "question-button-behavior",
+      "nodeId": "wireframe-button",
+      "sourceRegion": {"x": 2, "y": 15, "width": 12, "height": 5},
+      "category": "behavior",
+      "requiredAction": "source-inspection",
+      "decision": {
+        "kind": "set-events",
+        "events": [
+          {"kind": "click", "binding": "onContinue", "status": "resolved"}
+        ]
+      }
+    },
+    {
+      "questionId": "question-accessibility",
+      "sourceRegion": {"x": 0, "y": 0, "width": 16, "height": 24},
+      "category": "accessibility",
+      "requiredAction": "human-answer",
+      "decision": {
+        "kind": "accessibility-review",
+        "nodes": [
+          {
+            "nodeId": "wireframe-root",
+            "role": "none",
+            "labelSource": "none",
+            "traversalIndex": 0,
+            "decorative": false
+          },
+          {
+            "nodeId": "wireframe-title",
+            "role": "none",
+            "labelSource": "visible-text",
+            "traversalIndex": 1,
+            "decorative": false
+          },
+          {
+            "nodeId": "wireframe-field",
+            "role": "text-field",
+            "labelSource": "field-label",
+            "traversalIndex": 2,
+            "decorative": false
+          },
+          {
+            "nodeId": "wireframe-button",
+            "role": "button",
+            "labelSource": "visible-text",
+            "traversalIndex": 3,
+            "decorative": false
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "operation": "repeat-candidate",
+  "reasonCode": "exact-pixels",
+  "firstSeenIteration": 0,
+  "repeatedAtIteration": 1,
+  "candidateFingerprint": "98599de109dcc98ff978326bf9a906dc9b131549f2dce665cc04639adce61c78"
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/knowledge-bundle-manifest-v1.schema.json",
+  "title": "ViewCompose AI Knowledge Bundle manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatorVersion",
+    "framework",
+    "source",
+    "files",
+    "counts",
+    "bundleFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "generatorVersion": { "type": "string", "minLength": 1 },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["versionLane", "identity"],
+      "properties": {
+        "versionLane": { "enum": ["current-source", "released"] },
+        "identity": { "type": "string", "minLength": 7 }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "capabilityFingerprint"],
+      "properties": {
+        "revision": { "type": "string", "minLength": 7 },
+        "capabilityFingerprint": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "mediaType", "sha256", "bytes"],
+        "properties": {
+          "path": {
+            "enum": [
+              "artifacts.json",
+              "capabilities.json",
+              "symbols.jsonl",
+              "samples.jsonl",
+              "rules.json",
+              "llms.txt",
+              "llms-full.txt"
+            ]
+          },
+          "mediaType": { "type": "string", "minLength": 3 },
+          "sha256": { "$ref": "#/$defs/sha256" },
+          "bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifacts", "capabilities", "symbols", "samples", "rules"],
+      "properties": {
+        "artifacts": { "type": "integer", "minimum": 0 },
+        "capabilities": { "type": "integer", "minimum": 0 },
+        "symbols": { "type": "integer", "minimum": 0 },
+        "samples": { "type": "integer", "minimum": 0 },
+        "rules": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "bundleFingerprint": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

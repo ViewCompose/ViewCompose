@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "baseFixture": "screenshot-resolution/wireframe.result.json",
+  "operation": "replace-code-generation-eligibility",
+  "value": false,
+  "expectedDiagnostic": "VC-AI-SCREENSHOT-GENERATION-NOT-ELIGIBLE"
+}

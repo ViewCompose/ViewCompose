@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "subsetId": "android-xml-project-context-v1",
+  "baseSubsetId": "android-xml-layout-v1",
+  "execution": {
+    "readOnly": true,
+    "networkAccess": false,
+    "executeProjectBuildLogic": false,
+    "followSymbolicLinks": false,
+    "automaticVariantSelection": false
+  },
+  "inputs": {
+    "projectRoot": "one canonical absolute directory",
+    "layoutPath": "one project-relative file under an explicit resource root",
+    "resourceRoots": "ordered project-relative directories, highest precedence first",
+    "sourceRoots": "ordered project-relative Kotlin or Java directories"
+  },
+  "limits": {
+    "maxFiles": 1000,
+    "maxBytes": 4194304,
+    "maxResourceRoots": 16,
+    "maxSourceRoots": 16,
+    "maxStyleDepth": 16,
+    "maxDefinitionsPerResource": 64,
+    "maxCallSites": 4096,
+    "timeoutMs": 10000
+  },
+  "resourceResolution": {
+    "types": ["string", "dimen"],
+    "defaultDirectory": "values",
+    "qualifiedDefinitions": "inventory-only",
+    "selection": "first default definition by explicit resource-root precedence, then normalized path",
+    "stringPolicy": "preserve the resource identity and record the default literal as evidence",
+    "dimensionPolicy": "resolve non-negative finite dp, sp, or px values without density conversion",
+    "unsupported": [
+      "framework or package-qualified resources",
+      "resource aliases and theme attributes",
+      "formatted strings, plurals, arrays, markup, and XLIFF",
+      "duplicate definitions at the same precedence",
+      "a resource with no default values definition"
+    ]
+  },
+  "styleResolution": {
+    "attribute": "style",
+    "reference": "unqualified @style/name",
+    "parent": "explicit unqualified @style/name only",
+    "precedence": "inline attribute, child style item, nearest parent item",
+    "itemAttributes": [
+      "android:layout_width",
+      "android:layout_height",
+      "android:orientation",
+      "android:padding",
+      "android:text",
+      "android:hint",
+      "android:inputType"
+    ],
+    "cycles": "fail closed",
+    "implicitDottedParents": false,
+    "themeAttributes": false
+  },
+  "callSiteInventory": {
+    "languages": ["kotlin", "java"],
+    "analysis": "bounded-lexical",
+    "kinds": [
+      "layout-reference",
+      "id-reference",
+      "resource-reference",
+      "view-binding-reference",
+      "listener-registration",
+      "imperative-mutation",
+      "adapter-assignment"
+    ],
+    "positions": "project-relative path, one-based line and column",
+    "rawSourceInOutput": false,
+    "completeness": "not-proven",
+    "limitations": [
+      "dynamic and reflective references are not discovered",
+      "generated source and excluded roots are not discovered",
+      "binding-convention and local-variable ownership matches remain candidates",
+      "the inventory does not prove behavior or a semantic call graph"
+    ]
+  },
+  "normalization": {
+    "resources": "reference",
+    "styles": "reference",
+    "styleChain": "oldest ancestor to selected child",
+    "styleItems": "base XML attribute contract order",
+    "callSites": "path, start line, start column, kind, target",
+    "limitations": "stable id",
+    "lineEndings": "LF",
+    "trailingNewline": true
+  },
+  "fingerprint": "SHA-256 of normalized path, NUL, file SHA-256, and LF for every declared input file in path order",
+  "diagnosticCodes": [
+    "VC-AI-XML-CALLSITE-LIMIT",
+    "VC-AI-XML-PROJECT-LIMIT",
+    "VC-AI-XML-PROJECT-PATH-INVALID",
+    "VC-AI-XML-PROJECT-SYMLINK-DENIED",
+    "VC-AI-XML-RESOURCE-DUPLICATE",
+    "VC-AI-XML-RESOURCE-MISSING-DEFAULT",
+    "VC-AI-XML-RESOURCE-UNSUPPORTED",
+    "VC-AI-XML-STYLE-CYCLE",
+    "VC-AI-XML-STYLE-ITEM-UNSUPPORTED",
+    "VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED"
+  ],
+  "supportedFixtures": [
+    {
+      "projectRoot": "project-context/supported",
+      "layoutPath": "app/src/main/res/layout/styled_login.xml",
+      "resourceRoots": ["app/src/main/res"],
+      "sourceRoots": ["app/src/main/java"],
+      "files": [
+        "app/src/main/java/com/example/LoginActivity.kt",
+        "app/src/main/res/layout/styled_login.xml",
+        "app/src/main/res/values/dimens.xml",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values/styles.xml"
+      ],
+      "resourceFiles": [
+        "app/src/main/res/values/dimens.xml",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values/styles.xml"
+      ],
+      "sourceFiles": ["app/src/main/java/com/example/LoginActivity.kt"],
+      "goldenContext": "project-context/styled-login.context.json",
+      "goldenKotlin": "project-context/styled-login.viewcompose.kt",
+      "expectedFunction": "StyledLoginView",
+      "expectedResourceParameters": ["loginTitle", "emailHint", "loginAction"],
+      "expectedStateBindings": ["emailState"],
+      "expectedResources": [
+        "@dimen/screen_padding",
+        "@string/email_hint",
+        "@string/login_action",
+        "@string/login_title"
+      ],
+      "expectedStyles": ["@style/LoginPanel", "@style/LoginTitle"],
+      "expectedCallSiteKinds": {
+        "id-reference": 2,
+        "imperative-mutation": 1,
+        "layout-reference": 1,
+        "listener-registration": 1,
+        "resource-reference": 1,
+        "view-binding-reference": 1
+      }
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "projectRoot": "project-context/style-cycle",
+      "layoutPath": "app/src/main/res/layout/cycle.xml",
+      "files": [
+        "app/src/main/res/layout/cycle.xml",
+        "app/src/main/res/values/styles.xml"
+      ],
+      "diagnosticCodes": ["VC-AI-XML-STYLE-CYCLE"]
+    },
+    {
+      "projectRoot": "project-context/theme-attribute",
+      "layoutPath": "app/src/main/res/layout/theme_text.xml",
+      "files": ["app/src/main/res/layout/theme_text.xml"],
+      "diagnosticCodes": ["VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED"]
+    }
+  ]
+}

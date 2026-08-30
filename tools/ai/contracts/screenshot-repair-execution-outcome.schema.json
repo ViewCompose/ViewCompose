@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-repair-execution-outcome-v1.schema.json",
+  "title": "ViewCompose screenshot repair execution outcome v1",
+  "oneOf": [
+    {"$ref": "#/$defs/appliedOutcome"},
+    {"$ref": "#/$defs/failedOutcome"},
+    {"$ref": "#/$defs/cancelledOutcome"},
+    {"$ref": "#/$defs/indeterminateOutcome"}
+  ],
+  "$defs": {
+    "appliedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "reason",
+        "lineage",
+        "attempt",
+        "executor",
+        "effect",
+        "receipt",
+        "diagnostics",
+        "outcomeFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-execution-outcome"},
+        "status": {"const": "applied"},
+        "reason": {"const": "patch-applied"},
+        "lineage": {"$ref": "#/$defs/lineage"},
+        "attempt": {"$ref": "#/$defs/terminalAttempt"},
+        "executor": {"$ref": "#/$defs/executor"},
+        "effect": {"$ref": "#/$defs/committedEffect"},
+        "receipt": {"$ref": "#/$defs/terminalReceipt"},
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 0,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "outcomeFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "failedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "reason",
+        "lineage",
+        "attempt",
+        "executor",
+        "effect",
+        "receipt",
+        "diagnostics",
+        "outcomeFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-execution-outcome"},
+        "status": {"const": "failed"},
+        "reason": {"enum": ["input-invalid", "patch-failed", "executor-failed"]},
+        "lineage": {"$ref": "#/$defs/lineage"},
+        "attempt": {"$ref": "#/$defs/terminalAttempt"},
+        "executor": {"$ref": "#/$defs/executor"},
+        "effect": {"$ref": "#/$defs/notCommittedEffect"},
+        "receipt": {"$ref": "#/$defs/terminalReceipt"},
+        "diagnostics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "outcomeFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "cancelledOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "reason",
+        "lineage",
+        "attempt",
+        "executor",
+        "effect",
+        "receipt",
+        "diagnostics",
+        "outcomeFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-execution-outcome"},
+        "status": {"const": "cancelled"},
+        "reason": {"const": "cancelled"},
+        "lineage": {"$ref": "#/$defs/lineage"},
+        "attempt": {"$ref": "#/$defs/terminalAttempt"},
+        "executor": {"$ref": "#/$defs/executor"},
+        "effect": {"$ref": "#/$defs/notCommittedEffect"},
+        "receipt": {"$ref": "#/$defs/terminalReceipt"},
+        "diagnostics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "outcomeFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "indeterminateOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "reason",
+        "lineage",
+        "attempt",
+        "executor",
+        "effect",
+        "receipt",
+        "diagnostics",
+        "outcomeFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-execution-outcome"},
+        "status": {"const": "indeterminate"},
+        "reason": {
+          "enum": ["executor-crashed", "receipt-persist-failed", "effect-unknown"]
+        },
+        "lineage": {"$ref": "#/$defs/lineage"},
+        "attempt": {"$ref": "#/$defs/terminalAttempt"},
+        "executor": {"$ref": "#/$defs/executor"},
+        "effect": {"$ref": "#/$defs/unknownEffect"},
+        "receipt": {"$ref": "#/$defs/terminalReceipt"},
+        "diagnostics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "outcomeFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hostGrantDecisionFingerprint",
+        "hostGrantRequestFingerprint",
+        "authorizationFingerprint",
+        "proposalFingerprint",
+        "changeFingerprint",
+        "inputDesignIrFingerprint",
+        "reservationReceipt",
+        "hostTrustDomainId"
+      ],
+      "properties": {
+        "hostGrantDecisionFingerprint": {"$ref": "#/$defs/sha256"},
+        "hostGrantRequestFingerprint": {"$ref": "#/$defs/sha256"},
+        "authorizationFingerprint": {"$ref": "#/$defs/sha256"},
+        "proposalFingerprint": {"$ref": "#/$defs/sha256"},
+        "changeFingerprint": {"$ref": "#/$defs/sha256"},
+        "inputDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "reservationReceipt": {"$ref": "#/$defs/sha256"},
+        "hostTrustDomainId": {"$ref": "#/$defs/stableId"}
+      }
+    },
+    "terminalAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reservationState",
+        "attemptNumber",
+        "maxAttempts",
+        "terminal",
+        "reuseAllowed",
+        "retryAllowed",
+        "attendedExecution"
+      ],
+      "properties": {
+        "reservationState": {"const": "consumed"},
+        "attemptNumber": {"const": 1},
+        "maxAttempts": {"const": 1},
+        "terminal": {"const": true},
+        "reuseAllowed": {"const": false},
+        "retryAllowed": {"const": false},
+        "attendedExecution": {"const": true}
+      }
+    },
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executorId",
+        "executorBuildFingerprint",
+        "patchMode",
+        "persistentSourceWrite",
+        "publicToolMode",
+        "callerSuppliedOutcome",
+        "credentialInput",
+        "providerCalls",
+        "toolNetworkAccess",
+        "logs"
+      ],
+      "properties": {
+        "executorId": {"$ref": "#/$defs/stableId"},
+        "executorBuildFingerprint": {"$ref": "#/$defs/sha256"},
+        "patchMode": {"const": "typed-design-ir-in-memory"},
+        "persistentSourceWrite": {"const": false},
+        "publicToolMode": {"const": false},
+        "callerSuppliedOutcome": {"const": false},
+        "credentialInput": {"const": false},
+        "providerCalls": {"const": false},
+        "toolNetworkAccess": {"const": false},
+        "logs": {"const": "fingerprints-only"}
+      }
+    },
+    "committedEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "resultDesignIrFingerprint",
+        "patchOutputFingerprint",
+        "outputExposed"
+      ],
+      "properties": {
+        "state": {"const": "committed"},
+        "resultDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "patchOutputFingerprint": {"$ref": "#/$defs/sha256"},
+        "outputExposed": {"const": true}
+      }
+    },
+    "notCommittedEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "resultDesignIrFingerprint",
+        "patchOutputFingerprint",
+        "outputExposed"
+      ],
+      "properties": {
+        "state": {"const": "not-committed"},
+        "resultDesignIrFingerprint": {"type": "null"},
+        "patchOutputFingerprint": {"type": "null"},
+        "outputExposed": {"const": false}
+      }
+    },
+    "unknownEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "resultDesignIrFingerprint",
+        "patchOutputFingerprint",
+        "outputExposed"
+      ],
+      "properties": {
+        "state": {"const": "unknown"},
+        "resultDesignIrFingerprint": {"type": "null"},
+        "patchOutputFingerprint": {"type": "null"},
+        "outputExposed": {"const": false}
+      }
+    },
+    "terminalReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issuerTrustDomainId",
+        "reservationReceipt",
+        "terminalState",
+        "outcomeTransport",
+        "outcomeReceipt"
+      ],
+      "properties": {
+        "issuerTrustDomainId": {"$ref": "#/$defs/stableId"},
+        "reservationReceipt": {"$ref": "#/$defs/sha256"},
+        "terminalState": {"const": "recorded"},
+        "outcomeTransport": {"const": "trusted-host-callback-only"},
+        "outcomeReceipt": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "unrecordedResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "status",
+        "reason",
+        "lineage",
+        "attempt",
+        "executor",
+        "effect",
+        "executionAuthorized",
+        "retryAllowed",
+        "diagnostics",
+        "failureFingerprint"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "screenshot-repair-execution-recording-failure"},
+        "status": {"const": "blocked"},
+        "reason": {
+          "enum": ["terminal-receipt-unavailable", "terminal-receipt-invalid"]
+        },
+        "lineage": {"$ref": "#/$defs/lineage"},
+        "attempt": {"$ref": "#/$defs/terminalAttempt"},
+        "executor": {"$ref": "#/$defs/executor"},
+        "effect": {"$ref": "#/$defs/unknownEffect"},
+        "executionAuthorized": {"const": false},
+        "retryAllowed": {"const": false},
+        "diagnostics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {"$ref": "#/$defs/diagnostic"}
+        },
+        "failureFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "nextAction"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^VC-AI-REPAIR-EXECUTION-[A-Z0-9-]+$"},
+        "severity": {"enum": ["warning", "error"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "nextAction": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

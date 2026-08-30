@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "operation": "regress-passed-gate",
+  "reasonCode": "exact-pixels",
+  "regressedGate": "semantics",
+  "previousStatus": "passed",
+  "candidateStatus": "failed"
+}

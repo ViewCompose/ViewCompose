@@ -17,7 +17,7 @@ validation:
   - cd website && npm run build
 lifecycle: 公共文档层级、权威入口路由或有效所有权链接变化时更新。
 translation_source: README.md
-translation_source_hash: 14f81670f169a7252957898fcf84c3936bec504b506c88080ef3fdbe6401712e
+translation_source_hash: 0c97dcb885c5676f50f4cb9ab1127b0f627a334b04590b026ebcd7208e902c68
 translation_status: current
 ---
 
@@ -39,7 +39,7 @@ GitHub 托管文档站点的内容边界。
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
 | 查找面向应用的入口 | [能力参考](https://docs.viewcompose.com/reference/) → [版本化 API/KDoc](https://docs.viewcompose.com/api/) → 对应模块手册 |
 | 使用某项能力 | 从下面的[指南](#指南)中选择对应主题 |
-| 使用预览或进行性能工作 | [预览](./tooling/preview.md) → [诊断](https://docs.viewcompose.com/tooling/diagnostics) → [性能](https://docs.viewcompose.com/tooling/performance) |
+| 使用 AI、预览或进行性能工作 | [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt) → [本地工具契约](https://github.com/ViewCompose/ViewCompose/blob/main/tools/ai/README.md) → [预览](./tooling/preview.md) → [诊断](https://docs.viewcompose.com/tooling/diagnostics) → [性能](https://docs.viewcompose.com/tooling/performance) |
 | 参与贡献 | [开发流程](https://docs.viewcompose.com/project/workflow) → [文档治理规范](https://docs.viewcompose.com/project/documentation-governance) |
 | 准备发布 | [发布流程](https://docs.viewcompose.com/project/publishing) → [能力验证](https://docs.viewcompose.com/project/capability-verification) |
 | 恢复项目上下文 | 阅读[路线图](https://docs.viewcompose.com/project/roadmap)和对应领域的有效文档，不要从归档计划开始 |
@@ -114,6 +114,7 @@ GitHub 托管文档站点的内容边界。
 
 开发期工具、检查和性能能力：
 
+- [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt)（[本地契约](https://github.com/ViewCompose/ViewCompose/blob/main/tools/ai/README.md)）
 - [预览](./tooling/preview.md)
 - [诊断](https://docs.viewcompose.com/tooling/diagnostics)
 - [性能](https://docs.viewcompose.com/tooling/performance)

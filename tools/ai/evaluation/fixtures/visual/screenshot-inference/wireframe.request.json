@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "kind": "request",
+  "source": {
+    "preprocessingRequestFingerprint": "7aa09c79680bfd82eac6ba7ee04f69a8175dc04243f4baf8adcb3bd17f94f0a2",
+    "preprocessingOutputFingerprint": "58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3"
+  },
+  "screenshot": {
+    "mediaType": "image/png",
+    "encoding": "base64",
+    "data": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAYCAYAAADzoH0MAAAASUlEQVR42mP49evXf0owA9UMUFBUwYtpb8DAhwHFBpSWlpKEsRpArK14DWBgYMCLCRpAkQsoCoNhkA5EUw+QhEcNODAs0wG5GADXwg7aVePOTQAAAABJRU5ErkJggg==",
+    "bytes": 130,
+    "sha256": "db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+    "widthPx": 16,
+    "heightPx": 24
+  },
+  "interpretation": {
+    "density": 1,
+    "fontScale": 1,
+    "localeTag": "en-US",
+    "layoutDirection": "Ltr",
+    "colorSpace": "sRGB",
+    "alphaMode": "straight",
+    "orientation": "upright"
+  },
+  "intent": {
+    "operation": "screenshot-to-design-ir",
+    "target": "ViewCompose",
+    "userRequirements": "Infer only observable structure and geometry; leave text, accessibility, state, and behavior unresolved."
+  },
+  "policy": {
+    "designIrSchemaVersion": 1,
+    "frameworkVersionLane": "current-source",
+    "frameworkIdentity": "78127e51cd740ccdbd58d326e05426caf4e49795",
+    "allowedNodeKinds": [
+      "box",
+      "button",
+      "column",
+      "image",
+      "row",
+      "text",
+      "text-field"
+    ],
+    "minimumAcceptedConfidence": 0.8,
+    "unresolvedBelowConfidence": true,
+    "behaviorInference": "forbidden",
+    "resourceInference": "placeholder-only",
+    "textInference": "observed-or-unresolved",
+    "accessibilityInference": "observed-or-unresolved",
+    "maxNodes": 100,
+    "maxDepth": 16
+  },
+  "authorization": {
+    "mode": "human-golden",
+    "privacyReview": "complete",
+    "redactionsVerified": true,
+    "approvedInputFingerprint": "58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
+    "providerTransfer": false,
+    "networkAccess": false,
+    "inputPersistence": false,
+    "outputPersistence": false,
+    "logs": "metadata-only"
+  }
+}

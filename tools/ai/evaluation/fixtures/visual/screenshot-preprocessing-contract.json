@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-preprocessing-v1",
+  "requiresContracts": [
+    "screenshot-preprocessing-v1"
+  ],
+  "activation": {
+    "tool": "prepare_screenshot",
+    "status": "implemented",
+    "evidence": "static"
+  },
+  "input": {
+    "embeddedPngOnly": true,
+    "pathInputAllowed": false,
+    "urlInputAllowed": false,
+    "uriInputAllowed": false,
+    "credentialsAllowed": false,
+    "acceptedBitDepths": [8],
+    "acceptedColorTypes": [6],
+    "acceptedFilterTypes": [0, 1, 2, 3, 4],
+    "acceptedInterlaceMethods": [0],
+    "acceptedSrgbChunk": "zero-or-one-valid-rendering-intent",
+    "rejectedSemanticChunks": [
+      "iCCP",
+      "cHRM",
+      "gAMA",
+      "cICP",
+      "mDCV",
+      "cLLI",
+      "tRNS",
+      "acTL",
+      "fcTL",
+      "fdAT"
+    ]
+  },
+  "interpretation": {
+    "callerDeclaresDensity": true,
+    "callerDeclaresFontScale": true,
+    "callerDeclaresLocale": true,
+    "callerDeclaresLayoutDirection": true,
+    "callerDeclaresColorSpace": true,
+    "callerDeclaresAlphaMode": true,
+    "callerDeclaresOrientation": true,
+    "systemBars": "declaration-only",
+    "automaticSystemBarInference": false
+  },
+  "processing": {
+    "order": ["verify", "decode", "crop", "redact", "encode"],
+    "cropCoordinates": "source-image-pixels",
+    "redactionCoordinates": "cropped-output-pixels",
+    "redactionReplacement": "#000000ff",
+    "redactionOverlap": "request-order-idempotent",
+    "resize": "none"
+  },
+  "output": {
+    "mediaType": "image/png",
+    "canonicalChunks": ["IHDR", "IDAT", "IEND"],
+    "stripAncillaryChunks": true,
+    "filterType": 0,
+    "zlibLevel": 9,
+    "colorSpace": "sRGB",
+    "alphaMode": "straight"
+  },
+  "privacy": {
+    "reviewRequired": true,
+    "providerTransfer": false,
+    "networkAccess": false,
+    "inputPersistence": false,
+    "outputPersistence": false,
+    "logs": "metadata-only",
+    "redactions": "explicit-rectangles-only",
+    "automaticSensitiveContentDetection": false
+  },
+  "transport": {
+    "protocol": "mcp-stdio",
+    "maxMessageBytes": 4194304,
+    "maxInputJsonBytes": 2000000,
+    "maxToolResultJsonBytes": 2000000,
+    "resultRepresentations": 2,
+    "minimumResponseHeadroomBytes": 194304
+  },
+  "integrity": {
+    "verifyCanonicalBase64": true,
+    "verifyDeclaredBytes": true,
+    "verifySha256": true,
+    "verifyDimensions": true,
+    "verifyChunkCrc": true,
+    "verifyDecodedByteCount": true,
+    "requestFingerprint": "sha256-canonical-json",
+    "outputFingerprint": "sha256-canonical-json-without-outputFingerprint"
+  },
+  "limits": {
+    "maxCompressedBytes": 1310720,
+    "maxDimensionPx": 4096,
+    "maxDecodedBytes": 16777216,
+    "maxPngChunks": 256,
+    "maxRedactions": 64,
+    "maxOutputBytes": 1310720
+  },
+  "diagnosticCodes": [
+    "VC-AI-SCREENSHOT-INPUT-INVALID",
+    "VC-AI-SCREENSHOT-PATH-DENIED",
+    "VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED",
+    "VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID",
+    "VC-AI-SCREENSHOT-PNG-UNSUPPORTED",
+    "VC-AI-SCREENSHOT-CROP-INVALID",
+    "VC-AI-SCREENSHOT-REDACTION-INVALID",
+    "VC-AI-SCREENSHOT-LIMIT",
+    "VC-AI-SCREENSHOT-CANCELLED"
+  ],
+  "supportedFixtures": [
+    {
+      "request": "screenshot/privacy-grid.request.json",
+      "result": "screenshot/privacy-grid.result.json",
+      "status": "implemented",
+      "expectedRequestFingerprint": "e9db4c486dbcaa59cd214b557cca19fb4878f66eb668f9b94cbd14a4ca6dd77f",
+      "expectedInputSha256": "ff96bfc58337301e15ff1515d39a2653a855a46ef74e50f8884889cd28f21cc0",
+      "expectedOutputSha256": "201c08259fb2891c57c3f85e0f9e1157ad9df9ae8303c4f8d679735cf2850b99",
+      "expectedOutputFingerprint": "74d3e3190dca4157d07cefd51f9a3a809094dad93785cef3c327f566a6e832b1",
+      "expectedInputSize": [4, 4],
+      "expectedOutputSize": [4, 4],
+      "expectedRedactions": 1
+    },
+    {
+      "request": "screenshot/inference-wireframe.request.json",
+      "result": "screenshot/inference-wireframe.result.json",
+      "status": "implemented",
+      "expectedRequestFingerprint": "7aa09c79680bfd82eac6ba7ee04f69a8175dc04243f4baf8adcb3bd17f94f0a2",
+      "expectedInputSha256": "26817c1dd0bc39c1828fc854c549dd0df3217a8fd947787e801618aad01342ed",
+      "expectedOutputSha256": "db28e5a95b48fcbdde009f078295db924a48fde252ed5205a266b187b980f6d3",
+      "expectedOutputFingerprint": "58c45a3ce39b74fc9585132ac912fb8c915ac0a0334f4151f4cd1b1f51a87bb3",
+      "expectedInputSize": [16, 24],
+      "expectedOutputSize": [16, 24],
+      "expectedRedactions": 1
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "request": "screenshot/path-input.request.json",
+      "schemaValid": false,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-PATH-DENIED"]
+    },
+    {
+      "request": "screenshot/provider-transfer.request.json",
+      "schemaValid": false,
+      "diagnosticCodes": ["VC-AI-SCREENSHOT-PROVIDER-TRANSFER-DENIED"]
+    }
+  ]
+}

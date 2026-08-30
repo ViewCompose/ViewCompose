@@ -291,7 +291,7 @@ private fun Project.createPreviewToolConfigurations(): PreviewToolConfigurations
                 Bundling.BUNDLING_ATTRIBUTE,
                 objects.named(Bundling::class.java, Bundling.EXTERNAL),
             )
-            attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 17)
+            attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
         }
     }
     val runner = configurations.create(RUNNER_CONFIGURATION_NAME) { configuration ->
@@ -376,7 +376,9 @@ private const val ANDROID_ASSETS_ARTIFACT_TYPE = "android-assets"
 private const val ANDROID_SYMBOL_WITH_PACKAGE_ARTIFACT_TYPE =
     "android-symbol-with-package-name"
 private const val ANDROID_CLASSES_JAR_ARTIFACT_TYPE = "android-classes-jar"
-private const val LAYOUTLIB_NATIVE_VERSION = "15.2.3"
+// Paparazzi 2.0.0-alpha05 loads Layoutlib 16.2.1 bytecode. Its JNI runtime and resource archive
+// must use the same release or native registration can abort the isolated worker process.
+private const val LAYOUTLIB_NATIVE_VERSION = "16.2.1"
 internal const val PREVIEW_ID_PROJECT_PROPERTY = "viewComposePreviewId"
 internal const val PREVIEW_VARIANT_ID_PROJECT_PROPERTY = "viewComposePreviewVariantId"
 internal const val PREVIEW_TARGETS_FILE_PROJECT_PROPERTY = "viewComposePreviewTargetsFile"

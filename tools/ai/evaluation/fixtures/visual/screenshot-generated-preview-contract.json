@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-generated-preview-v1",
+  "requiresContracts": [
+    "viewcompose-screenshot-kotlin-generation-v1",
+    "viewcompose-generated-preview-v1",
+    "generated-preview-request-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "implemented",
+    "publicRenderMode": true,
+    "implementation": true,
+    "evidence": "rendered-golden"
+  },
+  "lineage": {
+    "acceptedSourceKind": "screenshot",
+    "resolutionResultFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
+    "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
+    "sourceGenerationRequestFingerprint": "5ebbcec395b2ffbd2c53919149ddd1f9cc3070edf862da2e7795f02ea0dfe0e2",
+    "sourceGenerationReportFingerprint": "91da4ff1eaf1f4d2fb0f8c73d8816d2c91030510ff00730ee96abe80f0efa319",
+    "renderGenerationRequestFingerprint": "68d3da2054ffe5513a90975d96f47be6cfa1137ad1b1e796114a4a27827b3d49",
+    "renderGenerationReportFingerprint": "464d4f31c5ec59a5083b58309240c76fc69709b42648b79beb4ff281ac2f93db",
+    "generatedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
+    "previewRequestFingerprint": "f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408",
+    "previewWrapperFingerprint": "7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b"
+  },
+  "profile": {
+    "sourceKind": "screenshot",
+    "targetId": "tools.ai.GeneratedScreenshotPreview",
+    "functionName": "GeneratedScreenshotPreview",
+    "annotationNamePrefix": "Generated Screenshot · ",
+    "annotationGroup": "AI/Screenshot",
+    "ownerClassName": "generated.viewcompose.GeneratedPreviewKt"
+  },
+  "bindings": {
+    "exactOrderRequired": true,
+    "exactParameterRequired": true,
+    "exactSourceRequired": true,
+    "exactTypeRequired": true,
+    "callbackSourceAllowed": false,
+    "allowed": {
+      "TextFieldState": {
+        "kind": "text-field-state",
+        "value": "explicit-initial-text"
+      },
+      "() -> Unit": {
+        "kind": "unit-callback",
+        "value": "fixed-no-op"
+      },
+      "(Boolean) -> Unit": {
+        "kind": "boolean-callback",
+        "value": "fixed-no-op"
+      },
+      "(TextFieldImeAction) -> Boolean": {
+        "kind": "ime-action-callback",
+        "value": "explicit-boolean-return"
+      }
+    }
+  },
+  "execution": {
+    "fixedPreviewHarness": true,
+    "projectBuildExecution": false,
+    "networkAccess": false,
+    "providerExecution": false,
+    "callerSourceExecution": false,
+    "callerTaskSelection": false,
+    "callerDependencySelection": false,
+    "callerOutputPathSelection": false
+  },
+  "claims": {
+    "deterministicWrapper": true,
+    "safeBindingContract": true,
+    "wrapperCompilation": true,
+    "runtimeRendering": true,
+    "semanticComparison": false,
+    "visualParity": false
+  },
+  "limits": {
+    "maxBindings": 64,
+    "maxGeneratedKotlinBytes": 1048576,
+    "maxWrapperBytes": 262144
+  },
+  "diagnosticCodes": [
+    "VC-AI-PREVIEW-BINDING-MISSING",
+    "VC-AI-PREVIEW-BINDING-VALUE-INVALID",
+    "VC-AI-PREVIEW-GENERATED-SOURCE-MISMATCH"
+  ],
+  "supportedFixtures": [
+    {
+      "status": "implemented",
+      "resolutionResult": "screenshot-resolution/wireframe.result.json",
+      "generationRequest": "screenshot-generation/wireframe.request.json",
+      "renderGenerationRequest": "screenshot-render/wireframe.generation-request.json",
+      "generatedKotlin": "screenshot-generation/wireframe.generated.kt",
+      "generationReport": "screenshot-generation/wireframe.report.json",
+      "previewRequest": "screenshot-render/wireframe.preview-request.json",
+      "previewWrapper": "screenshot-render/wireframe.preview-wrapper.kt",
+      "expectedBindings": 3,
+      "expectedCallbackBindings": 2,
+      "expectedBuildFingerprint": "2a92748798bad30d22e6a1a2160f7bebccfe58f9dcf19b4b9f7be6c90b471512",
+      "expectedOutputFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
+      "expectedPreviewId": "generatedpreviewkt-generatedscreenshotpreview-d8ad310b820d",
+      "expectedVariantId": "generated-screenshot-screenshotwireframeview-abee9c74",
+      "expectedSourceLine": 22,
+      "expectedCapabilityIds": ["foundation.components", "modifier.layout"],
+      "expectedImage": {
+        "widthPx": 1079,
+        "heightPx": 2339,
+        "bytes": 30984,
+        "sha256": "072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd"
+      },
+      "expectedRenderTree": {
+        "bytes": 203290,
+        "sha256": "5228e401662349d9142cf695c42e21805c7c332ac36bc09334a32251d2f27000",
+        "vnodeCount": 5,
+        "mountedNodeCount": 5,
+        "maxVNodeDepth": 3,
+        "maxMountedDepth": 3,
+        "texts": ["Welcome", "Continue"],
+        "contentDescriptions": []
+      }
+    }
+  ],
+  "unsupportedFixtures": [
+    {
+      "mutation": "screenshot-render/callback-source.mutation.json",
+      "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-VALUE-INVALID"]
+    },
+    {
+      "mutation": "screenshot-render/missing-callback.mutation.json",
+      "diagnosticCodes": ["VC-AI-PREVIEW-BINDING-MISSING"]
+    },
+    {
+      "mutation": "screenshot-render/wrong-callback-kind.mutation.json",
+      "diagnosticCodes": ["VC-AI-PREVIEW-GENERATED-SOURCE-MISMATCH"]
+    }
+  ]
+}

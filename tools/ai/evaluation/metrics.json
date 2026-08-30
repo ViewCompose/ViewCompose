@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-ai-metrics-v1",
+  "metrics": [
+    {
+      "id": "knowledge.deterministic-output",
+      "phase": 1,
+      "measure": "mismatch_count",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "files",
+      "environment": "same source revision and generator version"
+    },
+    {
+      "id": "knowledge.capability-completeness",
+      "phase": 1,
+      "measure": "resolved_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "current canonical capability inventory"
+    },
+    {
+      "id": "retrieval.top5-recall",
+      "phase": 1,
+      "measure": "top5_recall",
+      "direction": "at_least",
+      "threshold": 0.95,
+      "unit": "ratio",
+      "environment": "local index, cold process, current-source lane"
+    },
+    {
+      "id": "retrieval.exact-symbol-rank",
+      "phase": 1,
+      "measure": "reciprocal_rank",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact fully-qualified symbol query"
+    },
+    {
+      "id": "validation.fabricated-symbol-rejection",
+      "phase": 2,
+      "measure": "rejection_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "curated nonexistent and removed symbol corpus"
+    },
+    {
+      "id": "validation.rule-precision",
+      "phase": 2,
+      "measure": "precision",
+      "direction": "at_least",
+      "threshold": 0.95,
+      "unit": "ratio",
+      "environment": "per stable rule code on labeled fixtures"
+    },
+    {
+      "id": "validation.rule-recall",
+      "phase": 2,
+      "measure": "recall",
+      "direction": "at_least",
+      "threshold": 0.9,
+      "unit": "ratio",
+      "environment": "per stable rule code on labeled fixtures"
+    },
+    {
+      "id": "compile.supported-success",
+      "phase": 2,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "pinned JDK, Kotlin, AGP, Android SDK, artifacts, and supported fixtures"
+    },
+    {
+      "id": "render.supported-success",
+      "phase": 2,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "pinned Preview runner and declared configuration matrix"
+    },
+    {
+      "id": "security.fail-closed",
+      "phase": 2,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "adversarial path, build execution, secret, resource, timeout, cancellation, and cache fixtures"
+    },
+    {
+      "id": "runtime.isolation",
+      "phase": 2,
+      "measure": "release_runtime_occurrences",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "dependencies_or_operations",
+      "environment": "release dependency graph and inactive application process"
+    },
+    {
+      "id": "protocol.cli-mcp-parity",
+      "phase": 3,
+      "measure": "semantic_mismatch_count",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "cases",
+      "environment": "same core request and knowledge fingerprint"
+    },
+    {
+      "id": "layout.diagnosis-exactness",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "accepted Preview protocol v1 layout diagnostics with fixed code mapping"
+    },
+    {
+      "id": "workflow.contract-completeness",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "checked-in client-neutral skill manifest against the frozen workflow set"
+    },
+    {
+      "id": "distribution.reproducible-package",
+      "phase": 3,
+      "measure": "sha256_mismatch_count",
+      "direction": "at_most",
+      "threshold": 0,
+      "unit": "archives",
+      "environment": "two clean local package builds from the same source tree and npm version"
+    },
+    {
+      "id": "distribution.offline-lifecycle",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "isolated prefix, local tarball, unreachable registry, npm offline mode"
+    },
+    {
+      "id": "distribution.inventory-completeness",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "archive manifest, SHA-256 sidecars, SPDX 2.3 package record, and MIT license inventory"
+    },
+    {
+      "id": "protocol.installed-compatibility",
+      "phase": 3,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "installed stdio package against every frozen modern and legacy MCP version"
+    },
+    {
+      "id": "design-ir.schema-conformance",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "every declared Design IR v1 golden and converter output"
+    },
+    {
+      "id": "design-ir.deterministic-output",
+      "phase": 4,
+      "measure": "byte_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "two conversions of each supported source identity with identical bytes"
+    },
+    {
+      "id": "design-ir.provenance-completeness",
+      "phase": 4,
+      "measure": "complete_node_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "every emitted node has source id, source span, confidence, and mapping decision"
+    },
+    {
+      "id": "xml.supported-compile",
+      "phase": 4,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "declared supported XML subset"
+    },
+    {
+      "id": "xml.resource-preservation",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "declared XML resource references against IR and generated parameter bindings"
+    },
+    {
+      "id": "xml.project-resource-resolution",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "explicit project-relative resource roots, default values definitions, no AGP execution"
+    },
+    {
+      "id": "xml.project-style-resolution",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "bounded explicit style parents, supported items, and inline override precedence"
+    },
+    {
+      "id": "xml.callsite-inventory-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "bounded read-only Kotlin and Java lexical inventory with explicit candidate confidence"
+    },
+    {
+      "id": "xml.layout-dependency-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "ordered explicit resource roots, default layout files, stable include edges, no AGP execution"
+    },
+    {
+      "id": "xml.include-merge-expansion",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "bounded project-only include and merge fixtures with cross-file provenance"
+    },
+    {
+      "id": "xml.generated-preview-render-success",
+      "phase": 4,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "source-bound XML-generated Kotlin, exact bindings, fixed Preview configuration, and pinned offline render lane"
+    },
+    {
+      "id": "xml.generated-preview-binding-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "generator-reported binding parameter, source, type, order, and explicitly supported preview values"
+    },
+    {
+      "id": "xml.generated-preview-asset-integrity",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical embedded PNG bytes with exact size, SHA-256, dimensions, chunk structure, CRC, immutable staging, and no path or network input"
+    },
+    {
+      "id": "xml.generated-preview-isolation",
+      "phase": 4,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "fixed tool-owned harness with no inspected-project build, caller task, dependency, output path, network, or symlink traversal"
+    },
+    {
+      "id": "xml.generated-layout-semantic-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical Design IR against the exact accepted render tree; unique normalized keys, allowlisted semantic hosts, structure, observable text, roles, content descriptions, and visibility"
+    },
+    {
+      "id": "xml.generated-layout-geometry-exactness",
+      "phase": 4,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "single frozen Preview configuration; integer bounds, nearest-pixel dp conversion, zero tolerance, declared dimensions, padding, containment, and column order"
+    },
+    {
+      "id": "migration.unsupported-honesty",
+      "phase": 4,
+      "measure": "reported_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "labeled unsupported XML and Compose semantics"
+    },
+    {
+      "id": "visual.screenshot-input-integrity",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical embedded PNG bytes with exact size, SHA-256, dimensions, chunk CRC, decoded byte count, and no path, URL, URI, credential, or network input"
+    },
+    {
+      "id": "visual.screenshot-preprocessing-determinism",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "fixed decode, source-pixel crop, cropped-output-pixel redaction, metadata stripping, filter-zero PNG encoding, zlib level 9, and canonical JSON fingerprint"
+    },
+    {
+      "id": "visual.screenshot-privacy-redaction",
+      "phase": 5,
+      "measure": "blocked_or_redacted_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "completed caller privacy review, explicit rectangle redactions, no provider transfer, no persistence, metadata-only logs, and fail-closed path input"
+    },
+    {
+      "id": "visual.screenshot-inference-lineage",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact prepare_screenshot request/result fingerprints, canonical output PNG identity, inference request fingerprint, and Design IR screenshot source identity"
+    },
+    {
+      "id": "visual.screenshot-inference-evidence-coverage",
+      "phase": 5,
+      "measure": "complete_node_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exactly one in-bounds pixel region and dimension-separated evidence record for every screenshot-derived Design IR node"
+    },
+    {
+      "id": "visual.screenshot-inference-uncertainty-honesty",
+      "phase": 5,
+      "measure": "reported_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "no aggregate confidence; low-confidence content, semantics, behavior, state, resources, and accessibility remain explicit blocking questions with forbidden defaults"
+    },
+    {
+      "id": "visual.screenshot-inference-consent-safety",
+      "phase": 5,
+      "measure": "blocked_or_authorized_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "human-golden mode remains offline; future provider mode requires explicit provider identity, exact-input consent receipt, purpose, retention review, and accepts no credential field"
+    },
+    {
+      "id": "visual.screenshot-inference-validation-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "public offline validator replays canonical preprocessing, reconstructs the inference request, verifies result and Design IR fingerprints, and imports only complete per-node evidence without provider execution"
+    },
+    {
+      "id": "visual.screenshot-resolution-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "every typed human answer binds to one imported question, source region, required action, validation identity, review receipt, and exact resolved Design IR fingerprint"
+    },
+    {
+      "id": "visual.screenshot-resolution-safety",
+      "phase": 5,
+      "measure": "blocked_or_authorized_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "missing question coverage, changed validation lineage, executable expressions, guessed resources, and callback source fail closed before code-generation eligibility"
+    },
+    {
+      "id": "visual.screenshot-generation-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact resolved-result and Design IR lineage, deterministic Kotlin bytes, typed caller state and event parameters, and complete accessibility disposition report"
+    },
+    {
+      "id": "visual.screenshot-generation-compile-success",
+      "phase": 5,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "frozen screenshot-derived Kotlin golden in the pinned JDK 21 and Kotlin 2.3.10 UI Foundation compiler lane"
+    },
+    {
+      "id": "visual.screenshot-generation-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "ineligible resolution, changed lineage, unsupported events, expressions, resources, callback source, project build execution, and network access fail closed"
+    },
+    {
+      "id": "visual.screenshot-render-binding-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "screenshot generator-reported state and event parameter, source, type, and order mapped to explicit bounded Preview bindings"
+    },
+    {
+      "id": "visual.screenshot-render-success",
+      "phase": 5,
+      "measure": "success_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact screenshot-generated Kotlin and no-source Preview wrapper compiled and rendered in the pinned tool-owned JDK 21, AGP, Android 37, Paparazzi, and Layoutlib lane"
+    },
+    {
+      "id": "visual.screenshot-render-binding-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "fixed no-op or explicit boolean callback behavior with no caller lambda source, project build, task, dependency, path, provider, or network selection"
+    },
+    {
+      "id": "visual.screenshot-comparison-semantic-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "exact resolved screenshot Design IR and accepted render tree; authored identity, structure, mapped kind and role, visibility, and declared title/button text only"
+    },
+    {
+      "id": "visual.screenshot-comparison-structure-exactness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "zero-tolerance checks for declared parent/child order, column sibling order, containment, and allowlisted wrapper bounds; no source-region or pixel-parity claim"
+    },
+    {
+      "id": "visual.screenshot-comparison-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "changed semantic text or declared structure must downgrade compared evidence and return category-specific diagnostics without an aggregate similarity score"
+    },
+    {
+      "id": "visual.screenshot-pixel-reference-eligibility",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "canonical screenshot request/result lineage, zero redactions, full viewport crop, and exact density, font scale, locale, layout direction, dimensions, color space, alpha, orientation, and system bars"
+    },
+    {
+      "id": "visual.screenshot-pixel-exactness",
+      "phase": 5,
+      "measure": "exact_pixel_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "strictly eligible canonical sRGB straight-alpha RGBA references and the same accepted screenshot render; zero channel and dimension tolerance"
+    },
+    {
+      "id": "visual.screenshot-pixel-comparison-safety",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "configuration-mismatched, redacted, integrity-changed, or semantic-evidence-free references remain ineligible and never receive a pixel similarity score"
+    },
+    {
+      "id": "visual.semantic-preservation",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "declared text, role, state, content-description, and traversal expectations"
+    },
+    {
+      "id": "visual.geometry-pass",
+      "phase": 5,
+      "measure": "nodes_within_tolerance_ratio",
+      "direction": "at_least",
+      "threshold": 0.98,
+      "unit": "ratio",
+      "environment": "same density, viewport, font, locale, and system-bar crop; tolerance max(2 px, 1 percent)"
+    },
+    {
+      "id": "visual.repair-gate-order",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "safety, compilation, render, semantics, structure, and exact-pixel gates short-circuit in frozen order"
+    },
+    {
+      "id": "visual.repair-no-regression",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "a candidate that regresses any previously passed deterministic gate is rejected and terminates repair"
+    },
+    {
+      "id": "visual.repair-no-oscillation",
+      "phase": 5,
+      "measure": "blocked_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "candidate and change fingerprints are unique across one bounded repair run"
+    },
+    {
+      "id": "visual.repair-evidence-completeness",
+      "phase": 5,
+      "measure": "exact_match_ratio",
+      "direction": "at_least",
+      "threshold": 1,
+      "unit": "ratio",
+      "environment": "initial, attempted, accepted or rejected, and final candidates retain reason-coded gate evidence and fingerprints"
+    },
+    {
+      "id": "visual.repair-bound",
+      "phase": 5,
+      "measure": "iterations",
+      "direction": "at_most",
+      "threshold": 5,
+      "unit": "iterations",
+      "environment": "no oscillation and no regression of passed deterministic gates"
+    }
+  ]
+}

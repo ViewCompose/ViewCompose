@@ -1,0 +1,94 @@
+{
+  "stats": {
+    "inserts": 4,
+    "reuses": 0,
+    "removals": 0,
+    "reboundNodes": 4,
+    "patchedNodes": 0,
+    "skippedBindings": 0,
+    "skippedSubtrees": 0,
+    "bindingsByType": {}
+  },
+  "structure": {
+    "vnodeCount": 4,
+    "mountedNodeCount": 4,
+    "maxVNodeDepth": 2,
+    "maxMountedDepth": 2
+  },
+  "warnings": [],
+  "tree": [],
+  "nativeViewTree": [],
+  "layoutDiagnostics": [
+    {
+      "kind": "PartiallyClipped",
+      "severity": "Warning",
+      "className": "android.widget.TextView",
+      "bounds": {
+        "left": 24,
+        "top": 120,
+        "right": 460,
+        "bottom": 188
+      },
+      "visibleBounds": {
+        "left": 24,
+        "top": 120,
+        "right": 411,
+        "bottom": 188
+      },
+      "clippingAncestorClassName": "android.widget.LinearLayout",
+      "clippingAncestorNodeId": "node-column",
+      "clippingExpected": false,
+      "metrics": {},
+      "nodeId": "node-title",
+      "sourceCallSites": [
+        {
+          "className": "com.viewcompose.samples.counter.CounterPreviewKt",
+          "methodName": "CounterPreview",
+          "fileName": "CounterPreview.kt",
+          "lineNumber": 31
+        }
+      ],
+      "synthetic": false
+    },
+    {
+      "kind": "TextEllipsized",
+      "severity": "Info",
+      "className": "android.widget.TextView",
+      "bounds": {
+        "left": 24,
+        "top": 220,
+        "right": 387,
+        "bottom": 276
+      },
+      "visibleBounds": {
+        "left": 24,
+        "top": 220,
+        "right": 387,
+        "bottom": 276
+      },
+      "clippingExpected": false,
+      "metrics": {
+        "lineCount": 2,
+        "ellipsizedLineCount": 1,
+        "hiddenCharacterCount": 18
+      },
+      "nodeId": "node-body",
+      "sourceCallSites": [
+        {
+          "className": "com.viewcompose.samples.counter.CounterPreviewKt",
+          "methodName": "CounterPreview",
+          "fileName": "CounterPreview.kt",
+          "lineNumber": 36
+        }
+      ],
+      "synthetic": false
+    }
+  ],
+  "patches": [],
+  "composition": {
+    "invalidatedScopeCount": 0,
+    "recomposedScopeCount": 1,
+    "skippedScopeCount": 0,
+    "scopes": []
+  }
+}

@@ -14,7 +14,7 @@ validation:
   - ./gradlew verifyDocumentationStructure verifyViewComposeReleaseIntent
 lifecycle: 执行计划启动、状态变化、阻塞、完成或移入归档时更新。
 translation_source: project/plans/README.md
-translation_source_hash: 53c680c6598f80849bb698a11481701debdbc9f9911aff9873fccd521a53d849
+translation_source_hash: af01879db44d972bc36ee36d211ee9935a91d899a9ca305ddb044f8f56d0142c
 translation_status: current
 ---
 
@@ -27,6 +27,8 @@ translation_status: current
 计划详情是从本索引链接的仓库专属 draft，因为其中保存的是临时贡献者执行状态，而不是面向用户的
 指南。它们不会进入公共站点、搜索索引或 sitemap。
 
+- [AI 可验证开发工具](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md) —
+  Phase 0--1 已完成；Phase 2 先增加验证、隔离编译/Preview 证据与有界项目分析，再推进协议或转换器。
 - [PR 门禁扩展与构建逻辑模块化](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/pull-request-gate-scaling-and-build-logic-modularization.md) —
   把根构建文件中 2,582 行的门禁实现拆为经过编译且可测试的构建逻辑，再引入保守的 PR 影响选择、
   经过验证的不可变 API 缓存和受影响模块验证，同时不削弱 required check 或 `main` 全量验证。

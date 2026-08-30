@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "request",
+  "source": {"identity": "fixture:screenshot/privacy-grid"},
+  "screenshot": {
+    "mediaType": "image/png",
+    "encoding": "base64",
+    "data": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAN0lEQVR42mP4z8DwHwwZ/oMBAxD8b2hoADH/M8DJBqAgQwNQFogFFAz+OwQk/C9omPB/wYYD/wHsQyVEHXPO4wAAAABJRU5ErkJggg==",
+    "bytes": 112,
+    "sha256": "ff96bfc58337301e15ff1515d39a2653a855a46ef74e50f8884889cd28f21cc0",
+    "widthPx": 4,
+    "heightPx": 4
+  },
+  "interpretation": {
+    "density": 1,
+    "fontScale": 1,
+    "localeTag": "en-US",
+    "layoutDirection": "Ltr",
+    "colorSpace": "sRGB",
+    "alphaMode": "straight",
+    "orientation": "upright",
+    "systemBars": {"leftPx": 0, "topPx": 0, "rightPx": 0, "bottomPx": 0},
+    "crop": {"x": 0, "y": 0, "width": 4, "height": 4}
+  },
+  "privacy": {
+    "review": "complete",
+    "providerTransfer": false,
+    "persistInput": false,
+    "logs": "metadata-only",
+    "redactions": [
+      {
+        "rectangle": {"x": 1, "y": 1, "width": 2, "height": 2},
+        "reason": "user-specified-sensitive",
+        "replacement": "#000000ff"
+      }
+    ]
+  },
+  "output": {
+    "mediaType": "image/png",
+    "resize": "none",
+    "stripMetadata": true,
+    "maxWidthPx": 4,
+    "maxHeightPx": 4
+  }
+}
