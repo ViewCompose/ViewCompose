@@ -301,10 +301,10 @@ requires the resolved ascending traversal to equal generated hierarchy order ins
 an API. The exact wireframe Kotlin golden compiles in the pinned JDK 21/Kotlin UI Foundation lane.
 `generate` mode returns deterministic static source and its complete mapping report; `compile` mode
 passes only that source and the fixed artifact/capability selection to the hermetic compiler.
-`render` mode requires the exact explicit Preview bindings and enters the fixed source-bound
-Layoutlib harness. `compare` mode performs that same render and then reopens only its verified
-render tree, maps the exact resolved Design IR, and upgrades evidence to `compared` only when every
-supported check passes. `compare-pixels` additionally requires one canonical screenshot
+`render` mode requires the exact explicit Preview bindings and enters the fixed packaged
+released-artifact Layoutlib harness. `compare` mode performs that same render and then reopens only
+its verified render tree, maps the exact resolved Design IR, and upgrades evidence to `compared`
+only when every supported check passes. `compare-pixels` additionally requires one canonical screenshot
 preprocessing request/result pair and runs only after the semantic and structural comparison
 passes.
 
@@ -358,8 +358,8 @@ evidence that runs a later gate after an earlier failure. The internal patch app
 to an exact resolved screenshot Design IR fingerprint, requires existing nodes/fields/modifier
 arguments or an exact child permutation, rejects no-op operations, and revalidates the complete
 candidate before publishing its canonical fingerprint. The internal candidate evaluator rebinds the
-patched IR to a content-addressed generation request, runs the hermetic compiler and source-bound
-Preview as separate gates, categorizes semantic versus structural checks from the accepted render,
+patched IR to a content-addressed generation request, runs the hermetic released-artifact compiler
+and Preview as separate gates, categorizes semantic versus structural checks from the accepted render,
 and enters exact pixels only after both categories pass. Each accepted candidate is also retained
 inside one evaluator session as a bounded, immutable, content-addressed evidence record containing
 the exact Design IR, candidate evaluation, gate diagnostic codes, structured layout/pixel
@@ -377,7 +377,7 @@ same denominator; localize at least one mismatched pixel to the changed node; an
 baseline in exactly that one non-expression field. Localization never supplies a value. Novel
 mismatches, multiple field changes, unlocalized changes, modifier/structure/behavior changes, and
 caller-supplied targets return no eligible proposal. The real `Hello` regression produces the
-baseline `Welcome` patch, which then passes the typed applier and all six source-bound gates with
+baseline `Welcome` patch, which then passes the typed applier and all six released-artifact gates with
 zero mismatched pixels. This remains an internal verifier capability; no CLI/MCP repair mode is
 activated.
 

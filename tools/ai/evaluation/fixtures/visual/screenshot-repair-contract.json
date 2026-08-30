@@ -64,7 +64,7 @@
       "unique candidate and change fingerprints",
       "no regression of a previously passed deterministic gate",
       "strict improvement at the first failing gate before candidate acceptance",
-      "source-bound compile and render evidence for each evaluated candidate",
+      "released-artifact compile and render evidence for each evaluated candidate",
       "content-addressed candidate evidence excludes generated source and image bytes",
       "candidate evidence retains bounded exact-pixel mismatch localization",
       "pixel evidence cannot override safety, compilation, render, semantic, or structural failure"
@@ -129,19 +129,19 @@
     "cases": [
       {
         "id": "initial-exact",
-        "expectedCandidateFingerprint": "1207f03eb49f9e5a7c8b8277ee6262f2eb1e35e1f17f101ac8b4f912c2c63107",
+        "expectedCandidateFingerprint": "c024d7afaff87f86b25cdd7247fc6b4d9804da09a2daa1ba440e6c9c3a1aded2",
         "expectedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
-        "expectedEvaluationFingerprint": "7515312f2b01b502956a9b0eef6d0e233a002ae30ccbcebf125582ec973beeb9",
-        "expectedEvidenceFingerprint": "924f462673b39e8c9f00352f3517144d433894fde5d4985e20f62f448925babf",
+        "expectedEvaluationFingerprint": "28591f6de8533c32ff7ac919d695b40392f543a0fc1ab43850d0e702ddb3e77e",
+        "expectedEvidenceFingerprint": "9660c0fa52128c829885ce226858e9db6cda87f9a86ec349421ee42b14dc48b9",
         "expectedEvidenceDiagnosticCodes": [],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "passed"],
         "expectedGateEvidence": [
           "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
-          "7f42dcfd35573559c8c4c2bc62047a57085e01f4c78f2625299349b00440ae67",
-          "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
-          "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
-          "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
-          "6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f"
+          "90b399b30272c3c4d9f4b4c399f94dd47a2fcd258c27fd0322de5c6f03337637",
+          "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
+          "779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517",
+          "779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517",
+          "7504b5c23ed6e9fe142002572e08f24115e73fc311e4329057f8384f749bdd43"
         ],
         "expectedChecks": [1, 1, 1, 12, 15],
         "expectedPixels": {
@@ -155,50 +155,50 @@
           "mismatchBounds": null,
           "attributions": [],
           "unassignedMismatchedPixels": 0,
-          "localizationFingerprint": "af49f39cacbbaa7e5590f6e23cafa7b48766a2e2d1aace4cf42e1947cc0b4f71"
+          "localizationFingerprint": "a15f3cd4260b7cae54307be32acb40f03196571a960afa2a7411d4fb327fac9b"
         }
       },
       {
         "id": "title-text-pixel-mismatch",
         "patch": "screenshot-repair/title-text.patch.json",
-        "expectedCandidateFingerprint": "6dbf36d129386d254bd82aaefcf6304958c9b5f2798baaa1fcb98055bfa9d971",
+        "expectedCandidateFingerprint": "6b097111aee082f6c89c29ab79abeb7a9e8e3c5a0c29786603dd8032681c1ad4",
         "expectedDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
-        "expectedEvaluationFingerprint": "43a732ed3291c4a7d37cc13da7c37154505c573f0fbd75badd33676eb14f42c4",
-        "expectedEvidenceFingerprint": "f2b2b21f846ff99024fcb8a4d6bee129697da8b387802c6c086254febc47484c",
+        "expectedEvaluationFingerprint": "192517e3a159e52981c933f51f3bd63617d60ccadf7aa06a504cc9cd0c59c37b",
+        "expectedEvidenceFingerprint": "f5d313cbf24308fcd3091de36eeda27ad20946b067f7c0ece94ad65ba8fd45cd",
         "expectedEvidenceDiagnosticCodes": ["VC-AI-PIXEL-MISMATCH"],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "failed"],
         "expectedGateEvidence": [
           "ea77e571ae5977da628cdb40f12d83f664c2ed43b9375c42743ecd574098c219",
-          "873adf9b2512743396344bf9fbcf13b7dde73851c4cca41d1337e35c4100764a",
-          "d0e567db8bcc9ee28287f8dc7e54818fcae7c6a9892e0c8e8daae089546dc7ce",
-          "12095b060f4dce44f7bb0f9da46cd3529757bea4649a08cd973f8e24c00cebea",
-          "12095b060f4dce44f7bb0f9da46cd3529757bea4649a08cd973f8e24c00cebea",
-          "1096b600517179cacbb46008f1a5d64322d836fada5ab2af2ad79c0bcb8c4405"
+          "7024fa4d88eab0f03998696a02f50fed1fdb958ebe3d50696041126500648ca5",
+          "1c59187f64dbba8098fe5a659c85af44456f8e463c138a25a47947ddb5bfda78",
+          "a2ce37fbce8bfb3cc98a0360bf79ace938edd01eb33ba9e80fbe1f644c8532b2",
+          "a2ce37fbce8bfb3cc98a0360bf79ace938edd01eb33ba9e80fbe1f644c8532b2",
+          "267c063f902117b54a965ab6f42a8ea92e72bac8a4b94568114850961e48e55b"
         ],
         "expectedChecks": [1, 1, 1, 12, 15],
         "expectedPixels": {
           "comparedPixels": 2523781,
-          "mismatchedPixels": 3345,
-          "maxChannelDelta": 217
+          "mismatchedPixels": 2221,
+          "maxChannelDelta": 225
         },
         "expectedLocalization": {
           "status": "mismatch",
-          "mismatchedPixels": 3345,
-          "mismatchBounds": {"x": 1, "y": 8, "width": 198, "height": 37},
+          "mismatchedPixels": 2221,
+          "mismatchBounds": {"x": 1, "y": 6, "width": 155, "height": 29},
           "attributions": [
             {
               "designNodeId": "wireframe-title",
-              "mismatchedPixels": 2267,
-              "mismatchBounds": {"x": 1, "y": 8, "width": 111, "height": 37}
+              "mismatchedPixels": 1516,
+              "mismatchBounds": {"x": 1, "y": 6, "width": 87, "height": 29}
             },
             {
               "designNodeId": "wireframe-root",
-              "mismatchedPixels": 1078,
-              "mismatchBounds": {"x": 112, "y": 18, "width": 87, "height": 27}
+              "mismatchedPixels": 705,
+              "mismatchBounds": {"x": 88, "y": 14, "width": 68, "height": 21}
             }
           ],
           "unassignedMismatchedPixels": 0,
-          "localizationFingerprint": "ea2e12feed785c158153515b02ec4bfb70d83658a322357a37d499782e3a1f7b"
+          "localizationFingerprint": "ad1e1e4c1f6acdc3b7d7d9a40b671b882c63a2e71c55eb11f627afbe7af935fc"
         }
       }
     ]

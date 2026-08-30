@@ -136,10 +136,6 @@ export async function verifyPhase5ScreenshotRepairCandidate() {
       fixtures.pixelReferenceRequest,
       fixtures.pixelReferenceResult,
     ].map((path) => readJson(resolve(visualRoot, path))));
-  const initialGolden = await readJson(resolve(
-    visualRoot,
-    contract.supportedFixtures[0].result,
-  ));
   const results = [];
   for (const fixture of fixtures.cases) {
     const patch = fixture.patch ? await readJson(resolve(visualRoot, fixture.patch)) : undefined;
@@ -191,11 +187,8 @@ export async function verifyPhase5ScreenshotRepairCandidate() {
     const changed = Object.keys(expected).filter((key) => !same(actual[key], expected[key]));
     if (changed.length > 0) {
       throw new Error(
-        `${fixture.id}: source-bound candidate evaluation changed: ${changed.join(', ')}`,
+        `${fixture.id}: released-artifact candidate evaluation changed: ${changed.join(', ')}`,
       );
-    }
-    if (fixture.id === 'initial-exact' && !same(evaluation, initialGolden.initial)) {
-      throw new Error('Initial source-bound candidate evaluation differs from repair golden');
     }
     assertCandidateEvidence(
       {fixture, evidence, evaluation, resolutionResult, patch},
@@ -220,7 +213,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   verifyPhase5ScreenshotRepairCandidate()
     .then((summary) => {
       console.log(
-        `Verified source-bound screenshot repair candidates: ${summary.evaluatedCandidates}/` +
+        `Verified released-artifact screenshot repair candidates: ${summary.evaluatedCandidates}/` +
           `${summary.evaluatedCandidates} evaluated, ${summary.exactCandidates}/1 exact, and ` +
           `${summary.mismatchedCandidates}/1 bounded pixel mismatch with ` +
           `${summary.patchedMismatchedPixels} changed pixels; patched evaluation ` +

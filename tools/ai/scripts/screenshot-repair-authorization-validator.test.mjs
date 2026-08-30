@@ -44,9 +44,9 @@ const proposal = {
   proposalFingerprint: fixture.expectedProposalFingerprint,
 };
 const reference = {
-  requestFingerprint: '06ded39bf3588193305ba1574c43ca3a6b6d0ff9c4cd19ec3e12eb75afdefefd',
-  outputFingerprint: 'e874a198d57e64645472dc11dac8e82df35e11117869dd616d33c93a311eb091',
-  pngFingerprint: '69ac5adde66e6f5725a0258987f7f635cb7be333839536f06c0ae6a2ff0596e2',
+  requestFingerprint: 'df5bd7175f72dc76a4b750bff11ee9992c1afa1b4dc5e3c6b21a0c1731686bef',
+  outputFingerprint: 'adfc4b2c7703897dd6c00cae476956766efec9e2c619e60bbafc095931b46dae',
+  pngFingerprint: 'b0a1caca036852229979fac47cb0b439baf1ca5cdb44b45d92018e8f98c06169',
   widthPx: 1079,
   heightPx: 2339,
   configuration: {

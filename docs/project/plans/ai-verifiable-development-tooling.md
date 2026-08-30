@@ -98,6 +98,14 @@ in approximately 4.3 seconds with 32/32 checks and a clean five-node diagnosis. 
 cold/warm functional measurements, not a cross-platform latency guarantee; dependency mirrors,
 machine load, and first-use downloads remain limitations. The next release action is to publish and
 attest `ai-tooling-v0.2.0`, then retain these denominators in CI.
+The same cache-root correction was propagated through the internal screenshot-repair evidence
+chain. Its unchanged candidate passed 6/6 released-artifact gates with zero mismatched pixels; the
+typed `Welcome` → `Hello` candidate passed compilation, rendering, semantics, and structure while
+reporting 2,221/2,523,781 mismatched pixels, 1,516 localized to the changed title. Proposal,
+authorization, host grant, terminal outcome, and applied-result handoff fingerprints were resealed
+from that evidence. This is **improved** isolation consistency with no public repair activation and
+no Android runtime behavior change; the pixel count is lane-specific evidence, not a perceptual
+quality threshold.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The

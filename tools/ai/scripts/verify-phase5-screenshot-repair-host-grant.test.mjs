@@ -13,8 +13,8 @@ test('freezes host authentication, revocation, and atomic single-use before repa
     invalidDenominators: 17,
     deniedDenominators: 5,
     cancelledDenominators: 1,
-    requestFingerprint: '0fe314890a50871229e3fc221cb0bad0fc8a84e4f7fe0e76916a9294cd2aa47a',
-    decisionFingerprint: 'eeda387f022b57254f73abcd22eda6181ef60fd4963d5bee9b64e9ea07a2969d',
+    requestFingerprint: '3765e61fcffdeada154d8cfd028aca3ff6ecdea1e1b94a7834e9cc06cc00cbd1',
+    decisionFingerprint: 'df7a62497a1dce84a1461b16aa1d7481e0feb5e9fc0e7154026851f3bd1bb51e',
     adapter: {
       directCallbackGrants: 1,
       replayedGrants: 0,
