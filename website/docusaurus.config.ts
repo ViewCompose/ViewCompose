@@ -4,6 +4,7 @@ import type {Options, ThemeConfig} from '@docusaurus/preset-classic';
 import {createLocalizedMarkdownLinkResolver} from './src/config/localizedMarkdownLinks';
 import rewriteRepositoryFileLinks from './src/remark/rewriteRepositoryFileLinks';
 import stripGovernanceFrontMatter from './src/remark/stripGovernanceFrontMatter';
+import {compactArchitectureDecisionSidebar} from './src/sidebarItemsGenerator';
 
 const siteDir = __dirname;
 const docsDir = `${siteDir}/../docs`;
@@ -121,6 +122,10 @@ const config: Config = {
           path: '../docs',
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
+          sidebarItemsGenerator: async (args) =>
+            compactArchitectureDecisionSidebar(
+              await args.defaultSidebarItemsGenerator(args),
+            ),
           beforeDefaultRemarkPlugins: [
             [
               rewriteRepositoryFileLinks,

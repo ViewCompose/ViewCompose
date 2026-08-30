@@ -433,6 +433,14 @@ then retains the same commit-timestamp and `src/main` tree comparisons. The focu
 Knowledge Pack still reproduces profile `895ed1e5`. This is **improved** clean-checkout
 reproducibility without relaxing framework-version matching; the next evidence is the hosted rerun.
 
+The same first #260 attempt exposed 49,544,398 non-API documentation bytes, 156,468.4 bytes above
+the unchanged 47.1 MiB ceiling. The global generated sidebar repeated all 25 ADR children on the
+532-page bilingual site. Compacting that one category to its complete bilingual index retained all
+routes, content, search, and source links while reducing the same local corpus to 48,684,356 bytes:
+`-860,042` bytes (`-1.7359%`) and 703,573.6 bytes of headroom. All site acceptance checks passed in
+30.9 seconds. This is **improved** representation rather than a budget increase; hosted Linux
+remains the next acceptance environment.
+
 ## Maven release changesets
 
 - `release/changes/20260829-preview-worker-jvm21-resolution.json`

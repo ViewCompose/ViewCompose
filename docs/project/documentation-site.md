@@ -137,6 +137,11 @@ Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migratio
 archive, including their locale-prefixed forms. Add a redirect only for an intentional historical
 or campaign route; canonical document paths remain the source of truth.
 
+The global sidebar links to the Architecture Decisions index without repeating every ADR on every
+rendered page. The bilingual index remains the complete ordered catalog, and each decision remains
+directly routable, searchable, and linked from that index. This prevents an additional immutable
+decision from multiplying its navigation label across the entire site artifact.
+
 The versioned thresholds live in `website/site-budgets.json`. Immutable Dokka output is canonical
 at `/api/**`; the supported build removes locale-prefixed API copies and the redundant locale social
 card because localized pages use the canonical API tree and one absolute social-card URL.
@@ -636,6 +641,17 @@ AI documentation page.
   representation is smaller. Hosted and local Node/platform output differs, so the total
   203,546-byte build delta is not attributed solely to the image; the next action is the hosted
   rerun, which must independently remain below the same ceiling.
+
+- **2026-08-31, Architecture Decision navigation compaction:** the first #260 build produced
+  49,544,398 non-API bytes, 156,468.4 bytes above the unchanged 47.1 MiB ceiling. The generated
+  global sidebar repeated all 25 immutable ADR links across the 532-page bilingual site. Retaining
+  only the Architecture Decisions index in that sidebar, while preserving every ADR route, index
+  link, search entry, and source page, reduced the same local corpus to 48,684,356 bytes:
+  `-860,042` bytes (`-1.7359%`) with 703,573.6 bytes of headroom. The complete build retained 133
+  API versions and 133 localized module-manual fallbacks, audited all 532 site pages, and completed
+  Docusaurus in `30.9 s`. This is **improved** deployed representation with no content, route, API,
+  or budget reduction. The measurement is local uncompressed output; the next action is the hosted
+  #260 rerun.
 
 Git history preserves earlier Paging and site checkpoints. They do not authorize deleting current
 contracts, raising the limit without evidence, or re-expanding completed copies.
