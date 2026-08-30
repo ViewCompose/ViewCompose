@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze and implement a durable idempotent terminal-outcome store that records exactly one conflict-checked receipt per consumed reservation and reconciles uncertain writes without re-executing the patch.
+next_action: Freeze and implement a content-addressed applied-result handoff that retains and revalidates the exact in-memory Design IR only after a committed terminal receipt, while keeping application source writes and public activation disabled.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -139,7 +139,9 @@ non-retryable, while only an exact committed application may expose content-addr
 identities. An internal attended executor now consumes the process-local grant capability, applies
 only the exact typed Design IR patch in memory, and accepts a terminal receipt only through another
 direct trusted-host callback. Production host integration, persistent source output, durable
-terminal storage, and public activation remain off.
+result storage, and public activation remain off. A local file-backed reference store now durably
+publishes private terminal receipts, returns identical writes idempotently, rejects conflicts
+without overwrite, and reopens receipts for read-only reconciliation without patch re-execution.
 
 ## Maven release changesets
 
@@ -2910,7 +2912,9 @@ an uncertain effect to `indeterminate`. A callback exception or malformed receip
 schema-checked `unrecordedResult`: effect `unknown`, no output, execution authorization false, and
 retry forbidden. The consumed grant remains unusable.
 
-The implementation verifier reports one direct application, zero replayed applications, zero
+At executor implementation commit
+`1c55e7fc6ca2af7f8f44719f85d7c13658c36e20`, the verifier reported one direct application, zero
+replayed applications, zero
 accepted serialized grants, and zero outputs exposed without a terminal receipt. Dedicated tests
 also cover authorized-change drift, invalid typed input, cancellation, trusted indeterminate
 downgrade, missing or invalid receipts, concurrent consumption, serialized host handles, and
@@ -2923,12 +2927,51 @@ The dependency-free offline package contains 76 files and 1,953,674 declared byt
 contract package, this slice adds one adapter file, 14,038 declared bytes (+0.72%), and 2,585 archive
 bytes (+0.75%), with no runtime dependency or executable tool registration.
 
-This is **improved** authority isolation, exact-change enforcement, terminal receipt integrity, and
+This was **improved** authority isolation, exact-change enforcement, terminal receipt integrity, and
 fail-closed output handling with **no material Android runtime behavior change**. It does not supply
 a production durable terminal store, make effect and receipt persistence atomic, authenticate real
 host receipts, reconcile uncertain storage writes, persist or publish the output Design IR, write
-application source, or activate CLI/MCP repair. The next prerequisite is a durable idempotent
-terminal store that resolves one receipt per reservation without ever re-executing the patch.
+application source, or activate CLI/MCP repair. At this boundary the next prerequisite was a durable
+idempotent terminal store that resolves one receipt per reservation without ever re-executing the
+patch; the reference implementation below supplies that local storage boundary.
+
+### Implementation evidence — durable terminal reference store
+
+The packaged local reference store accepts one explicit absolute dedicated directory, rejects the
+filesystem root and user home, creates the directory as mode `0700`, and requires it to remain a
+private current-user-owned non-symbolic-link directory. Terminal record names derive only from the
+validated 64-hex reservation receipt. Each outcome is schema-checked and content-addressed before
+storage, and its deterministic outcome receipt binds the store identity, trust domain, reservation,
+and exact draft fingerprint without claiming reviewer authentication.
+
+Publication writes a complete mode-`0600` temporary file, synchronizes it, and atomically hard-links
+that inode to the final non-overwriting record name before synchronizing the directory. A crash
+before publication leaves no final claim; a crash after publication may leave a private temporary
+link but the complete final record remains reconcilable. Cleanup failure never weakens or removes a
+committed terminal record. Existing final records must remain bounded regular private files and
+pass JSON, schema, fingerprint, trust-domain, reservation, issuer, and receipt checks on every read.
+
+Repeating an identical terminal draft across independently opened store instances returns the exact
+existing outcome. A different applied, failed, cancelled, or indeterminate draft for the same
+reservation is rejected as a conflict and never overwrites the winner. Read-only reconciliation
+accepts only the reservation receipt, executes no patch callback, and returns no outcome when no
+record exists. Tests also reject an unsafe symbolic-link root and a record whose permissions have
+drifted. The formal verifier now proves 1/1 durable outcome, 1/1 reopened reconciliation, and 1/1
+idempotent replay in addition to the existing four terminal outcomes and 24 invalid mutations.
+
+Node 25.6.0 passes 265/265 AI-tooling tests, and Phase 0 remains at 21 schemas. The dependency-free
+offline package contains 77 files and 1,963,525 declared bytes; its 351,296-byte archive has SHA-256
+`8f6fd4963900e250704b5980fcbab868d7c2df5c326cb7157f4a18fb130dd9e5`. Relative to the executor
+package, the reference store and packaged explanation add one file, 9,851 declared bytes (+0.50%),
+and 2,269 archive bytes (+0.65%), with no runtime dependency or executable tool registration.
+
+This is **improved** local durability, idempotence, conflict safety, and restart reconciliation with
+**no material Android runtime behavior change**. It is not a production multi-host store, reviewer
+or receipt authenticator, transactional application-source writer, portability claim for arbitrary
+filesystems, or automatic recovery service. It persists only terminal metadata; the successful
+in-memory Design IR is still discarded after its fingerprint is recorded. The next prerequisite is
+a content-addressed applied-result handoff that exposes that exact Design IR only after a validated
+committed receipt, without writing application source or enabling public repair.
 
 ### Implementation evidence — bounded XML to Design IR
 

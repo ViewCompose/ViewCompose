@@ -1,5 +1,6 @@
-import {readFile} from 'node:fs/promises';
-import {resolve} from 'node:path';
+import {mkdtemp, readFile, rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {fingerprintRepairValue} from './repair-orchestrator.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
@@ -11,6 +12,9 @@ import {
   createTrustedScreenshotRepairHost,
   requestScreenshotRepairHostGrant,
 } from './screenshot-repair-host-grant-adapter.mjs';
+import {
+  createFileBackedScreenshotRepairTerminalStore,
+} from './screenshot-repair-terminal-store.mjs';
 
 const visualRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = resolve(visualRoot, 'screenshot-repair-execution-outcome-contract.json');
@@ -75,7 +79,16 @@ function assertContract(contract, schema) {
     contract.policy?.outcomeTransport !== 'trusted-host-callback-only' ||
     contract.policy?.callerSuppliedOutcome !== false ||
     contract.policy?.indeterminateHandling !== 'terminal-no-reexecution' ||
-    contract.policy?.publicActivation !== false
+    contract.policy?.publicActivation !== false ||
+    contract.referenceStore?.status !== 'implemented-internal' ||
+    contract.referenceStore?.directoryMode !== '0700' ||
+    contract.referenceStore?.recordMode !== '0600' ||
+    contract.referenceStore?.publication !==
+      'fsync-complete-temporary-then-atomic-hard-link' ||
+    contract.referenceStore?.sameDraft !== 'return-exact-existing-outcome' ||
+    contract.referenceStore?.conflictingDraft !== 'reject-without-overwrite' ||
+    contract.referenceStore?.reconciliation !== 'read-only-by-reservation-receipt' ||
+    contract.referenceStore?.reexecutePatch !== false
   ) {
     throw new Error('Screenshot repair execution-outcome policy changed');
   }
@@ -83,6 +96,7 @@ function assertContract(contract, schema) {
     'every outcome consumes attempt one of one and forbids reuse or retry',
     'only an applied committed outcome exposes content-addressed output identities',
     'failed and cancelled outcomes prove no committed output while indeterminate outcomes make no effect claim',
+    'the local reference store publishes only complete private records, returns identical drafts idempotently, and never overwrites a conflict',
   ];
   const notClaimed = [
     'a production durable terminal store, source-writing executor, or recovery workflow',
@@ -109,6 +123,17 @@ function assertContract(contract, schema) {
   ];
   if (!same(contract.diagnosticCodes, diagnostics)) {
     throw new Error('Screenshot repair execution-outcome diagnostics changed');
+  }
+  if (!same(contract.storeDiagnosticCodes, [
+    'VC-AI-REPAIR-TERMINAL-STORE-ROOT-INVALID',
+    'VC-AI-REPAIR-TERMINAL-STORE-ROOT-UNSAFE',
+    'VC-AI-REPAIR-TERMINAL-STORE-RESERVATION-INVALID',
+    'VC-AI-REPAIR-TERMINAL-STORE-INPUT-INVALID',
+    'VC-AI-REPAIR-TERMINAL-STORE-RECEIPT-COLLISION',
+    'VC-AI-REPAIR-TERMINAL-STORE-RECORD-CORRUPT',
+    'VC-AI-REPAIR-TERMINAL-STORE-CONFLICT',
+  ])) {
+    throw new Error('Screenshot repair terminal-store diagnostics changed');
   }
   if (
     schema.$id !==
@@ -315,6 +340,37 @@ async function verifyImplementedAdapter({
     executionInput(unrecordedGrant, resolutionResult, proposerContract),
     {host: outcomeHost(hostGrant, {fail: true})},
   );
+  const storeRoot = await mkdtemp(join(tmpdir(), 'viewcompose-terminal-verifier-'));
+  let durable;
+  let reconciled;
+  let idempotent;
+  try {
+    const firstStore = await createFileBackedScreenshotRepairTerminalStore({
+      storeRoot,
+      storeId: 'verifier-terminal-store',
+      trustDomainId: hostGrant.trustDomainId,
+    });
+    const durableGrant = await directGrant(hostGrant, authorization, validationResult);
+    durable = await executeTrustedScreenshotRepair(
+      executionInput(durableGrant, resolutionResult, proposerContract),
+      {host: firstStore.host},
+    );
+    const reopenedStore = await createFileBackedScreenshotRepairTerminalStore({
+      storeRoot,
+      storeId: 'verifier-terminal-store',
+      trustDomainId: hostGrant.trustDomainId,
+    });
+    reconciled = await reopenedStore.readTerminalOutcome(
+      hostGrant.reservation.reservationReceipt,
+    );
+    const idempotentGrant = await directGrant(hostGrant, authorization, validationResult);
+    idempotent = await executeTrustedScreenshotRepair(
+      executionInput(idempotentGrant, resolutionResult, proposerContract),
+      {host: reopenedStore.host},
+    );
+  } finally {
+    await rm(storeRoot, {recursive: true, force: true});
+  }
   if (
     outcome.status !== 'applied' ||
     outcome.effect.outputExposed !== true ||
@@ -324,7 +380,10 @@ async function verifyImplementedAdapter({
     unrecorded.status !== 'blocked' ||
     unrecorded.effect.outputExposed !== false ||
     unrecorded.retryAllowed !== false ||
-    validateSchemaValue(unrecorded, schema.$defs.unrecordedResult, schema).length > 0
+    validateSchemaValue(unrecorded, schema.$defs.unrecordedResult, schema).length > 0 ||
+    durable?.status !== 'applied' ||
+    !same(reconciled, durable) ||
+    !same(idempotent, durable)
   ) {
     throw new Error('Screenshot repair execution adapter boundary changed');
   }
@@ -333,6 +392,9 @@ async function verifyImplementedAdapter({
     replayedApplications: 0,
     serializedGrantsAccepted: 0,
     unrecordedOutputsExposed: 0,
+    durableOutcomes: 1,
+    reconciledOutcomes: 1,
+    idempotentOutcomes: 1,
   };
 }
 
@@ -490,7 +552,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `terminal outcomes and ${summary.invalidDenominators}/24 invalid denominators; ` +
           `${summary.outputBearingOutcomes}/1 outcomes expose output, ` +
           `${summary.retryableOutcomes}/0 are retryable; the internal attended adapter is ` +
-          'implemented and public execution remains off.',
+          'implemented, the durable reference store reconciles 1/1 outcomes, and public ' +
+          'execution remains off.',
       );
     })
     .catch((error) => {

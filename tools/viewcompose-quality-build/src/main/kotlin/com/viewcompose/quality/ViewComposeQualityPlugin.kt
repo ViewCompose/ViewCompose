@@ -1208,6 +1208,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                         "scripts/screenshot-contract.mjs",
                         "scripts/screenshot-repair-execution-adapter.mjs",
                         "scripts/screenshot-repair-host-grant-adapter.mjs",
+                        "scripts/screenshot-repair-terminal-store.mjs",
                         "scripts/verify-phase5-screenshot-repair-execution-outcome.mjs",
                     )
                 },

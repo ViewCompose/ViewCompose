@@ -35,6 +35,16 @@
     "indeterminateHandling": "terminal-no-reexecution",
     "publicActivation": false
   },
+  "referenceStore": {
+    "status": "implemented-internal",
+    "directoryMode": "0700",
+    "recordMode": "0600",
+    "publication": "fsync-complete-temporary-then-atomic-hard-link",
+    "sameDraft": "return-exact-existing-outcome",
+    "conflictingDraft": "reject-without-overwrite",
+    "reconciliation": "read-only-by-reservation-receipt",
+    "reexecutePatch": false
+  },
   "diagnosticCodes": [
     "VC-AI-REPAIR-EXECUTION-INPUT-INVALID",
     "VC-AI-REPAIR-EXECUTION-INTEGRITY-MISMATCH",
@@ -46,13 +56,23 @@
     "VC-AI-REPAIR-EXECUTION-CANCELLED",
     "VC-AI-REPAIR-EXECUTION-EFFECT-UNKNOWN"
   ],
+  "storeDiagnosticCodes": [
+    "VC-AI-REPAIR-TERMINAL-STORE-ROOT-INVALID",
+    "VC-AI-REPAIR-TERMINAL-STORE-ROOT-UNSAFE",
+    "VC-AI-REPAIR-TERMINAL-STORE-RESERVATION-INVALID",
+    "VC-AI-REPAIR-TERMINAL-STORE-INPUT-INVALID",
+    "VC-AI-REPAIR-TERMINAL-STORE-RECEIPT-COLLISION",
+    "VC-AI-REPAIR-TERMINAL-STORE-RECORD-CORRUPT",
+    "VC-AI-REPAIR-TERMINAL-STORE-CONFLICT"
+  ],
   "claims": {
     "checked": [
       "every terminal outcome binds the exact grant, request, authorization, proposal, change, Design IR, reservation, and trust domain",
       "every outcome consumes attempt one of one and forbids reuse or retry",
       "only an applied committed outcome exposes content-addressed output identities",
       "failed and cancelled outcomes prove no committed output while indeterminate outcomes make no effect claim",
-      "the terminal receipt is host-issued, purpose-bound to the same reservation, and distinct from the reservation receipt"
+      "the terminal receipt is host-issued, purpose-bound to the same reservation, and distinct from the reservation receipt",
+      "the local reference store publishes only complete private records, returns identical drafts idempotently, and never overwrites a conflict"
     ],
     "notClaimed": [
       "a production durable terminal store, source-writing executor, or recovery workflow",

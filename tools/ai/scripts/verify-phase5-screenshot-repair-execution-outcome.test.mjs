@@ -19,6 +19,9 @@ test('freezes and verifies terminal outcomes for attended screenshot repair exec
       replayedApplications: 0,
       serializedGrantsAccepted: 0,
       unrecordedOutputsExposed: 0,
+      durableOutcomes: 1,
+      reconciledOutcomes: 1,
+      idempotentOutcomes: 1,
     },
   });
 });

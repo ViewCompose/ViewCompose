@@ -416,6 +416,16 @@ supplied outcomes, public mode, credentials, providers, and tool network access 
 A production durable terminal store, atomic effect/receipt persistence, authentication, recovery,
 and CLI/MCP repair activation remain future host responsibilities.
 
+The package also includes a local file-backed terminal reference store for the internal callback.
+It requires an explicit private `0700` directory, writes a complete `0600` temporary record, calls
+`fsync`, and publishes it without overwrite through one atomic hard link. Repeating the same draft
+returns the exact existing outcome; a conflicting draft for the reservation fails closed and never
+replaces it. A new store instance can reconcile the outcome read-only by reservation receipt, with
+schema, fingerprint, file type, permissions, trust-domain, and receipt binding revalidated and no
+patch re-execution. This reference store provides deterministic local durability, not reviewer or
+receipt authentication, multi-host consensus, arbitrary-filesystem portability, or a production
+recovery service.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
