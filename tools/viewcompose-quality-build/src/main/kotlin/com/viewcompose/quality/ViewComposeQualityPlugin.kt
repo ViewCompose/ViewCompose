@@ -1170,10 +1170,12 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                         "contracts/screenshot-repair-host-grant.schema.json",
                         "evaluation/fixtures/visual/screenshot-repair-host-grant-contract.json",
                         "evaluation/fixtures/visual/screenshot-repair/rollback.authorization.json",
+                        "evaluation/fixtures/visual/screenshot-repair/rollback.authorization-validation.json",
                         "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-decision.json",
                         "evaluation/fixtures/visual/screenshot-repair/rollback.host-grant-request.json",
                         "scripts/repair-orchestrator.mjs",
                         "scripts/schema-validator.mjs",
+                        "scripts/screenshot-repair-host-grant-adapter.mjs",
                         "scripts/verify-phase5-screenshot-repair-host-grant.mjs",
                     )
                 },

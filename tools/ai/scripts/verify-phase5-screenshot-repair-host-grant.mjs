@@ -4,6 +4,10 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {fingerprintRepairValue} from './repair-orchestrator.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
+import {
+  createTrustedScreenshotRepairHost,
+  requestScreenshotRepairHostGrant,
+} from './screenshot-repair-host-grant-adapter.mjs';
 
 const visualRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = resolve(visualRoot, 'screenshot-repair-host-grant-contract.json');
@@ -48,9 +52,9 @@ function assertContract(contract, schema) {
       'screenshot-repair-host-grant-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-frozen' ||
+    contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
-    contract.activation?.implementation !== false ||
+    contract.activation?.implementation !== true ||
     contract.activation?.executionAuthorized !== false
   ) {
     throw new Error('Screenshot repair host-grant activation boundary changed');
@@ -83,7 +87,7 @@ function assertContract(contract, schema) {
       'authority for a decision loaded from a file, stdin, CLI argument, MCP argument, or network payload',
     ) ||
     !contract.claims?.notClaimed?.includes(
-      'an implemented durable host store, callback transport, patch executor, or recovery workflow',
+      'a production durable host store, authenticated host integration, patch executor, or recovery workflow',
     ) ||
     schema.$id !==
       'https://schemas.viewcompose.com/ai/screenshot-repair-host-grant-v1.schema.json' ||
@@ -112,6 +116,7 @@ function assertContract(contract, schema) {
     'VC-AI-REPAIR-HOST-GRANT-REVOKED',
     'VC-AI-REPAIR-HOST-GRANT-ALREADY-CONSUMED',
     'VC-AI-REPAIR-HOST-GRANT-POLICY-DENIED',
+    'VC-AI-REPAIR-HOST-GRANT-HOST-FAILED',
     'VC-AI-REPAIR-HOST-GRANT-CANCELLED',
   ])) {
     throw new Error('Screenshot repair host-grant diagnostic boundary changed');
@@ -261,22 +266,70 @@ function nonGrantDecision(request, status, reason, code) {
   return decision;
 }
 
+async function verifyImplementedAdapter(request, decision, authorization, validationResult) {
+  let reserved = false;
+  let calls = 0;
+  const host = createTrustedScreenshotRepairHost({
+    trustDomainId: request.hostBoundary.trustDomainId,
+    reserve: async (actualRequest) => {
+      calls += 1;
+      if (!same(actualRequest, request)) throw new Error('Adapter request drifted');
+      if (reserved) {
+        return nonGrantDecision(
+          actualRequest,
+          'denied',
+          'already-consumed',
+          'VC-AI-REPAIR-HOST-GRANT-ALREADY-CONSUMED',
+        );
+      }
+      reserved = true;
+      return structuredClone(decision);
+    },
+  });
+  const input = {validationResult, authorization};
+  const granted = await requestScreenshotRepairHostGrant(input, {host});
+  const replayed = await requestScreenshotRepairHostGrant(input, {host});
+  const serializedHandle = structuredClone(host);
+  const serialized = await requestScreenshotRepairHostGrant({
+    ...input,
+    decision,
+  }, {host: serializedHandle});
+  if (
+    granted.status !== 'granted' ||
+    granted.decisionFingerprint !== decision.decisionFingerprint ||
+    replayed.status !== 'denied' ||
+    replayed.reason !== 'already-consumed' ||
+    replayed.executionAuthorized !== false ||
+    serialized.status !== 'denied' ||
+    serialized.executionAuthorized !== false ||
+    calls !== 2
+  ) {
+    throw new Error('Screenshot repair trusted-host adapter boundary changed');
+  }
+  return {
+    directCallbackGrants: 1,
+    replayedGrants: 0,
+    serializedDecisionsAccepted: 0,
+  };
+}
+
 export async function verifyPhase5ScreenshotRepairHostGrant() {
   const [contract, schema] = await Promise.all([readJson(contractPath), readJson(schemaPath)]);
   assertContract(contract, schema);
   if (
     contract.supportedFixtures?.length !== 1 ||
     contract.invalidFixtures?.length !== 17 ||
-    contract.deniedFixtures?.length !== 4 ||
+    contract.deniedFixtures?.length !== 5 ||
     contract.cancelledFixtures?.length !== 1
   ) {
     throw new Error('Screenshot repair host-grant denominator changed');
   }
   const fixture = contract.supportedFixtures[0];
-  const [request, decision, authorization] = await Promise.all([
+  const [request, decision, authorization, validationResult] = await Promise.all([
     fixture.request,
     fixture.decision,
     fixture.authorization,
+    fixture.validation,
   ].map((path) => readJson(resolve(visualRoot, path))));
   if (
     request.requestFingerprint !== fixture.expectedRequestFingerprint ||
@@ -330,16 +383,23 @@ export async function verifyPhase5ScreenshotRepairHostGrant() {
   ) {
     throw new Error('Screenshot repair host-grant cancelled result changed');
   }
+  const adapter = await verifyImplementedAdapter(
+    request,
+    decision,
+    authorization,
+    validationResult,
+  );
   return {
-    implementation: false,
+    implementation: true,
     publicRepairMode: false,
     executionAuthorized: false,
     supportedGrants: 1,
     invalidDenominators: 17,
-    deniedDenominators: 4,
+    deniedDenominators: 5,
     cancelledDenominators: 1,
     requestFingerprint: request.requestFingerprint,
     decisionFingerprint: decision.decisionFingerprint,
+    adapter,
   };
 }
 
@@ -349,8 +409,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(
         `Verified screenshot repair host-grant contract: ${summary.supportedGrants}/1 ` +
           `synthetic trusted-host grant, ${summary.invalidDenominators}/17 invalid, ` +
-          `${summary.deniedDenominators}/4 denied, and ${summary.cancelledDenominators}/1 ` +
-          'cancelled denominators; host integration and repair execution remain off.',
+          `${summary.deniedDenominators}/5 denied, and ${summary.cancelledDenominators}/1 ` +
+          'cancelled denominators; the internal callback is implemented and repair execution remains off.',
       );
     })
     .catch((error) => {

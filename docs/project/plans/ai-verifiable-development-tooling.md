@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement an isolated trusted-host callback adapter and durable single-use test host that reject serialized caller decisions while keeping patch execution and public activation disabled.
+next_action: Freeze the terminal execution-outcome and receipt contract for a reserved host grant before any internal patch executor may consume it.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -130,9 +130,11 @@ explicit authorization are separately frozen.
 That v1 authorization boundary is now frozen with two purpose-bound human attestations and exact
 content-address binding. Its internal validator now reproduces all available evidence and proposal
 bindings while fixing `executionAuthorized` to false; every execution mode remains off.
-The following host-grant lifecycle is now contract-frozen: only a trusted host callback may
-authenticate both reviewer receipts, check revocation, and atomically reserve one terminal repair
-attempt. The host adapter, durable store, patch executor, and public activation remain off.
+The following host-grant lifecycle now has an internal direct-callback adapter: only an explicitly
+registered in-process host may authenticate both reviewer receipts, check revocation, and atomically
+reserve one terminal repair attempt. A durable file-backed test host proves concurrent and
+cross-instance replay denial. Production host integration, patch execution, and public activation
+remain off.
 
 ## Maven release changesets
 
@@ -2780,7 +2782,9 @@ decision fingerprint is
 explicitly gives no authority to a decision loaded from a file, stdin, CLI argument, MCP argument,
 or network payload. Only a future trusted callback boundary can supply such authority.
 
-The contract verifier passes 1/1 structurally valid synthetic grant, 17/17 invalid denominators,
+At contract-freeze commit
+`a9e06c168746015902acb029a319075ee13bb53d`, the verifier passed 1/1 structurally valid synthetic
+grant, 17/17 invalid denominators,
 4/4 denied decisions, and 1/1 cancelled decision. It keeps authentication failure, revocation,
 already-consumed state, policy denial, integrity drift, lineage drift, and malformed input distinct.
 Phase 0 now verifies 20 schemas, and Node 25.6.0 passes 244/244 AI-tooling tests. The
@@ -2793,9 +2797,48 @@ mode.
 This is **improved** dynamic trust-boundary precision and fail-closed single-use semantics with
 **no material Android runtime behavior change**. It does not implement or locally verify host
 identity, authentication receipts, revocation checks, durable reservation, patch application,
-failure recovery, or public execution. The next prerequisite is an isolated callback adapter plus
-a deterministic durable test host that prove serialized caller decisions cannot enter this trust
-boundary and the same authorization cannot be reserved twice.
+failure recovery, or public execution. At this boundary the next prerequisite was an isolated
+callback adapter plus a deterministic durable test host; the implementation below supplies those
+two pieces without creating an executor.
+
+### Implementation evidence — isolated trusted-host grant adapter
+
+The packaged internal adapter accepts exactly one structurally validated authorization result and
+its exact authorization record. It revalidates both schemas and content addresses, binds reviewer,
+receipt, evidence, proposal, source-revision, reference, change, and Design IR identities, and then
+builds the frozen host-grant request. The host reservation callback is retained in a private
+process-local registry behind an immutable handle. Serializing that handle preserves only the trust
+domain label and loses callback authority; extra `decision` input is rejected before the callback.
+No file, stdin, CLI, MCP, or network-supplied decision can enter the trusted path.
+
+The returned host decision is accepted only after schema, byte ceiling, content address, trust
+domain, purpose-distinct principal and review-receipt, active revocation, unique host-proof receipt,
+atomic reservation, attended-use, and complete repair-lineage checks pass. Host exceptions become
+non-authorizing `host-failed` decisions. Cancellation before the callback makes no reservation;
+cancellation or validation failure after the callback never retains its grant and does not imply
+that a host reservation can be reused.
+
+The deterministic file-backed test host creates one mode-`0600` reservation record with exclusive
+creation and synchronizes it before returning the synthetic grant. Two concurrent requests produce
+exactly one grant and one `already-consumed` denial. Reopening the same store through a new host
+instance also denies replay. Separate tests reject serialized handles, caller-injected decisions,
+validly rehashed lineage drift, changed validation identity, host failure, and cancellation before
+and after the callback. The contract verifier now passes 1/1 synthetic grant, 17/17 invalid, 5/5
+denied, and 1/1 cancelled denominators; its adapter replay reports one direct-callback grant, zero
+replayed grants, and zero accepted serialized decisions.
+
+Node 25.6.0 passes 251/251 AI-tooling tests, and Phase 0 remains at 20 schemas. The dependency-free
+offline package contains 74 files and 1,928,701 declared bytes; its 345,328-byte archive has SHA-256
+`c7981315ccf7760baee42d9fdc9619eaf9b6fa188bf8ff86dc66bc956d6d1425`. Relative to the
+contract package, the adapter adds one file, 11,768 declared bytes (+0.61%), and 2,283 archive bytes
+(+0.67%), with no runtime dependency or public tool mode.
+
+This is **improved** callback isolation, decision integrity, and single-use replay resistance with
+**no material Android runtime behavior change**. The test host demonstrates storage semantics; it
+does not authenticate real people or constitute a production host. No patch is applied, no source
+or Design IR is persisted, no execution receipt exists, and public CLI/MCP repair remains disabled.
+The next prerequisite is a terminal outcome contract that accounts for success, failure, and
+cancellation after reservation before an internal executor can consume a grant.
 
 ### Implementation evidence — bounded XML to Design IR
 

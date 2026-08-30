@@ -386,15 +386,17 @@ attestations and their content addresses, and returns a separate validation resu
 authenticate a person or receipt, decide whether the baseline is trustworthy, provide revocation,
 or execute the patch. Those remain host responsibilities.
 
-Screenshot repair host grant v1 freezes the next trust boundary without implementing it. A grant
-request binds the exact validated authorization, evidence, proposal, change, pixel reference,
-candidate Design IR, and immutable baseline source revision. Only a decision delivered by a
-trusted host callback may authenticate both reviewers and receipts, check both receipts for
-revocation immediately before use, and durably reserve one atomic application attempt. A reserved
-attempt cannot be reused or retried even when application fails. The checked-in granted decision
-is a synthetic contract fixture, not a trusted grant. Decisions loaded from files, stdin, CLI or
-MCP arguments, or network payloads have no authority; credentials remain out of band. The host
-store, callback transport, patch executor, and public repair mode remain unimplemented.
+Screenshot repair host grant v1 implements the internal trust callback without activating repair
+execution. A grant request binds the exact validated authorization, evidence, proposal, change,
+pixel reference, candidate Design IR, and immutable baseline source revision. The adapter accepts
+only a direct host handle registered in process; its callback is retained privately, so serializing
+the handle loses all authority. Files, stdin, CLI or MCP arguments, and network payloads cannot
+inject a decision. The adapter validates the decision schema, content address, trust domain,
+reviewer and receipt identities, active revocation records, unique host proof receipts, atomic
+single-use reservation, and complete repair lineage before returning a grant. A file-backed test
+host proves concurrent and cross-instance replay denial through one exclusive durable reservation.
+The checked-in grant remains synthetic, credentials remain out of band, and there is no production
+host integration, patch executor, public repair mode, or unattended execution.
 
 Run the local MCP server and its protocol/parity gate with:
 

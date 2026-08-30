@@ -7,9 +7,9 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-frozen",
+    "status": "implemented-internal",
     "publicRepairMode": false,
-    "implementation": false,
+    "implementation": true,
     "executionAuthorized": false
   },
   "boundary": {
@@ -42,6 +42,7 @@
     "VC-AI-REPAIR-HOST-GRANT-REVOKED",
     "VC-AI-REPAIR-HOST-GRANT-ALREADY-CONSUMED",
     "VC-AI-REPAIR-HOST-GRANT-POLICY-DENIED",
+    "VC-AI-REPAIR-HOST-GRANT-HOST-FAILED",
     "VC-AI-REPAIR-HOST-GRANT-CANCELLED"
   ],
   "claims": {
@@ -54,7 +55,7 @@
     "notClaimed": [
       "local verification of host identity, authentication receipts, or revocation checks",
       "authority for a decision loaded from a file, stdin, CLI argument, MCP argument, or network payload",
-      "an implemented durable host store, callback transport, patch executor, or recovery workflow",
+      "a production durable host store, authenticated host integration, patch executor, or recovery workflow",
       "public or unattended screenshot repair execution"
     ]
   },
@@ -64,6 +65,7 @@
       "request": "screenshot-repair/rollback.host-grant-request.json",
       "decision": "screenshot-repair/rollback.host-grant-decision.json",
       "authorization": "screenshot-repair/rollback.authorization.json",
+      "validation": "screenshot-repair/rollback.authorization-validation.json",
       "expectedRequestFingerprint": "ab8134e2be383dbe8c2b376aceb172d2132f0268e0c4870999a682c9fc660dbd",
       "expectedDecisionFingerprint": "8f5953ee7fec99c15d446d3adb1877ef1dd95a2ff5dbffbab27de119d6974c2e"
     }
@@ -91,7 +93,8 @@
     {"reason": "authentication-failed", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-AUTHENTICATION-FAILED"},
     {"reason": "receipt-revoked", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-REVOKED"},
     {"reason": "already-consumed", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-ALREADY-CONSUMED"},
-    {"reason": "policy-denied", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-POLICY-DENIED"}
+    {"reason": "policy-denied", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-POLICY-DENIED"},
+    {"reason": "host-failed", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-HOST-FAILED"}
   ],
   "cancelledFixtures": [
     {"reason": "cancelled", "expectedCode": "VC-AI-REPAIR-HOST-GRANT-CANCELLED"}

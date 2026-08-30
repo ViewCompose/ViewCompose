@@ -164,6 +164,7 @@
             "receipt-revoked",
             "already-consumed",
             "policy-denied",
+            "host-failed",
             "input-invalid",
             "cancelled"
           ]

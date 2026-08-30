@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "status": "validated",
+  "reason": "exact-attestation-bindings",
+  "policy": {
+    "version": 1,
+    "validation": "exact-content-address-only",
+    "executionAuthorized": false,
+    "reviewerTrust": "external-host-responsibility",
+    "receiptAuthentication": "not-claimed",
+    "providerCalls": false,
+    "networkAccess": false
+  },
+  "input": {
+    "baselineEvidenceFingerprint": "ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a",
+    "candidateEvidenceFingerprint": "e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068",
+    "proposalFingerprint": "47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68",
+    "authorizationFingerprint": "ba359be06ef055db9ca32d7724dfe256b2d53a44aacbdec0f781d5825343cb46"
+  },
+  "authorization": {
+    "baselineReviewerId": "fixture-baseline-reviewer",
+    "baselineReviewReceipt": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "sourceRevision": "a2faf25dc206b428936a42b3d0872007371592b3",
+    "repairReviewerId": "fixture-repair-approver",
+    "repairReviewReceipt": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "applicationCount": 1,
+    "unattendedExecution": false
+  },
+  "diagnostics": [],
+  "validationFingerprint": "8c60e3e4ffc772f44df9e7408b4fd21ba0bd578cfb537558f57d0626594db957"
+}
