@@ -398,6 +398,18 @@ host proves concurrent and cross-instance replay denial through one exclusive du
 The checked-in grant remains synthetic, credentials remain out of band, and there is no production
 host integration, patch executor, public repair mode, or unattended execution.
 
+Screenshot repair execution outcome v1 freezes what must happen after a host reservation is
+consumed, without implementing an executor. Every `applied`, `failed`, `cancelled`, or
+`indeterminate` outcome binds the exact grant, request, authorization, proposal, change, input
+Design IR, reservation receipt, and trust domain. All four states consume attempt one of one and
+forbid reuse or retry. Only `applied` with a `committed` effect may expose the result Design IR and
+typed-patch output fingerprints; failure and cancellation expose no output. A crash or missing
+effect proof becomes an `indeterminate` terminal receipt, never permission to execute again. The
+contract permits only an attended in-memory typed Design IR patch and forbids persistent source
+writes, caller-supplied outcomes, public mode, credentials, providers, and tool network access.
+Outcome receipt authentication, atomic effect/receipt persistence, recovery, and execution remain
+future trusted-host responsibilities.
+
 Run the local MCP server and its protocol/parity gate with:
 
 ```bash
@@ -415,6 +427,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-repair-candidate
 npm --prefix tools/ai run verify:phase5-screenshot-repair-proposer
 npm --prefix tools/ai run verify:phase5-screenshot-repair-authorization
 npm --prefix tools/ai run verify:phase5-screenshot-repair-host-grant
+npm --prefix tools/ai run verify:phase5-screenshot-repair-execution-outcome
 ./gradlew verifyAiMcp
 ./gradlew verifyAiScreenshotPreprocessing
 ./gradlew verifyAiScreenshotInference
@@ -427,6 +440,8 @@ npm --prefix tools/ai run verify:phase5-screenshot-repair-host-grant
 ./gradlew verifyAiScreenshotRepairCandidate
 ./gradlew verifyAiScreenshotRepairProposer
 ./gradlew verifyAiScreenshotRepairAuthorization
+./gradlew verifyAiScreenshotRepairHostGrant
+./gradlew verifyAiScreenshotRepairExecutionOutcome
 ```
 
 The preferred protocol follows the

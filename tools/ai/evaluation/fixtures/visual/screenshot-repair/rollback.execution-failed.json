@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-repair-execution-outcome",
+  "status": "failed",
+  "reason": "patch-failed",
+  "lineage": {
+    "hostGrantDecisionFingerprint": "8f5953ee7fec99c15d446d3adb1877ef1dd95a2ff5dbffbab27de119d6974c2e",
+    "hostGrantRequestFingerprint": "ab8134e2be383dbe8c2b376aceb172d2132f0268e0c4870999a682c9fc660dbd",
+    "authorizationFingerprint": "ba359be06ef055db9ca32d7724dfe256b2d53a44aacbdec0f781d5825343cb46",
+    "proposalFingerprint": "47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68",
+    "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
+    "inputDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
+    "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
+    "hostTrustDomainId": "fixture-repair-host"
+  },
+  "attempt": {
+    "reservationState": "consumed",
+    "attemptNumber": 1,
+    "maxAttempts": 1,
+    "terminal": true,
+    "reuseAllowed": false,
+    "retryAllowed": false,
+    "attendedExecution": true
+  },
+  "executor": {
+    "executorId": "fixture-typed-design-ir-executor",
+    "executorBuildFingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+    "patchMode": "typed-design-ir-in-memory",
+    "persistentSourceWrite": false,
+    "publicToolMode": false,
+    "callerSuppliedOutcome": false,
+    "credentialInput": false,
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "logs": "fingerprints-only"
+  },
+  "effect": {
+    "state": "not-committed",
+    "resultDesignIrFingerprint": null,
+    "patchOutputFingerprint": null,
+    "outputExposed": false
+  },
+  "receipt": {
+    "issuerTrustDomainId": "fixture-repair-host",
+    "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
+    "terminalState": "recorded",
+    "outcomeTransport": "trusted-host-callback-only",
+    "outcomeReceipt": "8888888888888888888888888888888888888888888888888888888888888888"
+  },
+  "diagnostics": [
+    {
+      "code": "VC-AI-REPAIR-EXECUTION-PATCH-FAILED",
+      "severity": "error",
+      "message": "The reserved typed Design IR patch failed without exposing an output.",
+      "nextAction": "Inspect the bounded diagnostic; this authorization is terminal and cannot be retried."
+    }
+  ],
+  "outcomeFingerprint": "3e9a778199be2bcd65bf255e9ecc5dc35ed0361769a892bb417a5d28f468c605"
+}

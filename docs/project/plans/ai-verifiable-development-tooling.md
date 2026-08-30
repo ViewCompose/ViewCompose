@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Freeze the terminal execution-outcome and receipt contract for a reserved host grant before any internal patch executor may consume it.
+next_action: Implement an isolated attended in-memory Design IR executor and trusted-host terminal-outcome callback that consume the frozen grant exactly once while keeping source writes and public activation disabled.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -134,7 +134,9 @@ The following host-grant lifecycle now has an internal direct-callback adapter: 
 registered in-process host may authenticate both reviewer receipts, check revocation, and atomically
 reserve one terminal repair attempt. A durable file-backed test host proves concurrent and
 cross-instance replay denial. Production host integration, patch execution, and public activation
-remain off.
+remain off. The terminal outcome contract now additionally freezes applied, failed, cancelled, and
+indeterminate receipts after reservation; every state is terminal and non-retryable, while only an
+exact committed application may expose content-addressed output identities.
 
 ## Maven release changesets
 
@@ -2837,8 +2839,45 @@ This is **improved** callback isolation, decision integrity, and single-use repl
 **no material Android runtime behavior change**. The test host demonstrates storage semantics; it
 does not authenticate real people or constitute a production host. No patch is applied, no source
 or Design IR is persisted, no execution receipt exists, and public CLI/MCP repair remains disabled.
-The next prerequisite is a terminal outcome contract that accounts for success, failure, and
-cancellation after reservation before an internal executor can consume a grant.
+At this implementation boundary, the next prerequisite was a terminal outcome contract covering
+success, failure, cancellation, and unknown effects after reservation; the contract below supplies
+that boundary without adding an executor.
+
+### Contract evidence — terminal execution outcomes and receipts
+
+Screenshot repair execution outcome v1 freezes the boundary after a trusted host has atomically
+reserved one authorization. Each outcome binds the exact host-grant decision and request,
+authorization, proposal, typed change, input Design IR, reservation receipt, and trust domain. Its
+attempt record is always consumed, attempt one of one, attended, terminal, non-reusable, and
+non-retryable. The executor profile is restricted to a typed in-memory Design IR patch with no
+persistent source write, caller-supplied outcome, public mode, credential input, provider call,
+tool network access, or content-bearing log.
+
+Four disjoint schema branches keep effect claims honest. `applied` requires `committed` plus exact
+result Design IR and patch-output fingerprints and is the only output-bearing state. `failed` and
+`cancelled` require `not-committed` and null output identities. `indeterminate` requires `unknown`
+and covers the crash window where an effect cannot be proved; it is still terminal and cannot be
+executed again. Every branch carries a host-issued terminal receipt bound to the same trust domain
+and reservation, and the outcome receipt must differ from the reservation receipt.
+
+The frozen verifier passes 4/4 terminal outcomes and 24/24 invalid mutations. It separately rejects
+fingerprint drift; every grant, request, authorization, proposal, change, Design IR, reservation,
+and trust-domain mismatch; second or non-terminal attempts; retry or unattended flags; source-write,
+public, or caller-outcome activation; applied/failed/cancelled/indeterminate effect mismatches;
+receipt issuer or reservation drift; receipt reuse; and raw Design IR output. Exactly 1/1 outcome
+exposes output fingerprints and 0/0 outcomes are retryable.
+
+Node 25.6.0 passes 252/252 AI-tooling tests, and Phase 0 verifies 21 schemas. The dependency-free
+offline package contains 75 files and 1,939,636 declared bytes; its 346,442-byte archive has SHA-256
+`5f25a417c4c85c020f7f2e499319fb99449eb28a55fa4cd4de3dc34bd8d337e6`. Relative to the host-adapter
+package, the contract schema and packaged explanation add one file, 10,935 declared bytes (+0.57%),
+and 1,114 archive bytes (+0.32%), with no runtime dependency or executable registration.
+
+This is **improved** terminal-state completeness, crash-window honesty, and replay resistance with
+**no material Android runtime behavior change**. It does not implement an executor, authenticate a
+production outcome receipt, make effect and receipt persistence atomic, recover an indeterminate
+attempt, write application source, or activate CLI/MCP repair. The next prerequisite is an isolated
+attended in-memory executor plus trusted-host terminal callback that implement this exact contract.
 
 ### Implementation evidence — bounded XML to Design IR
 

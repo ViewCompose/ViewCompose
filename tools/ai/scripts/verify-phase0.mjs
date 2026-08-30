@@ -251,7 +251,10 @@ export async function resolveFixturePath(fixture, root = repositoryRoot) {
 
 function schemaVersion(schema) {
   return schema.properties?.schemaVersion?.const ??
-    schema.$defs?.request?.properties?.schemaVersion?.const;
+    schema.$defs?.request?.properties?.schemaVersion?.const ??
+    Object.values(schema.$defs ?? {})
+      .map((definition) => definition.properties?.schemaVersion?.const)
+      .find((version) => version !== undefined);
 }
 
 async function verifySchemas(versions) {
@@ -293,6 +296,7 @@ async function verifySchemas(versions) {
     screenshotRepairProposal: 'screenshot-repair-proposal.schema.json',
     screenshotRepairAuthorization: 'screenshot-repair-authorization.schema.json',
     screenshotRepairHostGrant: 'screenshot-repair-host-grant.schema.json',
+    screenshotRepairExecutionOutcome: 'screenshot-repair-execution-outcome.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };
