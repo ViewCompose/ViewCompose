@@ -66,8 +66,8 @@
       "decision": "screenshot-repair/rollback.host-grant-decision.json",
       "authorization": "screenshot-repair/rollback.authorization.json",
       "validation": "screenshot-repair/rollback.authorization-validation.json",
-      "expectedRequestFingerprint": "1f47b20bbd1d7f300b906146978fbad84d690e04c44317327f8a5c7629d63faa",
-      "expectedDecisionFingerprint": "7503f19297663da468e481d319180e67fc7dd9815920013b542cdb9241ba203d"
+      "expectedRequestFingerprint": "0fe314890a50871229e3fc221cb0bad0fc8a84e4f7fe0e76916a9294cd2aa47a",
+      "expectedDecisionFingerprint": "eeda387f022b57254f73abcd22eda6181ef60fd4963d5bee9b64e9ea07a2969d"
     }
   ],
   "invalidFixtures": [

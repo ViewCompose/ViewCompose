@@ -59,8 +59,8 @@
     {
       "id": "human-accepted-single-use-rollback",
       "authorization": "screenshot-repair/rollback.authorization.json",
-      "expectedAuthorizationFingerprint": "adbffdf1900072ad257969d8ac00d4d0706990040ba893c6ac09e910d5cb6633",
-      "expectedValidationFingerprint": "8de21c6df22f608bbb2ca290e27b569e10eb0f60f88fa5efdcbb62544f52abb1"
+      "expectedAuthorizationFingerprint": "7ee3a6296b55b6ae58585ffba93527dcd49d372e6a3daf403eb9f95ce02ad859",
+      "expectedValidationFingerprint": "ef6ee08150a287d334c799ca30c4b0d4bb3aa8d94839fd143bf30071ecd00b1f"
     }
   ],
   "invalidFixtures": [

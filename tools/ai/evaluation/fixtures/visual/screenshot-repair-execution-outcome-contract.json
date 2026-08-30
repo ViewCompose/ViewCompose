@@ -88,28 +88,28 @@
       "file": "screenshot-repair/rollback.execution-applied.json",
       "expectedStatus": "applied",
       "expectedEffectState": "committed",
-      "expectedOutcomeFingerprint": "cc9fbc5f8eb1796ac55e5c8258ae68c4b588d3680b160975abf57b6390977ffc"
+      "expectedOutcomeFingerprint": "f322953bb0cf9c23d1c0583b7ddd1d620c77c190440ce49193ffdc31c9b16055"
     },
     {
       "id": "failed-not-committed",
       "file": "screenshot-repair/rollback.execution-failed.json",
       "expectedStatus": "failed",
       "expectedEffectState": "not-committed",
-      "expectedOutcomeFingerprint": "04f54652798f41e8983faeaff35bbf4186536ce4239e09be3f084c848e04667e"
+      "expectedOutcomeFingerprint": "e7487dfb3e13b97046ae2d468762d72530e85dd98ddf299bf7269b6e180f30eb"
     },
     {
       "id": "cancelled-not-committed",
       "file": "screenshot-repair/rollback.execution-cancelled.json",
       "expectedStatus": "cancelled",
       "expectedEffectState": "not-committed",
-      "expectedOutcomeFingerprint": "3dc1a992828e88d8c942853a9f53ce47ebe28a14e25e79da923fcdd7f0eb0591"
+      "expectedOutcomeFingerprint": "0c6ba6b0fc9517971e08fe2e19afb69ee51c5756df36ee1fd169f52359c4b959"
     },
     {
       "id": "crashed-effect-indeterminate",
       "file": "screenshot-repair/rollback.execution-indeterminate.json",
       "expectedStatus": "indeterminate",
       "expectedEffectState": "unknown",
-      "expectedOutcomeFingerprint": "496fa9c0efcedcc547d603a76947cf7fd89eedccc9c4803f698e1ab5aba857d0"
+      "expectedOutcomeFingerprint": "07a84b0fd14d03bdac6fb8c8270eac2a6f9c6c48abeb4bf0ee098f1a78a4e977"
     }
   ],
   "invalidFixtures": [

@@ -4,10 +4,10 @@
   "status": "failed",
   "reason": "patch-failed",
   "lineage": {
-    "hostGrantDecisionFingerprint": "7503f19297663da468e481d319180e67fc7dd9815920013b542cdb9241ba203d",
-    "hostGrantRequestFingerprint": "1f47b20bbd1d7f300b906146978fbad84d690e04c44317327f8a5c7629d63faa",
-    "authorizationFingerprint": "adbffdf1900072ad257969d8ac00d4d0706990040ba893c6ac09e910d5cb6633",
-    "proposalFingerprint": "a4e9a7462b3d7bbef163984f915444f3efce4586fd272573a4f30afcc28f7545",
+    "hostGrantDecisionFingerprint": "eeda387f022b57254f73abcd22eda6181ef60fd4963d5bee9b64e9ea07a2969d",
+    "hostGrantRequestFingerprint": "0fe314890a50871229e3fc221cb0bad0fc8a84e4f7fe0e76916a9294cd2aa47a",
+    "authorizationFingerprint": "7ee3a6296b55b6ae58585ffba93527dcd49d372e6a3daf403eb9f95ce02ad859",
+    "proposalFingerprint": "2d77def7c5582719c648797d4aaaf3ae551e92a0c4cb7f1d7eb60dbdaba2aeee",
     "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
     "inputDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
     "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
@@ -55,5 +55,5 @@
       "nextAction": "Inspect the bounded diagnostic; this authorization is terminal and cannot be retried."
     }
   ],
-  "outcomeFingerprint": "04f54652798f41e8983faeaff35bbf4186536ce4239e09be3f084c848e04667e"
+  "outcomeFingerprint": "e7487dfb3e13b97046ae2d468762d72530e85dd98ddf299bf7269b6e180f30eb"
 }

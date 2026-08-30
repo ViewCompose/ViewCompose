@@ -100,7 +100,7 @@
     "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
     "generatedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
     "semanticAndStructuralComparisonFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
-    "exactPixelComparisonFingerprint": "a3ed1711753ea5b66a5881a788bcbd47b19c3ddfc835bbd04aace403aa652432"
+    "exactPixelComparisonFingerprint": "6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f"
   },
   "supportedFixtures": [
     {
@@ -108,7 +108,7 @@
       "expectedStatus": "converged",
       "expectedTermination": "initial-pass",
       "expectedIterations": 0,
-      "expectedRepairFingerprint": "f56383c6a7e598b59534720677b68b83ef3015712cc14f85ce340468f7f50079"
+      "expectedRepairFingerprint": "e851cb37943ce42df9fa91a30cf36f73a99e2b59e5fd74cd0b061a5a4c444858"
     }
   ],
   "patchFixtures": [
@@ -129,10 +129,10 @@
     "cases": [
       {
         "id": "initial-exact",
-        "expectedCandidateFingerprint": "6fb5d7c90922d6a65fa35f97ada97664ca9965927002fce513be813880214e51",
+        "expectedCandidateFingerprint": "1207f03eb49f9e5a7c8b8277ee6262f2eb1e35e1f17f101ac8b4f912c2c63107",
         "expectedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
-        "expectedEvaluationFingerprint": "1e24e33d15f8e2e98c9daeab0824a5ee805b32e3cf8ab0495d0d7653df8e9200",
-        "expectedEvidenceFingerprint": "c7b35e4aee0883e10e76f68f2b11e9a06b22df9dd5d7d79b45ecf00469597770",
+        "expectedEvaluationFingerprint": "7515312f2b01b502956a9b0eef6d0e233a002ae30ccbcebf125582ec973beeb9",
+        "expectedEvidenceFingerprint": "924f462673b39e8c9f00352f3517144d433894fde5d4985e20f62f448925babf",
         "expectedEvidenceDiagnosticCodes": [],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "passed"],
         "expectedGateEvidence": [
@@ -141,7 +141,7 @@
           "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
           "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
           "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
-          "a3ed1711753ea5b66a5881a788bcbd47b19c3ddfc835bbd04aace403aa652432"
+          "6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f"
         ],
         "expectedChecks": [1, 1, 1, 12, 15],
         "expectedPixels": {
@@ -155,16 +155,16 @@
           "mismatchBounds": null,
           "attributions": [],
           "unassignedMismatchedPixels": 0,
-          "localizationFingerprint": "abd5d46c68a0b7ea1a9591ee9e534dc88e9fe0976dc35503ba3fff65713f22f7"
+          "localizationFingerprint": "af49f39cacbbaa7e5590f6e23cafa7b48766a2e2d1aace4cf42e1947cc0b4f71"
         }
       },
       {
         "id": "title-text-pixel-mismatch",
         "patch": "screenshot-repair/title-text.patch.json",
-        "expectedCandidateFingerprint": "4f95a6c1621a57178f8208f47f4da43d945f36696693e83724948a6b2519196e",
+        "expectedCandidateFingerprint": "6dbf36d129386d254bd82aaefcf6304958c9b5f2798baaa1fcb98055bfa9d971",
         "expectedDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
-        "expectedEvaluationFingerprint": "83b34c0871625de1689d5da8de15120607b912b32708a717b5bb985f1270258f",
-        "expectedEvidenceFingerprint": "8e9be5c9a547cbfa11ff13fb6629788f3cb2cf737fba686d22a5de4a2f7996ef",
+        "expectedEvaluationFingerprint": "43a732ed3291c4a7d37cc13da7c37154505c573f0fbd75badd33676eb14f42c4",
+        "expectedEvidenceFingerprint": "f2b2b21f846ff99024fcb8a4d6bee129697da8b387802c6c086254febc47484c",
         "expectedEvidenceDiagnosticCodes": ["VC-AI-PIXEL-MISMATCH"],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "failed"],
         "expectedGateEvidence": [
@@ -173,7 +173,7 @@
           "d0e567db8bcc9ee28287f8dc7e54818fcae7c6a9892e0c8e8daae089546dc7ce",
           "12095b060f4dce44f7bb0f9da46cd3529757bea4649a08cd973f8e24c00cebea",
           "12095b060f4dce44f7bb0f9da46cd3529757bea4649a08cd973f8e24c00cebea",
-          "2afc71c10795a737f8e5c5d828a44679b7629b7977c2427019fa5a4dc157b841"
+          "1096b600517179cacbb46008f1a5d64322d836fada5ab2af2ad79c0bcb8c4405"
         ],
         "expectedChecks": [1, 1, 1, 12, 15],
         "expectedPixels": {
@@ -198,7 +198,7 @@
             }
           ],
           "unassignedMismatchedPixels": 0,
-          "localizationFingerprint": "3a92d471b5380ad0287ed4b524ebca7886be9c50f106ffd1fe621ca4ffbce4f9"
+          "localizationFingerprint": "ea2e12feed785c158153515b02ec4bfb70d83658a322357a37d499782e3a1f7b"
         }
       }
     ]

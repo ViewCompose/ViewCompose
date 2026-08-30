@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
-import {deflateSync} from 'node:zlib';
+import {deflateSync, inflateSync} from 'node:zlib';
 import test from 'node:test';
-import {prepareScreenshot} from './screenshot-preprocessor.mjs';
+import {encodeScreenshotPng, prepareScreenshot} from './screenshot-preprocessor.mjs';
 
 const requestFixture = new URL(
   '../evaluation/fixtures/visual/screenshot/privacy-grid.request.json',
@@ -19,6 +19,14 @@ const pathFixture = new URL(
 );
 const providerFixture = new URL(
   '../evaluation/fixtures/visual/screenshot/provider-transfer.request.json',
+  import.meta.url,
+);
+const pixelReferenceRequestFixture = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.request.json',
+  import.meta.url,
+);
+const pixelReferenceResultFixture = new URL(
+  '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.result.json',
   import.meta.url,
 );
 const PNG_SIGNATURE = Buffer.from('89504e470d0a1a0a', 'hex');
@@ -133,6 +141,21 @@ function pngChunkTypes(data) {
   return types;
 }
 
+function pngFilterTypes(data, width, height) {
+  const bytes = Buffer.from(data, 'base64');
+  const idat = [];
+  let cursor = 8;
+  while (cursor < bytes.length) {
+    const length = bytes.readUInt32BE(cursor);
+    const type = bytes.subarray(cursor + 4, cursor + 8).toString('ascii');
+    if (type === 'IDAT') idat.push(bytes.subarray(cursor + 8, cursor + 8 + length));
+    cursor += 12 + length;
+  }
+  const filtered = inflateSync(Buffer.concat(idat));
+  const rowBytes = width * 4 + 1;
+  return Array.from({length: height}, (_, row) => filtered[row * rowBytes]);
+}
+
 test('reproduces the exact privacy-grid golden and canonical fingerprints', async () => {
   const request = await fixture(requestFixture);
   const expected = await fixture(resultFixture);
@@ -184,16 +207,29 @@ test('decodes every PNG filter and strips ancillary metadata from canonical outp
   const result = await prepareScreenshot(request, {requestId: 'screenshot-filters'});
   assert.equal(result.status, 'success');
   assert.deepEqual(pngChunkTypes(result.data.output.data), ['IHDR', 'IDAT', 'IEND']);
+  assert.deepEqual(pngFilterTypes(result.data.output.data, width, height), [0, 0, 0, 0, 0]);
   assert.equal(
-    Buffer.from(result.data.output.data, 'base64').equals(makePng({
-      width,
-      height,
-      pixels,
-      filters: [0],
-    })),
+    Buffer.from(result.data.output.data, 'base64').equals(
+      encodeScreenshotPng(pixels, width, height),
+    ),
     true,
   );
   assert.equal(Buffer.from(result.data.output.data, 'base64').includes('private=metadata'), false);
+});
+
+test('reproduces the large pixel reference without native zlib planner variance', async () => {
+  const request = await fixture(pixelReferenceRequestFixture);
+  const expected = await fixture(pixelReferenceResultFixture);
+  const result = await prepareScreenshot(request, {requestId: 'screenshot-large-portable'});
+  assert.equal(result.status, 'success');
+  assert.deepEqual(result.data, expected);
+  assert.equal(result.data.output.sha256, expected.output.sha256);
+  assert.equal(result.data.outputFingerprint, expected.outputFingerprint);
+  assert.equal(
+    pngFilterTypes(result.data.output.data, result.data.output.widthPx, result.data.output.heightPx)
+      .every((filterType) => filterType === 4),
+    true,
+  );
 });
 
 test('fails closed on external references and provider transfer', async () => {

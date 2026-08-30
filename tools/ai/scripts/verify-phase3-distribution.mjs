@@ -996,7 +996,7 @@ async function verifyMcpMatrix(mcp, contract) {
     modernScreenshotComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
       'b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd' ||
     modernScreenshotPixelComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      'a3ed1711753ea5b66a5881a788bcbd47b19c3ddfc835bbd04aace403aa652432' ||
+      '6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin

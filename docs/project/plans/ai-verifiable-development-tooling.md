@@ -123,7 +123,25 @@ before the hermetic boundary, and generated UI, Preview protocol, pixels, and An
 unchanged. The installed-distribution gate then passed in 1 minute 29 seconds, including 2/2
 reproducible packages, offline install/uninstall, both MCP protocols, compiled screenshot and XML
 denominators, three generated Preview results, semantic comparison, and exact pixel comparison.
-The next acceptance action is the clean Linux hosted rerun of both `qaQuick` and `qaPreview`.
+The next clean Linux run confirmed that dependency preparation completed, then exposed a separate
+reference-integrity defect: the rendered PNG and accepted render fingerprint were exact, but native
+zlib 1.2 and 1.3 selected different compressed byte streams when the 1079×2339 reference was
+canonicalized. The corrected large-image lane now applies Paeth filter type 4 and a repository-owned
+fixed-Huffman, distance-one DEFLATE encoder above 4,096 decoded bytes. Node 20.19.5, 24.12.0, and
+25.6.0 each reproduce the same 93,032-byte PNG, SHA-256
+`69ac5adde66e6f5725a0258987f7f635cb7be333839536f06c0ae6a2ff0596e2`, and result fingerprint
+`e874a198d57e64645472dc11dac8e82df35e11117869dd616d33c93a311eb091`. Decoding still proves
+2,523,781/2,523,781 exact pixels; the accepted comparison fingerprint is now
+`6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f`.
+
+This is **improved** cross-runtime reproducibility with **no material Android runtime behavior
+change**: PNG compression identity changed, while the decoded RGBA reference, render, semantics,
+geometry, and zero-tolerance policy did not. Small established fixtures retain their frozen
+filter-0/zlib-level-9 encoding, so this evidence does not claim a repository-owned compressor for
+every sub-4,097-byte image. The focused Node suite passes 266/266 tests, Phase 0 verifies all 21
+schemas and 73 cases, and the pixel, repair, proposal, authorization, host-grant, and terminal
+outcome chains reproduce their updated content addresses. The next acceptance action remains a
+clean Linux hosted rerun of both `qaQuick` and `qaPreview`.
 
 The screenshot semantic and structural comparison and the separate exact RGBA comparison are now
 implemented. Pixel comparison admits only canonical, zero-redaction, full-viewport references
@@ -2136,8 +2154,8 @@ The accepted infrastructure reference is the 1079×2339 rendered PNG re-entered 
 screenshot preprocessing at density 2.625, font scale 1, `en-US`, and LTR. Its preprocessing
 request fingerprint is
 `06ded39bf3588193305ba1574c43ca3a6b6d0ff9c4cd19ec3e12eb75afdefefd`; its canonical result and
-PNG fingerprints are `7a4b4458c215ed139191c0c85fe5f47d31b9c8b6a1db9f48f4d82806e4eb05c1` and
-`5d909bb84a6ac002f44ce0e1e0e6cf16dfce5f53ad742d6c91c66b8077fbb7a5`. The render PNG retains
+PNG fingerprints are `e874a198d57e64645472dc11dac8e82df35e11117869dd616d33c93a311eb091` and
+`69ac5adde66e6f5725a0258987f7f635cb7be333839536f06c0ae6a2ff0596e2`. The render PNG retains
 fingerprint `072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd`; differing encoded PNG
 bytes are permitted only because preprocessing deterministically strips metadata and re-encodes
 the same RGBA image. The implementation denominator is 2,523,781 pixels with zero dimension or
@@ -2719,13 +2737,13 @@ baseline is trustworthy, or turn a successful proposal into authorization. Publi
 execution authorization both remain false.
 
 The frozen real record accepts baseline evidence
-`ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a` at source revision
+`924f462673b39e8c9f00352f3517144d433894fde5d4985e20f62f448925babf` at source revision
 `a2faf25dc206b428936a42b3d0872007371592b3`, approves current evidence
-`e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068`, proposal
-`47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68`, and change
+`f2b2b21f846ff99024fcb8a4d6bee129697da8b387802c6c086254febc47484c`, proposal
+`2d77def7c5582719c648797d4aaaf3ae551e92a0c4cb7f1d7eb60dbdaba2aeee`, and change
 `7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945`, and binds exact-reference
-fingerprint `43673bdc72302871a3d4106704a2cf17357f0c1a459ee8bf8892749275859064`. Its authorization
-fingerprint is `ba359be06ef055db9ca32d7724dfe256b2d53a44aacbdec0f781d5825343cb46`.
+fingerprint `1df87bf9bc879ba5d809b1c9e3c5a4a051a1f4fa088ef3b5ec6edf7e648790e4`. Its authorization
+fingerprint is `7ee3a6296b55b6ae58585ffba93527dcd49d372e6a3daf403eb9f95ce02ad859`.
 
 The contract verifier passes 1/1 human-attested record, 10/10 invalid denominators, and 1/1
 cancelled denominator. Invalid classes freeze baseline, candidate, proposal, change, and exact
@@ -2759,9 +2777,9 @@ network, accepts credentials, authenticates a person, checks host revocation sta
 authorization. Thus deterministic structural validation cannot silently become an execution grant.
 
 The real source-bound gate evaluates the exact baseline and `Hello` regression, reproduces proposal
-`47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68`, validates authorization
-`ba359be06ef055db9ca32d7724dfe256b2d53a44aacbdec0f781d5825343cb46`, and emits validation
-fingerprint `8c60e3e4ffc772f44df9e7408b4fd21ba0bd578cfb537558f57d0626594db957` with execution disabled.
+`2d77def7c5582719c648797d4aaaf3ae551e92a0c4cb7f1d7eb60dbdaba2aeee`, validates authorization
+`7ee3a6296b55b6ae58585ffba93527dcd49d372e6a3daf403eb9f95ce02ad859`, and emits validation
+fingerprint `ef6ee08150a287d334c799ca30c4b0d4bb3aa8d94839fd143bf30071ecd00b1f` with execution disabled.
 The same run executes all 10 invalid mutations and one pre-validation cancellation: evidence,
 proposal, change, and pixel-reference drift stay distinct from schema and authorization-integrity
 failures.

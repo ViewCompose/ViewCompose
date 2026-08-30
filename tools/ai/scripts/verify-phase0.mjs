@@ -137,12 +137,14 @@ function decodeScreenshotPng(asset, limits, label) {
     throw new Error(`${label}: PNG decoded byte count changed`);
   }
   const pixels = Buffer.alloc(rowBytes * asset.heightPx);
+  const filterTypes = [];
   for (let y = 0; y < asset.heightPx; y += 1) {
     const filteredOffset = y * (rowBytes + 1);
     const filterType = filtered[filteredOffset];
     if (![0, 1, 2, 3, 4].includes(filterType)) {
       throw new Error(`${label}: unsupported PNG filter type ${filterType}`);
     }
+    filterTypes.push(filterType);
     const rowOffset = y * rowBytes;
     for (let x = 0; x < rowBytes; x += 1) {
       const encoded = filtered[filteredOffset + 1 + x];
@@ -159,7 +161,7 @@ function decodeScreenshotPng(asset, limits, label) {
       pixels[rowOffset + x] = (encoded + predictor) & 0xff;
     }
   }
-  return {bytes, chunkTypes, pixels};
+  return {bytes, chunkTypes, filterTypes, pixels};
 }
 
 function verifyEmbeddedPng(asset, limits, label) {
@@ -1410,8 +1412,11 @@ async function verifyScreenshotPreprocessing(schemas) {
     contract.output?.mediaType !== 'image/png' ||
     JSON.stringify(contract.output?.canonicalChunks) !== JSON.stringify(['IHDR', 'IDAT', 'IEND']) ||
     contract.output?.stripAncillaryChunks !== true ||
-    contract.output?.filterType !== 0 ||
-    contract.output?.zlibLevel !== 9 ||
+    contract.output?.smallImageMaxDecodedBytes !== 4096 ||
+    contract.output?.smallImageFilterType !== 0 ||
+    contract.output?.smallImageZlibLevel !== 9 ||
+    contract.output?.largeImageFilterType !== 4 ||
+    contract.output?.largeImageDeflateMode !== 'fixed-huffman-distance-one-v1' ||
     contract.output?.colorSpace !== 'sRGB' ||
     contract.output?.alphaMode !== 'straight'
   ) {
@@ -1574,6 +1579,11 @@ async function verifyScreenshotPreprocessing(schemas) {
       result.output.heightPx !== crop.height ||
       result.output.bytes > contract.limits.maxOutputBytes ||
       !output.pixels.equals(expectedPixels) ||
+      output.filterTypes.some((filterType) => filterType !== (
+        expectedPixels.length > contract.output.smallImageMaxDecodedBytes
+          ? contract.output.largeImageFilterType
+          : contract.output.smallImageFilterType
+      )) ||
       JSON.stringify(output.chunkTypes) !== JSON.stringify(contract.output.canonicalChunks) ||
       JSON.stringify(result.transformations) !== JSON.stringify(expectedTransformations) ||
       result.privacy.redactionsApplied !== request.privacy.redactions.length ||

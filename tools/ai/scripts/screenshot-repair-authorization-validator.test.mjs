@@ -45,8 +45,8 @@ const proposal = {
 };
 const reference = {
   requestFingerprint: '06ded39bf3588193305ba1574c43ca3a6b6d0ff9c4cd19ec3e12eb75afdefefd',
-  outputFingerprint: '7a4b4458c215ed139191c0c85fe5f47d31b9c8b6a1db9f48f4d82806e4eb05c1',
-  pngFingerprint: '5d909bb84a6ac002f44ce0e1e0e6cf16dfce5f53ad742d6c91c66b8077fbb7a5',
+  outputFingerprint: 'e874a198d57e64645472dc11dac8e82df35e11117869dd616d33c93a311eb091',
+  pngFingerprint: '69ac5adde66e6f5725a0258987f7f635cb7be333839536f06c0ae6a2ff0596e2',
   widthPx: 1079,
   heightPx: 2339,
   configuration: {

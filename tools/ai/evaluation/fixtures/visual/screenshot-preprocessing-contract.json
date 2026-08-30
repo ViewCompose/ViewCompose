@@ -56,8 +56,11 @@
     "mediaType": "image/png",
     "canonicalChunks": ["IHDR", "IDAT", "IEND"],
     "stripAncillaryChunks": true,
-    "filterType": 0,
-    "zlibLevel": 9,
+    "smallImageMaxDecodedBytes": 4096,
+    "smallImageFilterType": 0,
+    "smallImageZlibLevel": 9,
+    "largeImageFilterType": 4,
+    "largeImageDeflateMode": "fixed-huffman-distance-one-v1",
     "colorSpace": "sRGB",
     "alphaMode": "straight"
   },

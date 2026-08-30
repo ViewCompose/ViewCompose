@@ -18,6 +18,7 @@ export const SCREENSHOT_PREPROCESSING_LIMITS = Object.freeze({
 });
 
 const PNG_SIGNATURE = Buffer.from('89504e470d0a1a0a', 'hex');
+const PORTABLE_DEFLATE_THRESHOLD_BYTES = 4096;
 const CRC_TABLE = new Uint32Array(256);
 for (let index = 0; index < CRC_TABLE.length; index += 1) {
   let value = index;
@@ -380,13 +381,151 @@ function pngChunk(type, data) {
   return chunk;
 }
 
+function reverseBits(value, count) {
+  let reversed = 0;
+  for (let bit = 0; bit < count; bit += 1) {
+    reversed = (reversed << 1) | ((value >>> bit) & 1);
+  }
+  return reversed;
+}
+
+class DeflateBitWriter {
+  #bytes = [];
+  #current = 0;
+  #used = 0;
+
+  write(value, count) {
+    for (let bit = 0; bit < count; bit += 1) {
+      this.#current |= ((value >>> bit) & 1) << this.#used;
+      this.#used += 1;
+      if (this.#used === 8) {
+        this.#bytes.push(this.#current);
+        this.#current = 0;
+        this.#used = 0;
+      }
+    }
+  }
+
+  finish() {
+    if (this.#used > 0) this.#bytes.push(this.#current);
+    return Buffer.from(this.#bytes);
+  }
+}
+
+function writeFixedSymbol(writer, symbol) {
+  let code;
+  let bits;
+  if (symbol <= 143) {
+    code = 0x30 + symbol;
+    bits = 8;
+  } else if (symbol <= 255) {
+    code = 0x190 + symbol - 144;
+    bits = 9;
+  } else if (symbol <= 279) {
+    code = symbol - 256;
+    bits = 7;
+  } else {
+    code = 0xc0 + symbol - 280;
+    bits = 8;
+  }
+  writer.write(reverseBits(code, bits), bits);
+}
+
+const DEFLATE_LENGTH_BASES = Object.freeze([
+  3, 4, 5, 6, 7, 8, 9, 10,
+  11, 13, 15, 17,
+  19, 23, 27, 31,
+  35, 43, 51, 59,
+  67, 83, 99, 115,
+  131, 163, 195, 227,
+  258,
+]);
+const DEFLATE_LENGTH_EXTRA_BITS = Object.freeze([
+  0, 0, 0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1,
+  2, 2, 2, 2,
+  3, 3, 3, 3,
+  4, 4, 4, 4,
+  5, 5, 5, 5,
+  0,
+]);
+
+function writeRun(writer, length) {
+  const index = DEFLATE_LENGTH_BASES.findLastIndex((base) => length >= base);
+  writeFixedSymbol(writer, 257 + index);
+  const extraBits = DEFLATE_LENGTH_EXTRA_BITS[index];
+  if (extraBits > 0) writer.write(length - DEFLATE_LENGTH_BASES[index], extraBits);
+  writer.write(0, 5); // Fixed-Huffman distance code 0 is an exact one-byte look-behind.
+}
+
+function adler32(bytes) {
+  const modulus = 65_521;
+  let a = 1;
+  let b = 0;
+  for (const byte of bytes) {
+    a = (a + byte) % modulus;
+    b = (b + a) % modulus;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+
+function deterministicDeflate(bytes) {
+  const writer = new DeflateBitWriter();
+  writer.write(1, 1); // One final block.
+  writer.write(1, 2); // RFC 1951 fixed-Huffman block type.
+  let offset = 0;
+  while (offset < bytes.length) {
+    let runLength = 0;
+    if (offset > 0 && bytes[offset] === bytes[offset - 1]) {
+      const maximum = Math.min(258, bytes.length - offset);
+      while (runLength < maximum && bytes[offset + runLength] === bytes[offset - 1]) {
+        runLength += 1;
+      }
+    }
+    if (runLength >= 3) {
+      writeRun(writer, runLength);
+      offset += runLength;
+    } else {
+      writeFixedSymbol(writer, bytes[offset]);
+      offset += 1;
+    }
+  }
+  writeFixedSymbol(writer, 256);
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE(adler32(bytes));
+  return Buffer.concat([Buffer.from([0x78, 0x01]), writer.finish(), checksum]);
+}
+
+function paethPredictor(left, above, upperLeft) {
+  const estimate = left + above - upperLeft;
+  const leftDistance = Math.abs(estimate - left);
+  const aboveDistance = Math.abs(estimate - above);
+  const upperLeftDistance = Math.abs(estimate - upperLeft);
+  return leftDistance <= aboveDistance && leftDistance <= upperLeftDistance
+    ? left
+    : aboveDistance <= upperLeftDistance ? above : upperLeft;
+}
+
 function encodePng(pixels, width, height) {
   const rowBytes = width * 4;
   const filtered = Buffer.alloc(pixels.length + height);
+  const portableEncoding = pixels.length > PORTABLE_DEFLATE_THRESHOLD_BYTES;
   for (let y = 0; y < height; y += 1) {
     const filteredOffset = y * (rowBytes + 1);
-    filtered[filteredOffset] = 0;
-    pixels.copy(filtered, filteredOffset + 1, y * rowBytes, (y + 1) * rowBytes);
+    const rowOffset = y * rowBytes;
+    filtered[filteredOffset] = portableEncoding ? 4 : 0;
+    if (!portableEncoding) {
+      pixels.copy(filtered, filteredOffset + 1, rowOffset, rowOffset + rowBytes);
+      continue;
+    }
+    for (let x = 0; x < rowBytes; x += 1) {
+      const left = x >= 4 ? pixels[rowOffset + x - 4] : 0;
+      const above = y > 0 ? pixels[rowOffset - rowBytes + x] : 0;
+      const upperLeft = y > 0 && x >= 4 ? pixels[rowOffset - rowBytes + x - 4] : 0;
+      filtered[filteredOffset + 1 + x] = (
+        pixels[rowOffset + x] - paethPredictor(left, above, upperLeft)
+      ) & 0xff;
+    }
   }
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
@@ -395,7 +534,9 @@ function encodePng(pixels, width, height) {
   const encoded = Buffer.concat([
     PNG_SIGNATURE,
     pngChunk('IHDR', ihdr),
-    pngChunk('IDAT', deflateSync(filtered, {level: 9})),
+    pngChunk('IDAT', portableEncoding
+      ? deterministicDeflate(filtered)
+      : deflateSync(filtered, {level: 9})),
     pngChunk('IEND', Buffer.alloc(0)),
   ]);
   if (encoded.length > SCREENSHOT_PREPROCESSING_LIMITS.maxOutputBytes) {

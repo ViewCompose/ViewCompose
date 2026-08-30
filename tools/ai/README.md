@@ -250,7 +250,10 @@ crop. It accepts no path, URL, URI, credential, network transfer, or provider ex
 privacy review is mandatory; provider transfer and persistence are false, logs are metadata-only,
 and sensitive content is removed only through explicit caller rectangles in cropped-output pixel
 coordinates. The deterministic output strips ancillary PNG metadata, keeps 8-bit straight-alpha
-sRGB RGBA, uses filter type 0 and zlib level 9, and carries exact content and canonical-result
+sRGB RGBA. Outputs above 4,096 decoded bytes use Paeth filter type 4 and the repository-owned
+`fixed-huffman-distance-one-v1` DEFLATE encoder so native zlib versions cannot change large-image
+identity; smaller fixtures retain the frozen filter-0/zlib-level-9 encoding. Every result carries
+exact content and canonical-result
 fingerprints. The adapter reproduces the checked-in crop-and-redaction golden, decodes PNG filter
 types 0 through 4, and fails closed on changed identity/CRC, unsupported PNG format, invalid bounds,
 external references, provider transfer, limits, and cancellation. It does not infer UI, call a
