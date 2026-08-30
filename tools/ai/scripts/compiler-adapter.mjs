@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {existsSync} from 'node:fs';
 import {
   lstat,
   mkdir,
@@ -12,17 +13,20 @@ import {
 import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {executeBoundedProcess} from './bounded-process.mjs';
 import {
-  detectJavaFeature,
+  detectAndroidSdk,
+  detectJavaRuntime,
   diagnostic,
+  executionHarnessRoot,
   repositoryRoot,
+  toolCacheRoot,
   toolResult,
   utf8Bytes,
-  verifyConfiguredSourceRoot,
+  verifyConfiguredProjectRoot,
 } from './tool-core.mjs';
 import {validateKotlin} from './static-validator.mjs';
 
 export const COMPILER_LANE =
-  'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11';
+  'released-maven/jdk-17-or-21/gradle-9.3.1/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11';
 export const SUPPORTED_COMPILER_ARTIFACTS = Object.freeze(['viewcompose-ui-foundation']);
 export const DEFAULT_COMPILER_LIMITS = Object.freeze({
   maxSourceBytes: 1024 * 1024,
@@ -97,9 +101,10 @@ export function compilerRequestKey({source, artifactIds, bundleFingerprint}) {
   }));
 }
 
-function planFor({requestKey, cacheRoot, javaHome}) {
-  const repository = repositoryRoot();
+function planFor({requestKey, cacheRoot, javaHome, androidSdk, harnessRoot}) {
   const requestRoot = resolve(cacheRoot, requestKey);
+  const executionCacheRoot = resolve(cacheRoot, '../..');
+  const packagedWrapper = resolve(harnessRoot, 'gradlew');
   return {
     requestKey,
     requestRoot,
@@ -107,20 +112,30 @@ function planFor({requestKey, cacheRoot, javaHome}) {
     cachePath: resolve(requestRoot, 'result-cache.json'),
     lockPath: resolve(requestRoot, 'compile.lock'),
     classesDirectory: resolve(requestRoot, 'harness/tmp/kotlin-classes/debug'),
-    executable: resolve(repository, 'gradlew'),
-    cwd: repository,
+    executable: existsSync(packagedWrapper) ? packagedWrapper : resolve(repositoryRoot(), 'gradlew'),
+    cwd: harnessRoot,
+    env: {
+      ...process.env,
+      JAVA_HOME: javaHome,
+      ANDROID_HOME: androidSdk.root,
+      ANDROID_SDK_ROOT: androidSdk.root,
+    },
     args: [
-      ':tools:ai-compiler-harness:compileAiSnippet',
+      ':compiler:compileAiSnippet',
       `-PviewComposeAiRequestKey=${requestKey}`,
+      `-PviewComposeAiRequestCacheRoot=${cacheRoot}`,
       '-Pkotlin.compiler.execution.strategy=in-process',
       `-Dorg.gradle.java.home=${javaHome}`,
       '-Dorg.gradle.jvmargs=-Xmx1024m -Dfile.encoding=UTF-8',
-      '--offline',
       '--no-daemon',
       '--no-build-cache',
       '--no-configuration-cache',
       '--max-workers=2',
       '--console=plain',
+      '--project-cache-dir',
+      resolve(executionCacheRoot, 'gradle/project-cache'),
+      '--gradle-user-home',
+      resolve(executionCacheRoot, 'gradle/user-home'),
     ],
   };
 }
@@ -282,9 +297,12 @@ export async function compileKotlin({
   signal,
 } = {}, {
   runCompiler = executeCompilerProcess,
-  javaFeature = detectJavaFeature(),
-  javaHome = process.env.JAVA_HOME,
-  cacheRoot = resolve(repositoryRoot(), 'build/ai/compiler/requests'),
+  javaFeature,
+  javaHome,
+  androidSdk = detectAndroidSdk(36),
+  projectRoot = process.env.VIEWCOMPOSE_PROJECT_ROOT,
+  harnessRoot = executionHarnessRoot(),
+  cacheRoot = resolve(toolCacheRoot(), 'compiler/requests'),
 } = {}) {
   const started = performance.now();
   const limits = normalizeLimits(requestedLimits);
@@ -354,28 +372,29 @@ export async function compileKotlin({
     maxInputBytes: limits.maxSourceBytes,
   });
   if (staticResult.status !== 'success') return staticResult;
-  if (javaFeature !== 21 || !javaHome) {
+  const detectedJava = javaFeature === undefined || javaHome === undefined
+    ? detectJavaRuntime(javaHome)
+    : null;
+  const effectiveJavaFeature = javaFeature ?? detectedJava?.feature;
+  const effectiveJavaHome = javaHome ?? detectedJava?.javaHome;
+  if (![17, 21].includes(effectiveJavaFeature) || !effectiveJavaHome || !androidSdk) {
     return compilerFailure({
       requestId,
       status: 'unsupported',
       code: 'VC-AI-COMPILER-LANE-MISMATCH',
-      message: `The ${COMPILER_LANE} compiler lane requires JAVA_HOME to resolve JDK 21.`,
-      nextAction: 'Select the pinned JDK 21 lane before compiling.',
+      message: `The ${COMPILER_LANE} compiler lane requires JDK 17 or 21 and Android SDK 36.`,
+      nextAction: 'Install Android SDK platform 36 and expose a local JDK 17 or 21.',
       elapsedMs: performance.now() - started,
     });
   }
-  const sourceRoot = await verifyConfiguredSourceRoot();
-  if (!sourceRoot.matched) {
+  const consumerProject = await verifyConfiguredProjectRoot(projectRoot);
+  if (!consumerProject.matched) {
     return compilerFailure({
       requestId,
       status: 'unsupported',
-      code: 'VC-AI-SOURCE-ROOT-MISMATCH',
-      message: sourceRoot.reason === 'source-root-unavailable'
-        ? 'Compilation requires an explicitly bound ViewCompose source checkout in this release.'
-        : 'The configured ViewCompose source root does not contain the packaged framework identity.',
-      nextAction: sourceRoot.reason === 'source-root-unavailable'
-        ? 'Run viewcompose-agent init again with --source-root pointing to a matching ViewCompose checkout.'
-        : 'Select a matching ViewCompose checkout with the required Gradle wrapper.',
+      code: 'VC-AI-PROJECT-ROOT-MISMATCH',
+      message: 'Compilation requires the physical consumer project root bound by viewcompose-agent init.',
+      nextAction: 'Run viewcompose-agent init from the physical root of the consumer Android project.',
       elapsedMs: performance.now() - started,
     });
   }
@@ -386,7 +405,13 @@ export async function compileKotlin({
     artifactIds: requestedArtifacts,
     bundleFingerprint,
   });
-  const plan = planFor({requestKey, cacheRoot, javaHome});
+  const plan = planFor({
+    requestKey,
+    cacheRoot,
+    javaHome: effectiveJavaHome,
+    androidSdk,
+    harnessRoot,
+  });
   try {
     await ensureRequestDirectories(cacheRoot, plan.requestRoot, dirname(plan.inputPath));
   } catch {
@@ -502,7 +527,7 @@ export async function compileKotlin({
         status: 'failed',
         code: 'VC-AI-COMPILER-START-FAILED',
         message: 'The fixed Gradle compiler process could not be started.',
-        nextAction: 'Verify the repository wrapper and pinned JDK 21 installation.',
+        nextAction: 'Verify the packaged Gradle wrapper, JDK 17/21, and Android SDK 36 installation.',
         elapsedMs: performance.now() - started,
       });
     }

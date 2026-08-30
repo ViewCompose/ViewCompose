@@ -81,7 +81,7 @@ test('builds the exact frozen generated Preview request and Kotlin wrapper', asy
   );
   assert.equal(
     plan.requestFingerprint,
-    'd70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d',
+    'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
   );
   assert.equal(
     plan.wrapperFingerprint,
@@ -104,7 +104,7 @@ test('builds the exact frozen embedded PNG request, wrapper, and resource plan',
   assert.equal(plan.wrapper, await fixture('generated-preview/profile-card.preview-wrapper.kt'));
   assert.equal(
     plan.requestFingerprint,
-    'ce0fc5b926e8a243d2cf5b32a568911899e19d329e07ad9698e5f90c6b2976ef',
+    '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26',
   );
   assert.equal(
     plan.wrapperFingerprint,
@@ -138,7 +138,7 @@ test('builds the exact screenshot Preview profile and fixed callback values', as
   );
   assert.equal(
     plan.requestFingerprint,
-    'f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408',
+    '64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed',
   );
   assert.equal(
     plan.wrapperFingerprint,
@@ -249,19 +249,20 @@ test('stages immutable source and accepts only complete pinned render evidence',
   }, {
     repository,
     cacheRoot: resolve(repository, 'build/ai/preview/requests'),
+    diagnose: async () => ({summary: {clean: true}, structure: {}, findings: [], truncated: false}),
     render: async (request, options) => {
       rendered += 1;
       assert.equal(request.targetId, 'tools.ai.GeneratedXmlPreview');
       const target = options.targets[request.targetId];
-      assert.equal(target.modulePath, ':tools:ai-preview-harness');
+      assert.equal(target.modulePath, ':preview');
       assert.deepEqual(target.gradleArguments, [
         '-PviewComposeAiPreviewRequestKey=' +
-          'd70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d',
+          'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
       ]);
       const input = resolve(
         repository,
         'build/ai/preview/requests',
-        'd70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d',
+        'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
         'input',
       );
       assert.equal(await readFile(resolve(input, 'GeneratedView.kt'), 'utf8'),
@@ -297,7 +298,7 @@ test('stages immutable source and accepts only complete pinned render evidence',
   assert.equal(result.evidence.level, 'rendered');
   assert.equal(
     result.data.generatedPreview.requestFingerprint,
-    'd70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d',
+    'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
   );
   assert.equal(result.data.generatedPreview.pngSha256, 'b'.repeat(64));
   assert.equal(result.data.generatedPreview.renderTreeSha256, 'c'.repeat(64));
@@ -310,7 +311,7 @@ test('stages an exact PNG resource and reports its public identity without raw b
     await fixture('generated-preview/image-binding.preview-request.json'),
   );
   const requestKey =
-    'ce0fc5b926e8a243d2cf5b32a568911899e19d329e07ad9698e5f90c6b2976ef';
+    '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26';
   const resourceName =
     'vc_ai_4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5';
   const result = await renderGeneratedPreview({
@@ -321,6 +322,7 @@ test('stages an exact PNG resource and reports its public identity without raw b
   }, {
     repository,
     cacheRoot: resolve(repository, 'build/ai/preview/requests'),
+    diagnose: async () => ({summary: {clean: true}, structure: {}, findings: [], truncated: false}),
     render: async (request, options) => {
       assert.deepEqual(request.capabilityIds, [
         'foundation.components',
@@ -388,7 +390,7 @@ test('rejects changed PNG CRC and a symbolic-link asset before Gradle execution'
   const repository = await mkdtemp(resolve(tmpdir(), 'viewcompose-generated-preview-asset-link-'));
   context.after(() => rm(repository, {recursive: true, force: true}));
   const requestKey =
-    'ce0fc5b926e8a243d2cf5b32a568911899e19d329e07ad9698e5f90c6b2976ef';
+    '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26';
   const drawable = resolve(repository, 'build/ai/preview/requests', requestKey, 'res/drawable');
   await mkdir(drawable, {recursive: true});
   const external = resolve(repository, 'external.png');
@@ -419,7 +421,7 @@ test('rejects changed PNG CRC and a symbolic-link asset before Gradle execution'
 test('rejects changed bytes in an existing content-addressed input', async (context) => {
   const repository = await mkdtemp(resolve(tmpdir(), 'viewcompose-generated-preview-poison-'));
   context.after(() => rm(repository, {recursive: true, force: true}));
-  const requestKey = 'd70e50206f87bc0c6e10b487f5a47b72b1928f1162286cb204a1047f9376be3d';
+  const requestKey = 'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a';
   const input = resolve(repository, 'build/ai/preview/requests', requestKey, 'input');
   await mkdir(input, {recursive: true});
   await writeFile(resolve(input, 'GeneratedView.kt'), 'tampered\n');
@@ -433,6 +435,7 @@ test('rejects changed bytes in an existing content-addressed input', async (cont
   }, {
     repository,
     cacheRoot: resolve(repository, 'build/ai/preview/requests'),
+    diagnose: async () => ({summary: {clean: true}, structure: {}, findings: [], truncated: false}),
     render: async () => {
       rendered += 1;
     },
@@ -440,4 +443,70 @@ test('rejects changed bytes in an existing content-addressed input', async (cont
   assert.equal(rendered, 0);
   assert.equal(result.status, 'failed');
   assert.equal(result.diagnostics[0].code, 'VC-AI-RENDER-CACHE-POISONED');
+});
+
+test('rejects symbolic-link build and diagnosis ancestors in the tool cache', async (context) => {
+  const expectedRequest = JSON.parse(await fixture('generated-preview/login.preview-request.json'));
+  const requestKey = 'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a';
+
+  const stageRepository = await mkdtemp(resolve(tmpdir(), 'viewcompose-generated-build-link-'));
+  context.after(() => rm(stageRepository, {recursive: true, force: true}));
+  const stageRequest = resolve(stageRepository, 'requests', requestKey);
+  const externalBuild = resolve(stageRepository, 'external-build');
+  await mkdir(stageRequest, {recursive: true});
+  await mkdir(externalBuild);
+  await symlink(externalBuild, resolve(stageRequest, 'build'));
+  let rendered = 0;
+  const stageResult = await renderGeneratedPreview({
+    generatedKotlin: await fixture('login.viewcompose.kt'),
+    generationReport: loginReport(),
+    previewBindings: expectedRequest.bindings,
+  }, {
+    repository: stageRepository,
+    cacheRoot: resolve(stageRepository, 'requests'),
+    render: async () => { rendered += 1; },
+  });
+  assert.equal(rendered, 0);
+  assert.equal(stageResult.diagnostics[0].code, 'VC-AI-RENDER-CACHE-POISONED');
+
+  const evidenceRepository = await mkdtemp(resolve(tmpdir(), 'viewcompose-generated-tree-link-'));
+  context.after(() => rm(evidenceRepository, {recursive: true, force: true}));
+  const evidenceRequest = resolve(evidenceRepository, 'requests', requestKey);
+  const externalEvidence = resolve(evidenceRepository, 'external-evidence');
+  await mkdir(externalEvidence, {recursive: true});
+  const tree = Buffer.from(JSON.stringify({structure: {}, virtualTree: [], nativeTree: []}));
+  await writeFile(resolve(externalEvidence, 'render-tree.json'), tree);
+  const evidenceResult = await renderGeneratedPreview({
+    generatedKotlin: await fixture('login.viewcompose.kt'),
+    generationReport: loginReport(),
+    previewBindings: expectedRequest.bindings,
+  }, {
+    repository: evidenceRepository,
+    cacheRoot: resolve(evidenceRepository, 'requests'),
+    render: async () => {
+      await symlink(externalEvidence, resolve(evidenceRequest, 'build'));
+      return {
+        status: 'success',
+        evidence: {
+          level: 'rendered',
+          cache: 'miss',
+          compilerLane: PREVIEW_COMPILER_LANE,
+          renderLane: RENDER_LANE,
+          outputFingerprint: 'a'.repeat(64),
+        },
+        diagnostics: [],
+        data: {
+          source: {path: 'generated.kt'},
+          image: {sha256: 'b'.repeat(64)},
+          renderTree: {
+            path: `requests/${requestKey}/build/render-tree.json`,
+            bytes: tree.length,
+            sha256: createHash('sha256').update(tree).digest('hex'),
+          },
+        },
+      };
+    },
+  });
+  assert.equal(evidenceResult.status, 'failed');
+  assert.equal(evidenceResult.diagnostics[0].code, 'VC-AI-LAYOUT-EVIDENCE-INVALID');
 });

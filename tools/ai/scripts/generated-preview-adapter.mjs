@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {lstat, mkdir, readFile, readdir, writeFile} from 'node:fs/promises';
-import {relative, resolve, sep} from 'node:path';
+import {dirname, relative, resolve, sep} from 'node:path';
 import {
   PREVIEW_COMPILER_LANE,
   RENDER_LANE,
@@ -10,7 +10,7 @@ import {validateSchemaValue} from './schema-validator.mjs';
 import {
   diagnostic,
   loadKnowledgeManifest,
-  repositoryRoot,
+  toolCacheRoot,
   toolResult,
   utf8Bytes,
 } from './tool-core.mjs';
@@ -608,6 +608,20 @@ async function ensureContainedDirectory(repository, directory) {
   }
 }
 
+async function verifyContainedDirectory(repository, directory) {
+  const root = resolve(repository);
+  const target = resolve(directory);
+  if (!isWithin(root, target)) throw new Error('CACHE_PATH_ESCAPE');
+  let current = root;
+  for (const segment of relative(root, target).split(sep).filter(Boolean)) {
+    current = resolve(current, segment);
+    const metadata = await lstat(current);
+    if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
+      throw new Error('CACHE_PATH_UNSAFE');
+    }
+  }
+}
+
 async function persistImmutableInput(path, content) {
   const metadata = await lstat(path).catch((error) => {
     if (error?.code === 'ENOENT') return null;
@@ -654,7 +668,14 @@ async function stagePlan(plan, repository, cacheRoot) {
       throw new Error('CACHE_INPUT_UNSAFE');
     }
   }
-  const requestChildren = (await readdir(requestRoot)).sort();
+  const allRequestChildren = await readdir(requestRoot);
+  if (allRequestChildren.includes('build')) {
+    const buildMetadata = await lstat(resolve(requestRoot, 'build'));
+    if (!buildMetadata.isDirectory() || buildMetadata.isSymbolicLink()) {
+      throw new Error('CACHE_INPUT_UNSAFE');
+    }
+  }
+  const requestChildren = allRequestChildren.filter((name) => name !== 'build').sort();
   const expectedRequestChildren = plan.assets.length > 0 ? ['input', 'res'] : ['input'];
   if (JSON.stringify(requestChildren) !== JSON.stringify(expectedRequestChildren)) {
     throw new Error('CACHE_INPUT_UNSAFE');
@@ -686,6 +707,30 @@ async function generatedPreviewFailure(requestId, plan) {
   });
 }
 
+async function diagnoseGeneratedLayout(rendered, repository) {
+  const artifact = rendered.data?.renderTree;
+  if (
+    typeof artifact?.path !== 'string' ||
+    !Number.isInteger(artifact.bytes) ||
+    artifact.bytes < 1 ||
+    artifact.bytes > 8 * 1024 * 1024 ||
+    !SHA256.test(artifact.sha256 ?? '')
+  ) throw new Error('LAYOUT_EVIDENCE_INVALID');
+  const path = resolve(repository, artifact.path);
+  if (!isWithin(repository, path)) throw new Error('LAYOUT_EVIDENCE_INVALID');
+  await verifyContainedDirectory(repository, dirname(path));
+  const metadata = await lstat(path);
+  if (!metadata.isFile() || metadata.isSymbolicLink() || metadata.size !== artifact.bytes) {
+    throw new Error('LAYOUT_EVIDENCE_INVALID');
+  }
+  const bytes = await readFile(path);
+  if (sha256(bytes) !== artifact.sha256) throw new Error('LAYOUT_EVIDENCE_INVALID');
+  const {interpretLayoutSnapshot} = await import('./layout-diagnoser.mjs');
+  return interpretLayoutSnapshot(JSON.parse(bytes.toString('utf8')), {
+    sourcePath: rendered.data?.source?.path,
+  });
+}
+
 export async function renderGeneratedPreview({
   generatedKotlin,
   generationReport,
@@ -695,8 +740,9 @@ export async function renderGeneratedPreview({
   signal,
 } = {}, {
   render = renderPreview,
-  repository = repositoryRoot(),
-  cacheRoot = resolve(repository, 'build/ai/preview/requests'),
+  diagnose = diagnoseGeneratedLayout,
+  repository = toolCacheRoot(),
+  cacheRoot = resolve(repository, 'preview/requests'),
 } = {}) {
   const plan = await createGeneratedPreviewPlan({
     generatedKotlin,
@@ -727,11 +773,12 @@ export async function renderGeneratedPreview({
     ? ['foundation.components', 'image.foundation', 'modifier.drawing', 'modifier.layout']
     : ['foundation.components', 'modifier.layout'];
   const target = Object.freeze({
-    modulePath: ':tools:ai-preview-harness',
-    projectDirectory: 'tools/ai-preview-harness',
+    modulePath: ':preview',
+    projectDirectory: relative(repository, resolve(cacheRoot, plan.requestFingerprint))
+      .replaceAll(sep, '/'),
     buildVariant: 'debug',
-    discoveryTask: ':tools:ai-preview-harness:discoverDebugViewComposePreviews',
-    renderTask: ':tools:ai-preview-harness:renderDebugViewComposePreview',
+    discoveryTask: ':preview:discoverDebugViewComposePreviews',
+    renderTask: ':preview:renderDebugViewComposePreview',
     displayName: plan.profile.functionName,
     ownerClassName: 'generated.viewcompose.GeneratedPreviewKt',
     methodName: plan.profile.functionName,
@@ -757,6 +804,7 @@ export async function renderGeneratedPreview({
     signal,
   }, {
     repository,
+    requestCacheRoot: cacheRoot,
     targets: {[plan.profile.targetId]: target},
   }));
   if (rendered.status !== 'success') return rendered;
@@ -783,10 +831,32 @@ export async function renderGeneratedPreview({
       renderLane: RENDER_LANE,
     });
   }
+  let layoutDiagnosis;
+  try {
+    layoutDiagnosis = await diagnose(rendered, repository);
+  } catch {
+    return toolResult({
+      requestId,
+      tool: 'render_preview',
+      status: 'failed',
+      level: 'rendered',
+      cache: rendered.evidence.cache,
+      diagnostics: [diagnostic({
+        code: 'VC-AI-LAYOUT-EVIDENCE-INVALID',
+        severity: 'error',
+        message: 'Generated Preview layout evidence changed before bounded diagnosis completed.',
+        nextAction: 'Remove the generated Preview cache and render the immutable request again.',
+      })],
+      compilerLane: PREVIEW_COMPILER_LANE,
+      renderLane: RENDER_LANE,
+      outputFingerprint: rendered.evidence.outputFingerprint,
+    });
+  }
   return {
     ...rendered,
     data: {
       ...rendered.data,
+      layoutDiagnosis,
       generatedPreview: {
         ...(plan.profile.sourceKind === 'screenshot'
           ? {sourceKind: plan.profile.sourceKind, targetId: plan.profile.targetId}

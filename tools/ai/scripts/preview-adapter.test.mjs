@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdir, mkdtemp, rm, symlink, writeFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, realpath, rm, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import test from 'node:test';
@@ -42,7 +42,7 @@ function png(width = 1079, height = 2339) {
 }
 
 async function fixtureRepository() {
-  const repository = await mkdtemp(join(tmpdir(), 'viewcompose-ai-preview-'));
+  const repository = await realpath(await mkdtemp(join(tmpdir(), 'viewcompose-ai-preview-')));
   const source = resolve(
     repository,
     'samples/counter/src/debug/java/com/viewcompose/samples/counter/CounterPreview.kt',
@@ -140,8 +140,9 @@ test('renders only the fixed target and returns contained protocol evidence', as
     assert.equal(result.data.source.path.endsWith('CounterPreview.kt'), true);
     assert.equal(JSON.stringify(result).includes(fixture.repository), false);
     assert.equal(plans.length, 2);
-    assert.ok(plans.every((plan) => plan.args.includes('--offline')));
-    assert.ok(plans.every((plan) => plan.executable === resolve(fixture.repository, 'gradlew')));
+    assert.ok(plans.every((plan) => !plan.args.includes('--offline')));
+    assert.ok(plans.every((plan) => plan.args.includes('-PviewComposeAiPreviewRequestCacheRoot=' +
+      resolve(fixture.repository, 'preview/requests'))));
   } finally {
     await rm(fixture.repository, {recursive: true, force: true});
   }
@@ -229,7 +230,7 @@ test('rejects unsupported targets, malformed configurations, and lane mismatches
   assert.equal(malformed.status, 'invalid');
   assert.equal(malformed.diagnostics[0].code, 'VC-AI-PREVIEW-CONFIGURATION-INVALID');
 
-  const lane = await renderPreview({}, {...options, javaFeature: 17});
+  const lane = await renderPreview({}, {...options, javaFeature: 11});
   assert.equal(lane.status, 'unsupported');
   assert.equal(lane.diagnostics[0].code, 'VC-AI-PREVIEW-LANE-MISMATCH');
   assert.equal(executions, 0);

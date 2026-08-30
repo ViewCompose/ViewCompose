@@ -117,15 +117,15 @@
     "compareGenerationRequestFingerprint": "cfc226ab58a59db11c95f967d7c3518edf1c1138224fb6bcbde3c97cb2905062",
     "compareGenerationReportFingerprint": "90fb38544416443bf7aaeb7f75a1a5cbf49466f29e6bfe58f5ed2741a2d9f4fc",
     "previewRequest": "screenshot-render/wireframe.preview-request.json",
-    "previewRequestFingerprint": "f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408",
-    "acceptedOutputFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
-    "acceptedRenderTreeFingerprint": "5228e401662349d9142cf695c42e21805c7c332ac36bc09334a32251d2f27000"
+    "previewRequestFingerprint": "64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed",
+    "acceptedOutputFingerprint": "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
+    "acceptedRenderTreeFingerprint": "5746bf6dfc564a8724a7d49a20ec6000eeae79441d76ad9a6aa2ff278fcb6f30"
   },
   "supportedFixtures": [
     {
       "status": "implemented",
       "source": "screenshot wireframe",
-      "expectedComparisonFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
+      "expectedComparisonFingerprint": "779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "expectedSummary": {
         "designNodes": 4,
@@ -142,7 +142,7 @@
           "identityRenderKind": "column",
           "semanticRenderKind": "column",
           "wrapperDepth": 0,
-          "bounds": [0, 0, 1079, 328],
+          "bounds": [0, 0, 1079, 316],
           "checkIds": [
             "identity.key",
             "structure.parent",
@@ -157,7 +157,7 @@
           "identityRenderKind": "text",
           "semanticRenderKind": "text",
           "wrapperDepth": 0,
-          "bounds": [0, 0, 201, 55],
+          "bounds": [0, 0, 158, 43],
           "checkIds": [
             "identity.key",
             "structure.parent",
@@ -174,7 +174,7 @@
           "identityRenderKind": "column",
           "semanticRenderKind": "text-field",
           "wrapperDepth": 1,
-          "bounds": [0, 55, 399, 202],
+          "bounds": [0, 43, 365, 190],
           "checkIds": [
             "identity.key",
             "structure.parent",
@@ -191,7 +191,7 @@
           "identityRenderKind": "button",
           "semanticRenderKind": "button",
           "wrapperDepth": 0,
-          "bounds": [0, 202, 274, 328],
+          "bounds": [0, 190, 277, 316],
           "checkIds": [
             "identity.key",
             "structure.parent",

@@ -110,25 +110,25 @@
   ],
   "lineage": {
     "referenceRequest": "screenshot-pixel/pixel-reference.request.json",
-    "referenceRequestFingerprint": "06ded39bf3588193305ba1574c43ca3a6b6d0ff9c4cd19ec3e12eb75afdefefd",
+    "referenceRequestFingerprint": "df5bd7175f72dc76a4b750bff11ee9992c1afa1b4dc5e3c6b21a0c1731686bef",
     "referenceResult": "screenshot-pixel/pixel-reference.result.json",
-    "referenceOutputFingerprint": "e874a198d57e64645472dc11dac8e82df35e11117869dd616d33c93a311eb091",
-    "referencePngFingerprint": "69ac5adde66e6f5725a0258987f7f635cb7be333839536f06c0ae6a2ff0596e2",
+    "referenceOutputFingerprint": "adfc4b2c7703897dd6c00cae476956766efec9e2c619e60bbafc095931b46dae",
+    "referencePngFingerprint": "b0a1caca036852229979fac47cb0b439baf1ca5cdb44b45d92018e8f98c06169",
     "pixelGenerationRequest": "screenshot-pixel/wireframe.generation-request.json",
     "pixelGenerationRequestFingerprint": "53287747971524763ed8114e59c65f5d284b27e23acaff83db4203c95fed1858",
     "pixelGenerationReportFingerprint": "ef8428bca1dee88772f8c63ab7a9f7a8385357963039559f9456e15beab75fdd",
     "semanticComparisonContract": "screenshot-layout-comparison-contract.json",
-    "semanticComparisonFingerprint": "b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd",
+    "semanticComparisonFingerprint": "779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517",
     "previewRequest": "screenshot-render/wireframe.preview-request.json",
-    "previewRequestFingerprint": "f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408",
-    "renderOutputFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
-    "renderPngFingerprint": "072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd"
+    "previewRequestFingerprint": "64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed",
+    "renderOutputFingerprint": "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
+    "renderPngFingerprint": "c47698f63473b22763bbeffd020b8c9741d26b92f5c0069f0b6c4acca6f63663"
   },
   "supportedFixtures": [
     {
       "status": "implemented",
       "source": "canonicalized screenshot render reference",
-      "expectedComparisonFingerprint": "6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f",
+      "expectedComparisonFingerprint": "7504b5c23ed6e9fe142002572e08f24115e73fc311e4329057f8384f749bdd43",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "configuration": {
         "density": 2.625,
@@ -156,7 +156,7 @@
         "mismatchBounds": null,
         "attributions": 0,
         "unassignedMismatchedPixels": 0,
-        "localizationFingerprint": "af49f39cacbbaa7e5590f6e23cafa7b48766a2e2d1aace4cf42e1947cc0b4f71"
+        "localizationFingerprint": "a15f3cd4260b7cae54307be32acb40f03196571a960afa2a7411d4fb327fac9b"
       }
     }
   ],

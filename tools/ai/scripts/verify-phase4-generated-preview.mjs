@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {
   validateGeneratedPreviewRequest,
 } from './generated-preview-adapter.mjs';
+import {toolCacheRoot} from './tool-core.mjs';
 import {convertXmlToViewCompose} from './xml-migration.mjs';
 
 const aiRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -19,18 +20,22 @@ function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
 
-function containedRelativePath(path) {
+function containedRelativePath(root, path) {
   if (typeof path !== 'string' || path.length === 0 || isAbsolute(path)) return false;
-  const normalized = relative(repositoryRoot, resolve(repositoryRoot, path));
+  const normalized = relative(root, resolve(root, path));
   return normalized !== '..' && !normalized.startsWith(`..${sep}`) && !isAbsolute(normalized);
 }
 
 async function inspectArtifacts(preview, fixture) {
-  if (!containedRelativePath(preview.image?.path) || !containedRelativePath(preview.renderTree?.path)) {
+  const artifactRoot = toolCacheRoot();
+  if (
+    !containedRelativePath(artifactRoot, preview.image?.path) ||
+    !containedRelativePath(artifactRoot, preview.renderTree?.path)
+  ) {
     throw new Error(`${fixture.source}: rendered evidence exposed an unsafe artifact path`);
   }
-  const imagePath = resolve(repositoryRoot, preview.image.path);
-  const renderTreePath = resolve(repositoryRoot, preview.renderTree.path);
+  const imagePath = resolve(artifactRoot, preview.image.path);
+  const renderTreePath = resolve(artifactRoot, preview.renderTree.path);
   const [imageMetadata, treeMetadata, image, treeBytes] = await Promise.all([
     lstat(imagePath),
     lstat(renderTreePath),
@@ -144,13 +149,14 @@ function assertRendered(result, fixture, comparisonFixture, requiredCache) {
     result.status !== 'success' ||
     result.evidence?.level !== 'compared' ||
     (requiredCache && result.evidence.cache !== requiredCache) ||
-    result.evidence?.compilerLane !== 'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11' ||
+    result.evidence?.compilerLane !==
+      'released-maven/jdk-17-or-21/gradle-9.3.1/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11' ||
     result.evidence?.renderLane !==
-      'current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1' ||
+      'released-maven/preview-protocol-1/paparazzi-2.0.0-alpha02/layoutlib-15.2.3' ||
     result.evidence?.outputFingerprint !== comparisonFixture.expectedComparisonFingerprint ||
     result.diagnostics?.length !== 0 ||
     preview?.targetId !== 'tools.ai.GeneratedXmlPreview' ||
-    preview?.modulePath !== ':tools:ai-preview-harness' ||
+    preview?.modulePath !== ':preview' ||
     preview?.buildVariant !== 'debug' ||
     preview?.buildFingerprint !== fixture.expectedBuildFingerprint ||
     preview?.previewId !== fixture.expectedPreviewId ||
@@ -166,7 +172,7 @@ function assertRendered(result, fixture, comparisonFixture, requiredCache) {
     }) ||
     JSON.stringify(preview?.capabilityIds) !== JSON.stringify(fixture.expectedCapabilityIds) ||
     preview?.source?.path !==
-      `build/ai/preview/requests/${fixture.expectedRequestFingerprint}/input/GeneratedPreview.kt` ||
+      `preview/requests/${fixture.expectedRequestFingerprint}/input/GeneratedPreview.kt` ||
     preview?.source?.line !== fixture.expectedSourceLine ||
     preview?.source?.column !== 1 ||
     preview?.image?.mediaType !== 'image/png' ||
@@ -190,7 +196,15 @@ function assertRendered(result, fixture, comparisonFixture, requiredCache) {
         widthPx: fixture.expectedAssetWidthPx,
         heightPx: fixture.expectedAssetHeightPx,
       }],
-    )
+    ) ||
+    preview?.layoutDiagnosis?.summary?.clean !== true ||
+    preview?.layoutDiagnosis?.summary?.actionableCount !== 0 ||
+    JSON.stringify(preview?.layoutDiagnosis?.structure) !== JSON.stringify({
+      vnodeCount: fixture.expectedRenderTree.vnodeCount,
+      mountedNodeCount: fixture.expectedRenderTree.mountedNodeCount,
+      maxVNodeDepth: fixture.expectedRenderTree.maxVNodeDepth,
+      maxMountedDepth: fixture.expectedRenderTree.maxMountedDepth,
+    })
   ) {
     const codes = result.diagnostics?.map((diagnostic) => diagnostic.code).join(', ') ?? 'none';
     throw new Error(`${fixture.source}: generated Preview evidence changed (${codes})`);

@@ -7,7 +7,7 @@ import {generateScreenshotViewCompose} from './screenshot-generation-adapter.mjs
 import {SCREENSHOT_GENERATION_REQUEST_SCHEMA} from './screenshot-generation-contract.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {canonicalJson} from './screenshot-contract.mjs';
-import {repositoryRoot as resolveRepositoryRoot} from './tool-core.mjs';
+import {toolCacheRoot} from './tool-core.mjs';
 
 const fixtureRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = `${fixtureRoot}screenshot-generated-preview-contract.json`;
@@ -84,7 +84,7 @@ function assertContract(contract) {
   if (
     contract.execution?.fixedPreviewHarness !== true ||
     contract.execution?.projectBuildExecution !== false ||
-    contract.execution?.networkAccess !== false ||
+    contract.execution?.networkAccess !== 'first-use dependency resolution only' ||
     contract.execution?.providerExecution !== false ||
     contract.execution?.callerSourceExecution !== false ||
     contract.execution?.callerTaskSelection !== false ||
@@ -158,7 +158,7 @@ function containedRelativePath(path, repository) {
   return normalized !== '..' && !normalized.startsWith(`..${sep}`) && !isAbsolute(normalized);
 }
 
-async function inspectArtifacts(preview, fixture, repository = resolveRepositoryRoot()) {
+async function inspectArtifacts(preview, fixture, repository = toolCacheRoot()) {
   if (
     !containedRelativePath(preview.image?.path, repository) ||
     !containedRelativePath(preview.renderTree?.path, repository)
@@ -223,9 +223,9 @@ function assertRendered(result, fixture, requiredCache) {
     result.evidence?.level !== 'rendered' ||
     (requiredCache && result.evidence.cache !== requiredCache) ||
     result.evidence?.compilerLane !==
-      'current-source/jdk-21/agp-9.1.1/kotlin-2.2.10/android-37/jvm-11' ||
+      'released-maven/jdk-17-or-21/gradle-9.3.1/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11' ||
     result.evidence?.renderLane !==
-      'current-source/preview-protocol-1/paparazzi-2.0.0-alpha05/layoutlib-16.2.1' ||
+      'released-maven/preview-protocol-1/paparazzi-2.0.0-alpha02/layoutlib-15.2.3' ||
     result.evidence?.outputFingerprint !== fixture.expectedOutputFingerprint ||
     result.diagnostics?.length !== 0 ||
     result.data?.kotlinFingerprint !==
@@ -235,7 +235,7 @@ function assertRendered(result, fixture, requiredCache) {
     result.data?.generationReport?.reportFingerprint !==
       '464d4f31c5ec59a5083b58309240c76fc69709b42648b79beb4ff281ac2f93db' ||
     preview?.targetId !== 'tools.ai.GeneratedScreenshotPreview' ||
-    preview?.modulePath !== ':tools:ai-preview-harness' ||
+    preview?.modulePath !== ':preview' ||
     preview?.buildVariant !== 'debug' ||
     preview?.buildFingerprint !== fixture.expectedBuildFingerprint ||
     preview?.previewId !== fixture.expectedPreviewId ||
@@ -251,8 +251,8 @@ function assertRendered(result, fixture, requiredCache) {
     }) ||
     JSON.stringify(preview?.capabilityIds) !== JSON.stringify(fixture.expectedCapabilityIds) ||
     preview?.source?.path !==
-      `build/ai/preview/requests/${
-        'f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408'
+      `preview/requests/${
+        '64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed'
       }/input/GeneratedPreview.kt` ||
     preview?.source?.line !== fixture.expectedSourceLine ||
     preview?.source?.column !== 1 ||
@@ -266,14 +266,22 @@ function assertRendered(result, fixture, requiredCache) {
     preview?.generatedPreview?.sourceKind !== 'screenshot' ||
     preview?.generatedPreview?.targetId !== 'tools.ai.GeneratedScreenshotPreview' ||
     preview?.generatedPreview?.requestFingerprint !==
-      'f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408' ||
+      '64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed' ||
     preview?.generatedPreview?.generatedKotlinFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     preview?.generatedPreview?.wrapperFingerprint !==
       '7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b' ||
     preview?.generatedPreview?.pngSha256 !== fixture.expectedImage.sha256 ||
     preview?.generatedPreview?.renderTreeSha256 !== fixture.expectedRenderTree.sha256 ||
-    preview?.generatedPreview?.assets?.length !== 0
+    preview?.generatedPreview?.assets?.length !== 0 ||
+    preview?.layoutDiagnosis?.summary?.clean !== true ||
+    preview?.layoutDiagnosis?.summary?.actionableCount !== 0 ||
+    JSON.stringify(preview?.layoutDiagnosis?.structure) !== JSON.stringify({
+      vnodeCount: fixture.expectedRenderTree.vnodeCount,
+      mountedNodeCount: fixture.expectedRenderTree.mountedNodeCount,
+      maxVNodeDepth: fixture.expectedRenderTree.maxVNodeDepth,
+      maxMountedDepth: fixture.expectedRenderTree.maxMountedDepth,
+    })
   ) {
     const codes = result.diagnostics?.map((item) => item.code).join(', ') ?? 'none';
     throw new Error(`Screenshot generated Preview evidence changed (${codes})`);

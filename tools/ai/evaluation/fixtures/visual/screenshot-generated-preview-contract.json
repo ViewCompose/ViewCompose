@@ -22,7 +22,7 @@
     "renderGenerationRequestFingerprint": "68d3da2054ffe5513a90975d96f47be6cfa1137ad1b1e796114a4a27827b3d49",
     "renderGenerationReportFingerprint": "464d4f31c5ec59a5083b58309240c76fc69709b42648b79beb4ff281ac2f93db",
     "generatedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
-    "previewRequestFingerprint": "f3171a88878df3d3bdd770d59f098bcae0fcf6c6b456447ba652844e5af60408",
+    "previewRequestFingerprint": "64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed",
     "previewWrapperFingerprint": "7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b"
   },
   "profile": {
@@ -61,7 +61,7 @@
   "execution": {
     "fixedPreviewHarness": true,
     "projectBuildExecution": false,
-    "networkAccess": false,
+    "networkAccess": "first-use dependency resolution only",
     "providerExecution": false,
     "callerSourceExecution": false,
     "callerTaskSelection": false,
@@ -98,8 +98,8 @@
       "previewWrapper": "screenshot-render/wireframe.preview-wrapper.kt",
       "expectedBindings": 3,
       "expectedCallbackBindings": 2,
-      "expectedBuildFingerprint": "2a92748798bad30d22e6a1a2160f7bebccfe58f9dcf19b4b9f7be6c90b471512",
-      "expectedOutputFingerprint": "ba78a4047cad992e43b801a6b93a632a72543f383521172364d69b28fccf5076",
+      "expectedBuildFingerprint": "a621684a9e52951a6e30c87c78ef007db2eee81662469a804ee1cf264086c3a4",
+      "expectedOutputFingerprint": "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
       "expectedPreviewId": "generatedpreviewkt-generatedscreenshotpreview-d8ad310b820d",
       "expectedVariantId": "generated-screenshot-screenshotwireframeview-abee9c74",
       "expectedSourceLine": 22,
@@ -107,12 +107,12 @@
       "expectedImage": {
         "widthPx": 1079,
         "heightPx": 2339,
-        "bytes": 30984,
-        "sha256": "072787b8fa78026425577e7159494b9841850c4366ac1aa62010b4342919e5fd"
+        "bytes": 30243,
+        "sha256": "c47698f63473b22763bbeffd020b8c9741d26b92f5c0069f0b6c4acca6f63663"
       },
       "expectedRenderTree": {
         "bytes": 203290,
-        "sha256": "5228e401662349d9142cf695c42e21805c7c332ac36bc09334a32251d2f27000",
+        "sha256": "5746bf6dfc564a8724a7d49a20ec6000eeae79441d76ad9a6aa2ff278fcb6f30",
         "vnodeCount": 5,
         "mountedNodeCount": 5,
         "maxVNodeDepth": 3,

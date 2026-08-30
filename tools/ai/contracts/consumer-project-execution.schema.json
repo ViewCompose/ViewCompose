@@ -72,9 +72,9 @@
           "maxItems": 2,
           "uniqueItems": true
         },
-        "gradle": {"const": "8.13"},
-        "agp": {"const": "8.13.2"},
-        "kotlin": {"const": "2.0.21"},
+        "gradle": {"const": "9.3.1"},
+        "agp": {"const": "9.1.1"},
+        "kotlin": {"const": "2.2.10"},
         "compileSdk": {"const": 36},
         "jvmTarget": {"const": 11},
         "dependencyResolution": {"enum": ["online-first-use", "verified-cache"]},

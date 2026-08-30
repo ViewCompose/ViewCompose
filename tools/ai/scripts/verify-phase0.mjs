@@ -951,15 +951,15 @@ async function verifyGeneratedPreview(schemas) {
     ]) ||
     contract.activation?.tool !== 'convert_xml_to_viewcompose' ||
     contract.activation?.mode !== 'render' ||
-    contract.activation?.sourceLane !== 'current-source'
+    contract.activation?.sourceLane !== 'released-maven'
   ) {
     throw new Error('Generated Preview must extend the exact XML, Preview, and request contracts');
   }
   if (
-    contract.execution?.harnessModule !== ':tools:ai-preview-harness' ||
+    contract.execution?.harnessModule !== ':preview' ||
     contract.execution?.readInspectedProject !== false ||
     contract.execution?.executeInspectedProjectBuildLogic !== false ||
-    contract.execution?.networkAccess !== false ||
+    contract.execution?.networkAccess !== 'first-use dependency resolution only' ||
     contract.execution?.followSymbolicLinks !== false ||
     contract.execution?.callerSelectedGradleTask !== false ||
     contract.execution?.callerSelectedDependency !== false ||

@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {lstat, readFile} from 'node:fs/promises';
 import {isAbsolute, relative, resolve, sep} from 'node:path';
 import {validateSchemaValue} from './schema-validator.mjs';
-import {diagnostic, repositoryRoot} from './tool-core.mjs';
+import {diagnostic, toolCacheRoot} from './tool-core.mjs';
 
 const designSchemaPath = new URL('../contracts/design-ir.schema.json', import.meta.url);
 const comparisonSchemaPath = new URL('../contracts/layout-comparison.schema.json', import.meta.url);
@@ -588,7 +588,7 @@ export async function compareGeneratedLayout({
   preview,
   previewEvidence,
 } = {}, {
-  repository = repositoryRoot(),
+  repository = toolCacheRoot(),
 } = {}) {
   const [designSchema, comparisonSchema] = await loadSchemas();
   const designViolations = validateSchemaValue(designIr, designSchema);

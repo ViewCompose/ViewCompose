@@ -4,7 +4,7 @@ import {isAbsolute, relative, resolve, sep} from 'node:path';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {canonicalJson, SCREENSHOT_PREPROCESSING_SCHEMA} from './screenshot-contract.mjs';
 import {decodeScreenshotPng, prepareScreenshot} from './screenshot-preprocessor.mjs';
-import {diagnostic, repositoryRoot} from './tool-core.mjs';
+import {diagnostic, toolCacheRoot} from './tool-core.mjs';
 
 const pixelSchemaPath = new URL('../contracts/screenshot-pixel-comparison.schema.json', import.meta.url);
 const localizationSchemaPath = new URL(
@@ -339,7 +339,7 @@ export async function compareScreenshotPixels({
   preview,
   previewEvidence,
 } = {}, {
-  repository = repositoryRoot(),
+  repository = toolCacheRoot(),
   signal,
   prepare = prepareScreenshot,
 } = {}) {

@@ -80,7 +80,7 @@ The next Phase 6A boundary is now frozen as consumer-project execution v1. `view
 must bind the physical consumer root into the installed MCP process, but that root remains a
 read-only authorization boundary: the tooling never executes the consumer wrapper, settings,
 plugins, tasks, or build scripts. A packaged content-addressed Gradle harness owns execution and
-selects only fixed Maven Central coordinates, Gradle 8.13, AGP 8.13.2, Kotlin 2.0.21, Android 36,
+selects only fixed Maven Central coordinates, Gradle 9.3.1, AGP 9.1.1, Kotlin 2.2.10, Android 36,
 JVM target 11, and JDK 17/21. The first deep-evidence request may visibly resolve the pinned Gradle
 distribution and Maven dependencies; later requests may use the verified tool-owned cache.
 Compilation, generated Preview, and generated-screen layout diagnosis must pass from all three
