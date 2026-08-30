@@ -47,6 +47,7 @@ The source tree and future public site use the following content boundaries:
 | --- | --- | --- |
 | Repository root | Landing pages, community governance, and `AGENTS.md` | Stable and intentionally small |
 | `docs/README.md` | Canonical documentation index and root of the documentation link graph | Always current |
+| `docs/ai/` | AI-agent integration, supported clients, setup, evidence, and safety boundaries | Updated with AI tooling and client contracts |
 | `docs/getting-started/` | Installation, first UI, project setup, and the shortest successful path | Version-aware |
 | `docs/tutorials/` | Guided, end-to-end learning paths | Version-aware and sample-backed |
 | `docs/architecture/` | Current framework principles, runtime model, and architectural contracts | Updated with implementation |

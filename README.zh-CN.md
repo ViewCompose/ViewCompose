@@ -19,6 +19,7 @@
 
 <p align="center">
   <a href="https://docs.viewcompose.com/zh-CN/tutorials/getting-started">快速开始</a> ·
+  <a href="https://docs.viewcompose.com/zh-CN/ai">AI 接入</a> ·
   <a href="./docs/README.md">文档</a> ·
   <a href="https://central.sonatype.com/artifact/com.viewcompose/viewcompose-host-android">Maven Central</a> ·
   <a href="https://plugins.jetbrains.com/plugin/33290-viewcompose-preview">Android Studio 插件</a> ·
@@ -138,6 +139,16 @@ implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 
 模块版本有意保持独立。依赖某一项 Feature 不要求同时引入无关模块，也不要求整个项目使用同一个
 原子版本列车升级。
+
+## AI 接入
+
+ViewCompose 提供版本化 AI Reference、13 个本地 stdio MCP 工具、6 个标准 Agent Skill，以及从
+静态检查、编译、Allowlist Preview 渲染到结构化比较的可执行验证。框架负责事实与证据；Coding
+Client 继续负责模型、Credential、对话和用户授权的源码修改。
+
+当前本地 Distribution 已验证 Codex、Claude Code 和 Cursor 的项目 Profile。按照
+[AI 接入](./docs/ai/README.md)即可构建 Package、安装 Skill、添加项目 MCP 配置，并完成各客户端
+自己的最终连接检查。
 
 ## ViewCompose Preview Android Studio 插件
 

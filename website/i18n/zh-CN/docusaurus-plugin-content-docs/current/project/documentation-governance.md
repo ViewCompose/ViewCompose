@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: a27f366c7deed632fc1d7ce05d877e0d757619f3c263c106e620edb9d50da508
+translation_source_hash: d8fe834c0a30116f1ebe8fc4205225271b80866ca664b62a1c34c8e9c9c4afc1
 translation_status: current
 ---
 
@@ -25,6 +25,7 @@ Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑且�
 | --- | --- | --- |
 | 仓库根目录 | Landing、社区治理和 `AGENTS.md` | 稳定且刻意精简 |
 | `docs/README.md` | 权威文档索引与链接图根 | 始终最新 |
+| `docs/ai/` | AI Agent 接入、受支持客户端、配置、证据与安全边界 | 随 AI 工具和客户端契约更新 |
 | `docs/getting-started/` | 安装、第一段 UI、项目设置和最短成功路径 | 版本感知 |
 | `docs/tutorials/` | 端到端学习路径 | 版本感知且由 sample 支撑 |
 | `docs/architecture/` | 当前框架原理、runtime 模型和架构契约 | 随实现更新 |

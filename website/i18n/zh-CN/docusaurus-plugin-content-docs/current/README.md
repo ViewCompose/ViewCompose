@@ -11,13 +11,13 @@ version_lane: version-agnostic
 capability_ids: []
 artifact_ids: []
 sample_ids: []
-workflow: 从一个权威入口把读者和维护者路由到当前 Tutorial、Guide、Architecture、Migration、Module、Tooling 与 Project owner。
+workflow: 从一个权威入口把读者和维护者路由到当前 AI 接入、Tutorial、Guide、Architecture、Migration、Module、Tooling 与 Project owner。
 validation:
   - ./gradlew verifyDocumentationStructure
   - cd website && npm run build
 lifecycle: 公共文档层级、权威入口路由或有效所有权链接变化时更新。
 translation_source: README.md
-translation_source_hash: 0c97dcb885c5676f50f4cb9ab1127b0f627a334b04590b026ebcd7208e902c68
+translation_source_hash: 3fa6a7cd02b4eaaed50ff379c307396e027f7fb911485b96d533d36feb369e78
 translation_status: current
 ---
 
@@ -39,7 +39,8 @@ GitHub 托管文档站点的内容边界。
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
 | 查找面向应用的入口 | [能力参考](https://docs.viewcompose.com/reference/) → [版本化 API/KDoc](https://docs.viewcompose.com/api/) → 对应模块手册 |
 | 使用某项能力 | 从下面的[指南](#指南)中选择对应主题 |
-| 使用 AI、预览或进行性能工作 | [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt) → [本地工具契约](https://github.com/ViewCompose/ViewCompose/blob/main/tools/ai/README.md) → [预览](./tooling/preview.md) → [诊断](https://docs.viewcompose.com/tooling/diagnostics) → [性能](https://docs.viewcompose.com/tooling/performance) |
+| 连接 AI Agent | [AI 接入](./ai/README.md) |
+| 使用预览、诊断或进行性能工作 | [预览](./tooling/preview.md) → [诊断](https://docs.viewcompose.com/tooling/diagnostics) → [性能](https://docs.viewcompose.com/tooling/performance) |
 | 参与贡献 | [开发流程](https://docs.viewcompose.com/project/workflow) → [文档治理规范](https://docs.viewcompose.com/project/documentation-governance) |
 | 准备发布 | [发布流程](https://docs.viewcompose.com/project/publishing) → [能力验证](https://docs.viewcompose.com/project/capability-verification) |
 | 恢复项目上下文 | 阅读[路线图](https://docs.viewcompose.com/project/roadmap)和对应领域的有效文档，不要从归档计划开始 |
@@ -110,11 +111,17 @@ GitHub 托管文档站点的内容边界。
 和工具入口，数量、版本与路由都受新鲜度门禁保护。完整签名和 KDoc/Javadoc 请查看
 [版本化 API Reference](https://docs.viewcompose.com/api/)，再通过入口中的模块手册链接了解产物契约。
 
+## AI 接入
+
+机器可读 Reference、本地 MCP 工具、标准 Agent Skill 与可执行证据：
+
+- [AI 接入总览](./ai/README.md)
+- [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt)
+
 ## 工具
 
 开发期工具、检查和性能能力：
 
-- [AI Knowledge Bundle](https://docs.viewcompose.com/llms.txt)（[本地契约](https://github.com/ViewCompose/ViewCompose/blob/main/tools/ai/README.md)）
 - [预览](./tooling/preview.md)
 - [诊断](https://docs.viewcompose.com/tooling/diagnostics)
 - [性能](https://docs.viewcompose.com/tooling/performance)

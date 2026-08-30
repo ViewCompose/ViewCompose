@@ -454,6 +454,7 @@ internal object DocumentationQualityVerifiers {
         "THIRD_PARTY_NOTICES.md",
     )
     private val ALLOWED_DOCUMENTATION_DIRECTORIES = setOf(
+        "ai",
         "architecture",
         "archive",
         "getting-started",
