@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement and accept the frozen consumer-project execution v1 contract with the packaged Maven-backed harness, all three Agent profiles, and source-free compile, generated Preview, and layout-diagnosis evidence.
+next_action: Publish and verify the immutable AI tooling 0.2.0 GitHub Release, then freeze the next zero-friction AI-native generation slice without weakening the consumer execution boundary.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -72,21 +72,32 @@ the ViewCompose checkout from all three standalone MCP profiles, caps the public
 installation plus one project initialization command, and requires transactional configuration and
 Skill writes with zero manual edits. A separate GitHub Release contract binds the first package to
 an immutable tag, three exact assets, SHA-256, and GitHub build-provenance attestations. These
-contracts are implemented: all three clients pass standalone `init`, `doctor`, idempotent re-entry,
+contracts are implemented: all three clients pass project-bound `init`, `doctor`, idempotent re-entry,
 and exact `uninstall`; the cold release gate builds the complete Preview producer graph; and the tag
-workflow verifies, attests, and publishes the three assets without a mutable selector. This does not
-yet claim released-artifact compilation or consumer-project Preview readiness.
-The next Phase 6A boundary is now frozen as consumer-project execution v1. `viewcompose-agent init`
-must bind the physical consumer root into the installed MCP process, but that root remains a
+workflow verifies, attests, and publishes the three assets without a mutable selector.
+The Phase 6A consumer-project execution v1 boundary is now implemented. `viewcompose-agent init`
+binds the physical consumer root into the installed MCP process, but that root remains a
 read-only authorization boundary: the tooling never executes the consumer wrapper, settings,
 plugins, tasks, or build scripts. A packaged content-addressed Gradle harness owns execution and
 selects only fixed Maven Central coordinates, Gradle 9.3.1, AGP 9.1.1, Kotlin 2.2.10, Android 36,
 JVM target 11, and JDK 17/21. The first deep-evidence request may visibly resolve the pinned Gradle
 distribution and Maven dependencies; later requests may use the verified tool-owned cache.
-Compilation, generated Preview, and generated-screen layout diagnosis must pass from all three
-installed Agent profiles without a ViewCompose checkout before this boundary is accepted. Arbitrary
+Compilation, generated Preview, and generated-screen layout diagnosis pass from all three installed
+Agent profiles without a ViewCompose checkout. Arbitrary
 consumer source discovery, consumer dependency mirroring, manifest merging, custom plugins, Gradle
 task selection, application execution, device deployment, and source writes remain outside v1.
+
+Acceptance ran on macOS with JDK 17 and Android SDK 36. The first released-Maven Kotlin smoke
+compiled in 28,958 ms; the integrity-verified repeat returned in 31 ms. This changes the previous
+source-checkout requirement to a source-free installed-package path and is therefore **improved**
+for consumer setup. The installed-distribution gate then passed 2/2 reproducible builds, 3/3 Agent
+profiles, 18/18 exact Skill copies, 2/2 MCP protocol versions, released-artifact Kotlin compilation,
+2/2 XML generated Preview/layout comparisons, 1/1 screenshot render, 1/1 screenshot semantic
+comparison, and 1/1 exact RGBA comparison. The cached login Preview and layout comparison completed
+in approximately 4.3 seconds with 32/32 checks and a clean five-node diagnosis. These are local
+cold/warm functional measurements, not a cross-platform latency guarantee; dependency mirrors,
+machine load, and first-use downloads remain limitations. The next release action is to publish and
+attest `ai-tooling-v0.2.0`, then retain these denominators in CI.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
@@ -105,9 +116,9 @@ dependency contract is also frozen: it bounds default-layout selection, `include
 expansion, dependency cycles, graph identity, and cross-file provenance before implementation. Its
 resolver, project-context composition, CLI/MCP distribution, and hermetic compile gate now pass.
 The generated-screen Preview contract is now also frozen and implemented: it binds generated
-Kotlin, explicit preview values, one fixed configuration, the current-source compiler and renderer
+Kotlin, explicit preview values, one fixed configuration, the released-Maven compiler and renderer
 lanes, and all accepted artifacts into a content-addressed request while denying inspected-project
-build execution. The tool-owned harness, source-bound CLI/MCP render mode, exact artifact gate,
+build execution. The packaged tool-owned harness, project-bound CLI/MCP render mode, exact artifact gate,
 stable cache proof, and installed-package render denominator now pass. Exact embedded PNG bytes now
 also become a tool-owned Android resource without any caller path, URL, inspected-project resource
 read, or network access; the accepted XML v2 profile-card fixture compiles and renders through that

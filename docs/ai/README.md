@@ -12,8 +12,9 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - GitHub Release @viewcompose/ai-tooling 0.1.0 at ai-tooling-v0.1.0
+  - GitHub Release @viewcompose/ai-tooling 0.2.0 at ai-tooling-v0.2.0
   - Node.js 24.19.0 or newer
+  - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
   - Codex, Claude Code, and Cursor project profiles verified 2026-08-30
 verification_commands:
@@ -28,7 +29,8 @@ lifecycle: Update when a supported client format, Skill path, package release, t
 ViewCompose ships a machine-readable API reference, 13 local MCP tools, and six Agent Skills as one
 installable GitHub Release. A developer can connect Codex, Claude Code, or Cursor to a new or
 existing Android project with two commands. No ViewCompose checkout, package build, provider key,
-or manual MCP configuration edit is required for the standalone workflow.
+or manual MCP configuration edit is required, including for Kotlin compilation and generated-screen
+Preview evidence.
 
 The coding client still owns the model, credentials, conversation, and user-authorized source
 changes. ViewCompose supplies deterministic framework facts, generation tools, and explicit
@@ -40,7 +42,7 @@ Install the exact release from GitHub:
 
 ```bash
 npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.1.0/viewcompose-ai-tooling-0.1.0.tgz
+  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.2.0/viewcompose-ai-tooling-0.2.0.tgz
 ```
 
 Then run this from the root of the Android project and choose one client:
@@ -61,9 +63,12 @@ not leave a partially installed integration.
 | Claude Code | `.mcp.json` | `.claude/skills` |
 | Cursor | `.cursor/mcp.json` | `.agents/skills` |
 
-Node.js 24.19.0 or newer is the only runtime prerequisite for this standalone path. A Node version
-manager is recommended when the system-wide npm prefix is not writable; do not use `sudo` merely to
-install the tooling.
+Node.js 24.19.0 or newer is sufficient for reference, generation, static validation, and project
+analysis. Compiled, rendered, and compared evidence additionally requires JDK 17 or 21 and Android
+SDK platform 36. The release includes its own Gradle 9.3.1 wrapper and fixed build harness, so users
+do not install Gradle or align their project's AGP/Kotlin versions. A Node version manager is
+recommended when the system-wide npm prefix is not writable; do not use `sudo` merely to install the
+tooling.
 
 ## Confirm the installation
 
@@ -74,9 +79,10 @@ viewcompose-agent doctor --client <codex|claude-code|cursor> \
   --project-root "$(pwd -P)"
 ```
 
-`standalone-ready` means the MCP entry and every Skill match the installed release. The report also
-separates `knowledgeAndGeneration` from `compilationPreviewAndLayout`, so an unavailable deeper
-evidence lane is never reported as successful.
+`project-bound-ready` means the MCP entry and every Skill match the installed release, the physical
+project root is bound, and the JDK/Android SDK prerequisites for deep evidence are available. The
+report separates `knowledgeAndGeneration`, `compilationPreviewAndLayout`, and host prerequisites, so
+an unavailable evidence lane is never reported as successful.
 
 Complete the client-side connection check:
 
@@ -98,13 +104,16 @@ proprietary client binaries, so the checks above remain visible user steps.
 
 ## What works without ViewCompose source
 
-Standalone mode supports:
+The installed project-bound mode supports:
 
 - exact API, component, sample, and ranked capability retrieval;
-- static Kotlin validation and bounded read-only Android project analysis;
+- static and released-artifact Kotlin validation, plus bounded read-only Android project analysis;
 - Android XML-to-ViewCompose generation from pasted XML or explicitly scoped project resources;
+- compilation, Preview rendering, semantic/geometry comparison, and structured layout diagnosis for
+  generated XML screens;
 - screenshot preprocessing, inference validation and typed resolution, and ViewCompose Kotlin
-  generation;
+  generation, plus compilation, Preview rendering, semantic comparison, and eligible exact-pixel
+  comparison;
 - the six workflows for API lookup, screen creation, XML conversion, review, validation, and layout
   debugging, with each workflow retaining the evidence level it actually obtained.
 
@@ -117,27 +126,26 @@ Try this first request in the selected Agent:
 > before writing, run every validation lane currently available, and report the achieved evidence
 > level and any unavailable deeper lane.
 
-## Current compile, Preview, and layout boundary
+## Deep evidence execution boundary
 
-In release `0.1.0`, compile-mode `validate_code`, Preview rendering, and rendered layout diagnosis
-still execute against a matching ViewCompose source checkout. They require JDK 21, the repository's
-pinned Android/Gradle lane, and the exact Knowledge Bundle revision. This is an enhancement mode,
-not a prerequisite for installing or using the standalone tools.
+Release `0.2.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
+artifacts from Maven Central. A packaged content-addressed harness owns Gradle 9.3.1, AGP 9.1.1,
+Kotlin 2.2.10, Android 36, JVM target 11, and the allowlisted ViewCompose/Preview coordinates. The
+consumer project root is a read-only authorization boundary: the tooling does not execute its
+wrapper, settings, plugins, tasks, or build scripts and does not add files to the project.
 
-If that checkout is available, replace a standalone integration with a source-bound one:
+The first deep-evidence request may download the pinned Gradle distribution and Maven dependencies.
+Later requests use the integrity-checked cache under the operating system's user cache directory.
+Package installation itself remains script-free and offline-capable; model-provider network access
+is never required.
 
-```bash
-viewcompose-agent uninstall --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
-viewcompose-agent init --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)" \
-  --source-root <physical-absolute-viewcompose-source-root>
-```
-
-The next tooling boundary will run compilation, Preview, and layout diagnosis in an explicitly
-authorized consumer project using released ViewCompose Maven artifacts. Until that contract and its
-smoke projects pass, the release fails closed with `VC-AI-SOURCE-ROOT-MISMATCH` instead of silently
-upgrading static evidence.
+`validate_code` compile mode accepts bounded Kotlin snippets. XML and screenshot generation tools
+own their generated source, compile it, render it, reopen the exact PNG and render tree, and attach
+layout diagnosis before returning evidence. XML render mode additionally compares declared
+semantics and geometry; an eligible screenshot reference can add exact RGBA comparison. Direct
+`render_preview` and `diagnose_layout` remain limited to a separately allowlisted fixed target and
+must not be presented as evidence for arbitrary existing application code. Existing application UI
+rendering is a later, explicitly isolated capability.
 
 ## Upgrade or remove
 
@@ -162,7 +170,7 @@ npm uninstall --global @viewcompose/ai-tooling
 
 ## Integrity and troubleshooting
 
-The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.1.0)
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.2.0)
 contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
 checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
 Attestations for all three assets. See GitHub's
@@ -173,8 +181,9 @@ for an optional independent provenance check.
 | --- | --- |
 | `viewcompose-agent` is not found | Confirm Node 24.19 or newer and that npm's global binary directory is on `PATH`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
+| `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
 | The client does not show the MCP server | Run the client-specific check above, approve project configuration when required, then restart or reload the client. |
-| Compile or Preview reports `VC-AI-SOURCE-ROOT-MISMATCH` | Continue with honest static evidence, or explicitly install the source-bound enhancement mode. |
+| Compile or Preview reports `VC-AI-PROJECT-ROOT-MISMATCH` | Run `init` from the physical project root and keep that project path available to the Agent process. |
 | A credential is requested | Stop. ViewCompose needs no model-provider credential and never accepts one in MCP arguments or project configuration. |
 
 Contributor internals are documented in the [AI tooling contract](../../tools/ai/README.md) and the

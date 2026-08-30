@@ -556,11 +556,11 @@ viewcompose-agent doctor --client <codex|claude-code|cursor> \
   --project-root <physical-absolute-consumer-project-root>
 ```
 
-The default result is `standalone-ready`; it marks knowledge and generation ready while compilation,
-Preview, and layout diagnosis remain `source-root-required`. A contributor can request the existing
-current-source enhancement explicitly with `init ... --source-root <physical-checkout>`. The
-standalone MCP configuration contains no `VIEWCOMPOSE_SOURCE_ROOT` entry and the installed package
-does not infer a source checkout from parent directories.
+The default result is `project-bound-ready` when the exact configuration and Skills are present,
+JDK 17 or 21 is available, and Android SDK platform 36 is installed. Knowledge/generation and
+compilation/Preview/layout readiness are reported separately. `VIEWCOMPOSE_PROJECT_ROOT` is always
+bound to the explicit physical consumer root; an optional `VIEWCOMPOSE_SOURCE_ROOT` remains only for
+contributor compatibility. The installed package does not infer either root from parent directories.
 
 `uninstall` removes only an exact package-owned MCP definition and exact canonical Skill bytes. It
 preserves unrelated configuration and fails closed after user edits. `config` and `install-skills`
@@ -584,10 +584,11 @@ npm --prefix tools/ai run package:distribution
 
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
 exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the thirteen-tool CLI/MCP core,
-the `viewcompose-agent` onboarding command, six consumer skills, the immutable Knowledge Bundle, an
-SPDX 2.3 package record, the MIT license, and a reviewed empty runtime-dependency license inventory.
-It intentionally contains no
-`node_modules`, Gradle project, Android SDK, JDK, provider adapter, network listener, or model.
+the `viewcompose-agent` onboarding command, six consumer skills, the immutable Knowledge Bundle, the
+consumer execution contract, a content-addressed Gradle harness and wrapper, an SPDX 2.3 package
+record, the MIT license, and a reviewed empty runtime-dependency license inventory. The license
+inventory records the distributed Gradle Wrapper as an Apache-2.0 development tool. The package
+contains no `node_modules`, Android SDK, JDK, provider adapter, network listener, or model.
 
 Verify reproducibility, inventory, offline lifecycle, installed CLI compilation, and both supported
 MCP protocol versions with:
@@ -602,31 +603,29 @@ The public consumer installs the pinned GitHub asset directly, without a checkou
 
 ```bash
 npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.1.0/viewcompose-ai-tooling-0.1.0.tgz
+  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.2.0/viewcompose-ai-tooling-0.2.0.tgz
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.1.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.2.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
 ```
 
-`get_api_reference`, `get_component_reference`, `search_component`, `get_sample`, static
-`validate_code`, `analyze_project`, and both source and explicit-project generate modes of
-`convert_xml_to_viewcompose` plus generate-mode `generate_screenshot_viewcompose` need no
-ViewCompose source checkout. Project generation reads only the caller-supplied bounded project
-roots. Compile-mode `validate_code`, compile/render modes of `convert_xml_to_viewcompose`,
-compile/render modes of `generate_screenshot_viewcompose`, `render_preview`, and `diagnose_layout`
-remain source-bound: set
-`VIEWCOMPOSE_SOURCE_ROOT` to the absolute root of the matching ViewCompose checkout and provide the
-pinned JDK/Android/Gradle offline lane. The adapter requires the exact Knowledge Bundle source
-revision to be present in that checkout's Git ancestry and rejects missing wrapper/settings files,
-symbolic-link replacements, and mismatched history before Gradle. The package never searches
-arbitrary parent directories or silently converts static evidence into compiled/rendered evidence.
+All knowledge, static, analysis, XML, and screenshot-generation modes need no ViewCompose source
+checkout. Compile-mode `validate_code` and the compile/render/compare modes owned by XML and
+screenshot generation use the packaged Gradle 9.3.1 harness, exact released ViewCompose Maven
+coordinates, AGP 9.1.1, Kotlin 2.2.10, Android 36, and JVM target 11. JDK 17 or 21 and SDK platform 36
+are host prerequisites. The first request may resolve the pinned Gradle distribution and Maven
+dependencies; subsequent requests use the integrity-checked OS user cache. The consumer root is
+read-only and its wrapper, settings, plugins, tasks, and build scripts are never executed. Direct
+`render_preview` and `diagnose_layout` still require a separately allowlisted fixed target; generated
+XML and screenshot results expose their own Preview and layout-diagnosis evidence. The package never
+searches arbitrary parent directories or silently upgrades static evidence.
 
 Tags matching `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
 the tag against the frozen release contract, repeats the complete distribution gate from a clean
