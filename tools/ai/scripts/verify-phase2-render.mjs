@@ -1,6 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {executeBoundedProcess} from './bounded-process.mjs';
 import {renderPreview} from './preview-adapter.mjs';
 
 const evaluationRoot = fileURLToPath(new URL('../evaluation/', import.meta.url));
@@ -15,12 +16,38 @@ const results = [];
 for (const testCase of cases) {
   const targetId = targetByCase[testCase.id];
   if (!targetId) throw new Error(`${testCase.id} has no fixed Preview target mapping.`);
+  const failedProcessOutput = [];
   const result = await renderPreview({
     targetId,
     capabilityIds: testCase.expected.capabilityIds ?? [],
     requestId: testCase.id,
+  }, {
+    runProcess: async (plan, limits) => {
+      const execution = await executeBoundedProcess(plan, limits);
+      if (
+        execution.exitCode !== 0 ||
+        execution.cancelled ||
+        execution.timedOut ||
+        execution.truncated ||
+        execution.spawnError
+      ) {
+        failedProcessOutput.push(execution.output);
+      }
+      return execution;
+    },
   });
   if (result.status !== 'success') {
+    const redactedRoots = [
+      fileURLToPath(new URL('../../../', import.meta.url)),
+      process.env.JAVA_HOME,
+      process.env.HOME,
+    ].filter((root) => typeof root === 'string' && root.length > 0);
+    for (const [index, output] of failedProcessOutput.entries()) {
+      let diagnosticOutput = output.replace(/\u001b\[[0-9;]*[A-Za-z]/gu, '');
+      for (const root of redactedRoots) diagnosticOutput = diagnosticOutput.replaceAll(root, '<redacted-root>');
+      diagnosticOutput = diagnosticOutput.slice(-64 * 1024).trim();
+      console.error(`Preview process failure ${index + 1}:\n${diagnosticOutput}`);
+    }
     throw new Error(
       `${testCase.id} expected render success; got ${result.status}: ` +
         result.diagnostics.map((entry) => `${entry.code} ${entry.message}`).join('; '),

@@ -77,9 +77,11 @@ plugin versions are independent.
   Layoutlib compatibility inputs change.
 
 Hosted `qaQuick` and `qaPreview` retain the stable Android 36 SDK setup before invoking the fixed
-JDK 21 render lane. On failure, `qaPreview` prints the last 200 worker-log lines and retains the
-worker log and structured render responses for seven days; these diagnostics support root-cause
-analysis and do not turn a failed render into accepted evidence.
+JDK 21 render lane. On failure, the Phase 2 verifier prints at most the final 64 KiB of already
+bounded Gradle output after repository, JDK, and home paths are redacted. `qaPreview` also prints
+the last 200 worker-log lines and retains the worker log and structured render responses for seven
+days. These diagnostics support root-cause analysis and do not turn a failed render into accepted
+evidence.
 
 The 2026-08-29 dependency-resolution acceptance reproduced the former JVM 17 consumer/JVM 21 worker
 mismatch with the published local worker artifact and then exposed a stale 15.2.3 native Layoutlib

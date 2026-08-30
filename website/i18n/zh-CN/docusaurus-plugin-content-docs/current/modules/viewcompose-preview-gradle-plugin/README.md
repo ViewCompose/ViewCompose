@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-gradle-plugin/README.md
-translation_source_hash: 408308054c04bf11e1795b34d8944ede6f81a9286b249953e40196921a19d920
+translation_source_hash: 447250f08a992dce7d5f560cab458b83cb616189cefad5bfc893d7f148561574
 translation_status: current
 ---
 
@@ -58,7 +58,8 @@ Marketplace 安装 `ViewCompose Preview`。IDE 与 Gradle 插件独立版本化�
   Worker Reuse 验证。
 
 托管 `qaQuick` 与 `qaPreview` 会保留稳定的 Android 36 SDK Setup，再调用固定的 JDK 21 Render
-Lane。失败时，`qaPreview` 会打印 Worker Log 最后 200 行，并把 Worker Log 和结构化 Render
+Lane。失败时，Phase 2 Verifier 会从已有上限的 Gradle 输出中最多打印最后 64 KiB，并先替换仓库、
+JDK 与 Home 路径。`qaPreview` 还会打印 Worker Log 最后 200 行，并把 Worker Log 和结构化 Render
 Response 保留七天；这些 Diagnostic 只用于根因分析，不会把失败 Render 升级为已接受证据。
 
 2026-08-29 的依赖解析验收先用本地发布的 Worker Artifact 复现了 JVM 17 Consumer/JVM 21 Worker
