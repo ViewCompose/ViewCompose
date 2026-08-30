@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 1b8c54cfb738c3114542e1af29d594f53539b2f694ca214c957cc5a640aa72ea
+translation_source_hash: 01e29b4a44155398a5b1d126fe1348483a26cd370476b1e6cd6f9248472ddeed
 translation_status: current
 ---
 
@@ -47,6 +47,19 @@ API 查询、生成、静态验证和 Project 分析只要求 Node.js 24.19.0 �
 9.3.1 Wrapper 与固定 Build Harness，用户无需安装 Gradle，也无需让现有 Project 的 AGP/Kotlin
 版本与工具链对齐。如果系统级 npm Prefix 不可写，建议使用 Node Version Manager；不要仅仅
 为了安装工具而使用 `sudo`。
+
+### `0.2.0` 的框架版本边界
+
+Release `0.2.0` 不会检查或绑定已有 Project 中的 ViewCompose Dependency 版本。它的 Knowledge
+Bundle 描述一个精确 `current-source` Revision，而深层证据 Harness 使用一组固定的已发布 Maven
+Artifact。两类身份各自确定，但不能证明知识适用于任意旧 Project。不要仅因为 `0.2.0` 是最新工具
+Release 就安装或升级到它，也不要把成功的静态查询视为版本兼容证明。
+
+下一版升级契约会绑定框架版本：它不会执行 Project Gradle Logic，而是读取 Project 中独立版本化的
+精确 `com.viewcompose` Coordinate；只选择 Released Knowledge Pack 与该 Artifact-version 子集
+匹配的 Release；遇到无法解析、互相冲突或不支持的版本时保留现有接入。在该门禁发布前，面向已有
+Project 的生成代码必须通过当前可用的 Compile Lane 并接受正常开发者 Review；编译仍不能证明每项
+语义契约。
 
 ## 确认安装状态
 
@@ -120,8 +133,10 @@ RGBA 比对。直接调用 `render_preview` 和 `diagnose_layout` 仍只适用�
 
 ## 升级或删除
 
-更换 Package 版本前，先用当前已安装的 Executable 删除精确的旧 Project 接入，再安装新的固定
-GitHub Release 并重新执行 `init`。这样在 Skill 或配置变化时仍能保留冲突检测。
+`0.2.0` 没有自动且感知版本的升级命令。在新 Package 所属 Release 明确声明的框架 Profile 与
+Project 的精确 ViewCompose Artifact 版本匹配前，不要直接替换。确需执行已经显式验证的迁移时，
+先用当前已安装的 Executable 删除精确旧 Project 接入，再安装固定且兼容的 GitHub Release 并重新
+执行 `init`。这样可以保留 Skill 与配置的冲突检测，但不能替代 Profile 匹配。
 
 删除当前 Project 接入：
 

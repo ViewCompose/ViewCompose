@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Publish and verify the immutable AI tooling 0.2.0 GitHub Release, then freeze the next zero-friction AI-native generation slice without weakening the consumer execution boundary.
+next_action: Generate the first exact released Knowledge Pack and project Artifact profile, then allow upgrade discovery only for Releases whose profile matches the consumer project.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -86,6 +86,16 @@ Compilation, generated Preview, and generated-screen layout diagnosis pass from 
 Agent profiles without a ViewCompose checkout. Arbitrary
 consumer source discovery, consumer dependency mirroring, manifest merging, custom plugins, Gradle
 task selection, application execution, device deployment, and source writes remain outside v1.
+
+Version-bound upgrades are now the active Phase 6A prerequisite. The public `0.2.0` package proves
+deterministic `current-source` knowledge and a released-Maven Harness separately, but does not prove
+that its knowledge matches an arbitrary consumer dependency set. ADR-0025 and framework
+compatibility profile v1 therefore prohibit a global-latest upgrade. The implementation order is:
+generate released knowledge from immutable per-artifact release revisions; derive the exact
+Artifact profile; detect exact consumer versions without executing consumer Gradle; publish the
+profile with the checksummed Release; and only then transactionally migrate MCP and unchanged
+Skills to the newest matching tooling Release. Dynamic, unresolved, conflicting, or unsupported
+versions retain the previous integration.
 
 Acceptance ran on macOS with JDK 17 and Android SDK 36. The first released-Maven Kotlin smoke
 compiled in 28,958 ms; the integrity-verified repeat returned in 31 ms. This changes the previous
@@ -292,6 +302,33 @@ with **no material Android runtime behavior change**. All implementation remains
 development tooling and documentation, so no published Maven artifact or publication input changed
 and no new Maven release changeset is required. The previously frozen applied-result handoff is
 again the next action.
+
+## Contract freeze — version-bound AI tooling upgrades v1
+
+The upgrade boundary separates the AI tooling runtime version from framework knowledge identity.
+One consumer-selectable profile is a content-addressed vector of exact
+`com.viewcompose:<artifact>:<version>` coordinates, their immutable release revisions, one released
+Knowledge Bundle fingerprint, and the exact Harness coordinates. Current-source knowledge remains
+valid only for its exact checkout and can never satisfy a released consumer profile.
+
+Read-only project detection accepts exact literal coordinates, standard version catalogs, and
+dependency lock records. It treats a dependency-free Android project as a new-project case, but
+rejects dynamic versions, ranges, unresolved aliases or variables, duplicate conflicts, and a
+ViewCompose import whose owning dependency cannot be resolved. It never executes consumer Gradle
+settings, plugins, tasks, or build logic.
+
+Candidate selection compares the detected Artifact subset before considering tooling recency. It
+chooses the newest immutable AI tooling Release with an exact matching profile, or leaves the old
+integration active when no candidate exists. Download verification and side-by-side installation
+complete before one transaction replaces only the exact old MCP entry and unchanged canonical
+Skill bytes. The frozen denominator covers profile generation, project detection, matching and
+non-matching candidates, checksums, contract majors, user conflicts, interruption, rollback, and
+recovery across all three supported Agent clients.
+
+This contract adds no public/protected framework API, Maven publication input, or application
+runtime behavior, so no Maven release Changeset or module-manual update is required. It changes a
+public development-tooling contract and therefore owns ADR-0025, the Phase 0 schema/example, the AI
+Integration chapter in both locales, and the installed-package acceptance gate.
 
 ## Maven release changesets
 

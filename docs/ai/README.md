@@ -70,6 +70,22 @@ do not install Gradle or align their project's AGP/Kotlin versions. A Node versi
 recommended when the system-wide npm prefix is not writable; do not use `sudo` merely to install the
 tooling.
 
+### Framework-version boundary in `0.2.0`
+
+Release `0.2.0` does not inspect or bind the ViewCompose dependency versions in an existing project.
+Its Knowledge Bundle describes one exact `current-source` revision, while its deep-evidence Harness
+uses a fixed set of released Maven artifacts. Those identities are deterministic but do not prove
+that the knowledge matches an arbitrary older project. Do not install or upgrade to `0.2.0` merely
+because it is the newest tooling Release, and do not treat a successful static lookup as version
+compatibility.
+
+The next upgrade contract is version-bound: it will read the project's exact independently
+versioned `com.viewcompose` coordinates without executing project Gradle logic, select only a
+Release whose released Knowledge Pack matches that Artifact-version subset, and retain the existing
+integration when versions are unresolved, conflicting, or unsupported. Until that gate ships,
+generated code for an existing project must pass the available compile lane and receive normal
+developer review; compilation still cannot prove every semantic contract.
+
 ## Confirm the installation
 
 Run the same client choice from the project root:
@@ -149,9 +165,12 @@ rendering is a later, explicitly isolated capability.
 
 ## Upgrade or remove
 
-Before changing package versions, use the currently installed executable to remove the exact old
-project integration. Then install the new pinned GitHub Release and run `init` again. This preserves
-conflict detection across Skill and configuration changes.
+`0.2.0` has no automatic, version-aware upgrade command. Do not replace it with a newer package
+until that Release explicitly declares a framework profile matching the project's exact ViewCompose
+Artifact versions. When an explicitly verified migration is necessary, use the currently installed
+executable to remove the exact old project integration, install the pinned compatible GitHub
+Release, and run `init` again. This preserves conflict detection across Skill and configuration
+changes but is not a substitute for profile matching.
 
 Remove the current project integration:
 

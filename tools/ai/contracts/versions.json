@@ -4,6 +4,7 @@
     "agentClientIntegration": 3,
     "aiToolingRelease": 1,
     "consumerProjectExecution": 1,
+    "frameworkCompatibilityProfile": 1,
     "knowledgeBundleManifest": 1,
     "toolEnvelope": 1,
     "designIr": 1,

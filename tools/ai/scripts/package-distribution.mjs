@@ -29,6 +29,8 @@ const sourcePaths = Object.freeze([
   'contracts/examples/agent-client-integration.json',
   'contracts/consumer-project-execution.schema.json',
   'contracts/examples/consumer-project-execution.json',
+  'contracts/framework-compatibility-profile.schema.json',
+  'contracts/examples/framework-compatibility-profile.json',
   'contracts/ai-tooling-release.schema.json',
   'contracts/examples/ai-tooling-release.json',
   'contracts/design-ir.schema.json',

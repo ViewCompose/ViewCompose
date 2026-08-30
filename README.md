@@ -159,7 +159,9 @@ needed for knowledge, generation, validation, or project analysis.
 
 Release `0.2.0` also carries an isolated harness that compiles against released Maven artifacts and
 renders and diagnoses tool-generated screens without executing the consumer project's Gradle build.
-Static evidence is never presented as compiled or rendered evidence. Follow
+Its `current-source` Knowledge Bundle is not yet matched automatically to an existing project's
+independently versioned ViewCompose dependencies, so tooling recency must not be used as a framework
+compatibility signal. Static evidence is never presented as compiled or rendered evidence. Follow
 [AI Integration](./docs/ai/README.md) for the two-command setup, `doctor`, capability boundary,
 client checks, upgrades, and safe removal.
 

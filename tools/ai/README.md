@@ -627,6 +627,14 @@ read-only and its wrapper, settings, plugins, tasks, and build scripts are never
 XML and screenshot results expose their own Preview and layout-diagnosis evidence. The package never
 searches arbitrary parent directories or silently upgrades static evidence.
 
+Release `0.2.0` still packages `current-source` knowledge and does not inspect a consumer project's
+independently versioned ViewCompose dependencies. Its fixed Harness coordinates prove only the
+compile/render lane they execute; they do not convert the current-source Knowledge Bundle into a
+released project profile. The framework compatibility profile v1 contract therefore blocks a
+global-latest upgrade until an exact released Knowledge Pack, read-only project Artifact profile,
+and matching release metadata are available. Unresolved or conflicting versions must preserve the
+old integration rather than guessing.
+
 Tags matching `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
 the tag against the frozen release contract, repeats the complete distribution gate from a clean
 checkout, refuses an existing Release, creates GitHub build-provenance attestations for the exact
