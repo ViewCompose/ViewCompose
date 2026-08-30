@@ -27,6 +27,8 @@ const packageContractPath = fileURLToPath(
 const sourcePaths = Object.freeze([
   'contracts/agent-client-integration.schema.json',
   'contracts/examples/agent-client-integration.json',
+  'contracts/consumer-project-execution.schema.json',
+  'contracts/examples/consumer-project-execution.json',
   'contracts/ai-tooling-release.schema.json',
   'contracts/examples/ai-tooling-release.json',
   'contracts/design-ir.schema.json',
@@ -57,6 +59,12 @@ const sourcePaths = Object.freeze([
   'generated/current-source/rules.json',
   'generated/current-source/samples.jsonl',
   'generated/current-source/symbols.jsonl',
+  'harness/build.gradle.kts',
+  'harness/compiler/build.gradle.kts',
+  'harness/gradle.properties',
+  'harness/preview/build.gradle.kts',
+  'harness/preview/src/main/AndroidManifest.xml',
+  'harness/settings.gradle.kts',
   'scripts/ai-tool.mjs',
   'scripts/agent-client-integration.mjs',
   'scripts/bounded-process.mjs',
@@ -103,6 +111,22 @@ const sourcePaths = Object.freeze([
   'skills/viewcompose-review/SKILL.md',
   'skills/viewcompose-validate/SKILL.md',
 ]);
+const mappedSourcePaths = Object.freeze([
+  {source: resolve(repositoryRoot, 'gradlew'), target: 'harness/gradlew'},
+  {source: resolve(repositoryRoot, 'gradlew.bat'), target: 'harness/gradlew.bat'},
+  {
+    source: resolve(repositoryRoot, 'gradle/wrapper/gradle-wrapper.jar'),
+    target: 'harness/gradle/wrapper/gradle-wrapper.jar',
+  },
+  {
+    source: resolve(aiRoot, 'harness/gradle-wrapper.properties'),
+    target: 'harness/gradle/wrapper/gradle-wrapper.properties',
+  },
+]);
+const allowedRepositorySources = new Set([
+  resolve(repositoryRoot, 'LICENSE'),
+  ...mappedSourcePaths.map((entry) => entry.source).filter((path) => !contained(aiRoot, path)),
+]);
 const fixedCreationTime = '2026-08-29T00:00:00Z';
 
 function json(value) {
@@ -123,7 +147,7 @@ async function readJson(path) {
 }
 
 async function copyRegularFile(source, target) {
-  if (!contained(aiRoot, source) && source !== resolve(repositoryRoot, 'LICENSE')) {
+  if (!contained(aiRoot, source) && !allowedRepositorySources.has(resolve(source))) {
     throw new Error(`Distribution source escapes its allowlisted roots: ${source}`);
   }
   const metadata = await lstat(source);
@@ -199,7 +223,7 @@ function spdxDocument(contract, knowledge) {
       externalRefs: [{
         referenceCategory: 'PACKAGE-MANAGER',
         referenceType: 'purl',
-        referenceLocator: 'pkg:npm/%40viewcompose/ai-tooling@0.1.0',
+        referenceLocator: `pkg:npm/%40viewcompose/ai-tooling@${contract.package.version}`,
       }],
     }],
     relationships: [{
@@ -221,7 +245,14 @@ function licenseInventory(contract) {
       licenseFile: 'LICENSE',
     },
     distributedRuntimeDependencies: [],
-    developmentToolsIncluded: false,
+    developmentToolsIncluded: true,
+    distributedDevelopmentTools: [{
+      name: 'Gradle Wrapper',
+      version: '9.3.1',
+      license: 'Apache-2.0',
+      path: 'harness/gradle/wrapper/gradle-wrapper.jar',
+      source: 'https://github.com/gradle/gradle',
+    }],
     reviewedAt: fixedCreationTime,
   };
 }
@@ -265,6 +296,9 @@ async function prepareStaging(stagingRoot, contract) {
   for (const path of sourcePaths) {
     await copyRegularFile(resolve(aiRoot, path), resolve(stagingRoot, path));
   }
+  for (const entry of mappedSourcePaths) {
+    await copyRegularFile(entry.source, resolve(stagingRoot, entry.target));
+  }
   await copyRegularFile(resolve(repositoryRoot, 'LICENSE'), resolve(stagingRoot, 'LICENSE'));
   await copyRegularFile(resolve(aiRoot, 'README.md'), resolve(stagingRoot, 'README.md'));
   await writeFile(resolve(stagingRoot, 'package.json'), json(await packageMetadata(contract)));
@@ -280,6 +314,7 @@ async function prepareStaging(stagingRoot, contract) {
   await chmod(resolve(stagingRoot, 'scripts/ai-tool.mjs'), 0o755);
   await chmod(resolve(stagingRoot, 'scripts/agent-client-integration.mjs'), 0o755);
   await chmod(resolve(stagingRoot, 'scripts/mcp-server.mjs'), 0o755);
+  await chmod(resolve(stagingRoot, 'harness/gradlew'), 0o755);
 }
 
 function assertExactContract(contract, files, packFiles) {

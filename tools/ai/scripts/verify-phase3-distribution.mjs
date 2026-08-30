@@ -300,15 +300,22 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
   ]);
   const installedMcp = await realpath(resolve(packageRoot, 'scripts/mcp-server.mjs'));
   for (const profile of profiles.clients) {
+    const projectRoot = resolve(temporaryRoot, `agent-${profile.id}`);
+    await mkdir(projectRoot);
+    const canonicalProjectRoot = await realpath(projectRoot);
     const standaloneConfig = await runAgentCommand(agent, [
       'config',
       '--client',
       profile.id,
+      '--project-root',
+      canonicalProjectRoot,
     ]);
     const sourceBoundConfig = await runAgentCommand(agent, [
       'config',
       '--client',
       profile.id,
+      '--project-root',
+      canonicalProjectRoot,
       '--source-root',
       canonicalSourceRoot,
     ]);
@@ -318,14 +325,17 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       if (
         standalone.mcpServers?.viewcompose?.command !== process.execPath ||
         standalone.mcpServers?.viewcompose?.args?.[0] !== installedMcp ||
-        standalone.mcpServers?.viewcompose?.env !== undefined ||
+        standalone.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !==
+          canonicalProjectRoot ||
         parsed.mcpServers?.viewcompose?.command !== process.execPath ||
         parsed.mcpServers?.viewcompose?.args?.[0] !== installedMcp ||
+        parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_PROJECT_ROOT !== canonicalProjectRoot ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_SOURCE_ROOT !== canonicalSourceRoot
       ) throw new Error(`Installed ${profile.id} configuration does not bind the packaged MCP server.`);
     } else if (
       !standaloneConfig.includes('[mcp_servers.viewcompose]') ||
-      standaloneConfig.includes('[mcp_servers.viewcompose.env]') ||
+      !standaloneConfig.includes('[mcp_servers.viewcompose.env]') ||
+      !standaloneConfig.includes(JSON.stringify(canonicalProjectRoot)) ||
       !sourceBoundConfig.includes('[mcp_servers.viewcompose.env]') ||
       !sourceBoundConfig.includes(JSON.stringify(installedMcp)) ||
       !sourceBoundConfig.includes(JSON.stringify(canonicalSourceRoot))
@@ -333,9 +343,6 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       throw new Error('Installed Codex configuration does not bind the packaged MCP server.');
     }
 
-    const projectRoot = resolve(temporaryRoot, `agent-${profile.id}`);
-    await mkdir(projectRoot);
-    const canonicalProjectRoot = await realpath(projectRoot);
     const first = JSON.parse(await runAgentCommand(agent, [
       'init',
       '--client',
@@ -344,12 +351,12 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       canonicalProjectRoot,
     ]));
     if (
-      first.mode !== 'standalone' ||
+      first.mode !== 'project-bound' ||
       first.config.status !== 'installed' ||
       first.skills.installed.length !== skills.skills.length ||
       first.skills.unchanged.length !== 0
     ) {
-      throw new Error(`Installed ${profile.id} standalone initialization was incomplete.`);
+      throw new Error(`Installed ${profile.id} project-bound initialization was incomplete.`);
     }
     for (const skill of skills.skills) {
       const actual = await readFile(resolve(projectRoot, profile.skills.projectPath, skill.id, 'SKILL.md'));
@@ -364,10 +371,11 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       canonicalProjectRoot,
     ]));
     if (
-      doctor.status !== 'standalone-ready' ||
+      doctor.status !== 'project-bound-ready' ||
       doctor.capabilities.knowledgeAndGeneration !== 'ready' ||
-      doctor.capabilities.compilationPreviewAndLayout !== 'source-root-required'
-    ) throw new Error(`Installed ${profile.id} standalone doctor drifted.`);
+      doctor.capabilities.compilationPreviewAndLayout !== 'project-bound-ready' ||
+      doctor.host?.status !== 'ready'
+    ) throw new Error(`Installed ${profile.id} project-bound doctor drifted.`);
     const second = JSON.parse(await runAgentCommand(agent, [
       'init',
       '--client',
@@ -461,7 +469,10 @@ async function verifyInventory(packageRoot, contract) {
     sbom.packages[0].filesAnalyzed !== contract.integrity.sbom.filesAnalyzed ||
     sbom.packages[0].licenseDeclared !== contract.package.license ||
     licenses.reviewStatus !== 'passed' ||
-    licenses.distributedRuntimeDependencies?.length !== 0
+    licenses.distributedRuntimeDependencies?.length !== 0 ||
+    licenses.developmentToolsIncluded !== true ||
+    licenses.distributedDevelopmentTools?.[0]?.name !== 'Gradle Wrapper' ||
+    licenses.distributedDevelopmentTools?.[0]?.version !== '9.3.1'
   ) {
     throw new Error('Installed SPDX or license inventory differs from the frozen contract.');
   }
@@ -571,7 +582,7 @@ async function verifyCliFlow(
     'generate_screenshot_viewcompose',
     {resolutionResult: resolvedInference.data, generationRequest},
     'distribution-screenshot-generation-compile',
-    {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot},
+    {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot},
   );
   if (
     compiledScreenshot.status !== 'success' ||
@@ -597,7 +608,7 @@ async function verifyCliFlow(
       previewBindings: screenshotPreviewRequest.bindings,
     },
     'distribution-screenshot-render',
-    {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot},
+    {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot},
   );
   const expectedScreenshotPreview = screenshotGeneratedPreviewContract.supportedFixtures[0];
   if (
@@ -642,7 +653,7 @@ async function verifyCliFlow(
       previewBindings: screenshotPreviewRequest.bindings,
     },
     'distribution-screenshot-compare',
-    {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot},
+    {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot},
   );
   const expectedScreenshotComparison = screenshotComparisonContract.supportedFixtures[0];
   if (
@@ -675,7 +686,7 @@ async function verifyCliFlow(
       pixelReference: {request: pixelReferenceRequest, result: pixelReferenceResult},
     },
     'distribution-screenshot-compare-pixels',
-    {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot},
+    {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot},
   );
   const expectedPixelComparison = screenshotPixelComparisonContract.supportedFixtures[0];
   if (
@@ -797,10 +808,12 @@ async function verifyCliFlow(
     source: xml,
     path: 'res/layout/login.xml',
     mode: 'compile',
-  }, 'distribution-xml-mismatched-source', {VIEWCOMPOSE_SOURCE_ROOT: installedPackageRoot});
+  }, 'distribution-xml-missing-project', {
+    VIEWCOMPOSE_PROJECT_ROOT: resolve(installedPackageRoot, 'missing-project'),
+  });
   if (
     rejectedXmlCompile.status !== 'unsupported' ||
-    rejectedXmlCompile.diagnostics?.[0]?.code !== 'VC-AI-SOURCE-ROOT-MISMATCH'
+    rejectedXmlCompile.diagnostics?.[0]?.code !== 'VC-AI-PROJECT-ROOT-MISMATCH'
   ) {
     throw new Error('Installed XML compile did not reject a mismatched source checkout.');
   }
@@ -808,7 +821,7 @@ async function verifyCliFlow(
     source: xml,
     path: 'res/layout/login.xml',
     mode: 'compile',
-  }, 'distribution-xml-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  }, 'distribution-xml-compile', {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot});
   if (compiledXml.status !== 'success' || compiledXml.evidence.level !== 'compiled') {
     throw new Error('Installed CLI did not compile the frozen XML migration.');
   }
@@ -818,7 +831,7 @@ async function verifyCliFlow(
     path: 'res/layout/login.xml',
     mode: 'render',
     previewBindings: previewRequest.bindings,
-  }, 'distribution-xml-render', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  }, 'distribution-xml-render', {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot});
   const expectedPreview = generatedPreviewContract.supportedFixtures[0];
   const expectedComparison = layoutComparisonContract.supportedFixtures.find(
     (fixture) => fixture.source === 'login.xml',
@@ -857,7 +870,7 @@ async function verifyCliFlow(
     path: 'res/layout/profile-card.xml',
     mode: 'render',
     previewBindings: imagePreviewRequest.bindings,
-  }, 'distribution-xml-image-render', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  }, 'distribution-xml-image-render', {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot});
   const expectedImagePreview = generatedPreviewContract.supportedFixtures.find(
     (fixture) => fixture.expectedFunction === 'ProfileCardView',
   );
@@ -901,7 +914,7 @@ async function verifyCliFlow(
     source: xmlV2,
     path: 'res/layout/profile-card.xml',
     mode: 'compile',
-  }, 'distribution-xml-v2-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  }, 'distribution-xml-v2-compile', {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot});
   if (compiledXmlV2.status !== 'success' || compiledXmlV2.evidence.level !== 'compiled') {
     throw new Error('Installed CLI did not compile the frozen XML v2 migration.');
   }
@@ -911,7 +924,7 @@ async function verifyCliFlow(
     resourceRoots: ['app/src/main/res'],
     sourceRoots: [],
     mode: 'compile',
-  }, 'distribution-xml-layout-dependencies-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  }, 'distribution-xml-layout-dependencies-compile', {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot});
   if (
     compiledXmlLayoutDependencies.status !== 'success' ||
     compiledXmlLayoutDependencies.evidence.level !== 'compiled'
@@ -926,10 +939,12 @@ async function verifyCliFlow(
     path: 'DistributionExample.kt',
     artifactIds: ['viewcompose-ui-foundation'],
     capabilityIds: ['foundation.components'],
-  }, 'distribution-mismatched-source', {VIEWCOMPOSE_SOURCE_ROOT: installedPackageRoot});
+  }, 'distribution-missing-project', {
+    VIEWCOMPOSE_PROJECT_ROOT: resolve(installedPackageRoot, 'missing-project'),
+  });
   if (
     rejected.status !== 'unsupported' ||
-    rejected.diagnostics?.[0]?.code !== 'VC-AI-SOURCE-ROOT-MISMATCH'
+    rejected.diagnostics?.[0]?.code !== 'VC-AI-PROJECT-ROOT-MISMATCH'
   ) {
     throw new Error('Installed CLI did not reject a mismatched configured source checkout.');
   }
@@ -939,7 +954,7 @@ async function verifyCliFlow(
     path: 'DistributionExample.kt',
     artifactIds: ['viewcompose-ui-foundation'],
     capabilityIds: ['foundation.components'],
-  }, 'distribution-compile', {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot});
+  }, 'distribution-compile', {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot});
   if (compiled.status !== 'success' || compiled.evidence.level !== 'compiled') {
     throw new Error('Installed CLI did not compile the frozen end-to-end sample.');
   }
@@ -1124,7 +1139,7 @@ async function verifyMcpMatrix(mcp, contract) {
       },
       _meta: modernMeta(modernVersion),
     },
-  }], {env: {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot}}));
+  }], {env: {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot}}));
   const modernScreenshotComparison = modern.find(
     (response) => response.id === 'modern-screenshot-comparison',
   );
@@ -1142,7 +1157,7 @@ async function verifyMcpMatrix(mcp, contract) {
       },
       _meta: modernMeta(modernVersion),
     },
-  }], {env: {VIEWCOMPOSE_SOURCE_ROOT: repositoryRoot}}));
+  }], {env: {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot}}));
   const modernScreenshotPixelComparison = modern.find(
     (response) => response.id === 'modern-screenshot-pixel-comparison',
   );
@@ -1166,9 +1181,9 @@ async function verifyMcpMatrix(mcp, contract) {
     modernScreenshotGeneration?.result?.structuredContent?.evidence?.outputFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     modernScreenshotComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      'b7bb94b56b2be515287f421422b976b7ec4818be4234f9d9c7b78b0fe1f901cd' ||
+      '779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517' ||
     modernScreenshotPixelComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      '6ad4d53b294bb3e6faba9d39ac8fccf76deb32cb964c7f32553264b18072310f' ||
+      '7504b5c23ed6e9fe142002572e08f24115e73fc311e4329057f8384f749bdd43' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin

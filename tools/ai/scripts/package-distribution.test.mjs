@@ -17,9 +17,17 @@ test('creates an exact reproducible dependency-free npm distribution', async () 
     const packageEntry = first.manifest.files.find((entry) => entry.path === 'package.json');
     const sbomEntry = first.manifest.files.find((entry) => entry.path === 'sbom.spdx.json');
     const licenseEntry = first.manifest.files.find((entry) => entry.path === 'LICENSE');
+    const wrapperEntry = first.manifest.files.find(
+      (entry) => entry.path === 'harness/gradle/wrapper/gradle-wrapper.jar',
+    );
+    const executionContract = first.manifest.files.find(
+      (entry) => entry.path === 'contracts/consumer-project-execution.schema.json',
+    );
     assert.ok(packageEntry?.bytes > 0);
     assert.ok(sbomEntry?.bytes > 0);
     assert.ok(licenseEntry?.bytes > 0);
+    assert.ok(wrapperEntry?.bytes > 0);
+    assert.ok(executionContract?.bytes > 0);
     assert.equal(first.manifest.files.some((entry) => entry.path.includes('node_modules')), false);
   } finally {
     await rm(root, {recursive: true, force: true});

@@ -13,6 +13,7 @@ import {
 } from 'node:fs/promises';
 import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {detectAndroidSdk, detectJavaRuntime} from './tool-core.mjs';
 
 const defaultAiRoot = fileURLToPath(new URL('../', import.meta.url));
 const defaultMcpServerPath = fileURLToPath(new URL('./mcp-server.mjs', import.meta.url));
@@ -465,6 +466,8 @@ export async function diagnoseAgentClient({
   aiRoot = defaultAiRoot,
   nodeExecutable = process.execPath,
   mcpServerPath = defaultMcpServerPath,
+  detectJava = detectJavaRuntime,
+  detectSdk = detectAndroidSdk,
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
@@ -484,14 +487,21 @@ export async function diagnoseAgentClient({
   const missing = prepared.operations.filter((item) => item.status === 'missing').map((item) => item.id);
   const conflicts = prepared.operations.filter((item) => item.status === 'conflict').map((item) => item.id);
   const skillsStatus = conflicts.length > 0 ? 'conflict' : missing.length > 0 ? 'missing' : 'ready';
-  const ready = configStatus === 'ready' && skillsStatus === 'ready';
+  const configurationReady = configStatus === 'ready' && skillsStatus === 'ready';
+  const java = detectJava();
+  const androidSdk = detectSdk(36);
+  const hostReady = [17, 21].includes(java?.feature) && androidSdk?.apiLevel === 36;
+  const ready = configurationReady && hostReady;
+  const readyStatus = canonicalSourceRoot === undefined
+    ? 'project-bound-ready'
+    : 'source-bound-ready';
   return {
     schemaVersion: 1,
     client: prepared.profile.id,
     projectRoot: prepared.root,
     mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
-    status: ready
-      ? canonicalSourceRoot === undefined ? 'project-bound-ready' : 'source-bound-ready'
+    status: ready ? readyStatus : configurationReady
+      ? 'host-prerequisites-required'
       : 'repair-required',
     config: {
       path: prepared.profile.configPath,
@@ -507,10 +517,19 @@ export async function diagnoseAgentClient({
       conflicts,
     },
     capabilities: {
-      knowledgeAndGeneration: ready ? 'ready' : 'repair-required',
-      compilationPreviewAndLayout: canonicalSourceRoot === undefined
-        ? ready ? 'project-bound-ready' : 'repair-required'
-        : ready ? 'source-bound-ready' : 'repair-required',
+      knowledgeAndGeneration: configurationReady ? 'ready' : 'repair-required',
+      compilationPreviewAndLayout: ready ? readyStatus : configurationReady
+        ? 'host-prerequisites-required'
+        : 'repair-required',
+    },
+    host: {
+      status: hostReady ? 'ready' : 'prerequisites-required',
+      java: java && [17, 21].includes(java.feature)
+        ? {status: 'ready', feature: java.feature, home: java.javaHome}
+        : {status: 'required', acceptedFeatures: [17, 21]},
+      androidSdk: androidSdk?.apiLevel === 36
+        ? {status: 'ready', apiLevel: 36, root: androidSdk.root}
+        : {status: 'required', apiLevel: 36},
     },
   };
 }
@@ -633,7 +652,7 @@ async function main() {
     : command === 'doctor' ? diagnoseAgentClient : uninstallAgentClient;
   const result = await operation(arguments_);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-  if (command === 'doctor' && result.status === 'repair-required') process.exitCode = 1;
+  if (command === 'doctor' && !result.status.endsWith('-ready')) process.exitCode = 1;
 }
 
 const entryPath = process.argv[1] ? realpathSync(resolve(process.argv[1])) : '';

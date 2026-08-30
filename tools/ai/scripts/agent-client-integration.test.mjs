@@ -120,6 +120,24 @@ test('initializes, diagnoses, and uninstalls standalone integrations transaction
       assert.equal(doctor.status, 'project-bound-ready');
       assert.equal(doctor.capabilities.knowledgeAndGeneration, 'ready');
       assert.equal(doctor.capabilities.compilationPreviewAndLayout, 'project-bound-ready');
+      assert.equal(doctor.host.status, 'ready');
+      if (client === 'codex') {
+        const missingHost = await diagnoseAgentClient({
+          client,
+          projectRoot,
+          aiRoot,
+          nodeExecutable,
+          mcpServerPath,
+          detectJava: () => null,
+          detectSdk: () => null,
+        });
+        assert.equal(missingHost.status, 'host-prerequisites-required');
+        assert.equal(missingHost.capabilities.knowledgeAndGeneration, 'ready');
+        assert.equal(
+          missingHost.capabilities.compilationPreviewAndLayout,
+          'host-prerequisites-required',
+        );
+      }
 
       const second = await initializeAgentClient({
         client,

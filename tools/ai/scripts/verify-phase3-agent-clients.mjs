@@ -121,7 +121,8 @@ export async function verifyAgentClientIntegration() {
       });
       if (
         doctor.status !== 'project-bound-ready' ||
-        doctor.capabilities.compilationPreviewAndLayout !== 'project-bound-ready'
+        doctor.capabilities.compilationPreviewAndLayout !== 'project-bound-ready' ||
+        doctor.host?.status !== 'ready'
       ) throw new Error(`Standalone doctor evidence drifted for ${client.id}.`);
       const second = await initializeAgentClient({
         client: client.id,
