@@ -300,7 +300,12 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
   ]);
   const installedMcp = await realpath(resolve(packageRoot, 'scripts/mcp-server.mjs'));
   for (const profile of profiles.clients) {
-    const config = await runAgentCommand(agent, [
+    const standaloneConfig = await runAgentCommand(agent, [
+      'config',
+      '--client',
+      profile.id,
+    ]);
+    const sourceBoundConfig = await runAgentCommand(agent, [
       'config',
       '--client',
       profile.id,
@@ -308,47 +313,84 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       canonicalSourceRoot,
     ]);
     if (profile.config.format === 'json') {
-      const parsed = JSON.parse(config);
+      const standalone = JSON.parse(standaloneConfig);
+      const parsed = JSON.parse(sourceBoundConfig);
       if (
+        standalone.mcpServers?.viewcompose?.command !== process.execPath ||
+        standalone.mcpServers?.viewcompose?.args?.[0] !== installedMcp ||
+        standalone.mcpServers?.viewcompose?.env !== undefined ||
         parsed.mcpServers?.viewcompose?.command !== process.execPath ||
         parsed.mcpServers?.viewcompose?.args?.[0] !== installedMcp ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_SOURCE_ROOT !== canonicalSourceRoot
       ) throw new Error(`Installed ${profile.id} configuration does not bind the packaged MCP server.`);
     } else if (
-      !config.includes('[mcp_servers.viewcompose]') ||
-      !config.includes('[mcp_servers.viewcompose.env]') ||
-      !config.includes(JSON.stringify(installedMcp)) ||
-      !config.includes(JSON.stringify(canonicalSourceRoot))
+      !standaloneConfig.includes('[mcp_servers.viewcompose]') ||
+      standaloneConfig.includes('[mcp_servers.viewcompose.env]') ||
+      !sourceBoundConfig.includes('[mcp_servers.viewcompose.env]') ||
+      !sourceBoundConfig.includes(JSON.stringify(installedMcp)) ||
+      !sourceBoundConfig.includes(JSON.stringify(canonicalSourceRoot))
     ) {
       throw new Error('Installed Codex configuration does not bind the packaged MCP server.');
     }
 
     const projectRoot = resolve(temporaryRoot, `agent-${profile.id}`);
     await mkdir(projectRoot);
+    const canonicalProjectRoot = await realpath(projectRoot);
     const first = JSON.parse(await runAgentCommand(agent, [
-      'install-skills',
+      'init',
       '--client',
       profile.id,
       '--project-root',
-      await realpath(projectRoot),
+      canonicalProjectRoot,
     ]));
-    if (first.installed.length !== skills.skills.length || first.unchanged.length !== 0) {
-      throw new Error(`Installed ${profile.id} Skill installation was incomplete.`);
+    if (
+      first.mode !== 'standalone' ||
+      first.config.status !== 'installed' ||
+      first.skills.installed.length !== skills.skills.length ||
+      first.skills.unchanged.length !== 0
+    ) {
+      throw new Error(`Installed ${profile.id} standalone initialization was incomplete.`);
     }
     for (const skill of skills.skills) {
       const actual = await readFile(resolve(projectRoot, profile.skills.projectPath, skill.id, 'SKILL.md'));
       const expected = await readFile(resolve(packageRoot, skill.path));
       if (!actual.equals(expected)) throw new Error(`Installed ${profile.id}/${skill.id} bytes drifted.`);
     }
-    const second = JSON.parse(await runAgentCommand(agent, [
-      'install-skills',
+    const doctor = JSON.parse(await runAgentCommand(agent, [
+      'doctor',
       '--client',
       profile.id,
       '--project-root',
-      await realpath(projectRoot),
+      canonicalProjectRoot,
     ]));
-    if (second.installed.length !== 0 || second.unchanged.length !== skills.skills.length) {
-      throw new Error(`Installed ${profile.id} Skill reinstall was not idempotent.`);
+    if (
+      doctor.status !== 'standalone-ready' ||
+      doctor.capabilities.knowledgeAndGeneration !== 'ready' ||
+      doctor.capabilities.compilationPreviewAndLayout !== 'source-root-required'
+    ) throw new Error(`Installed ${profile.id} standalone doctor drifted.`);
+    const second = JSON.parse(await runAgentCommand(agent, [
+      'init',
+      '--client',
+      profile.id,
+      '--project-root',
+      canonicalProjectRoot,
+    ]));
+    if (
+      second.config.status !== 'unchanged' ||
+      second.skills.installed.length !== 0 ||
+      second.skills.unchanged.length !== skills.skills.length
+    ) {
+      throw new Error(`Installed ${profile.id} lifecycle was not idempotent.`);
+    }
+    const removed = JSON.parse(await runAgentCommand(agent, [
+      'uninstall',
+      '--client',
+      profile.id,
+      '--project-root',
+      canonicalProjectRoot,
+    ]));
+    if (removed.config.status !== 'removed' || removed.skills.removed.length !== skills.skills.length) {
+      throw new Error(`Installed ${profile.id} lifecycle did not uninstall cleanly.`);
     }
   }
 
@@ -1281,7 +1323,7 @@ async function main() {
     process.stdout.write(
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
-      `3/3 installed agent profiles with 18/18 exact Skill copies, ` +
+      `3/3 installed agent profiles with init/doctor/uninstall and 18/18 exact Skill copies, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
       `prepared screenshot ${compileFingerprints.screenshot}, ` +
       `validated screenshot inference ${compileFingerprints.screenshotInference}, ` +

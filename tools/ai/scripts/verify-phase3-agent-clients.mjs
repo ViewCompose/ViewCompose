@@ -5,8 +5,11 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
   AGENT_CLIENT_PROFILES,
+  diagnoseAgentClient,
+  initializeAgentClient,
   installAgentClientSkills,
   renderAgentClientConfig,
+  uninstallAgentClient,
 } from './agent-client-integration.mjs';
 import {assertSchemaValue} from './schema-validator.mjs';
 
@@ -32,27 +35,39 @@ function verifyProfileContract(contract) {
       client.config.format !== profile.configFormat ||
       client.config.projectPath !== profile.configPath ||
       client.skills.projectPath !== profile.skillRoot ||
-      client.config.generatorArguments[2] !== client.id ||
-      client.skills.installArguments[2] !== client.id
+      client.config.standaloneArguments[2] !== client.id ||
+      client.config.sourceBoundArguments[2] !== client.id ||
+      client.lifecycle.initArguments[2] !== client.id ||
+      client.lifecycle.doctorArguments[2] !== client.id ||
+      client.lifecycle.uninstallArguments[2] !== client.id
     ) {
       throw new Error(`Agent client profile drifted for ${client.id}.`);
     }
-    const config = renderAgentClientConfig(client.id, sourceRoot, {
+    const standalone = renderAgentClientConfig(client.id, undefined, {
+      nodeExecutable: process.execPath,
+      mcpServerPath,
+    });
+    const sourceBound = renderAgentClientConfig(client.id, sourceRoot, {
       nodeExecutable: process.execPath,
       mcpServerPath,
     });
     if (profile.configFormat === 'json') {
-      const parsed = JSON.parse(config);
+      const standaloneParsed = JSON.parse(standalone);
+      const parsed = JSON.parse(sourceBound);
       if (
+        standaloneParsed.mcpServers?.viewcompose?.command !== process.execPath ||
+        standaloneParsed.mcpServers?.viewcompose?.args?.[0] !== mcpServerPath ||
+        standaloneParsed.mcpServers?.viewcompose?.env !== undefined ||
         parsed.mcpServers?.viewcompose?.command !== process.execPath ||
         parsed.mcpServers?.viewcompose?.args?.[0] !== mcpServerPath ||
         parsed.mcpServers?.viewcompose?.env?.VIEWCOMPOSE_SOURCE_ROOT !== sourceRoot
       ) throw new Error(`Generated JSON MCP configuration drifted for ${client.id}.`);
     } else if (
-      !config.includes('[mcp_servers.viewcompose]') ||
-      !config.includes('[mcp_servers.viewcompose.env]') ||
-      !config.includes(JSON.stringify(mcpServerPath)) ||
-      !config.includes(JSON.stringify(sourceRoot))
+      !standalone.includes('[mcp_servers.viewcompose]') ||
+      standalone.includes('[mcp_servers.viewcompose.env]') ||
+      !sourceBound.includes('[mcp_servers.viewcompose.env]') ||
+      !sourceBound.includes(JSON.stringify(mcpServerPath)) ||
+      !sourceBound.includes(JSON.stringify(sourceRoot))
     ) {
       throw new Error('Generated Codex TOML configuration drifted.');
     }
@@ -75,19 +90,58 @@ export async function verifyAgentClientIntegration() {
     for (const client of contract.clients) {
       const projectRoot = resolve(temporary, client.id);
       await mkdir(projectRoot);
-      const first = await installAgentClientSkills({client: client.id, projectRoot, aiRoot});
+      const first = await initializeAgentClient({
+        client: client.id,
+        projectRoot,
+        aiRoot,
+        nodeExecutable: process.execPath,
+        mcpServerPath,
+      });
       if (
-        JSON.stringify(first.installed) !== JSON.stringify(manifest.skills.map((skill) => skill.id)) ||
-        first.unchanged.length !== 0
-      ) throw new Error(`Initial Skill installation drifted for ${client.id}.`);
+        first.mode !== 'standalone' ||
+        first.config.status !== 'installed' ||
+        JSON.stringify(first.skills.installed) !== JSON.stringify(manifest.skills.map((skill) => skill.id)) ||
+        first.skills.unchanged.length !== 0
+      ) throw new Error(`Initial standalone lifecycle drifted for ${client.id}.`);
       for (const skill of manifest.skills) {
-        const installed = await readFile(resolve(projectRoot, first.skillRoot, skill.id, 'SKILL.md'));
+        const installed = await readFile(resolve(projectRoot, first.skills.path, skill.id, 'SKILL.md'));
         const canonical = await readFile(resolve(aiRoot, skill.path));
         if (!installed.equals(canonical)) throw new Error(`Installed Skill bytes drifted for ${skill.id}.`);
       }
-      const second = await installAgentClientSkills({client: client.id, projectRoot, aiRoot});
-      if (second.installed.length !== 0 || second.unchanged.length !== manifest.skills.length) {
-        throw new Error(`Idempotent Skill installation drifted for ${client.id}.`);
+      const doctor = await diagnoseAgentClient({
+        client: client.id,
+        projectRoot,
+        aiRoot,
+        nodeExecutable: process.execPath,
+        mcpServerPath,
+      });
+      if (
+        doctor.status !== 'standalone-ready' ||
+        doctor.capabilities.compilationPreviewAndLayout !== 'source-root-required'
+      ) throw new Error(`Standalone doctor evidence drifted for ${client.id}.`);
+      const second = await initializeAgentClient({
+        client: client.id,
+        projectRoot,
+        aiRoot,
+        nodeExecutable: process.execPath,
+        mcpServerPath,
+      });
+      if (
+        second.config.status !== 'unchanged' ||
+        second.skills.installed.length !== 0 ||
+        second.skills.unchanged.length !== manifest.skills.length
+      ) {
+        throw new Error(`Idempotent lifecycle drifted for ${client.id}.`);
+      }
+      const removed = await uninstallAgentClient({
+        client: client.id,
+        projectRoot,
+        aiRoot,
+        nodeExecutable: process.execPath,
+        mcpServerPath,
+      });
+      if (removed.config.status !== 'removed' || removed.skills.removed.length !== manifest.skills.length) {
+        throw new Error(`Uninstall lifecycle drifted for ${client.id}.`);
       }
     }
 
@@ -128,6 +182,8 @@ export async function verifyAgentClientIntegration() {
     skills: manifest.skills.length,
     installedSkillComparisons: contract.clients.length * manifest.skills.length,
     idempotentReinstalls: contract.clients.length,
+    standaloneDoctors: contract.clients.length,
+    cleanUninstalls: contract.clients.length,
     safetyRejections: 3,
   };
 }
@@ -138,6 +194,8 @@ async function main() {
     `Verified ViewCompose AI agent clients: ${result.profiles}/3 profiles, ` +
     `${result.installedSkillComparisons}/${result.installedSkillComparisons} exact Skill copies, ` +
     `${result.idempotentReinstalls}/3 idempotent reinstalls, and ` +
+    `${result.standaloneDoctors}/3 standalone doctors, ` +
+    `${result.cleanUninstalls}/3 clean uninstalls, and ` +
     `${result.safetyRejections}/3 safety rejections.\n`,
   );
 }

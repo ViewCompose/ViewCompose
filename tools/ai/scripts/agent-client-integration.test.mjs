@@ -5,16 +5,26 @@ import {resolve} from 'node:path';
 import test from 'node:test';
 import {
   AGENT_CLIENT_PROFILES,
+  diagnoseAgentClient,
+  initializeAgentClient,
   installAgentClientSkills,
   renderAgentClientConfig,
+  uninstallAgentClient,
 } from './agent-client-integration.mjs';
 
 const aiRoot = await realpath(new URL('../', import.meta.url));
 const sourceRoot = resolve(aiRoot, '../..');
 
-test('renders deterministic project-scoped configuration for all supported clients', () => {
+test('renders deterministic standalone and source-bound configuration for every client', () => {
   const nodeExecutable = '/opt/viewcompose/node';
   const mcpServerPath = '/opt/viewcompose/mcp-server.mjs';
+  const standaloneCodex = renderAgentClientConfig('codex', undefined, {nodeExecutable, mcpServerPath});
+  assert.equal(standaloneCodex, [
+    '[mcp_servers.viewcompose]',
+    `command = "${nodeExecutable}"`,
+    `args = ["${mcpServerPath}"]`,
+    '',
+  ].join('\n'));
   const codex = renderAgentClientConfig('codex', sourceRoot, {nodeExecutable, mcpServerPath});
   assert.equal(codex, [
     '[mcp_servers.viewcompose]',
@@ -27,6 +37,14 @@ test('renders deterministic project-scoped configuration for all supported clien
   ].join('\n'));
 
   for (const client of ['claude-code', 'cursor']) {
+    const standalone = JSON.parse(renderAgentClientConfig(client, undefined, {
+      nodeExecutable,
+      mcpServerPath,
+    }));
+    assert.deepEqual(standalone.mcpServers.viewcompose, {
+      command: nodeExecutable,
+      args: [mcpServerPath],
+    });
     const config = JSON.parse(renderAgentClientConfig(client, sourceRoot, {
       nodeExecutable,
       mcpServerPath,
@@ -42,6 +60,93 @@ test('renders deterministic project-scoped configuration for all supported clien
     });
   }
   assert.throws(() => renderAgentClientConfig('unknown', sourceRoot), /Unknown client/u);
+});
+
+test('initializes, diagnoses, and uninstalls standalone integrations transactionally', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-lifecycle-')));
+  const nodeExecutable = '/opt/viewcompose/node';
+  const mcpServerPath = '/opt/viewcompose/mcp-server.mjs';
+  try {
+    for (const client of Object.keys(AGENT_CLIENT_PROFILES)) {
+      const profile = AGENT_CLIENT_PROFILES[client];
+      const projectRoot = resolve(temporary, client);
+      await mkdir(projectRoot);
+      const configPath = resolve(projectRoot, profile.configPath);
+      await mkdir(resolve(configPath, '..'), {recursive: true});
+      if (profile.configFormat === 'json') {
+        await writeFile(configPath, `${JSON.stringify({
+          unrelated: {preserved: true},
+          mcpServers: {other: {command: '/opt/other'}},
+        }, null, 2)}\n`);
+      } else {
+        await writeFile(configPath, '[features]\nexperimental = true\n');
+      }
+
+      const first = await initializeAgentClient({
+        client,
+        projectRoot,
+        aiRoot,
+        nodeExecutable,
+        mcpServerPath,
+      });
+      assert.equal(first.mode, 'standalone');
+      assert.equal(first.config.status, 'installed');
+      assert.ok(first.skills.installed.length > 0);
+
+      const doctor = await diagnoseAgentClient({
+        client,
+        projectRoot,
+        aiRoot,
+        nodeExecutable,
+        mcpServerPath,
+      });
+      assert.equal(doctor.status, 'standalone-ready');
+      assert.equal(doctor.capabilities.knowledgeAndGeneration, 'ready');
+      assert.equal(doctor.capabilities.compilationPreviewAndLayout, 'source-root-required');
+
+      const second = await initializeAgentClient({
+        client,
+        projectRoot,
+        aiRoot,
+        nodeExecutable,
+        mcpServerPath,
+      });
+      assert.equal(second.config.status, 'unchanged');
+      assert.equal(second.skills.installed.length, 0);
+
+      const removed = await uninstallAgentClient({
+        client,
+        projectRoot,
+        aiRoot,
+        nodeExecutable,
+        mcpServerPath,
+      });
+      assert.equal(removed.config.status, 'removed');
+      assert.ok(removed.skills.removed.length > 0);
+      const remaining = await readFile(configPath, 'utf8');
+      if (profile.configFormat === 'json') {
+        const parsed = JSON.parse(remaining);
+        assert.deepEqual(parsed.unrelated, {preserved: true});
+        assert.deepEqual(parsed.mcpServers.other, {command: '/opt/other'});
+        assert.equal(parsed.mcpServers.viewcompose, undefined);
+      } else {
+        assert.equal(remaining, '[features]\nexperimental = true\n');
+      }
+
+      const after = await diagnoseAgentClient({
+        client,
+        projectRoot,
+        aiRoot,
+        nodeExecutable,
+        mcpServerPath,
+      });
+      assert.equal(after.status, 'repair-required');
+      assert.equal(after.config.status, 'missing');
+      assert.equal(after.skills.status, 'missing');
+    }
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
 });
 
 test('installs exact canonical Skill bytes idempotently for every client layout', async () => {
@@ -82,6 +187,23 @@ test('rejects conflicts, relative roots, symbolic-link roots, and unknown client
       installAgentClientSkills({client: 'codex', projectRoot, aiRoot}),
       /Refusing to overwrite conflicting Skill bytes/u,
     );
+    await assert.rejects(
+      initializeAgentClient({client: 'codex', projectRoot, aiRoot}),
+      /Refusing to overwrite conflicting Skill bytes/u,
+    );
+    await assert.rejects(readFile(resolve(projectRoot, '.codex/config.toml')), /ENOENT/u);
+
+    const configConflictRoot = resolve(temporary, 'config-conflict');
+    await mkdir(resolve(configConflictRoot, '.cursor'), {recursive: true});
+    await writeFile(
+      resolve(configConflictRoot, '.cursor/mcp.json'),
+      `${JSON.stringify({mcpServers: {viewcompose: {command: '/conflict'}}})}\n`,
+    );
+    await assert.rejects(
+      initializeAgentClient({client: 'cursor', projectRoot: configConflictRoot, aiRoot}),
+      /Refusing to overwrite conflicting MCP configuration/u,
+    );
+    await assert.rejects(readFile(resolve(configConflictRoot, '.agents/skills')), /ENOENT|EISDIR/u);
     await assert.rejects(
       installAgentClientSkills({client: 'codex', projectRoot: 'relative', aiRoot}),
       /absolute path/u,

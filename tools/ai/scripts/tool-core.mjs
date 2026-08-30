@@ -38,9 +38,11 @@ export function repositoryRoot() {
 }
 
 export async function verifyConfiguredSourceRoot(root = repositoryRoot()) {
-  if (process.env[SOURCE_ROOT_ENVIRONMENT_VARIABLE] === undefined) {
-    return {matched: true, mode: 'inferred'};
-  }
+  const configured = process.env[SOURCE_ROOT_ENVIRONMENT_VARIABLE] !== undefined;
+  // A non-default root is an injected, process-local test/adapter boundary. Public tool calls cannot
+  // select it; retaining this path keeps hermetic adapter tests independent of a Git checkout.
+  if (!configured && resolve(root) !== repository) return {matched: true, mode: 'inferred'};
+  const mode = configured ? 'configured' : 'standalone';
   const manifest = await loadKnowledgeManifest();
   for (const path of ['gradlew', 'settings.gradle.kts']) {
     const metadata = await lstat(resolve(root, path)).catch((error) => {
@@ -48,7 +50,11 @@ export async function verifyConfiguredSourceRoot(root = repositoryRoot()) {
       throw error;
     });
     if (!metadata?.isFile() || metadata.isSymbolicLink()) {
-      return {matched: false, mode: 'configured', reason: 'required-file'};
+      return {
+        matched: false,
+        mode,
+        reason: configured ? 'required-file' : 'source-root-unavailable',
+      };
     }
   }
   const revision = manifest.source.revision;
@@ -59,9 +65,9 @@ export async function verifyConfiguredSourceRoot(root = repositoryRoot()) {
     encoding: 'utf8',
   });
   if (resolved.error || resolved.status !== 0 || ancestor.error || ancestor.status !== 0) {
-    return {matched: false, mode: 'configured', reason: 'framework-identity'};
+    return {matched: false, mode, reason: 'framework-identity'};
   }
-  return {matched: true, mode: 'configured'};
+  return {matched: true, mode: configured ? 'configured' : 'inferred'};
 }
 
 export function detectJavaFeature(javaHome = process.env.JAVA_HOME) {
