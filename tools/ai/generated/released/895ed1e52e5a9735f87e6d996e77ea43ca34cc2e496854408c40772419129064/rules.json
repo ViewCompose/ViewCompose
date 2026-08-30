@@ -1,0 +1,113 @@
+{
+  "rules": [
+    {
+      "code": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "evidenceRequired": "rendered",
+      "severity": "warning",
+      "sourceDocuments": [
+        "architecture.modifier-runtime",
+        "guide.image-loading"
+      ],
+      "summary": "A meaningful Image or Icon requires a content description. Null is reserved for content that is deliberately decorative.",
+      "title": "Describe meaningful images"
+    },
+    {
+      "code": "VC-AI-A11Y-TOUCH-TARGET",
+      "evidenceRequired": "rendered",
+      "severity": "warning",
+      "sourceDocuments": [
+        "architecture.renderer-neutral-interaction-indication",
+        "guide.focus-input"
+      ],
+      "summary": "Interactive output must preserve the design-system touch-target contract and cannot use visual bounds as the only interaction bound.",
+      "title": "Preserve accessible touch targets"
+    },
+    {
+      "code": "VC-AI-ANDROID-VIEW-COMMIT",
+      "evidenceRequired": "static",
+      "severity": "error",
+      "sourceDocuments": [
+        "architecture.android-view-side-effects",
+        "architecture.render-failures"
+      ],
+      "summary": "Non-replayable native operations belong in AndroidView.onCommit or another documented commit boundary, not in replayable update work.",
+      "title": "Keep non-replayable Android View work after commit"
+    },
+    {
+      "code": "VC-AI-ARTIFACT-REQUIRED",
+      "evidenceRequired": "compiled",
+      "severity": "error",
+      "sourceDocuments": [
+        "module.catalog",
+        "project.publishing"
+      ],
+      "summary": "Every generated symbol must resolve to the exact owning artifact and version lane; aggregate artifacts are not assumed.",
+      "title": "Declare the owning artifact"
+    },
+    {
+      "code": "VC-AI-EVIDENCE-DEPTH",
+      "evidenceRequired": "knowledge",
+      "severity": "error",
+      "sourceDocuments": [
+        "architecture.development-tooling-isolation"
+      ],
+      "summary": "Knowledge, static, compiled, rendered, and compared results are cumulative and cannot be promoted by inference.",
+      "title": "Report only evidence that actually passed"
+    },
+    {
+      "code": "VC-AI-LIFECYCLE-PAIRED-WORK",
+      "evidenceRequired": "static",
+      "severity": "error",
+      "sourceDocuments": [
+        "architecture.lifecycle-saved-state",
+        "module.viewcompose-lifecycle-androidx"
+      ],
+      "summary": "Use the lifecycle-aware Flow and paired effect APIs for threshold-bound work; do not branch once on a non-observable lifecycle snapshot.",
+      "title": "Bind resource work to the nearest Lifecycle"
+    },
+    {
+      "code": "VC-AI-MODIFIER-ORDER",
+      "evidenceRequired": "rendered",
+      "severity": "warning",
+      "sourceDocuments": [
+        "architecture.modifier-runtime",
+        "migration.compose-layout-modifier-environment"
+      ],
+      "summary": "Modifier elements are ordered behavior. A conversion or repair must not reorder layout, drawing, input, semantics, or parent-data elements without evidence.",
+      "title": "Preserve Modifier order"
+    },
+    {
+      "code": "VC-AI-PROJECT-READ-ONLY",
+      "evidenceRequired": "static",
+      "severity": "error",
+      "sourceDocuments": [
+        "architecture.development-tooling-isolation"
+      ],
+      "summary": "Project analysis cannot execute build logic or write files; migration returns an explicit patch plan before a client applies changes.",
+      "title": "Keep analysis read-only and bounded"
+    },
+    {
+      "code": "VC-AI-UNIT-DP-SP",
+      "evidenceRequired": "compiled",
+      "severity": "error",
+      "sourceDocuments": [
+        "tutorial.layouts-and-modifiers",
+        "migration.compose-layout-modifier-environment"
+      ],
+      "summary": "Layout dimensions use UiDp/dp and text sizes use UiSp/sp unless the selected API documents another typed unit.",
+      "title": "Use typed density and text units"
+    },
+    {
+      "code": "VC-AI-UNKNOWN-SYMBOL",
+      "evidenceRequired": "compiled",
+      "severity": "error",
+      "sourceDocuments": [
+        "project.documentation-governance",
+        "project.api-documentation-quality"
+      ],
+      "summary": "Reject a ViewCompose-looking declaration that is absent from the selected knowledge bundle or is recorded as removed.",
+      "title": "Use a current published ViewCompose symbol"
+    }
+  ],
+  "schemaVersion": 1
+}

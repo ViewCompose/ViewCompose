@@ -24,11 +24,18 @@ const repositoryRoot = resolve(aiRoot, '../..');
 const packageContractPath = fileURLToPath(
   new URL('../evaluation/fixtures/distribution/package-contract.json', import.meta.url),
 );
+const releasedProfileId = '895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064';
+const releasedBundleRoot = `generated/released/${releasedProfileId}`;
 const sourcePaths = Object.freeze([
   'contracts/agent-client-integration.schema.json',
   'contracts/examples/agent-client-integration.json',
   'contracts/consumer-project-execution.schema.json',
   'contracts/examples/consumer-project-execution.json',
+  'contracts/framework-compatibility-profile.schema.json',
+  'contracts/examples/framework-compatibility-profile.json',
+  'contracts/framework-profile-index.schema.json',
+  'contracts/examples/framework-profile-index.json',
+  'contracts/versions.json',
   'contracts/ai-tooling-release.schema.json',
   'contracts/examples/ai-tooling-release.json',
   'contracts/design-ir.schema.json',
@@ -59,6 +66,16 @@ const sourcePaths = Object.freeze([
   'generated/current-source/rules.json',
   'generated/current-source/samples.jsonl',
   'generated/current-source/symbols.jsonl',
+  'generated/released/index.json',
+  `${releasedBundleRoot}/artifacts.json`,
+  `${releasedBundleRoot}/capabilities.json`,
+  `${releasedBundleRoot}/llms-full.txt`,
+  `${releasedBundleRoot}/llms.txt`,
+  `${releasedBundleRoot}/manifest.json`,
+  `${releasedBundleRoot}/profile.json`,
+  `${releasedBundleRoot}/rules.json`,
+  `${releasedBundleRoot}/samples.jsonl`,
+  `${releasedBundleRoot}/symbols.jsonl`,
   'harness/build.gradle.kts',
   'harness/compiler/build.gradle.kts',
   'harness/gradle.properties',
@@ -72,6 +89,8 @@ const sourcePaths = Object.freeze([
   'scripts/design-ir-to-kotlin.mjs',
   'scripts/design-ir-repair-patch.mjs',
   'scripts/generated-preview-adapter.mjs',
+  'scripts/framework-project-profile.mjs',
+  'scripts/framework-profile-selection.mjs',
   'scripts/knowledge-retriever.mjs',
   'scripts/layout-diagnoser.mjs',
   'scripts/layout-comparator.mjs',
@@ -99,6 +118,7 @@ const sourcePaths = Object.freeze([
   'scripts/static-validator.mjs',
   'scripts/tool-catalog.mjs',
   'scripts/tool-core.mjs',
+  'scripts/tooling-upgrade.mjs',
   'scripts/xml-migration.mjs',
   'scripts/xml-layout-dependencies.mjs',
   'scripts/xml-project-context.mjs',
@@ -176,15 +196,17 @@ async function packageMetadata(contract) {
   };
 }
 
-function distributionMetadata(contract, knowledge, protocol, skills) {
+function distributionMetadata(contract, knowledge, releasedKnowledge, profile, protocol, skills) {
   return {
     schemaVersion: 1,
     package: contract.package,
-    framework: knowledge.framework,
+    framework: releasedKnowledge.framework,
+    contributorFramework: knowledge.framework,
     knowledge: {
-      bundleFingerprint: knowledge.bundleFingerprint,
-      generatorVersion: knowledge.generatorVersion,
+      bundleFingerprint: releasedKnowledge.bundleFingerprint,
+      generatorVersion: releasedKnowledge.generatorVersion,
     },
+    frameworkProfile: profile,
     tools: [...TOOL_NAMES],
     skills: skills.skills.map((workflow) => workflow.id).sort(),
     executables: [...contract.contents.executables],
@@ -196,6 +218,19 @@ function distributionMetadata(contract, knowledge, protocol, skills) {
       transport: protocol.transport,
     },
   };
+}
+
+async function releasedProfileMetadata() {
+  const index = await readJson(resolve(aiRoot, 'generated/released/index.json'));
+  const profiles = await Promise.all(index.profiles.map((entry) =>
+    readJson(resolve(aiRoot, 'generated/released', entry.profilePath))));
+  if (
+    !profiles.some((profile) => profile.profileId === index.defaultProfileId) ||
+    profiles.some((profile, position) => profile.profileId !== index.profiles[position].profileId)
+  ) {
+    throw new Error('Released framework profile sidecar inventory is inconsistent.');
+  }
+  return {index, profiles};
 }
 
 function spdxDocument(contract, knowledge) {
@@ -304,8 +339,18 @@ async function removeSupersededArchives(outputRoot, retainedName) {
 
 async function prepareStaging(stagingRoot, contract) {
   const knowledge = await readJson(resolve(aiRoot, 'generated/current-source/manifest.json'));
+  const releasedKnowledge = await readJson(resolve(aiRoot, releasedBundleRoot, 'manifest.json'));
+  const profile = await readJson(resolve(aiRoot, releasedBundleRoot, 'profile.json'));
   const protocol = await readJson(resolve(aiRoot, 'contracts/mcp-protocol.json'));
   const skills = await readJson(resolve(aiRoot, 'skills/manifest.json'));
+  if (
+    profile.profileId !== releasedProfileId ||
+    releasedKnowledge.framework?.versionLane !== 'released' ||
+    releasedKnowledge.framework?.identity !== profile.profileId ||
+    releasedKnowledge.bundleFingerprint !== profile.knowledge?.bundleFingerprint
+  ) {
+    throw new Error('Released Knowledge Pack identity differs from its framework profile.');
+  }
 
   for (const path of sourcePaths) {
     await copyRegularFile(resolve(aiRoot, path), resolve(stagingRoot, path));
@@ -318,7 +363,7 @@ async function prepareStaging(stagingRoot, contract) {
   await writeFile(resolve(stagingRoot, 'package.json'), json(await packageMetadata(contract)));
   await writeFile(
     resolve(stagingRoot, 'distribution.json'),
-    json(distributionMetadata(contract, knowledge, protocol, skills)),
+    json(distributionMetadata(contract, knowledge, releasedKnowledge, profile, protocol, skills)),
   );
   await writeFile(resolve(stagingRoot, 'sbom.spdx.json'), json(spdxDocument(contract, knowledge)));
   await writeFile(
@@ -390,9 +435,17 @@ export async function createDistribution({
     const archivePath = resolve(absoluteOutput, archiveName);
     const manifestPath = resolve(absoluteOutput, 'manifest.json');
     const checksumsPath = resolve(absoluteOutput, 'SHA256SUMS');
+    const releasedProfiles = await releasedProfileMetadata();
     const manifest = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       package: contract.package,
+      compatibility: {
+        agentClientIntegration: 4,
+        frameworkCompatibilityProfile: 1,
+        frameworkProfileIndex: 1,
+      },
+      frameworkProfileIndex: releasedProfiles.index,
+      frameworkProfiles: releasedProfiles.profiles,
       archive: {
         path: archiveName,
         bytes: archive.length,

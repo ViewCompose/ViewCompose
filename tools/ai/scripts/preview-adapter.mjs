@@ -19,11 +19,11 @@ export const PREVIEW_COMPILER_LANE =
 export const RENDER_LANE =
   'released-maven/preview-protocol-1/paparazzi-2.0.0-alpha02/layoutlib-15.2.3';
 export const DEFAULT_PREVIEW_LIMITS = Object.freeze({
-  timeoutMs: 120_000,
+  timeoutMs: 300_000,
   maxOutputBytes: 1024 * 1024,
 });
 const HARD_PREVIEW_LIMITS = Object.freeze({
-  timeoutMs: 120_000,
+  timeoutMs: 300_000,
   maxOutputBytes: 2 * 1024 * 1024,
 });
 const MAX_CATALOG_BYTES = 2 * 1024 * 1024;

@@ -437,7 +437,7 @@ export async function createGeneratedPreviewPlan({
   const request = {
     schemaVersion: 1,
     framework: {
-      versionLane: 'current-source',
+      versionLane: manifest.framework.versionLane,
       identity: manifest.framework.identity,
       bundleFingerprint: manifest.bundleFingerprint,
     },

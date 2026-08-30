@@ -1,0 +1,259 @@
+{
+  "artifacts": [
+    {
+      "coordinate": "com.viewcompose:viewcompose-android",
+      "knowledgeIncluded": false,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-animation",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-animation-core",
+      "knowledgeIncluded": false,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-camerax-androidx",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha01"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-constraintlayout-androidx",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-diagnostics",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha01"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-exoplayer2-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha01"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-gesture",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-gesture-core",
+      "knowledgeIncluded": false,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-google-maps-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha01"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-graphics",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-graphics-core",
+      "knowledgeIncluded": false,
+      "sourceRevision": "963e114e7364a9b1f100d2a918b5b9af9a40d462",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-host-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-image-coil",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-image-glide",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha03"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-lifecycle-androidx",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-material3",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-material3-android",
+      "knowledgeIncluded": false,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-media3-androidx",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha01"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-navigation-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-navigation-core",
+      "knowledgeIncluded": false,
+      "sourceRevision": "143b09acf3bfcda81add008b4dcf09d06a09e2dc",
+      "version": "0.1.0-alpha03"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-oneui7",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-overlay-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-overlay-material3-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-overlay-oneui7-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-paging-androidx",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha01"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-preview",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-preview-core",
+      "knowledgeIncluded": true,
+      "sourceRevision": "143b09acf3bfcda81add008b4dcf09d06a09e2dc",
+      "version": "0.1.0-alpha03"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-preview-gradle-plugin",
+      "knowledgeIncluded": true,
+      "sourceRevision": "143b09acf3bfcda81add008b4dcf09d06a09e2dc",
+      "version": "0.1.0-alpha03"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-preview-runner",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-preview-worker-host",
+      "knowledgeIncluded": true,
+      "sourceRevision": "143b09acf3bfcda81add008b4dcf09d06a09e2dc",
+      "version": "0.1.0-alpha03"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-renderer-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-runtime",
+      "knowledgeIncluded": false,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha04"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-shadow-android",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-text-core",
+      "knowledgeIncluded": false,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha04"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-ui-contract",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha05"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-ui-foundation",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-viewmodel-androidx",
+      "knowledgeIncluded": true,
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "version": "0.1.0-alpha02"
+    }
+  ],
+  "consumerSelectable": true,
+  "harness": {
+    "artifactCoordinates": [
+      "com.viewcompose:viewcompose-material3-android:0.1.0-alpha02",
+      "com.viewcompose:viewcompose-preview-core:0.1.0-alpha03",
+      "com.viewcompose:viewcompose-preview-gradle-plugin:0.1.0-alpha03",
+      "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha05",
+      "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03",
+      "com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02"
+    ],
+    "executesConsumerBuildLogic": false
+  },
+  "knowledge": {
+    "bundleFingerprint": "9ee4560b30f2d26378314d5b8c8acf20343662f5a8c1d5bfc0442944c4d09660",
+    "sourcePolicy": "exact-artifact-release-revisions",
+    "versionLane": "released"
+  },
+  "profileId": "895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064",
+  "schemaVersion": 1,
+  "selection": {
+    "conflictingVersion": "reject",
+    "emptyProject": "newest-stable-compatible-profile",
+    "projectMatch": "exact-declared-artifact-version-subset",
+    "unresolvedVersion": "reject",
+    "upgradeCandidate": "newest-tooling-release-with-matching-profile"
+  },
+  "stability": "released"
+}

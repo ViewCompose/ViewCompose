@@ -1,10 +1,8 @@
 import {readFile} from 'node:fs/promises';
-import {fileURLToPath} from 'node:url';
 import {diagnostic, sourceLocation, toolResult, utf8Bytes} from './tool-core.mjs';
+import {activeKnowledgePath} from './framework-profile-selection.mjs';
 
-const symbolsPath = fileURLToPath(
-  new URL('../generated/current-source/symbols.jsonl', import.meta.url),
-);
+const symbolsPath = activeKnowledgePath('symbols.jsonl');
 const kotlinKeywords = new Set([
   'catch',
   'class',

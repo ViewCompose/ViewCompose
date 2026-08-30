@@ -5,12 +5,12 @@
   "workflowPath": ".github/workflows/ai-tooling-release.yml",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.2.0",
-    "tag": "ai-tooling-v0.2.0",
+    "version": "0.3.0",
+    "tag": "ai-tooling-v0.3.0",
     "tagPattern": "ai-tooling-v<semver>",
     "immutable": true
   },
-  "assets": ["viewcompose-ai-tooling-0.2.0.tgz", "manifest.json", "SHA256SUMS"],
+  "assets": ["viewcompose-ai-tooling-0.3.0.tgz", "manifest.json", "SHA256SUMS"],
   "provenance": {
     "provider": "github-artifact-attestations",
     "attestationRequired": true,

@@ -28,6 +28,7 @@
     "architecture/decisions/0022-in-memory-development-tooling-installation.md",
     "architecture/decisions/0023-retained-viewmodel-scope-ownership.md",
     "architecture/decisions/0024-scene-derived-navigation-lifecycle-and-presentation-ownership.md",
+    "architecture/decisions/0025-version-bound-ai-tooling-upgrades.md",
     "architecture/decisions/README.md",
     "architecture/design-systems.md",
     "architecture/effects.md",

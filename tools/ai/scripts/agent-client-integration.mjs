@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {randomUUID} from 'node:crypto';
+import {createHash, randomUUID} from 'node:crypto';
 import {realpathSync} from 'node:fs';
 import {
   lstat,
@@ -11,15 +11,24 @@ import {
   rmdir,
   writeFile,
 } from 'node:fs/promises';
-import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
+import {basename, dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {detectAndroidSdk, detectJavaRuntime} from './tool-core.mjs';
+import {detectFrameworkProjectProfile} from './framework-project-profile.mjs';
+import {
+  CURRENT_SOURCE_PROFILE,
+  FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE,
+  frameworkProfileMatchesProject,
+  loadReleasedFrameworkProfiles,
+  selectReleasedFrameworkProfile,
+} from './framework-profile-selection.mjs';
 
 const defaultAiRoot = fileURLToPath(new URL('../', import.meta.url));
 const defaultMcpServerPath = fileURLToPath(new URL('./mcp-server.mjs', import.meta.url));
 const manifestRelativePath = 'skills/manifest.json';
 const managedTomlStart = '# ViewCompose AI managed configuration — start';
 const managedTomlEnd = '# ViewCompose AI managed configuration — end';
+const upgradeJournalPath = '.viewcompose/ai-upgrade-v1.json';
 
 export const AGENT_CLIENT_PROFILES = Object.freeze({
   codex: Object.freeze({
@@ -66,6 +75,7 @@ function tomlString(value) {
 
 function expectedServerDefinition(projectRoot, {
   sourceRoot,
+  frameworkProfile,
   nodeExecutable = process.execPath,
   mcpServerPath = defaultMcpServerPath,
 } = {}) {
@@ -75,11 +85,22 @@ function expectedServerDefinition(projectRoot, {
   if (sourceRoot !== undefined && !isAbsolute(sourceRoot)) {
     throw new Error('Configuration paths must be absolute.');
   }
+  const selectedProfile = frameworkProfile ?? (sourceRoot === undefined ? undefined : CURRENT_SOURCE_PROFILE);
+  if (
+    selectedProfile === undefined ||
+    (selectedProfile !== CURRENT_SOURCE_PROFILE && !/^[a-f0-9]{64}$/u.test(selectedProfile))
+  ) {
+    throw new Error('Project-bound configuration requires one exact released framework profile.');
+  }
+  if (sourceRoot !== undefined && selectedProfile !== CURRENT_SOURCE_PROFILE) {
+    throw new Error('Source-bound configuration requires the current-source framework profile.');
+  }
   return {
     command: nodeExecutable,
     args: [mcpServerPath],
     env: {
       VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+      [FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE]: selectedProfile,
       ...(sourceRoot === undefined ? {} : {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot}),
     },
   };
@@ -98,6 +119,9 @@ export function renderAgentClientConfig(client, projectRoot, options = {}) {
     lines.push(
       '[mcp_servers.viewcompose.env]',
       `VIEWCOMPOSE_PROJECT_ROOT = ${tomlString(server.env.VIEWCOMPOSE_PROJECT_ROOT)}`,
+      `${FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE} = ${tomlString(
+        server.env[FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE],
+      )}`,
       ...(server.env.VIEWCOMPOSE_SOURCE_ROOT === undefined ? [] : [
         `VIEWCOMPOSE_SOURCE_ROOT = ${tomlString(server.env.VIEWCOMPOSE_SOURCE_ROOT)}`,
       ]),
@@ -135,6 +159,18 @@ async function canonicalSourceRootOrUndefined(sourceRoot) {
   return sourceRoot === undefined
     ? undefined
     : requireCanonicalDirectory(sourceRoot, 'ViewCompose source root');
+}
+
+async function resolveFrameworkBinding({root, sourceRoot, aiRoot}) {
+  if (sourceRoot !== undefined) {
+    return Object.freeze({
+      profileId: CURRENT_SOURCE_PROFILE,
+      versionLane: 'current-source',
+      projectProfile: null,
+    });
+  }
+  const projectProfile = await detectFrameworkProjectProfile({projectRoot: root});
+  return selectReleasedFrameworkProfile(projectProfile, {aiRoot});
 }
 
 async function assertSafePath(root, relativePath, {leafKind = 'any'} = {}) {
@@ -294,6 +330,338 @@ function equalJson(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function sha256(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function parseManagedTomlServer(text, relativePath) {
+  const start = text.indexOf(`${managedTomlStart}\n`);
+  const end = text.indexOf(`${managedTomlEnd}\n`);
+  if (start < 0 || end < start || text.indexOf(managedTomlStart, start + 1) >= 0) {
+    throw new Error(`Refusing to migrate an unknown MCP configuration: ${relativePath}`);
+  }
+  const block = text.slice(start, end + managedTomlEnd.length + 1);
+  const stringValue = (name) => {
+    const match = new RegExp(`^${name} = (.+)$`, 'mu').exec(block);
+    if (!match) return undefined;
+    try {
+      const value = JSON.parse(match[1]);
+      return typeof value === 'string' ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  const argsMatch = /^args = \[(.+)\]$/mu.exec(block);
+  let argument;
+  try {
+    argument = argsMatch ? JSON.parse(argsMatch[1]) : undefined;
+  } catch {
+    argument = undefined;
+  }
+  const command = stringValue('command');
+  const projectRoot = stringValue('VIEWCOMPOSE_PROJECT_ROOT');
+  const frameworkProfile = stringValue(FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE);
+  const sourceRoot = stringValue('VIEWCOMPOSE_SOURCE_ROOT');
+  if (!command || !argument || !projectRoot || !frameworkProfile) {
+    throw new Error(`Refusing to migrate malformed managed MCP configuration: ${relativePath}`);
+  }
+  return {
+    server: {
+      command,
+      args: [argument],
+      env: {
+        VIEWCOMPOSE_PROJECT_ROOT: projectRoot,
+        [FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE]: frameworkProfile,
+        ...(sourceRoot === undefined ? {} : {VIEWCOMPOSE_SOURCE_ROOT: sourceRoot}),
+      },
+    },
+    block,
+  };
+}
+
+async function inspectManagedIntegration(profile, root) {
+  await assertSafePath(root, profile.configPath, {leafKind: 'file'});
+  const target = resolve(root, profile.configPath);
+  const metadata = await metadataOrNull(target);
+  if (!metadata?.isFile() || metadata.isSymbolicLink()) {
+    throw new Error(`Managed MCP configuration is missing or unsafe: ${profile.configPath}`);
+  }
+  const original = await readFile(target, 'utf8');
+  if (profile.configFormat === 'json') {
+    const document = parseJsonObject(original, profile.configPath);
+    const server = document.mcpServers?.viewcompose;
+    if (!server || typeof server !== 'object' || Array.isArray(server)) {
+      throw new Error(`Managed MCP configuration is missing: ${profile.configPath}`);
+    }
+    return {target, original, mode: metadata.mode & 0o777, document, server};
+  }
+  const parsed = parseManagedTomlServer(original, profile.configPath);
+  const active = aiRootForManagedServer(parsed.server, root);
+  const expectedBlock = managedTomlBlock(root, undefined, {
+    frameworkProfile: active.frameworkProfile,
+    nodeExecutable: parsed.server.command,
+    mcpServerPath: parsed.server.args[0],
+  });
+  if (parsed.block !== expectedBlock) {
+    throw new Error('Refusing to migrate user-edited managed MCP configuration.');
+  }
+  return {target, original, mode: metadata.mode & 0o777, ...parsed};
+}
+
+export async function inspectAgentClientInstallation({client, projectRoot} = {}) {
+  const profile = profileFor(client);
+  const root = await requireCanonicalDirectory(projectRoot, 'Consumer project root');
+  const inspected = await inspectManagedIntegration(profile, root);
+  const active = aiRootForManagedServer(inspected.server, root);
+  const aiRoot = await requireCanonicalDirectory(active.aiRoot, 'Active AI package root');
+  const distribution = JSON.parse(await readFile(resolve(aiRoot, 'distribution.json'), 'utf8'));
+  if (
+    distribution.package?.name !== '@viewcompose/ai-tooling' ||
+    !/^\d+\.\d+\.\d+$/u.test(distribution.package?.version ?? '')
+  ) {
+    throw new Error('Active MCP entry does not point to a released ViewCompose AI package.');
+  }
+  return Object.freeze({
+    client: profile.id,
+    projectRoot: root,
+    aiRoot,
+    mcpServerPath: inspected.server.args[0],
+    nodeExecutable: inspected.server.command,
+    frameworkProfile: active.frameworkProfile,
+    version: distribution.package.version,
+  });
+}
+
+function aiRootForManagedServer(server, projectRoot) {
+  const frameworkProfile = server.env?.[FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE];
+  if (
+    server.env?.VIEWCOMPOSE_PROJECT_ROOT !== projectRoot ||
+    server.env?.VIEWCOMPOSE_SOURCE_ROOT !== undefined ||
+    !/^[a-f0-9]{64}$/u.test(frameworkProfile ?? '') ||
+    !isAbsolute(server.command) ||
+    !Array.isArray(server.args) ||
+    server.args.length !== 1 ||
+    !isAbsolute(server.args[0]) ||
+    basename(server.args[0]) !== 'mcp-server.mjs' ||
+    basename(dirname(server.args[0])) !== 'scripts'
+  ) {
+    throw new Error('Refusing to migrate an MCP entry outside the version-bound managed shape.');
+  }
+  const aiRoot = resolve(server.args[0], '../..');
+  const expected = expectedServerDefinition(projectRoot, {
+    frameworkProfile,
+    nodeExecutable: server.command,
+    mcpServerPath: server.args[0],
+  });
+  if (!equalJson(server, expected)) {
+    throw new Error('Refusing to migrate an MCP entry with unknown fields or ownership.');
+  }
+  return {aiRoot, frameworkProfile};
+}
+
+async function fileFingerprint(path) {
+  const bytes = await readFile(path);
+  return {bytes, sha256: sha256(bytes)};
+}
+
+async function recoverUpgradeTransaction(root) {
+  await assertSafePath(root, upgradeJournalPath, {leafKind: 'file'});
+  const journalFile = resolve(root, upgradeJournalPath);
+  const metadata = await metadataOrNull(journalFile);
+  if (!metadata) return {status: 'none'};
+  if (!metadata.isFile() || metadata.isSymbolicLink()) {
+    throw new Error('Upgrade recovery journal is unsafe.');
+  }
+  const journal = parseJsonObject(await readFile(journalFile, 'utf8'), upgradeJournalPath);
+  if (
+    journal.schemaVersion !== 1 ||
+    !['prepared', 'committed'].includes(journal.status) ||
+    !Array.isArray(journal.entries) ||
+    journal.entries.length < 1 ||
+    journal.entries.length > 32
+  ) throw new Error('Upgrade recovery journal is invalid.');
+  for (const entry of journal.entries) {
+    for (const path of [entry.target, entry.backup, entry.staged]) {
+      if (typeof path !== 'string' || path.length === 0) {
+        throw new Error('Upgrade recovery journal contains an invalid path.');
+      }
+      await assertSafePath(root, path, {leafKind: 'file'});
+    }
+    const target = resolve(root, entry.target);
+    const backup = resolve(root, entry.backup);
+    const staged = resolve(root, entry.staged);
+    if (journal.status === 'prepared') {
+      const backupMetadata = await metadataOrNull(backup);
+      if (backupMetadata) {
+        if (!backupMetadata.isFile() || backupMetadata.isSymbolicLink()) {
+          throw new Error(`Upgrade backup is unsafe: ${entry.backup}`);
+        }
+        await rm(target, {force: true});
+        await rename(backup, target);
+      } else {
+        const targetMetadata = await metadataOrNull(target);
+        if (!targetMetadata?.isFile() || targetMetadata.isSymbolicLink()) {
+          throw new Error(`Upgrade recovery cannot restore ${entry.target}.`);
+        }
+        const actual = await fileFingerprint(target);
+        if (actual.sha256 !== entry.originalSha256) {
+          throw new Error(`Upgrade recovery found changed bytes at ${entry.target}.`);
+        }
+      }
+    } else {
+      const actual = await fileFingerprint(target);
+      if (actual.sha256 !== entry.desiredSha256) {
+        throw new Error(`Committed upgrade target changed before cleanup: ${entry.target}.`);
+      }
+      await rm(backup, {force: true});
+    }
+    await rm(staged, {force: true});
+  }
+  await rm(journalFile, {force: true});
+  await rmdir(resolve(root, '.viewcompose')).catch((error) => {
+    if (!['ENOENT', 'ENOTEMPTY'].includes(error?.code)) throw error;
+  });
+  return {status: journal.status === 'prepared' ? 'rolled-back' : 'committed-cleanup'};
+}
+
+async function applyUpgradeTransaction(root, changes, {afterWrite} = {}) {
+  await recoverUpgradeTransaction(root);
+  const transactionId = randomUUID();
+  const entries = [];
+  for (const [index, change] of changes.entries()) {
+    const original = await fileFingerprint(change.target);
+    if (original.sha256 !== change.expectedSha256) {
+      throw new Error(`Managed bytes changed before upgrade: ${change.relativePath}`);
+    }
+    const suffix = `${transactionId}-${index}`;
+    const directory = dirname(change.relativePath);
+    const name = basename(change.relativePath);
+    const staged = `${directory}/${name}.${suffix}.viewcompose-new`;
+    const backup = `${directory}/${name}.${suffix}.viewcompose-old`;
+    await writeFile(resolve(root, staged), change.next, {flag: 'wx', mode: change.mode});
+    entries.push({
+      target: change.relativePath,
+      staged,
+      backup,
+      originalSha256: original.sha256,
+      desiredSha256: sha256(change.next),
+    });
+  }
+  const journal = {schemaVersion: 1, status: 'prepared', entries};
+  await atomicWrite(root, upgradeJournalPath, `${JSON.stringify(journal, null, 2)}\n`, 0o600);
+  try {
+    for (let index = 0; index < entries.length; index += 1) {
+      const entry = entries[index];
+      await rename(resolve(root, entry.target), resolve(root, entry.backup));
+      await rename(resolve(root, entry.staged), resolve(root, entry.target));
+      await afterWrite?.(index, entry);
+    }
+    journal.status = 'committed';
+    await atomicWrite(root, upgradeJournalPath, `${JSON.stringify(journal, null, 2)}\n`, 0o600);
+    await recoverUpgradeTransaction(root);
+  } catch (error) {
+    await recoverUpgradeTransaction(root);
+    throw error;
+  }
+}
+
+export async function migrateAgentClient({
+  client,
+  projectRoot,
+  newAiRoot,
+  frameworkProfile,
+  nodeExecutable = process.execPath,
+  afterWrite,
+} = {}) {
+  const profile = profileFor(client);
+  const root = await requireCanonicalDirectory(projectRoot, 'Consumer project root');
+  const canonicalNewAiRoot = await requireCanonicalDirectory(newAiRoot, 'Candidate AI package root');
+  const projectProfile = await detectFrameworkProjectProfile({projectRoot: root});
+  if (!['empty', 'resolved'].includes(projectProfile.status)) {
+    throw new Error(`Cannot migrate while project framework status is ${projectProfile.status}.`);
+  }
+  const candidateProfiles = await loadReleasedFrameworkProfiles({aiRoot: canonicalNewAiRoot});
+  const candidate = candidateProfiles.profiles.find(({profile: candidateProfile}) =>
+    candidateProfile.profileId === frameworkProfile);
+  if (
+    !candidate ||
+    (projectProfile.status === 'resolved' &&
+      !frameworkProfileMatchesProject(projectProfile.artifacts, candidate.profile))
+  ) {
+    throw new Error('Candidate framework profile no longer matches the consumer project.');
+  }
+  const inspected = await inspectManagedIntegration(profile, root);
+  const active = aiRootForManagedServer(inspected.server, root);
+  const canonicalOldAiRoot = await requireCanonicalDirectory(active.aiRoot, 'Active AI package root');
+  const oldServerPath = resolve(canonicalOldAiRoot, 'scripts/mcp-server.mjs');
+  if (oldServerPath !== inspected.server.args[0]) {
+    throw new Error('Managed MCP server path differs from the active AI package root.');
+  }
+  const [oldSkills, newSkills, oldDistribution, newDistribution] = await Promise.all([
+    loadCanonicalSkills(canonicalOldAiRoot),
+    loadCanonicalSkills(canonicalNewAiRoot),
+    readFile(resolve(canonicalOldAiRoot, 'distribution.json'), 'utf8').then(JSON.parse),
+    readFile(resolve(canonicalNewAiRoot, 'distribution.json'), 'utf8').then(JSON.parse),
+  ]);
+  if (
+    oldDistribution.package?.name !== '@viewcompose/ai-tooling' ||
+    newDistribution.package?.name !== '@viewcompose/ai-tooling' ||
+    JSON.stringify(oldSkills.map((skill) => skill.id)) !== JSON.stringify(newSkills.map((skill) => skill.id))
+  ) {
+    throw new Error('AI package identity or Skill set requires an unsupported migration contract.');
+  }
+  const newServer = expectedServerDefinition(root, {
+    frameworkProfile,
+    nodeExecutable,
+    mcpServerPath: resolve(canonicalNewAiRoot, 'scripts/mcp-server.mjs'),
+  });
+  let nextConfig;
+  if (profile.configFormat === 'json') {
+    const document = {...inspected.document, mcpServers: {...inspected.document.mcpServers}};
+    document.mcpServers.viewcompose = newServer;
+    nextConfig = `${JSON.stringify(document, null, 2)}\n`;
+  } else {
+    const nextBlock = managedTomlBlock(root, undefined, {
+      frameworkProfile,
+      nodeExecutable,
+      mcpServerPath: newServer.args[0],
+    });
+    nextConfig = inspected.original.replace(inspected.block, nextBlock);
+  }
+  const changes = [{
+    relativePath: profile.configPath,
+    target: inspected.target,
+    expectedSha256: sha256(inspected.original),
+    next: Buffer.from(nextConfig),
+    mode: inspected.mode,
+  }];
+  for (let index = 0; index < oldSkills.length; index += 1) {
+    const oldSkill = oldSkills[index];
+    const newSkill = newSkills[index];
+    const relativePath = `${profile.skillRoot}/${oldSkill.id}/SKILL.md`;
+    await assertSafePath(root, relativePath, {leafKind: 'file'});
+    changes.push({
+      relativePath,
+      target: resolve(root, relativePath),
+      expectedSha256: sha256(oldSkill.bytes),
+      next: newSkill.bytes,
+      mode: 0o644,
+    });
+  }
+  await applyUpgradeTransaction(root, changes, {afterWrite});
+  return {
+    schemaVersion: 1,
+    client: profile.id,
+    projectRoot: root,
+    previousVersion: oldDistribution.package.version,
+    installedVersion: newDistribution.package.version,
+    previousFrameworkProfile: active.frameworkProfile,
+    frameworkProfile,
+    config: {path: profile.configPath, status: 'migrated'},
+    skills: {path: profile.skillRoot, migrated: newSkills.map((skill) => skill.id)},
+  };
+}
+
 function managedTomlBlock(projectRoot, sourceRoot, options) {
   return `${managedTomlStart}\n${renderAgentClientConfig('codex', projectRoot, {
     ...options,
@@ -320,14 +688,21 @@ function parseJsonObject(text, relativePath) {
   return parsed;
 }
 
-async function prepareConfigOperation({profile, root, sourceRoot, options = {}, action = 'install'}) {
+async function prepareConfigOperation({
+  profile,
+  root,
+  sourceRoot,
+  frameworkProfile,
+  options = {},
+  action = 'install',
+}) {
   await assertSafePath(root, profile.configPath, {leafKind: 'file'});
   const target = resolve(root, profile.configPath);
   const metadata = await metadataOrNull(target);
   const original = metadata ? await readFile(target, 'utf8') : undefined;
   const mode = metadata ? metadata.mode & 0o777 : 0o644;
   if (profile.configFormat === 'json') {
-    const server = expectedServerDefinition(root, {...options, sourceRoot});
+    const server = expectedServerDefinition(root, {...options, sourceRoot, frameworkProfile});
     const document = original === undefined ? {} : parseJsonObject(original, profile.configPath);
     const existing = document.mcpServers?.viewcompose;
     if (action === 'install') {
@@ -365,7 +740,7 @@ async function prepareConfigOperation({profile, root, sourceRoot, options = {}, 
     };
   }
 
-  const block = managedTomlBlock(root, sourceRoot, options);
+  const block = managedTomlBlock(root, sourceRoot, {...options, frameworkProfile});
   const text = original ?? '';
   const hasSection = /^\s*\[mcp_servers\.viewcompose(?:\.env)?\]\s*$/mu.test(text);
   const occurrences = text.split(block).length - 1;
@@ -428,11 +803,17 @@ export async function initializeAgentClient({
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
+  const framework = await resolveFrameworkBinding({
+    root: prepared.root,
+    sourceRoot: canonicalSourceRoot,
+    aiRoot,
+  });
   assertNoSkillConflicts(prepared.operations);
   const config = await prepareConfigOperation({
     profile: prepared.profile,
     root: prepared.root,
     sourceRoot: canonicalSourceRoot,
+    frameworkProfile: framework.profileId,
     options: {nodeExecutable, mcpServerPath},
   });
   let configChanged = false;
@@ -450,6 +831,11 @@ export async function initializeAgentClient({
     client: prepared.profile.id,
     projectRoot: prepared.root,
     mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
+    framework: {
+      versionLane: framework.versionLane,
+      profileId: framework.profileId,
+      projectStatus: framework.projectProfile?.status ?? 'source-bound',
+    },
     config: {path: prepared.profile.configPath, status: configChanged ? 'installed' : 'unchanged'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -470,15 +856,52 @@ export async function diagnoseAgentClient({
   detectSdk = detectAndroidSdk,
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
-  const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
+  let activeInstallation;
+  if (canonicalSourceRoot === undefined) {
+    activeInstallation = await inspectAgentClientInstallation({client, projectRoot}).catch(() => null);
+  }
+  const effectiveAiRoot = activeInstallation?.aiRoot ?? aiRoot;
+  const effectiveNodeExecutable = activeInstallation?.nodeExecutable ?? nodeExecutable;
+  const effectiveMcpServerPath = activeInstallation?.mcpServerPath ?? mcpServerPath;
+  const prepared = await prepareSkillOperations({client, projectRoot, aiRoot: effectiveAiRoot});
   let configStatus = 'conflict';
   let configDetail;
+  let framework;
   try {
+    if (activeInstallation) {
+      const projectProfile = await detectFrameworkProjectProfile({projectRoot: prepared.root});
+      const inventory = await loadReleasedFrameworkProfiles({aiRoot: effectiveAiRoot});
+      const activeProfile = inventory.profiles.find(({profile: candidateProfile}) =>
+        candidateProfile.profileId === activeInstallation.frameworkProfile)?.profile;
+      if (
+        !activeProfile ||
+        !['empty', 'resolved'].includes(projectProfile.status) ||
+        (projectProfile.status === 'resolved' &&
+          !frameworkProfileMatchesProject(projectProfile.artifacts, activeProfile))
+      ) {
+        throw new Error('Installed framework profile no longer matches the consumer project.');
+      }
+      framework = {
+        profileId: activeInstallation.frameworkProfile,
+        versionLane: 'released',
+        projectProfile,
+      };
+    } else {
+      framework = await resolveFrameworkBinding({
+        root: prepared.root,
+        sourceRoot: canonicalSourceRoot,
+        aiRoot: effectiveAiRoot,
+      });
+    }
     const config = await prepareConfigOperation({
       profile: prepared.profile,
       root: prepared.root,
       sourceRoot: canonicalSourceRoot,
-      options: {nodeExecutable, mcpServerPath},
+      frameworkProfile: framework.profileId,
+      options: {
+        nodeExecutable: effectiveNodeExecutable,
+        mcpServerPath: effectiveMcpServerPath,
+      },
     });
     configStatus = config.status === 'ready' ? 'ready' : 'missing';
   } catch (error) {
@@ -500,6 +923,16 @@ export async function diagnoseAgentClient({
     client: prepared.profile.id,
     projectRoot: prepared.root,
     mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
+    tooling: activeInstallation ? {
+      version: activeInstallation.version,
+      packageRoot: activeInstallation.aiRoot,
+    } : {version: null, packageRoot: effectiveAiRoot},
+    framework: framework ? {
+      status: 'compatible',
+      versionLane: framework.versionLane,
+      profileId: framework.profileId,
+      projectStatus: framework.projectProfile?.status ?? 'source-bound',
+    } : {status: 'incompatible', detail: configDetail},
     status: ready ? readyStatus : configurationReady
       ? 'host-prerequisites-required'
       : 'repair-required',
@@ -554,13 +987,31 @@ export async function uninstallAgentClient({
   mcpServerPath = defaultMcpServerPath,
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
-  const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
+  const activeInstallation = canonicalSourceRoot === undefined
+    ? await inspectAgentClientInstallation({client, projectRoot}).catch(() => null)
+    : null;
+  const effectiveAiRoot = activeInstallation?.aiRoot ?? aiRoot;
+  const prepared = await prepareSkillOperations({client, projectRoot, aiRoot: effectiveAiRoot});
+  const framework = activeInstallation
+    ? {
+      profileId: activeInstallation.frameworkProfile,
+      versionLane: 'released',
+    }
+    : await resolveFrameworkBinding({
+      root: prepared.root,
+      sourceRoot: canonicalSourceRoot,
+      aiRoot: effectiveAiRoot,
+    });
   assertNoSkillConflicts(prepared.operations);
   const config = await prepareConfigOperation({
     profile: prepared.profile,
     root: prepared.root,
     sourceRoot: canonicalSourceRoot,
-    options: {nodeExecutable, mcpServerPath},
+    frameworkProfile: framework.profileId,
+    options: {
+      nodeExecutable: activeInstallation?.nodeExecutable ?? nodeExecutable,
+      mcpServerPath: activeInstallation?.mcpServerPath ?? mcpServerPath,
+    },
     action: 'uninstall',
   });
   const removable = prepared.operations.filter((item) => item.status === 'ready');
@@ -585,6 +1036,7 @@ export async function uninstallAgentClient({
     client: prepared.profile.id,
     projectRoot: prepared.root,
     mode: canonicalSourceRoot === undefined ? 'project-bound' : 'source-bound',
+    framework: {versionLane: framework.versionLane, profileId: framework.profileId},
     config: {path: prepared.profile.configPath, status: configChanged ? 'removed' : 'absent'},
     skills: {
       path: prepared.profile.skillRoot,
@@ -596,9 +1048,9 @@ export async function uninstallAgentClient({
 
 function parseCommandLine(arguments_) {
   const [command, ...tokens] = arguments_;
-  if (!['config', 'install-skills', 'init', 'doctor', 'uninstall'].includes(command)) {
+  if (!['config', 'install-skills', 'init', 'doctor', 'upgrade', 'uninstall'].includes(command)) {
     throw new Error(
-      'Usage: viewcompose-agent <config|install-skills|init|doctor|uninstall> ' +
+      'Usage: viewcompose-agent <config|install-skills|init|doctor|upgrade|uninstall> ' +
       '--client <codex|claude-code|cursor> --project-root <absolute-path> ' +
       '[--source-root <absolute-path>]',
     );
@@ -616,7 +1068,7 @@ function parseCommandLine(arguments_) {
     values[key] = value;
   }
   const required = ['client', 'project-root'];
-  const allowed = command === 'install-skills'
+  const allowed = command === 'install-skills' || command === 'upgrade'
     ? new Set(required)
     : new Set([...required, 'source-root']);
   const unexpected = Object.keys(values).filter((key) => !allowed.has(key));
@@ -634,7 +1086,15 @@ async function main() {
       values['project-root'],
       'Consumer project root',
     );
-    process.stdout.write(renderAgentClientConfig(values.client, projectRoot, {sourceRoot}));
+    const framework = await resolveFrameworkBinding({
+      root: projectRoot,
+      sourceRoot,
+      aiRoot: defaultAiRoot,
+    });
+    process.stdout.write(renderAgentClientConfig(values.client, projectRoot, {
+      sourceRoot,
+      frameworkProfile: framework.profileId,
+    }));
     return;
   }
   const arguments_ = {
@@ -644,6 +1104,12 @@ async function main() {
   };
   if (command === 'install-skills') {
     const result = await installAgentClientSkills(arguments_);
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    return;
+  }
+  if (command === 'upgrade') {
+    const {upgradeAgentClient} = await import('./tooling-upgrade.mjs');
+    const result = await upgradeAgentClient(arguments_);
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     return;
   }

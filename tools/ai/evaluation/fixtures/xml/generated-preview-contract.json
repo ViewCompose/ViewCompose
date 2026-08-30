@@ -160,7 +160,7 @@
     "maxProcessOutputBytes": 2097152,
     "maxImageBytes": 16777216,
     "maxRenderTreeBytes": 8388608,
-    "timeoutMs": 120000,
+    "timeoutMs": 300000,
     "maxConcurrentRequests": 1
   },
   "diagnosticCodes": [

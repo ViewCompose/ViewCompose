@@ -1,0 +1,245 @@
+{
+  "artifacts": [
+    {
+      "apiReference": "/api/viewcompose-animation/0.1.0-alpha05/",
+      "artifact": "viewcompose-animation",
+      "moduleManual": "/modules/viewcompose-animation/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-camerax-androidx/0.1.0-alpha01/",
+      "artifact": "viewcompose-camerax-androidx",
+      "moduleManual": "/modules/viewcompose-camerax-androidx/0.1.0-alpha01/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-constraintlayout-androidx/0.1.0-alpha02/",
+      "artifact": "viewcompose-constraintlayout-androidx",
+      "moduleManual": "/modules/viewcompose-constraintlayout-androidx/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-diagnostics/0.1.0-alpha01/",
+      "artifact": "viewcompose-diagnostics",
+      "moduleManual": "/modules/viewcompose-diagnostics/0.1.0-alpha01/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-exoplayer2-android/0.1.0-alpha01/",
+      "artifact": "viewcompose-exoplayer2-android",
+      "moduleManual": "/modules/viewcompose-exoplayer2-android/0.1.0-alpha01/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-gesture/0.1.0-alpha05/",
+      "artifact": "viewcompose-gesture",
+      "moduleManual": "/modules/viewcompose-gesture/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-google-maps-android/0.1.0-alpha01/",
+      "artifact": "viewcompose-google-maps-android",
+      "moduleManual": "/modules/viewcompose-google-maps-android/0.1.0-alpha01/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-graphics/0.1.0-alpha05/",
+      "artifact": "viewcompose-graphics",
+      "moduleManual": "/modules/viewcompose-graphics/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-host-android/0.1.0-alpha05/",
+      "artifact": "viewcompose-host-android",
+      "moduleManual": "/modules/viewcompose-host-android/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-image-coil/0.1.0-alpha05/",
+      "artifact": "viewcompose-image-coil",
+      "moduleManual": "/modules/viewcompose-image-coil/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-image-glide/0.1.0-alpha03/",
+      "artifact": "viewcompose-image-glide",
+      "moduleManual": "/modules/viewcompose-image-glide/0.1.0-alpha03/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha03",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-lifecycle-androidx/0.1.0-alpha02/",
+      "artifact": "viewcompose-lifecycle-androidx",
+      "moduleManual": "/modules/viewcompose-lifecycle-androidx/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-material3/0.1.0-alpha02/",
+      "artifact": "viewcompose-material3",
+      "moduleManual": "/modules/viewcompose-material3/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-media3-androidx/0.1.0-alpha01/",
+      "artifact": "viewcompose-media3-androidx",
+      "moduleManual": "/modules/viewcompose-media3-androidx/0.1.0-alpha01/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-navigation-android/0.1.0-alpha02/",
+      "artifact": "viewcompose-navigation-android",
+      "moduleManual": "/modules/viewcompose-navigation-android/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-oneui7/0.1.0-alpha02/",
+      "artifact": "viewcompose-oneui7",
+      "moduleManual": "/modules/viewcompose-oneui7/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-overlay-android/0.1.0-alpha05/",
+      "artifact": "viewcompose-overlay-android",
+      "moduleManual": "/modules/viewcompose-overlay-android/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-overlay-material3-android/0.1.0-alpha02/",
+      "artifact": "viewcompose-overlay-material3-android",
+      "moduleManual": "/modules/viewcompose-overlay-material3-android/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-overlay-oneui7-android/0.1.0-alpha02/",
+      "artifact": "viewcompose-overlay-oneui7-android",
+      "moduleManual": "/modules/viewcompose-overlay-oneui7-android/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-paging-androidx/0.1.0-alpha01/",
+      "artifact": "viewcompose-paging-androidx",
+      "moduleManual": "/modules/viewcompose-paging-androidx/0.1.0-alpha01/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview/0.1.0-alpha05/",
+      "artifact": "viewcompose-preview",
+      "moduleManual": "/modules/viewcompose-preview/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-core/0.1.0-alpha03/",
+      "artifact": "viewcompose-preview-core",
+      "moduleManual": "/modules/viewcompose-preview-core/0.1.0-alpha03/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha03",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-gradle-plugin/0.1.0-alpha03/",
+      "artifact": "viewcompose-preview-gradle-plugin",
+      "moduleManual": "/modules/viewcompose-preview-gradle-plugin/0.1.0-alpha03/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha03",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-runner/0.1.0-alpha05/",
+      "artifact": "viewcompose-preview-runner",
+      "moduleManual": "/modules/viewcompose-preview-runner/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-worker-host/0.1.0-alpha03/",
+      "artifact": "viewcompose-preview-worker-host",
+      "moduleManual": "/modules/viewcompose-preview-worker-host/0.1.0-alpha03/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha03",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-renderer-android/0.1.0-alpha02/",
+      "artifact": "viewcompose-renderer-android",
+      "moduleManual": "/modules/viewcompose-renderer-android/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-shadow-android/0.1.0-alpha05/",
+      "artifact": "viewcompose-shadow-android",
+      "moduleManual": "/modules/viewcompose-shadow-android/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-ui-contract/0.1.0-alpha05/",
+      "artifact": "viewcompose-ui-contract",
+      "moduleManual": "/modules/viewcompose-ui-contract/0.1.0-alpha05/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha05",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-ui-foundation/0.1.0-alpha02/",
+      "artifact": "viewcompose-ui-foundation",
+      "moduleManual": "/modules/viewcompose-ui-foundation/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-viewmodel-androidx/0.1.0-alpha02/",
+      "artifact": "viewcompose-viewmodel-androidx",
+      "moduleManual": "/modules/viewcompose-viewmodel-androidx/0.1.0-alpha02/",
+      "schemaVersion": 1,
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    }
+  ],
+  "schemaVersion": 1
+}

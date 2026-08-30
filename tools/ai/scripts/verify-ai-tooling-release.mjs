@@ -73,6 +73,28 @@ async function verifyAssets(contract, distributionRoot) {
   if (checksums.size !== contract.assets.length - 1) {
     throw new Error('Release checksum inventory contains an unexpected asset.');
   }
+  const manifest = await readJson(resolve(distributionRoot, 'manifest.json'));
+  const profileIds = manifest.frameworkProfiles?.map((profile) => profile.profileId) ?? [];
+  const indexedIds = manifest.frameworkProfileIndex?.profiles?.map((profile) => profile.profileId) ?? [];
+  if (
+    manifest.schemaVersion !== 2 ||
+    manifest.package?.name !== contract.package.name ||
+    manifest.package?.version !== contract.package.version ||
+    manifest.archive?.path !== contract.assets[0] ||
+    checksums.get(manifest.archive.path) !== manifest.archive.sha256 ||
+    manifest.compatibility?.agentClientIntegration !== 4 ||
+    manifest.compatibility?.frameworkCompatibilityProfile !== 1 ||
+    manifest.compatibility?.frameworkProfileIndex !== 1 ||
+    profileIds.length < 1 ||
+    JSON.stringify(profileIds) !== JSON.stringify(indexedIds) ||
+    !profileIds.includes(manifest.frameworkProfileIndex?.defaultProfileId) ||
+    manifest.frameworkProfiles.some((profile) =>
+      profile.consumerSelectable !== true ||
+      profile.knowledge?.versionLane !== 'released' ||
+      !/^[a-f0-9]{64}$/u.test(profile.profileId ?? ''))
+  ) {
+    throw new Error('Release manifest framework compatibility inventory is invalid.');
+  }
 }
 
 export async function verifyAiToolingRelease({

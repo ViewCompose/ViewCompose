@@ -1,14 +1,10 @@
 import {lstat, readFile, readdir, realpath} from 'node:fs/promises';
 import {basename, extname, isAbsolute, relative, resolve, sep} from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {diagnostic, toolResult, utf8Bytes} from './tool-core.mjs';
+import {activeKnowledgePath} from './framework-profile-selection.mjs';
 
-const artifactsPath = fileURLToPath(
-  new URL('../generated/current-source/artifacts.json', import.meta.url),
-);
-const symbolsPath = fileURLToPath(
-  new URL('../generated/current-source/symbols.jsonl', import.meta.url),
-);
+const artifactsPath = activeKnowledgePath('artifacts.json');
+const symbolsPath = activeKnowledgePath('symbols.jsonl');
 
 export const DEFAULT_PROJECT_LIMITS = Object.freeze({
   maxFiles: 1000,

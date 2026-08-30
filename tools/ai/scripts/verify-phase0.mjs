@@ -283,6 +283,8 @@ async function verifySchemas(versions) {
     agentClientIntegration: 'agent-client-integration.schema.json',
     aiToolingRelease: 'ai-tooling-release.schema.json',
     consumerProjectExecution: 'consumer-project-execution.schema.json',
+    frameworkCompatibilityProfile: 'framework-compatibility-profile.schema.json',
+    frameworkProfileIndex: 'framework-profile-index.schema.json',
     knowledgeBundleManifest: 'knowledge-bundle-manifest.schema.json',
     toolEnvelope: 'tool-envelope.schema.json',
     designIr: 'design-ir.schema.json',
@@ -381,6 +383,8 @@ async function verifyExamples(schemas) {
     ['agent-client-integration.json', 'agent-client-integration.schema.json'],
     ['ai-tooling-release.json', 'ai-tooling-release.schema.json'],
     ['consumer-project-execution.json', 'consumer-project-execution.schema.json'],
+    ['framework-compatibility-profile.json', 'framework-compatibility-profile.schema.json'],
+    ['framework-profile-index.json', 'framework-profile-index.schema.json'],
     ['knowledge-bundle-manifest.json', 'knowledge-bundle-manifest.schema.json'],
     ['tool-request.json', 'tool-envelope.schema.json'],
     ['tool-result.json', 'tool-envelope.schema.json'],
@@ -1029,7 +1033,7 @@ async function verifyGeneratedPreview(schemas) {
     maxProcessOutputBytes: 2 * 1024 * 1024,
     maxImageBytes: 16 * 1024 * 1024,
     maxRenderTreeBytes: 8 * 1024 * 1024,
-    timeoutMs: 120_000,
+    timeoutMs: 300_000,
     maxConcurrentRequests: 1,
   })) {
     const value = contract.limits?.[name];

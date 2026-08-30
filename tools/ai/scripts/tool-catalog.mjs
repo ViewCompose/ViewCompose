@@ -47,7 +47,7 @@ const previewArguments = {
   configuration: previewConfiguration,
 };
 const previewLimits = {
-  timeoutMs: 120000,
+  timeoutMs: 300000,
   maxInputBytes: 262144,
   maxOutputBytes: 1048576,
 };
@@ -141,7 +141,7 @@ const executableDefinitions = {
       },
     },
     defaultLimits: {
-      timeoutMs: 120000,
+      timeoutMs: 300000,
       maxInputBytes: 4194304,
       maxOutputBytes: 1048576,
     },
@@ -260,7 +260,7 @@ const executableDefinitions = {
       ],
     },
     defaultLimits: {
-      timeoutMs: 120000,
+      timeoutMs: 300000,
       maxInputBytes: 4194304,
       maxOutputBytes: 1048576,
     },
@@ -308,7 +308,7 @@ const executableDefinitions = {
       'Generate, hermetically compile, source-bind and render, exactly compare layout evidence, or compare an eligible canonical pixel reference from one resolved screenshot result without provider, network, callback-source, or inspected-project build execution.',
     inputSchema: SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA,
     defaultLimits: {
-      timeoutMs: 120000,
+      timeoutMs: 300000,
       maxInputBytes: 2000000,
       maxOutputBytes: 2000000,
     },

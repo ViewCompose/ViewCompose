@@ -1,12 +1,13 @@
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {activeFrameworkProfile} from './framework-profile-selection.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {diagnostic, loadKnowledgeManifest, toolResult} from './tool-core.mjs';
 
-const bundleRoot = fileURLToPath(new URL('../generated/current-source/', import.meta.url));
-const supportedVersionLane = 'current-source';
+const activeProfile = activeFrameworkProfile();
+const bundleRoot = activeProfile.bundleRoot;
+const supportedVersionLane = activeProfile.versionLane;
 const stopWords = new Set(['a', 'an', 'and', 'for', 'of', 'the', 'to', 'use', 'using', 'with']);
 
 export const KNOWLEDGE_TOOL_DEFINITIONS = Object.freeze({
@@ -90,7 +91,9 @@ export function loadKnowledgeIndex() {
     if (
       manifest.schemaVersion !== 1 ||
       manifest.framework?.versionLane !== supportedVersionLane ||
-      manifest.framework?.identity !== manifest.source?.revision
+      (supportedVersionLane === 'current-source'
+        ? manifest.framework?.identity !== manifest.source?.revision
+        : manifest.framework?.identity !== activeProfile.profileId)
     ) {
       throw new Error('Knowledge Bundle manifest identity is outside the supported retrieval lane.');
     }

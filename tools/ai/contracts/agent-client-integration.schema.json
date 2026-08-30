@@ -1,18 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://viewcompose.com/schemas/ai/agent-client-integration-v3.schema.json",
-  "title": "ViewCompose AI agent client integration contract v3",
+  "$id": "https://viewcompose.com/schemas/ai/agent-client-integration-v4.schema.json",
+  "title": "ViewCompose AI agent client integration contract v4",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "profileSetId", "lastVerified", "package", "evidence", "clients"],
   "properties": {
-    "schemaVersion": {"const": 3},
-    "profileSetId": {"const": "viewcompose-agent-clients-v3"},
+    "schemaVersion": {"const": 4},
+    "profileSetId": {"const": "viewcompose-agent-clients-v4"},
     "lastVerified": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "version", "transport", "mcpExecutable", "clientExecutable", "projectRootVariable", "sourceRootVariable"],
+      "required": ["name", "version", "transport", "mcpExecutable", "clientExecutable", "projectRootVariable", "sourceRootVariable", "frameworkProfileVariable"],
       "properties": {
         "name": {"const": "@viewcompose/ai-tooling"},
         "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
@@ -20,7 +20,8 @@
         "mcpExecutable": {"const": "viewcompose-mcp"},
         "clientExecutable": {"const": "viewcompose-agent"},
         "projectRootVariable": {"const": "VIEWCOMPOSE_PROJECT_ROOT"},
-        "sourceRootVariable": {"const": "VIEWCOMPOSE_SOURCE_ROOT"}
+        "sourceRootVariable": {"const": "VIEWCOMPOSE_SOURCE_ROOT"},
+        "frameworkProfileVariable": {"const": "VIEWCOMPOSE_FRAMEWORK_PROFILE"}
       }
     },
     "evidence": {
@@ -33,6 +34,9 @@
         "maxPrimaryCommands",
         "manualConfigurationEdits",
         "transactionalProjectWrites",
+        "transactionalUpgrade",
+        "versionBoundProfiles",
+        "maxUpgradeCommands",
         "protocolVersions",
         "vendorBinaryAutomation",
         "limitation"
@@ -44,6 +48,9 @@
         "maxPrimaryCommands": {"const": 2},
         "manualConfigurationEdits": {"const": 0},
         "transactionalProjectWrites": {"const": true},
+        "transactionalUpgrade": {"const": true},
+        "versionBoundProfiles": {"const": true},
+        "maxUpgradeCommands": {"const": 1},
         "protocolVersions": {
           "type": "array",
           "prefixItems": [{"const": "2026-07-28"}, {"const": "2025-11-25"}],
@@ -76,7 +83,7 @@
     "lifecycleCommand": {
       "type": "array",
       "prefixItems": [
-        {"enum": ["init", "doctor", "uninstall"]},
+        {"enum": ["init", "doctor", "upgrade", "uninstall"]},
         {"const": "--client"},
         {"enum": ["codex", "claude-code", "cursor"]},
         {"const": "--project-root"},
@@ -143,10 +150,11 @@
     "lifecycle": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["initArguments", "doctorArguments", "uninstallArguments"],
+      "required": ["initArguments", "doctorArguments", "upgradeArguments", "uninstallArguments"],
       "properties": {
         "initArguments": {"$ref": "#/$defs/lifecycleCommand"},
         "doctorArguments": {"$ref": "#/$defs/lifecycleCommand"},
+        "upgradeArguments": {"$ref": "#/$defs/lifecycleCommand"},
         "uninstallArguments": {"$ref": "#/$defs/lifecycleCommand"}
       }
     },

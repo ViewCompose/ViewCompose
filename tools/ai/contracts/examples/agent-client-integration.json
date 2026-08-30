@@ -1,15 +1,16 @@
 {
-  "schemaVersion": 3,
-  "profileSetId": "viewcompose-agent-clients-v3",
-  "lastVerified": "2026-08-30",
+  "schemaVersion": 4,
+  "profileSetId": "viewcompose-agent-clients-v4",
+  "lastVerified": "2026-08-31",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "transport": "stdio",
     "mcpExecutable": "viewcompose-mcp",
     "clientExecutable": "viewcompose-agent",
     "projectRootVariable": "VIEWCOMPOSE_PROJECT_ROOT",
-    "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT"
+    "sourceRootVariable": "VIEWCOMPOSE_SOURCE_ROOT",
+    "frameworkProfileVariable": "VIEWCOMPOSE_FRAMEWORK_PROFILE"
   },
   "evidence": {
     "officialConfigurationReviewed": true,
@@ -18,6 +19,9 @@
     "maxPrimaryCommands": 2,
     "manualConfigurationEdits": 0,
     "transactionalProjectWrites": true,
+    "transactionalUpgrade": true,
+    "versionBoundProfiles": true,
+    "maxUpgradeCommands": 1,
     "protocolVersions": ["2026-07-28", "2025-11-25"],
     "vendorBinaryAutomation": false,
     "limitation": "CI validates generated configuration, transactional lifecycle behavior, exact Skill bytes, and both frozen MCP protocol handshakes; it does not authenticate or automate proprietary client binaries."
@@ -37,6 +41,7 @@
       "lifecycle": {
         "initArguments": ["init", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
         "doctorArguments": ["doctor", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
+        "upgradeArguments": ["upgrade", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
         "uninstallArguments": ["uninstall", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"]
       },
       "officialDocumentation": {
@@ -58,6 +63,7 @@
       "lifecycle": {
         "initArguments": ["init", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
         "doctorArguments": ["doctor", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
+        "upgradeArguments": ["upgrade", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
         "uninstallArguments": ["uninstall", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"]
       },
       "officialDocumentation": {
@@ -79,6 +85,7 @@
       "lifecycle": {
         "initArguments": ["init", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
         "doctorArguments": ["doctor", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
+        "upgradeArguments": ["upgrade", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
         "uninstallArguments": ["uninstall", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"]
       },
       "officialDocumentation": {

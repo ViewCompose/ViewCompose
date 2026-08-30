@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "profileId": "0000000000000000000000000000000000000000000000000000000000000000",
+  "stability": "released",
+  "consumerSelectable": true,
+  "knowledge": {
+    "versionLane": "released",
+    "bundleFingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+    "sourcePolicy": "exact-artifact-release-revisions"
+  },
+  "artifacts": [
+    {
+      "coordinate": "com.viewcompose:viewcompose-ui-foundation",
+      "version": "0.1.0-alpha02",
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "knowledgeIncluded": true
+    },
+    {
+      "coordinate": "com.viewcompose:viewcompose-material3-android",
+      "version": "0.1.0-alpha02",
+      "sourceRevision": "2d37ff2e9544831e9209ef9eeadbb24f123cbd71",
+      "knowledgeIncluded": false
+    }
+  ],
+  "harness": {
+    "artifactCoordinates": [
+      "com.viewcompose:viewcompose-material3-android:0.1.0-alpha02",
+      "com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02"
+    ],
+    "executesConsumerBuildLogic": false
+  },
+  "selection": {
+    "projectMatch": "exact-declared-artifact-version-subset",
+    "unresolvedVersion": "reject",
+    "conflictingVersion": "reject",
+    "emptyProject": "newest-stable-compatible-profile",
+    "upgradeCandidate": "newest-tooling-release-with-matching-profile"
+  }
+}

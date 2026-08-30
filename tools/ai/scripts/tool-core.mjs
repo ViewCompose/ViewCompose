@@ -4,19 +4,33 @@ import {lstat, readFile} from 'node:fs/promises';
 import {homedir, platform} from 'node:os';
 import {isAbsolute, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {
+  activeFrameworkProfile,
+  activeKnowledgePath,
+  FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE,
+} from './framework-profile-selection.mjs';
 
 const aiRoot = fileURLToPath(new URL('../', import.meta.url));
 const repository = resolve(aiRoot, '../..');
 export const SOURCE_ROOT_ENVIRONMENT_VARIABLE = 'VIEWCOMPOSE_SOURCE_ROOT';
 export const PROJECT_ROOT_ENVIRONMENT_VARIABLE = 'VIEWCOMPOSE_PROJECT_ROOT';
-const manifestPath = fileURLToPath(
-  new URL('../generated/current-source/manifest.json', import.meta.url),
-);
+export {FRAMEWORK_PROFILE_ENVIRONMENT_VARIABLE};
+const manifestPath = activeKnowledgePath('manifest.json');
 
 let manifestPromise;
 
 export function loadKnowledgeManifest() {
-  manifestPromise ??= readFile(manifestPath, 'utf8').then(JSON.parse);
+  manifestPromise ??= readFile(manifestPath, 'utf8').then((text) => {
+    const manifest = JSON.parse(text);
+    const selected = activeFrameworkProfile();
+    if (
+      manifest.framework?.versionLane !== selected.versionLane ||
+      (selected.versionLane === 'released' && manifest.framework?.identity !== selected.profileId)
+    ) {
+      throw new Error('Active Knowledge Bundle differs from the selected framework profile.');
+    }
+    return manifest;
+  });
   return manifestPromise;
 }
 
@@ -34,7 +48,10 @@ export function toolCacheRoot() {
     : process.env.XDG_CACHE_HOME && isAbsolute(process.env.XDG_CACHE_HOME)
       ? resolve(process.env.XDG_CACHE_HOME)
       : resolve(homedir(), '.cache');
-  return resolve(base, 'viewcompose/ai-tooling/0.2.0');
+  // Cache entries already include the Knowledge, source, lane, and Harness fingerprints. Keep the
+  // root stable across tooling releases so a compatible runtime upgrade does not redownload or
+  // rebuild unchanged deep-evidence inputs.
+  return resolve(base, 'viewcompose/ai-tooling/execution-v1');
 }
 
 export function repositoryRoot() {
