@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 6d8978d2d75f4919e41955972a86e5fd65dd6e67f811db10920d6f1daaa20984
+translation_source_hash: 4214f3e84f6c8250a7c4576304bb456f83aa475bf17814df0ebcc06cc6109786
 translation_status: current
 ---
 
@@ -131,8 +131,9 @@ accessible name、图片替代文本、表头、iframe title 和重复 ID；重�
 站点外壳检查要求两种语言的主页使用同一个显式浏览器存储 namespace，确保切换语言时保留读者
 选择的亮色或暗色模式；同时拒绝在任一主页重新出现已删除的独立 Maven 坐标横幅。同一门禁还会检查
 最终打包的样式表，禁止在 `.navbar` 根节点上设置滤镜、变换、containment 或相关属性，因为它们会把
-Docusaurus 的 fixed 移动端侧栏和遮罩限制在导航栏高度内。视觉效果必须放在伪元素或其他不是这些
-fixed 图层祖先的节点上。
+Docusaurus 的 fixed 移动端侧栏和遮罩限制在导航栏高度内。同一限制也适用于导航栏伪元素：部分
+浏览器的合成顺序会把定位滤镜层绘制到普通流中的菜单按钮与品牌标题上方，同时仍显示定位的搜索框。
+因此导航栏只使用普通背景，不再增加模糊图层。
 
 ## 发布版本与别名
 

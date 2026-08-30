@@ -25,13 +25,10 @@ function normalizedBuildPath(buildDirectory, path) {
   return relative(buildDirectory, path).split(sep).join('/');
 }
 
-function selectorTargetsNavbarRoot(selector) {
+function selectorTargetsNavbarShell(selector) {
   const withoutComments = selector.replaceAll(/\/\*[\s\S]*?\*\//gu, '').trim();
   const lastCompound = withoutComments.split(/[\s>+~]+/u).filter(Boolean).at(-1) ?? '';
-  return (
-    !/:{1,2}(?:after|before)(?![A-Za-z0-9_-])/u.test(lastCompound) &&
-    /(?:^|[^A-Za-z0-9_-])\.navbar(?![A-Za-z0-9_-])/u.test(lastCompound)
-  );
+  return /(?:^|[^A-Za-z0-9_-])\.navbar(?![A-Za-z0-9_-])/u.test(lastCompound);
 }
 
 function propertyCreatesFixedContainingBlock(property, value) {
@@ -62,7 +59,7 @@ export function analyzeSiteShellStyles(stylesheets) {
   for (const [path, css] of Object.entries(stylesheets)) {
     for (const rule of css.matchAll(cssRulePattern)) {
       const selectors = rule[1].split(',').map((selector) => selector.trim());
-      if (!selectors.some(selectorTargetsNavbarRoot)) {
+      if (!selectors.some(selectorTargetsNavbarShell)) {
         continue;
       }
 
@@ -70,7 +67,8 @@ export function analyzeSiteShellStyles(stylesheets) {
         const property = declaration[1].toLowerCase();
         if (propertyCreatesFixedContainingBlock(property, declaration[2])) {
           violations.push(
-            `${path}: .navbar must not set ${property}; it confines the fixed mobile sidebar to the navbar`,
+            `${path}: .navbar and its pseudo-elements must not set ${property}; ` +
+              'they can confine fixed layers or cover in-flow mobile controls',
           );
         }
       }
