@@ -300,6 +300,8 @@ async function verifySchemas(versions) {
     screenshotRepairAuthorization: 'screenshot-repair-authorization.schema.json',
     screenshotRepairHostGrant: 'screenshot-repair-host-grant.schema.json',
     screenshotRepairExecutionOutcome: 'screenshot-repair-execution-outcome.schema.json',
+    screenshotRepairAppliedResultHandoff:
+      'screenshot-repair-applied-result-handoff.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
   };

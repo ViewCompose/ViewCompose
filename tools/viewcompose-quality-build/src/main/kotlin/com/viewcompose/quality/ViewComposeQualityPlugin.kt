@@ -1238,6 +1238,23 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiScreenshotRepairAppliedResultHandoff") {
+            group = "verification"
+            description =
+                "Verifies the durable receipt and exact in-memory applied-result handoff boundary."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:phase5-screenshot-repair-applied-result-handoff")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "contracts/screenshot-repair-applied-result-handoff.schema.json",
+                        "evaluation/fixtures/visual/screenshot-repair-applied-result-handoff-contract.json",
+                        "scripts/verify-phase5-screenshot-repair-applied-result-handoff.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("generateAiKnowledgeBundle") {
             group = "documentation"
             description =

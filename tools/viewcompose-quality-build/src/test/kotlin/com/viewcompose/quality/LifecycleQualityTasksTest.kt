@@ -94,6 +94,7 @@ class LifecycleQualityTasksTest {
                 "verifyAiScreenshotRepairAuthorization",
                 "verifyAiScreenshotRepairHostGrant",
                 "verifyAiScreenshotRepairExecutionOutcome",
+                "verifyAiScreenshotRepairAppliedResultHandoff",
                 "verifyDocumentationStructure",
                 "verifyDslApiContracts",
                 "verifyMigrationPairedSamples",

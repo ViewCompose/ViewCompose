@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Resume the content-addressed applied-result handoff that retains and revalidates the exact in-memory Design IR only after a committed terminal receipt, while keeping application source writes and public activation disabled.
+next_action: Implement the frozen content-addressed applied-result handoff, retaining and delivering the exact in-memory Design IR only after durable terminal-receipt reconciliation while application source writes and public activation remain disabled.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -57,6 +57,11 @@ The missing consumer setup boundary is now also complete: the offline package ex
 `viewcompose-agent` command with deterministic project profiles for Codex, Claude Code, and Cursor,
 installs the six canonical Skills into each client's standard project root, and verifies installed
 configuration, exact Skill bytes, idempotence, conflict/path safety, and both MCP protocol versions.
+The resumed screenshot-repair lane now has a frozen applied-result handoff contract. It requires the
+exact process-local execution outcome and original trusted host, re-reads the durable terminal
+record before delivery, binds one content-addressed handoff receipt to the complete result lineage,
+and permits only one delivery of the exact frozen in-memory Design IR. Implementation, result
+persistence, application source writes, and public repair activation remain off at this freeze.
 Phase 4 now has a frozen typed Design IR v1 and a fail-closed Android XML v1 migration subset with
 one supported golden and three explicit unsupported denominators. The bounded XML parser now meets
 the frozen IR determinism, provenance, resource-preservation, and unsupported-honesty gates. The
@@ -3073,6 +3078,31 @@ filesystems, or automatic recovery service. It persists only terminal metadata; 
 in-memory Design IR is still discarded after its fingerprint is recorded. The next prerequisite is
 a content-addressed applied-result handoff that exposes that exact Design IR only after a validated
 committed receipt, without writing application source or enabling public repair.
+
+### Contract evidence — content-addressed applied-result handoff
+
+Screenshot repair applied-result handoff v1 freezes the final process-local boundary after a typed
+patch has produced an applied Design IR and the trusted host has returned a committed terminal
+receipt. Handoff authority belongs only to the exact outcome object returned by attended execution
+and the exact trusted host that recorded it. A serialized or reconstructed outcome or host handle
+has no authority. Before any result is exposed, that host must read the terminal outcome again; the
+reconciled record must remain schema-valid, content-addressed, committed, and byte-for-byte equal to
+the accepted execution outcome.
+
+The successful return separates one immutable content-addressed handoff receipt from the exact
+frozen in-memory Design IR object. The receipt binds the outcome and terminal receipt, reservation,
+trust domain, input and result Design IR, authorized change, and patch-output identities. The Design
+IR itself remains subject to Design IR v1 validation and exact fingerprint reproduction. It is not
+sent to the terminal host or persisted in the terminal store. Delivery is process-local and single
+use; concurrent requests may produce at most one successful delivery.
+
+The frozen denominator requires 1/1 successful handoff, 1/1 durable receipt re-read, 1/1 exact
+object delivery, 0/0 accepted serialized authorities, 0/0 non-applied results, 0/0 mismatched
+receipts, and 0/0 replayed deliveries. The contract and its twenty-third Phase 0 schema pass under
+Node 25.6.0. This is **improved** output-lineage and delivery safety with **no material Android
+runtime behavior change**. It does not implement handoff, persist the applied Design IR, write or
+roll back application source, authenticate a production receipt, or activate CLI/MCP repair. The
+next action is the isolated process-local implementation against the durable reference store.
 
 ### Implementation evidence — bounded XML to Design IR
 

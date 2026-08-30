@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-screenshot-repair-applied-result-handoff-v1",
+  "requiresContracts": [
+    "design-ir-v1",
+    "screenshot-repair-execution-outcome-v1"
+  ],
+  "activation": {
+    "tool": "generate_screenshot_viewcompose",
+    "status": "contract-frozen",
+    "implementation": false,
+    "publicRepairMode": false,
+    "persistentSourceWrite": false
+  },
+  "boundary": {
+    "authority": "the exact process-local applied outcome object returned by attended execution",
+    "durability": "the same trusted host must read and revalidate the exact persisted terminal outcome before delivery",
+    "result": "the exact frozen in-memory Design IR object retained from typed patch application",
+    "receipt": "one content-addressed handoff receipt binds the terminal outcome and all result identities",
+    "serialization": "serialized or reconstructed outcomes and host handles carry no handoff authority",
+    "singleUse": true,
+    "persistentResultStorage": false,
+    "persistentSourceWrite": false,
+    "providerCalls": false,
+    "toolNetworkAccess": false,
+    "publicActivation": false,
+    "logs": "fingerprints-only"
+  },
+  "acceptance": {
+    "successfulHandoffs": 1,
+    "durableReceiptReads": 1,
+    "exactObjectDeliveries": 1,
+    "serializedAuthoritiesAccepted": 0,
+    "nonAppliedResultsDelivered": 0,
+    "mismatchedReceiptsAccepted": 0,
+    "replayedDeliveries": 0,
+    "concurrentDeliveries": 1
+  },
+  "diagnosticCodes": [
+    "VC-AI-REPAIR-HANDOFF-AUTHORITY-INVALID",
+    "VC-AI-REPAIR-HANDOFF-HOST-UNTRUSTED",
+    "VC-AI-REPAIR-HANDOFF-IN-PROGRESS",
+    "VC-AI-REPAIR-HANDOFF-ALREADY-DELIVERED",
+    "VC-AI-REPAIR-HANDOFF-TERMINAL-OUTCOME-INVALID",
+    "VC-AI-REPAIR-HANDOFF-DURABLE-RECEIPT-UNAVAILABLE",
+    "VC-AI-REPAIR-HANDOFF-DURABLE-RECEIPT-MISMATCH",
+    "VC-AI-REPAIR-HANDOFF-RESULT-INTEGRITY-MISMATCH"
+  ],
+  "claims": {
+    "checked": [
+      "only the exact live applied-outcome object and its original trusted host can request handoff",
+      "the terminal record is read again and must exactly match its schema-valid content-addressed outcome",
+      "the retained Design IR is schema-valid and exactly matches the committed result identity",
+      "one immutable content-addressed receipt accompanies the exact frozen in-memory Design IR object",
+      "successful delivery is process-local and single use even under concurrent requests"
+    ],
+    "notClaimed": [
+      "persistent storage or restart recovery of the applied Design IR",
+      "transactional application source writes or rollback",
+      "a production receipt authenticator or multi-host durable store",
+      "public CLI or MCP screenshot repair activation"
+    ]
+  }
+}
