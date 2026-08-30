@@ -3212,6 +3212,18 @@ source-bound until the next Phase 6A contract binds an exact released Knowledge 
 coordinates and an explicitly authorized consumer project. That consumer-project execution
 contract is the next action.
 
+The final isolated-worktree `qaQuick` acceptance passed 2,311 tasks: 2,078 executed, 233 up-to-date,
+and 15 minutes 12 seconds. The comparison context is the immediately preceding accepted full
+onboarding run recorded above at 2,309 tasks, 2,061 executed, 248 up-to-date, and 10 minutes 51
+seconds. This change adds two tasks (`+0.0866%`), executes 17 more (`+0.8248%`), and takes 4 minutes
+21 seconds longer (`+40.09%`) while carrying a different local output-cache state and the complete
+release distribution gate. The elapsed-time difference is therefore not accepted as a performance
+regression. Functional conclusion: **no material change** to repository quality—the new release and
+transactional-onboarding gates pass alongside documentation, tooling isolation, Release Intent,
+R8, Lint, Paparazzi, unit tests, and samples. Limitations are one local macOS/JDK 21 run and no
+tag-triggered Linux publication. Next action remains the first attested Release followed by the
+consumer-project execution contract.
+
 ### Implementation evidence — bounded XML to Design IR
 
 The first Phase 4 implementation uses a dependency-free scanner and tree builder rather than
