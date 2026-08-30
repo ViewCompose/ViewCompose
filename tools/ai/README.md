@@ -356,19 +356,22 @@ and enters exact pixels only after both categories pass. Each accepted candidate
 inside one evaluator session as a bounded, immutable, content-addressed evidence record containing
 the exact Design IR, candidate evaluation, gate diagnostic codes, structured layout/pixel
 comparisons, and bounded pixel localization. The record excludes generated Kotlin and PNG bytes,
-and callers receive clones rather
-than mutable session state. Candidate proposal remains an injected internal boundary; no MCP/CLI
-caller can activate repair yet.
+and callers receive clones rather than mutable session state. The internal proposal boundary now
+accepts only two complete content-addressed records from the same base resolution and exact pixel
+reference. No MCP/CLI caller can activate repair yet.
 
-Screenshot repair proposal v1 is contract-frozen but not implemented. Its first eligible mode is
-deliberately limited to rolling one changed `properties` field back to the exact typed value in an
-integrity-verified, strictly better baseline candidate. The current candidate must pass safety,
-compilation, render, semantics, and structure; fail exact pixels on the same denominator; localize
-at least one mismatched pixel to the changed node; and differ from the baseline in exactly that one
-non-expression field. Localization alone never supplies a value. Novel mismatches, multiple field
-changes, unlocalized changes, modifier/structure/behavior changes, and caller-supplied targets
-return no eligible proposal. Every eventual patch remains subject to the existing typed applier and
-six-gate evaluator, and no CLI/MCP repair mode is activated.
+Screenshot repair proposal v1 implements one deliberately narrow mode: roll one changed
+`properties` field back to the exact typed value retained by an integrity-verified, strictly better
+baseline candidate. The proposer verifies the evidence and every nested Design IR, layout, pixel,
+localization, gate, lineage, and exact-reference binding before inspecting differences. The current
+candidate must pass safety, compilation, render, semantics, and structure; fail exact pixels on the
+same denominator; localize at least one mismatched pixel to the changed node; and differ from the
+baseline in exactly that one non-expression field. Localization never supplies a value. Novel
+mismatches, multiple field changes, unlocalized changes, modifier/structure/behavior changes, and
+caller-supplied targets return no eligible proposal. The real `Hello` regression produces the
+baseline `Welcome` patch, which then passes the typed applier and all six source-bound gates with
+zero mismatched pixels. This remains an internal verifier capability; no CLI/MCP repair mode is
+activated.
 
 Run the local MCP server and its protocol/parity gate with:
 
@@ -395,6 +398,7 @@ npm --prefix tools/ai run verify:phase5-screenshot-repair-proposer
 ./gradlew verifyAiScreenshotPixelComparison
 ./gradlew verifyAiScreenshotRepair
 ./gradlew verifyAiScreenshotRepairCandidate
+./gradlew verifyAiScreenshotRepairProposer
 ```
 
 The preferred protocol follows the

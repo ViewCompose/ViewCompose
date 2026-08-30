@@ -7,6 +7,10 @@ import {
   fingerprintRepairValue,
   validateRepairPatch,
 } from './repair-orchestrator.mjs';
+import {
+  evaluateScreenshotRepairCandidateWithEvidence,
+} from './screenshot-repair-candidate-evaluator.mjs';
+import {proposeScreenshotRepair} from './screenshot-repair-proposer.mjs';
 
 const visualRoot = fileURLToPath(new URL('../evaluation/fixtures/visual/', import.meta.url));
 const contractPath = resolve(visualRoot, 'screenshot-repair-proposer-contract.json');
@@ -59,9 +63,9 @@ function assertContract(contract, schema) {
       'screenshot-repair-proposal-v1',
     ]) ||
     contract.activation?.tool !== 'generate_screenshot_viewcompose' ||
-    contract.activation?.status !== 'contract-frozen' ||
+    contract.activation?.status !== 'implemented-internal' ||
     contract.activation?.publicRepairMode !== false ||
-    contract.activation?.implementation !== false ||
+    contract.activation?.implementation !== true ||
     contract.activation?.mode !== 'single-property-regression-rollback'
   ) {
     throw new Error('Screenshot repair proposer activation boundary changed');
@@ -70,10 +74,15 @@ function assertContract(contract, schema) {
     contract.input?.callerSuppliedPatch !== false ||
     contract.input?.callerSuppliedTargetValue !== false ||
     contract.input?.pixelOrVisionInferredValue !== false ||
+    contract.eligibility?.evidenceIntegrity !==
+      'both evidence fingerprints and every self-contained retained nested fingerprint reproduce; ' +
+        'opaque upstream identities are compared but not recomputed' ||
     !same(contract.eligibility?.sharedLineage, [
       'baseResolutionResultFingerprint',
       'inputDesignIrFingerprint',
     ]) ||
+    contract.eligibility?.pixelReference !==
+      'identical request, output, PNG, viewport, and interpretation identity' ||
     contract.eligibility?.difference !==
       'exactly one existing properties field has a different non-expression typed value' ||
     contract.eligibility?.targetValue !==
@@ -122,7 +131,95 @@ function assertContract(contract, schema) {
   }
 }
 
-export async function verifyPhase5ScreenshotRepairProposer() {
+function resolutionFingerprint(resolutionResult) {
+  const copy = structuredClone(resolutionResult);
+  delete copy.resultFingerprint;
+  return fingerprintRepairValue(copy);
+}
+
+async function verifyRealRollback(contract, schema) {
+  const repairContract = await readJson(resolve(visualRoot, 'screenshot-repair-contract.json'));
+  const fixtures = repairContract.candidateEvaluatorFixtures;
+  const [resolutionResult, generationRequest, previewRequest, referenceRequest, referenceResult] =
+    await Promise.all([
+      fixtures.resolutionResult,
+      fixtures.generationRequest,
+      fixtures.previewRequest,
+      fixtures.pixelReferenceRequest,
+      fixtures.pixelReferenceResult,
+    ].map((path) => readJson(resolve(visualRoot, path))));
+  const patch = await readJson(resolve(
+    visualRoot,
+    fixtures.cases.find((item) => item.id === 'title-text-pixel-mismatch').patch,
+  ));
+  const input = {
+    resolutionResult,
+    generationRequest,
+    previewBindings: previewRequest.bindings,
+    pixelReference: {request: referenceRequest, result: referenceResult},
+  };
+  const limits = {maxSourceBytes: 262144, timeoutMs: 120000, maxOutputBytes: 1048576};
+  const baseline = await evaluateScreenshotRepairCandidateWithEvidence(input, {
+    requestId: 'verify-screenshot-proposer-baseline',
+    limits,
+  });
+  const candidate = await evaluateScreenshotRepairCandidateWithEvidence({...input, patch}, {
+    requestId: 'verify-screenshot-proposer-candidate',
+    limits,
+  });
+  const proposal = await proposeScreenshotRepair({
+    baselineEvidence: baseline.evidence,
+    candidateEvidence: candidate.evidence,
+  });
+  const fixture = contract.supportedFixtures[0];
+  if (
+    validateSchemaValue(proposal, schema).length > 0 ||
+    proposal.status !== 'proposed' ||
+    proposal.reason !== fixture.expectedReason ||
+    proposal.input.baselineEvidenceFingerprint !== fixture.baselineEvidenceFingerprint ||
+    proposal.input.candidateEvidenceFingerprint !== fixture.candidateEvidenceFingerprint ||
+    !same(proposal.target, fixture.expectedTarget) ||
+    !same(proposal.patch, fixture.expectedPatch) ||
+    proposal.proposalFingerprint !== fixture.expectedProposalFingerprint ||
+    candidate.evaluation.gates[5].mismatchedPixels !== 3345
+  ) {
+    throw new Error('Real source-bound screenshot repair proposal changed');
+  }
+
+  const currentResolution = structuredClone(resolutionResult);
+  currentResolution.designIr = structuredClone(candidate.evidence.designIr);
+  currentResolution.designIrFingerprint = candidate.evaluation.designIrFingerprint;
+  currentResolution.resultFingerprint = resolutionFingerprint(currentResolution);
+  const rollback = await evaluateScreenshotRepairCandidateWithEvidence({
+    ...input,
+    resolutionResult: currentResolution,
+    patch: proposal.patch,
+  }, {
+    requestId: 'verify-screenshot-proposer-rollback',
+    limits,
+  });
+  if (
+    rollback.evidence === null ||
+    !rollback.evaluation.gates.every((gate) => gate.status === 'passed') ||
+    rollback.evaluation.gates[5].mismatchedPixels !== 0 ||
+    rollback.evaluation.designIrFingerprint !== baseline.evaluation.designIrFingerprint ||
+    rollback.evaluation.evaluationFingerprint !==
+      fixture.expectedRollbackEvaluationFingerprint ||
+    rollback.evidence.evidenceFingerprint !== fixture.expectedRollbackEvidenceFingerprint ||
+    !same(rollback.evidence.designIr, baseline.evidence.designIr)
+  ) {
+    throw new Error('Proposed rollback did not pass the complete source-bound six-gate evaluator');
+  }
+  return {
+    evaluatedCandidates: 3,
+    regressedPixels: candidate.evaluation.gates[5].mismatchedPixels,
+    rollbackPixels: rollback.evaluation.gates[5].mismatchedPixels,
+    rollbackEvaluationFingerprint: rollback.evaluation.evaluationFingerprint,
+    rollbackEvidenceFingerprint: rollback.evidence.evidenceFingerprint,
+  };
+}
+
+export async function verifyPhase5ScreenshotRepairProposer({evaluateReal = true} = {}) {
   const [contract, schema] = await Promise.all([
     readJson(contractPath),
     readJson(schemaPath),
@@ -185,13 +282,15 @@ export async function verifyPhase5ScreenshotRepairProposer() {
   ) {
     throw new Error('Screenshot repair proposer fail-closed reasons changed');
   }
+  const real = evaluateReal ? await verifyRealRollback(contract, schema) : null;
   return {
-    implementation: false,
+    implementation: true,
     supportedRollbacks: 1,
     noEligibleDenominators: 6,
     invalidDenominators: 2,
     cancelledDenominators: 1,
     proposalFingerprint: fixture.expectedProposalFingerprint,
+    real,
   };
 }
 
@@ -202,7 +301,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         `Verified screenshot repair proposer contract: ${summary.supportedRollbacks}/1 bounded ` +
           `rollback, ${summary.noEligibleDenominators}/6 no-change, ` +
           `${summary.invalidDenominators}/2 invalid, and ` +
-          `${summary.cancelledDenominators}/1 cancelled denominators; implementation remains off.`,
+          `${summary.cancelledDenominators}/1 cancelled denominators; real rollback restored ` +
+          `${summary.real.regressedPixels} changed pixels to ${summary.real.rollbackPixels} and ` +
+          `passed all six gates.`,
       );
     })
     .catch((error) => {

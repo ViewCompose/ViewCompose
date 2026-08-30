@@ -36,7 +36,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-30
-next_action: Implement the frozen single-property regression rollback proposer and verify its emitted patch through the existing six-gate evaluator.
+next_action: Freeze how an accepted regression baseline is supplied and explicitly authorized before binding the internal rollback proposer to any public repair workflow.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -117,20 +117,15 @@ The bounded deterministic repair contract and its provider-offline internal orch
 implemented, including typed Design IR patch application, source-bound candidate evaluation, and
 content-addressed structured candidate evidence, but automatic repair is not yet a public tool
 mode. The reproduced cross-build persistent Preview worker isolation gap is now closed by binding
-worker reuse to one exact build identity. Candidate evidence also proves that semantic layout
-comparison establishes conformance of generated code to its candidate IR; it cannot identify how
-that IR should change to match the reference image. Exact pixel findings currently retain only
-aggregate mismatch metrics. Therefore the next prerequisite is a separate localization result
-with bounded global mismatch bounds, deepest-containing Design IR node attribution, stable
-tie-breaking, and explicit unassigned pixels. The v1 implementation now emits that separate
-content-addressed result from the same bounded RGBA traversal and retains it in candidate evidence.
-It deliberately does not infer repair values from pixel locations. Real source-bound exact and
-mutated candidates now reproduce their localization, candidate-evidence, and six-gate fingerprints
-from an empty Preview harness; the public exact comparison/localization path also passes through the
-installed package. The next step is to freeze which structured findings may enter a bounded
-deterministic proposer without guessing or claiming perceptual or cross-device equivalence. That
-rollback-only v1 boundary is now frozen; implementation remains off until the input-evidence and
-fail-closed denominators are wired to executable tests.
+worker reuse to one exact build identity. Exact RGBA comparison now retains separate bounded
+global mismatch bounds, deepest-containing Design IR node attribution, stable tie-breaking, and
+explicit unassigned pixels without deriving a repair value from location. The internal v1 proposer
+now consumes only two integrity-verified records from the same resolution and exact reference. It
+may roll back exactly one localized `properties` value, and only to the typed value retained by a
+strictly better baseline. The real `Hello` regression emits the frozen `Welcome` patch and that
+patch passes the typed applier plus all six source-bound gates with zero mismatched pixels. Novel
+repair inference and public CLI/MCP activation remain off until accepted baseline provenance and
+explicit authorization are separately frozen.
 
 ## Maven release changesets
 
@@ -2576,8 +2571,8 @@ This result is **improved** visual-failure localization, candidate traceability,
 ownership, and installed-tool parity with **no material Android runtime behavior change**. It does
 not prove that an attributed node caused every changed pixel, that a mismatch rectangle determines
 a valid modifier/value patch, or that exact pixels express perceptual or design quality. The next
-action is to define a bounded proposer eligibility policy over these accepted structured facts,
-then emit only typed Design IR patches that can be verified by the existing six-gate loop.
+action at this slice boundary was to define the bounded proposer eligibility policy implemented
+below and emit only typed Design IR patches that can be verified by the existing six-gate loop.
 
 ### Contract evidence — rollback-only screenshot repair proposer
 
@@ -2601,7 +2596,8 @@ denominators cover an already exact candidate, an earlier failed gate, a non-imp
 multiple differences, an unlocalized changed node, and localization without a baseline value
 difference. Two invalid denominators cover evidence-integrity and lineage drift, and cancellation
 has its own result. The contract verifier passes 1/1 supported rollback, 6/6 no-change, 2/2 invalid,
-and 1/1 cancelled cases while explicitly reporting `implementation: false`.
+and 1/1 cancelled cases while explicitly reporting `implementation: false` at the contract-only
+boundary.
 
 Phase 0 now verifies 18 schemas, and Node 25.6.0 passes 231/231 AI-tooling tests. The
 dependency-free package contains 69 files and 1,863,534 declared bytes; its 334,488-byte archive
@@ -2609,9 +2605,67 @@ has SHA-256 `3facf1c0273e6a4a4cf309f9c66d9c8679abdf9c29e1bac3bed0e394e541d549`. 
 localization package, the frozen proposal schema and guidance add one file, 5,563 declared bytes
 (+0.30%), and 885 archive bytes (+0.27%), with no runtime dependency or provider boundary. This is
 **improved** repair-scope honesty, deterministic rollback eligibility, and fail-closed coverage with
-**no material Android runtime behavior change**. It does not yet prove executable proposal output
-or end-to-end rollback convergence. The next action is to implement exactly this boundary and run
-the emitted patch through the real source-bound evaluator.
+**no material Android runtime behavior change**. At that contract-only boundary it did not yet
+prove executable proposal output or end-to-end rollback convergence; the implementation evidence
+below closes exactly those two claims.
+
+### Implementation evidence — deterministic single-property regression rollback
+
+The internal screenshot repair proposer now verifies each input against the candidate-evidence,
+repair-evaluation, Design IR, layout-comparison, pixel-comparison, localization, and proposal
+schemas before considering a change. It reproduces canonical evidence, Design IR, localization,
+and proposal identities; reproduces compact evaluation, layout, pixel, and patch identities; binds
+the retained layout nodes and paths back to the exact Design IR; reconciles layout check totals,
+pixel denominators, node attributions, and unassigned pixels; and requires the same base resolution,
+input Design IR, pixel-reference request/output/PNG, viewport, and interpretation on both records.
+Malformed, oversized, internally inconsistent, cross-lineage, and cancelled input fails closed.
+
+Eligibility is deliberately not a general visual-repair heuristic. The current candidate must pass
+the first five ordered gates and fail exact pixels. The baseline must pass the same first five gates,
+use the same exact reference and compared-pixel count, contain strictly fewer mismatched pixels,
+and have no larger maximum channel delta. A bounded 1,000-node, depth-64 comparison permits exactly
+one existing non-expression field in `properties` to differ; replacing that current value with the
+baseline value must make the complete canonical Design IR equal to the baseline. The changed node
+must also own at least one current mismatched pixel. The proposer then seals one `replace-field`
+operation and runs it through the existing typed patch validator and applier before publishing the
+proposal. No pixel, OCR, vision, model, caller target, aggregate score, or network path supplies the
+value.
+
+The real source-bound 1079×2339 denominator reproduces the exact baseline evidence fingerprint
+`ce8555c98b3febf00cdd23978da5c5af685efcddb17c0f2110b229ec26a7605a` and the `Hello`
+regression evidence fingerprint
+`e0bd2617d05017bf9fa864139ecc03535b35a3b8b7bbbf491c28884be0c60068`. The proposer emits
+only `wireframe-title.properties.text = Welcome`, with change fingerprint
+`7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945` and proposal
+fingerprint `47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68`. Rebased onto the
+current `Hello` resolution, that emitted patch passes safety, compilation, render, all 12 semantic
+checks, all 15 structural checks, and the complete 2,523,781-pixel comparison, reducing the current
+3,345 mismatches to zero. The rollback evaluation fingerprint is
+`020019c2483980dcbcd3d6c3ca5148228d6330a46f6ca9dc48d4acc849ffc7f3`; its complete evidence
+fingerprint is `f655efb37838921c557fe0455a0424a311ed9847af3e7de273ed805236d8263c`.
+
+The focused suite covers deterministic proposal replay, typed-applier equality, exact candidates,
+earlier-gate short circuits, non-improving baselines, multiple property differences, unlocalized
+changes, localization without a baseline value difference, evidence-integrity drift, base-lineage
+drift, exact-reference drift, and cancellation. The dedicated real verifier passes 1/1 supported
+rollback, 6/6 no-change, 2/2 invalid, and 1/1 cancelled contract denominators, then evaluates three
+real candidates and proves the emitted rollback through all six gates. Public repair activation
+remains false.
+
+Node 25.6.0 passes 238/238 AI-tooling tests, and Phase 0 remains at 18 schemas, 64 metrics,
+73 cases, 70 fixture-backed cases, and nine screenshot-repair fixtures. The dependency-free offline
+package now contains 70 files and 1,886,105 declared bytes; its 338,952-byte archive has SHA-256
+`83ad316c9fba96da952c6fef195b3a949b3247405bb859f23af8a795e256c619`. Relative to the
+contract-only package, the internal proposer adds one file, 22,571 declared bytes (+1.21%), and
+4,464 archive bytes (+1.33%), with no runtime dependency, provider, network, or public tool mode.
+
+This is **improved** deterministic rollback capability, evidence integrity, and end-to-end repair
+verification with **no material Android runtime behavior change**. It proves only recovery of one
+known single-property regression against an accepted better baseline. It does not prove how a
+baseline becomes trusted, that arbitrary localized pixels reveal causality, novel value inference,
+perceptual equivalence, or safe unattended repair. The next prerequisite is an explicit contract
+for accepted baseline provenance and human authorization before any CLI/MCP repair workflow can
+bind this internal proposer to the orchestrator.
 
 ### Implementation evidence — bounded XML to Design IR
 

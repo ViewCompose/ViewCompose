@@ -10,14 +10,14 @@
   ],
   "activation": {
     "tool": "generate_screenshot_viewcompose",
-    "status": "contract-frozen",
+    "status": "implemented-internal",
     "publicRepairMode": false,
-    "implementation": false,
+    "implementation": true,
     "mode": "single-property-regression-rollback"
   },
   "input": {
-    "baselineEvidence": "one complete schema-valid previously evaluated candidate record",
-    "candidateEvidence": "one complete schema-valid current candidate record",
+    "baselineEvidence": "one schema-valid previously evaluated candidate record; completion is required for proposal eligibility",
+    "candidateEvidence": "one schema-valid current candidate record; completion is required for proposal eligibility",
     "callerSuppliedPatch": false,
     "callerSuppliedTargetValue": false,
     "pixelOrVisionInferredValue": false
@@ -27,7 +27,8 @@
       "baseResolutionResultFingerprint",
       "inputDesignIrFingerprint"
     ],
-    "evidenceIntegrity": "both evidence fingerprints and all nested fingerprints reproduce",
+    "pixelReference": "identical request, output, PNG, viewport, and interpretation identity",
+    "evidenceIntegrity": "both evidence fingerprints and every self-contained retained nested fingerprint reproduce; opaque upstream identities are compared but not recomputed",
     "candidateGate": "safety through structure passed and exact-pixels failed",
     "baselineGate": "same exact-pixel denominator with strictly fewer mismatched pixels and no larger maximum channel delta",
     "difference": "exactly one existing properties field has a different non-expression typed value",
@@ -97,7 +98,9 @@
         ],
         "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945"
       },
-      "expectedProposalFingerprint": "47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68"
+      "expectedProposalFingerprint": "47bffb223b1503cb603f77840ea46ec9ae375bc7efa5637c5a3635adbcecce68",
+      "expectedRollbackEvaluationFingerprint": "020019c2483980dcbcd3d6c3ca5148228d6330a46f6ca9dc48d4acc849ffc7f3",
+      "expectedRollbackEvidenceFingerprint": "f655efb37838921c557fe0455a0424a311ed9847af3e7de273ed805236d8263c"
     }
   ],
   "noEligibleFixtures": [

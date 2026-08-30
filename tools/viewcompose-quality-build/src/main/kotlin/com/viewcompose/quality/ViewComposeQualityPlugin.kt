@@ -1054,24 +1054,52 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
         project.tasks.register<Exec>("verifyAiScreenshotRepairProposer") {
             group = "verification"
             description =
-                "Verifies rollback-only screenshot repair proposal contracts and denominators."
+                "Verifies rollback-only screenshot proposals and six-gate source-bound replay."
             workingDir(project.rootDir.resolve("tools/ai"))
             commandLine("npm", "run", "verify:phase5-screenshot-repair-proposer")
             inputs.files(
                 project.fileTree(project.rootDir.resolve("tools/ai")) {
                     include(
                         "contracts/design-ir.schema.json",
+                        "contracts/generated-preview-request.schema.json",
+                        "contracts/layout-comparison.schema.json",
+                        "contracts/screenshot-inference-resolution.schema.json",
+                        "contracts/screenshot-kotlin-generation.schema.json",
+                        "contracts/screenshot-pixel-comparison.schema.json",
                         "contracts/screenshot-pixel-localization.schema.json",
+                        "contracts/screenshot-preprocessing.schema.json",
                         "contracts/screenshot-repair-candidate-evidence.schema.json",
                         "contracts/screenshot-repair-proposal.schema.json",
                         "contracts/screenshot-repair.schema.json",
                         "evaluation/fixtures/visual/screenshot-repair-proposer-contract.json",
+                        "evaluation/fixtures/visual/screenshot-generation/wireframe.request.json",
+                        "evaluation/fixtures/visual/screenshot-pixel/pixel-reference.*.json",
+                        "evaluation/fixtures/visual/screenshot-render/wireframe.preview-request.json",
+                        "evaluation/fixtures/visual/screenshot-repair-contract.json",
+                        "evaluation/fixtures/visual/screenshot-repair/**",
+                        "evaluation/fixtures/visual/screenshot-resolution/wireframe.result.json",
+                        "generated/current-source/**",
+                        "scripts/bounded-process.mjs",
+                        "scripts/compiler-adapter.mjs",
+                        "scripts/design-ir-repair-patch.mjs",
+                        "scripts/generated-preview-adapter.mjs",
+                        "scripts/layout-comparator.mjs",
+                        "scripts/pixel-comparator.mjs",
                         "scripts/repair-orchestrator.mjs",
                         "scripts/schema-validator.mjs",
                         "scripts/screenshot-contract.mjs",
+                        "scripts/screenshot-design-ir-to-kotlin.mjs",
+                        "scripts/screenshot-generation-adapter.mjs",
+                        "scripts/screenshot-generation-contract.mjs",
+                        "scripts/screenshot-preprocessor.mjs",
+                        "scripts/screenshot-repair-candidate-evaluator.mjs",
+                        "scripts/screenshot-repair-proposer.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/tool-core.mjs",
                         "scripts/verify-phase5-screenshot-repair-proposer.mjs",
                     )
                 },
+                project.rootDir.resolve("settings.gradle.kts"),
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
