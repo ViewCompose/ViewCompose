@@ -7,8 +7,10 @@ import {promisify} from 'node:util';
 import {detectFrameworkProjectProfile} from './framework-project-profile.mjs';
 import {frameworkProfileMatchesProject} from './framework-profile-selection.mjs';
 import {
+  commitDurablePackageIntegrity,
   inspectAgentClientInstallation,
   migrateAgentClient,
+  verifyDurablePackageIntegrity,
 } from './agent-client-integration.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -17,6 +19,7 @@ const archiveLimit = 128 * 1024 * 1024;
 const manifestLimit = 4 * 1024 * 1024;
 const checksumLimit = 64 * 1024;
 const packageFileLimit = 2048;
+const bootstrapIntegrityMarker = '.viewcompose-ai-bootstrap-v1.json';
 const githubReleaseHosts = new Set([
   'api.github.com',
   'github.com',
@@ -24,10 +27,16 @@ const githubReleaseHosts = new Set([
   'release-assets.githubusercontent.com',
 ]);
 const supportedContracts = Object.freeze({
-  agentClientIntegration: 4,
+  agentClientIntegration: 5,
   frameworkCompatibilityProfile: 1,
   frameworkProfileIndex: 1,
 });
+
+export function npmInvocation(npmExecPath = process.env.npm_execpath) {
+  return npmExecPath
+    ? {executable: process.execPath, arguments: [npmExecPath]}
+    : {executable: 'npm', arguments: []};
+}
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -291,6 +300,7 @@ export async function verifyInstalledCandidate(packageRoot, manifest) {
     for (const entry of (await readdir(directory, {withFileTypes: true}))
       .sort((left, right) => left.name.localeCompare(right.name))) {
       const path = resolve(directory, entry.name);
+      if (relative(packageRoot, path) === bootstrapIntegrityMarker) continue;
       if (entry.isSymbolicLink()) throw new Error('Installed candidate contains a symbolic link.');
       if (entry.isDirectory()) {
         await visit(path);
@@ -345,8 +355,14 @@ export async function verifyInstalledCandidate(packageRoot, manifest) {
   }
 }
 
-async function installedPackageRoot(prefix, npmExecutable) {
-  const {stdout} = await execFileAsync(npmExecutable, ['root', '--global', '--prefix', prefix], {
+async function installedPackageRoot(prefix, npmExecutable, npmArguments) {
+  const {stdout} = await execFileAsync(npmExecutable, [
+    ...npmArguments,
+    'root',
+    '--global',
+    '--prefix',
+    prefix,
+  ], {
     encoding: 'utf8',
     maxBuffer: 1024 * 1024,
   });
@@ -355,7 +371,8 @@ async function installedPackageRoot(prefix, npmExecutable) {
 
 export async function installCompatibleCandidate(candidate, archivePath, {
   installRoot = defaultUpgradeRoot(),
-  npmExecutable = 'npm',
+  npmExecutable,
+  npmArguments,
 } = {}) {
   if (!isAbsolute(installRoot) || !isAbsolute(archivePath)) {
     throw new Error('Candidate installation paths must be absolute.');
@@ -365,6 +382,9 @@ export async function installCompatibleCandidate(candidate, archivePath, {
     `${candidate.version}-${candidate.manifest.archive.sha256.slice(0, 16)}`,
   );
   const stagingPrefix = resolve(installRoot, `.staging-${randomUUID()}`);
+  const npm = npmInvocation();
+  const effectiveNpmExecutable = npmExecutable ?? npm.executable;
+  const effectiveNpmArguments = npmArguments ?? npm.arguments;
   await mkdir(installRoot, {recursive: true});
   try {
     const existing = await lstat(finalPrefix).catch((error) => {
@@ -375,8 +395,17 @@ export async function installCompatibleCandidate(candidate, archivePath, {
       if (!existing.isDirectory() || existing.isSymbolicLink()) {
         throw new Error('Existing content-addressed candidate prefix is unsafe.');
       }
-      const packageRoot = await installedPackageRoot(finalPrefix, npmExecutable);
+      const packageRoot = await installedPackageRoot(
+        finalPrefix,
+        effectiveNpmExecutable,
+        effectiveNpmArguments,
+      );
       await verifyInstalledCandidate(packageRoot, candidate.manifest);
+      await verifyDurablePackageIntegrity({
+        aiRoot: packageRoot,
+        frameworkProfile: candidate.selectedProfile.profileId,
+        packageVersion: candidate.version,
+      });
       return {
         prefix: finalPrefix,
         packageRoot,
@@ -384,7 +413,8 @@ export async function installCompatibleCandidate(candidate, archivePath, {
         cache: 'verified-hit',
       };
     }
-    await execFileAsync(npmExecutable, [
+    await execFileAsync(effectiveNpmExecutable, [
+      ...effectiveNpmArguments,
       'install',
       '--global',
       '--prefix',
@@ -400,8 +430,16 @@ export async function installCompatibleCandidate(candidate, archivePath, {
       maxBuffer: 4 * 1024 * 1024,
       env: {...process.env, npm_config_audit: 'false', npm_config_fund: 'false'},
     });
-    const stagingPackage = await installedPackageRoot(stagingPrefix, npmExecutable);
+    const stagingPackage = await installedPackageRoot(
+      stagingPrefix,
+      effectiveNpmExecutable,
+      effectiveNpmArguments,
+    );
     await verifyInstalledCandidate(stagingPackage, candidate.manifest);
+    await commitDurablePackageIntegrity({
+      aiRoot: stagingPackage,
+      frameworkProfile: candidate.selectedProfile.profileId,
+    });
     await rename(stagingPrefix, finalPrefix);
     const finalPackage = resolve(finalPrefix, stagingPackage.slice(stagingPrefix.length + 1));
     return {
@@ -418,10 +456,11 @@ export async function installCompatibleCandidate(candidate, archivePath, {
 
 export async function upgradeAgentClient({
   client,
-  projectRoot,
+  projectRoot = process.cwd(),
   request = boundedReleaseRequest,
   installRoot = defaultUpgradeRoot(),
-  npmExecutable = 'npm',
+  npmExecutable,
+  npmArguments,
   discover = discoverCompatibleUpgrade,
   download = downloadCompatibleCandidate,
   install = installCompatibleCandidate,
@@ -450,6 +489,7 @@ export async function upgradeAgentClient({
     const installed = await install(discovery.candidate, downloaded.archivePath, {
       installRoot,
       npmExecutable,
+      npmArguments,
     });
     const migration = await migrate({
       client: active.client,

@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-31
-next_action: Start Execution Wave A in a new branch by freezing the public npm bootstrap and persistent-cache contracts; do not implement Compose, analyzer, Figma, or public repair work until Wave A is released and its cross-platform adoption gate passes.
+next_action: Run the hosted Linux, macOS, and Windows bootstrap-adoption matrix, establish the @viewcompose npm scope and ai-tooling-release trusted publisher, then publish and verify exact 0.4.0 npm and GitHub identities; do not begin Wave B until those external gates pass.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -61,6 +61,71 @@ accepted on 2026-08-31. Publication is therefore no longer an open action.
 
 The product priority is now adoption cost, followed by capability breadth. Work must execute in
 this order unless this plan and the unified roadmap are changed together:
+
+#### Wave A contract-freeze evidence (2026-08-31)
+
+The first Wave A slice froze `bootstrap-v1` in
+`tools/ai/contracts/bootstrap.schema.json` with a checked-in example and three negative tests.
+The contract fixes the exact npm identity `@viewcompose/ai-tooling@0.4.0`, Node `>=24.19.0`, the
+three supported clients, physical-current-directory resolution, logical symlink rejection, the
+content-addressed durable cache layout, durable-only MCP paths, staged-rename recovery, exact
+current-profile selection, and the complete bootstrap result shape. It intentionally changes no
+installer or project-write behavior. Against the pre-change Phase 0 contract suite, the focused
+post-change suite passed 2/2 test files (schema acceptance plus Phase 0 integration), with the
+schema inventory increasing from 27 to 28 and all existing 66 metrics, 74 cases, and 71 fixture
+cases unchanged. This is **improved** contract coverage with no runtime-behavior claim; the
+remaining limitation was that platform adoption was not yet implemented. The deterministic bootstrap
+implementation is now present in `tools/ai/scripts/agent-client-integration.mjs`: omitted roots use
+the physical current directory, published packages materialize into a content-addressed user cache,
+MCP configuration uses only the durable package, and `init` includes the readiness diagnosis.
+Focused post-implementation validation initially passed 13/13 targeted tests, 312/312 total AI Node
+tests, and 3/3 deterministic package-distribution tests, including source-removal persistence and
+transaction rollback. The package/adoption slice then advanced the candidate identity to public,
+script-free `@viewcompose/ai-tooling@0.4.0`, upgraded the client and release contracts to majors 5
+and 2, and added `.github/workflows/ai-tooling-adoption.yml`. That matrix runs the real packaged npx
+bootstrap on Linux, macOS, and Windows for all three clients from paths containing spaces and
+non-ASCII characters; it checks integrated diagnosis, exact re-entry, deletion of the temporary npx
+cache, durable MCP handshake, symbolic-link rejection, exact Skill ownership, and uninstall.
+
+Local Linux acceptance passed 3/3 client bootstraps, 3/3 durable MCP handshakes, and 4/4 native path
+cases. Durable bootstrap and upgrade caches now re-hash every package byte on reuse; one focused
+tamper case changes diagnosis from a false Ready possibility to `repair-required`. Follow-up review
+extended that fail-closed boundary from exact `0.4.0` to every later stable package, normalized
+missing and malformed integrity markers into repair-required results, made concurrent cache writers
+converge only after byte verification, and routed npm upgrade invocations through the Node entry
+point so Windows command shims are not executed directly. Prerelease, build-metadata, and malformed
+package versions are rejected rather than exempted from the stable-version gate. The complete AI
+Node suite increased from 312/312 to 320/320 while retaining a zero-failure rate; the added cases
+cover `0.4.0`, `0.4.1`, and `1.0.0` integrity gates, invalid version forms, a malformed marker,
+missing marker, changed package bytes, concurrent materialization, and portable npm invocation.
+`verifyDocumentationStructure` passed 19 tasks in 18 seconds, including 132 canonical-English
+pages, 129/129 current Chinese mirrors, 80/80 documentation-script tests, and zero Governance V2
+issues. After adding the npm publication inventory and cache-integrity checks, the combined JDK 21
+and Gradle 9.3.1 `verifyDocumentationStructure verifyAiToolingRelease` gate passed 192 tasks in 2
+minutes 1 second (9 executed, 183 up-to-date), with 2/2 reproducible packages, 1/1 npm publish
+dry-run inventory, 1/1 offline archive lifecycle,
+3/3 installed profiles, 18/18 exact Skill copies, 2/2 MCP protocol versions, 3/3 release assets, and
+all retained compile, Preview, XML, layout, screenshot, and exact-pixel evidence. Relative to the
+two-command global installation path, local setup changed from no one-command denominator to 3/3
+clients on one native operating system. The conclusion is **improved**, not cross-platform accepted:
+the hosted matrix remains 0/3 executed in this worktree.
+
+The English and Chinese AI Integration pages, repository README, and tooling README now expose only
+the exact one-command `0.4.0` path, durable-cache behavior, optional diagnosis, upgrade/removal, and
+provenance boundary. The candidate release workflow uses npm Trusted Publishing through GitHub OIDC,
+pins npm 11.8.0, creates or byte-verifies the GitHub Release before publishing the exact public npm
+tarball with provenance, and contains no long-lived npm token. A retry accepts a pre-existing GitHub
+Release only after its bytes and complete asset inventory match the frozen local outputs; a missing,
+partial, or divergent identity fails closed. Any pre-existing npm version is rejected because equal
+tarball bytes alone cannot prove OIDC provenance. This permits automatic recovery when GitHub
+publication succeeds before a temporary npm failure, without permitting overwrite or silently
+accepting unverifiable npm provenance. A public registry check on 2026-08-31 returned
+`E404` for the package and `Scope not found` for `@viewcompose`; therefore namespace creation and
+the npm-side trusted-publisher binding are external account prerequisites, not accepted evidence.
+No funding endpoint was declared because the repository has no authoritative funding destination;
+the package publishes its repository, documentation home, and issue-support URLs. The next action is
+to run the hosted three-OS matrix, establish those npm account bindings, and only then publish and
+verify both immutable `0.4.0` identities.
 
 | Order | Execution wave | User outcome | Entry condition | Exit gate |
 | --- | --- | --- | --- | --- |

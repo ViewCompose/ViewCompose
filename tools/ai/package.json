@@ -22,6 +22,7 @@
     "verify:phase3-workflows": "node scripts/verify-phase3-workflows.mjs",
     "verify:phase3-mcp": "node scripts/verify-phase3-mcp.mjs",
     "verify:phase3-distribution": "node scripts/verify-phase3-distribution.mjs",
+    "verify:bootstrap-adoption": "node scripts/verify-bootstrap-adoption.mjs",
     "verify:release": "node scripts/verify-ai-tooling-release.mjs",
     "verify:phase4-design-ir": "node scripts/verify-phase4-design-ir.mjs",
     "verify:phase4-project-context": "node scripts/verify-phase4-project-context.mjs",

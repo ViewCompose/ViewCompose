@@ -2,39 +2,42 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: e9606443ee425d246c717599bee2859f09c8eb51a81b5f1614757828b05c0ba4
+translation_source_hash: 1f70bfb5e6478e2b12e5d851a4ade27180eb1550f0b43e5f03c9a05786c354ac
 translation_status: current
 ---
 
 # AI 接入
 
 ViewCompose 把机器可读 API Reference、13 个本地 MCP 工具和 6 个 Agent Skill 作为一个
-可安装的 GitHub Release 发布。开发者只需两条命令，就能让 Codex、Claude Code 或 Cursor
-接入全新或已有 Android Project。即使要执行 Kotlin 编译和生成页面的 Preview 证据，也不要求
-ViewCompose Checkout、本地构建 Package、Provider Key 或手动编辑 MCP 配置。
+由不可变 GitHub Release 支持的精确版本 npm Package 发布。开发者只需一条命令，就能让 Codex、
+Claude Code 或 Cursor 接入全新或已有 Android Project。即使要执行 Kotlin 编译和生成页面的
+Preview 证据，也不要求全局安装、ViewCompose Checkout、本地构建 Package、Provider Key 或
+手动编辑 MCP 配置。
 
 Coding Client 仍然负责模型、Credential、对话和用户授权的源码修改。ViewCompose 只提供确定性的
 框架事实、生成工具与明确的验证证据，既不内置也不连接模型 Provider。
 
-## 两条命令完成安装
+## 一条命令完成安装
 
-从 GitHub 安装精确版本：
-
-```bash
-npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.3.0/viewcompose-ai-tooling-0.3.0.tgz
-```
-
-然后在 Android Project 根目录执行，并选择一个客户端：
+在 Android Project 的物理根目录执行以下任意一条命令：
 
 ```bash
-viewcompose-agent init --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client codex
 ```
 
-`init` 会以事务方式合并 `viewcompose` MCP Entry，并安装全部 6 个规范 Skill。它会保留无关设置；
-对精确内容重复执行时保持幂等；遇到无效 JSON、相对路径、符号链接路径或配置与 Skill 冲突时会
-拒绝覆盖。执行失败不会留下只安装了一部分的接入状态。
+```bash
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client claude-code
+```
+
+```bash
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client cursor
+```
+
+`init` 会解析当前物理目录，在任何写入前检测精确 ViewCompose Dependency Vector，把已验证 Package
+物化到 Content-addressed 用户 Cache，并让 MCP 只指向该持久副本而不是 npm 的临时 npx 目录；随后
+执行与 `doctor` 相同的 Readiness 检查。它会保留无关设置，对精确内容重复执行时保持幂等；遇到无效
+JSON、相对或符号链接路径、不兼容框架版本，以及配置或 Skill 冲突时，不会留下部分接入状态。自动化
+仍可显式传入 `--project-root <physical-absolute-path>`。
 
 | 客户端 | Project MCP 配置 | Skill 根目录 |
 | --- | --- | --- |
@@ -45,10 +48,9 @@ viewcompose-agent init --client <codex|claude-code|cursor> \
 API 查询、生成、静态验证和 Project 分析只要求 Node.js 24.19.0 或更高版本。若要取得编译、
 渲染和比对证据，还需要 JDK 17 或 21，以及 Android SDK Platform 36。Release 已携带 Gradle
 9.3.1 Wrapper 与固定 Build Harness，用户无需安装 Gradle，也无需让现有 Project 的 AGP/Kotlin
-版本与工具链对齐。如果系统级 npm Prefix 不可写，建议使用 Node Version Manager；不要仅仅
-为了安装工具而使用 `sudo`。
+版本与工具链对齐。Bootstrap 只写入 Project 接入面与操作系统用户 Cache；不要为此使用 `sudo`。
 
-### `0.3.0` 的精确框架版本绑定
+### `0.4.0` 的精确框架版本绑定
 
 `init` 不会执行 Project Gradle Logic，而是读取 Project 中独立版本化的 `com.viewcompose`
 Coordinate。它接受精确 Literal、默认 `libs.versions.toml` 中实际使用的 Entry，以及 Dependency
@@ -58,16 +60,16 @@ Pack；并在安装 Skill 前把 Content-addressed Profile ID 写入 MCP Environ
 
 不含 ViewCompose Dependency 的 Project 属于新项目，会选择该 Release 最新稳定 Profile。Dynamic、
 互相冲突、不支持或其他无法解析的版本——包括存在 ViewCompose Import 却没有 Dependency Identity——
-都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。首个 `0.3.0` Profile 表示当前
+都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。首个 `0.4.0` Profile 表示当前
 已发布 Artifact Vector；旧版本 Vector 只有在某个 Release 明确携带匹配 Profile 后才会升级。
 
 ## 确认安装状态
 
-在 Project 根目录使用相同的客户端选项：
+`init` 已经返回 Readiness 结果。以后需要重复诊断时，在 Project 根目录使用相同精确 Package
+版本与客户端选项：
 
 ```bash
-viewcompose-agent doctor --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` 表示 MCP Entry 与全部 Skill 都和已安装 Release 一致，物理 Project 根目录
@@ -89,8 +91,9 @@ Lane 误报为成功。
   [MCP](https://docs.cursor.com/context/model-context-protocol)与
   [Skills](https://cursor.com/docs/skills)。
 
-CI 会验证生成的客户端配置、事务生命周期、精确 Skill 字节、安装后的 Package 和两个 MCP
-Protocol 握手。它不会自动控制或登录专有客户端 Binary，因此上述检查仍是明确的用户步骤。
+CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootstrap，覆盖带空格和非 ASCII
+字符的路径、3 个客户端、集成诊断、幂等重复执行、清理 npx Cache 后的持久 MCP 启动、精确 Skill
+字节、MCP 握手和卸载。它不会自动控制或登录专有客户端 Binary，因此上述检查仍是明确的用户步骤。
 
 ## 无需 ViewCompose 源码即可使用的能力
 
@@ -115,7 +118,7 @@ Protocol 握手。它不会自动控制或登录专有客户端 Binary，因此�
 
 ## 深层证据执行边界
 
-Release `0.3.0` 使用 Maven Central 中的精确 ViewCompose Artifact 编译生成 Kotlin，并渲染生成
+Release `0.4.0` 使用 Maven Central 中的精确 ViewCompose Artifact 编译生成 Kotlin，并渲染生成
 页面。Package 内的 Content-addressed Harness 固定使用 Gradle 9.3.1、AGP 9.1.1、Kotlin
 2.2.10、Android 36、JVM Target 11 和 Allowlist 中的 ViewCompose/Preview Coordinate。Consumer
 Project 根目录只是只读授权边界：工具不会执行它的 Wrapper、Settings、Plugin、Task 或 Build
@@ -124,7 +127,9 @@ Script，也不会向 Project 写入文件。
 第一次请求深层证据时，工具可能下载固定 Gradle Distribution 与 Maven Dependency；后续请求会
 受到 5 分钟执行窗口的约束。后续请求会使用操作系统用户缓存目录中的完整性校验 Cache；当
 Knowledge、Harness、源码与 Lane Fingerprint 不变时，兼容的工具升级也会保留同一 Execution Cache
-Namespace。Package 安装本身仍然无脚本且支持 Offline；整个流程也不需要模型 Provider 的网络访问。
+Namespace。Package 安装本身仍然无脚本；首次 npx 或深层证据请求可能需要联网取得精确 Package、
+Gradle Distribution 或 Maven Dependency，但 npm 清理临时 npx 文件后，持久且已验证的 Cache 仍可
+继续使用。整个流程不需要模型 Provider 的网络访问。
 
 `validate_code` 的 Compile Mode 接收有界 Kotlin Snippet。XML 与 Screenshot 生成工具只执行自己
 确定性生成的源码，依次编译、渲染、重新打开精确 PNG 与 Render Tree，并在返回证据前附加布局诊断。
@@ -137,8 +142,7 @@ RGBA 比对。直接调用 `render_preview` 和 `diagnose_layout` 仍只适用�
 用一条命令检查、下载并迁移到最新兼容的工具 Release：
 
 ```bash
-viewcompose-agent upgrade --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 upgrade --client <codex|claude-code|cursor>
 ```
 
 该命令先检测 Project 版本，并且只检查不可变的 `ai-tooling-v<semver>` Release。它会跳过框架
@@ -149,26 +153,22 @@ Sidecar Manifest、`SHA256SUMS`、Archive Size 与 SHA-256；再把 Package 安�
 旧 Package 会在升级器替换内容期间保持可用；事务只迁移精确受管理的 MCP Entry 与未修改的规范
 Skill 字节。私有 Recovery Journal 会回滚被中断的迁移；存在用户编辑内容或未知 MCP Owner 时，
 替换前就会停止。`no-compatible-update` 是成功的 No-op，不会修改现有接入或 Project 的框架
-Dependency。全局安装的 Bootstrap Command 会沿着已验证的受管理 MCP Entry 找到当前 Side-by-side
-Package，因此后续诊断、升级和删除仍使用同一条命令。
+Dependency。精确版本 Bootstrap 会沿着已验证的受管理 MCP Entry 找到当前 Side-by-side Package，
+从而诊断、升级或删除当前接入。
 
 删除当前 Project 接入：
 
 ```bash
-viewcompose-agent uninstall --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 uninstall --client <codex|claude-code|cursor>
 ```
 
 该命令只删除精确的 ViewCompose MCP Entry 与规范 Skill 字节，无关客户端设置和文件会保留。
-如果受管理内容被编辑，删除会停止并要求 Review，而不是删除用户内容。全局 Package 单独删除：
-
-```bash
-npm uninstall --global @viewcompose/ai-tooling
-```
+如果受管理内容被编辑，删除会停止并要求 Review，而不是删除用户内容。没有需要另行删除的全局
+Package；Content-addressed Package Cache 会保留，用于完整性校验与兼容复用。
 
 ## 完整性与故障排查
 
-[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.3.0)
+[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.0)
 包含 Tarball、`manifest.json` 与 `SHA256SUMS`。发布 Workflow 会构建 Package 两次、检查精确
 Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创建 GitHub Artifact Attestation。
 如需独立校验 Provenance，请参考 GitHub 的
@@ -176,7 +176,7 @@ Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创�
 
 | 现象 | 处理方式 |
 | --- | --- |
-| 找不到 `viewcompose-agent` | 确认 Node 版本不低于 24.19，并且 npm 全局 Binary 目录已加入 `PATH`。 |
+| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并使用字面量 `@viewcompose/ai-tooling@0.4.0`；不要替换为 `latest`。 |
 | `doctor` 报告 `repair-required` | 只有现有文件未修改时才重新运行 `init`；否则先检查报告中的冲突。 |
 | `doctor` 报告 `host-prerequisites-required` | 安装 JDK 17 或 21 与 Android SDK Platform 36 后重新运行 `doctor`；无需另装 Gradle。 |
 | `upgrade` 返回 `no-compatible-update` | 保持当前接入不变。当前还没有已发布的工具 Release 为该 Project 提供精确框架 Profile；不要改为安装全局最新 Package。 |

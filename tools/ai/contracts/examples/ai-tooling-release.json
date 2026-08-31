@@ -1,27 +1,35 @@
 {
-  "schemaVersion": 1,
-  "releaseId": "viewcompose-ai-tooling-github-release-v1",
+  "schemaVersion": 2,
+  "releaseId": "viewcompose-ai-tooling-npm-github-release-v2",
   "repository": "ViewCompose/ViewCompose",
   "workflowPath": ".github/workflows/ai-tooling-release.yml",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.3.0",
-    "tag": "ai-tooling-v0.3.0",
+    "version": "0.4.0",
+    "tag": "ai-tooling-v0.4.0",
     "tagPattern": "ai-tooling-v<semver>",
     "immutable": true
   },
-  "assets": ["viewcompose-ai-tooling-0.3.0.tgz", "manifest.json", "SHA256SUMS"],
+  "assets": ["viewcompose-ai-tooling-0.4.0.tgz", "manifest.json", "SHA256SUMS"],
+  "npm": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public",
+    "trustedPublishing": "github-actions-oidc",
+    "minimumCli": "11.5.1",
+    "provenance": true,
+    "installScripts": false
+  },
   "provenance": {
     "provider": "github-artifact-attestations",
     "attestationRequired": true,
     "checksumAlgorithm": "SHA-256"
   },
   "installation": {
-    "source": "github-release",
+    "source": "exact-version-npm",
     "buildFromSourceRequired": false,
     "sourceCheckoutRequiredForStandalone": false,
     "manualConfigurationEdits": 0,
-    "maxPrimaryCommands": 2,
+    "maxPrimaryCommands": 1,
     "pinnedVersionRequired": true
   }
 }

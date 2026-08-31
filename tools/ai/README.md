@@ -534,11 +534,11 @@ entrypoint limit.
 ## Common AI agent onboarding
 
 The package exposes one client-neutral lifecycle command for Codex, Claude Code, and Cursor. The
-primary consumer path is one transactional project operation:
+primary consumer path is one exact-version transactional operation run from the physical project
+root:
 
 ```bash
-viewcompose-agent init --client <codex|claude-code|cursor> \
-  --project-root <physical-absolute-consumer-project-root>
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client <codex|claude-code|cursor>
 ```
 
 `init` merges only the `viewcompose` MCP entry into `.codex/config.toml`, `.mcp.json`, or
@@ -547,20 +547,23 @@ viewcompose-agent init --client <codex|claude-code|cursor> \
 preflighted before writes; atomic configuration replacement and Skill rollback prevent a partial
 install. Existing unrelated JSON/TOML content is preserved. Exact reinitialization is idempotent,
 while invalid JSON, conflicting MCP definitions or Skill bytes, relative roots, symbolic-link
-boundaries, unknown clients, and implicit home-directory selection fail closed.
+boundaries, unknown clients, and implicit home-directory selection fail closed. The npx package is
+copied transactionally into a content-addressed user cache before configuration; generated MCP
+paths never depend on npm's ephemeral extraction directory. An explicit physical
+`--project-root` remains available for automation.
 
 Inspect the installed state and its honest capability boundary with:
 
 ```bash
-viewcompose-agent doctor --client <codex|claude-code|cursor> \
-  --project-root <physical-absolute-consumer-project-root>
+npx --yes @viewcompose/ai-tooling@0.4.0 doctor --client <codex|claude-code|cursor>
 ```
 
 The default result is `project-bound-ready` when the exact configuration and Skills are present,
 JDK 17 or 21 is available, and Android SDK platform 36 is installed. Knowledge/generation and
-compilation/Preview/layout readiness are reported separately. `VIEWCOMPOSE_PROJECT_ROOT` is always
-bound to the explicit physical consumer root; an optional `VIEWCOMPOSE_SOURCE_ROOT` remains only for
-contributor compatibility. The installed package does not infer either root from parent directories.
+compilation/Preview/layout readiness are reported separately, and `init` includes this diagnosis in
+its own result. `VIEWCOMPOSE_PROJECT_ROOT` is always bound to the physical consumer root; an
+optional `VIEWCOMPOSE_SOURCE_ROOT` remains only for contributor compatibility. The installed
+package does not infer either root from parent directories.
 
 `uninstall` removes only an exact package-owned MCP definition and exact canonical Skill bytes. It
 preserves unrelated configuration and fails closed after user edits. `config` and `install-skills`
@@ -571,6 +574,7 @@ Run the dedicated gate with:
 
 ```bash
 npm --prefix tools/ai run verify:phase3-agent-clients
+npm --prefix tools/ai run verify:bootstrap-adoption
 ./gradlew verifyAiAgentClients
 ```
 
@@ -599,18 +603,18 @@ JAVA_HOME=<jdk-21-home> npm --prefix tools/ai run verify:phase3-distribution
 ./gradlew verifyAiToolingRelease
 ```
 
-The public consumer installs the pinned GitHub asset directly, without a checkout or build:
+The public consumer launches the exact npm version, which remains provenance-bound to the matching
+immutable GitHub Release:
 
 ```bash
-npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.3.0/viewcompose-ai-tooling-0.3.0.tgz
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client <codex|claude-code|cursor>
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.3.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.4.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
@@ -631,8 +635,9 @@ XML and screenshot results expose their own Preview and layout-diagnosis evidenc
 searches arbitrary parent directories or silently upgrades static evidence.
 
 Release `0.2.0` packaged only `current-source` knowledge and remains historical evidence; never
-infer released-project compatibility for it. Release `0.3.0` carries explicit released framework
-profiles and makes the selected profile part of every project-bound MCP process identity.
+infer released-project compatibility for it. Release `0.3.0` introduced explicit released
+framework profiles. Release `0.4.0` retains that exact profile identity while adding the durable
+one-command npm bootstrap.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and
@@ -655,12 +660,15 @@ side-by-side directory, and migrates exact managed configuration plus unchanged 
 recoverable journal. An injected interruption rolls back the old integration, while an unsupported
 project or user-edited surface fails before replacement.
 
-Tags matching `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
+AI package changes also enter `.github/workflows/ai-tooling-adoption.yml`, whose Linux, macOS, and
+Windows jobs verify all three clients from fresh paths containing spaces and non-ASCII characters,
+including npx cache deletion, durable MCP handshake, idempotence, and uninstall. Tags matching
+`ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
 the tag against the frozen release contract, repeats the complete distribution gate from a clean
 checkout, refuses an existing Release, creates GitHub build-provenance attestations for the exact
 tarball, manifest, and checksum list, and then publishes those three assets. It never publishes a
-mutable `latest` selector and requires no npm-registry account. The package layout follows npm's
-tarball installation contract, and its SBOM uses the
+mutable `latest` selector. The package layout follows npm's tarball installation contract, and its
+SBOM uses the
 [SPDX 2.3 specification](https://spdx.github.io/spdx-spec/v2.3/).
 
 ### Release-gate acceptance evidence

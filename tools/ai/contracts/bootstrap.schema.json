@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewcompose.com/schemas/ai/bootstrap-v1.schema.json",
+  "title": "ViewCompose AI public npm bootstrap contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "lastVerified", "package", "clients", "rootResolution", "cache", "ownership", "transaction", "compatibility", "result"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "contractId": {"const": "viewcompose-ai-bootstrap-v1"},
+    "lastVerified": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "version", "nodeEngine", "binary", "installScripts", "manager"],
+      "properties": {
+        "name": {"const": "@viewcompose/ai-tooling"},
+        "version": {"const": "0.4.0"},
+        "nodeEngine": {"const": ">=24.19.0"},
+        "binary": {"const": "viewcompose-agent"},
+        "installScripts": {"const": false},
+        "manager": {"const": "npm"}
+      }
+    },
+    "clients": {
+      "type": "array", "prefixItems": [{"const": "codex"}, {"const": "claude-code"}, {"const": "cursor"}],
+      "items": false, "minItems": 3, "maxItems": 3
+    },
+    "rootResolution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["omittedArgument", "explicitArgument", "physicalIdentity", "symbolicLinks", "supportedPathCases"],
+      "properties": {
+        "omittedArgument": {"const": "physical-current-directory"},
+        "explicitArgument": {"const": "absolute-directory-only"},
+        "physicalIdentity": {"const": "realpath-before-project-write"},
+        "symbolicLinks": {"const": "reject-logical-alias"},
+        "supportedPathCases": {
+          "type": "array", "items": {"enum": ["spaces", "non-ascii", "case-insensitive", "windows-drive", "windows-unc"]},
+          "minItems": 5, "maxItems": 5, "uniqueItems": true
+        }
+      }
+    },
+    "cache": {
+      "type": "object", "additionalProperties": false,
+      "required": ["layout", "keyAlgorithm", "keyInputs", "configuredPath", "materialization"],
+      "properties": {
+        "layout": {"const": "<user-cache>/viewcompose/ai-tooling/<sha256-package-and-profile>"},
+        "keyAlgorithm": {"const": "sha256"},
+        "keyInputs": {"const": ["verified-package-content", "framework-profile-id"]},
+        "configuredPath": {"const": "durable-cache-only"},
+        "materialization": {"const": "staged-rename-with-recovery"}
+      }
+    },
+    "ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mcp", "skills", "unmanagedBytes", "idempotence"],
+      "properties": {
+        "mcp": {"const": "exact-package-owned-entry"},
+        "skills": {"const": "exact-canonical-bytes"},
+        "unmanagedBytes": {"const": "preserve-and-report-conflict"},
+        "idempotence": {"const": "unchanged-on-exact-reentry"}
+      }
+    },
+    "transaction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["journal", "interruption", "rollback", "partialSelection"],
+      "properties": {
+        "journal": {"const": ".viewcompose/ai-bootstrap-v1.json"},
+        "interruption": {"const": "recover-on-next-command"},
+        "rollback": {"const": "old-integration-or-no-integration"},
+        "partialSelection": {"const": "never-select"}
+      }
+    },
+    "compatibility": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frameworkSelection", "newProject", "nonCurrentProject", "writesBeforeSelection"],
+      "properties": {
+        "frameworkSelection": {"const": "exact-current-profile-only"},
+        "newProject": {"const": "select-single-current-profile"},
+        "nonCurrentProject": {"const": "fail-closed-with-upgrade-guidance"},
+        "writesBeforeSelection": {"const": false}
+      }
+    },
+    "result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["package", "framework", "projectRoot", "client", "mcpPath", "skillRoot", "skillCount", "durableInstallRoot", "prerequisites", "readiness", "warnings", "nextAction"],
+      "properties": {
+        "package": {"const": "package identity and exact version"},
+        "framework": {"const": "exact framework vector and profile"},
+        "projectRoot": {"const": "physical absolute path"},
+        "client": {"enum": ["codex", "claude-code", "cursor"]},
+        "mcpPath": {"const": "project-relative configuration path"},
+        "skillRoot": {"const": "project-relative Skill root"},
+        "skillCount": {"type": "integer", "minimum": 0},
+        "durableInstallRoot": {"const": "verified content-addressed cache path"},
+        "prerequisites": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "readiness": {"enum": ["project-bound-ready", "host-prerequisites-required", "blocked"]},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "nextAction": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

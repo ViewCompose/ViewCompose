@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contracts": {
-    "agentClientIntegration": 4,
-    "aiToolingRelease": 1,
+    "agentClientIntegration": 5,
+    "aiToolingRelease": 2,
     "consumerProjectExecution": 1,
     "frameworkCompatibilityProfile": 1,
     "frameworkProfileIndex": 1,
@@ -27,7 +27,8 @@
     "screenshotRepairExecutionOutcome": 1,
     "screenshotRepairAppliedResultHandoff": 1,
     "evaluationCorpus": 1,
-    "metricContract": 1
+    "metricContract": 1,
+    "bootstrap": 1
   },
   "compatibility": {
     "policy": "exact-major",

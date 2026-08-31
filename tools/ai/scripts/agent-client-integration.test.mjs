@@ -5,11 +5,14 @@ import {resolve} from 'node:path';
 import test from 'node:test';
 import {
   AGENT_CLIENT_PROFILES,
+  commitDurablePackageIntegrity,
   diagnoseAgentClient,
   initializeAgentClient,
   installAgentClientSkills,
+  isAbsoluteProjectRoot,
   migrateAgentClient,
   renderAgentClientConfig,
+  resolveConsumerProjectRoot,
   uninstallAgentClient,
 } from './agent-client-integration.mjs';
 
@@ -121,6 +124,174 @@ test('renders deterministic standalone and source-bound configuration for every 
     });
   }
   assert.throws(() => renderAgentClientConfig('unknown', projectRoot), /Unknown client/u);
+});
+
+test('resolves an omitted project root from the physical current directory', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-root-')));
+  const linked = `${temporary}-link`;
+  await mkdir(resolve(temporary, 'project'));
+  await symlink(resolve(temporary, 'project'), linked, 'dir');
+  const previous = process.cwd();
+  try {
+    process.chdir(resolve(temporary, 'project'));
+    assert.equal(await resolveConsumerProjectRoot(), resolve(temporary, 'project'));
+    await assert.rejects(resolveConsumerProjectRoot(linked), /must not be a symbolic link/u);
+  } finally {
+    process.chdir(previous);
+    await rm(linked, {force: true});
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('recognizes POSIX, Windows drive, and Windows UNC absolute project-root syntax', () => {
+  assert.equal(isAbsoluteProjectRoot('/workspace/app', 'linux'), true);
+  assert.equal(isAbsoluteProjectRoot('workspace/app', 'linux'), false);
+  assert.equal(isAbsoluteProjectRoot('C:\\workspace\\app', 'win32'), true);
+  assert.equal(isAbsoluteProjectRoot('\\\\server\\share\\app', 'win32'), true);
+  assert.equal(isAbsoluteProjectRoot('C:workspace\\app', 'win32'), false);
+});
+
+test('binds MCP to a durable content-addressed package that survives source removal', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-cache-')));
+  const packageRoot = resolve(temporary, 'package');
+  const projectRoot = resolve(temporary, 'project');
+  const cacheRoot = resolve(temporary, 'cache');
+  try {
+    await createAiPackage(packageRoot, '0.4.0', 'cached');
+    await mkdir(projectRoot);
+    const initialized = await initializeAgentClient({
+      client: 'cursor', projectRoot, aiRoot: packageRoot, cacheRoot,
+    });
+    assert.ok(initialized.durableInstallRoot?.startsWith(cacheRoot));
+    const config = await readFile(resolve(projectRoot, '.cursor/mcp.json'), 'utf8');
+    assert.match(config, new RegExp(initialized.durableInstallRoot.replaceAll('/', '\\/'), 'u'));
+    await rm(packageRoot, {recursive: true, force: true});
+    const diagnosed = await diagnoseAgentClient({client: 'cursor', projectRoot});
+    assert.equal(diagnosed.tooling.version, '0.4.0');
+    assert.equal(diagnosed.tooling.packageRoot, initialized.durableInstallRoot);
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('rejects a tampered durable package on re-entry and reports repair-required diagnosis', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-tamper-')));
+  const packageRoot = resolve(temporary, 'package');
+  const projectRoot = resolve(temporary, 'project');
+  const cacheRoot = resolve(temporary, 'cache');
+  try {
+    await createAiPackage(packageRoot, '0.4.0', 'integrity');
+    await mkdir(projectRoot);
+    const initialized = await initializeAgentClient({
+      client: 'codex', projectRoot, aiRoot: packageRoot, cacheRoot,
+    });
+    await writeFile(resolve(initialized.durableInstallRoot, 'scripts/mcp-server.mjs'), '// tampered\n');
+    await assert.rejects(
+      initializeAgentClient({client: 'codex', projectRoot, aiRoot: packageRoot, cacheRoot}),
+      /integrity check/u,
+    );
+    const diagnosed = await diagnoseAgentClient({client: 'codex', projectRoot});
+    assert.equal(diagnosed.status, 'repair-required');
+    assert.match(diagnosed.config.detail, /integrity check/u);
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('requires valid durable integrity for 0.4.0 and every later stable version', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-version-integrity-')));
+  const cases = [
+    {version: '0.4.0', mutation: 'missing-marker'},
+    {version: '0.4.1', mutation: 'malformed-marker'},
+    {version: '1.0.0', mutation: 'tampered-package'},
+  ];
+  try {
+    for (const {version, mutation} of cases) {
+      const suffix = version.replaceAll('.', '-');
+      const packageRoot = resolve(temporary, `package-${suffix}`);
+      const projectRoot = resolve(temporary, `project-${suffix}`);
+      const cacheRoot = resolve(temporary, `cache-${suffix}`);
+      await createAiPackage(packageRoot, version, suffix);
+      await mkdir(projectRoot);
+      const initialized = await initializeAgentClient({
+        client: 'cursor', projectRoot, aiRoot: packageRoot, cacheRoot,
+      });
+      const marker = resolve(
+        initialized.durableInstallRoot,
+        '.viewcompose-ai-bootstrap-v1.json',
+      );
+      if (mutation === 'missing-marker') await rm(marker);
+      if (mutation === 'malformed-marker') await writeFile(marker, '{invalid json\n');
+      if (mutation === 'tampered-package') {
+        await writeFile(resolve(initialized.durableInstallRoot, 'scripts/mcp-server.mjs'), '// tampered\n');
+      }
+      const diagnosed = await diagnoseAgentClient({client: 'cursor', projectRoot});
+      assert.equal(diagnosed.status, 'repair-required');
+      assert.match(diagnosed.config.detail, /durable-cache integrity|could not be verified|integrity check/u);
+    }
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('rejects prerelease, build-metadata, and malformed active package versions', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-invalid-version-')));
+  const invalidVersions = [
+    '0.4.1-beta.1',
+    '1.0.0-rc.1',
+    '1.0.0+build.1',
+    '00.4.0',
+    '0.04.0',
+    '0.4.00',
+    'not-a-version',
+  ];
+  try {
+    for (const [index, invalidVersion] of invalidVersions.entries()) {
+      const packageRoot = resolve(temporary, `package-${index}`);
+      const projectRoot = resolve(temporary, `project-${index}`);
+      const cacheRoot = resolve(temporary, `cache-${index}`);
+      await createAiPackage(packageRoot, '0.4.1', `invalid-${index}`);
+      await mkdir(projectRoot);
+      const initialized = await initializeAgentClient({
+        client: 'cursor', projectRoot, aiRoot: packageRoot, cacheRoot,
+      });
+      const distributionPath = resolve(initialized.durableInstallRoot, 'distribution.json');
+      await writeFile(
+        distributionPath,
+        `${JSON.stringify({package: {
+          name: '@viewcompose/ai-tooling',
+          version: invalidVersion,
+        }})}\n`,
+      );
+      const diagnosed = await diagnoseAgentClient({client: 'cursor', projectRoot});
+      assert.equal(diagnosed.status, 'repair-required');
+      assert.match(diagnosed.config.detail, /stable released/u);
+    }
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('concurrent durable package materialization converges on one verified cache entry', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-concurrent-cache-')));
+  const packageRoot = resolve(temporary, 'package');
+  const cacheRoot = resolve(temporary, 'cache');
+  const projectRoots = [resolve(temporary, 'project-one'), resolve(temporary, 'project-two')];
+  try {
+    await createAiPackage(packageRoot, '0.4.1', 'concurrent');
+    await Promise.all(projectRoots.map((projectRoot) => mkdir(projectRoot)));
+    const initialized = await Promise.all(projectRoots.map((projectRoot) => initializeAgentClient({
+      client: 'codex', projectRoot, aiRoot: packageRoot, cacheRoot,
+    })));
+    assert.equal(initialized[0].durableInstallRoot, initialized[1].durableInstallRoot);
+    for (const projectRoot of projectRoots) {
+      const diagnosed = await diagnoseAgentClient({client: 'codex', projectRoot});
+      assert.equal(diagnosed.status, 'project-bound-ready');
+      assert.equal(diagnosed.tooling.version, '0.4.1');
+    }
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
 });
 
 test('initializes, diagnoses, and uninstalls standalone integrations transactionally', async () => {
@@ -323,6 +494,7 @@ test('migrates config and exact Skill bytes as one recoverable version-bound tra
     const newAiRoot = resolve(temporary, 'new-package');
     const manifest = await createAiPackage(oldAiRoot, '0.3.0', 'old');
     await createAiPackage(newAiRoot, '0.4.0', 'new');
+    await commitDurablePackageIntegrity({aiRoot: newAiRoot, frameworkProfile: releasedProfile});
     const dependency = JSON.parse(await readFile(
       resolve(oldAiRoot, 'generated/released', releasedProfile, 'profile.json'),
       'utf8',
@@ -342,8 +514,10 @@ test('migrates config and exact Skill bytes as one recoverable version-bound tra
         aiRoot: oldAiRoot,
         mcpServerPath: oldMcp,
         nodeExecutable: process.execPath,
+        cacheRoot: resolve(temporary, 'cache'),
       });
       if (client === 'codex') {
+        const initialConfig = await readFile(resolve(projectRoot, profile.configPath), 'utf8');
         await assert.rejects(migrateAgentClient({
           client,
           projectRoot,
@@ -354,7 +528,7 @@ test('migrates config and exact Skill bytes as one recoverable version-bound tra
           },
         }), /injected interruption/u);
         const rolledBack = await readFile(resolve(projectRoot, profile.configPath), 'utf8');
-        assert.match(rolledBack, new RegExp(oldMcp.replaceAll('/', '\\/'), 'u'));
+        assert.equal(rolledBack, initialConfig);
         await assert.rejects(readFile(resolve(projectRoot, '.viewcompose/ai-upgrade-v1.json')), /ENOENT/u);
         const edited = rolledBack.replace(
           '# ViewCompose AI managed configuration — end',

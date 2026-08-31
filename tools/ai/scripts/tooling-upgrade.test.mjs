@@ -8,10 +8,19 @@ import {
   boundedReleaseRequest,
   compareToolingVersions,
   downloadCompatibleCandidate,
+  npmInvocation,
   selectCompatibleUpgradeCandidate,
   upgradeAgentClient,
   verifyInstalledCandidate,
 } from './tooling-upgrade.mjs';
+
+test('uses the Node entry point for npm command shims on every platform', () => {
+  assert.deepEqual(npmInvocation('/opt/npm-cli.js'), {
+    executable: process.execPath,
+    arguments: ['/opt/npm-cli.js'],
+  });
+  assert.deepEqual(npmInvocation(''), {executable: 'npm', arguments: []});
+});
 
 const aiRoot = await realpath(new URL('../', import.meta.url));
 const profile = JSON.parse(await readFile(
@@ -44,7 +53,7 @@ function manifest(version, frameworkProfile = profile, archive = Buffer.from(`ar
     schemaVersion: 2,
     package: {name: '@viewcompose/ai-tooling', version},
     compatibility: {
-      agentClientIntegration: 4,
+      agentClientIntegration: 5,
       frameworkCompatibilityProfile: 1,
       frameworkProfileIndex: 1,
     },

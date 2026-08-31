@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 4,
-  "profileSetId": "viewcompose-agent-clients-v4",
+  "schemaVersion": 5,
+  "profileSetId": "viewcompose-agent-clients-v5",
   "lastVerified": "2026-08-31",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "transport": "stdio",
     "mcpExecutable": "viewcompose-mcp",
     "clientExecutable": "viewcompose-agent",
@@ -16,7 +16,7 @@
     "officialConfigurationReviewed": true,
     "deterministicProfileCount": 3,
     "sourceFreeStandaloneProfiles": 3,
-    "maxPrimaryCommands": 2,
+    "maxPrimaryCommands": 1,
     "manualConfigurationEdits": 0,
     "transactionalProjectWrites": true,
     "transactionalUpgrade": true,
@@ -39,10 +39,10 @@
       },
       "skills": {"standard": "agent-skills", "projectPath": ".agents/skills", "invocationPrefix": "$"},
       "lifecycle": {
-        "initArguments": ["init", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
-        "doctorArguments": ["doctor", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
-        "upgradeArguments": ["upgrade", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"],
-        "uninstallArguments": ["uninstall", "--client", "codex", "--project-root", "<absolute-consumer-project-root>"]
+        "initArguments": ["init", "--client", "codex"],
+        "doctorArguments": ["doctor", "--client", "codex"],
+        "upgradeArguments": ["upgrade", "--client", "codex"],
+        "uninstallArguments": ["uninstall", "--client", "codex"]
       },
       "officialDocumentation": {
         "mcp": "https://developers.openai.com/codex/mcp/",
@@ -61,10 +61,10 @@
       },
       "skills": {"standard": "agent-skills", "projectPath": ".claude/skills", "invocationPrefix": "/"},
       "lifecycle": {
-        "initArguments": ["init", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
-        "doctorArguments": ["doctor", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
-        "upgradeArguments": ["upgrade", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"],
-        "uninstallArguments": ["uninstall", "--client", "claude-code", "--project-root", "<absolute-consumer-project-root>"]
+        "initArguments": ["init", "--client", "claude-code"],
+        "doctorArguments": ["doctor", "--client", "claude-code"],
+        "upgradeArguments": ["upgrade", "--client", "claude-code"],
+        "uninstallArguments": ["uninstall", "--client", "claude-code"]
       },
       "officialDocumentation": {
         "mcp": "https://code.claude.com/docs/en/mcp",
@@ -83,10 +83,10 @@
       },
       "skills": {"standard": "agent-skills", "projectPath": ".agents/skills", "invocationPrefix": "/"},
       "lifecycle": {
-        "initArguments": ["init", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
-        "doctorArguments": ["doctor", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
-        "upgradeArguments": ["upgrade", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"],
-        "uninstallArguments": ["uninstall", "--client", "cursor", "--project-root", "<absolute-consumer-project-root>"]
+        "initArguments": ["init", "--client", "cursor"],
+        "doctorArguments": ["doctor", "--client", "cursor"],
+        "upgradeArguments": ["upgrade", "--client", "cursor"],
+        "uninstallArguments": ["uninstall", "--client", "cursor"]
       },
       "officialDocumentation": {
         "mcp": "https://docs.cursor.com/context/model-context-protocol",
