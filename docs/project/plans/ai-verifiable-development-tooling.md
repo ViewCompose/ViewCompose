@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-31
-next_action: Run the hosted Linux, macOS, and Windows bootstrap-adoption matrix, establish the @viewcompose npm scope and ai-tooling-release trusted publisher, then publish and verify exact 0.4.0 npm and GitHub identities; do not begin Wave B until those external gates pass.
+next_action: Establish the @viewcompose npm scope and ai-tooling-release trusted publisher, then publish and verify exact 0.4.0 npm and GitHub identities; do not begin Wave B until those external gates pass.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -107,8 +107,15 @@ dry-run inventory, 1/1 offline archive lifecycle,
 3/3 installed profiles, 18/18 exact Skill copies, 2/2 MCP protocol versions, 3/3 release assets, and
 all retained compile, Preview, XML, layout, screenshot, and exact-pixel evidence. Relative to the
 two-command global installation path, local setup changed from no one-command denominator to 3/3
-clients on one native operating system. The conclusion is **improved**, not cross-platform accepted:
-the hosted matrix remains 0/3 executed in this worktree.
+clients on one native operating system. Pull request `#261` then ran the exact packed-tarball
+adoption workflow on GitHub-hosted Ubuntu, macOS, and Windows in
+[run `33378127917`](https://github.com/ViewCompose/ViewCompose/actions/runs/33378127917). All 3/3
+jobs passed: Ubuntu in 39 seconds, macOS in 36 seconds, and Windows in 3 minutes 23 seconds. Compared
+with the preceding local Linux-only platform denominator, accepted operating-system coverage moved
+from 1/3 (33.3%) to 3/3 (100%), an absolute gain of two platforms and 66.7 percentage points. The
+conclusion is **improved** and the cross-platform adoption gate is accepted. The remaining limitation
+is that hosted adoption verifies the packed candidate rather than a public npm registry identity;
+the next action is therefore npm scope ownership, trusted-publisher binding, and exact publication.
 
 The English and Chinese AI Integration pages, repository README, and tooling README now expose only
 the exact one-command `0.4.0` path, durable-cache behavior, optional diagnosis, upgrade/removal, and
@@ -124,8 +131,8 @@ accepting unverifiable npm provenance. A public registry check on 2026-08-31 ret
 the npm-side trusted-publisher binding are external account prerequisites, not accepted evidence.
 No funding endpoint was declared because the repository has no authoritative funding destination;
 the package publishes its repository, documentation home, and issue-support URLs. The next action is
-to run the hosted three-OS matrix, establish those npm account bindings, and only then publish and
-verify both immutable `0.4.0` identities.
+to establish those npm account bindings and only then publish and verify both immutable `0.4.0`
+identities.
 
 | Order | Execution wave | User outcome | Entry condition | Exit gate |
 | --- | --- | --- | --- | --- |
