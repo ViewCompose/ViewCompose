@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 2b52341c0fe7f5666bf1b522740e2d396c359fda71c145e0cb2ba95d6c7f9569
+translation_source_hash: 23c581766bfc4f4571df7069851e608053cce83a8da466a95246bdab974b2804
 translation_status: current
 ---
 
@@ -79,11 +79,13 @@ translation_status: current
 33. 复杂图形场景已增强：`DrawScene` 支持不可变复用、嵌套 transform/clip 与 Canvas 状态隔离，并拒绝不平衡 save/restore。
 34. 富文本文档与 Receive Content 已落地：span、段落、链接、行内附件共享 `TextDocument`；clipboard、drag/drop、IME content 统一转换、变换、插入、撤销和保存恢复。
 35. 高级阴影装饰层已落地：`viewcompose-shadow-android` 提供有序多层外阴影、前景内阴影、有界栅格缓存、RenderNode 实验后端和结构化诊断；默认 `Auto` 依据首轮发布态基准保持 ExactBitmap。
-36. AI 可验证工具已发布受新鲜度门禁保护、覆盖 31 个制品与 540 个符号的 Knowledge Bundle
-    和紧凑 `llms.txt`，以及 13 个共享 CLI/MCP 工具、6 个标准 Agent Skill、可复现离线 Package
-    和经过验证的 Codex、Claude Code、Cursor 项目 Profile。后续有界阶段还提供 Android XML
-    转换，以及截图预处理、类型化 Inference 导入/解析、Kotlin 生成、编译/Preview、语义/几何比较、
-    满足资格条件的精确像素比较与内部人工授权修复契约；每条 Lane 都保留真实证据等级和不支持语义。
+36. AI 可验证工具 Release `0.3.0` 已发布受新鲜度门禁保护、覆盖 31 个制品与 540 个符号的
+    Knowledge Bundle 和紧凑 `llms.txt`，以及 13 个共享 CLI/MCP 工具、6 个标准 Agent Skill、
+    具备 Attestation 的可复现离线 Package 和经过验证的 Codex、Claude Code、Cursor 项目
+    Profile。其唯一当前框架 Profile 按精确依赖身份选择，版本不匹配时拒绝接入并保持原状。后续有界阶段
+    还提供 Android XML 转换，以及截图预处理、类型化 Inference 导入/解析、Kotlin 生成、
+    编译/Preview、语义/几何比较、满足资格条件的精确像素比较与内部人工授权修复契约；每条
+    Lane 都保留真实证据等级和不支持语义。
 
 ### 2.2 Demo 与验证层
 
@@ -131,7 +133,7 @@ translation_status: current
 | Diagnostics | 已关联的渲染 Session 与 Studio Inspector、受限的生产故障聚合、Render/Layout Tree、逐节点 Patch、CompositionLocal、重组原因、源码跳转、按请求触发的真实 View 高亮、有限采样的 Composition/Reconciliation/Binding 逐节点耗时，以及已验收的空闲/请求/Release 隔离预算 | 当前没有扩展计划；持续观察器、新耗时域或更广设备契约必须重新建立可归因计划，并提供 ADR 支持的非激活路径证据 |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| AI 可验证开发工具 | Knowledge Bundle/`llms.txt`、13 个 CLI/MCP 工具、6 个 Agent Skill、可复现离线 Distribution、Codex/Claude Code/Cursor 接入、静态/编译/Preview/布局证据、有界项目分析和 XML 转换，以及有界截图到已验证 Kotlin/比较/人工授权修复基础均已落地 | 从[有效计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)的内容寻址 Applied-result Handoff 继续；源码写入、公开修复激活、任意 XML/Compose/Figma 转换与不受限视觉一致声明继续位于已接受 Surface 之外 |
+| AI 可验证开发工具 | Release `0.3.0` 已提供当前版本 Knowledge Bundle/`llms.txt`、13 个 CLI/MCP 工具、6 个 Agent Skill、具备 Attestation 的离线 Distribution、Codex/Claude Code/Cursor 接入、静态/编译/Preview/布局证据、有界项目分析和 XML 转换，以及有界截图到已验证 Kotlin/比较/人工授权修复基础 | 按[有效计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)冻结的顺序推进：先完成 npm 公开单命令接入与跨平台采用验收，再依次完成 Compose 语义映射与 Skill、有界 Compose AST 转换、增强只读分析、Figma Design IR 导入，最后在事务化源码写入与回滚门禁通过后公开人工授权截图修复。只维护当前框架 Profile，任何版本不匹配都拒绝接入并保持原状 |
 | ConstraintLayout | Alpha DSL 加分类协调、类型化 Chain/Wrap/物理方向 API、类型化 Grid、声明式 CircularFlow、精确 Helper/回滚/Lifecycle 覆盖、Pairwise 视觉验收、API 24/33/36 设备覆盖，以及稳定行发版安全的 Released/Candidate/Direct 矩阵 | [已归档的能力与性能扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)完成了 Phase 0～4，发版安全为 **no material change**，没有全帧优化胜利。保持 MotionScene/MotionLayout 范围外；多 OEM 性能或新增能力必须新建归因计划 |
 | Animation | 已具备动画 Core/DSL 分层、物理 spring/decay/result、共享的通用与可 seek Transition、完整 AnimatedContent 与丰富显隐变换、animateContentSize/animateBounds、导航共享运动、原始 Android interop，以及请求驱动的只读时间线工具 | [已归档的动画能力扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)完成了 Phase 0～7，保持有界所有权与 `no material change` 的发版安全结论。MotionLayout、持续 profiler 和真机远程修改继续不排期，直到新的归因需求获批 |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
