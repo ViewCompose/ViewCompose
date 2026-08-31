@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 1f70bfb5e6478e2b12e5d851a4ade27180eb1550f0b43e5f03c9a05786c354ac
+translation_source_hash: e96c7c6e9b2856d9e3a8c8282d1da3a6c3faaad9434ab38c37aeebbf55745c82
 translation_status: current
 ---
 
@@ -173,6 +173,12 @@ Package；Content-addressed Package Cache 会保留，用于完整性校验与�
 Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创建 GitHub Artifact Attestation。
 如需独立校验 Provenance，请参考 GitHub 的
 [Artifact Attestation 校验指南](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)。
+
+npm 版本历史中还可能出现 `0.4.0-bootstrap.0`。它是一次性的、带 Provenance 的预发布
+Package，只用于先建立 npm Package Identity，以便随后绑定稳定版 GitHub Trusted Publisher。
+它永远不会被分配给 `latest`，普通稳定 SemVer Range 也不会选中它；它不是受支持的消费者
+入口。不要安装或调用该版本，请使用上文记录的精确稳定 Selector
+`@viewcompose/ai-tooling@0.4.0`。
 
 | 现象 | 处理方式 |
 | --- | --- |

@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-31
-next_action: Establish the @viewcompose npm scope and ai-tooling-release trusted publisher, then publish and verify exact 0.4.0 npm and GitHub identities; do not begin Wave B until those external gates pass.
+next_action: Merge and run the one-time 0.4.0-bootstrap.0 npm identity workflow, bind ai-tooling-release as the trusted publisher, revoke and remove the temporary bootstrap authority, then publish and verify exact 0.4.0 npm and GitHub identities; do not begin Wave B until those external gates pass.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -133,6 +133,26 @@ No funding endpoint was declared because the repository has no authoritative fun
 the package publishes its repository, documentation home, and issue-support URLs. The next action is
 to establish those npm account bindings and only then publish and verify both immutable `0.4.0`
 identities.
+
+The `viewcompose` npm organization was created and its owner membership was verified on 2026-08-31.
+Current npm policy exposes a first-publication dependency that the original handoff did not model:
+trusted-publisher configuration and staged publishing both require an already-existing package, while
+the stable `0.4.0` identity must remain unpublished until the GitHub OIDC workflow owns it. The
+accepted one-time bridge is therefore the complete `0.4.0-bootstrap.0` prerelease payload under only
+the `bootstrap` dist-tag. A fixed, default-branch-only workflow derives it from the twice-reproduced
+stable tarball, permits changes only in eleven enumerated JSON version-bearing files, reproduces the
+seed archive twice, verifies identical file inventory and an MCP handshake, and publishes it with
+GitHub provenance through the protected `ai-tooling-release` environment. The seed is not a consumer
+release and cannot become `latest`; ordinary stable semver ranges exclude it. A short-lived,
+scope-scoped npm credential restricted to `@viewcompose`, with bypass permission, is allowed only
+for this unavoidable package-identity bootstrap, after account 2FA is enabled. Before the stable
+tag is created, that credential must be revoked, its GitHub secret deleted, the temporary workflow
+removed, and npm Trusted
+Publishing bound exactly to `ViewCompose/ViewCompose`, `ai-tooling-release.yml`, and environment
+`ai-tooling-release`. Historical GitHub-only `0.3.0` is intentionally not backfilled to npm because
+it would become a permanent stable-range target and its private tarball would require a later
+metadata repack. After OIDC publishes `0.4.0`, `latest` must point to that stable version and the
+temporary `bootstrap` dist-tag must be removed; the immutable prerelease remains registry history.
 
 | Order | Execution wave | User outcome | Entry condition | Exit gate |
 | --- | --- | --- | --- | --- |

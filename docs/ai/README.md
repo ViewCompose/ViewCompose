@@ -213,6 +213,12 @@ Attestations for all three assets. See GitHub's
 [artifact attestation verification guide](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)
 for an optional independent provenance check.
 
+The npm version history may also contain `0.4.0-bootstrap.0`. It is a one-time, provenance-bearing
+prerelease used only to create the package identity required before npm can bind the stable GitHub
+Trusted Publisher. It is never assigned to `latest`, is excluded from ordinary stable semver ranges,
+and is not a supported consumer entry point. Do not install or invoke it; use the exact stable
+`@viewcompose/ai-tooling@0.4.0` selector documented above.
+
 | Symptom | Action |
 | --- | --- |
 | `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal `@viewcompose/ai-tooling@0.4.0` selector. Do not substitute `latest`. |
