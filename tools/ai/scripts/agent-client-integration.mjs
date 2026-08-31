@@ -2,16 +2,19 @@
 import {createHash, randomUUID} from 'node:crypto';
 import {realpathSync} from 'node:fs';
 import {
+  copyFile,
   lstat,
   mkdir,
   readFile,
+  readdir,
   realpath,
   rename,
   rm,
   rmdir,
   writeFile,
 } from 'node:fs/promises';
-import {basename, dirname, isAbsolute, relative, resolve, sep} from 'node:path';
+import {homedir, platform} from 'node:os';
+import {basename, dirname, isAbsolute, posix, relative, resolve, sep, win32} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {detectAndroidSdk, detectJavaRuntime} from './tool-core.mjs';
 import {detectFrameworkProjectProfile} from './framework-project-profile.mjs';
@@ -29,6 +32,13 @@ const manifestRelativePath = 'skills/manifest.json';
 const managedTomlStart = '# ViewCompose AI managed configuration — start';
 const managedTomlEnd = '# ViewCompose AI managed configuration — end';
 const upgradeJournalPath = '.viewcompose/ai-upgrade-v1.json';
+const bootstrapJournalName = '.viewcompose-ai-bootstrap-v1.json';
+
+function durableIntegrityError(message) {
+  const error = new Error(message);
+  error.code = 'VC_AI_DURABLE_INTEGRITY';
+  return error;
+}
 
 export const AGENT_CLIENT_PROFILES = Object.freeze({
   codex: Object.freeze({
@@ -139,8 +149,185 @@ async function metadataOrNull(path) {
   });
 }
 
+export async function resolveConsumerProjectRoot(projectRoot = process.cwd()) {
+  return requireCanonicalDirectory(projectRoot, 'Consumer project root');
+}
+
+export function isAbsoluteProjectRoot(path, targetPlatform = platform()) {
+  if (typeof path !== 'string' || path.length === 0) return false;
+  return targetPlatform === 'win32' ? win32.isAbsolute(path) : posix.isAbsolute(path);
+}
+
+function defaultDurableCacheRoot() {
+  if (platform() === 'win32') {
+    return resolve(process.env.LOCALAPPDATA ?? resolve(homedir(), 'AppData', 'Local'), 'ViewCompose', 'ai-tooling');
+  }
+  if (platform() === 'darwin') return resolve(homedir(), 'Library', 'Caches', 'ViewCompose', 'ai-tooling');
+  return resolve(process.env.XDG_CACHE_HOME ?? resolve(homedir(), '.cache'), 'viewcompose', 'ai-tooling');
+}
+
+async function packageFingerprint(root, {excludeBootstrapMarker = false} = {}) {
+  const files = [];
+  async function visit(current) {
+    for (const name of (await readdir(current)).sort()) {
+      const path = resolve(current, name);
+      if (excludeBootstrapMarker && relative(root, path) === bootstrapJournalName) continue;
+      const metadata = await lstat(path);
+      if (metadata.isSymbolicLink()) throw new Error(`AI package contains a symbolic link: ${path}`);
+      if (metadata.isDirectory()) await visit(path);
+      else if (metadata.isFile()) files.push({path: relative(root, path).split(sep).join('/'), bytes: await readFile(path)});
+      else throw new Error(`AI package contains a non-regular entry: ${path}`);
+    }
+  }
+  await visit(root);
+  const identity = Buffer.concat(files.map(({path, bytes}) => Buffer.concat([
+    Buffer.from(`${path}\0`, 'utf8'), bytes, Buffer.from('\0', 'utf8'),
+  ])));
+  return sha256(identity);
+}
+
+async function copyPackageTree(source, target) {
+  await mkdir(target, {recursive: true});
+  for (const name of (await readdir(source)).sort()) {
+    const from = resolve(source, name);
+    const to = resolve(target, name);
+    const metadata = await lstat(from);
+    if (metadata.isSymbolicLink()) throw new Error(`AI package contains a symbolic link: ${from}`);
+    if (metadata.isDirectory()) await copyPackageTree(from, to);
+    else if (metadata.isFile()) await copyFile(from, to);
+    else throw new Error(`AI package contains a non-regular entry: ${from}`);
+  }
+}
+
+export async function commitDurablePackageIntegrity({aiRoot, frameworkProfile}) {
+  const distribution = JSON.parse(await readFile(resolve(aiRoot, 'distribution.json'), 'utf8'));
+  if (
+    distribution.package?.name !== '@viewcompose/ai-tooling' ||
+    !/^\d+\.\d+\.\d+$/u.test(distribution.package?.version ?? '') ||
+    !/^[a-f0-9]{64}$/u.test(frameworkProfile ?? '')
+  ) {
+    throw new Error('Cannot commit integrity for an invalid ViewCompose AI package identity.');
+  }
+  const contentFingerprint = await packageFingerprint(aiRoot, {excludeBootstrapMarker: true});
+  const record = {
+    schemaVersion: 1,
+    status: 'committed',
+    cacheKey: sha256(`${contentFingerprint}\0${frameworkProfile}`),
+    packageVersion: distribution.package.version,
+    frameworkProfile,
+    contentFingerprint,
+  };
+  await writeFile(
+    resolve(aiRoot, bootstrapJournalName),
+    `${JSON.stringify(record, null, 2)}\n`,
+    {flag: 'wx', mode: 0o600},
+  );
+  return record;
+}
+
+export async function verifyDurablePackageIntegrity({aiRoot, frameworkProfile, packageVersion}) {
+  try {
+    const markerPath = resolve(aiRoot, bootstrapJournalName);
+    const markerMetadata = await metadataOrNull(markerPath);
+    if (!markerMetadata?.isFile() || markerMetadata.isSymbolicLink()) {
+      throw durableIntegrityError(
+        'Active ViewCompose AI package has no safe durable-cache integrity marker.',
+      );
+    }
+    const marker = JSON.parse(await readFile(markerPath, 'utf8'));
+    const contentFingerprint = await packageFingerprint(aiRoot, {excludeBootstrapMarker: true});
+    const expectedCacheKey = sha256(`${contentFingerprint}\0${frameworkProfile}`);
+    const pathCacheKey = basename(aiRoot);
+    if (
+      marker.schemaVersion !== 1 ||
+      marker.status !== 'committed' ||
+      marker.packageVersion !== packageVersion ||
+      marker.frameworkProfile !== frameworkProfile ||
+      marker.contentFingerprint !== contentFingerprint ||
+      marker.cacheKey !== expectedCacheKey ||
+      (/^[a-f0-9]{64}$/u.test(pathCacheKey) && pathCacheKey !== expectedCacheKey)
+    ) {
+      throw durableIntegrityError(
+        'Active ViewCompose AI durable package failed its integrity check.',
+      );
+    }
+    return marker;
+  } catch (error) {
+    if (error?.code === 'VC_AI_DURABLE_INTEGRITY') throw error;
+    throw durableIntegrityError(
+      `Active ViewCompose AI durable package could not be verified: ${error.message}`,
+    );
+  }
+}
+
+function stablePackageVersion(packageVersion) {
+  const match = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/u.exec(packageVersion);
+  return match ? match.slice(1).map(Number) : null;
+}
+
+function requiresDurablePackageIntegrity(packageVersion) {
+  const parts = stablePackageVersion(packageVersion);
+  if (!parts) return false;
+  const [major, minor] = parts;
+  return major > 0 || minor >= 4;
+}
+
+async function materializeDurablePackage(aiRoot, frameworkProfile, cacheRoot = defaultDurableCacheRoot()) {
+  const distributionPath = resolve(aiRoot, 'distribution.json');
+  if (!(await metadataOrNull(distributionPath))) return {aiRoot, durableInstallRoot: null};
+  const distribution = JSON.parse(await readFile(distributionPath, 'utf8'));
+  if (distribution.package?.name !== '@viewcompose/ai-tooling') {
+    throw new Error('AI package identity is invalid.');
+  }
+  const contentFingerprint = await packageFingerprint(aiRoot);
+  const cacheKey = sha256(`${contentFingerprint}\0${frameworkProfile}`);
+  const durableInstallRoot = resolve(cacheRoot, cacheKey);
+  const marker = resolve(durableInstallRoot, bootstrapJournalName);
+  const existing = await metadataOrNull(marker);
+  if (existing) {
+    const record = await verifyDurablePackageIntegrity({
+      aiRoot: durableInstallRoot,
+      frameworkProfile,
+      packageVersion: distribution.package.version,
+    });
+    if (record.cacheKey !== cacheKey || record.contentFingerprint !== contentFingerprint) {
+      throw durableIntegrityError('Durable AI package cache marker is invalid.');
+    }
+    return {aiRoot: durableInstallRoot, durableInstallRoot};
+  }
+  await mkdir(cacheRoot, {recursive: true});
+  const staging = resolve(cacheRoot, `.${cacheKey}.${randomUUID()}.staging`);
+  try {
+    await copyPackageTree(aiRoot, staging);
+    const record = await commitDurablePackageIntegrity({aiRoot: staging, frameworkProfile});
+    if (record.cacheKey !== cacheKey || record.contentFingerprint !== contentFingerprint) {
+      throw durableIntegrityError('Staged durable AI package integrity identity drifted.');
+    }
+    try {
+      await rename(staging, durableInstallRoot);
+    } catch (error) {
+      if (!['EEXIST', 'ENOTEMPTY'].includes(error?.code)) throw error;
+      const concurrent = await verifyDurablePackageIntegrity({
+        aiRoot: durableInstallRoot,
+        frameworkProfile,
+        packageVersion: distribution.package.version,
+      });
+      if (
+        concurrent.cacheKey !== cacheKey ||
+        concurrent.contentFingerprint !== contentFingerprint
+      ) {
+        throw durableIntegrityError('Concurrent durable AI package materialization diverged.');
+      }
+    }
+  } catch (error) {
+    await rm(staging, {recursive: true, force: true}).catch(() => {});
+    throw error;
+  }
+  return {aiRoot: durableInstallRoot, durableInstallRoot};
+}
+
 async function requireCanonicalDirectory(path, label) {
-  if (!isAbsolute(path)) throw new Error(`${label} must be an absolute path.`);
+  if (!isAbsoluteProjectRoot(path)) throw new Error(`${label} must be an absolute path.`);
   const absolute = resolve(path);
   const canonical = await realpath(absolute).catch((error) => {
     if (error?.code === 'ENOENT') throw new Error(`${label} does not exist: ${absolute}`);
@@ -417,9 +604,18 @@ export async function inspectAgentClientInstallation({client, projectRoot} = {})
   const distribution = JSON.parse(await readFile(resolve(aiRoot, 'distribution.json'), 'utf8'));
   if (
     distribution.package?.name !== '@viewcompose/ai-tooling' ||
-    !/^\d+\.\d+\.\d+$/u.test(distribution.package?.version ?? '')
+    !stablePackageVersion(distribution.package?.version ?? '')
   ) {
-    throw new Error('Active MCP entry does not point to a released ViewCompose AI package.');
+    throw durableIntegrityError(
+      'Active MCP entry does not point to a stable released ViewCompose AI package.',
+    );
+  }
+  if (requiresDurablePackageIntegrity(distribution.package.version)) {
+    await verifyDurablePackageIntegrity({
+      aiRoot,
+      frameworkProfile: active.frameworkProfile,
+      packageVersion: distribution.package.version,
+    });
   }
   return Object.freeze({
     client: profile.id,
@@ -795,11 +991,12 @@ async function rollbackConfigOperation(root, operation) {
 
 export async function initializeAgentClient({
   client,
-  projectRoot,
+  projectRoot = process.cwd(),
   sourceRoot,
   aiRoot = defaultAiRoot,
   nodeExecutable = process.execPath,
   mcpServerPath = defaultMcpServerPath,
+  cacheRoot,
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot});
@@ -808,13 +1005,19 @@ export async function initializeAgentClient({
     sourceRoot: canonicalSourceRoot,
     aiRoot,
   });
+  const durable = canonicalSourceRoot === undefined
+    ? await materializeDurablePackage(aiRoot, framework.profileId, cacheRoot)
+    : {aiRoot, durableInstallRoot: null};
+  const effectiveMcpServerPath = durable.durableInstallRoot
+    ? resolve(durable.aiRoot, 'scripts/mcp-server.mjs')
+    : mcpServerPath;
   assertNoSkillConflicts(prepared.operations);
   const config = await prepareConfigOperation({
     profile: prepared.profile,
     root: prepared.root,
     sourceRoot: canonicalSourceRoot,
     frameworkProfile: framework.profileId,
-    options: {nodeExecutable, mcpServerPath},
+    options: {nodeExecutable, mcpServerPath: effectiveMcpServerPath},
   });
   let configChanged = false;
   let created = [];
@@ -842,12 +1045,13 @@ export async function initializeAgentClient({
       installed: created.map((item) => item.id),
       unchanged: prepared.operations.filter((item) => item.status === 'ready').map((item) => item.id),
     },
+    durableInstallRoot: durable.durableInstallRoot,
   };
 }
 
 export async function diagnoseAgentClient({
   client,
-  projectRoot,
+  projectRoot = process.cwd(),
   sourceRoot,
   aiRoot = defaultAiRoot,
   nodeExecutable = process.execPath,
@@ -857,8 +1061,13 @@ export async function diagnoseAgentClient({
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   let activeInstallation;
+  let activeInstallationError;
   if (canonicalSourceRoot === undefined) {
-    activeInstallation = await inspectAgentClientInstallation({client, projectRoot}).catch(() => null);
+    try {
+      activeInstallation = await inspectAgentClientInstallation({client, projectRoot});
+    } catch (error) {
+      if (error?.code === 'VC_AI_DURABLE_INTEGRITY') activeInstallationError = error;
+    }
   }
   const effectiveAiRoot = activeInstallation?.aiRoot ?? aiRoot;
   const effectiveNodeExecutable = activeInstallation?.nodeExecutable ?? nodeExecutable;
@@ -868,6 +1077,7 @@ export async function diagnoseAgentClient({
   let configDetail;
   let framework;
   try {
+    if (activeInstallationError) throw activeInstallationError;
     if (activeInstallation) {
       const projectProfile = await detectFrameworkProjectProfile({projectRoot: prepared.root});
       const inventory = await loadReleasedFrameworkProfiles({aiRoot: effectiveAiRoot});
@@ -980,7 +1190,7 @@ async function removeEmptySkillDirectories(root, operations, skillRoot) {
 
 export async function uninstallAgentClient({
   client,
-  projectRoot,
+  projectRoot = process.cwd(),
   sourceRoot,
   aiRoot = defaultAiRoot,
   nodeExecutable = process.execPath,
@@ -1067,12 +1277,13 @@ function parseCommandLine(arguments_) {
     if (Object.hasOwn(values, key)) throw new Error(`Duplicate option ${option}.`);
     values[key] = value;
   }
-  const required = ['client', 'project-root'];
-  const allowed = command === 'install-skills' || command === 'upgrade'
-    ? new Set(required)
-    : new Set([...required, 'source-root']);
+  const required = ['client'];
+  const allowed = command === 'config' || command === 'install-skills'
+    ? new Set([...required, 'project-root', ...(command === 'config' ? ['source-root'] : [])])
+    : new Set([...required, 'project-root', 'source-root']);
   const unexpected = Object.keys(values).filter((key) => !allowed.has(key));
-  if (required.some((key) => !Object.hasOwn(values, key)) || unexpected.length > 0) {
+  if (required.some((key) => !Object.hasOwn(values, key)) || unexpected.length > 0 ||
+      (command === 'config' && !Object.hasOwn(values, 'project-root'))) {
     throw new Error(`Invalid ${command} options.`);
   }
   return {command, values};
@@ -1099,7 +1310,7 @@ async function main() {
   }
   const arguments_ = {
     client: values.client,
-    projectRoot: values['project-root'],
+    ...(values['project-root'] === undefined ? {} : {projectRoot: values['project-root']}),
     sourceRoot: values['source-root'],
   };
   if (command === 'install-skills') {
@@ -1117,6 +1328,9 @@ async function main() {
     ? initializeAgentClient
     : command === 'doctor' ? diagnoseAgentClient : uninstallAgentClient;
   const result = await operation(arguments_);
+  if (command === 'init') {
+    result.readiness = await diagnoseAgentClient(arguments_);
+  }
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (command === 'doctor' && !result.status.endsWith('-ready')) process.exitCode = 1;
 }

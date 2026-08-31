@@ -12,12 +12,13 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - GitHub Release @viewcompose/ai-tooling 0.3.0 at ai-tooling-v0.3.0
+  - npm @viewcompose/ai-tooling 0.4.0 with GitHub Release ai-tooling-v0.4.0 provenance
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
   - Codex, Claude Code, and Cursor project profiles verified 2026-08-31
 verification_commands:
+  - npm --prefix tools/ai run verify:bootstrap-adoption
   - npm --prefix tools/ai run verify:phase3-agent-clients
   - ./gradlew verifyAiDistribution
   - ./gradlew verifyAiToolingRelease
@@ -27,35 +28,39 @@ lifecycle: Update when a supported client format, Skill path, package release, t
 # AI Integration
 
 ViewCompose ships a machine-readable API reference, 13 local MCP tools, and six Agent Skills as one
-installable GitHub Release. A developer can connect Codex, Claude Code, or Cursor to a new or
-existing Android project with two commands. No ViewCompose checkout, package build, provider key,
-or manual MCP configuration edit is required, including for Kotlin compilation and generated-screen
-Preview evidence.
+exact-version npm package backed by an immutable GitHub Release. A developer can connect Codex,
+Claude Code, or Cursor to a new or existing Android project with one command. No global install,
+ViewCompose checkout, package build, provider key, or manual MCP configuration edit is required,
+including for Kotlin compilation and generated-screen Preview evidence.
 
 The coding client still owns the model, credentials, conversation, and user-authorized source
 changes. ViewCompose supplies deterministic framework facts, generation tools, and explicit
 validation evidence; it never embeds or contacts a model provider.
 
-## Install in two commands
+## Install in one command
 
-Install the exact release from GitHub:
+Run exactly one of these commands from the physical root of the Android project:
 
 ```bash
-npm install --global --ignore-scripts \
-  https://github.com/ViewCompose/ViewCompose/releases/download/ai-tooling-v0.3.0/viewcompose-ai-tooling-0.3.0.tgz
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client codex
 ```
 
-Then run this from the root of the Android project and choose one client:
+```bash
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client claude-code
+```
 
 ```bash
-viewcompose-agent init --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client cursor
 ```
 
 `init` transactionally merges the `viewcompose` MCP entry and installs all six canonical Skills.
-It preserves unrelated settings, is idempotent for exact installed content, and refuses invalid
-JSON, relative or symbolic-link roots, and conflicting configuration or Skill bytes. A failure does
-not leave a partially installed integration.
+It resolves the physical current directory, detects the exact ViewCompose dependency vector before
+writing, materializes the verified package into a content-addressed user cache, and points MCP only
+at that durable copy—not npm's temporary npx directory. It then runs the same readiness checks as
+`doctor`. Unrelated settings are preserved; exact re-entry is idempotent; invalid JSON, relative or
+symbolic-link roots, incompatible framework versions, and conflicting configuration or Skill bytes
+fail without leaving a partial integration. Automation may still pass
+`--project-root <physical-absolute-path>` explicitly.
 
 | Client | Project MCP configuration | Skill root |
 | --- | --- | --- |
@@ -66,11 +71,10 @@ not leave a partially installed integration.
 Node.js 24.19.0 or newer is sufficient for reference, generation, static validation, and project
 analysis. Compiled, rendered, and compared evidence additionally requires JDK 17 or 21 and Android
 SDK platform 36. The release includes its own Gradle 9.3.1 wrapper and fixed build harness, so users
-do not install Gradle or align their project's AGP/Kotlin versions. A Node version manager is
-recommended when the system-wide npm prefix is not writable; do not use `sudo` merely to install the
-tooling.
+do not install Gradle or align their project's AGP/Kotlin versions. The bootstrap writes only to the
+project integration surfaces and the operating system's user cache; never use `sudo` for it.
 
-### Exact framework-version binding in `0.3.0`
+### Exact framework-version binding in `0.4.0`
 
 `init` reads the project's independently versioned `com.viewcompose` coordinates without executing
 project Gradle logic. It accepts exact literals, used entries from the default
@@ -82,17 +86,17 @@ and generated Preview all load that same bundle.
 A project without a ViewCompose dependency is a new-project case and selects the Release's newest
 stable profile. Dynamic, conflicting, unsupported, or otherwise unresolved versions—including a
 ViewCompose import without dependency identity—fail before any project write. The tool does not
-silently change framework dependencies. The first `0.3.0` profile represents the current published
+silently change framework dependencies. The first `0.4.0` profile represents the current published
 Artifact vector; an older version vector remains unchanged until a Release explicitly carries its
 matching profile.
 
 ## Confirm the installation
 
-Run the same client choice from the project root:
+`init` already returns the readiness result. To repeat the diagnosis later, run the same exact
+package version and client choice from the project root:
 
 ```bash
-viewcompose-agent doctor --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` means the MCP entry and every Skill match the installed release, the physical
@@ -114,9 +118,10 @@ Complete the client-side connection check:
   [MCP](https://docs.cursor.com/context/model-context-protocol) and
   [Skills](https://cursor.com/docs/skills) documentation.
 
-CI verifies generated client configuration, transactional lifecycle behavior, exact Skill bytes,
-the installed package, and both MCP protocol handshakes. It does not automate or authenticate
-proprietary client binaries, so the checks above remain visible user steps.
+CI verifies the real packaged bootstrap on fresh Linux, macOS, and Windows projects, including paths
+with spaces and non-ASCII characters, all three clients, integrated diagnosis, idempotent re-entry,
+npx-cache removal, durable MCP launch, exact Skill bytes, MCP handshake, and uninstall. It does not
+automate or authenticate proprietary client binaries, so the checks above remain visible user steps.
 
 ## What works without ViewCompose source
 
@@ -144,7 +149,7 @@ Try this first request in the selected Agent:
 
 ## Deep evidence execution boundary
 
-Release `0.3.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
+Release `0.4.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
 artifacts from Maven Central. A packaged content-addressed harness owns Gradle 9.3.1, AGP 9.1.1,
 Kotlin 2.2.10, Android 36, JVM target 11, and the allowlisted ViewCompose/Preview coordinates. The
 consumer project root is a read-only authorization boundary: the tooling does not execute its
@@ -154,8 +159,10 @@ The first deep-evidence request may download the pinned Gradle distribution and 
 It remains bounded by a five-minute execution window. Later requests use the integrity-checked cache
 under the operating system's user cache directory, and compatible tooling upgrades retain the same
 execution-cache namespace when the Knowledge, Harness, source, and lane fingerprints are unchanged.
-Package installation itself remains script-free and offline-capable; model-provider network access
-is never required.
+Package installation is script-free. The first npx or deep-evidence request can require network
+access for the exact package, Gradle distribution, or Maven dependencies; the durable verified
+cache remains usable after npm removes its temporary npx files. Model-provider network access is
+never required.
 
 `validate_code` compile mode accepts bounded Kotlin snippets. XML and screenshot generation tools
 own their generated source, compile it, render it, reopen the exact PNG and render tree, and attach
@@ -170,8 +177,7 @@ rendering is a later, explicitly isolated capability.
 Check, download, and migrate to the newest compatible tooling Release with one command:
 
 ```bash
-viewcompose-agent upgrade --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 upgrade --client <codex|claude-code|cursor>
 ```
 
 The command detects the project versions first and inspects only immutable `ai-tooling-v<semver>`
@@ -184,28 +190,23 @@ The old Package remains available while the upgrader replaces only the exact man
 unchanged canonical Skill bytes. A private recovery journal rolls back an interrupted migration;
 user-edited content or an unknown MCP owner stops before replacement. `no-compatible-update` is a
 successful no-op: it does not change the installed integration or the project's framework
-dependencies. The globally installed bootstrap command can diagnose, upgrade, or remove the active
-side-by-side Package by following its verified managed MCP entry, so every later compatible upgrade
-uses the same command.
+dependencies. The exact-version bootstrap follows the verified managed MCP entry to diagnose,
+upgrade, or remove the active side-by-side package.
 
 Remove the current project integration:
 
 ```bash
-viewcompose-agent uninstall --client <codex|claude-code|cursor> \
-  --project-root "$(pwd -P)"
+npx --yes @viewcompose/ai-tooling@0.4.0 uninstall --client <codex|claude-code|cursor>
 ```
 
 The command removes only the exact ViewCompose MCP entry and canonical Skill bytes; unrelated client
 settings and files remain. If either managed surface was edited, removal fails for review rather
-than deleting user content. Remove the global package separately:
-
-```bash
-npm uninstall --global @viewcompose/ai-tooling
-```
+than deleting user content. No global package exists to remove; the content-addressed package cache
+is retained for integrity and compatible reuse.
 
 ## Integrity and troubleshooting
 
-The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.3.0)
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.0)
 contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
 checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
 Attestations for all three assets. See GitHub's
@@ -214,7 +215,7 @@ for an optional independent provenance check.
 
 | Symptom | Action |
 | --- | --- |
-| `viewcompose-agent` is not found | Confirm Node 24.19 or newer and that npm's global binary directory is on `PATH`. |
+| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal `@viewcompose/ai-tooling@0.4.0` selector. Do not substitute `latest`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
 | `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
 | `upgrade` returns `no-compatible-update` | Keep the current integration. No published tooling Release contains an exact framework profile for this project yet. Do not install a global-latest package as a workaround. |

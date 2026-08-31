@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-ai-bootstrap-v1",
+  "lastVerified": "2026-08-31",
+  "package": {
+    "name": "@viewcompose/ai-tooling",
+    "version": "0.4.0",
+    "nodeEngine": ">=24.19.0",
+    "binary": "viewcompose-agent",
+    "installScripts": false,
+    "manager": "npm"
+  },
+  "clients": ["codex", "claude-code", "cursor"],
+  "rootResolution": {
+    "omittedArgument": "physical-current-directory",
+    "explicitArgument": "absolute-directory-only",
+    "physicalIdentity": "realpath-before-project-write",
+    "symbolicLinks": "reject-logical-alias",
+    "supportedPathCases": ["spaces", "non-ascii", "case-insensitive", "windows-drive", "windows-unc"]
+  },
+  "cache": {
+    "layout": "<user-cache>/viewcompose/ai-tooling/<sha256-package-and-profile>",
+    "keyAlgorithm": "sha256",
+    "keyInputs": ["verified-package-content", "framework-profile-id"],
+    "configuredPath": "durable-cache-only",
+    "materialization": "staged-rename-with-recovery"
+  },
+  "ownership": {
+    "mcp": "exact-package-owned-entry",
+    "skills": "exact-canonical-bytes",
+    "unmanagedBytes": "preserve-and-report-conflict",
+    "idempotence": "unchanged-on-exact-reentry"
+  },
+  "transaction": {
+    "journal": ".viewcompose/ai-bootstrap-v1.json",
+    "interruption": "recover-on-next-command",
+    "rollback": "old-integration-or-no-integration",
+    "partialSelection": "never-select"
+  },
+  "compatibility": {
+    "frameworkSelection": "exact-current-profile-only",
+    "newProject": "select-single-current-profile",
+    "nonCurrentProject": "fail-closed-with-upgrade-guidance",
+    "writesBeforeSelection": false
+  },
+  "result": {
+    "package": "package identity and exact version",
+    "framework": "exact framework vector and profile",
+    "projectRoot": "physical absolute path",
+    "client": "codex",
+    "mcpPath": "project-relative configuration path",
+    "skillRoot": "project-relative Skill root",
+    "skillCount": 6,
+    "durableInstallRoot": "verified content-addressed cache path",
+    "prerequisites": ["Node.js >=24.19.0"],
+    "readiness": "project-bound-ready",
+    "warnings": [],
+    "nextAction": "Run the selected agent in the project root."
+  }
+}

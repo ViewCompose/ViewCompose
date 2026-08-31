@@ -29,6 +29,8 @@ const releasedBundleRoot = `generated/released/${releasedProfileId}`;
 const sourcePaths = Object.freeze([
   'contracts/agent-client-integration.schema.json',
   'contracts/examples/agent-client-integration.json',
+  'contracts/bootstrap.schema.json',
+  'contracts/examples/bootstrap.json',
   'contracts/consumer-project-execution.schema.json',
   'contracts/examples/consumer-project-execution.json',
   'contracts/framework-compatibility-profile.schema.json',
@@ -182,10 +184,14 @@ async function packageMetadata(contract) {
   return {
     name: contract.package.name,
     version: contract.package.version,
-    description: 'Deterministic local AI tooling for the ViewCompose Android UI framework.',
-    private: true,
+    description: contract.package.description,
     type: 'module',
     license: contract.package.license,
+    repository: contract.package.repository,
+    homepage: contract.package.homepage,
+    bugs: {url: contract.package.support},
+    keywords: contract.package.keywords,
+    publishConfig: {access: contract.package.publishAccess},
     engines: {node: contract.package.nodeEngine},
     bin: {
       'viewcompose-ai': 'scripts/ai-tool.mjs',
@@ -391,6 +397,9 @@ function assertExactContract(contract, files, packFiles) {
   if (contract.package.runtimeDependencies.length !== 0) {
     throw new Error('The frozen distribution permits no runtime dependencies.');
   }
+  if (contract.package.installScripts !== false) {
+    throw new Error('The frozen distribution permits no installation scripts.');
+  }
   if (TOOL_NAMES.length !== contract.contents.tools.length ||
       TOOL_NAMES.some((tool, index) => tool !== contract.contents.tools[index])) {
     throw new Error('The packaged tool catalog differs from the frozen distribution contract.');
@@ -399,7 +408,8 @@ function assertExactContract(contract, files, packFiles) {
 
 export async function createDistribution({
   outputRoot = resolve(aiRoot, 'build/distribution'),
-  npmExecutable = 'npm',
+  npmExecutable = process.env.npm_execpath ? process.execPath : 'npm',
+  npmArguments = process.env.npm_execpath ? [process.env.npm_execpath] : [],
 } = {}) {
   const absoluteOutput = resolve(outputRoot);
   if (absoluteOutput === resolve('/') || absoluteOutput === resolve(repositoryRoot)) {
@@ -414,6 +424,7 @@ export async function createDistribution({
     await prepareStaging(stagingRoot, contract);
     const files = await fileManifest(stagingRoot);
     const {stdout} = await execFileAsync(npmExecutable, [
+      ...npmArguments,
       'pack',
       stagingRoot,
       '--json',
@@ -440,7 +451,7 @@ export async function createDistribution({
       schemaVersion: 2,
       package: contract.package,
       compatibility: {
-        agentClientIntegration: 4,
+        agentClientIntegration: 5,
         frameworkCompatibilityProfile: 1,
         frameworkProfileIndex: 1,
       },

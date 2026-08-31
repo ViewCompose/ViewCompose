@@ -2,10 +2,21 @@
   "schemaVersion": 1,
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "format": "npm-tgz",
     "nodeEngine": ">=24.19.0",
     "license": "MIT",
+    "description": "Deterministic local AI tooling for the ViewCompose Android UI framework.",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/ViewCompose/ViewCompose.git",
+      "directory": "tools/ai"
+    },
+    "homepage": "https://github.com/ViewCompose/ViewCompose/tree/main/docs/ai",
+    "support": "https://github.com/ViewCompose/ViewCompose/issues",
+    "keywords": ["android", "viewcompose", "mcp", "agent-skills", "development-tooling"],
+    "publishAccess": "public",
+    "installScripts": false,
     "runtimeDependencies": []
   },
   "contents": {
@@ -42,6 +53,8 @@
       "third-party-licenses.json",
       "contracts/agent-client-integration.schema.json",
       "contracts/examples/agent-client-integration.json",
+      "contracts/bootstrap.schema.json",
+      "contracts/examples/bootstrap.json",
       "contracts/consumer-project-execution.schema.json",
       "contracts/examples/consumer-project-execution.json",
       "contracts/framework-compatibility-profile.schema.json",

@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://viewcompose.com/schemas/ai/ai-tooling-release-v1.schema.json",
-  "title": "ViewCompose AI tooling GitHub Release contract v1",
+  "$id": "https://viewcompose.com/schemas/ai/ai-tooling-release-v2.schema.json",
+  "title": "ViewCompose AI tooling npm and GitHub Release contract v2",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "releaseId", "repository", "workflowPath", "package", "assets", "provenance", "installation"],
+  "required": ["schemaVersion", "releaseId", "repository", "workflowPath", "package", "assets", "npm", "provenance", "installation"],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "releaseId": {"const": "viewcompose-ai-tooling-github-release-v1"},
+    "schemaVersion": {"const": 2},
+    "releaseId": {"const": "viewcompose-ai-tooling-npm-github-release-v2"},
     "repository": {"const": "ViewCompose/ViewCompose"},
     "workflowPath": {"const": ".github/workflows/ai-tooling-release.yml"},
     "package": {
@@ -16,8 +16,8 @@
       "required": ["name", "version", "tag", "tagPattern", "immutable"],
       "properties": {
         "name": {"const": "@viewcompose/ai-tooling"},
-        "version": {"const": "0.3.0"},
-        "tag": {"const": "ai-tooling-v0.3.0"},
+        "version": {"const": "0.4.0"},
+        "tag": {"const": "ai-tooling-v0.4.0"},
         "tagPattern": {"const": "ai-tooling-v<semver>"},
         "immutable": {"const": true}
       }
@@ -25,7 +25,7 @@
     "assets": {
       "type": "array",
       "prefixItems": [
-        {"const": "viewcompose-ai-tooling-0.3.0.tgz"},
+        {"const": "viewcompose-ai-tooling-0.4.0.tgz"},
         {"const": "manifest.json"},
         {"const": "SHA256SUMS"}
       ],
@@ -33,6 +33,19 @@
       "minItems": 3,
       "maxItems": 3,
       "uniqueItems": true
+    },
+    "npm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registry", "access", "trustedPublishing", "minimumCli", "provenance", "installScripts"],
+      "properties": {
+        "registry": {"const": "https://registry.npmjs.org"},
+        "access": {"const": "public"},
+        "trustedPublishing": {"const": "github-actions-oidc"},
+        "minimumCli": {"const": "11.5.1"},
+        "provenance": {"const": true},
+        "installScripts": {"const": false}
+      }
     },
     "provenance": {
       "type": "object",
@@ -56,11 +69,11 @@
         "pinnedVersionRequired"
       ],
       "properties": {
-        "source": {"const": "github-release"},
+        "source": {"const": "exact-version-npm"},
         "buildFromSourceRequired": {"const": false},
         "sourceCheckoutRequiredForStandalone": {"const": false},
         "manualConfigurationEdits": {"const": 0},
-        "maxPrimaryCommands": {"const": 2},
+        "maxPrimaryCommands": {"const": 1},
         "pinnedVersionRequired": {"const": true}
       }
     }

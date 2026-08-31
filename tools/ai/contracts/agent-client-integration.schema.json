@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://viewcompose.com/schemas/ai/agent-client-integration-v4.schema.json",
-  "title": "ViewCompose AI agent client integration contract v4",
+  "$id": "https://viewcompose.com/schemas/ai/agent-client-integration-v5.schema.json",
+  "title": "ViewCompose AI agent client integration contract v5",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "profileSetId", "lastVerified", "package", "evidence", "clients"],
   "properties": {
-    "schemaVersion": {"const": 4},
-    "profileSetId": {"const": "viewcompose-agent-clients-v4"},
+    "schemaVersion": {"const": 5},
+    "profileSetId": {"const": "viewcompose-agent-clients-v5"},
     "lastVerified": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
     "package": {
       "type": "object",
@@ -45,7 +45,7 @@
         "officialConfigurationReviewed": {"const": true},
         "deterministicProfileCount": {"const": 3},
         "sourceFreeStandaloneProfiles": {"const": 3},
-        "maxPrimaryCommands": {"const": 2},
+        "maxPrimaryCommands": {"const": 1},
         "manualConfigurationEdits": {"const": 0},
         "transactionalProjectWrites": {"const": true},
         "transactionalUpgrade": {"const": true},
@@ -85,13 +85,11 @@
       "prefixItems": [
         {"enum": ["init", "doctor", "upgrade", "uninstall"]},
         {"const": "--client"},
-        {"enum": ["codex", "claude-code", "cursor"]},
-        {"const": "--project-root"},
-        {"const": "<absolute-consumer-project-root>"}
+        {"enum": ["codex", "claude-code", "cursor"]}
       ],
       "items": false,
-      "minItems": 5,
-      "maxItems": 5
+      "minItems": 3,
+      "maxItems": 3
     },
     "config": {
       "type": "object",

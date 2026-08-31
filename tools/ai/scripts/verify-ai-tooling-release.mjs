@@ -30,10 +30,20 @@ function verifyWorkflow(workflow, contract) {
     ['fetch-depth: 0', 'complete tag history'],
     ['actions/setup-node@v7', 'the pinned Node setup action'],
     ['node-version: "24.19.0"', 'the pinned Node runtime'],
+    ['registry-url: "https://registry.npmjs.org"', 'the canonical npm registry'],
+    ['package-manager-cache: false', 'the release-build package-manager cache prohibition'],
+    ['npm install --global npm@11.8.0', 'the trusted-publishing npm client'],
+    ['environment: ai-tooling-release', 'the protected release environment'],
     ['actions/attest-build-provenance@v3', 'GitHub build provenance'],
     ['./gradlew verifyAiToolingRelease --stacktrace', 'the release quality gate'],
     ['--verify-tag', 'tag existence verification'],
-    ['gh release view "$GITHUB_REF_NAME"', 'existing-release rejection'],
+    ['gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME"', 'existing-release inspection'],
+    ['gh release download "$GITHUB_REF_NAME"', 'existing-release byte verification'],
+    ['npm view @viewcompose/ai-tooling@0.4.0 version', 'unpublished npm-identity requirement'],
+    ['automated recovery cannot prove its OIDC provenance', 'existing npm provenance rejection'],
+    ['npm publish', 'npm publication'],
+    ['--access public', 'public scoped-package access'],
+    ['--provenance', 'npm provenance'],
   ];
   for (const [fragment, label] of requiredFragments) assertIncludes(workflow, fragment, label);
   for (const asset of contract.assets) {
@@ -44,6 +54,15 @@ function verifyWorkflow(workflow, contract) {
   }
   if (/\b(?:latest|main)\b.*viewcompose-ai-tooling/u.test(workflow)) {
     throw new Error('AI tooling release workflow must not publish a mutable package selector.');
+  }
+  if (/NODE_AUTH_TOKEN|NPM_TOKEN|npm_token/iu.test(workflow)) {
+    throw new Error('AI tooling release workflow must use OIDC without a long-lived npm token.');
+  }
+  if (workflow.indexOf('gh release create') > workflow.indexOf('npm publish')) {
+    throw new Error('AI tooling release workflow must create or verify the GitHub Release before npm publication.');
+  }
+  if (!workflow.includes("if: steps.github-release.outputs.state == 'missing'")) {
+    throw new Error('AI tooling release workflow must recover only from a byte-verified GitHub Release.');
   }
 }
 
@@ -82,7 +101,7 @@ async function verifyAssets(contract, distributionRoot) {
     manifest.package?.version !== contract.package.version ||
     manifest.archive?.path !== contract.assets[0] ||
     checksums.get(manifest.archive.path) !== manifest.archive.sha256 ||
-    manifest.compatibility?.agentClientIntegration !== 4 ||
+    manifest.compatibility?.agentClientIntegration !== 5 ||
     manifest.compatibility?.frameworkCompatibilityProfile !== 1 ||
     manifest.compatibility?.frameworkProfileIndex !== 1 ||
     profileIds.length < 1 ||

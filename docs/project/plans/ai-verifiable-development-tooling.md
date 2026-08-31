@@ -19,16 +19,17 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: The 2026-08-29 audit found a strong generated capability Reference with 537 application-facing entries, 77 capabilities, 30 artifacts, one compiled sample for every capability, 185 compiled documentation regions, structured diagnostics, and a compilable Layoutlib Preview runner. It also found no versioned AI knowledge bundle, llms.txt, consumer Agent skills, MCP service, generated validator index, hermetic snippet compiler, tooling interchange representation, or conversion and visual-repair evaluation corpus.
+baseline: Release 0.3.0 is published as an attested GitHub Release with a version-bound current Knowledge Pack, 13 CLI/MCP tools, six Agent Skills, source-free compile/Preview/layout evidence, bounded XML and screenshot generation, and verified Codex, Claude Code, and Cursor project profiles. The remaining adoption cost is a global GitHub-tarball install plus an explicit project-root argument, while Compose migration, deeper project diagnostics, Figma import, and public source repair remain unactivated.
 ordered_work:
-  - Freeze terminology, architecture, threat model, version lanes, evaluation corpus, metrics, and public capability dispositions before adding AI-facing tools.
-  - Generate one deterministic, versioned AI Knowledge Bundle and compact llms.txt from canonical governance, signatures, KDoc, samples, and publication metadata.
-  - Build isolated static, compile, render, diagnostic, and project-analysis foundations with structured results and adversarial safety tests.
-  - Expose the accepted foundations through a local CLI, MCP server, and client-neutral Agent skills without duplicating framework knowledge.
-  - Add a tooling-only Design IR and implement XML migration before bounded Jetpack Compose source migration.
-  - Add prompt, screenshot, and Figma adapters only after code generation, compile, render, comparison, and repair are independently measurable.
-  - Stabilize packaging, compatibility, security, documentation, release operations, and product claims against longitudinal evidence.
+  - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
+  - Freeze and publish a current-version Jetpack Compose-to-ViewCompose semantic mapping and client-neutral conversion Skill before implementing automatic conversion.
+  - Implement a bounded compiler/AST-based Compose converter over the accepted mapping and Design IR, with explicit unsupported results and compile evidence.
+  - Extend the existing read-only analyze_project surface with precision-gated ViewCompose structure, lifecycle, accessibility, unit, theme, and performance rules.
+  - Add a provider-neutral Figma design-tree adapter to the same Design IR only after provenance, asset, privacy, and unsupported-semantics contracts are frozen.
+  - Publicly activate attended screenshot repair only after a separate authorized source-application transaction, diff, durable outcome, and rollback boundary passes its gates.
 completion:
+  - A new or existing Android project can install the exact compatible AI tooling, configure one supported Agent, copy all Skills, and receive a readiness result from one project-root command without a ViewCompose checkout or global npm install.
+  - The one-command path passes fresh macOS, Linux, and Windows adoption fixtures and never points MCP configuration at an ephemeral npx directory.
   - Every supported AI-facing answer can identify its ViewCompose artifact/version, canonical source fingerprint, symbols, samples, and validation evidence.
   - Generated snippets use real published APIs and pass the required isolated compilation gate; renderable UI also passes Preview diagnostics and declared semantic or visual checks.
   - MCP, CLI, skills, validators, converters, and model adapters remain downstream development tools with no inactive-path or release-runtime footprint.
@@ -36,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-08-31
-next_action: Publish and attest ai-tooling-v0.3.0 after merge, then extend released-profile coverage only from immutable framework publication history.
+next_action: Establish the @viewcompose npm scope and ai-tooling-release trusted publisher, then publish and verify exact 0.4.0 npm and GitHub identities; do not begin Wave B until those external gates pass.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -44,6 +45,479 @@ maven_release_changesets:
 # AI-Verifiable Development Tooling Plan
 
 ## Status
+
+### Accepted post-0.3.0 execution handoff (2026-08-31)
+
+This section is the current execution authority for the next machine and supersedes earlier
+then-current “next action” sentences retained in the chronological evidence below. It is a
+planning-only handoff: this documentation change does not modify the AI package, schemas, client
+configuration, framework source, publication workflow, or runtime behavior.
+
+Release `0.3.0` is complete. The immutable tag `ai-tooling-v0.3.0` points at
+`a5c7de196a92e0d76caae28876fddaa4f3493e5e`, and its successful publication run produced the
+tarball, Manifest, and checksum list with GitHub attestations. Public installation, checksum and
+attestation verification, the three client profiles, and `project-bound-ready` diagnosis were
+accepted on 2026-08-31. Publication is therefore no longer an open action.
+
+The product priority is now adoption cost, followed by capability breadth. Work must execute in
+this order unless this plan and the unified roadmap are changed together:
+
+#### Wave A contract-freeze evidence (2026-08-31)
+
+The first Wave A slice froze `bootstrap-v1` in
+`tools/ai/contracts/bootstrap.schema.json` with a checked-in example and three negative tests.
+The contract fixes the exact npm identity `@viewcompose/ai-tooling@0.4.0`, Node `>=24.19.0`, the
+three supported clients, physical-current-directory resolution, logical symlink rejection, the
+content-addressed durable cache layout, durable-only MCP paths, staged-rename recovery, exact
+current-profile selection, and the complete bootstrap result shape. It intentionally changes no
+installer or project-write behavior. Against the pre-change Phase 0 contract suite, the focused
+post-change suite passed 2/2 test files (schema acceptance plus Phase 0 integration), with the
+schema inventory increasing from 27 to 28 and all existing 66 metrics, 74 cases, and 71 fixture
+cases unchanged. This is **improved** contract coverage with no runtime-behavior claim; the
+remaining limitation was that platform adoption was not yet implemented. The deterministic bootstrap
+implementation is now present in `tools/ai/scripts/agent-client-integration.mjs`: omitted roots use
+the physical current directory, published packages materialize into a content-addressed user cache,
+MCP configuration uses only the durable package, and `init` includes the readiness diagnosis.
+Focused post-implementation validation initially passed 13/13 targeted tests, 312/312 total AI Node
+tests, and 3/3 deterministic package-distribution tests, including source-removal persistence and
+transaction rollback. The package/adoption slice then advanced the candidate identity to public,
+script-free `@viewcompose/ai-tooling@0.4.0`, upgraded the client and release contracts to majors 5
+and 2, and added `.github/workflows/ai-tooling-adoption.yml`. That matrix runs the real packaged npx
+bootstrap on Linux, macOS, and Windows for all three clients from paths containing spaces and
+non-ASCII characters; it checks integrated diagnosis, exact re-entry, deletion of the temporary npx
+cache, durable MCP handshake, symbolic-link rejection, exact Skill ownership, and uninstall.
+
+Local Linux acceptance passed 3/3 client bootstraps, 3/3 durable MCP handshakes, and 4/4 native path
+cases. Durable bootstrap and upgrade caches now re-hash every package byte on reuse; one focused
+tamper case changes diagnosis from a false Ready possibility to `repair-required`. Follow-up review
+extended that fail-closed boundary from exact `0.4.0` to every later stable package, normalized
+missing and malformed integrity markers into repair-required results, made concurrent cache writers
+converge only after byte verification, and routed npm upgrade invocations through the Node entry
+point so Windows command shims are not executed directly. Prerelease, build-metadata, and malformed
+package versions are rejected rather than exempted from the stable-version gate. The complete AI
+Node suite increased from 312/312 to 320/320 while retaining a zero-failure rate; the added cases
+cover `0.4.0`, `0.4.1`, and `1.0.0` integrity gates, invalid version forms, a malformed marker,
+missing marker, changed package bytes, concurrent materialization, and portable npm invocation.
+`verifyDocumentationStructure` passed 19 tasks in 18 seconds, including 132 canonical-English
+pages, 129/129 current Chinese mirrors, 80/80 documentation-script tests, and zero Governance V2
+issues. After adding the npm publication inventory and cache-integrity checks, the combined JDK 21
+and Gradle 9.3.1 `verifyDocumentationStructure verifyAiToolingRelease` gate passed 192 tasks in 2
+minutes 1 second (9 executed, 183 up-to-date), with 2/2 reproducible packages, 1/1 npm publish
+dry-run inventory, 1/1 offline archive lifecycle,
+3/3 installed profiles, 18/18 exact Skill copies, 2/2 MCP protocol versions, 3/3 release assets, and
+all retained compile, Preview, XML, layout, screenshot, and exact-pixel evidence. Relative to the
+two-command global installation path, local setup changed from no one-command denominator to 3/3
+clients on one native operating system. Pull request `#261` then ran the exact packed-tarball
+adoption workflow on GitHub-hosted Ubuntu, macOS, and Windows in
+[run `33378127917`](https://github.com/ViewCompose/ViewCompose/actions/runs/33378127917). All 3/3
+jobs passed: Ubuntu in 39 seconds, macOS in 36 seconds, and Windows in 3 minutes 23 seconds. Compared
+with the preceding local Linux-only platform denominator, accepted operating-system coverage moved
+from 1/3 (33.3%) to 3/3 (100%), an absolute gain of two platforms and 66.7 percentage points. The
+conclusion is **improved** and the cross-platform adoption gate is accepted. The remaining limitation
+is that hosted adoption verifies the packed candidate rather than a public npm registry identity;
+the next action is therefore npm scope ownership, trusted-publisher binding, and exact publication.
+
+The English and Chinese AI Integration pages, repository README, and tooling README now expose only
+the exact one-command `0.4.0` path, durable-cache behavior, optional diagnosis, upgrade/removal, and
+provenance boundary. The candidate release workflow uses npm Trusted Publishing through GitHub OIDC,
+pins npm 11.8.0, creates or byte-verifies the GitHub Release before publishing the exact public npm
+tarball with provenance, and contains no long-lived npm token. A retry accepts a pre-existing GitHub
+Release only after its bytes and complete asset inventory match the frozen local outputs; a missing,
+partial, or divergent identity fails closed. Any pre-existing npm version is rejected because equal
+tarball bytes alone cannot prove OIDC provenance. This permits automatic recovery when GitHub
+publication succeeds before a temporary npm failure, without permitting overwrite or silently
+accepting unverifiable npm provenance. A public registry check on 2026-08-31 returned
+`E404` for the package and `Scope not found` for `@viewcompose`; therefore namespace creation and
+the npm-side trusted-publisher binding are external account prerequisites, not accepted evidence.
+No funding endpoint was declared because the repository has no authoritative funding destination;
+the package publishes its repository, documentation home, and issue-support URLs. The next action is
+to establish those npm account bindings and only then publish and verify both immutable `0.4.0`
+identities.
+
+| Order | Execution wave | User outcome | Entry condition | Exit gate |
+| --- | --- | --- | --- | --- |
+| 1 | A — public npm bootstrap and cross-platform onboarding | One project-root command installs, configures, and diagnoses ViewCompose AI tooling | Release `0.3.0` remains reproducible and attested | Exact-version npm publication plus fresh macOS, Linux, and Windows adoption passes |
+| 2 | B — Compose semantic map and Agent Skill | Agents translate Compose intent with an explicit supported/partial/manual/unsupported map | Wave A is released | Current mapping corpus, compiled target samples, Skill parity, and docs pass |
+| 3 | C — bounded Compose AST conversion | A supported stateless Compose subset converts through Design IR to compiled ViewCompose Kotlin | Wave B mapping is frozen | AST fixtures, unsupported honesty, CLI/MCP parity, compilation, and installed-package gates pass |
+| 4 | D — enhanced ViewCompose analysis | Existing projects receive actionable, evidence-ranked ViewCompose findings | Wave C is released or explicitly closed without activation | Rule precision/recall, safety, read-only, performance, CLI/MCP, and corpus gates pass |
+| 5 | E — Figma design-tree adapter | Exported Figma structure converts through Design IR with provenance and assets preserved | Waves B–D are stable and Design IR gaps are enumerated | Offline import, provenance, resource, compile/render/compare, privacy, and installed-package gates pass |
+| 6 | F — attended screenshot repair activation | Users can review and explicitly apply a bounded repair with rollback | The source-application transaction boundary is independently accepted | Diff preview, authorization, atomic apply, durable outcome, rollback, replay, and public-surface gates pass |
+
+“Released” in this table means the wave has its accepted contracts, implementation, tests, public
+English and Chinese guidance, immutable package evidence, and a merged pull request. A local green
+test, draft package, or internal tool mode does not unblock the next wave.
+
+#### Frozen product decisions
+
+1. **Current framework only.** The project currently has no adoption base that justifies building
+   or maintaining historical API/Knowledge profiles. Each new framework release produces one
+   current released profile. Historical profile generation, migration fixtures, compatibility
+   claims, and backfill work are outside this sequence.
+2. **Mismatch still fails closed.** “No historical support” does not permit the newest Knowledge
+   Bundle to serve an older dependency vector. Initialization and upgrade must detect the exact
+   project vector without executing consumer Gradle. A non-current, dynamic, conflicting, or
+   unresolved vector is left unchanged and receives an actionable framework/tooling alignment
+   message.
+3. **No silent framework upgrade.** The AI bootstrap never edits Gradle dependencies merely to make
+   its own profile compatible. The user upgrades ViewCompose separately, then reruns initialization.
+4. **GitHub remains the immutable evidence origin.** npm is the low-friction discovery and bootstrap
+   channel. The release tag, exact asset inventory, Manifest, `SHA256SUMS`, and attestations remain
+   the canonical provenance chain until a later ADR deliberately changes it.
+5. **No mutable-latest compatibility signal.** Documentation and CI use an exact tooling version.
+   Even if npm exposes a `latest` tag, compatibility is decided by the detected framework vector and
+   packaged profile, never by package recency.
+6. **No provider ownership.** ViewCompose continues to accept provider-neutral inputs and validated
+   results. It does not own model credentials, provider SDKs, remote calls, conversation state, or
+   billing.
+7. **No consumer build execution.** Compile, Preview, and layout evidence continue through the
+   packaged allowlisted harness. No wave may execute the consumer wrapper, settings, plugins,
+   arbitrary tasks, application process, or device deployment as an implementation shortcut.
+8. **Source mutation stays last.** Waves A–E are read-only with respect to application source.
+   Public repair cannot reuse an in-memory authority object as source-write permission and cannot
+   activate before the Wave F transaction and rollback contract passes.
+9. **Reconsideration trigger.** Historical profile support requires concrete adoption evidence, a
+   named support window, storage/CI budgets, and a separately accepted plan. A single request to
+   support an old version is recorded but does not silently expand this plan.
+
+#### Cross-computer resume procedure
+
+The next implementation session starts from a clean clone or clean `main` and performs these steps
+before editing production files:
+
+1. Read `docs/README.md`, `docs/project/documentation-governance.md`, this plan, ADR-0009, ADR-0022,
+   ADR-0025, `docs/ai/README.md`, and `tools/ai/README.md` in that order.
+2. Fetch `origin` and tags, fast-forward local `main`, and confirm both
+   `ai-tooling-v0.3.0` and this planning commit are ancestors of `HEAD`. Do not reconstruct the plan
+   from chat history.
+3. Confirm the worktree is clean. Preserve unrelated user changes if it is not; do not reset or
+   overwrite them.
+4. Record the local Node, JDK, Android SDK, operating system, architecture, and npm versions in the
+   first Wave A evidence update. The currently accepted deep-evidence prerequisites remain Node
+   24.19 or newer, JDK 17 or 21, and Android SDK 36 until a contract change says otherwise.
+5. Run the documentation structure and current AI Release gates before changing behavior. A
+   baseline failure is investigated and recorded; it is not normalized into the new work.
+6. Create a dedicated `codex/` branch for Wave A. Do not combine later waves into that branch or
+   pull request.
+7. Make the Wave A contract/schema/tests the first implementation commit. Only then implement the
+   deterministic bootstrap path, followed by platform evidence and public documentation.
+8. Update this section after every merged wave with accepted absolute results, normalized change,
+   conclusion, limitations, and the next unblocked wave. Earlier chronological evidence remains
+   immutable except for factual corrections.
+
+Recommended clean-baseline commands are:
+
+```bash
+git fetch origin --tags
+git switch main
+git pull --ff-only origin main
+git merge-base --is-ancestor ai-tooling-v0.3.0 HEAD
+./gradlew verifyDocumentationStructure
+./gradlew verifyAiToolingRelease
+```
+
+The commands above inspect the baseline only. They do not authorize publication, package release,
+consumer source writes, or execution of any implementation wave.
+
+### Execution Wave A — public npm bootstrap and one-command onboarding
+
+#### Objective and public happy path
+
+Replace the current global GitHub-tarball installation plus explicit
+`--project-root "$(pwd -P)"` invocation with one shell-independent command run from the physical root
+of a new or existing Android project. The target release is `0.4.0`, because the distribution
+contract is a feature over `0.3.0`:
+
+```text
+npx --yes @viewcompose/ai-tooling@0.4.0 init --client <codex|claude-code|cursor>
+```
+
+The documentation may render separate copy buttons for each client, but all three commands must
+exercise the same CLI contract. `--project-root <absolute-path>` remains available for automation;
+when omitted, `init`, `doctor`, `upgrade`, and `uninstall` resolve and bind the physical current
+directory. No public instruction may require a global install, `sudo`, command substitution,
+`curl | sh`, manual archive extraction, manual Skill copying, or manual MCP JSON/TOML editing.
+
+#### Contract-first work
+
+1. Freeze the public npm package name as `@viewcompose/ai-tooling`, its exact semver, supported Node
+   engines, binary name, package files, licenses, repository metadata, funding/support links, and
+   zero-install-script policy. Verify registry namespace ownership before changing publication code.
+   If the namespace is unavailable, stop this wave and update this plan with an explicitly accepted
+   name; do not silently publish a lookalike package.
+2. Freeze a bootstrap result schema that reports package identity, framework vector, profile ID,
+   physical project root, selected client, MCP path, Skill root/count, durable install root, evidence
+   prerequisites, readiness state, warnings, and exact next action.
+3. Define omitted-root semantics consistently across POSIX shells, PowerShell, `cmd.exe`, real paths,
+   symbolic links, UNC paths, spaces, non-ASCII paths, and case-insensitive filesystems. MCP keeps
+   the physical root identity already required by `0.3.0`; aliases cannot gain authority.
+4. Define a user-cache layout keyed by verified package content and profile identity. The ephemeral
+   npm/npx extraction directory may launch the bootstrap, but generated MCP configuration must point
+   only to the durable, integrity-checked cache. Interrupted materialization is transactional and
+   leaves no selectable partial version.
+5. Define ownership, conflict, idempotence, recovery-journal, upgrade, and uninstall rules for the
+   durable package, MCP entry, and Skills. Existing unmanaged bytes remain untouched and produce a
+   reviewable conflict.
+6. Keep exact framework detection and current-only profile selection ahead of every project write.
+   A project without ViewCompose dependencies may select the package's single current profile; a
+   project with a non-current vector fails closed with upgrade guidance.
+7. Make `init` perform the existing `doctor` checks and return the readiness summary in the same
+   invocation. `doctor` remains available for troubleshooting but is not a required second setup
+   command.
+8. Freeze npm publication provenance: protected tag workflow, environment approval, least-privilege
+   token or trusted publishing, package dry-run, exact tarball comparison, provenance, immutable
+   GitHub asset cross-check, and prevention of duplicate/version-overwrite attempts.
+
+#### Implementation slices and commit boundaries
+
+Wave A uses one pull request with reviewable commits in this order:
+
+1. `test(ai): freeze one-command bootstrap contract` — schemas, negative fixtures, platform path
+   cases, current-only version cases, and release expectations; no behavior activation.
+2. `feat(ai): materialize durable npx bootstrap` — omitted-root resolution, content-addressed cache,
+   transactional initialization, integrated readiness result, upgrade/uninstall ownership, and no
+   ephemeral configured paths.
+3. `ci(ai): verify npm package adoption across platforms` — package dry-run and fresh project
+   fixtures on macOS, Linux, and Windows, including all three clients and paths with spaces and
+   non-ASCII characters.
+4. `docs(ai): publish one-command client setup` — English and Chinese AI Integration pages, README
+   entry points, troubleshooting, exact version, security/provenance, and old two-command removal.
+5. `chore(ai): prepare 0.4.0 release evidence` — publication inputs, immutable asset/version checks,
+   and release intent required by repository policy. The actual npm/GitHub publication happens only
+   after merge and protected-gate success.
+
+Do not squash away contract and evidence separation unless repository policy requires it. Do not
+include Compose, analyzer, Figma, or source-repair code in this pull request.
+
+#### Acceptance matrix
+
+| Gate | Required denominator |
+| --- | --- |
+| One-command setup | 3/3 clients reach `project-bound-ready` from exactly one version-explicit command in a fresh project |
+| Operating systems | Fresh macOS, Linux, and Windows runners each pass init, integrated doctor, idempotent re-entry, MCP handshake, and uninstall |
+| Paths | Spaces, non-ASCII, physical/symlink mismatch, case behavior, and Windows drive/UNC fixtures fail or pass exactly as contracted |
+| Persistence | Every configured server path survives npx cache cleanup and points to the verified durable package |
+| Transactions | Injected interruption at every materialization/configuration/Skill step leaves the old integration usable or no integration installed |
+| Compatibility | Current exact framework vector and no-dependency new project pass; old/dynamic/conflicting/unresolved vectors fail before writes |
+| Security | No lifecycle script, `sudo`, arbitrary consumer Gradle execution, provider credential, path escape, mutable URL, or unverified archive is accepted |
+| Reproducibility | Two package builds are byte-identical; npm dry-run contents match the attested GitHub tarball contract and exact version |
+| Documentation | README and the standalone AI chapter provide per-client copyable commands, prerequisites, outcomes, upgrade/remove, and troubleshooting in English and Chinese |
+| Release | npm `0.4.0` and GitHub `ai-tooling-v0.4.0` identities, checksums, provenance, assets, and public clean-install result are recorded after publication |
+
+Wave A closes only after a user can start in an unrelated Android project with the documented one
+command and no repository-local preparation. A green in-repository package test is insufficient.
+
+### Execution Wave B — Compose semantic map and Agent Skill
+
+#### Objective
+
+Use Jetpack Compose familiarity as a safe bridge without pretending identical names imply identical
+semantics. This wave publishes knowledge and workflow guidance only; it does not parse or rewrite
+Compose source.
+
+#### Required work
+
+1. Freeze one exact Compose API baseline and one exact ViewCompose release vector in the first
+   contract commit. If the Compose stable release changes during implementation, update the map and
+   fixtures explicitly rather than silently following “latest.”
+2. Add one machine-readable semantic map keyed by stable IDs. Each entry records source symbol and
+   version, target capability/symbol/artifact, status (`exact`, `translated`, `manual`, or
+   `unsupported`), parameter/default differences, lifecycle/state consequences, accessibility,
+   imports/dependencies, required resources, evidence, and migration notes.
+3. Cover at least layout, modifier ordering, sizing, padding, alignment, text, image, input,
+   collections, state, remember/saveable state, effects, lifecycle, coroutines, navigation, theme,
+   resources, accessibility, gestures, animation, Android interop, Preview, and testing. Empty
+   categories are explicit unsupported records, not omitted rows.
+4. Add current-version ViewCompose compiled samples for every accepted target pattern. Compose source
+   examples are bounded fixtures for mapping evaluation; they do not become a copied parallel API
+   manual.
+5. Add a seventh client-neutral Skill, provisionally `viewcompose-convert-compose`, that retrieves
+   the exact map, asks for clarification when mapping is partial/manual, generates only real
+   ViewCompose APIs, validates the target, and reports unsupported source semantics.
+6. Expose map retrieval/search through the existing knowledge surface when possible. A new MCP tool
+   requires a demonstrated contract that cannot be represented by current retrieval; do not grow the
+   public tool catalog merely for naming symmetry.
+7. Publish English and Chinese Compose migration guidance with supported, translated, manual, and
+   unsupported examples and a clear statement that this wave is Agent guidance, not automatic
+   conversion.
+
+#### Commit and acceptance boundaries
+
+Use separate commits for mapping schema/corpus, compiled target samples, Skill/workflow, and public
+documentation. Accept only when every mapped target resolves to the current Knowledge Pack, every
+accepted generated target compiles, all six existing Skills plus the new Skill retain installed-byte
+and client-profile parity, unsupported categories are queryable, and curated migration prompts do
+not fabricate APIs. Publish the resulting AI package before Wave C starts.
+
+### Execution Wave C — bounded Compose AST conversion
+
+#### Objective and v1 boundary
+
+Convert a deliberately small, stateless Compose source subset through the existing tooling-only
+Design IR into ViewCompose Kotlin. Parsing must use a maintained Kotlin parser/compiler AST; regex
+or model-only source rewriting cannot produce an accepted conversion result.
+
+The v1 corpus begins with local composable function bodies, a direct supported layout/component
+tree, literal or resource-backed values, and modifier semantics already marked `exact` or
+`translated` by Wave B. State/effect ownership, navigation graphs, arbitrary control flow, custom
+composables without an accepted expansion, reflection, generated code, build plugins, and behavior
+inference remain unsupported until separately added with fixtures.
+
+#### Required work
+
+1. Freeze source, AST, mapping, Design IR, generated-source, diagnostic, and evidence schemas with
+   content-addressed lineage and exact source spans.
+2. Parse only explicit caller-supplied source or bounded files under an explicit physical project
+   root. Do not execute Gradle, compiler plugins, annotation processors, scripts, or source code.
+3. Resolve symbols against the frozen Compose baseline and Wave B map. Unknown overloads,
+   expressions, defaults, modifiers, ambient values, state, effects, or custom calls yield typed
+   unsupported findings; they never become guessed Design IR.
+4. Preserve strings, drawables, dimensions, accessibility, IDs/keys when meaningful, imports,
+   source-node provenance, and manual follow-up markers.
+5. Generate ViewCompose through the shared Design IR generator, then run static validation and the
+   released-artifact compiler. Render/compare is attached only where the accepted configuration and
+   semantic expectations exist.
+6. Expose one CLI/MCP operation only after local schema/fixture gates pass. Generation mode and
+   compile mode remain distinct evidence levels, and installed-package parity is mandatory.
+7. Keep application source read-only. The converter returns source, diagnostics, provenance, and
+   evidence; it does not replace files or call sites.
+
+#### Commit and acceptance boundaries
+
+Use contract/fixtures, AST adapter, Design IR/generator composition, CLI/MCP/Skill orchestration,
+and docs/release commits. The initial corpus must contain positive, boundary, malformed, ambiguous,
+unsupported, adversarial path, and API-hallucination cases. Acceptance requires deterministic AST
+output, 100% compile success for the declared supported corpus, 100% typed rejection for the
+declared unsupported corpus, no consumer execution or writes, installed-package reproduction, and
+an immutable released package before Wave D.
+
+### Execution Wave D — enhanced read-only ViewCompose analysis
+
+#### Objective
+
+Extend the existing `analyze_project` tool instead of creating a duplicate
+`analyze_viewcompose` alias. Findings must help an Agent review real ViewCompose code while
+remaining read-only, bounded, version-aware, and measurable.
+
+#### Required rule families
+
+1. Structural complexity: redundant or pathological Row/Column/container nesting, unstable identity,
+   repeated modifier segments, and simplifications that preserve semantics.
+2. Recomposition and allocation: state reads at overly broad scopes, repeated View/Drawable/resource
+   creation, avoidable node churn, unstable collection keys, and repeated expensive conversion.
+3. Lifecycle and ownership: application/View/Context retention, effect cleanup, coroutine scope,
+   listener/callback release, AndroidView ownership, and session-bound resource misuse.
+4. Accessibility and input: missing descriptions/roles/state, undersized touch targets, click without
+   semantics, focus order, disabled/selected state, and input-unit mistakes.
+5. Layout, units, and theme: dp/sp misuse, conflicting sizing, impossible constraints, clipping,
+   hard-coded theme values, Material token bypass, and RTL/font-scale hazards.
+6. Performance evidence: only rules with a traceable mechanism and accepted fixture may claim a
+   performance risk; stylistic preferences remain informational and cannot masquerade as regressions.
+
+Each rule owns a stable rule ID, applicable framework versions, severity, confidence, source span,
+mechanism, evidence link, safe suggestion, false-positive corpus, and suppression contract. Begin
+with high-confidence deterministic rules. Do not ship broad model-authored warnings as static facts.
+
+#### Commit and acceptance boundaries
+
+Commit rule contracts/corpus before implementations, then rule-family slices, CLI/MCP output parity,
+performance/resource limits, and docs/release. Acceptance requires named precision and recall
+denominators per rule, zero source or build execution, traversal/secret/output-limit safety, stable
+diagnostics under repeated runs, exact current-version attribution, and successful installed-package
+analysis of fresh and existing project fixtures. Low-confidence rules remain experimental and are
+not counted in public analyzer claims.
+
+### Execution Wave E — provider-neutral Figma design-tree adapter
+
+#### Objective
+
+Transform a caller-exported Figma design tree into the shared Design IR, then reuse generation,
+compile, Preview, semantic/geometry comparison, and diagnostics. The ViewCompose package does not
+log into Figma, store access tokens, scrape private documents, or select a model/provider.
+
+#### Required work
+
+1. Freeze an offline input envelope containing export format/version, selected node IDs, document and
+   component provenance, dimensions, constraints/auto-layout, text/style tokens, asset inventory,
+   export settings, and redaction/privacy declarations.
+2. Define explicit mappings for frames/auto-layout, text, images, vectors, component instances,
+   variants, tokens/styles, visibility, clipping, constraints, accessibility annotations, and
+   interactions. Prototype-only interactions and unsupported effects remain typed gaps.
+3. Import only caller-provided JSON and asset bytes under bounded sizes/counts. Reject URLs, active
+   content, path traversal, external fetches, executable plugin data, and undeclared fonts/assets.
+4. Preserve asset hashes, licensing/ownership declarations, token identity, component/instance
+   lineage, and every unsupported property through Design IR and generated reports.
+5. Reuse the current generator and evidence lanes. Visual comparison distinguishes structural,
+   semantic, geometry, style, asset, exact-pixel, and perceptual evidence; no aggregate “Figma
+   parity” claim hides missing categories.
+6. Publish export instructions for common Figma workflows without requiring a ViewCompose-owned
+   credential. Any future direct Figma connector is a separate provider integration and plan.
+
+#### Commit and acceptance boundaries
+
+Use input/schema/security, deterministic adapter, Design IR/resource handling, evidence integration,
+CLI/MCP/Skill, and docs/release commits. Acceptance requires supported/unsupported goldens,
+deterministic offline import, exact provenance and asset verification, privacy/path/size adversarial
+tests, compiled generated output, accepted Preview/semantic/geometry denominators, and
+installed-package reproduction. Wave E does not authorize source writes.
+
+### Execution Wave F — public attended screenshot repair
+
+#### Objective
+
+Turn the accepted internal proposal/authorization/host-grant/terminal-outcome/applied-result chain
+into a public, explicitly attended source change without granting the MCP process general write
+authority.
+
+#### Required source-application boundary
+
+1. Freeze a separate downstream application host with exact project root, file, expected preimage
+   hash, source span or structured edit, candidate hash, diff, authorization identity, expiry,
+   single-use nonce, and permitted rollback target.
+2. Present generated source, evidence, limitations, and a complete diff before authorization. The
+   user authorizes that exact candidate only; “repair this screen” is not durable write authority.
+3. Re-read the physical target and all lineage immediately before apply. Any preimage, root, symlink,
+   profile, evidence, candidate, or authorization drift fails closed.
+4. Apply atomically, preserve an integrity-checked recovery copy outside source control, and persist a
+   terminal outcome before returning success. Interrupted apply must restore the old bytes or leave
+   a recoverable, diagnosed state.
+5. Rollback is explicit, single-target, preconditioned, auditable, and refuses to overwrite later
+   user edits. Cleanup follows bounded retention and never removes unrelated files.
+6. Public CLI/MCP exposure remains request-driven and attended. No background watcher, continuous
+   loop, provider credential, application execution, commit, push, or pull request is implied.
+7. Re-run static, compile, Preview, semantic/geometry, and eligible pixel evidence against the exact
+   applied bytes and report both pre-apply and post-apply results. A worse candidate remains rejected.
+
+#### Commit and acceptance boundaries
+
+Use transaction/rollback schemas and adversarial fixtures, isolated host implementation, durable
+outcome/recovery, public orchestration, and docs/release commits. Acceptance requires atomic apply
+and rollback under injected crashes, conflict/preimage/symlink/replay/concurrency rejection, no
+general MCP write capability, exact post-apply evidence, user-visible diff and recovery steps, and
+installed-package reproduction. Only then may public documentation describe “attended automatic
+repair”; unattended or arbitrary-source repair remains out of scope.
+
+### Per-wave pull request and release discipline
+
+1. One execution wave owns one branch and one pull request. If a wave becomes too large, split it by
+   its listed commit boundaries while keeping later waves blocked until the final wave gate passes.
+2. The first commit freezes contracts and negative fixtures; the last implementation commit updates
+   active documentation and evidence interpretation. Public pages update English and Simplified
+   Chinese together.
+3. Every changed public/protected framework API completes capability impact, Q level, contract fields,
+   canonical KDoc/Javadoc, compiled Q3 sample, module manual, API dump, and Changeset in the same
+   change. Prefer tooling-only changes; do not alter framework API solely to simplify a converter.
+4. Every change to a published artifact's source, publication inputs, or compiled API samples adds
+   the immutable `release/changes/<unique>.json` disposition required by repository policy. A
+   documentation-only handoff such as this one adds no release Changeset.
+5. Each pull request runs its focused suites plus `verifyDocumentationStructure`,
+   `verifyDevelopmentToolingIsolation`, `verifyAiToolingRelease`, `qaQuick`, and every affected
+   installed-distribution/evidence gate. Preview-affecting work also runs `qaPreview` in the accepted
+   environment.
+6. Record absolute results, normalized change, conclusion, limitations, and next action in this plan.
+   Do not advance based on raw output, aggregate green status, or a locally packed archive.
+7. Merge before publication. Publish only from the protected tag workflow, verify the public clean
+   install, then update this plan and roadmap with immutable URLs and evidence before unblocking the
+   next wave.
 
 Active. The audit and Phase 0 contract/security freeze are complete. Phase 1 canonical knowledge
 generation, hosted discovery, freshness gates, and full-site acceptance are complete. Phase 2
@@ -105,8 +579,9 @@ profiles, 18/18 exact Skill copies, 2/2 MCP protocol versions, released-artifact
 comparison, and 1/1 exact RGBA comparison. The cached login Preview and layout comparison completed
 in approximately 4.3 seconds with 32/32 checks and a clean five-node diagnosis. These are local
 cold/warm functional measurements, not a cross-platform latency guarantee; dependency mirrors,
-machine load, and first-use downloads remain limitations. The next release action is to publish and
-attest `ai-tooling-v0.3.0`, then retain these denominators in CI.
+machine load, and first-use downloads remain limitations. At this acceptance slice, the remaining
+release action was publication and attestation of `ai-tooling-v0.3.0`; that action completed on
+2026-08-31, and the denominators remain CI inputs.
 The same cache-root correction was propagated through the internal screenshot-repair evidence
 chain. Its unchanged candidate passed 6/6 released-artifact gates with zero mismatched pixels; the
 typed `Welcome` → `Hello` candidate passed compilation, rendering, semantics, and structure while
@@ -167,7 +642,7 @@ authorized decision. The source-bound screenshot generated-Preview contract is n
 explicit state and fixed no-source callback bindings, exact rendered evidence, CLI/MCP parity, and
 installed-package verification.
 
-Last verified: 2026-08-30.
+Last verified: 2026-08-31.
 
 The 2026-08-30 clean hosted-runner audit exposed that the documented Preview preparation boundary
 did not resolve the Android variant-specific runner classpath used by the later offline Gradle
@@ -3405,8 +3880,8 @@ release distribution gate. The elapsed-time difference is therefore not accepted
 regression. Functional conclusion: **no material change** to repository quality—the new release and
 transactional-onboarding gates pass alongside documentation, tooling isolation, Release Intent,
 R8, Lint, Paparazzi, unit tests, and samples. Limitations are one local macOS/JDK 21 run and no
-tag-triggered Linux publication. Next action remains the first attested Release followed by the
-consumer-project execution contract.
+tag-triggered Linux publication at that slice. The first attested Release and consumer-project
+execution contract subsequently completed; the current next action is Execution Wave A above.
 
 ### Implementation evidence — bounded XML to Design IR
 

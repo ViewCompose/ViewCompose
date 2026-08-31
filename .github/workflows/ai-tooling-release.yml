@@ -19,6 +19,7 @@ jobs:
     name: Verify and publish AI tooling
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment: ai-tooling-release
 
     steps:
       - name: Checkout immutable tag
@@ -36,6 +37,11 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "24.19.0"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Pin npm trusted-publishing client
+        run: npm install --global npm@11.8.0
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -56,12 +62,49 @@ jobs:
           ./gradlew verifyAiToolingRelease --stacktrace
           npm --prefix tools/ai run verify:release -- --tag "$GITHUB_REF_NAME"
 
-      - name: Reject an existing release
+      - name: Inspect existing GitHub Release identity
+        id: github-release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $GITHUB_REF_NAME already exists; refusing to overwrite it." >&2
+          release_json="$RUNNER_TEMP/viewcompose-existing-release.json"
+          release_error="$RUNNER_TEMP/viewcompose-existing-release.error"
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" >"$release_json" 2>"$release_error"; then
+            actual_assets=$(jq -r '.assets[].name' "$release_json" | sort)
+            expected_assets=$(printf '%s\n' \
+              "SHA256SUMS" \
+              "manifest.json" \
+              "viewcompose-ai-tooling-0.4.0.tgz" | sort)
+            if [[ "$actual_assets" != "$expected_assets" ]]; then
+              echo "Existing GitHub Release asset inventory differs from the frozen identity." >&2
+              exit 1
+            fi
+            release_dir="$RUNNER_TEMP/viewcompose-existing-release-assets"
+            mkdir -p "$release_dir"
+            gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir "$release_dir"
+            for asset in viewcompose-ai-tooling-0.4.0.tgz manifest.json SHA256SUMS; do
+              cmp "tools/ai/build/distribution/$asset" "$release_dir/$asset"
+            done
+            echo "state=verified-existing" >> "$GITHUB_OUTPUT"
+          elif grep -q "HTTP 404" "$release_error"; then
+            echo "state=missing" >> "$GITHUB_OUTPUT"
+          else
+            cat "$release_error" >&2
+            echo "GitHub Release identity could not be established." >&2
+            exit 1
+          fi
+
+      - name: Require an unpublished npm identity
+        run: |
+          registry_error="$RUNNER_TEMP/viewcompose-existing-npm.error"
+          if npm view @viewcompose/ai-tooling@0.4.0 version 2>"$registry_error"; then
+            echo "npm @viewcompose/ai-tooling@0.4.0 already exists; automated recovery cannot prove its OIDC provenance." >&2
+            exit 1
+          elif grep -q "E404" "$registry_error"; then
+            true
+          else
+            cat "$registry_error" >&2
+            echo "npm registry availability could not be proven." >&2
             exit 1
           fi
 
@@ -69,19 +112,27 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
-            tools/ai/build/distribution/viewcompose-ai-tooling-0.3.0.tgz
+            tools/ai/build/distribution/viewcompose-ai-tooling-0.4.0.tgz
             tools/ai/build/distribution/manifest.json
             tools/ai/build/distribution/SHA256SUMS
 
       - name: Publish immutable GitHub Release
+        if: steps.github-release.outputs.state == 'missing'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            tools/ai/build/distribution/viewcompose-ai-tooling-0.3.0.tgz \
+            tools/ai/build/distribution/viewcompose-ai-tooling-0.4.0.tgz \
             tools/ai/build/distribution/manifest.json \
             tools/ai/build/distribution/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
-            --title "ViewCompose AI tooling 0.3.0" \
+            --title "ViewCompose AI tooling 0.4.0" \
             --generate-notes
+
+      - name: Publish exact public npm package with provenance
+        run: >-
+          npm publish
+          tools/ai/build/distribution/viewcompose-ai-tooling-0.4.0.tgz
+          --access public
+          --provenance

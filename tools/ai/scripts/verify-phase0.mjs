@@ -308,6 +308,7 @@ async function verifySchemas(versions) {
       'screenshot-repair-applied-result-handoff.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
+    bootstrap: 'bootstrap.schema.json',
   };
   for (const [contract, file] of Object.entries(contractSchemas)) {
     const expected = versions.contracts[contract];
@@ -394,6 +395,7 @@ async function verifyExamples(schemas) {
     ['layout-comparison.json', 'layout-comparison.schema.json'],
     ['screenshot-preprocessing-request.json', 'screenshot-preprocessing.schema.json'],
     ['screenshot-preprocessing-result.json', 'screenshot-preprocessing.schema.json'],
+    ['bootstrap.json', 'bootstrap.schema.json'],
   ];
   for (const [exampleName, schemaName] of examples) {
     const example = await readJson(resolve(contractsDirectory, 'examples', exampleName));
