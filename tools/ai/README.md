@@ -671,6 +671,21 @@ mutable `latest` selector. The package layout follows npm's tarball installation
 SBOM uses the
 [SPDX 2.3 specification](https://spdx.github.io/spdx-spec/v2.3/).
 
+npm requires a package to exist before either Trusted Publishing or staged publishing can be
+configured. The one-time `.github/workflows/ai-tooling-npm-bootstrap.yml` bridge therefore derives
+the complete `0.4.0-bootstrap.0` prerelease from the frozen stable tarball and publishes it only
+under the `bootstrap` dist-tag. The transformer changes exactly eleven enumerated JSON files and
+only their `0.4.0` version-bearing strings; the workflow compares two seed archives byte for byte,
+requires the stable and seed file inventories to match, repeats the tree-difference check after
+packing, and completes an MCP handshake before publication. It accepts no dispatch inputs, runs
+only from the default branch in the protected `ai-tooling-release` environment, and refuses an
+existing package. A short-lived bootstrap credential restricted to the `@viewcompose` scope is the
+sole temporary exception to OIDC authentication. Enable account 2FA before creating it, revoke it
+and remove the workflow before the stable tag, and bind `ai-tooling-release.yml` as the exact npm
+Trusted Publisher. The prerelease is not a consumer entry point and must never receive `latest`;
+after stable publication,
+remove the `bootstrap` dist-tag.
+
 ### Release-gate acceptance evidence
 
 On 2026-08-30, the first cold `prepareAiPreviewLane` run changed from 0/1 successful executions
