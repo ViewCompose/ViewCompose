@@ -135,7 +135,11 @@ const sourcePaths = Object.freeze([
 ]);
 const mappedSourcePaths = Object.freeze([
   {source: resolve(repositoryRoot, 'gradlew'), target: 'harness/gradlew'},
-  {source: resolve(repositoryRoot, 'gradlew.bat'), target: 'harness/gradlew.bat'},
+  {
+    source: resolve(repositoryRoot, 'gradlew.bat'),
+    target: 'harness/gradlew.bat',
+    normalizeLineEndings: true,
+  },
   {
     source: resolve(repositoryRoot, 'gradle/wrapper/gradle-wrapper.jar'),
     target: 'harness/gradle/wrapper/gradle-wrapper.jar',
@@ -178,6 +182,26 @@ async function copyRegularFile(source, target) {
   }
   await mkdir(dirname(target), {recursive: true});
   await copyFile(source, target);
+}
+
+export function normalizePackageText(value) {
+  return Buffer.from(value.toString('utf8').replace(/\r\n?/gu, '\n'), 'utf8');
+}
+
+async function copyMappedFile(entry) {
+  if (!entry.normalizeLineEndings) {
+    await copyRegularFile(entry.source, resolve(entry.target));
+    return;
+  }
+  if (!contained(aiRoot, entry.source) && !allowedRepositorySources.has(resolve(entry.source))) {
+    throw new Error(`Distribution source escapes its allowlisted roots: ${entry.source}`);
+  }
+  const metadata = await lstat(entry.source);
+  if (!metadata.isFile() || metadata.isSymbolicLink()) {
+    throw new Error(`Distribution source is not a regular file: ${entry.source}`);
+  }
+  await mkdir(dirname(entry.target), {recursive: true});
+  await writeFile(entry.target, normalizePackageText(await readFile(entry.source)));
 }
 
 async function packageMetadata(contract) {
@@ -363,7 +387,7 @@ async function prepareStaging(stagingRoot, contract) {
     await copyRegularFile(resolve(aiRoot, path), resolve(stagingRoot, path));
   }
   for (const entry of mappedSourcePaths) {
-    await copyRegularFile(entry.source, resolve(stagingRoot, entry.target));
+    await copyMappedFile({...entry, target: resolve(stagingRoot, entry.target)});
   }
   await copyRegularFile(resolve(repositoryRoot, 'LICENSE'), resolve(stagingRoot, 'LICENSE'));
   await copyRegularFile(resolve(aiRoot, 'README.md'), resolve(stagingRoot, 'README.md'));

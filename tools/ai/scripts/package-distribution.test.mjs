@@ -3,7 +3,11 @@ import {mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import test from 'node:test';
-import {createDistribution} from './package-distribution.mjs';
+import {createDistribution, normalizePackageText} from './package-distribution.mjs';
+
+test('normalizes mapped text inputs across checkout line-ending policies', () => {
+  assert.equal(normalizePackageText(Buffer.from('one\r\ntwo\rthree\n')).toString('utf8'), 'one\ntwo\nthree\n');
+});
 
 test('creates an exact reproducible dependency-free npm distribution', async () => {
   const root = await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-package-test-'));
