@@ -602,6 +602,51 @@ async function releaseLock(lock) {
   await rm(lock.path, {force: true});
 }
 
+export async function inspectPreparedSourceApplication({requestFingerprint, projectRoot} = {}, {
+  stateRoot = defaultScreenshotSourceStateRoot(),
+} = {}) {
+  const located = await locateBundle(requestFingerprint, projectRoot, stateRoot);
+  const request = located.bundle.request;
+  const [applyReceipt, rollbackReceipt, journal] = await Promise.all([
+    readOptionalJson(resolve(located.directory, 'apply-receipt.json')),
+    readOptionalJson(resolve(located.directory, 'rollback-receipt.json')),
+    readJournal(resolve(located.directory, 'journal.jsonl'), request),
+  ]);
+  if (applyReceipt) validateReceipt(applyReceipt, request, 'apply');
+  if (rollbackReceipt) validateReceipt(rollbackReceipt, request, 'rollback');
+  const current = await exactTarget(projectRoot, request, null);
+  const state = rollbackReceipt
+    ? 'rolled-back'
+    : applyReceipt?.status ?? (journal.length > 0 ? 'recovery-required' : 'prepared');
+  return {
+    schemaVersion: 1,
+    status: state,
+    requestFingerprint: request.requestFingerprint,
+    expiresAt: request.expiresAt,
+    project: {
+      relativePath: request.project.relativePath,
+      currentSha256: current.sha256,
+      preimageSha256: request.project.preimage.sha256,
+      candidateSha256: request.edit.candidate.sha256,
+    },
+    edit: {
+      nodeId: request.edit.nodeId,
+      propertyName: request.edit.propertyName,
+      diff: request.edit.diff,
+    },
+    evidence: {
+      preApplyEvidenceFingerprint: request.lineage.preApplyEvidenceFingerprint,
+      postApply: applyReceipt?.evidence ?? null,
+    },
+    authorization: {
+      operation: 'apply',
+      confirmationSuffix: request.authorization.confirmationSuffix,
+      bypassAllowed: false,
+    },
+    receiptFingerprint: rollbackReceipt?.receiptFingerprint ?? applyReceipt?.receiptFingerprint ?? null,
+  };
+}
+
 export async function applyPreparedSourceApplication({requestFingerprint, projectRoot} = {}, {
   stateRoot = defaultScreenshotSourceStateRoot(),
   confirm = confirmFromControllingTty,

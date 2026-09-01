@@ -14,6 +14,7 @@ const mutationPolicies = new Set([
   'read-only',
   'user-requested-project-writes',
   'read-only-unless-fix-requested',
+  'mcp-read-only-and-attended-cli-source-write',
 ]);
 const providerNames = /\b(?:chatgpt|claude|codex|cursor|gemini)\b/iu;
 const localAbsolutePath = /(?:^|[\s(])\/(?:Users|home|private|tmp)\//mu;

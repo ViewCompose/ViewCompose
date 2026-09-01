@@ -5,12 +5,12 @@
   "workflowPath": ".github/workflows/ai-tooling-release.yml",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.6.0",
-    "tag": "ai-tooling-v0.6.0",
+    "version": "0.7.0",
+    "tag": "ai-tooling-v0.7.0",
     "tagPattern": "ai-tooling-v<semver>",
     "immutable": true
   },
-  "assets": ["viewcompose-ai-tooling-0.6.0.tgz", "manifest.json", "SHA256SUMS"],
+  "assets": ["viewcompose-ai-tooling-0.7.0.tgz", "manifest.json", "SHA256SUMS"],
   "npm": {
     "registry": "https://registry.npmjs.org",
     "access": "public",

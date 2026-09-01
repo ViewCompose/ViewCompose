@@ -13,7 +13,7 @@ const expectedClients = Object.freeze({
   'claude-code': {configPath: '.mcp.json', skillRoot: '.claude/skills'},
   cursor: {configPath: '.cursor/mcp.json', skillRoot: '.agents/skills'},
 });
-const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.6.0'});
+const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.7.0'});
 
 function contained(root, candidate) {
   const path = relative(resolve(root), resolve(candidate));
@@ -144,7 +144,7 @@ async function verifyMcpHandshake(durableRoot, projectRoot, frameworkProfile, en
   assert.equal(result.stderr, '');
   const responses = result.stdout.trim().split('\n').filter(Boolean).map(JSON.parse);
   assert.equal(responses.find((response) => response.id === 1)?.result?.protocolVersion, '2025-11-25');
-  assert.equal(responses.find((response) => response.id === 2)?.result?.tools?.length, 14);
+  assert.equal(responses.find((response) => response.id === 2)?.result?.tools?.length, 15);
 }
 
 async function assertSymlinkRejected(durableRoot, projectRoot, environment, client) {
@@ -176,7 +176,7 @@ async function verifyClient({archivePath, root, client, expectedDurableRoot}) {
   assert.equal(first.client, client);
   assert.equal(first.mode, 'project-bound');
   assert.equal(first.config.status, 'installed');
-  assert.equal(first.skills.installed.length, 7);
+  assert.equal(first.skills.installed.length, 8);
   assert.equal(first.readiness.tooling.version, expectedPackage.version);
   assert.equal(first.readiness.framework.status, 'compatible');
   assert.ok(['project-bound-ready', 'host-prerequisites-required'].includes(first.readiness.status));
@@ -207,7 +207,7 @@ async function verifyClient({archivePath, root, client, expectedDurableRoot}) {
   assert.equal(doctor.tooling.version, expectedPackage.version);
   assert.equal(doctor.tooling.packageRoot, first.durableInstallRoot);
   assert.equal(doctor.config.status, 'ready');
-  assert.equal(doctor.skills.ready, 7);
+  assert.equal(doctor.skills.ready, 8);
 
   const configText = await readFile(resolve(projectRoot, expectedClients[client].configPath), 'utf8');
   assert.equal(configText.includes('viewcompose'), true);
@@ -227,7 +227,7 @@ async function verifyClient({archivePath, root, client, expectedDurableRoot}) {
     `${client} uninstall`,
   );
   assert.equal(removed.config.status, 'removed');
-  assert.equal(removed.skills.removed.length, 7);
+  assert.equal(removed.skills.removed.length, 8);
   const remainingConfig = await readFile(resolve(projectRoot, expectedClients[client].configPath), 'utf8');
   assert.equal(remainingConfig.includes('viewcompose'), false);
   const skillRoot = resolve(projectRoot, expectedClients[client].skillRoot);

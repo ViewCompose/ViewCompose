@@ -105,6 +105,7 @@ test('discovers the stateless modern server and deterministically lists the shar
     'validate_screenshot_inference',
     'resolve_screenshot_inference',
     'generate_screenshot_viewcompose',
+    'prepare_screenshot_repair',
   ]);
   assert.equal(listing.result.tools[0].inputSchema.required.includes('versionLane'), true);
 });
@@ -529,7 +530,7 @@ test('supports the 2025-11-25 initialize lifecycle without weakening modern requ
     params: {},
   });
   assert.equal(listing.result.resultType, undefined);
-  assert.equal(listing.result.tools.length, 14);
+  assert.equal(listing.result.tools.length, 15);
 });
 
 test('emits bounded opt-in progress and suppresses all output after cancellation', async () => {

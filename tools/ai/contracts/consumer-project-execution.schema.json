@@ -23,7 +23,7 @@
       "required": ["package", "version", "knowledgeLane"],
       "properties": {
         "package": {"const": "@viewcompose/ai-tooling"},
-        "version": {"const": "0.6.0"},
+        "version": {"const": "0.7.0"},
         "knowledgeLane": {"const": "current-source"}
       }
     },
@@ -96,11 +96,12 @@
         {"const": "convert_xml_to_viewcompose:render"},
         {"const": "generate_screenshot_viewcompose:compile"},
         {"const": "generate_screenshot_viewcompose:render"},
+        {"const": "prepare_screenshot_repair:prepare"},
         {"const": "generated_preview:layout_diagnosis"}
       ],
       "items": false,
-      "minItems": 6,
-      "maxItems": 6
+      "minItems": 7,
+      "maxItems": 7
     },
     "evidence": {
       "type": "object",

@@ -3,7 +3,7 @@
   "contractId": "viewcompose-consumer-project-execution-v1",
   "toolingRelease": {
     "package": "@viewcompose/ai-tooling",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "knowledgeLane": "current-source"
   },
   "authorization": {
@@ -70,6 +70,7 @@
     "convert_xml_to_viewcompose:render",
     "generate_screenshot_viewcompose:compile",
     "generate_screenshot_viewcompose:render",
+    "prepare_screenshot_repair:prepare",
     "generated_preview:layout_diagnosis"
   ],
   "evidence": {

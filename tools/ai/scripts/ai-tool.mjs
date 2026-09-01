@@ -22,6 +22,7 @@ import {validateKotlin} from './static-validator.mjs';
 import {TOOL_DEFINITIONS} from './tool-catalog.mjs';
 import {convertXmlToViewCompose} from './xml-migration.mjs';
 import {importFigmaExport} from './figma-import-adapter.mjs';
+import {prepareScreenshotRepairTool} from './prepare-screenshot-repair-tool.mjs';
 import {
   diagnostic,
   loadKnowledgeManifest,
@@ -77,6 +78,7 @@ export async function dispatchToolRequest(request, {
   renderGenerated,
   compareGenerated,
   comparePixelsGenerated,
+  prepareRepair = prepareScreenshotRepairTool,
   signal,
 } = {}) {
   const schema = await loadToolEnvelopeSchema();
@@ -152,6 +154,8 @@ export async function dispatchToolRequest(request, {
                   ? 'VC-AI-SCREENSHOT-RESOLUTION-INPUT-INVALID'
                   : request.tool === 'generate_screenshot_viewcompose'
                     ? 'VC-AI-SCREENSHOT-GENERATION-INPUT-INVALID'
+                    : request.tool === 'prepare_screenshot_repair'
+                      ? 'VC-AI-SOURCE-APPLICATION-INPUT-INVALID'
           : 'VC-AI-ARGUMENTS-INVALID',
       message: screenshotPathDenied
         ? 'Screenshot preprocessing accepts no path, URL, or URI input.'
@@ -169,6 +173,8 @@ export async function dispatchToolRequest(request, {
                   ? `Screenshot resolution arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
                   : request.tool === 'generate_screenshot_viewcompose'
                     ? `Screenshot generation arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
+                    : request.tool === 'prepare_screenshot_repair'
+                      ? `Screenshot repair preparation arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`
           : `${request.tool} arguments violate the fixed schema: ${argumentViolations.slice(0, 3).join('; ')}`,
       nextAction: screenshotPathDenied
         ? 'Embed one integrity-declared PNG as canonical base64.'
@@ -186,6 +192,8 @@ export async function dispatchToolRequest(request, {
                   ? 'Use the unchanged validated import and exact human-resolution request.'
                   : request.tool === 'generate_screenshot_viewcompose'
                     ? 'Use one exact resolved result and the frozen generate, compile, render, compare, or compare-pixels request; rendered modes require explicit Preview bindings and compare-pixels also requires one canonical pixel reference.'
+                    : request.tool === 'prepare_screenshot_repair'
+                      ? 'Evaluate exact baseline and candidate evidence, reproduce one proposal, then prepare one attended request.'
           : 'Use the exact arguments declared by the current tool catalog.',
       level: definition.evidenceLevel === 'knowledge' ? 'knowledge' : 'static',
     });
@@ -348,6 +356,13 @@ export async function dispatchToolRequest(request, {
           render: renderGenerated,
           compare: compareGenerated,
           comparePixels: comparePixelsGenerated,
+        });
+        break;
+      case 'prepare_screenshot_repair':
+        result = await prepareRepair(request.arguments, {
+          requestId: request.requestId,
+          limits: request.limits,
+          signal: controller.signal,
         });
         break;
       default:

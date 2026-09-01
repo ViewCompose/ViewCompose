@@ -120,6 +120,7 @@ const sourcePaths = Object.freeze([
   'scripts/layout-diagnoser.mjs',
   'scripts/layout-comparator.mjs',
   'scripts/pixel-comparator.mjs',
+  'scripts/prepare-screenshot-repair-tool.mjs',
   'scripts/mcp-server.mjs',
   'scripts/preview-adapter.mjs',
   'scripts/project-analyzer.mjs',
@@ -134,6 +135,8 @@ const sourcePaths = Object.freeze([
   'scripts/screenshot-repair-terminal-store.mjs',
   'scripts/screenshot-source-edit.mjs',
   'scripts/screenshot-source-application-preparer.mjs',
+  'scripts/screenshot-source-application-contract.mjs',
+  'scripts/screenshot-source-repair-cli.mjs',
   'scripts/screenshot-source-secure-backend.mjs',
   'scripts/screenshot-source-transaction.mjs',
   'scripts/verify-phase5-screenshot-source-application.mjs',
@@ -163,6 +166,7 @@ const sourcePaths = Object.freeze([
   'skills/viewcompose-debug-layout/SKILL.md',
   'skills/viewcompose-import-figma/SKILL.md',
   'skills/viewcompose-review/SKILL.md',
+  'skills/viewcompose-repair-screenshot/SKILL.md',
   'skills/viewcompose-validate/SKILL.md',
 ]);
 const mappedSourcePaths = Object.freeze([
@@ -254,6 +258,7 @@ async function packageMetadata(contract) {
       'viewcompose-ai': 'scripts/ai-tool.mjs',
       'viewcompose-agent': 'scripts/agent-client-integration.mjs',
       'viewcompose-mcp': 'scripts/mcp-server.mjs',
+      'viewcompose-repair': 'scripts/screenshot-source-repair-cli.mjs',
     },
     dependencies: {},
   };
