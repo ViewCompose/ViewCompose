@@ -19,7 +19,7 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: Release 0.3.0 is published as an attested GitHub Release with a version-bound current Knowledge Pack, 13 CLI/MCP tools, six Agent Skills, source-free compile/Preview/layout evidence, bounded XML and screenshot generation, and verified Codex, Claude Code, and Cursor project profiles. The remaining adoption cost is a global GitHub-tarball install plus an explicit project-root argument, while Compose migration, deeper project diagnostics, Figma import, and public source repair remain unactivated.
+baseline: Release 0.4.1 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Its exact-version one-command bootstrap durably configures Codex, Claude Code, or Cursor, binds the released Knowledge Pack to the detected framework vector, and exposes source-free compile/Preview/layout evidence plus bounded XML and screenshot generation. Compose migration, deeper project diagnostics, Figma import, and public source repair remain unactivated.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
   - Freeze and publish a current-version Jetpack Compose-to-ViewCompose semantic mapping and client-neutral conversion Skill before implementing automatic conversion.
@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Merge the default-bin correction, publish ai-tooling-v0.4.1 from that merge through the protected OIDC workflow, verify the exact documented shorthand for all three clients from the public registry, deprecate 0.4.0, remove the bootstrap dist-tag, and merge final Wave A evidence; do not begin Wave B before those gates pass.
+next_action: Begin Wave B by freezing the current-version Jetpack Compose semantic map and client-neutral conversion Skill contract; do not implement automatic conversion until the mapping corpus, unsupported taxonomy, compiled target samples, Skill parity, and bilingual documentation gates are explicit.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -45,6 +45,11 @@ maven_release_changesets:
 # AI-Verifiable Development Tooling Plan
 
 ## Status
+
+Wave A completed on 2026-09-01 with public `@viewcompose/ai-tooling@0.4.1`, exact-version
+one-command adoption for all three clients, protected OIDC provenance, and removal of temporary
+bootstrap authority and selectors. The current execution boundary is Wave B contract freeze; the
+chronological handoffs below remain evidence rather than competing next actions.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
 
@@ -187,6 +192,90 @@ Maven release changeset. Compared with the previous 322/322 and 129/129 denomina
 remain 0% and translation coverage remains 100%; the only normalized behavioral change is the
 shorthand adoption result above. The conclusion remains **improved** with no material framework
 runtime change; public and hosted evidence is still pending.
+
+#### Wave A corrective-release acceptance evidence (2026-09-01)
+
+Default-entry correction pull request
+[#264](https://github.com/ViewCompose/ViewCompose/pull/264) passed all 11 required checks and merged
+as `fec75d4842b99cf9a59eaa2ba6d169c2cfc37aa1`. Its hosted
+[adoption run `33471574680`](https://github.com/ViewCompose/ViewCompose/actions/runs/33471574680)
+executed the npm inferred-binary shorthand rather than naming `viewcompose-agent`: Linux, macOS,
+and Windows each passed 3/3 client lifecycles, 3/3 durable MCP handshakes, and 4/4 native path
+cases. Across the matrix that is 9/9 client lifecycles, 9/9 handshakes, and 12/12 path cases, with
+zero failures.
+
+Annotated tag `ai-tooling-v0.4.1` resolves exactly to that merge. Protected
+[release run `33473341135`](https://github.com/ViewCompose/ViewCompose/actions/runs/33473341135)
+completed in 10 minutes 31 seconds and passed every setup, reproducible-distribution,
+unpublished-identity, attestation, GitHub Release, and npm Trusted Publishing step. The immutable
+[GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.1)
+contains exactly 3/3 assets. Their GitHub-recorded SHA-256 digests are
+`4f1bcd8ab5ebb84a2c6775409511f045f8cb745b1b9576d08930c17318d794e4` for the tarball,
+`a465f498e7254d1674d7df487f8ca7caf4cf6faeab27c0a89fa3c9ca23b47901` for
+`manifest.json`, and
+`e0bc5cd1cd43376cd2c4a1a35a8cdd74f3511012aed08f81a748227b20ebc37f` for
+`SHA256SUMS`. The checksum list passed 2/2 entries, GitHub attestation verification passed all 3/3
+assets, and a fresh public npm pack reproduced the exact tarball SHA-256.
+
+npm now exposes versions `0.4.0-bootstrap.0`, `0.4.0`, and `0.4.1`, with only
+`latest -> 0.4.1`; the temporary `bootstrap` dist-tag is absent while the prerelease remains
+immutable history. Stable `0.4.0` carries the actionable deprecation message
+`Default npx entry is unavailable; use @viewcompose/ai-tooling@0.4.1.` The `0.4.1` SLSA v1
+statement resolves dependency commit `fec75d4842b99cf9a59eaa2ba6d169c2cfc37aa1`, workflow
+`.github/workflows/ai-tooling-release.yml`, ref `refs/tags/ai-tooling-v0.4.1`, protected environment
+`ai-tooling-release`, invocation
+`https://github.com/ViewCompose/ViewCompose/actions/runs/33473341135/attempts/1`, and transparency
+log index `2671959148`. The release environment reports zero secrets; the one-time token and
+bootstrap workflow had already been removed before the tag.
+
+Repository-external public acceptance used a physical minimal Android project with exact
+`com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02` and independent fresh npm caches. The
+literal documented `npx --yes @viewcompose/ai-tooling@0.4.1` command completed
+`init -> doctor -> uninstall` for Codex, Claude Code, and Cursor: 3/3 clients reached
+`project-bound-ready`, 18/18 Skill copies were ready, all 3/3 knowledge/generation lanes were
+`ready`, all 3/3 compile/Preview/layout lanes were `project-bound-ready`, and all 3/3 uninstalls
+removed only their managed configuration and 6/6 Skills.
+
+Relative to public `0.4.0`, shorthand success changed from 0/1 to 3/3, a normalized change from 0%
+to 100%; hosted coverage adds three operating systems with no failures. The primary conclusion is
+**improved** one-command adoption with no material Android runtime or framework-API change. The
+public registry lifecycle was exercised on one macOS host, while Linux and Windows used the exact
+packed candidate in CI; proprietary Agent UI authentication and discovery remain documented user
+checks rather than automated claims. Wave A is complete. The next action is Wave B contract freeze
+for the current-version Compose semantic mapping and client-neutral conversion Skill, not converter
+implementation.
+
+#### Wave A post-publication gate correction evidence (2026-09-01)
+
+The first attempt to run the frozen release gate after publication passed 0/1 npm inventory checks:
+`npm publish --dry-run` correctly refused to overwrite immutable `0.4.1`, so a gate that protected
+an unpublished tag could no longer protect `main` after that tag existed. A first published-version
+check also passed 0/1 archive comparisons. Investigation found two independent portability facts:
+the local checkout materialized `gradlew.bat` with CRLF while the Linux release checkout used LF,
+and platform compressors emitted different gzip bytes for an otherwise byte-identical tar payload.
+No staged package file differed after extraction.
+
+The package builder now canonicalizes the mapped batch wrapper to LF. The inventory gate queries
+the exact registry version; an `E404` retains the original publish dry-run, while a published version
+is downloaded by exact identity. That download must match npm's registry SHA-512 identity, and its
+uncompressed tar payload plus complete inventory must match the frozen candidate. Authentication,
+authorization, and transient registry errors fail closed rather than being reclassified as an
+unpublished version. Focused portability and registry tests passed 9/9 cases. The complete installed
+distribution then passed 2/2 reproducible builds, 1/1 published-payload inventory, 1/1 offline
+install/uninstall lifecycle, 1/1 SPDX/license inventory, 3/3 Agent profiles, 18/18 exact Skill
+copies, 2/2 MCP protocol versions, and all accepted Kotlin, XML, screenshot, compile, Preview,
+layout, and exact-pixel lanes. The complete Node suite passed 328/328 tests. The root acceptance
+passed 194 tasks in 1 minute 17 seconds, including 3/3 Release assets, 129/129 required current
+translations, 80/80 documentation-script tests, zero Governance V2 issues, development-tooling
+isolation, and zero Maven release artifacts, ignored artifacts, or shared-path classifications.
+
+Relative to the post-publication baseline, the npm inventory result changed from 0/1 to 1/1, a
+normalized change from 0% to 100%. The conclusion is **improved** continuous release integrity and
+cross-platform reproducibility with no package payload, Maven artifact, framework API, or Android
+runtime change; therefore neither `0.4.2` nor a Maven release changeset is required. The check
+requires npm registry availability after publication and proves Agent configuration/protocol
+behavior rather than proprietary UI authentication. The next action remains the final evidence PR,
+followed by Wave B contract freeze only after that PR merges.
 
 #### Wave A contract-freeze evidence (2026-08-31)
 
@@ -366,6 +455,10 @@ consumer source writes, or execution of any implementation wave.
 
 ### Execution Wave A — public npm bootstrap and one-command onboarding
 
+**Status: complete on 2026-09-01.** The accepted release and public evidence are recorded in
+“Wave A corrective-release acceptance evidence” above. Wave B is now unblocked only at its
+contract-freeze boundary.
+
 #### Objective and public happy path
 
 Replace the current global GitHub-tarball installation plus explicit
@@ -450,8 +543,10 @@ include Compose, analyzer, Figma, or source-repair code in this pull request.
 | Documentation | README and the standalone AI chapter provide per-client copyable commands, prerequisites, outcomes, upgrade/remove, and troubleshooting in English and Chinese |
 | Release | npm `0.4.1` and GitHub `ai-tooling-v0.4.1` identities, checksums, provenance, assets, and public clean-install result are recorded after publication; immutable `0.4.0` failure evidence remains visible |
 
-Wave A closes only after a user can start in an unrelated Android project with the documented one
-command and no repository-local preparation. A green in-repository package test is insufficient.
+Wave A closed on 2026-09-01 after users could start in an unrelated Android project with the
+documented one command and no repository-local preparation. The accepted external, hosted, npm,
+provenance, and Release evidence is recorded above; a green in-repository package test alone would
+not have been sufficient.
 
 ### Execution Wave B — Compose semantic map and Agent Skill
 

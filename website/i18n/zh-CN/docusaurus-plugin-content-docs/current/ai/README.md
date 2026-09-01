@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 01daf3667788fd469e4bdc328d69e284a8ca0fc1c7dccc7d033d175730cdc706
+translation_source_hash: 38144ad6053a5737d3334bc07622fadb9dbbe17b5e19a802df76b22a4a3162fc
 translation_status: current
 ---
 
@@ -174,14 +174,28 @@ Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创�
 如需独立校验 Provenance，请参考 GitHub 的
 [Artifact Attestation 校验指南](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)。
 
+公开 Release 验收已于 2026-09-01 完成。受保护的
+[Run `33473341135`](https://github.com/ViewCompose/ViewCompose/actions/runs/33473341135)
+通过 `ai-tooling-release` Environment，从精确 Tag Commit
+`fec75d4842b99cf9a59eaa2ba6d169c2cfc37aa1` 发布 `0.4.1`。npm Provenance Predicate 为
+SLSA v1，并且精确记录该 Tag、Workflow、Commit、Environment 与 Run。全部 3/3 个 GitHub
+Asset 都通过 Attestation 校验；Tarball 的 SHA-256 为
+`4f1bcd8ab5ebb84a2c6775409511f045f8cb745b1b9576d08930c17318d794e4`，全新 npm 下载结果
+与它完全一致。在 Repository 外使用独立全新 Cache 执行生命周期后，Codex、Claude Code 与
+Cursor 均达到 `project-bound-ready`，随后只删除各自受管理配置和总计 18/18 个 Skill。npm
+目前只暴露 `latest -> 0.4.1`，不再存在 `bootstrap` Dist-tag 或临时 Release Secret。详细
+分母、限制与解释后的结论保存在
+[当前 AI 工具计划](../project/plans/ai-verifiable-development-tooling.md)中。
+
 npm 版本历史中还包含 `0.4.0-bootstrap.0`。它是一次性的、带 Provenance 的预发布 Package，
 只用于先建立 npm Package Identity，以便绑定稳定版 GitHub Trusted Publisher。npm 在首次
 创建 Package 时同时把该版本分配给 `latest` 与 `bootstrap`，并拒绝了经过身份验证的默认标签
 删除请求。稳定版 `0.4.0` 已替换 `latest`，但公开验收发现 npm 无法从它的 3 个命名 Binary 中
 推断默认入口。Release `0.4.1` 为同一个事务化 Agent 入口增加与 Package 名匹配的 `ai-tooling`
-Alias；公开验证成功后再删除 `bootstrap` 标签。两个旧版本都保留为不可变审计历史，普通稳定
-SemVer Range 仍不会选中 `0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在两个稳定
-Tag 创建前撤销。请使用上文记录的精确稳定 Selector `@viewcompose/ai-tooling@0.4.1`。
+Alias。公开验证已经通过，`bootstrap` 标签也已删除。两个旧版本都保留为不可变审计历史；
+`0.4.0` 已弃用并明确指向 `0.4.1`，普通稳定 SemVer Range 仍不会选中
+`0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在两个稳定 Tag 创建前撤销。请使用
+上文记录的精确稳定 Selector `@viewcompose/ai-tooling@0.4.1`。
 
 | 现象 | 处理方式 |
 | --- | --- |
