@@ -14,7 +14,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import {homedir, platform} from 'node:os';
-import {basename, dirname, isAbsolute, posix, relative, resolve, sep, win32} from 'node:path';
+import {basename, dirname, isAbsolute, parse, posix, relative, resolve, sep, win32} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {detectAndroidSdk, detectJavaRuntime} from './tool-core.mjs';
 import {detectFrameworkProjectProfile} from './framework-project-profile.mjs';
@@ -166,6 +166,45 @@ function defaultDurableCacheRoot() {
   return resolve(process.env.XDG_CACHE_HOME ?? resolve(homedir(), '.cache'), 'viewcompose', 'ai-tooling');
 }
 
+function pathPrefixes(path) {
+  const absolute = resolve(path);
+  const root = parse(absolute).root;
+  const suffix = relative(root, absolute);
+  const prefixes = [root];
+  let current = root;
+  for (const component of suffix === '' ? [] : suffix.split(sep)) {
+    current = resolve(current, component);
+    prefixes.push(current);
+  }
+  return prefixes;
+}
+
+async function canonicalizeDurableCacheRoot(cacheRoot) {
+  const lexicalRoot = resolve(cacheRoot);
+  await mkdir(lexicalRoot, {recursive: true});
+  const canonicalRoot = await realpath(lexicalRoot);
+  const lexicalPrefixes = pathPrefixes(lexicalRoot);
+  const canonicalPrefixes = pathPrefixes(canonicalRoot);
+  if (lexicalPrefixes.length !== canonicalPrefixes.length) {
+    throw new Error('AI tooling cache root must not traverse a symbolic link.');
+  }
+  for (let index = 0; index < lexicalPrefixes.length; index += 1) {
+    const [lexical, canonical] = await Promise.all([
+      lstat(lexicalPrefixes[index]),
+      lstat(canonicalPrefixes[index]),
+    ]);
+    if (
+      lexical.isSymbolicLink() ||
+      canonical.isSymbolicLink() ||
+      lexical.dev !== canonical.dev ||
+      lexical.ino !== canonical.ino
+    ) {
+      throw new Error('AI tooling cache root must not traverse a symbolic link.');
+    }
+  }
+  return canonicalRoot;
+}
+
 async function packageFingerprint(root, {excludeBootstrapMarker = false} = {}) {
   const files = [];
   async function visit(current) {
@@ -281,34 +320,50 @@ async function materializeDurablePackage(aiRoot, frameworkProfile, cacheRoot = d
   }
   const contentFingerprint = await packageFingerprint(aiRoot);
   const cacheKey = sha256(`${contentFingerprint}\0${frameworkProfile}`);
-  const durableInstallRoot = resolve(cacheRoot, cacheKey);
+  const canonicalCacheRoot = await canonicalizeDurableCacheRoot(cacheRoot);
+  const durableInstallRoot = resolve(canonicalCacheRoot, cacheKey);
   const marker = resolve(durableInstallRoot, bootstrapJournalName);
   const existing = await metadataOrNull(marker);
   if (existing) {
+    const canonicalDurableInstallRoot = await requireCanonicalDirectory(
+      durableInstallRoot,
+      'Active AI package root',
+    );
     const record = await verifyDurablePackageIntegrity({
-      aiRoot: durableInstallRoot,
+      aiRoot: canonicalDurableInstallRoot,
       frameworkProfile,
       packageVersion: distribution.package.version,
     });
     if (record.cacheKey !== cacheKey || record.contentFingerprint !== contentFingerprint) {
       throw durableIntegrityError('Durable AI package cache marker is invalid.');
     }
-    return {aiRoot: durableInstallRoot, durableInstallRoot};
+    return {
+      aiRoot: canonicalDurableInstallRoot,
+      durableInstallRoot: canonicalDurableInstallRoot,
+    };
   }
-  await mkdir(cacheRoot, {recursive: true});
-  const staging = resolve(cacheRoot, `.${cacheKey}.${randomUUID()}.staging`);
+  const staging = resolve(canonicalCacheRoot, `.${cacheKey}.${randomUUID()}.staging`);
   try {
-    await copyPackageTree(aiRoot, staging);
-    const record = await commitDurablePackageIntegrity({aiRoot: staging, frameworkProfile});
+    await mkdir(staging);
+    const canonicalStaging = await requireCanonicalDirectory(staging, 'Staged AI package root');
+    await copyPackageTree(aiRoot, canonicalStaging);
+    const record = await commitDurablePackageIntegrity({
+      aiRoot: canonicalStaging,
+      frameworkProfile,
+    });
     if (record.cacheKey !== cacheKey || record.contentFingerprint !== contentFingerprint) {
       throw durableIntegrityError('Staged durable AI package integrity identity drifted.');
     }
     try {
-      await rename(staging, durableInstallRoot);
+      await rename(canonicalStaging, durableInstallRoot);
     } catch (error) {
       if (!['EEXIST', 'ENOTEMPTY'].includes(error?.code)) throw error;
+      const canonicalDurableInstallRoot = await requireCanonicalDirectory(
+        durableInstallRoot,
+        'Active AI package root',
+      );
       const concurrent = await verifyDurablePackageIntegrity({
-        aiRoot: durableInstallRoot,
+        aiRoot: canonicalDurableInstallRoot,
         frameworkProfile,
         packageVersion: distribution.package.version,
       });
@@ -323,7 +378,14 @@ async function materializeDurablePackage(aiRoot, frameworkProfile, cacheRoot = d
     await rm(staging, {recursive: true, force: true}).catch(() => {});
     throw error;
   }
-  return {aiRoot: durableInstallRoot, durableInstallRoot};
+  const canonicalDurableInstallRoot = await requireCanonicalDirectory(
+    durableInstallRoot,
+    'Active AI package root',
+  );
+  return {
+    aiRoot: canonicalDurableInstallRoot,
+    durableInstallRoot: canonicalDurableInstallRoot,
+  };
 }
 
 async function requireCanonicalDirectory(path, label) {

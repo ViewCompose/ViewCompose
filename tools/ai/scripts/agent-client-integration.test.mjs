@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {cp, mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile} from 'node:fs/promises';
-import {tmpdir} from 'node:os';
+import {platform, tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import test from 'node:test';
 import {
@@ -169,6 +169,69 @@ test('binds MCP to a durable content-addressed package that survives source remo
     const diagnosed = await diagnoseAgentClient({client: 'cursor', projectRoot});
     assert.equal(diagnosed.tooling.version, '0.4.0');
     assert.equal(diagnosed.tooling.packageRoot, initialized.durableInstallRoot);
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('canonicalizes a case-only durable cache alias before emitting MCP configuration', async (context) => {
+  if (platform() !== 'darwin') {
+    context.skip('Case-only APFS aliases are a macOS-specific regression fixture.');
+    return;
+  }
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-cache-case-')));
+  const packageRoot = resolve(temporary, 'package');
+  const projectRoot = resolve(temporary, 'project');
+  const canonicalCacheRoot = resolve(temporary, 'ViewCompose');
+  const lexicalCacheRoot = resolve(temporary, 'viewcompose');
+  try {
+    await mkdir(canonicalCacheRoot);
+    const canonicalAlias = await realpath(lexicalCacheRoot).catch(() => null);
+    if (canonicalAlias === null) {
+      context.skip('The test volume is case-sensitive.');
+      return;
+    }
+    await createAiPackage(packageRoot, '0.4.0', 'case-alias');
+    await mkdir(projectRoot);
+    const initialized = await initializeAgentClient({
+      client: 'codex',
+      projectRoot,
+      aiRoot: packageRoot,
+      cacheRoot: lexicalCacheRoot,
+    });
+    assert.equal(initialized.durableInstallRoot, await realpath(initialized.durableInstallRoot));
+    assert.ok(initialized.durableInstallRoot.startsWith(canonicalAlias));
+    const config = await readFile(resolve(projectRoot, '.codex/config.toml'), 'utf8');
+    assert.match(config, new RegExp(initialized.durableInstallRoot.replaceAll('/', '\\/'), 'u'));
+    const diagnosed = await diagnoseAgentClient({client: 'codex', projectRoot});
+    assert.equal(diagnosed.status, 'project-bound-ready');
+    assert.equal(diagnosed.tooling.version, '0.4.0');
+    assert.equal(diagnosed.tooling.packageRoot, initialized.durableInstallRoot);
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('rejects a symbolic-link durable cache root', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-cache-link-')));
+  const packageRoot = resolve(temporary, 'package');
+  const projectRoot = resolve(temporary, 'project');
+  const physicalCacheRoot = resolve(temporary, 'physical-cache');
+  const linkedCacheRoot = resolve(temporary, 'linked-cache');
+  try {
+    await createAiPackage(packageRoot, '0.4.0', 'linked-cache');
+    await mkdir(projectRoot);
+    await mkdir(physicalCacheRoot);
+    await symlink(physicalCacheRoot, linkedCacheRoot, 'dir');
+    await assert.rejects(
+      initializeAgentClient({
+        client: 'codex',
+        projectRoot,
+        aiRoot: packageRoot,
+        cacheRoot: linkedCacheRoot,
+      }),
+      /cache root must not traverse a symbolic link/u,
+    );
   } finally {
     await rm(temporary, {recursive: true, force: true});
   }
