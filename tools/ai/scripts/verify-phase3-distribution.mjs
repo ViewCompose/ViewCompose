@@ -1509,7 +1509,8 @@ async function main() {
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
       `1/1 npm package inventory (${npmInventoryMode}), ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
-      `3/3 installed agent profiles with init/doctor/uninstall and 18/18 exact Skill copies, ` +
+      `3/3 installed agent profiles with init/doctor/uninstall and ` +
+      `${contract.contents.skills.length * 3}/${contract.contents.skills.length * 3} exact Skill copies, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
       `prepared screenshot ${compileFingerprints.screenshot}, ` +
       `validated screenshot inference ${compileFingerprints.screenshotInference}, ` +
