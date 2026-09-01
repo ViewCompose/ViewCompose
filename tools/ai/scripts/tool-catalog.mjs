@@ -4,6 +4,9 @@ import {SCREENSHOT_INFERENCE_VALIDATION_ARGUMENTS_SCHEMA} from './screenshot-inf
 import {SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA} from './screenshot-generation-contract.mjs';
 import {SCREENSHOT_RESOLUTION_ARGUMENTS_SCHEMA} from './screenshot-resolution-contract.mjs';
 import {FIGMA_IMPORT_REQUEST_SCHEMA} from './figma-contract.mjs';
+import {
+  SCREENSHOT_SOURCE_APPLICATION_ARGUMENTS_SCHEMA,
+} from './screenshot-source-application-contract.mjs';
 
 const stableId = {
   type: 'string',
@@ -327,6 +330,20 @@ const executableDefinitions = {
     },
     evidenceLevel: 'static',
   },
+  prepare_screenshot_repair: {
+    title: 'Prepare an Attended ViewCompose Screenshot Repair',
+    description:
+      'Evaluate or propose a bounded screenshot repair, or prepare one inert content-addressed source-application request; never writes project source.',
+    inputSchema: SCREENSHOT_SOURCE_APPLICATION_ARGUMENTS_SCHEMA,
+    defaultLimits: {
+      timeoutMs: 300000,
+      maxInputBytes: 4194304,
+      maxOutputBytes: 4194304,
+    },
+    evidenceLevel: 'static',
+    idempotent: false,
+    readOnly: false,
+  },
 };
 
 const knowledgeDefaults = {
@@ -368,6 +385,7 @@ export const TOOL_NAMES = Object.freeze([
   'validate_screenshot_inference',
   'resolve_screenshot_inference',
   'generate_screenshot_viewcompose',
+  'prepare_screenshot_repair',
 ]);
 
 export function publicToolDefinition(name) {
@@ -379,9 +397,9 @@ export function publicToolDefinition(name) {
     description: definition.description,
     inputSchema: definition.inputSchema,
     annotations: {
-      readOnlyHint: true,
+      readOnlyHint: definition.readOnly ?? true,
       destructiveHint: false,
-      idempotentHint: true,
+      idempotentHint: definition.idempotent ?? true,
       openWorldHint: false,
     },
   };

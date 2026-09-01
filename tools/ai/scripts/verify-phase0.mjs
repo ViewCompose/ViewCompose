@@ -14,6 +14,9 @@ import {
   verifyPhase5ScreenshotPixelComparison,
 } from './verify-phase5-screenshot-pixel-comparison.mjs';
 import {verifyPhase5ScreenshotRepair} from './verify-phase5-screenshot-repair.mjs';
+import {
+  verifyPhase5ScreenshotSourceApplication,
+} from './verify-phase5-screenshot-source-application.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const aiRoot = resolve(scriptDirectory, '..');
@@ -308,6 +311,12 @@ async function verifySchemas(versions) {
     screenshotRepairExecutionOutcome: 'screenshot-repair-execution-outcome.schema.json',
     screenshotRepairAppliedResultHandoff:
       'screenshot-repair-applied-result-handoff.schema.json',
+    screenshotSourceApplicationRequest:
+      'screenshot-source-application-request.schema.json',
+    screenshotSourceApplicationJournal:
+      'screenshot-source-application-journal.schema.json',
+    screenshotSourceApplicationReceipt:
+      'screenshot-source-application-receipt.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
     projectAnalysis: 'project-analysis.schema.json',
@@ -406,6 +415,18 @@ async function verifyExamples(schemas) {
     ['project-analysis-corpus.json', 'project-analysis-corpus.schema.json'],
     ['project-analysis-quality.json', 'project-analysis-quality.schema.json'],
     ['bootstrap.json', 'bootstrap.schema.json'],
+    [
+      'screenshot-source-application-request.json',
+      'screenshot-source-application-request.schema.json',
+    ],
+    [
+      'screenshot-source-application-journal.json',
+      'screenshot-source-application-journal.schema.json',
+    ],
+    [
+      'screenshot-source-application-receipt.json',
+      'screenshot-source-application-receipt.schema.json',
+    ],
   ];
   for (const [exampleName, schemaName] of examples) {
     const example = await readJson(resolve(contractsDirectory, 'examples', exampleName));
@@ -2247,6 +2268,7 @@ export async function verifyPhase0() {
     compareGolden: false,
   });
   const screenshotRepair = await verifyPhase5ScreenshotRepair();
+  const screenshotSourceApplication = await verifyPhase5ScreenshotSourceApplication();
   const metrics = await verifyMetrics(schemas);
   const corpus = await verifyCorpus(schemas, metrics);
   return {
@@ -2290,6 +2312,11 @@ export async function verifyPhase0() {
     screenshotRepairFixtures:
       screenshotRepair.supportedGoldens + screenshotRepair.patchGoldens +
         screenshotRepair.candidateEvaluatorGoldens + screenshotRepair.failClosedDenominators,
+    screenshotSourceApplicationFixtures:
+      screenshotSourceApplication.positiveExamples +
+        screenshotSourceApplication.schemaRejections +
+        screenshotSourceApplication.runtimeRejections +
+        screenshotSourceApplication.crashBoundaries,
   };
 }
 
@@ -2313,7 +2340,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
           `${summary.screenshotGeneratedPreviewFixtures} frozen screenshot-Preview fixtures and ` +
           `${summary.screenshotLayoutComparisonFixtures} frozen screenshot-comparison fixtures and ` +
           `${summary.screenshotPixelComparisonFixtures} frozen screenshot-pixel fixtures and ` +
-          `${summary.screenshotRepairFixtures} frozen screenshot-repair fixtures.`,
+          `${summary.screenshotRepairFixtures} frozen screenshot-repair fixtures and ` +
+          `${summary.screenshotSourceApplicationFixtures} frozen source-application fixtures.`,
       );
     })
     .catch((error) => {

@@ -16,8 +16,8 @@
       "required": ["name", "version", "tag", "tagPattern", "immutable"],
       "properties": {
         "name": {"const": "@viewcompose/ai-tooling"},
-        "version": {"const": "0.6.0"},
-        "tag": {"const": "ai-tooling-v0.6.0"},
+        "version": {"const": "0.7.0"},
+        "tag": {"const": "ai-tooling-v0.7.0"},
         "tagPattern": {"const": "ai-tooling-v<semver>"},
         "immutable": {"const": true}
       }
@@ -25,7 +25,7 @@
     "assets": {
       "type": "array",
       "prefixItems": [
-        {"const": "viewcompose-ai-tooling-0.6.0.tgz"},
+        {"const": "viewcompose-ai-tooling-0.7.0.tgz"},
         {"const": "manifest.json"},
         {"const": "SHA256SUMS"}
       ],

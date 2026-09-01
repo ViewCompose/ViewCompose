@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "format": "npm-tgz",
     "nodeEngine": ">=24.19.0",
     "license": "MIT",
@@ -34,7 +34,8 @@
       "prepare_screenshot",
       "validate_screenshot_inference",
       "resolve_screenshot_inference",
-      "generate_screenshot_viewcompose"
+      "generate_screenshot_viewcompose",
+      "prepare_screenshot_repair"
     ],
     "skills": [
       "viewcompose-api-reference",
@@ -43,9 +44,10 @@
       "viewcompose-debug-layout",
       "viewcompose-import-figma",
       "viewcompose-review",
+      "viewcompose-repair-screenshot",
       "viewcompose-validate"
     ],
-    "executables": ["ai-tooling", "viewcompose-ai", "viewcompose-agent", "viewcompose-mcp"],
+    "executables": ["ai-tooling", "viewcompose-ai", "viewcompose-agent", "viewcompose-mcp", "viewcompose-repair"],
     "requiredPaths": [
       "LICENSE",
       "README.md",
@@ -95,6 +97,12 @@
       "contracts/screenshot-repair-execution-outcome.schema.json",
       "contracts/screenshot-repair-host-grant.schema.json",
       "contracts/screenshot-repair-proposal.schema.json",
+      "contracts/screenshot-source-application-request.schema.json",
+      "contracts/screenshot-source-application-journal.schema.json",
+      "contracts/screenshot-source-application-receipt.schema.json",
+      "contracts/examples/screenshot-source-application-request.json",
+      "contracts/examples/screenshot-source-application-journal.json",
+      "contracts/examples/screenshot-source-application-receipt.json",
       "contracts/tool-envelope.schema.json",
       "contracts/xml-project-context.schema.json",
       "contracts/xml-layout-dependencies.schema.json",
@@ -126,6 +134,7 @@
       "harness/gradle/wrapper/gradle-wrapper.properties",
       "harness/preview/build.gradle.kts",
       "harness/preview/src/main/AndroidManifest.xml",
+      "harness/source-repair/ViewComposeSourceRepairHost.java",
       "harness/settings.gradle.kts",
       "scripts/ai-tool.mjs",
       "scripts/agent-client-integration.mjs",
@@ -143,6 +152,7 @@
       "scripts/layout-diagnoser.mjs",
       "scripts/layout-comparator.mjs",
       "scripts/pixel-comparator.mjs",
+      "scripts/prepare-screenshot-repair-tool.mjs",
       "scripts/mcp-server.mjs",
       "scripts/preview-adapter.mjs",
       "scripts/project-analyzer.mjs",
@@ -155,6 +165,13 @@
       "scripts/screenshot-repair-host-grant-adapter.mjs",
       "scripts/screenshot-repair-proposer.mjs",
       "scripts/screenshot-repair-terminal-store.mjs",
+      "scripts/screenshot-source-edit.mjs",
+      "scripts/screenshot-source-application-preparer.mjs",
+      "scripts/screenshot-source-application-contract.mjs",
+      "scripts/screenshot-source-repair-cli.mjs",
+      "scripts/screenshot-source-secure-backend.mjs",
+      "scripts/screenshot-source-transaction.mjs",
+      "scripts/verify-phase5-screenshot-source-application.mjs",
       "scripts/schema-validator.mjs",
       "scripts/screenshot-contract.mjs",
       "scripts/screenshot-inference-contract.mjs",
@@ -181,6 +198,7 @@
       "skills/viewcompose-debug-layout/SKILL.md",
       "skills/viewcompose-import-figma/SKILL.md",
       "skills/viewcompose-review/SKILL.md",
+      "skills/viewcompose-repair-screenshot/SKILL.md",
       "skills/viewcompose-validate/SKILL.md"
     ]
   },
@@ -223,7 +241,9 @@
       "prepare_screenshot",
       "validate_screenshot_inference",
       "resolve_screenshot_inference",
-      "generate_screenshot_viewcompose:generate"
+      "generate_screenshot_viewcompose:generate",
+      "prepare_screenshot_repair:evaluate",
+      "prepare_screenshot_repair:propose"
     ],
     "projectBoundModes": [
       "validate_code:compile",
@@ -233,7 +253,8 @@
       "generate_screenshot_viewcompose:compile",
       "generate_screenshot_viewcompose:render",
       "generate_screenshot_viewcompose:compare",
-      "generate_screenshot_viewcompose:compare-pixels"
+      "generate_screenshot_viewcompose:compare-pixels",
+      "prepare_screenshot_repair:prepare"
     ],
     "fixedTargetModes": ["render_preview", "diagnose_layout"],
     "fixedTargetAvailability": "separately-allowlisted-target-required",

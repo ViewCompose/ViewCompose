@@ -378,7 +378,20 @@ right/bottom exclusive viewport coordinates. Localization does not infer a sourc
 value from a pixel position. The
 checked-in 16×24 inference wireframe is intentionally ineligible because it does not share the
 1079×2339 render viewport or density and contains a redaction. No aggregate or perceptual
-similarity score is produced.
+score is produced.
+
+Attended screenshot source repair is exposed as the fifteenth public tool,
+`prepare_screenshot_repair`, plus the separate `viewcompose-repair` executable. The MCP tool can
+evaluate the six-gate baseline/candidate evidence, reproduce one single-property rollback proposal,
+and prepare one inert content-addressed request. It never writes project source. The executable
+shows the complete bounded diff and requires the controlling terminal to type the exact request
+suffix before applying one generated Kotlin literal `text` or `hint` span. It stores owner-only
+recovery bytes outside the project, uses no-follow beneath-root directory-handle replacement,
+persists hash-chained journals and immutable receipts, and reruns static, compile, Preview,
+semantic/geometry, and eligible pixel evidence against the committed bytes. Validation failure
+does not roll back automatically. `recover` reconciles an interrupted transaction, while explicit
+`rollback` has a second terminal confirmation and refuses later user edits. No MCP call, `--yes`,
+stdin value, environment variable, token, or reusable grant can authorize a source write.
 
 Bounded screenshot repair has a provider-offline internal orchestrator but is not yet a public tool
 mode. It allows at most five reason-coded attempts over typed Design IR patches and evaluates
@@ -524,11 +537,11 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns fourteen tools in stable
+lifecycle; it never silently downgrades either era. `tools/list` returns fifteen tools in stable
 order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
 `analyze_project`, followed by `convert_xml_to_viewcompose`, `convert_figma_to_viewcompose`,
 `prepare_screenshot`, and `validate_screenshot_inference`, then `resolve_screenshot_inference` and
-`generate_screenshot_viewcompose`.
+`generate_screenshot_viewcompose` and `prepare_screenshot_repair`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
 provider-neutral result unchanged as `structuredContent` and as serialized text for compatibility.
@@ -542,7 +555,7 @@ boundary.
 
 ## Consumer Agent workflows
 
-Seven client-neutral consumer skills live below `skills/`:
+Eight client-neutral consumer skills live below `skills/`:
 
 - `viewcompose-api-reference` retrieves exact APIs and compiled samples without writing files.
 - `viewcompose-create-screen` retrieves before implementation and requires compile-backed delivery.
@@ -552,6 +565,8 @@ Seven client-neutral consumer skills live below `skills/`:
 - `viewcompose-import-figma` audits one offline export before deterministic generation and reports
   each compile, Preview, comparison, and unsupported-evidence boundary independently.
 - `viewcompose-review` keeps review read-only unless the caller also asks for a fix.
+- `viewcompose-repair-screenshot` separates MCP evidence preparation from attended transactional
+  source apply, recovery, and explicit rollback.
 - `viewcompose-debug-layout` uses only allowlisted Preview and structured layout evidence.
 - `viewcompose-validate` requires hermetic compilation and renders only covered allowlisted targets.
 
@@ -569,7 +584,7 @@ npm --prefix tools/ai run verify:phase3-workflows
 ./gradlew verifyAiConsumerWorkflows
 ```
 
-The gate checks the frozen seven-workflow denominator, known tool names, evidence ordering, stable
+The gate checks the frozen eight-workflow denominator, known tool names, evidence ordering, stable
 skill paths and frontmatter, safety boundaries, path containment, provider neutrality, and a 16 KiB
 entrypoint limit.
 
@@ -580,11 +595,11 @@ primary consumer path is one exact-version transactional operation run from the 
 root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client <codex|claude-code|cursor>
 ```
 
 `init` merges only the `viewcompose` MCP entry into `.codex/config.toml`, `.mcp.json`, or
-`.cursor/mcp.json` and copies the seven exact canonical `SKILL.md` files. Codex and Cursor use
+`.cursor/mcp.json` and copies the eight exact canonical `SKILL.md` files. Codex and Cursor use
 `.agents/skills`; Claude Code uses `.claude/skills`. All configuration and Skill surfaces are
 preflighted before writes; atomic configuration replacement and Skill rollback prevent a partial
 install. Existing unrelated JSON/TOML content is preserved. Exact reinitialization is idempotent,
@@ -597,7 +612,7 @@ paths never depend on npm's ephemeral extraction directory. An explicit physical
 Inspect the installed state and its honest capability boundary with:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 doctor --client <codex|claude-code|cursor>
 ```
 
 The default result is `project-bound-ready` when the exact configuration and Skills are present,
@@ -629,8 +644,8 @@ npm --prefix tools/ai run package:distribution
 ```
 
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
-exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the fourteen-tool CLI/MCP core,
-the `viewcompose-agent` onboarding command, seven consumer skills, the immutable Knowledge Bundle, the
+exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the fifteen-tool CLI/MCP core,
+the `viewcompose-agent` onboarding command, `viewcompose-repair`, eight consumer skills, the immutable Knowledge Bundle, the
 consumer execution contract, a content-addressed Gradle harness and wrapper, an SPDX 2.3 package
 record, the MIT license, and a reviewed empty runtime-dependency license inventory. The license
 inventory records the distributed Gradle Wrapper as an Apache-2.0 development tool. The package
@@ -649,14 +664,14 @@ The public consumer launches the exact npm version, which remains provenance-bou
 immutable GitHub Release:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client <codex|claude-code|cursor>
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.6.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.7.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
@@ -687,6 +702,9 @@ coverage, and installed-package verification.
 Release `0.6.0` retains that analyzer and adds the strict offline Figma import, Design IR v2,
 deterministic Kotlin/PNG generation, bounded Preview/layout verification, and seventh consumer
 Skill. It does not add a Figma credentialed connector or visual-parity claim.
+Release `0.7.0` retains those contracts and adds attended, transactional screenshot repair for one
+generated literal property. Its MCP surface remains source-read-only; only the separate terminal
+command can apply or explicitly roll back exact content-addressed bytes.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and

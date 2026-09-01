@@ -4,7 +4,7 @@
   "lastVerified": "2026-09-01",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "transport": "stdio",
     "mcpExecutable": "viewcompose-mcp",
     "clientExecutable": "viewcompose-agent",

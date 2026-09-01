@@ -19,19 +19,28 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     'validate_screenshot_inference',
     'resolve_screenshot_inference',
     'generate_screenshot_viewcompose',
+    'prepare_screenshot_repair',
   ]);
   assert.deepEqual(Object.keys(TOOL_DEFINITIONS).sort(), [...TOOL_NAMES].sort());
   for (const name of TOOL_NAMES) {
     const definition = publicToolDefinition(name);
     assert.equal(definition.name, name);
     assert.equal(definition.inputSchema.type, 'object');
-    assert.equal(definition.annotations.readOnlyHint, true);
+    assert.equal(
+      definition.annotations.readOnlyHint,
+      name !== 'prepare_screenshot_repair',
+    );
     assert.ok(TOOL_DEFINITIONS[name].defaultLimits.maxOutputBytes <=
-      (['prepare_screenshot', 'validate_screenshot_inference', 'resolve_screenshot_inference',
+      (name === 'prepare_screenshot_repair'
+        ? 4_194_304
+        : ['prepare_screenshot', 'validate_screenshot_inference', 'resolve_screenshot_inference',
         'generate_screenshot_viewcompose', 'convert_figma_to_viewcompose'].includes(name)
         ? 3_145_728
         : 1024 * 1024));
   }
+  assert.equal(publicToolDefinition('prepare_screenshot_repair').annotations.idempotentHint, false);
+  assert.equal(publicToolDefinition('prepare_screenshot_repair').annotations.readOnlyHint, false);
+  assert.equal(publicToolDefinition('prepare_screenshot_repair').annotations.destructiveHint, false);
 });
 
 test('the executable catalog rejects unbounded arrays and undeclared arguments', () => {

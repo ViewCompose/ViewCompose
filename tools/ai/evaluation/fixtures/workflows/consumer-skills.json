@@ -89,6 +89,21 @@
       "mutationPolicy": "read-only-unless-fix-requested"
     },
     {
+      "id": "viewcompose-repair-screenshot",
+      "requiredTools": [
+        "prepare_screenshot_repair"
+      ],
+      "conditionalTools": [
+        "generate_screenshot_viewcompose",
+        "analyze_project",
+        "get_component_reference",
+        "validate_code"
+      ],
+      "minimumEvidence": "compared",
+      "maximumEvidence": "compared",
+      "mutationPolicy": "mcp-read-only-and-attended-cli-source-write"
+    },
+    {
       "id": "viewcompose-debug-layout",
       "requiredTools": [
         "render_preview",

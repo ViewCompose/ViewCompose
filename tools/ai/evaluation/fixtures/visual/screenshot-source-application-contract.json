@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "contractId": "viewcompose-attended-screenshot-source-application-v1",
+  "schemas": [
+    "screenshot-source-application-request-v1",
+    "screenshot-source-application-journal-v1",
+    "screenshot-source-application-receipt-v1"
+  ],
+  "positive": {
+    "request": "contracts/examples/screenshot-source-application-request.json",
+    "journal": "contracts/examples/screenshot-source-application-journal.json",
+    "receipt": "contracts/examples/screenshot-source-application-receipt.json"
+  },
+  "schemaRejections": [
+    {
+      "id": "absolute-target-path",
+      "path": ["project", "relativePath"],
+      "value": "/tmp/LoginScreen.kt",
+      "code": "VC-AI-SOURCE-APPLICATION-PATH-INVALID"
+    },
+    {
+      "id": "parent-traversal",
+      "path": ["project", "relativePath"],
+      "value": "app/src/../../LoginScreen.kt",
+      "code": "VC-AI-SOURCE-APPLICATION-PATH-INVALID"
+    },
+    {
+      "id": "raw-replacement-field",
+      "path": ["edit", "rawSource"],
+      "value": "malicious()",
+      "code": "VC-AI-SOURCE-APPLICATION-EDIT-INVALID"
+    },
+    {
+      "id": "whole-file-replacement",
+      "path": ["edit", "kind"],
+      "value": "replace-whole-file",
+      "code": "VC-AI-SOURCE-APPLICATION-EDIT-INVALID"
+    },
+    {
+      "id": "authorization-bypass",
+      "path": ["authorization", "bypassAllowed"],
+      "value": true,
+      "code": "VC-AI-SOURCE-APPLICATION-AUTHORIZATION-INVALID"
+    },
+    {
+      "id": "mcp-write-authority",
+      "path": ["policy", "mcpSourceWrite"],
+      "value": true,
+      "code": "VC-AI-SOURCE-APPLICATION-POLICY-INVALID"
+    },
+    {
+      "id": "automatic-rollback",
+      "path": ["policy", "automaticRollback"],
+      "value": true,
+      "code": "VC-AI-SOURCE-APPLICATION-POLICY-INVALID"
+    },
+    {
+      "id": "hard-linked-target",
+      "path": ["project", "fileIdentity", "linkCount"],
+      "value": 2,
+      "code": "VC-AI-SOURCE-APPLICATION-FILE-UNSAFE"
+    }
+  ],
+  "runtimeRejections": [
+    {"id": "expired-request", "code": "VC-AI-SOURCE-APPLICATION-EXPIRED", "sourceWrites": 0},
+    {"id": "nonce-replay-after-rollback", "code": "VC-AI-SOURCE-APPLICATION-REPLAY", "sourceWrites": 0},
+    {"id": "root-identity-drift", "code": "VC-AI-SOURCE-APPLICATION-ROOT-DRIFT", "sourceWrites": 0},
+    {"id": "symlinked-intermediate", "code": "VC-AI-SOURCE-APPLICATION-SYMLINK", "sourceWrites": 0},
+    {"id": "preimage-drift", "code": "VC-AI-SOURCE-APPLICATION-PREIMAGE-DRIFT", "sourceWrites": 0},
+    {"id": "span-drift", "code": "VC-AI-SOURCE-APPLICATION-SPAN-DRIFT", "sourceWrites": 0},
+    {"id": "candidate-drift", "code": "VC-AI-SOURCE-APPLICATION-CANDIDATE-DRIFT", "sourceWrites": 0},
+    {"id": "diff-drift", "code": "VC-AI-SOURCE-APPLICATION-DIFF-DRIFT", "sourceWrites": 0},
+    {"id": "profile-drift", "code": "VC-AI-SOURCE-APPLICATION-PROFILE-DRIFT", "sourceWrites": 0},
+    {"id": "missing-controlling-tty", "code": "VC-AI-SOURCE-APPLICATION-TTY-REQUIRED", "sourceWrites": 0},
+    {"id": "unsupported-secure-filesystem", "code": "VC-AI-SOURCE-APPLICATION-FILESYSTEM-UNSUPPORTED", "sourceWrites": 0},
+    {"id": "rollback-after-user-edit", "code": "VC-AI-SOURCE-ROLLBACK-CONFLICT", "sourceWrites": 0}
+  ],
+  "crashBoundaries": [
+    "after-recovery-files-fsync",
+    "after-prepared-journal-fsync",
+    "after-applying-journal-fsync",
+    "after-candidate-file-fsync",
+    "after-atomic-replace",
+    "after-target-directory-fsync",
+    "after-applied-unverified-journal-fsync",
+    "during-post-apply-evidence",
+    "after-rolling-back-journal-fsync",
+    "after-rollback-atomic-replace"
+  ],
+  "recoveryOutcomes": ["NOT_APPLIED", "APPLIED_UNVERIFIED", "APPLIED_CONFLICT"],
+  "limits": {
+    "maxFiles": 1,
+    "maxEdits": 1,
+    "maxSourceBytes": 1048576,
+    "maxReplacementBytes": 65536,
+    "maxRequestLifetimeSeconds": 600,
+    "providerCalls": false,
+    "networkAccess": false,
+    "consumerBuildExecution": false,
+    "mcpSourceWrite": false
+  }
+}

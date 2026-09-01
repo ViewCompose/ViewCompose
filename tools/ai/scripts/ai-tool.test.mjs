@@ -633,6 +633,40 @@ test('propagates transport cancellation into the bounded execution signal', asyn
   assert.equal((await pending).status, 'cancelled');
 });
 
+test('dispatches screenshot repair preparation without granting MCP source writes', async () => {
+  const repairEvidence = {
+    schemaVersion: 1,
+    status: 'complete',
+    lineage: {candidateDesignIrFingerprint: 'a'.repeat(64)},
+    candidateEvaluation: {},
+    designIr: {},
+    evidenceFingerprint: 'b'.repeat(64),
+  };
+  let invoked = 0;
+  const result = await dispatchToolRequest(await request('prepare_screenshot_repair', {
+    operation: 'propose',
+    baselineEvidence: repairEvidence,
+    candidateEvidence: repairEvidence,
+  }), {
+    prepareRepair: async (arguments_, options) => {
+      invoked += 1;
+      assert.equal(arguments_.operation, 'propose');
+      assert.equal(options.signal instanceof AbortSignal, true);
+      return toolResult({
+        requestId: options.requestId,
+        tool: 'prepare_screenshot_repair',
+        status: 'success',
+        level: 'compared',
+        diagnostics: [],
+        data: {sourceWritePerformed: false},
+      });
+    },
+  });
+  assert.equal(invoked, 1);
+  assert.equal(result.status, 'success');
+  assert.equal(result.data.sourceWritePerformed, false);
+});
+
 test('replaces oversized adapter data with one bounded stable result', async () => {
   const result = await dispatchToolRequest(await request('analyze_project', {
     projectRoot: '/workspace/sample',

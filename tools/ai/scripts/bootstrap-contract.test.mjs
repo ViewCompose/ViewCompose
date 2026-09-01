@@ -35,6 +35,6 @@ test('rejects a mutable or non-current package identity', () => {
   invalid.package.version = 'latest';
   invalid.compatibility.frameworkSelection = 'newest-tooling-profile';
   const violations = validateSchemaValue(invalid, schema);
-  assert.ok(violations.some((item) => item.includes('0.6.0')));
+  assert.ok(violations.some((item) => item.includes('0.7.0')));
   assert.ok(violations.some((item) => item.includes('exact-current-profile-only')));
 });

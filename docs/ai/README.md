@@ -12,7 +12,7 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - npm @viewcompose/ai-tooling 0.6.0 with immutable GitHub Release ai-tooling-v0.6.0
+  - npm @viewcompose/ai-tooling 0.7.0 release candidate for ai-tooling-v0.7.0
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
@@ -29,7 +29,7 @@ lifecycle: Update when a supported client format, Skill path, package release, t
 
 # AI Integration
 
-ViewCompose ships a machine-readable API reference, 14 local MCP tools, and seven Agent Skills as one
+ViewCompose ships a machine-readable API reference, 15 local MCP tools, and eight Agent Skills as one
 exact-version npm package backed by an immutable GitHub Release. A developer can connect Codex,
 Claude Code, or Cursor to a new or existing Android project with one command. No global install,
 ViewCompose checkout, package build, provider key, or manual MCP configuration edit is required,
@@ -41,24 +41,25 @@ validation evidence; it never embeds or contacts a model provider.
 
 ## Install in one command
 
-Release `0.6.0` is public. Use its exact selector so the installed tools, Skills, Knowledge Pack,
+Release candidate `0.7.0` is frozen for publication. Use its exact selector after the immutable
+GitHub Release becomes public so the installed tools, Skills, Knowledge Pack,
 and framework profile remain one verified version; do not replace it with a floating selector.
 
 Run exactly one of these commands from the physical root of the Android project:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client codex
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client codex
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client claude-code
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client claude-code
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client cursor
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client cursor
 ```
 
-`init` transactionally merges the `viewcompose` MCP entry and installs all seven canonical Skills.
+`init` transactionally merges the `viewcompose` MCP entry and installs all eight canonical Skills.
 It resolves the physical current directory, detects the exact ViewCompose dependency vector before
 writing, materializes the verified package into a content-addressed user cache, and points MCP only
 at that durable copy—not npm's temporary npx directory. It then runs the same readiness checks as
@@ -79,7 +80,7 @@ SDK platform 36. The release includes its own Gradle 9.3.1 wrapper and fixed bui
 do not install Gradle or align their project's AGP/Kotlin versions. The bootstrap writes only to the
 project integration surfaces and the operating system's user cache; never use `sudo` for it.
 
-### Exact framework-version binding in `0.6.0`
+### Exact framework-version binding in `0.7.0`
 
 `init` reads the project's independently versioned `com.viewcompose` coordinates without executing
 project Gradle logic. It accepts exact literals, used entries from the default
@@ -91,7 +92,7 @@ and generated Preview all load that same bundle.
 A project without a ViewCompose dependency is a new-project case and selects the Release's newest
 stable profile. Dynamic, conflicting, unsupported, or otherwise unresolved versions—including a
 ViewCompose import without dependency identity—fail before any project write. The tool does not
-silently change framework dependencies. The `0.6.0` profile represents the current published
+silently change framework dependencies. The `0.7.0` profile represents the current published
 Artifact vector; an older version vector remains unchanged until a Release explicitly carries its
 matching profile.
 
@@ -101,7 +102,7 @@ matching profile.
 package version and client choice from the project root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` means the MCP entry and every Skill match the installed release, the physical
@@ -143,12 +144,60 @@ The installed project-bound mode supports:
 - offline Figma export inspection, deterministic ViewCompose Kotlin and redistributable PNG
   generation, compilation, Preview rendering, and bounded structure/semantics/geometry/asset
   comparison;
-- the seven workflows for API lookup, screen creation, XML conversion, Figma import, review,
-  validation, and layout debugging, with each workflow retaining the evidence level it actually
-  obtained.
+- attended screenshot repair preparation for one exact generated Kotlin literal, with a separate
+  terminal-only apply/recovery/rollback host;
+- the eight workflows for API lookup, screen creation, XML conversion, Figma import, screenshot
+  repair, review, validation, and layout debugging, with each workflow retaining the evidence
+  level it actually obtained.
 
 Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A static result
 does not prove compilation, and generated Kotlin does not prove rendering or visual parity.
+
+## Attended screenshot repair
+
+Release candidate `0.7.0` adds `prepare_screenshot_repair`, the
+`viewcompose-repair-screenshot` Skill, and the separate `viewcompose-repair` executable. The Agent
+uses MCP to reproduce baseline/current six-gate evidence, derive one strictly improving rollback
+proposal, and store one inert content-addressed request. MCP does not write project source.
+
+The released edit subset changes exactly one generated Kotlin literal `text` or `hint` property.
+It rejects whole-file replacement, raw patches, imports, declarations, callbacks, arbitrary source,
+multiple files, profile or root drift, symlinks, hard links, and any preimage/span/candidate/diff
+mismatch. Before preparing a request, all safety, compilation, Preview, semantic, structural, and
+eligible exact-pixel gates must pass for the proposed candidate.
+
+Ask the Agent to use `$viewcompose-repair-screenshot`. It will return a request fingerprint and the
+review command:
+
+```bash
+viewcompose-repair show <request-fingerprint> --pretty
+```
+
+After reviewing the complete diff and evidence, apply it from the same physical project root:
+
+```bash
+viewcompose-repair apply <request-fingerprint> --pretty
+```
+
+The command requires the controlling terminal to type the exact displayed suffix. There is no
+`--yes`, stdin, environment-variable, token, reusable grant, or MCP route for that confirmation.
+Recovery bytes and a hash-chained journal live in an owner-only operating-system user-state
+directory outside the project. The host performs a no-follow beneath-root atomic replacement,
+durably synchronizes it, rereads the committed bytes, and reruns the five post-apply evidence
+categories.
+
+If the process is interrupted, run `viewcompose-repair recover <request-fingerprint> --pretty`.
+Recovery never guesses or silently rolls back: it reports unchanged preimage, reconciles the exact
+candidate, or stops on conflict. A failed post-apply validation leaves the candidate in place so a
+later user edit is not overwritten. Only an explicit
+`viewcompose-repair rollback <request-fingerprint> --pretty` with a second terminal confirmation
+may restore the recovery copy, and it refuses any file that no longer exactly equals the candidate.
+
+The attended host currently requires a POSIX controlling terminal, JDK 17 or 21, and a filesystem
+where secure directory-handle-relative atomic replacement and durable directory synchronization
+can be proven. Unsupported hosts fail without a source write. It does not commit, push, open a pull
+request, repair arbitrary Kotlin, or defend against an actor that already controls the user's OS
+account and terminal.
 
 ## Offline Figma to ViewCompose
 
@@ -273,7 +322,7 @@ rendering is a later, explicitly isolated capability.
 Check, download, and migrate to the newest compatible tooling Release with one command:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 upgrade --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 upgrade --client <codex|claude-code|cursor>
 ```
 
 The command detects the project versions first and inspects only immutable `ai-tooling-v<semver>`
@@ -292,7 +341,7 @@ upgrade, or remove the active side-by-side package.
 Remove the current project integration:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 uninstall --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 uninstall --client <codex|claude-code|cursor>
 ```
 
 The command removes only the exact ViewCompose MCP entry and canonical Skill bytes; unrelated client
@@ -377,11 +426,12 @@ actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from or
 ranges. The temporary npm token and GitHub secret were revoked before any stable tag.
 Release `0.5.0` retains that onboarding correction and adds the versioned high-confidence project
 analysis contract described above. Public `0.6.0` retains that analyzer and adds the offline Figma
-contract described above. Use the exact `@viewcompose/ai-tooling@0.6.0` selector.
+contract described above. Release candidate `0.7.0` adds the attended repair contract; after its
+immutable publication, use the exact `@viewcompose/ai-tooling@0.7.0` selector.
 
 | Symptom | Action |
 | --- | --- |
-| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal published `@viewcompose/ai-tooling@0.6.0` selector. Do not substitute `latest`. |
+| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal published `@viewcompose/ai-tooling@0.7.0` selector after its Release is public. Do not substitute `latest`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
 | `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
 | `upgrade` returns `no-compatible-update` | Keep the current integration. No published tooling Release contains an exact framework profile for this project yet. Do not install a global-latest package as a workaround. |

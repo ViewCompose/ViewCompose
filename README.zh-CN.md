@@ -142,7 +142,7 @@ implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 
 ## AI 接入
 
-ViewCompose 把版本化 AI Reference、14 个本地 stdio MCP 工具和 7 个标准 Agent Skill 作为
+ViewCompose 把版本化 AI Reference、15 个本地 stdio MCP 工具和 8 个标准 Agent Skill 作为
 精确版本 npm Package 与不可变 GitHub Release 发布。Codex、Claude Code 和 Cursor 只需从
 Android Project 根目录执行一条事务化 `npx ... init` 命令即可完成接入；知识检索、生成、验证和
 Project 分析不要求全局安装、ViewCompose Checkout、本地构建 Package、Provider Key 或手动改配置。
@@ -151,6 +151,12 @@ AI 工具 `0.6.0` 新增 Fail-closed 的离线 Figma 路径：Agent 可以 Audit
 确定性的 ViewCompose Kotlin 与允许再分发的 PNG Resource，再对受支持的结构、语义、几何和 Asset
 执行编译、渲染与比较。ViewCompose 不登录 Figma，也不接收 Token；结果不会声称 Style、Pixel 或
 Perceptual Parity。
+
+AI 工具 `0.7.0` 新增人工授权 Screenshot Repair，同时不向 MCP 授予源码写入权限。Agent 可以
+复现 Baseline/Candidate 的六道 Gate 证据，并为一个 Generated Literal Property 准备内容寻址
+Repair；用户再通过独立的 `viewcompose-repair` 检查并确认精确 Diff。该能力包含 Atomic Apply、
+Crash Recovery、不可变 Receipt、Post-apply Verification，以及显式、Conflict-safe Rollback；
+不提供 Unattended、Whole-file、任意源码、Commit、Push 或 Pull Request 路径。
 
 该 Package 还携带隔离 Harness，使用已发布 Maven Artifact 编译工具生成源码，并在不执行
 Consumer Project Gradle Build 的前提下渲染和诊断生成页面。静态证据绝不会被描述成已编译或已

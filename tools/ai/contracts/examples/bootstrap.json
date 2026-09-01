@@ -4,7 +4,7 @@
   "lastVerified": "2026-09-01",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "nodeEngine": ">=24.19.0",
     "binary": "ai-tooling",
     "installScripts": false,
@@ -50,7 +50,7 @@
     "client": "codex",
     "mcpPath": "project-relative configuration path",
     "skillRoot": "project-relative Skill root",
-    "skillCount": 6,
+    "skillCount": 8,
     "durableInstallRoot": "verified content-addressed cache path",
     "prerequisites": ["Node.js >=24.19.0"],
     "readiness": "project-bound-ready",

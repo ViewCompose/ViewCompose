@@ -2,13 +2,13 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: d73ade9ca56ff1d69919722effdc6669f7a2887dc1129da2e6f9665959d4f812
+translation_source_hash: fb2c8ce9fe9c80b4b074c8cc892b328f76e0ea23ed036a960a95eb2fee4a4315
 translation_status: current
 ---
 
 # AI 接入
 
-ViewCompose 把机器可读 API Reference、14 个本地 MCP 工具和 7 个 Agent Skill 作为一个
+ViewCompose 把机器可读 API Reference、15 个本地 MCP 工具和 8 个 Agent Skill 作为一个
 由不可变 GitHub Release 支持的精确版本 npm Package 发布。开发者只需一条命令，就能让 Codex、
 Claude Code 或 Cursor 接入全新或已有 Android Project。即使要执行 Kotlin 编译和生成页面的
 Preview 证据，也不要求全局安装、ViewCompose Checkout、本地构建 Package、Provider Key 或
@@ -19,21 +19,22 @@ Coding Client 仍然负责模型、Credential、对话和用户授权的源码�
 
 ## 一条命令完成安装
 
-Release `0.6.0` 已公开发布。请使用它的精确 Selector，确保安装的工具、Skill、Knowledge Pack
-与框架 Profile 始终属于同一个已验证版本；不要改用浮动 Selector。
+Release Candidate `0.7.0` 已冻结等待发布。不可变 GitHub Release 公开后，请使用它的精确
+Selector，确保安装的工具、Skill、Knowledge Pack 与框架 Profile 始终属于同一个已验证版本；
+不要改用浮动 Selector。
 
 在 Android Project 的物理根目录执行以下任意一条命令：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client codex
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client codex
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client claude-code
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client claude-code
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 init --client cursor
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client cursor
 ```
 
 `init` 会解析当前物理目录，在任何写入前检测精确 ViewCompose Dependency Vector，把已验证 Package
@@ -53,7 +54,7 @@ API 查询、生成、静态验证和 Project 分析只要求 Node.js 24.19.0 �
 9.3.1 Wrapper 与固定 Build Harness，用户无需安装 Gradle，也无需让现有 Project 的 AGP/Kotlin
 版本与工具链对齐。Bootstrap 只写入 Project 接入面与操作系统用户 Cache；不要为此使用 `sudo`。
 
-### `0.6.0` 的精确框架版本绑定
+### `0.7.0` 的精确框架版本绑定
 
 `init` 不会执行 Project Gradle Logic，而是读取 Project 中独立版本化的 `com.viewcompose`
 Coordinate。它接受精确 Literal、默认 `libs.versions.toml` 中实际使用的 Entry，以及 Dependency
@@ -63,7 +64,7 @@ Pack；并在安装 Skill 前把 Content-addressed Profile ID 写入 MCP Environ
 
 不含 ViewCompose Dependency 的 Project 属于新项目，会选择该 Release 最新稳定 Profile。Dynamic、
 互相冲突、不支持或其他无法解析的版本——包括存在 ViewCompose Import 却没有 Dependency Identity——
-都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。`0.6.0` Profile 表示当前
+都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。`0.7.0` Profile 表示当前
 已发布 Artifact Vector；旧版本 Vector 只有在某个 Release 明确携带匹配 Profile 后才会升级。
 
 ## 确认安装状态
@@ -72,7 +73,7 @@ Pack；并在安装 Skill 前把 Content-addressed Profile ID 写入 MCP Environ
 版本与客户端选项：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` 表示 MCP Entry 与全部 Skill 都和已安装 Release 一致，物理 Project 根目录
@@ -110,11 +111,55 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
 - 对 Screenshot 生成页面执行编译、Preview 渲染、语义比对，以及符合条件时的精确 Pixel 比对；
 - 离线 Figma Export 检查、确定性 ViewCompose Kotlin 与可再分发 PNG 生成、编译、Preview
   渲染，以及有界的结构、语义、几何和 Asset 比较；
-- API 查询、页面创建、XML 转换、Figma Import、Review、验证和布局调试共 7 个 Workflow；
-  每个 Workflow 只保留实际取得的证据等级。
+- 为一个精确 Generated Kotlin Literal 准备人工授权 Screenshot 修复，并由独立 Terminal-only
+  Host 执行 Apply、Recovery 与 Rollback；
+- API 查询、页面创建、XML 转换、Figma Import、Screenshot Repair、Review、验证和布局调试共
+  8 个 Workflow；每个 Workflow 只保留实际取得的证据等级。
 
 证据等级依次为 `knowledge`、`static`、`compiled`、`rendered` 和 `compared`。静态结果不证明
 编译通过，生成 Kotlin 也不证明页面已渲染或达到视觉一致。
+
+## 人工授权 Screenshot 修复
+
+Release Candidate `0.7.0` 新增 `prepare_screenshot_repair`、
+`viewcompose-repair-screenshot` Skill 与独立的 `viewcompose-repair` Executable。Agent 通过 MCP
+复现 Baseline/Current 的六道 Gate 证据、导出一个严格改善的 Rollback Proposal，并存储一份
+内容寻址的惰性 Request；MCP 不写 Project 源码。
+
+首个公开 Edit 子集只修改一个 Generated Kotlin Literal `text` 或 `hint` Property。Whole-file
+Replacement、Raw Patch、Import、Declaration、Callback、任意源码、多文件，以及 Profile、Root、
+Symlink、Hard Link、Preimage、Span、Candidate 或 Diff Drift 都会 Fail closed。准备 Request 前，
+Proposal Candidate 必须通过 Safety、Compilation、Preview、Semantic、Structure 与符合条件的
+Exact-pixel Gate。
+
+让 Agent 使用 `$viewcompose-repair-screenshot`。它会返回 Request Fingerprint 与 Review 命令：
+
+```bash
+viewcompose-repair show <request-fingerprint> --pretty
+```
+
+检查完整 Diff 与证据后，在同一物理 Project 根目录执行：
+
+```bash
+viewcompose-repair apply <request-fingerprint> --pretty
+```
+
+命令要求用户在 Controlling Terminal 输入屏幕显示的精确 Suffix。不存在 `--yes`、stdin、
+Environment Variable、Token、Reusable Grant 或 MCP 确认路径。Recovery Byte 与 Hash-chained
+Journal 位于 Project 外、只有 Owner 可读写的操作系统 User-state 目录。Host 使用 No-follow、
+Beneath-root、Directory-handle Relative 的 Atomic Replace，持久同步并重新读取已提交 Byte，随后
+针对该 Byte 重跑五类 Post-apply Evidence。
+
+如果 Process 中断，执行 `viewcompose-repair recover <request-fingerprint> --pretty`。Recovery
+不会猜测或静默回滚：只会报告未变化的 Preimage、协调精确 Candidate，或在 Conflict 时停止。
+Post-apply Validation 失败后 Candidate 会保留，避免覆盖随后发生的用户 Edit。只有用户再次确认
+`viewcompose-repair rollback <request-fingerprint> --pretty`，才允许恢复 Recovery Copy；若当前
+文件已不再精确等于 Candidate，Rollback 会拒绝执行。
+
+当前人工授权 Host 需要 POSIX Controlling Terminal、JDK 17 或 21，以及能够证明安全
+Directory-handle Relative Atomic Replace 与持久目录同步语义的 File System。不支持的 Host 会在
+源码写入前失败。该能力不会 Commit、Push、创建 Pull Request、修复任意 Kotlin，也不能防御已经
+控制用户 OS Account 与 Terminal 的攻击者。
 
 ## 离线 Figma 转 ViewCompose
 
@@ -223,7 +268,7 @@ RGBA 比对。直接调用 `render_preview` 和 `diagnose_layout` 仍只适用�
 用一条命令检查、下载并迁移到最新兼容的工具 Release：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 upgrade --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 upgrade --client <codex|claude-code|cursor>
 ```
 
 该命令先检测 Project 版本，并且只检查不可变的 `ai-tooling-v<semver>` Release。它会跳过框架
@@ -240,7 +285,7 @@ Dependency。精确版本 Bootstrap 会沿着已验证的受管理 MCP Entry 找
 删除当前 Project 接入：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.6.0 uninstall --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.7.0 uninstall --client <codex|claude-code|cursor>
 ```
 
 该命令只删除精确的 ViewCompose MCP Entry 与规范 Skill 字节，无关客户端设置和文件会保留。
@@ -314,12 +359,13 @@ Alias。公开验证已经通过，`bootstrap` 标签也已删除。早期版本
 `0.4.0` 已弃用并明确指向 `0.4.1`，普通稳定 SemVer Range 仍不会选中
 `0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在任何稳定 Tag 创建前撤销。
 Release `0.5.0` 保留该接入修正，并新增上文所述的版本化、高置信度 Project 分析契约。
-公开 `0.6.0` 保留该 Analyzer，并新增上文所述的离线 Figma 契约。请使用精确 Selector
-`@viewcompose/ai-tooling@0.6.0`。
+公开 `0.6.0` 保留该 Analyzer，并新增上文所述的离线 Figma 契约。Release Candidate `0.7.0`
+新增人工授权 Repair 契约；其不可变 Release 公开后，请使用精确 Selector
+`@viewcompose/ai-tooling@0.7.0`。
 
 | 现象 | 处理方式 |
 | --- | --- |
-| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并使用已发布的字面量 `@viewcompose/ai-tooling@0.6.0`；不要替换为 `latest`。 |
+| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并在 Release 公开后使用字面量 `@viewcompose/ai-tooling@0.7.0`；不要替换为 `latest`。 |
 | `doctor` 报告 `repair-required` | 只有现有文件未修改时才重新运行 `init`；否则先检查报告中的冲突。 |
 | `doctor` 报告 `host-prerequisites-required` | 安装 JDK 17 或 21 与 Android SDK Platform 36 后重新运行 `doctor`；无需另装 Gradle。 |
 | `upgrade` 返回 `no-compatible-update` | 保持当前接入不变。当前还没有已发布的工具 Release 为该 Project 提供精确框架 Profile；不要改为安装全局最新 Package。 |

@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-source-application-request-v1.schema.json",
+  "title": "ViewCompose attended screenshot source-application request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "nonce",
+    "createdAt",
+    "expiresAt",
+    "project",
+    "edit",
+    "lineage",
+    "authorization",
+    "recovery",
+    "policy",
+    "requestFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "screenshot-source-application-request"},
+    "status": {"const": "prepared"},
+    "nonce": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "createdAt": {"$ref": "#/$defs/timestamp"},
+    "expiresAt": {"$ref": "#/$defs/timestamp"},
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "physicalRootFingerprint",
+        "frameworkProfileFingerprint",
+        "relativePath",
+        "fileIdentity",
+        "encoding",
+        "preimage"
+      ],
+      "properties": {
+        "physicalRootFingerprint": {"$ref": "#/$defs/sha256"},
+        "frameworkProfileFingerprint": {"$ref": "#/$defs/sha256"},
+        "relativePath": {"$ref": "#/$defs/kotlinPath"},
+        "fileIdentity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "key", "linkCount"],
+          "properties": {
+            "kind": {"const": "regular-file"},
+            "key": {"type": "string", "pattern": "^[a-z0-9][a-z0-9:._-]{0,255}$"},
+            "linkCount": {"const": 1}
+          }
+        },
+        "encoding": {"const": "utf-8"},
+        "preimage": {"$ref": "#/$defs/contentIdentity"}
+      }
+    },
+    "edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "nodeId",
+        "propertyName",
+        "byteStart",
+        "byteEnd",
+        "expectedSpan",
+        "replacement",
+        "candidate",
+        "diff"
+      ],
+      "properties": {
+        "kind": {"const": "replace-generated-property-value"},
+        "nodeId": {"$ref": "#/$defs/stableId"},
+        "propertyName": {"enum": ["text", "hint"]},
+        "byteStart": {"type": "integer", "minimum": 0, "maximum": 1048576},
+        "byteEnd": {"type": "integer", "minimum": 1, "maximum": 1048576},
+        "expectedSpan": {"$ref": "#/$defs/contentIdentity"},
+        "replacement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["encoding", "data", "bytes", "sha256"],
+          "properties": {
+            "encoding": {"const": "base64"},
+            "data": {
+              "type": "string",
+              "maxLength": 87384,
+              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+            },
+            "bytes": {"type": "integer", "minimum": 1, "maximum": 65536},
+            "sha256": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        "candidate": {"$ref": "#/$defs/contentIdentity"},
+        "diff": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "text", "sha256"],
+          "properties": {
+            "format": {"const": "unified-v1"},
+            "text": {"type": "string", "minLength": 1, "maxLength": 131072},
+            "sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputDesignIrFingerprint",
+        "resultDesignIrFingerprint",
+        "changeFingerprint",
+        "proposalFingerprint",
+        "authorizationValidationFingerprint",
+        "patchOutputFingerprint",
+        "baselineEvidenceFingerprint",
+        "candidateEvidenceFingerprint",
+        "preApplyEvidenceFingerprint"
+      ],
+      "properties": {
+        "inputDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "resultDesignIrFingerprint": {"$ref": "#/$defs/sha256"},
+        "changeFingerprint": {"$ref": "#/$defs/sha256"},
+        "proposalFingerprint": {"$ref": "#/$defs/sha256"},
+        "authorizationValidationFingerprint": {"$ref": "#/$defs/sha256"},
+        "patchOutputFingerprint": {"$ref": "#/$defs/sha256"},
+        "baselineEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "candidateEvidenceFingerprint": {"$ref": "#/$defs/sha256"},
+        "preApplyEvidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "confirmationSuffix", "singleUse", "bypassAllowed"],
+      "properties": {
+        "mode": {"const": "controlling-tty-exact-request"},
+        "confirmationSuffix": {"type": "string", "pattern": "^[A-F0-9]{12}$"},
+        "singleUse": {"const": true},
+        "bypassAllowed": {"const": false}
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "sourceControl",
+        "permissions",
+        "preimageSha256",
+        "candidateSha256",
+        "rollbackTargetSha256"
+      ],
+      "properties": {
+        "location": {"const": "platform-user-state-outside-project"},
+        "sourceControl": {"const": false},
+        "permissions": {"const": "owner-only"},
+        "preimageSha256": {"$ref": "#/$defs/sha256"},
+        "candidateSha256": {"$ref": "#/$defs/sha256"},
+        "rollbackTargetSha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sourceOwnership",
+        "maxFiles",
+        "maxEdits",
+        "arbitrarySource",
+        "wholeFileReplacement",
+        "mcpSourceWrite",
+        "shellExecution",
+        "networkAccess",
+        "automaticRollback",
+        "postApplyEvidence"
+      ],
+      "properties": {
+        "version": {"const": 1},
+        "sourceOwnership": {"const": "exact-tool-generated-kotlin"},
+        "maxFiles": {"const": 1},
+        "maxEdits": {"const": 1},
+        "arbitrarySource": {"const": false},
+        "wholeFileReplacement": {"const": false},
+        "mcpSourceWrite": {"const": false},
+        "shellExecution": {"const": false},
+        "networkAccess": {"const": false},
+        "automaticRollback": {"const": false},
+        "postApplyEvidence": {
+          "const": ["static", "compiled", "rendered", "semantic-geometry", "eligible-pixels"]
+        }
+      }
+    },
+    "requestFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "contentIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "sha256"],
+      "properties": {
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 1048576},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+    },
+    "kotlinPath": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._/-]+\\.kt$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}
