@@ -538,7 +538,7 @@ primary consumer path is one exact-version transactional operation run from the 
 root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client <codex|claude-code|cursor>
 ```
 
 `init` merges only the `viewcompose` MCP entry into `.codex/config.toml`, `.mcp.json`, or
@@ -555,7 +555,7 @@ paths never depend on npm's ephemeral extraction directory. An explicit physical
 Inspect the installed state and its honest capability boundary with:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 doctor --client <codex|claude-code|cursor>
 ```
 
 The default result is `project-bound-ready` when the exact configuration and Skills are present,
@@ -607,14 +607,14 @@ The public consumer launches the exact npm version, which remains provenance-bou
 immutable GitHub Release:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client <codex|claude-code|cursor>
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.4.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.4.1.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
@@ -636,8 +636,10 @@ searches arbitrary parent directories or silently upgrades static evidence.
 
 Release `0.2.0` packaged only `current-source` knowledge and remains historical evidence; never
 infer released-project compatibility for it. Release `0.3.0` introduced explicit released
-framework profiles. Release `0.4.0` retains that exact profile identity while adding the durable
-one-command npm bootstrap.
+framework profiles. Release `0.4.0` introduced the durable npm bootstrap, but its three named
+binaries left npm without a default executable for the documented shorthand. Release `0.4.1`
+retains the exact framework profile and adds the package-name `ai-tooling` alias for the existing
+transactional Agent entry point.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and
@@ -662,7 +664,11 @@ project or user-edited surface fails before replacement.
 
 AI package changes also enter `.github/workflows/ai-tooling-adoption.yml`, whose Linux, macOS, and
 Windows jobs verify all three clients from fresh paths containing spaces and non-ASCII characters,
-including npx cache deletion, durable MCP handshake, idempotence, and uninstall. Tags matching
+including npx cache deletion, durable MCP handshake, idempotence, and uninstall.
+The packed adoption command passes the archive directly to npm as the package spec, matching the
+public `npx @viewcompose/ai-tooling@<version> ...` executable-inference path; it does not name
+`viewcompose-agent` explicitly. This makes the default-bin contract part of every platform gate.
+Tags matching
 `ai-tooling-v*` enter `.github/workflows/ai-tooling-release.yml`. The workflow validates
 the tag against the frozen release contract, repeats the complete distribution gate from a clean
 checkout, refuses an existing Release, creates GitHub build-provenance attestations for the exact
@@ -680,8 +686,8 @@ accepted the package and signed provenance, but the workflow's immediate post-pu
 inside npm's approximately five-minute scan window and returned `E404`; the run was not repeated.
 The registry also assigned `latest` to the first package version despite `--tag bootstrap`, and
 authenticated npm 11.8.0 and 12.0.2 removal attempts both returned `400 Bad Request`. Stable
-publication must therefore replace `latest` with exact `0.4.0`, after which the `bootstrap` tag is
-removed while the prerelease version remains immutable history.
+`0.4.0` replaced the interim `latest`; corrective `0.4.1` replaces it again, after which the
+`bootstrap` tag is removed while both earlier versions remain immutable history.
 
 The one-time workflow and transformer are no longer part of the repository. npm trust relationship
 `37e878fb-a68c-4633-ad92-d98fdbafeb4a` binds `@viewcompose/ai-tooling` exactly to

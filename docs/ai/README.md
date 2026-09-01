@@ -12,7 +12,7 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - npm @viewcompose/ai-tooling 0.4.0 with GitHub Release ai-tooling-v0.4.0 provenance
+  - npm @viewcompose/ai-tooling 0.4.1 with GitHub Release ai-tooling-v0.4.1 provenance
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
@@ -42,15 +42,15 @@ validation evidence; it never embeds or contacts a model provider.
 Run exactly one of these commands from the physical root of the Android project:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client codex
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client codex
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client claude-code
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client claude-code
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client cursor
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client cursor
 ```
 
 `init` transactionally merges the `viewcompose` MCP entry and installs all six canonical Skills.
@@ -74,7 +74,7 @@ SDK platform 36. The release includes its own Gradle 9.3.1 wrapper and fixed bui
 do not install Gradle or align their project's AGP/Kotlin versions. The bootstrap writes only to the
 project integration surfaces and the operating system's user cache; never use `sudo` for it.
 
-### Exact framework-version binding in `0.4.0`
+### Exact framework-version binding in `0.4.1`
 
 `init` reads the project's independently versioned `com.viewcompose` coordinates without executing
 project Gradle logic. It accepts exact literals, used entries from the default
@@ -86,7 +86,7 @@ and generated Preview all load that same bundle.
 A project without a ViewCompose dependency is a new-project case and selects the Release's newest
 stable profile. Dynamic, conflicting, unsupported, or otherwise unresolved versions—including a
 ViewCompose import without dependency identity—fail before any project write. The tool does not
-silently change framework dependencies. The first `0.4.0` profile represents the current published
+silently change framework dependencies. The first `0.4.1` profile represents the current published
 Artifact vector; an older version vector remains unchanged until a Release explicitly carries its
 matching profile.
 
@@ -96,7 +96,7 @@ matching profile.
 package version and client choice from the project root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` means the MCP entry and every Skill match the installed release, the physical
@@ -149,7 +149,7 @@ Try this first request in the selected Agent:
 
 ## Deep evidence execution boundary
 
-Release `0.4.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
+Release `0.4.1` compiles generated Kotlin and renders generated screens against exact ViewCompose
 artifacts from Maven Central. A packaged content-addressed harness owns Gradle 9.3.1, AGP 9.1.1,
 Kotlin 2.2.10, Android 36, JVM target 11, and the allowlisted ViewCompose/Preview coordinates. The
 consumer project root is a read-only authorization boundary: the tooling does not execute its
@@ -177,7 +177,7 @@ rendering is a later, explicitly isolated capability.
 Check, download, and migrate to the newest compatible tooling Release with one command:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 upgrade --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 upgrade --client <codex|claude-code|cursor>
 ```
 
 The command detects the project versions first and inspects only immutable `ai-tooling-v<semver>`
@@ -196,7 +196,7 @@ upgrade, or remove the active side-by-side package.
 Remove the current project integration:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 uninstall --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 uninstall --client <codex|claude-code|cursor>
 ```
 
 The command removes only the exact ViewCompose MCP entry and canonical Skill bytes; unrelated client
@@ -206,7 +206,7 @@ is retained for integrity and compatible reuse.
 
 ## Integrity and troubleshooting
 
-The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.0)
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.1)
 contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
 checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
 Attestations for all three assets. See GitHub's
@@ -216,15 +216,17 @@ for an optional independent provenance check.
 The npm version history also contains `0.4.0-bootstrap.0`. It is a one-time, provenance-bearing
 prerelease used only to create the package identity required before npm could bind the stable
 GitHub Trusted Publisher. npm assigned the first package version to `latest` as well as
-`bootstrap`, and rejected authenticated attempts to remove that default intermediate tag; stable
-publication replaces it with exact `0.4.0`, then removes `bootstrap`. The prerelease is excluded
-from ordinary stable semver ranges and is not a supported consumer entry point. Its temporary npm
-token and GitHub secret were revoked before the stable tag. Do not install or invoke the
-prerelease; use the exact stable `@viewcompose/ai-tooling@0.4.0` selector documented above.
+`bootstrap`, and rejected authenticated attempts to remove that default intermediate tag. Stable
+`0.4.0` replaced `latest`, but public acceptance found that npm could not infer a default executable
+from its three named binaries. Release `0.4.1` adds the package-name `ai-tooling` alias for the same
+transactional Agent entry point; after its public verification, the `bootstrap` tag is removed.
+Both earlier versions remain immutable audit history, and `0.4.0-bootstrap.0` remains excluded from
+ordinary stable semver ranges. The temporary npm token and GitHub secret were revoked before either
+stable tag. Use the exact stable `@viewcompose/ai-tooling@0.4.1` selector documented above.
 
 | Symptom | Action |
 | --- | --- |
-| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal `@viewcompose/ai-tooling@0.4.0` selector. Do not substitute `latest`. |
+| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal `@viewcompose/ai-tooling@0.4.1` selector. Do not substitute `latest`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
 | `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
 | `upgrade` returns `no-compatible-update` | Keep the current integration. No published tooling Release contains an exact framework profile for this project yet. Do not install a global-latest package as a workaround. |
