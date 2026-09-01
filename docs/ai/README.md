@@ -259,18 +259,28 @@ Attestations for all three assets. See GitHub's
 [artifact attestation verification guide](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)
 for an optional independent provenance check.
 
-Public release acceptance completed on 2026-09-01. Protected
-[run `33473341135`](https://github.com/ViewCompose/ViewCompose/actions/runs/33473341135)
-published `0.4.1` from exact tag commit
-`fec75d4842b99cf9a59eaa2ba6d169c2cfc37aa1` through the `ai-tooling-release` environment.
-The npm provenance predicate is SLSA v1 and names that tag, workflow, commit, environment, and run.
-All 3/3 GitHub assets passed attestation verification; the tarball SHA-256 is
-`4f1bcd8ab5ebb84a2c6775409511f045f8cb745b1b9576d08930c17318d794e4`, and a fresh npm download
-reproduced it exactly. Repository-external fresh-cache lifecycles reached
-`project-bound-ready` for Codex, Claude Code, and Cursor, then removed only their managed
-configuration and 18/18 total Skill copies. npm now exposes only `latest -> 0.4.1`; no
-`bootstrap` dist-tag or temporary release secret remains. Detailed denominators, limitations, and
-the interpreted conclusion are retained in the
+Public `0.5.0` acceptance completed on 2026-09-01. Protected
+[run `33486262197`](https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197)
+published the package from exact tag commit
+`99894e8220de78421c428a80b1d0f2b01c0f0f24` through the `ai-tooling-release` environment in
+9 minutes 14 seconds. npm exposes only `latest -> 0.5.0`. Its SLSA v1 provenance names
+`ViewCompose/ViewCompose`, `.github/workflows/ai-tooling-release.yml`,
+`refs/tags/ai-tooling-v0.5.0`, the GitHub-hosted builder, and that exact run. The 637,133-byte
+tarball has SHA-256 `a19e1c5680f34d744e313926af7d9081f51ea97e3ace64b6c732527d7104da04` and npm
+integrity
+`sha512-ffUtj1NwYZWx9JhlJEsw30AE+ZeQIDuMb1WaJ3r4CaOqzu1Y6F6EwO3NBIMSs6NkgSDrsLmi8JWGJ1GijwRSmg==`.
+All 3/3 GitHub assets passed checksum and attestation verification.
+
+Repository-external projects using the literal public selector reached `project-bound-ready` for
+Codex, Claude Code, and Cursor, installed 6/6 Skills per client, then removed only their managed
+configuration and 18/18 total Skill copies. The durable npm-installed analyzer returned schema v1,
+an exact released-profile match, static evidence, and the expected categorical-high
+`VC-AI-A11Y-IMAGE-DESCRIPTION` finding from a deliberately incomplete Image call. This is
+**improved** analyzer evidence relative to `0.4.1`, with the one-command onboarding contract
+unchanged. The public reproduction used one macOS host and did not launch proprietary Agent
+binaries; hosted CI separately verifies native bootstrap behavior on Linux, macOS, and Windows.
+Analyzer claims remain limited to the documented lexical boundary. Detailed denominators,
+limitations, and the interpreted conclusion are retained in the
 [active AI tooling plan](../project/plans/ai-verifiable-development-tooling.md).
 
 The npm version history also contains `0.4.0-bootstrap.0`. It is a one-time, provenance-bearing
@@ -280,9 +290,9 @@ GitHub Trusted Publisher. npm assigned the first package version to `latest` as 
 `0.4.0` replaced `latest`, but public acceptance found that npm could not infer a default executable
 from its three named binaries. Release `0.4.1` adds the package-name `ai-tooling` alias for the same
 transactional Agent entry point. Public verification passed, and the `bootstrap` tag has been
-removed. Both earlier versions remain immutable audit history, `0.4.0` is deprecated with an
-actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from ordinary stable
-semver ranges. The temporary npm token and GitHub secret were revoked before either stable tag.
+removed. The earlier versions remain immutable audit history, `0.4.0` is deprecated with an
+actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from ordinary stable semver
+ranges. The temporary npm token and GitHub secret were revoked before any stable tag.
 Release `0.5.0` retains that onboarding correction and adds the versioned high-confidence project
 analysis contract described above. Use the exact stable `@viewcompose/ai-tooling@0.5.0` selector
 documented above.

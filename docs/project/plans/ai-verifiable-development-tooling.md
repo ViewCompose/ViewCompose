@@ -19,7 +19,7 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: Release 0.4.1 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Its exact-version one-command bootstrap durably configures Codex, Claude Code, or Cursor, binds the released Knowledge Pack to the detected framework vector, and exposes source-free compile/Preview/layout evidence plus bounded XML and screenshot generation. Compose migration, deeper project diagnostics, Figma import, and public source repair remain unactivated.
+baseline: Release 0.5.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Its exact-version one-command bootstrap durably configures Codex, Claude Code, or Cursor, binds the released Knowledge Pack to the detected framework vector, and exposes source-free compile/Preview/layout evidence, bounded XML and screenshot generation, and versioned high-confidence read-only project analysis. Compose migration, Figma import, and public source repair remain unactivated.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
   - Extend the existing read-only analyze_project surface with a versioned finding contract, measurable high-confidence rules, explicit unsupported coverage, and audited suppressions.
@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Merge and publish @viewcompose/ai-tooling 0.5.0 through the protected OIDC release, then reproduce the versioned analyze_project result from a fresh public-registry install and record immutable provenance before starting Wave C Figma contract work.
+next_action: Freeze the Wave C offline Figma export envelope, provenance, asset, privacy, unsupported-semantics, and Design IR mapping contracts before implementing any adapter or direct provider integration.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -50,9 +50,10 @@ Wave A completed on 2026-09-01 with public `@viewcompose/ai-tooling@0.4.1`, exac
 one-command adoption for all three clients, protected OIDC provenance, and removal of temporary
 bootstrap authority and selectors. Product priority was then changed to maximize value for existing
 Android View users: enhanced analysis, Figma import, and attended screenshot repair now precede the
-lower-probability Compose migration path. The current execution boundary is the Wave B analyzer
-contract freeze; the chronological handoffs below remain evidence rather than competing next
-actions.
+lower-probability Compose migration path. Wave B completed with public
+`@viewcompose/ai-tooling@0.5.0` and installed-package reproduction of the versioned analyzer. The
+current execution boundary is the Wave C offline Figma contract freeze; the chronological handoffs
+below remain evidence rather than competing next actions.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
 
@@ -706,9 +707,55 @@ Conclusion: **improved**. Existing consumers retain their diagnostic codes while
 receive exact rule, profile, evidence, quality, suppression, and unsupported metadata. Limitations:
 the corpus measures only documented literal/lexical forms; it does not substantiate alias, star
 import, wrapper, transitive dependency, lifecycle, control/data-flow, performance, theme, unit,
-touch-target, Modifier-order, or arbitrary Kotlin semantic claims. The next action is the protected
-`0.5.0` publication and fresh public-install reproduction; Wave B remains open until that immutable
-evidence is merged.
+touch-target, Modifier-order, or arbitrary Kotlin semantic claims. The next action at this
+pre-release checkpoint was protected `0.5.0` publication and fresh public-install reproduction. The
+immutable evidence below supersedes that checkpoint and closes Wave B.
+
+#### Wave B public-release acceptance evidence (2026-09-01)
+
+PR [#266](https://github.com/ViewCompose/ViewCompose/pull/266) merged the four implementation
+slices at commit `99894e8220de78421c428a80b1d0f2b01c0f0f24` after hosted Linux, macOS, and
+Windows adoption, documentation, `qaPreview`, and `qaQuick` passed; the complete hosted `qaQuick`
+work took 29 minutes 14 seconds. Lightweight tag `ai-tooling-v0.5.0` resolves exactly to that merge.
+Protected [run `33486262197`](https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197)
+completed in 9 minutes 14 seconds through environment `ai-tooling-release`, rebuilt the distribution
+twice, attested the three exact assets, created the immutable
+[GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.5.0), and
+published npm `@viewcompose/ai-tooling@0.5.0` through the existing GitHub OIDC Trusted Publisher.
+
+The npm registry exposes only `latest -> 0.5.0`. Its SLSA v1 statement names repository
+`https://github.com/ViewCompose/ViewCompose`, workflow `.github/workflows/ai-tooling-release.yml`,
+ref `refs/tags/ai-tooling-v0.5.0`, GitHub-hosted builder, invocation
+`https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197/attempts/1`, and subject
+`pkg:npm/%40viewcompose/ai-tooling@0.5.0`. The 637,133-byte tarball has SHA-256
+`a19e1c5680f34d744e313926af7d9081f51ea97e3ace64b6c732527d7104da04` and npm integrity
+`sha512-ffUtj1NwYZWx9JhlJEsw30AE+ZeQIDuMb1WaJ3r4CaOqzu1Y6F6EwO3NBIMSs6NkgSDrsLmi8JWGJ1GijwRSmg==`.
+`manifest.json`, `SHA256SUMS`, and the tarball passed checksum verification and 3/3 GitHub
+attestation checks; their published SHA-256 digests are respectively
+`aac30848374ea8b990157f173841747e6548d4fd3c07a22c777d072b69004452`,
+`a8382cb4a60b4a1ed62a68ef818de46cee1533d90518dc0f48c36303e8c8c51e`, and the tarball digest
+above.
+
+Repository-external fresh projects then ran the literal public-registry
+`npx --yes @viewcompose/ai-tooling@0.5.0` selector. Codex, Claude Code, and Cursor each completed
+`init`, reached `project-bound-ready` in `doctor`, installed 6/6 canonical Skills, and completed
+`uninstall` with only their managed configuration and 18/18 total Skill copies removed. The Codex
+fixture resolved the exact released profile
+`895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064`. Its durable npm-installed
+binary executed `analyze_project` directly and returned `success`, static evidence, schema v1,
+exact-profile match, Knowledge Bundle fingerprint
+`9ee4560b30f2d26378314d5b8c8acf20343662f5a8c1d5bfc0442944c4d09660`, and one unsuppressed
+categorical-high `VC-AI-A11Y-IMAGE-DESCRIPTION` finding for the deliberately incomplete Image call.
+
+Relative to public `0.4.1`, the normalized change is from unversioned inventory/legacy diagnostics
+to five installed project-level rules with stable rule versions, exact framework applicability,
+quality denominators, audited suppression, and explicit unsupported coverage, while one-command
+adoption and all legacy diagnostics remain compatible. Conclusion: **improved**. Limitations: the
+public reproduction used one macOS host and did not launch or authenticate proprietary Agent
+binaries; the hosted matrix covers OS-native bootstrap behavior, and the analyzer evidence covers
+only the documented lexical boundary rather than aliases, wrappers, dynamic expressions, or Kotlin
+semantics. Wave B is complete. The next action is Wave C contract freeze; no Figma adapter or source
+write is authorized by this evidence.
 
 ### Execution Wave C — provider-neutral Figma design-tree adapter
 

@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: cdbae10d4420161670f78bdf849f01d5adbea467f341ee018195673efa317d25
+translation_source_hash: cd6f66b71c46c38ea29263c6d602b711769e4c0255950059b4c35a360f1c83ed
 translation_status: current
 ---
 
@@ -216,17 +216,25 @@ Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创�
 如需独立校验 Provenance，请参考 GitHub 的
 [Artifact Attestation 校验指南](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)。
 
-公开 Release 验收已于 2026-09-01 完成。受保护的
-[Run `33473341135`](https://github.com/ViewCompose/ViewCompose/actions/runs/33473341135)
+公开 `0.5.0` 验收已于 2026-09-01 完成。受保护的
+[Run `33486262197`](https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197)
 通过 `ai-tooling-release` Environment，从精确 Tag Commit
-`fec75d4842b99cf9a59eaa2ba6d169c2cfc37aa1` 发布 `0.4.1`。npm Provenance Predicate 为
-SLSA v1，并且精确记录该 Tag、Workflow、Commit、Environment 与 Run。全部 3/3 个 GitHub
-Asset 都通过 Attestation 校验；Tarball 的 SHA-256 为
-`4f1bcd8ab5ebb84a2c6775409511f045f8cb745b1b9576d08930c17318d794e4`，全新 npm 下载结果
-与它完全一致。在 Repository 外使用独立全新 Cache 执行生命周期后，Codex、Claude Code 与
-Cursor 均达到 `project-bound-ready`，随后只删除各自受管理配置和总计 18/18 个 Skill。npm
-目前只暴露 `latest -> 0.4.1`，不再存在 `bootstrap` Dist-tag 或临时 Release Secret。详细
-分母、限制与解释后的结论保存在
+`99894e8220de78421c428a80b1d0f2b01c0f0f24` 发布 Package，用时 9 分 14 秒。npm 目前只
+暴露 `latest -> 0.5.0`。SLSA v1 Provenance 精确记录 `ViewCompose/ViewCompose`、
+`.github/workflows/ai-tooling-release.yml`、`refs/tags/ai-tooling-v0.5.0`、GitHub-hosted Builder
+与该 Run。637,133 字节 Tarball 的 SHA-256 为
+`a19e1c5680f34d744e313926af7d9081f51ea97e3ace64b6c732527d7104da04`，npm Integrity 为
+`sha512-ffUtj1NwYZWx9JhlJEsw30AE+ZeQIDuMb1WaJ3r4CaOqzu1Y6F6EwO3NBIMSs6NkgSDrsLmi8JWGJ1GijwRSmg==`。
+全部 3/3 个 GitHub Asset 都通过 Checksum 与 Attestation 校验。
+
+在 Repository 外使用字面量公开 Selector 的 Project 中，Codex、Claude Code 与 Cursor 均达到
+`project-bound-ready`，每个 Client 安装 6/6 个 Skill，随后只删除各自受管理配置和总计 18/18
+个 Skill Copy。持久 npm 安装目录中的 Analyzer 返回 Schema v1、精确 Released Profile 匹配、
+Static Evidence，以及故意不完整 Image 调用对应的预期高置信度
+`VC-AI-A11Y-IMAGE-DESCRIPTION` Finding。相较 `0.4.1`，Analyzer Evidence 结论为
+**improved**，单命令接入契约保持不变。公开复现只使用一台 macOS Host，且没有启动或认证专有
+Agent Binary；Hosted CI 另行验证 Linux、macOS 与 Windows 的原生 Bootstrap 行为。Analyzer
+结论仍只适用于文档声明的 Lexical Boundary。详细分母、限制与解释后的结论保存在
 [当前 AI 工具计划](../project/plans/ai-verifiable-development-tooling.md)中。
 
 npm 版本历史中还包含 `0.4.0-bootstrap.0`。它是一次性的、带 Provenance 的预发布 Package，
@@ -234,9 +242,9 @@ npm 版本历史中还包含 `0.4.0-bootstrap.0`。它是一次性的、带 Prov
 创建 Package 时同时把该版本分配给 `latest` 与 `bootstrap`，并拒绝了经过身份验证的默认标签
 删除请求。稳定版 `0.4.0` 已替换 `latest`，但公开验收发现 npm 无法从它的 3 个命名 Binary 中
 推断默认入口。Release `0.4.1` 为同一个事务化 Agent 入口增加与 Package 名匹配的 `ai-tooling`
-Alias。公开验证已经通过，`bootstrap` 标签也已删除。两个旧版本都保留为不可变审计历史；
+Alias。公开验证已经通过，`bootstrap` 标签也已删除。早期版本都保留为不可变审计历史；
 `0.4.0` 已弃用并明确指向 `0.4.1`，普通稳定 SemVer Range 仍不会选中
-`0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在两个稳定 Tag 创建前撤销。请使用
+`0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在任何稳定 Tag 创建前撤销。
 Release `0.5.0` 保留该接入修正，并新增上文所述的版本化、高置信度 Project 分析契约。请使用
 上文记录的精确稳定 Selector `@viewcompose/ai-tooling@0.5.0`。
 
