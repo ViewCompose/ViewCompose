@@ -990,7 +990,7 @@ inventory, 3/3 client profiles with 24/24 exact Skill copies, and 2/2 installed 
 versions. Native macOS bootstrap passed 3/3 clients, 3/3 handshakes, and 4/4 path cases. The Skill
 structure validator also accepted the eighth Skill.
 
-The final local tarball is 694,184 bytes with SHA-256
+The final local tarball before the TTY correction was 694,184 bytes with SHA-256
 `b394ce612d73e3d76eb03bd9f86e26f4b27810e4aab5654122d5814ff8f0b13b`; all 3/3 candidate Release
 assets passed the frozen inventory and checksum verifier. Repository gates passed on JDK 21:
 `verifyAiToolingRelease`, documentation structure/language/governance/translation checks,
@@ -1007,6 +1007,30 @@ loss; Windows has no attended host in v1; the public registry package, protected
 repository-external human-confirmed apply/recovery/rollback are not yet evidence. The next action
 is to merge the release candidate, publish only from `ai-tooling-v0.7.0`, reproduce the exact public
 package outside this repository, and record immutable evidence before closing Wave D.
+
+The first pre-tag repository-external run installed the exact 694,184-byte candidate from merge
+`6edaa4b6e91099c23d7fb96155bcebda82dc61fa`. Package identity and the `viewcompose-repair` binary
+were present, and `show` reproduced the prepared target, preimage/candidate hashes, complete
+single-line diff, evidence identity, expiry, and confirmation suffix. The required unattended
+negative then preserved the preimage byte-for-byte, but 0/1 invocations returned the promised
+structured CLI diagnostic: opening `/dev/tty` through an asynchronous stream emitted an unhandled
+`ENXIO` event and exited 1 before the CLI boundary could map it. The conclusion is **mixed**:
+source-write denial worked, while diagnostic containment regressed from the contract. Publication
+remains blocked.
+
+The release candidate now awaits an explicit `FileHandle` opened with `r+` before constructing its
+read/write streams, so missing controlling-terminal access is caught and mapped to
+`VC-AI-SOURCE-APPLICATION-TTY-REQUIRED`; cleanup also tolerates every partially initialized handle.
+A deterministic injected-`ENXIO` case passes, the focused transaction/CLI suite passes 9/9, and the
+complete AI suite passes 374/374. This correction has **improved** diagnostic containment with
+**no material Android runtime behavior change**. Its limitation is that the repacked installed
+candidate must still complete human-confirmed crash apply, recovery, later-edit rollback refusal,
+and successful rollback. The repacked 694,233-byte tarball has SHA-256
+`3bb47595e70eb8835f234b44e49be628bb2bd61fd03d16a2f9886482e5f5ec15`; its installed transaction
+source matched the candidate byte-for-byte. The real no-TTY invocation now passes 1/1: it exits 2
+with only `VC-AI-SOURCE-APPLICATION-TTY-REQUIRED`, and the target remains the exact
+`1a504684dae2593c74de6f177dd3e57cc825e03b66d98671cdfabe1ca319e104` preimage. The remaining
+human-confirmed operations are the exact next action before any tag can exist.
 
 ### Per-wave pull request and release discipline
 

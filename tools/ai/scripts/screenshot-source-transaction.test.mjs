@@ -10,6 +10,7 @@ import {fingerprintRepairValue} from './repair-orchestrator.mjs';
 import {fingerprintSourceBytes} from './screenshot-source-edit.mjs';
 import {
   applyPreparedSourceApplication,
+  confirmFromControllingTty,
   recoverPreparedSourceApplication,
   rollbackPreparedSourceApplication,
   storePreparedSourceApplication,
@@ -19,6 +20,20 @@ const goldenPath = new URL(
   '../evaluation/fixtures/visual/screenshot-generation/wireframe.generated.kt',
   import.meta.url,
 );
+
+test('maps an unavailable controlling terminal to one structured no-write rejection', async () => {
+  await assert.rejects(confirmFromControllingTty({
+    operation: 'apply',
+    suffix: 'ABCDEF012345',
+    summary: 'Acceptance fixture',
+  }, {
+    openTty: async () => {
+      const error = new Error('no controlling terminal');
+      error.code = 'ENXIO';
+      throw error;
+    },
+  }), {code: 'VC-AI-SOURCE-APPLICATION-TTY-REQUIRED'});
+});
 
 async function preparedFixture(root, relativePath, source) {
   const designIr = {
