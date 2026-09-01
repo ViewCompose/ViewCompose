@@ -28,6 +28,10 @@
     "screenshotRepairAppliedResultHandoff": 1,
     "evaluationCorpus": 1,
     "metricContract": 1,
+    "projectAnalysis": 1,
+    "projectAnalysisCatalog": 1,
+    "projectAnalysisCorpus": 1,
+    "projectAnalysisQuality": 1,
     "bootstrap": 1
   },
   "compatibility": {

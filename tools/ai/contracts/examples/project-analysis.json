@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "profile": {
+    "versionLane": "released",
+    "identity": "895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064",
+    "match": "exact"
+  },
+  "scan": {
+    "files": 3,
+    "bytes": 1024,
+    "kotlinFiles": 1,
+    "gradleFiles": 1,
+    "xmlFiles": 0,
+    "excludedEntries": 2,
+    "unsupported": []
+  },
+  "catalog": {
+    "catalogVersion": "viewcompose-project-analysis-rules-v1",
+    "rules": [
+      {
+        "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+        "ruleVersion": 1,
+        "title": "Declare image content description intent",
+        "family": "accessibility",
+        "severity": "warning",
+        "confidence": "high",
+        "suppressible": true,
+        "mechanism": "An exact governed Image call omits the contentDescription named argument.",
+        "suggestion": "Provide meaningful text, or use explicit null only when the image is decorative.",
+        "evidence": ["guide.image-loading", "image.foundation"]
+      }
+    ]
+  },
+  "quality": {
+    "qualityVersion": "viewcompose-project-analysis-quality-v1",
+    "corpusVersion": "viewcompose-project-analysis-corpus-v1",
+    "rules": [
+      {
+        "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+        "ruleVersion": 1,
+        "positiveOpportunities": 25,
+        "eligibleNegativeOpportunities": 50,
+        "unsupportedOpportunities": 5,
+        "precision": 1,
+        "recall": 1
+      }
+    ]
+  },
+  "summary": {"total": 1, "unsuppressed": 1, "suppressed": 0, "unsupported": 0},
+  "findings": [
+    {
+      "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "ruleVersion": 1,
+      "severity": "warning",
+      "confidence": "high",
+      "message": "ViewCompose Image omits contentDescription intent.",
+      "mechanism": "An exact governed Image call omits the contentDescription named argument.",
+      "evidence": ["guide.image-loading", "image.foundation"],
+      "suggestion": "Provide meaningful text, or use explicit null only when the image is decorative.",
+      "artifactId": "viewcompose-ui-foundation",
+      "capabilityId": "image.foundation",
+      "framework": {
+        "versionLane": "released",
+        "identity": "895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064"
+      },
+      "source": {"path": "app/src/main/java/sample/Screen.kt", "startLine": 12, "startColumn": 5},
+      "suppression": {"state": "none"}
+    }
+  ]
+}

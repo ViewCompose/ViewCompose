@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "viewcompose-project-analysis-rules-v1",
+  "applicability": {
+    "mode": "active-exact-profile",
+    "versionLanes": ["current-source", "released"]
+  },
+  "rules": [
+    {
+      "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "ruleVersion": 1,
+      "title": "Declare image content description intent",
+      "family": "accessibility",
+      "severity": "warning",
+      "confidence": "high",
+      "suppressible": true,
+      "mechanism": "An exact governed Image call omits the contentDescription named argument.",
+      "suggestion": "Provide meaningful text, or use explicit null only when the image is decorative.",
+      "evidence": ["guide.image-loading", "image.foundation"],
+      "supportedSyntax": ["Exact unaliased ViewCompose Image import with a balanced argument list."],
+      "unsupportedSyntax": ["Aliases, wrappers, malformed calls, and inferred overloads."]
+    }
+  ]
+}
