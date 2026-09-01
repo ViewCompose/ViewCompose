@@ -62,6 +62,22 @@
       "mutationPolicy": "user-requested-project-writes"
     },
     {
+      "id": "viewcompose-import-figma",
+      "path": "skills/viewcompose-import-figma/SKILL.md",
+      "requiredTools": [
+        "convert_figma_to_viewcompose"
+      ],
+      "conditionalTools": [
+        "analyze_project",
+        "get_component_reference",
+        "get_sample",
+        "validate_code"
+      ],
+      "minimumEvidence": "static",
+      "maximumEvidence": "compared",
+      "mutationPolicy": "user-requested-project-writes"
+    },
+    {
       "id": "viewcompose-review",
       "path": "skills/viewcompose-review/SKILL.md",
       "requiredTools": [

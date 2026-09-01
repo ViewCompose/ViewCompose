@@ -144,6 +144,7 @@ npm --silent --prefix tools/ai run tool -- --pretty < request.json
 It currently dispatches `get_api_reference`, `get_component_reference`, `search_component`,
 `get_sample`, `validate_code` (`static` or `compile`), `render_preview`, `diagnose_layout`, and
 `analyze_project`, plus `convert_xml_to_viewcompose` (`generate`, `compile`, or `render`). The
+same envelope also exposes `convert_figma_to_viewcompose` (`inspect`, `generate`, or `verify`). The
 request must name the exact `framework.versionLane` and
 `framework.identity` from `generated/current-source/manifest.json`; input, output, and timeout
 limits are mandatory and are propagated to the underlying adapter. Stdout contains only one JSON
@@ -262,6 +263,25 @@ Preview configuration. It permits only the current one-child `TextField` wrapper
 returns reason-coded findings and retains only `rendered` evidence. Placeholder rendering,
 state/event behavior, traversal, style, typography, pixels, touch targets, and other device
 configurations remain explicit non-claims.
+
+Offline Figma import v1 is implemented as the public `convert_figma_to_viewcompose` tool. It
+accepts only strict, self-contained `viewcompose-figma-export/1` JSON from a caller-controlled or
+separately reviewed offline adapter. The package includes no Figma login, access token, REST client,
+plugin runner, `.fig` parser, URL fetch, provider adapter, or source-write authority. The importer
+rejects duplicate JSON keys, active or credential-shaped data, URLs, unsafe paths, changed asset
+bytes, invalid media signatures, undeclared references, cycles, detached nodes, and bounded-size
+violations before generation.
+
+`inspect` emits Design IR v2 with exact document/revision identity, privacy declarations,
+component/variant/token/style/font lineage, resource identities, a decision ledger covering every
+declared fact, explicit unsupported records, and no embedded asset bytes. `generate` requires one
+root and no error-level unsupported decision, then lowers the accepted non-wrapping
+Row/Column/Box, generic-system-font Text, solid-color, and explicitly accessible redistributable PNG
+subset into deterministic virtual Kotlin and resource files. `verify` reuses the packaged Maven
+compiler and generated Preview profile, then compares structure, semantics, geometry, and assets.
+Style remains incomplete, and pixel/perceptual categories remain not applicable because no trusted
+Figma reference render is accepted. A compared result therefore cannot be described as visual or
+pixel parity.
 
 Screenshot preprocessing v1 is implemented as the public `prepare_screenshot` tool. It accepts only one
 embedded, canonical-base64 PNG with declared byte count, SHA-256, dimensions, density, font scale,
@@ -504,10 +524,10 @@ The preferred protocol follows the
 may call `server/discover` and every request must carry `io.modelcontextprotocol/protocolVersion` and
 `io.modelcontextprotocol/clientCapabilities` in `params._meta`. For clients that have not yet
 migrated, the same process accepts only the frozen `2025-11-25` `initialize`/`initialized`
-lifecycle; it never silently downgrades either era. `tools/list` returns thirteen tools in stable
+lifecycle; it never silently downgrades either era. `tools/list` returns fourteen tools in stable
 order: the four retrieval tools, `validate_code`, `render_preview`, `diagnose_layout`, and
-`analyze_project`, followed by `convert_xml_to_viewcompose`, `prepare_screenshot`, and
-`validate_screenshot_inference`, then `resolve_screenshot_inference` and
+`analyze_project`, followed by `convert_xml_to_viewcompose`, `convert_figma_to_viewcompose`,
+`prepare_screenshot`, and `validate_screenshot_inference`, then `resolve_screenshot_inference` and
 `generate_screenshot_viewcompose`.
 
 Every `tools/call` creates the same immutable request envelope used by the CLI. MCP returns that
@@ -522,13 +542,15 @@ boundary.
 
 ## Consumer Agent workflows
 
-Six client-neutral consumer skills live below `skills/`:
+Seven client-neutral consumer skills live below `skills/`:
 
 - `viewcompose-api-reference` retrieves exact APIs and compiled samples without writing files.
 - `viewcompose-create-screen` retrieves before implementation and requires compile-backed delivery.
 - `viewcompose-convert-xml` prefers explicit project evidence when a layout lives in the scoped
   project, preserves standalone pasted-source migration, requires compile-backed integration, and
   uses generated render mode only with exact explicit bindings.
+- `viewcompose-import-figma` audits one offline export before deterministic generation and reports
+  each compile, Preview, comparison, and unsupported-evidence boundary independently.
 - `viewcompose-review` keeps review read-only unless the caller also asks for a fix.
 - `viewcompose-debug-layout` uses only allowlisted Preview and structured layout evidence.
 - `viewcompose-validate` requires hermetic compilation and renders only covered allowlisted targets.
@@ -547,7 +569,7 @@ npm --prefix tools/ai run verify:phase3-workflows
 ./gradlew verifyAiConsumerWorkflows
 ```
 
-The gate checks the frozen six-workflow denominator, known tool names, evidence ordering, stable
+The gate checks the frozen seven-workflow denominator, known tool names, evidence ordering, stable
 skill paths and frontmatter, safety boundaries, path containment, provider neutrality, and a 16 KiB
 entrypoint limit.
 
@@ -558,11 +580,11 @@ primary consumer path is one exact-version transactional operation run from the 
 root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client <codex|claude-code|cursor>
 ```
 
 `init` merges only the `viewcompose` MCP entry into `.codex/config.toml`, `.mcp.json`, or
-`.cursor/mcp.json` and copies the six exact canonical `SKILL.md` files. Codex and Cursor use
+`.cursor/mcp.json` and copies the seven exact canonical `SKILL.md` files. Codex and Cursor use
 `.agents/skills`; Claude Code uses `.claude/skills`. All configuration and Skill surfaces are
 preflighted before writes; atomic configuration replacement and Skill rollback prevent a partial
 install. Existing unrelated JSON/TOML content is preserved. Exact reinitialization is idempotent,
@@ -575,7 +597,7 @@ paths never depend on npm's ephemeral extraction directory. An explicit physical
 Inspect the installed state and its honest capability boundary with:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 doctor --client <codex|claude-code|cursor>
 ```
 
 The default result is `project-bound-ready` when the exact configuration and Skills are present,
@@ -607,8 +629,8 @@ npm --prefix tools/ai run package:distribution
 ```
 
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
-exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the thirteen-tool CLI/MCP core,
-the `viewcompose-agent` onboarding command, six consumer skills, the immutable Knowledge Bundle, the
+exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the fourteen-tool CLI/MCP core,
+the `viewcompose-agent` onboarding command, seven consumer skills, the immutable Knowledge Bundle, the
 consumer execution contract, a content-addressed Gradle harness and wrapper, an SPDX 2.3 package
 record, the MIT license, and a reviewed empty runtime-dependency license inventory. The license
 inventory records the distributed Gradle Wrapper as an Apache-2.0 development tool. The package
@@ -627,22 +649,22 @@ The public consumer launches the exact npm version, which remains provenance-bou
 immutable GitHub Release:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client <codex|claude-code|cursor>
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.5.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.6.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
 ```
 
-All knowledge, static, analysis, XML, and screenshot-generation modes need no ViewCompose source
+All knowledge, static, analysis, XML, Figma, and screenshot-generation modes need no ViewCompose source
 checkout. Compile-mode `validate_code` and the compile/render/compare modes owned by XML and
-screenshot generation use the packaged Gradle 9.3.1 harness, exact released ViewCompose Maven
+Figma/screenshot generation use the packaged Gradle 9.3.1 harness, exact released ViewCompose Maven
 coordinates, AGP 9.1.1, Kotlin 2.2.10, Android 36, and JVM target 11. JDK 17 or 21 and SDK platform 36
 are host prerequisites. The first request may resolve the pinned Gradle distribution and Maven
 dependencies within one fixed five-minute execution window; subsequent requests use the
@@ -651,7 +673,7 @@ upgrades, while each entry remains content-addressed by its Knowledge, Harness, 
 identity. The consumer root is read-only and its wrapper, settings, plugins, tasks, and build
 scripts are never executed. Direct
 `render_preview` and `diagnose_layout` still require a separately allowlisted fixed target; generated
-XML and screenshot results expose their own Preview and layout-diagnosis evidence. The package never
+XML, Figma, and screenshot results expose their own Preview and layout-diagnosis evidence. The package never
 searches arbitrary parent directories or silently upgrades static evidence.
 
 Release `0.2.0` packaged only `current-source` knowledge and remains historical evidence; never
@@ -662,6 +684,9 @@ retains the exact framework profile and adds the package-name `ai-tooling` alias
 transactional Agent entry point. Release `0.5.0` retains that onboarding contract and adds the
 versioned high-confidence project-analysis payload, rule catalog, quality snapshot, unsupported
 coverage, and installed-package verification.
+Release `0.6.0` retains that analyzer and adds the strict offline Figma import, Design IR v2,
+deterministic Kotlin/PNG generation, bounded Preview/layout verification, and seventh consumer
+Skill. It does not add a Figma credentialed connector or visual-parity claim.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and

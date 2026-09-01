@@ -12,7 +12,7 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - npm @viewcompose/ai-tooling 0.5.0 with GitHub Release ai-tooling-v0.5.0 provenance
+  - npm @viewcompose/ai-tooling 0.6.0 release candidate for GitHub Release ai-tooling-v0.6.0
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
@@ -29,7 +29,7 @@ lifecycle: Update when a supported client format, Skill path, package release, t
 
 # AI Integration
 
-ViewCompose ships a machine-readable API reference, 13 local MCP tools, and six Agent Skills as one
+ViewCompose ships a machine-readable API reference, 14 local MCP tools, and seven Agent Skills as one
 exact-version npm package backed by an immutable GitHub Release. A developer can connect Codex,
 Claude Code, or Cursor to a new or existing Android project with one command. No global install,
 ViewCompose checkout, package build, provider key, or manual MCP configuration edit is required,
@@ -41,21 +41,25 @@ validation evidence; it never embeds or contacts a model provider.
 
 ## Install in one command
 
+This `next`-lane page documents the `0.6.0` Wave C release candidate. The exact commands become
+public when the protected `ai-tooling-v0.6.0` tag workflow completes; until then, existing projects
+remain on exact `0.5.0` and must not follow an unpublished or mutable selector.
+
 Run exactly one of these commands from the physical root of the Android project:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client codex
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client codex
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client claude-code
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client claude-code
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client cursor
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client cursor
 ```
 
-`init` transactionally merges the `viewcompose` MCP entry and installs all six canonical Skills.
+`init` transactionally merges the `viewcompose` MCP entry and installs all seven canonical Skills.
 It resolves the physical current directory, detects the exact ViewCompose dependency vector before
 writing, materializes the verified package into a content-addressed user cache, and points MCP only
 at that durable copy—not npm's temporary npx directory. It then runs the same readiness checks as
@@ -76,7 +80,7 @@ SDK platform 36. The release includes its own Gradle 9.3.1 wrapper and fixed bui
 do not install Gradle or align their project's AGP/Kotlin versions. The bootstrap writes only to the
 project integration surfaces and the operating system's user cache; never use `sudo` for it.
 
-### Exact framework-version binding in `0.5.0`
+### Exact framework-version binding in `0.6.0`
 
 `init` reads the project's independently versioned `com.viewcompose` coordinates without executing
 project Gradle logic. It accepts exact literals, used entries from the default
@@ -88,7 +92,7 @@ and generated Preview all load that same bundle.
 A project without a ViewCompose dependency is a new-project case and selects the Release's newest
 stable profile. Dynamic, conflicting, unsupported, or otherwise unresolved versions—including a
 ViewCompose import without dependency identity—fail before any project write. The tool does not
-silently change framework dependencies. The `0.5.0` profile represents the current published
+silently change framework dependencies. The `0.6.0` profile represents the current published
 Artifact vector; an older version vector remains unchanged until a Release explicitly carries its
 matching profile.
 
@@ -98,7 +102,7 @@ matching profile.
 package version and client choice from the project root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` means the MCP entry and every Skill match the installed release, the physical
@@ -137,11 +141,58 @@ The installed project-bound mode supports:
 - screenshot preprocessing, inference validation and typed resolution, and ViewCompose Kotlin
   generation, plus compilation, Preview rendering, semantic comparison, and eligible exact-pixel
   comparison;
-- the six workflows for API lookup, screen creation, XML conversion, review, validation, and layout
-  debugging, with each workflow retaining the evidence level it actually obtained.
+- offline Figma export inspection, deterministic ViewCompose Kotlin and redistributable PNG
+  generation, compilation, Preview rendering, and bounded structure/semantics/geometry/asset
+  comparison;
+- the seven workflows for API lookup, screen creation, XML conversion, Figma import, review,
+  validation, and layout debugging, with each workflow retaining the evidence level it actually
+  obtained.
 
 Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A static result
 does not prove compilation, and generated Kotlin does not prove rendering or visual parity.
+
+## Offline Figma to ViewCompose
+
+Release `0.6.0` adds the public `convert_figma_to_viewcompose` tool and
+`viewcompose-import-figma` Skill. The tool accepts one self-contained
+`viewcompose-figma-export/1` JSON document supplied by the caller. ViewCompose does not log into
+Figma, accept an access token, fetch a URL, run plugin data, or contact a model/provider. The first
+release deliberately does not include a Figma plugin, Figma REST client, or `.fig` parser: an
+organization that produces this normalized export must use a separately reviewed offline adapter
+and give the resulting JSON to the Agent.
+
+After installing the exact package, attach or otherwise make that JSON available inside the
+project session and ask the Agent:
+
+> Use `$viewcompose-import-figma` to inspect this offline Figma export. Continue to generation only
+> if the complete mapping audit allows it, verify the generated result when the host is ready, and
+> report every unsupported property and evidence limitation before proposing project writes.
+
+The Skill follows one fail-closed sequence:
+
+1. `inspect` validates strict JSON, declared privacy/redaction, selected graph completeness,
+   component and variant lineage, token aliases, fonts, asset ownership and redistribution,
+   canonical base64, media signatures, byte counts, SHA-256 identities, and safe relative paths.
+   The result includes Design IR v2, a decision for every declared render fact, complete fact and
+   asset coverage, and no embedded asset bytes.
+2. `generate` is available only when the audit has no error-level unsupported decision. It returns
+   content-addressed virtual Kotlin and resource files; it does not write the consumer project.
+3. `verify` compiles the generated Kotlin against the exact released Maven profile, renders the
+   fixed Preview, and compares the accepted render tree with the mapped Design IR. Project
+   initialization must already report the deep-evidence lane as ready.
+
+The first generation subset supports exactly one selected root; non-wrapping Row, Column, and Box
+structure; Text using declared generic system fonts; solid colors; and explicitly accessible,
+redistributable PNG images. Multiple roots, custom fonts, wrapping, effects, prototype
+interactions, active content, URLs, undeclared facts or assets, unsafe paths, vectors, and JPEG/WebP
+emission remain blocked or inspect-only.
+
+Verification reports categories independently. Structure, semantics, geometry, and assets can pass
+in `0.6.0`; style remains `incomplete`, while pixel and perceptual categories are
+`not-applicable` because the import does not accept a trusted Figma reference render. Therefore a
+successful `compared` result is bounded render-tree evidence, not Figma visual parity. Integrating
+the returned virtual files remains a user-authorized Agent action, and conflicts must be reviewed
+instead of overwritten.
 
 ## Versioned project analysis
 
@@ -195,7 +246,7 @@ Try this first request in the selected Agent:
 
 ## Deep evidence execution boundary
 
-Release `0.5.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
+Release `0.6.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
 artifacts from Maven Central. A packaged content-addressed harness owns Gradle 9.3.1, AGP 9.1.1,
 Kotlin 2.2.10, Android 36, JVM target 11, and the allowlisted ViewCompose/Preview coordinates. The
 consumer project root is a read-only authorization boundary: the tooling does not execute its
@@ -223,7 +274,7 @@ rendering is a later, explicitly isolated capability.
 Check, download, and migrate to the newest compatible tooling Release with one command:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 upgrade --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 upgrade --client <codex|claude-code|cursor>
 ```
 
 The command detects the project versions first and inspects only immutable `ai-tooling-v<semver>`
@@ -242,7 +293,7 @@ upgrade, or remove the active side-by-side package.
 Remove the current project integration:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 uninstall --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 uninstall --client <codex|claude-code|cursor>
 ```
 
 The command removes only the exact ViewCompose MCP entry and canonical Skill bytes; unrelated client
@@ -252,7 +303,7 @@ is retained for integrity and compatible reuse.
 
 ## Integrity and troubleshooting
 
-The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.5.0)
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.6.0)
 contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
 checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
 Attestations for all three assets. See GitHub's
@@ -294,12 +345,13 @@ removed. The earlier versions remain immutable audit history, `0.4.0` is depreca
 actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from ordinary stable semver
 ranges. The temporary npm token and GitHub secret were revoked before any stable tag.
 Release `0.5.0` retains that onboarding correction and adds the versioned high-confidence project
-analysis contract described above. Use the exact stable `@viewcompose/ai-tooling@0.5.0` selector
-documented above.
+analysis contract described above. Release candidate `0.6.0` retains that analyzer and adds the
+offline Figma contract described above. Use the exact `@viewcompose/ai-tooling@0.6.0` selector only
+after its protected tag publication completes.
 
 | Symptom | Action |
 | --- | --- |
-| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal `@viewcompose/ai-tooling@0.5.0` selector. Do not substitute `latest`. |
+| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal published `@viewcompose/ai-tooling@0.6.0` selector. Do not substitute `latest`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
 | `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
 | `upgrade` returns `no-compatible-update` | Keep the current integration. No published tooling Release contains an exact framework profile for this project yet. Do not install a global-latest package as a workaround. |
@@ -307,6 +359,8 @@ documented above.
 | `upgrade` reports changed managed configuration or Skills | Review and preserve the user edits before retrying. The upgrader replaces only the exact bytes installed by ViewCompose. |
 | The client does not show the MCP server | Run the client-specific check above, approve project configuration when required, then restart or reload the client. |
 | Compile or Preview reports `VC-AI-PROJECT-ROOT-MISMATCH` | Run `init` from the physical project root and keep that project path available to the Agent process. |
+| Figma inspection reports an unsupported mapping | Review the complete mapping ledger and correct or simplify the offline export. Do not delete the unsupported fact or ask the Agent to guess it. |
+| Figma `verify` reports style `incomplete` or pixels `not-applicable` | This is the released evidence boundary, not a host failure. Review the generated Preview visually; do not claim Figma parity. |
 | A credential is requested | Stop. ViewCompose needs no model-provider credential and never accepts one in MCP arguments or project configuration. |
 
 Contributor internals are documented in the [AI tooling contract](../../tools/ai/README.md) and the

@@ -288,6 +288,8 @@ async function verifySchemas(versions) {
     knowledgeBundleManifest: 'knowledge-bundle-manifest.schema.json',
     toolEnvelope: 'tool-envelope.schema.json',
     designIr: 'design-ir.schema.json',
+    designIrV2: 'design-ir-v2.schema.json',
+    figmaImport: 'figma-import.schema.json',
     xmlProjectContext: 'xml-project-context.schema.json',
     xmlLayoutDependencies: 'xml-layout-dependencies.schema.json',
     generatedPreviewRequest: 'generated-preview-request.schema.json',

@@ -74,7 +74,7 @@ jobs:
             expected_assets=$(printf '%s\n' \
               "SHA256SUMS" \
               "manifest.json" \
-              "viewcompose-ai-tooling-0.5.0.tgz" | sort)
+              "viewcompose-ai-tooling-0.6.0.tgz" | sort)
             if [[ "$actual_assets" != "$expected_assets" ]]; then
               echo "Existing GitHub Release asset inventory differs from the frozen identity." >&2
               exit 1
@@ -82,7 +82,7 @@ jobs:
             release_dir="$RUNNER_TEMP/viewcompose-existing-release-assets"
             mkdir -p "$release_dir"
             gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir "$release_dir"
-            for asset in viewcompose-ai-tooling-0.5.0.tgz manifest.json SHA256SUMS; do
+            for asset in viewcompose-ai-tooling-0.6.0.tgz manifest.json SHA256SUMS; do
               cmp "tools/ai/build/distribution/$asset" "$release_dir/$asset"
             done
             echo "state=verified-existing" >> "$GITHUB_OUTPUT"
@@ -97,8 +97,8 @@ jobs:
       - name: Require an unpublished npm identity
         run: |
           registry_error="$RUNNER_TEMP/viewcompose-existing-npm.error"
-          if npm view @viewcompose/ai-tooling@0.5.0 version 2>"$registry_error"; then
-            echo "npm @viewcompose/ai-tooling@0.5.0 already exists; automated recovery cannot prove its OIDC provenance." >&2
+          if npm view @viewcompose/ai-tooling@0.6.0 version 2>"$registry_error"; then
+            echo "npm @viewcompose/ai-tooling@0.6.0 already exists; automated recovery cannot prove its OIDC provenance." >&2
             exit 1
           elif grep -q "E404" "$registry_error"; then
             true
@@ -112,7 +112,7 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
-            tools/ai/build/distribution/viewcompose-ai-tooling-0.5.0.tgz
+            tools/ai/build/distribution/viewcompose-ai-tooling-0.6.0.tgz
             tools/ai/build/distribution/manifest.json
             tools/ai/build/distribution/SHA256SUMS
 
@@ -122,17 +122,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            tools/ai/build/distribution/viewcompose-ai-tooling-0.5.0.tgz \
+            tools/ai/build/distribution/viewcompose-ai-tooling-0.6.0.tgz \
             tools/ai/build/distribution/manifest.json \
             tools/ai/build/distribution/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
-            --title "ViewCompose AI tooling 0.5.0" \
+            --title "ViewCompose AI tooling 0.6.0" \
             --generate-notes
 
       - name: Publish exact public npm package with provenance
         run: >-
           npm publish
-          tools/ai/build/distribution/viewcompose-ai-tooling-0.5.0.tgz
+          tools/ai/build/distribution/viewcompose-ai-tooling-0.6.0.tgz
           --access public
           --provenance

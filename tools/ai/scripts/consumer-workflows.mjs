@@ -54,7 +54,7 @@ function validateWorkflow(entry, {requiresPath}) {
   }
   const minimum = evidenceLevels.indexOf(entry.minimumEvidence);
   const maximum = evidenceLevels.indexOf(entry.maximumEvidence);
-  if (minimum < 0 || maximum < minimum || maximum > evidenceLevels.indexOf('rendered')) {
+  if (minimum < 0 || maximum < minimum || maximum > evidenceLevels.indexOf('compared')) {
     throw new Error(`${entry.id} has an invalid consumer evidence range.`);
   }
   if (!mutationPolicies.has(entry.mutationPolicy)) {

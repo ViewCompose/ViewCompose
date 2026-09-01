@@ -21,6 +21,7 @@ import {assertSchemaValue, validateSchemaValue} from './schema-validator.mjs';
 import {validateKotlin} from './static-validator.mjs';
 import {TOOL_DEFINITIONS} from './tool-catalog.mjs';
 import {convertXmlToViewCompose} from './xml-migration.mjs';
+import {importFigmaExport} from './figma-import-adapter.mjs';
 import {
   diagnostic,
   loadKnowledgeManifest,
@@ -68,6 +69,7 @@ export async function dispatchToolRequest(request, {
   searchComponent = searchComponents,
   getSample = retrieveSample,
   convertXml = convertXmlToViewCompose,
+  convertFigma = importFigmaExport,
   prepare = prepareScreenshot,
   validateScreenshot = validateScreenshotInference,
   resolveScreenshot = resolveScreenshotInference,
@@ -302,6 +304,14 @@ export async function dispatchToolRequest(request, {
           },
           signal: controller.signal,
           compile,
+          render: renderGenerated,
+          compare: compareGenerated,
+        });
+        break;
+      case 'convert_figma_to_viewcompose':
+        result = await convertFigma(request.arguments, {
+          requestId: request.requestId,
+          signal: controller.signal,
           render: renderGenerated,
           compare: compareGenerated,
         });

@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "kind": "figma-export",
+  "exportVersion": "viewcompose-figma-export/1",
+  "document": {
+    "identity": "figma-file-example",
+    "revision": "version-1",
+    "nameDigest": "5884505c71742738715bbe3fdd7583950a4744447190e3c3fab90d81e40f4f2e",
+    "editorType": "figma",
+    "selectedNodeIds": ["1:1"]
+  },
+  "units": {
+    "dpPerUnit": 1,
+    "spPerUnit": 1
+  },
+  "settings": {
+    "colorSpace": "srgb",
+    "coordinateSpace": "selected-root-local",
+    "geometryIncluded": true,
+    "variablesIncluded": true,
+    "componentSnapshotsResolved": true
+  },
+  "privacy": {
+    "classification": "internal",
+    "textIncluded": true,
+    "labelsIncluded": false,
+    "redactionDeclared": true,
+    "diagnosticDisclosure": "digests-only"
+  },
+  "completeness": {
+    "selectedSubtreesComplete": true,
+    "renderFactsComplete": true,
+    "componentLineageResolved": true,
+    "assetReferencesDeclared": true,
+    "fontReferencesDeclared": true,
+    "pluginDataExcluded": true,
+    "externalReferencesExcluded": true,
+    "credentialsExcluded": true
+  },
+  "catalogs": {
+    "components": [],
+    "tokens": [],
+    "styles": [],
+    "fonts": [
+      {
+        "id": "font:system-sans-400-normal",
+        "familyDigest": "ea72078892e77301c02237114b58ea372b0878025c77598b06fe8ee91ba2e64d",
+        "genericFamily": "sans-serif",
+        "weight": 400,
+        "style": "normal"
+      }
+    ]
+  },
+  "assets": [
+    {
+      "id": "asset:logo",
+      "sourceNodeId": "1:3",
+      "logicalPath": "res/drawable/viewcompose_figma_logo.png",
+      "mediaType": "image/png",
+      "encoding": "base64",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAYCAYAAADzoH0MAAAASUlEQVR42mP49evXf0owA9UMUFBUwYtpb8DAhwHFBpSWlpKEsRpArK14DTimoYEXEzSAIhdQFAbDIB2Iph4gCY8acGBYpgNyMQDe4heK94pkCQAAAABJRU5ErkJggg==",
+      "bytes": 130,
+      "sha256": "26817c1dd0bc39c1828fc854c549dd0df3217a8fd947787e801618aad01342ed",
+      "intrinsicWidth": 16,
+      "intrinsicHeight": 24,
+      "ownership": "owned",
+      "redistribution": "allowed",
+      "licenseId": "MIT"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "1:1",
+      "type": "FRAME",
+      "nameDigest": "41b1ca0da597016ca91b2dc43a4ae94d5a558b38d1649e72a584dddcba420a30",
+      "visible": true,
+      "childIds": ["1:2", "1:3"],
+      "componentLineage": [],
+      "variantProperties": [],
+      "facts": [
+        {"path": "layout.mode", "phase": "structure", "value": {"kind": "string", "value": "VERTICAL"}},
+        {"path": "layout.wrap", "phase": "layout", "value": {"kind": "string", "value": "NO_WRAP"}},
+        {"path": "geometry.x", "phase": "layout", "value": {"kind": "number", "value": 0}},
+        {"path": "geometry.y", "phase": "layout", "value": {"kind": "number", "value": 0}},
+        {"path": "geometry.width", "phase": "layout", "value": {"kind": "number", "value": 360}},
+        {"path": "geometry.height", "phase": "layout", "value": {"kind": "number", "value": 120}},
+        {"path": "layout.width", "phase": "layout", "value": {"kind": "string", "value": "FIXED"}},
+        {"path": "layout.height", "phase": "layout", "value": {"kind": "string", "value": "FIXED"}},
+        {"path": "layout.padding.left", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "layout.padding.top", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "layout.padding.right", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "layout.padding.bottom", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "layout.gap", "phase": "layout", "value": {"kind": "number", "value": 8}},
+        {"path": "layout.primaryAlignment", "phase": "layout", "value": {"kind": "string", "value": "MIN"}},
+        {"path": "layout.counterAlignment", "phase": "layout", "value": {"kind": "string", "value": "MIN"}},
+        {"path": "clip.enabled", "phase": "style", "value": {"kind": "boolean", "value": false}},
+        {"path": "fill.solid", "phase": "style", "value": {"kind": "color", "argb": "FFFFFFFF"}}
+      ]
+    },
+    {
+      "id": "1:2",
+      "type": "TEXT",
+      "nameDigest": "7e8cd2056da73a7fefb6cd91f4e5d199d08d9058c517b9a2476b1b520324d674",
+      "visible": true,
+      "childIds": [],
+      "componentLineage": [],
+      "variantProperties": [],
+      "facts": [
+        {"path": "geometry.x", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "geometry.y", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "geometry.width", "phase": "layout", "value": {"kind": "number", "value": 328}},
+        {"path": "geometry.height", "phase": "layout", "value": {"kind": "number", "value": 30}},
+        {"path": "layout.width", "phase": "layout", "value": {"kind": "string", "value": "FILL"}},
+        {"path": "layout.height", "phase": "layout", "value": {"kind": "string", "value": "HUG"}},
+        {"path": "text.characters", "phase": "structure", "value": {"kind": "string", "value": "Welcome"}},
+        {"path": "text.font", "phase": "style", "value": {"kind": "reference", "referenceType": "font", "id": "font:system-sans-400-normal"}},
+        {"path": "text.fontSize", "phase": "style", "value": {"kind": "number", "value": 24}},
+        {"path": "text.lineHeight", "phase": "style", "value": {"kind": "number", "value": 30}},
+        {"path": "text.letterSpacing", "phase": "style", "value": {"kind": "number", "value": 0}},
+        {"path": "text.fill", "phase": "style", "value": {"kind": "color", "argb": "FF111111"}},
+        {"path": "accessibility.role", "phase": "semantics", "value": {"kind": "string", "value": "heading"}}
+      ]
+    },
+    {
+      "id": "1:3",
+      "type": "RECTANGLE",
+      "nameDigest": "d707dc2f1936efd8707060cbe7cdeaba8f250967ecd32fcd56e2491c7f18e52c",
+      "visible": true,
+      "childIds": [],
+      "componentLineage": [],
+      "variantProperties": [],
+      "facts": [
+        {"path": "geometry.x", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "geometry.y", "phase": "layout", "value": {"kind": "number", "value": 54}},
+        {"path": "geometry.width", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "geometry.height", "phase": "layout", "value": {"kind": "number", "value": 24}},
+        {"path": "layout.width", "phase": "layout", "value": {"kind": "string", "value": "FIXED"}},
+        {"path": "layout.height", "phase": "layout", "value": {"kind": "string", "value": "FIXED"}},
+        {"path": "image.asset", "phase": "resource", "value": {"kind": "reference", "referenceType": "asset", "id": "asset:logo"}},
+        {"path": "image.scale", "phase": "style", "value": {"kind": "string", "value": "FIT"}},
+        {"path": "accessibility.decorative", "phase": "semantics", "value": {"kind": "boolean", "value": true}}
+      ]
+    }
+  ]
+}

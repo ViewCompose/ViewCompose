@@ -1,0 +1,496 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/design-ir-v2.schema.json",
+  "title": "ViewCompose tooling Design IR v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "documentId",
+    "source",
+    "importFingerprint",
+    "selections",
+    "exportSettings",
+    "privacy",
+    "catalogs",
+    "resources",
+    "roots",
+    "mappingLedger",
+    "unsupported"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "kind": {"const": "design-ir"},
+    "documentId": {"$ref": "#/$defs/stableId"},
+    "source": {"$ref": "#/$defs/source"},
+    "importFingerprint": {"$ref": "#/$defs/sha256"},
+    "selections": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/stableId"}
+    },
+    "exportSettings": {"$ref": "#/$defs/exportSettings"},
+    "privacy": {"$ref": "#/$defs/privacy"},
+    "catalogs": {"$ref": "#/$defs/catalogs"},
+    "resources": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/resource"}
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/node"}
+    },
+    "mappingLedger": {
+      "type": "array",
+      "maxItems": 32768,
+      "items": {"$ref": "#/$defs/mappingDecision"}
+    },
+    "unsupported": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {"$ref": "#/$defs/unsupported"}
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "documentIdentity",
+        "revision",
+        "exportVersion",
+        "fingerprint"
+      ],
+      "properties": {
+        "kind": {"const": "figma"},
+        "documentIdentity": {"type": "string", "minLength": 1, "maxLength": 256},
+        "revision": {"type": "string", "minLength": 1, "maxLength": 256},
+        "exportVersion": {"const": "viewcompose-figma-export/1"},
+        "fingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "exportSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dpPerUnit", "spPerUnit", "colorSpace", "coordinateSpace"],
+      "properties": {
+        "dpPerUnit": {"type": "number", "minimum": 0.000001, "maximum": 16},
+        "spPerUnit": {"type": "number", "minimum": 0.000001, "maximum": 16},
+        "colorSpace": {"const": "srgb"},
+        "coordinateSpace": {"const": "selected-root-local"}
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "textIncluded",
+        "labelsIncluded",
+        "pluginDataExcluded",
+        "externalReferencesExcluded",
+        "redactionDeclared"
+      ],
+      "properties": {
+        "classification": {"enum": ["public", "internal", "confidential"]},
+        "textIncluded": {"type": "boolean"},
+        "labelsIncluded": {"type": "boolean"},
+        "pluginDataExcluded": {"const": true},
+        "externalReferencesExcluded": {"const": true},
+        "redactionDeclared": {"type": "boolean"}
+      }
+    },
+    "catalogs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["components", "tokens", "styles", "fonts"],
+      "properties": {
+        "components": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {"$ref": "#/$defs/component"}
+        },
+        "tokens": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {"$ref": "#/$defs/token"}
+        },
+        "styles": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {"$ref": "#/$defs/style"}
+        },
+        "fonts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/font"}
+        }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "sourceNodeId", "nameDigest", "sourceFingerprint"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "kind": {"enum": ["component", "component-set"]},
+        "sourceNodeId": {"$ref": "#/$defs/stableId"},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "sourceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "collectionId", "nameDigest", "resolvedType", "value", "aliases"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "collectionId": {"$ref": "#/$defs/stableId"},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "resolvedType": {"enum": ["boolean", "color", "number", "string"]},
+        "value": {"$ref": "#/$defs/value"},
+        "aliases": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "nameDigest", "sourceFingerprint"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "kind": {"enum": ["fill", "grid", "text", "effect"]},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "sourceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "font": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "familyDigest", "genericFamily", "weight", "style", "renderable"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "familyDigest": {"$ref": "#/$defs/sha256"},
+        "genericFamily": {"enum": ["sans-serif", "serif", "monospace", "custom"]},
+        "weight": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "style": {"enum": ["normal", "italic"]},
+        "renderable": {"type": "boolean"}
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "mediaType",
+        "bytes",
+        "sha256",
+        "intrinsicWidth",
+        "intrinsicHeight",
+        "sourceNodeId",
+        "ownership",
+        "redistribution"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "kind": {"enum": ["raster", "vector"]},
+        "mediaType": {
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "application/vnd.viewcompose.vector+json"
+          ]
+        },
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 524288},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "intrinsicWidth": {"type": "number", "minimum": 0.000001, "maximum": 16384},
+        "intrinsicHeight": {"type": "number", "minimum": 0.000001, "maximum": 16384},
+        "sourceNodeId": {"$ref": "#/$defs/stableId"},
+        "ownership": {"enum": ["owned", "licensed", "third-party", "unknown"]},
+        "redistribution": {"enum": ["allowed", "prohibited", "unknown"]},
+        "licenseId": {"type": "string", "minLength": 1, "maxLength": 256}
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "layout",
+        "properties",
+        "semantics",
+        "children",
+        "provenance"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "kind": {"enum": ["row", "column", "box", "text", "image", "vector"]},
+        "layout": {"$ref": "#/$defs/layout"},
+        "properties": {"$ref": "#/$defs/fields"},
+        "semantics": {"$ref": "#/$defs/fields"},
+        "children": {
+          "type": "array",
+          "maxItems": 2048,
+          "items": {"$ref": "#/$defs/node"}
+        },
+        "provenance": {"$ref": "#/$defs/provenance"}
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "xDp",
+        "yDp",
+        "width",
+        "height",
+        "padding",
+        "gapDp",
+        "mainAxisArrangement",
+        "horizontalAlignment",
+        "verticalAlignment",
+        "clip"
+      ],
+      "properties": {
+        "mode": {"enum": ["fixed", "row", "column"]},
+        "xDp": {"type": "number", "minimum": -32768, "maximum": 32768},
+        "yDp": {"type": "number", "minimum": -32768, "maximum": 32768},
+        "width": {"$ref": "#/$defs/layoutSize"},
+        "height": {"$ref": "#/$defs/layoutSize"},
+        "padding": {"$ref": "#/$defs/edges"},
+        "gapDp": {"type": "number", "minimum": 0, "maximum": 4096},
+        "mainAxisArrangement": {
+          "enum": ["start", "center", "end", "space-between", "space-around", "space-evenly"]
+        },
+        "horizontalAlignment": {"enum": ["start", "center", "end", "stretch"]},
+        "verticalAlignment": {"enum": ["start", "center", "end", "baseline", "stretch"]},
+        "clip": {"enum": ["none", "rectangle", "uniform-rounded-rectangle"]},
+        "cornerRadiusDp": {"type": "number", "minimum": 0, "maximum": 4096}
+      }
+    },
+    "layoutSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {"enum": ["fixed", "hug", "fill"]},
+        "valueDp": {"type": "number", "minimum": 0, "maximum": 32768}
+      }
+    },
+    "edges": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left", "top", "right", "bottom"],
+      "properties": {
+        "left": {"type": "number", "minimum": 0, "maximum": 4096},
+        "top": {"type": "number", "minimum": 0, "maximum": 4096},
+        "right": {"type": "number", "minimum": 0, "maximum": 4096},
+        "bottom": {"type": "number", "minimum": 0, "maximum": 4096}
+      }
+    },
+    "fields": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value"],
+        "properties": {
+          "name": {"$ref": "#/$defs/stableId"},
+          "value": {"$ref": "#/$defs/value"}
+        }
+      }
+    },
+    "value": {
+      "oneOf": [
+        {"$ref": "#/$defs/literalValue"},
+        {"$ref": "#/$defs/dimensionValue"},
+        {"$ref": "#/$defs/colorValue"},
+        {"$ref": "#/$defs/enumValue"},
+        {"$ref": "#/$defs/resourceValue"},
+        {"$ref": "#/$defs/tokenValue"}
+      ]
+    },
+    "literalValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": {"const": "literal"},
+        "value": {
+          "oneOf": [
+            {"type": "string", "maxLength": 32768},
+            {"type": "number"},
+            {"type": "boolean"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "dimensionValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value", "unit"],
+      "properties": {
+        "kind": {"const": "dimension"},
+        "value": {"type": "number", "minimum": -32768, "maximum": 32768},
+        "unit": {"enum": ["dp", "sp"]}
+      }
+    },
+    "colorValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "argb"],
+      "properties": {
+        "kind": {"const": "color"},
+        "argb": {"type": "string", "pattern": "^[A-F0-9]{8}$"}
+      }
+    },
+    "enumValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "type", "value"],
+      "properties": {
+        "kind": {"const": "enum"},
+        "type": {"$ref": "#/$defs/stableId"},
+        "value": {"$ref": "#/$defs/stableId"}
+      }
+    },
+    "resourceValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "resourceId"],
+      "properties": {
+        "kind": {"const": "resource"},
+        "resourceId": {"$ref": "#/$defs/stableId"}
+      }
+    },
+    "tokenValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "tokenId", "resolvedValue"],
+      "properties": {
+        "kind": {"const": "token"},
+        "tokenId": {"$ref": "#/$defs/stableId"},
+        "resolvedValue": {
+          "oneOf": [
+            {"$ref": "#/$defs/literalValue"},
+            {"$ref": "#/$defs/dimensionValue"},
+            {"$ref": "#/$defs/colorValue"},
+            {"$ref": "#/$defs/enumValue"}
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceNodeId",
+        "sourcePath",
+        "componentLineage",
+        "variantProperties",
+        "tokenReferences",
+        "styleReferences",
+        "confidence",
+        "decision"
+      ],
+      "properties": {
+        "sourceNodeId": {"$ref": "#/$defs/stableId"},
+        "sourcePath": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "componentLineage": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        },
+        "variantProperties": {"$ref": "#/$defs/fields"},
+        "tokenReferences": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        },
+        "styleReferences": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        },
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "decision": {"type": "string", "minLength": 1, "maxLength": 2048}
+      }
+    },
+    "mappingDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "sourcePath",
+        "phase",
+        "status",
+        "severity",
+        "disposition",
+        "sourceValueFingerprint",
+        "reasonCode"
+      ],
+      "properties": {
+        "nodeId": {"$ref": "#/$defs/stableId"},
+        "sourcePath": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "targetPath": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "phase": {
+          "enum": ["structure", "layout", "style", "semantics", "resource", "interaction"]
+        },
+        "status": {"enum": ["mapped", "flattened", "preserved-only", "unsupported"]},
+        "severity": {"enum": ["info", "warning", "error"]},
+        "disposition": {"enum": ["emitted", "preserved", "blocked"]},
+        "sourceValueFingerprint": {"$ref": "#/$defs/sha256"},
+        "reasonCode": {"type": "string", "pattern": "^VC-AI-FIGMA-[A-Z0-9-]+$"}
+      }
+    },
+    "unsupported": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "sourcePath",
+        "code",
+        "reason",
+        "sourceValueFingerprint",
+        "severity",
+        "disposition"
+      ],
+      "properties": {
+        "nodeId": {"$ref": "#/$defs/stableId"},
+        "sourcePath": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "code": {"type": "string", "pattern": "^VC-AI-FIGMA-[A-Z0-9-]+$"},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "sourceValueFingerprint": {"$ref": "#/$defs/sha256"},
+        "severity": {"enum": ["warning", "error"]},
+        "disposition": {"enum": ["preserved", "blocked"]}
+      }
+    },
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,255}$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

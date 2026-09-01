@@ -36,7 +36,7 @@
       ],
       "properties": {
         "packageName": { "const": "generated.viewcompose" },
-        "sourceKind": { "enum": ["android-xml", "screenshot"] },
+        "sourceKind": { "enum": ["android-xml", "screenshot", "figma"] },
         "functionName": { "$ref": "#/$defs/kotlinIdentifier" },
         "kotlinFingerprint": { "$ref": "#/$defs/sha256" },
         "artifactIds": {
@@ -232,7 +232,12 @@
       ],
       "properties": {
         "widthDp": { "type": "integer", "minimum": 1, "maximum": 2000 },
-        "heightDp": { "enum": [-1] },
+        "heightDp": {
+          "oneOf": [
+            { "const": -1 },
+            { "type": "integer", "minimum": 1, "maximum": 4000 }
+          ]
+        },
         "density": { "type": "number", "minimum": 0.5, "maximum": 8 },
         "fontScale": { "type": "number", "minimum": 0.5, "maximum": 3 },
         "localeTag": {

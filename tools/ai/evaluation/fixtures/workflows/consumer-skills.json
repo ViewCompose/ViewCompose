@@ -59,6 +59,21 @@
       "mutationPolicy": "user-requested-project-writes"
     },
     {
+      "id": "viewcompose-import-figma",
+      "requiredTools": [
+        "convert_figma_to_viewcompose"
+      ],
+      "conditionalTools": [
+        "analyze_project",
+        "get_component_reference",
+        "get_sample",
+        "validate_code"
+      ],
+      "minimumEvidence": "static",
+      "maximumEvidence": "compared",
+      "mutationPolicy": "user-requested-project-writes"
+    },
+    {
       "id": "viewcompose-review",
       "requiredTools": [
         "get_api_reference",

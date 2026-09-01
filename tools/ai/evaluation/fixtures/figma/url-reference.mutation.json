@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "request-mutation",
+  "baseFixture": "contracts/examples/figma-export.json",
+  "operation": "add-fact",
+  "nodeId": "1:1",
+  "fact": {
+    "path": "image.url",
+    "phase": "resource",
+    "value": {"kind": "string", "value": "https://example.invalid/asset.png"}
+  },
+  "expectedDiagnostic": "VC-AI-FIGMA-SECURITY-FORBIDDEN-REFERENCE"
+}

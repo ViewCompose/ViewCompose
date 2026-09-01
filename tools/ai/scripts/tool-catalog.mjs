@@ -3,6 +3,7 @@ import {SCREENSHOT_REQUEST_SCHEMA} from './screenshot-contract.mjs';
 import {SCREENSHOT_INFERENCE_VALIDATION_ARGUMENTS_SCHEMA} from './screenshot-inference-contract.mjs';
 import {SCREENSHOT_GENERATION_ARGUMENTS_SCHEMA} from './screenshot-generation-contract.mjs';
 import {SCREENSHOT_RESOLUTION_ARGUMENTS_SCHEMA} from './screenshot-resolution-contract.mjs';
+import {FIGMA_IMPORT_REQUEST_SCHEMA} from './figma-contract.mjs';
 
 const stableId = {
   type: 'string',
@@ -266,6 +267,18 @@ const executableDefinitions = {
     },
     evidenceLevel: 'static',
   },
+  convert_figma_to_viewcompose: {
+    title: 'Convert an Offline Figma Export to ViewCompose',
+    description:
+      'Inspect, generate, or compile, render, and compare one bounded self-contained Figma export without credentials, provider access, network execution, or project writes.',
+    inputSchema: FIGMA_IMPORT_REQUEST_SCHEMA,
+    defaultLimits: {
+      timeoutMs: 300000,
+      maxInputBytes: 3145728,
+      maxOutputBytes: 3145728,
+    },
+    evidenceLevel: 'static',
+  },
   prepare_screenshot: {
     title: 'Prepare a Screenshot for ViewCompose Generation',
     description:
@@ -350,6 +363,7 @@ export const TOOL_NAMES = Object.freeze([
   'diagnose_layout',
   'analyze_project',
   'convert_xml_to_viewcompose',
+  'convert_figma_to_viewcompose',
   'prepare_screenshot',
   'validate_screenshot_inference',
   'resolve_screenshot_inference',

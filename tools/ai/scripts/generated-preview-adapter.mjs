@@ -31,6 +31,13 @@ const PREVIEW_PROFILES = Object.freeze({
     annotationPrefix: 'Generated Screenshot · ',
     annotationGroup: 'AI/Screenshot',
   }),
+  figma: Object.freeze({
+    sourceKind: 'figma',
+    targetId: 'tools.ai.GeneratedFigmaPreview',
+    functionName: 'GeneratedFigmaPreview',
+    annotationPrefix: 'Generated Figma · ',
+    annotationGroup: 'AI/Figma',
+  }),
 });
 const MAX_GENERATED_KOTLIN_BYTES = 1024 * 1024;
 const MAX_WRAPPER_BYTES = 256 * 1024;
@@ -151,6 +158,15 @@ function reportBindings(report) {
 }
 
 function sourceKindForReport(report) {
+  if (
+    report?.kind === 'figma-generation-report' &&
+    report?.target?.packageName === 'generated.viewcompose' &&
+    Array.isArray(report?.bindings?.resources) &&
+    Array.isArray(report?.bindings?.states) &&
+    Array.isArray(report?.bindings?.events)
+  ) {
+    return 'figma';
+  }
   if (
     report?.kind === 'report' &&
     SHA256.test(report?.input?.resolutionResultFingerprint ?? '') &&
@@ -393,6 +409,7 @@ export async function createGeneratedPreviewPlan({
   generatedKotlin,
   generationReport,
   previewBindings,
+  previewConfiguration,
 } = {}) {
   const sourceKind = sourceKindForReport(generationReport);
   if (
@@ -443,14 +460,16 @@ export async function createGeneratedPreviewPlan({
     },
     generatedSource: {
       packageName: 'generated.viewcompose',
-      ...(sourceKind === 'screenshot' ? {sourceKind} : {}),
+      ...(sourceKind !== 'android-xml' ? {sourceKind} : {}),
       functionName: generationReport.target.functionName,
       kotlinFingerprint: sha256(generatedKotlin),
       artifactIds: [...generationReport.target.artifactIds],
       declaredBindings,
     },
     bindings,
-    configuration: {...GENERATED_PREVIEW_CONFIGURATION},
+    configuration: previewConfiguration === undefined
+      ? {...GENERATED_PREVIEW_CONFIGURATION}
+      : {...previewConfiguration},
     lanes: {
       compiler: PREVIEW_COMPILER_LANE,
       render: RENDER_LANE,
@@ -735,6 +754,7 @@ export async function renderGeneratedPreview({
   generatedKotlin,
   generationReport,
   previewBindings,
+  previewConfiguration,
   requestId = 'render-generated-preview',
   limits,
   signal,
@@ -748,6 +768,7 @@ export async function renderGeneratedPreview({
     generatedKotlin,
     generationReport,
     previewBindings,
+    previewConfiguration,
   });
   if (plan.status !== 'success') return generatedPreviewFailure(requestId, plan);
   plan.generatedKotlin = generatedKotlin;
@@ -784,13 +805,13 @@ export async function renderGeneratedPreview({
     methodName: plan.profile.functionName,
     capabilityIds: Object.freeze(capabilityIds),
     configuration: Object.freeze({
-      widthDp: GENERATED_PREVIEW_CONFIGURATION.widthDp,
-      heightDp: GENERATED_PREVIEW_CONFIGURATION.heightDp,
-      density: GENERATED_PREVIEW_CONFIGURATION.density,
-      fontScale: GENERATED_PREVIEW_CONFIGURATION.fontScale,
-      localeTags: Object.freeze([GENERATED_PREVIEW_CONFIGURATION.localeTag]),
-      layoutDirection: GENERATED_PREVIEW_CONFIGURATION.layoutDirection,
-      theme: GENERATED_PREVIEW_CONFIGURATION.theme,
+      widthDp: plan.request.configuration.widthDp,
+      heightDp: plan.request.configuration.heightDp,
+      density: plan.request.configuration.density,
+      fontScale: plan.request.configuration.fontScale,
+      localeTags: Object.freeze([plan.request.configuration.localeTag]),
+      layoutDirection: plan.request.configuration.layoutDirection,
+      theme: plan.request.configuration.theme,
     }),
     gradleArguments: Object.freeze([
       `-PviewComposeAiPreviewRequestKey=${plan.requestFingerprint}`,
@@ -858,7 +879,7 @@ export async function renderGeneratedPreview({
       ...rendered.data,
       layoutDiagnosis,
       generatedPreview: {
-        ...(plan.profile.sourceKind === 'screenshot'
+        ...(plan.profile.sourceKind !== 'android-xml'
           ? {sourceKind: plan.profile.sourceKind, targetId: plan.profile.targetId}
           : {}),
         requestFingerprint: plan.requestFingerprint,

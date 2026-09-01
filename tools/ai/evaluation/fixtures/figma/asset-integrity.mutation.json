@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "kind": "request-mutation",
+  "baseFixture": "contracts/examples/figma-export.json",
+  "operation": "replace-asset-sha256",
+  "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "expectedDiagnostic": "VC-AI-FIGMA-INTEGRITY-MISMATCH"
+}

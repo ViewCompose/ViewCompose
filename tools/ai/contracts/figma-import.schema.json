@@ -1,0 +1,686 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/figma-import-v1.schema.json",
+  "title": "ViewCompose offline Figma import v1",
+  "oneOf": [
+    {"$ref": "#/$defs/request"},
+    {"$ref": "#/$defs/inspectResult"},
+    {"$ref": "#/$defs/generateResult"},
+    {"$ref": "#/$defs/verifyResult"}
+  ],
+  "$defs": {
+    "request": {
+      "oneOf": [
+        {"$ref": "#/$defs/inspectRequest"},
+        {"$ref": "#/$defs/generateRequest"},
+        {"$ref": "#/$defs/verifyRequest"}
+      ]
+    },
+    "inspectRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "mode", "exportJson"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "figma-import-request"},
+        "mode": {"const": "inspect"},
+        "exportJson": {"type": "string", "minLength": 1, "maxLength": 3145728}
+      }
+    },
+    "generateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "mode", "exportJson"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "figma-import-request"},
+        "mode": {"const": "generate"},
+        "exportJson": {"type": "string", "minLength": 1, "maxLength": 3145728}
+      }
+    },
+    "verifyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "mode", "exportJson", "verification"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "figma-import-request"},
+        "mode": {"const": "verify"},
+        "exportJson": {"type": "string", "minLength": 1, "maxLength": 3145728},
+        "verification": {"$ref": "#/$defs/verificationRequest"}
+      }
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "exportVersion",
+        "document",
+        "units",
+        "settings",
+        "privacy",
+        "completeness",
+        "catalogs",
+        "assets",
+        "nodes"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "figma-export"},
+        "exportVersion": {"const": "viewcompose-figma-export/1"},
+        "document": {"$ref": "#/$defs/document"},
+        "units": {"$ref": "#/$defs/units"},
+        "settings": {"$ref": "#/$defs/settings"},
+        "privacy": {"$ref": "#/$defs/privacy"},
+        "completeness": {"$ref": "#/$defs/completeness"},
+        "catalogs": {"$ref": "#/$defs/catalogs"},
+        "assets": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/asset"}
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2048,
+          "items": {"$ref": "#/$defs/exportNode"}
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "revision",
+        "nameDigest",
+        "editorType",
+        "selectedNodeIds"
+      ],
+      "properties": {
+        "identity": {"type": "string", "minLength": 1, "maxLength": 256},
+        "revision": {"type": "string", "minLength": 1, "maxLength": 256},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "editorType": {"const": "figma"},
+        "selectedNodeIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        }
+      }
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dpPerUnit", "spPerUnit"],
+      "properties": {
+        "dpPerUnit": {"type": "number", "minimum": 0.000001, "maximum": 16},
+        "spPerUnit": {"type": "number", "minimum": 0.000001, "maximum": 16}
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "colorSpace",
+        "coordinateSpace",
+        "geometryIncluded",
+        "variablesIncluded",
+        "componentSnapshotsResolved"
+      ],
+      "properties": {
+        "colorSpace": {"const": "srgb"},
+        "coordinateSpace": {"const": "selected-root-local"},
+        "geometryIncluded": {"type": "boolean"},
+        "variablesIncluded": {"type": "boolean"},
+        "componentSnapshotsResolved": {"const": true}
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "textIncluded",
+        "labelsIncluded",
+        "redactionDeclared",
+        "diagnosticDisclosure"
+      ],
+      "properties": {
+        "classification": {"enum": ["public", "internal", "confidential"]},
+        "textIncluded": {"type": "boolean"},
+        "labelsIncluded": {"type": "boolean"},
+        "redactionDeclared": {"type": "boolean"},
+        "diagnosticDisclosure": {"enum": ["digests-only", "labels", "labels-and-text"]}
+      }
+    },
+    "completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selectedSubtreesComplete",
+        "renderFactsComplete",
+        "componentLineageResolved",
+        "assetReferencesDeclared",
+        "fontReferencesDeclared",
+        "pluginDataExcluded",
+        "externalReferencesExcluded",
+        "credentialsExcluded"
+      ],
+      "properties": {
+        "selectedSubtreesComplete": {"const": true},
+        "renderFactsComplete": {"const": true},
+        "componentLineageResolved": {"const": true},
+        "assetReferencesDeclared": {"const": true},
+        "fontReferencesDeclared": {"const": true},
+        "pluginDataExcluded": {"const": true},
+        "externalReferencesExcluded": {"const": true},
+        "credentialsExcluded": {"const": true}
+      }
+    },
+    "catalogs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["components", "tokens", "styles", "fonts"],
+      "properties": {
+        "components": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {"$ref": "#/$defs/exportComponent"}
+        },
+        "tokens": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {"$ref": "#/$defs/exportToken"}
+        },
+        "styles": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {"$ref": "#/$defs/exportStyle"}
+        },
+        "fonts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/exportFont"}
+        }
+      }
+    },
+    "exportComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "sourceNodeId", "nameDigest", "sourceFingerprint"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "kind": {"enum": ["component", "component-set"]},
+        "sourceNodeId": {"$ref": "#/$defs/stableId"},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "sourceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "exportToken": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "collectionId", "nameDigest", "resolvedType", "value", "aliases"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "collectionId": {"$ref": "#/$defs/stableId"},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "resolvedType": {"enum": ["BOOLEAN", "COLOR", "FLOAT", "STRING"]},
+        "value": {"$ref": "#/$defs/factValue"},
+        "aliases": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        }
+      }
+    },
+    "exportStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "nameDigest", "sourceFingerprint"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "kind": {"enum": ["FILL", "GRID", "TEXT", "EFFECT"]},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "sourceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "exportFont": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "familyDigest", "genericFamily", "weight", "style"],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "familyDigest": {"$ref": "#/$defs/sha256"},
+        "genericFamily": {"enum": ["sans-serif", "serif", "monospace", "custom"]},
+        "weight": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "style": {"enum": ["normal", "italic"]}
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sourceNodeId",
+        "logicalPath",
+        "mediaType",
+        "encoding",
+        "data",
+        "bytes",
+        "sha256",
+        "intrinsicWidth",
+        "intrinsicHeight",
+        "ownership",
+        "redistribution"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "sourceNodeId": {"$ref": "#/$defs/stableId"},
+        "logicalPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,255}$"
+        },
+        "mediaType": {
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "application/vnd.viewcompose.vector+json"
+          ]
+        },
+        "encoding": {"const": "base64"},
+        "data": {
+          "type": "string",
+          "maxLength": 699052,
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        },
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 524288},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "intrinsicWidth": {"type": "number", "minimum": 0.000001, "maximum": 16384},
+        "intrinsicHeight": {"type": "number", "minimum": 0.000001, "maximum": 16384},
+        "ownership": {"enum": ["owned", "licensed", "third-party", "unknown"]},
+        "redistribution": {"enum": ["allowed", "prohibited", "unknown"]},
+        "licenseId": {"type": "string", "minLength": 1, "maxLength": 256}
+      }
+    },
+    "exportNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "nameDigest",
+        "visible",
+        "childIds",
+        "componentLineage",
+        "variantProperties",
+        "facts"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/stableId"},
+        "type": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,63}$"},
+        "nameDigest": {"$ref": "#/$defs/sha256"},
+        "visible": {"type": "boolean"},
+        "childIds": {
+          "type": "array",
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        },
+        "componentLineage": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/stableId"}
+        },
+        "variantProperties": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/fact"}
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {"$ref": "#/$defs/fact"}
+        }
+      }
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "phase", "value"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^[a-z][a-zA-Z0-9.-]{0,255}$"},
+        "phase": {
+          "enum": ["structure", "layout", "style", "semantics", "resource", "interaction"]
+        },
+        "value": {"$ref": "#/$defs/factValue"}
+      }
+    },
+    "factValue": {
+      "oneOf": [
+        {"$ref": "#/$defs/stringFact"},
+        {"$ref": "#/$defs/numberFact"},
+        {"$ref": "#/$defs/booleanFact"},
+        {"$ref": "#/$defs/nullFact"},
+        {"$ref": "#/$defs/colorFact"},
+        {"$ref": "#/$defs/referenceFact"},
+        {"$ref": "#/$defs/numberListFact"},
+        {"$ref": "#/$defs/digestFact"}
+      ]
+    },
+    "stringFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": {"const": "string"},
+        "value": {"type": "string", "maxLength": 32768}
+      }
+    },
+    "numberFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {"kind": {"const": "number"}, "value": {"type": "number"}}
+    },
+    "booleanFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {"kind": {"const": "boolean"}, "value": {"type": "boolean"}}
+    },
+    "nullFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {"kind": {"const": "null"}, "value": {"type": "null"}}
+    },
+    "colorFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "argb"],
+      "properties": {
+        "kind": {"const": "color"},
+        "argb": {"type": "string", "pattern": "^[A-F0-9]{8}$"}
+      }
+    },
+    "referenceFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "referenceType", "id"],
+      "properties": {
+        "kind": {"const": "reference"},
+        "referenceType": {"enum": ["asset", "component", "font", "node", "style", "token"]},
+        "id": {"$ref": "#/$defs/stableId"}
+      }
+    },
+    "numberListFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "values"],
+      "properties": {
+        "kind": {"const": "number-list"},
+        "values": {"type": "array", "maxItems": 64, "items": {"type": "number"}}
+      }
+    },
+    "digestFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "sha256", "summary"],
+      "properties": {
+        "kind": {"const": "digest"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 256}
+      }
+    },
+    "verificationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widthDp", "heightDp", "density", "fontScale", "theme", "layoutDirection"],
+      "properties": {
+        "widthDp": {"type": "integer", "minimum": 1, "maximum": 2000},
+        "heightDp": {"type": "integer", "minimum": 1, "maximum": 4000},
+        "density": {"type": "number", "minimum": 0.5, "maximum": 8},
+        "fontScale": {"type": "number", "minimum": 0.5, "maximum": 3},
+        "theme": {"enum": ["Light", "Dark"]},
+        "layoutDirection": {"enum": ["Ltr", "Rtl"]}
+      }
+    },
+    "inspectResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "mode",
+        "inputFingerprint",
+        "irFingerprint",
+        "profile",
+        "auditSummary",
+        "designIr",
+        "audit"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "figma-import-result"},
+        "mode": {"const": "inspect"},
+        "inputFingerprint": {"$ref": "#/$defs/sha256"},
+        "irFingerprint": {"$ref": "#/$defs/sha256"},
+        "profile": {"$ref": "#/$defs/profile"},
+        "auditSummary": {"$ref": "#/$defs/auditSummary"},
+        "designIr": {"type": "object"},
+        "audit": {"$ref": "#/$defs/audit"}
+      }
+    },
+    "generateResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "mode",
+        "inputFingerprint",
+        "irFingerprint",
+        "profile",
+        "auditSummary",
+        "virtualFiles"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "figma-import-result"},
+        "mode": {"const": "generate"},
+        "inputFingerprint": {"$ref": "#/$defs/sha256"},
+        "irFingerprint": {"$ref": "#/$defs/sha256"},
+        "profile": {"$ref": "#/$defs/profile"},
+        "auditSummary": {"$ref": "#/$defs/auditSummary"},
+        "virtualFiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/virtualFile"}
+        }
+      }
+    },
+    "verifyResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "mode",
+        "inputFingerprint",
+        "irFingerprint",
+        "profile",
+        "auditSummary",
+        "artifactSetFingerprint",
+        "verification"
+      ],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "kind": {"const": "figma-import-result"},
+        "mode": {"const": "verify"},
+        "inputFingerprint": {"$ref": "#/$defs/sha256"},
+        "irFingerprint": {"$ref": "#/$defs/sha256"},
+        "profile": {"$ref": "#/$defs/profile"},
+        "auditSummary": {"$ref": "#/$defs/auditSummary"},
+        "artifactSetFingerprint": {"$ref": "#/$defs/sha256"},
+        "verification": {"$ref": "#/$defs/verification"}
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["versionLane", "identity", "match"],
+      "properties": {
+        "versionLane": {"enum": ["current-source", "released"]},
+        "identity": {"type": "string", "minLength": 1, "maxLength": 256},
+        "match": {"const": "exact"}
+      }
+    },
+    "auditSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selectedRoots",
+        "nodes",
+        "facts",
+        "mapped",
+        "flattened",
+        "preservedOnly",
+        "unsupported",
+        "blocking",
+        "generationAllowed"
+      ],
+      "properties": {
+        "selectedRoots": {"type": "integer", "minimum": 1, "maximum": 64},
+        "nodes": {"type": "integer", "minimum": 1, "maximum": 2048},
+        "facts": {"type": "integer", "minimum": 1, "maximum": 32768},
+        "mapped": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "flattened": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "preservedOnly": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "unsupported": {"type": "integer", "minimum": 0, "maximum": 1024},
+        "blocking": {"type": "integer", "minimum": 0, "maximum": 1024},
+        "generationAllowed": {"type": "boolean"}
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factCoverage", "assetCoverage", "privacy", "limits"],
+      "properties": {
+        "factCoverage": {"$ref": "#/$defs/coverage"},
+        "assetCoverage": {"$ref": "#/$defs/coverage"},
+        "privacy": {"enum": ["declared", "redacted"]},
+        "limits": {"const": "within-bounds"}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declared", "decided", "percent"],
+      "properties": {
+        "declared": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "decided": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "percent": {"type": "number", "minimum": 0, "maximum": 100}
+      }
+    },
+    "virtualFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "mediaType",
+        "encoding",
+        "data",
+        "bytes",
+        "sha256",
+        "artifactFingerprint"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,255}$"
+        },
+        "mediaType": {
+          "enum": [
+            "text/x-kotlin",
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "application/vnd.android.resource"
+          ]
+        },
+        "encoding": {"enum": ["utf8", "base64"]},
+        "data": {"type": "string", "maxLength": 699052},
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 524288},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "artifactFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compilation", "preview", "categories", "conclusion"],
+      "properties": {
+        "compilation": {"$ref": "#/$defs/stageEvidence"},
+        "preview": {"$ref": "#/$defs/stageEvidence"},
+        "categories": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["structure", "semantics", "geometry", "style", "assets", "pixels", "perceptual"],
+          "properties": {
+            "structure": {"$ref": "#/$defs/categoryEvidence"},
+            "semantics": {"$ref": "#/$defs/categoryEvidence"},
+            "geometry": {"$ref": "#/$defs/categoryEvidence"},
+            "style": {"$ref": "#/$defs/categoryEvidence"},
+            "assets": {"$ref": "#/$defs/categoryEvidence"},
+            "pixels": {"$ref": "#/$defs/categoryEvidence"},
+            "perceptual": {"$ref": "#/$defs/categoryEvidence"}
+          }
+        },
+        "conclusion": {"enum": ["passed", "failed", "incomplete"]}
+      }
+    },
+    "stageEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "fingerprint"],
+      "properties": {
+        "status": {"enum": ["passed", "failed", "not-run"]},
+        "fingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "categoryEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible", "evaluated", "passed", "failed", "notApplicable", "conclusion"],
+      "properties": {
+        "eligible": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "evaluated": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "passed": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "failed": {"type": "integer", "minimum": 0, "maximum": 512},
+        "notApplicable": {"type": "integer", "minimum": 0, "maximum": 32768},
+        "conclusion": {"enum": ["passed", "failed", "not-applicable", "incomplete"]}
+      }
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,255}$"
+    }
+  }
+}

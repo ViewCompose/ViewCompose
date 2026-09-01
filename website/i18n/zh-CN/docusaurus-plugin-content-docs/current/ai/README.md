@@ -2,13 +2,13 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: cd6f66b71c46c38ea29263c6d602b711769e4c0255950059b4c35a360f1c83ed
+translation_source_hash: cf24d6596bba3d9e63052905ee4d499aedf97cb9a4eca57d294cc72fd1c9cf5f
 translation_status: current
 ---
 
 # AI 接入
 
-ViewCompose 把机器可读 API Reference、13 个本地 MCP 工具和 6 个 Agent Skill 作为一个
+ViewCompose 把机器可读 API Reference、14 个本地 MCP 工具和 7 个 Agent Skill 作为一个
 由不可变 GitHub Release 支持的精确版本 npm Package 发布。开发者只需一条命令，就能让 Codex、
 Claude Code 或 Cursor 接入全新或已有 Android Project。即使要执行 Kotlin 编译和生成页面的
 Preview 证据，也不要求全局安装、ViewCompose Checkout、本地构建 Package、Provider Key 或
@@ -19,18 +19,22 @@ Coding Client 仍然负责模型、Credential、对话和用户授权的源码�
 
 ## 一条命令完成安装
 
+本 `next` Lane 页面记录 Wave C 的 `0.6.0` Release Candidate。以下精确命令会在受保护的
+`ai-tooling-v0.6.0` Tag Workflow 完成后公开可用；在此之前，已有 Project 应继续使用精确
+`0.5.0`，不得跟随尚未发布或可变的 Selector。
+
 在 Android Project 的物理根目录执行以下任意一条命令：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client codex
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client codex
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client claude-code
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client claude-code
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 init --client cursor
+npx --yes @viewcompose/ai-tooling@0.6.0 init --client cursor
 ```
 
 `init` 会解析当前物理目录，在任何写入前检测精确 ViewCompose Dependency Vector，把已验证 Package
@@ -50,7 +54,7 @@ API 查询、生成、静态验证和 Project 分析只要求 Node.js 24.19.0 �
 9.3.1 Wrapper 与固定 Build Harness，用户无需安装 Gradle，也无需让现有 Project 的 AGP/Kotlin
 版本与工具链对齐。Bootstrap 只写入 Project 接入面与操作系统用户 Cache；不要为此使用 `sudo`。
 
-### `0.5.0` 的精确框架版本绑定
+### `0.6.0` 的精确框架版本绑定
 
 `init` 不会执行 Project Gradle Logic，而是读取 Project 中独立版本化的 `com.viewcompose`
 Coordinate。它接受精确 Literal、默认 `libs.versions.toml` 中实际使用的 Entry，以及 Dependency
@@ -60,7 +64,7 @@ Pack；并在安装 Skill 前把 Content-addressed Profile ID 写入 MCP Environ
 
 不含 ViewCompose Dependency 的 Project 属于新项目，会选择该 Release 最新稳定 Profile。Dynamic、
 互相冲突、不支持或其他无法解析的版本——包括存在 ViewCompose Import 却没有 Dependency Identity——
-都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。`0.5.0` Profile 表示当前
+都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。`0.6.0` Profile 表示当前
 已发布 Artifact Vector；旧版本 Vector 只有在某个 Release 明确携带匹配 Profile 后才会升级。
 
 ## 确认安装状态
@@ -69,7 +73,7 @@ Pack；并在安装 Skill 前把 Content-addressed Profile ID 写入 MCP Environ
 版本与客户端选项：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` 表示 MCP Entry 与全部 Skill 都和已安装 Release 一致，物理 Project 根目录
@@ -105,11 +109,49 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
 - 对 XML 生成页面执行编译、Preview 渲染、语义/几何比对与结构化布局诊断；
 - Screenshot 预处理、Inference 验证与类型化 Resolution，以及 ViewCompose Kotlin 生成；
 - 对 Screenshot 生成页面执行编译、Preview 渲染、语义比对，以及符合条件时的精确 Pixel 比对；
-- API 查询、页面创建、XML 转换、Review、验证和布局调试共 6 个 Workflow；每个 Workflow
-  只保留实际取得的证据等级。
+- 离线 Figma Export 检查、确定性 ViewCompose Kotlin 与可再分发 PNG 生成、编译、Preview
+  渲染，以及有界的结构、语义、几何和 Asset 比较；
+- API 查询、页面创建、XML 转换、Figma Import、Review、验证和布局调试共 7 个 Workflow；
+  每个 Workflow 只保留实际取得的证据等级。
 
 证据等级依次为 `knowledge`、`static`、`compiled`、`rendered` 和 `compared`。静态结果不证明
 编译通过，生成 Kotlin 也不证明页面已渲染或达到视觉一致。
+
+## 离线 Figma 转 ViewCompose
+
+Release `0.6.0` 新增公开工具 `convert_figma_to_viewcompose` 和 Skill
+`viewcompose-import-figma`。工具只接收调用方提供的一份自包含
+`viewcompose-figma-export/1` JSON 文档。ViewCompose 不登录 Figma、不接收 Access Token、
+不抓取 URL、不执行 Plugin Data，也不联系模型或 Provider。首个 Release 有意不包含 Figma
+Plugin、Figma REST Client 或 `.fig` Parser：需要生成这种标准化 Export 的组织，应使用经过
+单独 Review 的离线 Adapter，再把得到的 JSON 提供给 Agent。
+
+安装精确 Package 后，把该 JSON 作为附件或以其他方式放入 Project Session，并向 Agent 提出：
+
+> 使用 `$viewcompose-import-figma` 检查这份离线 Figma Export。只有完整 Mapping Audit 允许时
+> 才继续生成；Host 就绪时验证生成结果；在建议写入 Project 前报告所有不支持属性和证据限制。
+
+该 Skill 执行一条 Fail-closed 流程：
+
+1. `inspect` 校验严格 JSON、声明的 Privacy/Redaction、选中 Graph 完整性、Component 与
+   Variant Lineage、Token Alias、Font、Asset Ownership 与 Redistribution、权威 Base64、Media
+   Signature、Byte Count、SHA-256 Identity 和安全相对路径。结果包含 Design IR v2、每条已声明
+   Render Fact 的 Decision、完整 Fact/Asset Coverage，并且不回显嵌入的 Asset Byte。
+2. 只有 Audit 不含 Error 级 Unsupported Decision 时才允许 `generate`。它返回内容寻址的虚拟
+   Kotlin 与 Resource File，不会写入 Consumer Project。
+3. `verify` 使用精确 Released Maven Profile 编译生成 Kotlin，渲染固定 Preview，并把接受的
+   Render Tree 与 Mapping 后的 Design IR 比较。Project 初始化必须已经把 Deep-evidence Lane
+   报告为 Ready。
+
+首个生成子集只支持一个选中 Root；不换行的 Row、Column 和 Box 结构；使用已声明通用系统字体
+的 Text；Solid Color；以及明确声明无障碍意图、允许再分发的 PNG Image。多个 Root、自定义
+Font、Wrap、Effect、Prototype Interaction、Active Content、URL、未声明 Fact 或 Asset、危险
+Path、Vector 和 JPEG/WebP 输出仍会被阻断，或仅允许检查。
+
+验证会分别报告各个 Category。`0.6.0` 可以通过结构、语义、几何和 Asset；Style 仍为
+`incomplete`，Pixel 与 Perceptual Category 为 `not-applicable`，因为 Import 不接收可信 Figma
+Reference Render。因此成功的 `compared` 结果只是有界 Render-tree 证据，不是 Figma 视觉一致。
+把返回的虚拟文件集成进 Project 仍是用户授权的 Agent Action；发生冲突时必须 Review，不能覆盖。
 
 ## 版本化 Project 分析
 
@@ -132,8 +174,6 @@ Applicability、分类值 `high` Confidence，以及独立的 Precision/Recall �
 规则提供 25 个 Positive 与 50 个 Eligible Negative Opportunity：125/125 个 Positive 全部检出，
 250 个 Eligible Negative 中 0 个产生错误 Finding，25/25 个刻意不支持的 Opportunity 均保持显式。
 因此，在已声明的 Lexical Boundary 内，验收结果为 100% Observed Precision 与 Recall；这不是对
-任意 Kotlin 语义的覆盖声明。
-
 Alias、Star Import、Custom Wrapper、Dynamic Dependency Expression、Malformed Call，以及需要
 Type/Control/Data-flow 的问题都会报告为 Unsupported，而不会静默当作安全。Lifecycle Pairing、
 Touch Target Size、Modifier Ordering、Unit/Theme Preference、AndroidView Commit Semantics、结构
@@ -160,7 +200,7 @@ Image(source = divider)
 
 ## 深层证据执行边界
 
-Release `0.5.0` 使用 Maven Central 中的精确 ViewCompose Artifact 编译生成 Kotlin，并渲染生成
+Release `0.6.0` 使用 Maven Central 中的精确 ViewCompose Artifact 编译生成 Kotlin，并渲染生成
 页面。Package 内的 Content-addressed Harness 固定使用 Gradle 9.3.1、AGP 9.1.1、Kotlin
 2.2.10、Android 36、JVM Target 11 和 Allowlist 中的 ViewCompose/Preview Coordinate。Consumer
 Project 根目录只是只读授权边界：工具不会执行它的 Wrapper、Settings、Plugin、Task 或 Build
@@ -184,7 +224,7 @@ RGBA 比对。直接调用 `render_preview` 和 `diagnose_layout` 仍只适用�
 用一条命令检查、下载并迁移到最新兼容的工具 Release：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 upgrade --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 upgrade --client <codex|claude-code|cursor>
 ```
 
 该命令先检测 Project 版本，并且只检查不可变的 `ai-tooling-v<semver>` Release。它会跳过框架
@@ -201,7 +241,7 @@ Dependency。精确版本 Bootstrap 会沿着已验证的受管理 MCP Entry 找
 删除当前 Project 接入：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.5.0 uninstall --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.6.0 uninstall --client <codex|claude-code|cursor>
 ```
 
 该命令只删除精确的 ViewCompose MCP Entry 与规范 Skill 字节，无关客户端设置和文件会保留。
@@ -210,7 +250,7 @@ Package；Content-addressed Package Cache 会保留，用于完整性校验与�
 
 ## 完整性与故障排查
 
-[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.5.0)
+[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.6.0)
 包含 Tarball、`manifest.json` 与 `SHA256SUMS`。发布 Workflow 会构建 Package 两次、检查精确
 Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创建 GitHub Artifact Attestation。
 如需独立校验 Provenance，请参考 GitHub 的
@@ -245,12 +285,13 @@ npm 版本历史中还包含 `0.4.0-bootstrap.0`。它是一次性的、带 Prov
 Alias。公开验证已经通过，`bootstrap` 标签也已删除。早期版本都保留为不可变审计历史；
 `0.4.0` 已弃用并明确指向 `0.4.1`，普通稳定 SemVer Range 仍不会选中
 `0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在任何稳定 Tag 创建前撤销。
-Release `0.5.0` 保留该接入修正，并新增上文所述的版本化、高置信度 Project 分析契约。请使用
-上文记录的精确稳定 Selector `@viewcompose/ai-tooling@0.5.0`。
+Release `0.5.0` 保留该接入修正，并新增上文所述的版本化、高置信度 Project 分析契约。
+Release Candidate `0.6.0` 保留该 Analyzer，并新增上文所述的离线 Figma 契约。仅在受保护的
+Tag 发布完成后使用精确 Selector `@viewcompose/ai-tooling@0.6.0`。
 
 | 现象 | 处理方式 |
 | --- | --- |
-| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并使用字面量 `@viewcompose/ai-tooling@0.5.0`；不要替换为 `latest`。 |
+| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并使用已发布的字面量 `@viewcompose/ai-tooling@0.6.0`；不要替换为 `latest`。 |
 | `doctor` 报告 `repair-required` | 只有现有文件未修改时才重新运行 `init`；否则先检查报告中的冲突。 |
 | `doctor` 报告 `host-prerequisites-required` | 安装 JDK 17 或 21 与 Android SDK Platform 36 后重新运行 `doctor`；无需另装 Gradle。 |
 | `upgrade` 返回 `no-compatible-update` | 保持当前接入不变。当前还没有已发布的工具 Release 为该 Project 提供精确框架 Profile；不要改为安装全局最新 Package。 |
@@ -258,6 +299,8 @@ Release `0.5.0` 保留该接入修正，并新增上文所述的版本化、高�
 | `upgrade` 报告受管理配置或 Skill 已被修改 | 重试前先检查并保留用户改动。Upgrader 只替换 ViewCompose 曾安装的精确字节。 |
 | 客户端未显示 MCP Server | 执行上面的客户端检查，按要求批准 Project 配置，再重启或 Reload 客户端。 |
 | 编译或 Preview 报告 `VC-AI-PROJECT-ROOT-MISMATCH` | 从物理 Project 根目录运行 `init`，并确保 Agent Process 仍可访问该路径。 |
+| Figma 检查报告 Unsupported Mapping | Review 完整 Mapping Ledger，并修正或简化离线 Export；不要删除 Unsupported Fact，也不要要求 Agent 猜测。 |
+| Figma `verify` 报告 Style `incomplete` 或 Pixel `not-applicable` | 这是 Released Evidence Boundary，不是 Host 故障。请人工 Review 生成 Preview，不要声称 Figma Parity。 |
 | 出现 Credential 请求 | 立即停止。ViewCompose 不需要模型 Provider Credential，也不会在 MCP 参数或 Project 配置中接收它。 |
 
 贡献者内部说明见 [AI 工具契约](https://github.com/ViewCompose/ViewCompose/blob/main/tools/ai/README.md)
