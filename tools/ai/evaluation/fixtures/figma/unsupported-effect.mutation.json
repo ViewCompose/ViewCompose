@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "request-mutation",
+  "baseFixture": "contracts/examples/figma-export.json",
+  "operation": "add-fact",
+  "nodeId": "1:1",
+  "fact": {
+    "path": "effect.dropShadow",
+    "phase": "style",
+    "value": {
+      "kind": "digest",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "summary": "DROP_SHADOW"
+    }
+  },
+  "expectedStatus": "unsupported",
+  "expectedDiagnostic": "VC-AI-FIGMA-MAPPING-UNSUPPORTED"
+}

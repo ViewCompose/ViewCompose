@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 2,
+  "kind": "design-ir",
+  "documentId": "figma-example",
+  "source": {
+    "kind": "figma",
+    "documentIdentity": "figma-file-example",
+    "revision": "version-1",
+    "exportVersion": "viewcompose-figma-export/1",
+    "fingerprint": "508aeee427b660c0d9b5757e2be23ea8ad8cb98f7fd5f6c0ff83a1b6585d5e38"
+  },
+  "importFingerprint": "41e3b69d791b63859794c068d91b9472474d6ca84db2fa0817280db195094c44",
+  "selections": ["1:2"],
+  "exportSettings": {
+    "dpPerUnit": 1,
+    "spPerUnit": 1,
+    "colorSpace": "srgb",
+    "coordinateSpace": "selected-root-local"
+  },
+  "privacy": {
+    "classification": "internal",
+    "textIncluded": true,
+    "labelsIncluded": false,
+    "pluginDataExcluded": true,
+    "externalReferencesExcluded": true,
+    "redactionDeclared": true
+  },
+  "catalogs": {
+    "components": [],
+    "tokens": [],
+    "styles": [],
+    "fonts": []
+  },
+  "resources": [],
+  "roots": [
+    {
+      "id": "1:2",
+      "kind": "text",
+      "layout": {
+        "mode": "fixed",
+        "xDp": 0,
+        "yDp": 0,
+        "width": {"mode": "hug", "valueDp": 104},
+        "height": {"mode": "hug", "valueDp": 30},
+        "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
+        "gapDp": 0,
+        "horizontalAlignment": "start",
+        "verticalAlignment": "start",
+        "clip": "none"
+      },
+      "properties": [
+        {"name": "text", "value": {"kind": "literal", "value": "Welcome"}}
+      ],
+      "semantics": [],
+      "children": [],
+      "provenance": {
+        "sourceNodeId": "1:2",
+        "sourcePath": "nodes/1:2",
+        "componentLineage": [],
+        "variantProperties": [],
+        "tokenReferences": [],
+        "styleReferences": [],
+        "confidence": 1,
+        "decision": "Mapped one declared static text node without inferred behavior."
+      }
+    }
+  ],
+  "mappingLedger": [
+    {
+      "nodeId": "1:2",
+      "sourcePath": "text.characters",
+      "targetPath": "properties.text",
+      "phase": "structure",
+      "status": "mapped",
+      "severity": "info",
+      "disposition": "emitted",
+      "sourceValueFingerprint": "0e2226b5235f0ff94a276eb4d07a3bfea74b7e3b8b85e9efca6c18430f041bf8",
+      "reasonCode": "VC-AI-FIGMA-TEXT-MAPPED"
+    }
+  ],
+  "unsupported": []
+}

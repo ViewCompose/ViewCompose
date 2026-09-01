@@ -9,6 +9,8 @@
     "knowledgeBundleManifest": 1,
     "toolEnvelope": 1,
     "designIr": 1,
+    "designIrV2": 2,
+    "figmaImport": 1,
     "xmlProjectContext": 1,
     "xmlLayoutDependencies": 1,
     "generatedPreviewRequest": 1,

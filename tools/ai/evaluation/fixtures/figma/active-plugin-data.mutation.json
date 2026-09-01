@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "request-mutation",
+  "baseFixture": "contracts/examples/figma-export.json",
+  "operation": "add-fact",
+  "nodeId": "1:1",
+  "fact": {
+    "path": "pluginData.script",
+    "phase": "interaction",
+    "value": {"kind": "string", "value": "not-executed"}
+  },
+  "expectedDiagnostic": "VC-AI-FIGMA-SECURITY-ACTIVE-CONTENT"
+}

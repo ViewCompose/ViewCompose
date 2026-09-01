@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "kind": "request-mutation",
+  "baseFixture": "contracts/examples/figma-export.json",
+  "operation": "replace-asset-logical-path",
+  "value": "res/drawable/../../outside.png",
+  "expectedDiagnostic": "VC-AI-FIGMA-PATH-INVALID"
+}
