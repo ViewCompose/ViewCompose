@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "format": "npm-tgz",
     "nodeEngine": ">=24.19.0",
     "license": "MIT",
@@ -43,7 +43,7 @@
       "viewcompose-review",
       "viewcompose-validate"
     ],
-    "executables": ["viewcompose-ai", "viewcompose-agent", "viewcompose-mcp"],
+    "executables": ["ai-tooling", "viewcompose-ai", "viewcompose-agent", "viewcompose-mcp"],
     "requiredPaths": [
       "LICENSE",
       "README.md",

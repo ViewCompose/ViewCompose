@@ -13,7 +13,7 @@ const expectedClients = Object.freeze({
   'claude-code': {configPath: '.mcp.json', skillRoot: '.claude/skills'},
   cursor: {configPath: '.cursor/mcp.json', skillRoot: '.agents/skills'},
 });
-const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.4.0'});
+const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.4.1'});
 
 function contained(root, candidate) {
   const path = relative(resolve(root), resolve(candidate));
@@ -95,13 +95,13 @@ function adoptionEnvironment(root, npmCache) {
 
 async function runNpxAgent(archivePath, projectRoot, npmCache, arguments_) {
   const npm = npmInvocation();
+  const packageSpec = `file:${archivePath}`;
   return run(npm.executable, [
     ...npm.arguments,
     'exec',
     '--yes',
-    `--package=${archivePath}`,
     '--',
-    'viewcompose-agent',
+    packageSpec,
     ...arguments_,
   ], {
     cwd: projectRoot,

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "contractId": "viewcompose-ai-bootstrap-v1",
-  "lastVerified": "2026-08-31",
+  "lastVerified": "2026-09-01",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "nodeEngine": ">=24.19.0",
-    "binary": "viewcompose-agent",
+    "binary": "ai-tooling",
     "installScripts": false,
     "manager": "npm"
   },

@@ -194,6 +194,7 @@ async function packageMetadata(contract) {
     publishConfig: {access: contract.package.publishAccess},
     engines: {node: contract.package.nodeEngine},
     bin: {
+      'ai-tooling': 'scripts/agent-client-integration.mjs',
       'viewcompose-ai': 'scripts/ai-tool.mjs',
       'viewcompose-agent': 'scripts/agent-client-integration.mjs',
       'viewcompose-mcp': 'scripts/mcp-server.mjs',

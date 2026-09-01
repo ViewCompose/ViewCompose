@@ -23,7 +23,7 @@
       "required": ["package", "version", "knowledgeLane"],
       "properties": {
         "package": {"const": "@viewcompose/ai-tooling"},
-        "version": {"const": "0.4.0"},
+        "version": {"const": "0.4.1"},
         "knowledgeLane": {"const": "current-source"}
       }
     },
