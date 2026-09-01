@@ -51,14 +51,30 @@
       }
     ]
   },
-  "assets": [],
+  "assets": [
+    {
+      "id": "asset:logo",
+      "sourceNodeId": "1:3",
+      "logicalPath": "res/drawable/viewcompose_figma_logo.png",
+      "mediaType": "image/png",
+      "encoding": "base64",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAYCAYAAADzoH0MAAAASUlEQVR42mP49evXf0owA9UMUFBUwYtpb8DAhwHFBpSWlpKEsRpArK14DTimoYEXEzSAIhdQFAbDIB2Iph4gCY8acGBYpgNyMQDe4heK94pkCQAAAABJRU5ErkJggg==",
+      "bytes": 130,
+      "sha256": "26817c1dd0bc39c1828fc854c549dd0df3217a8fd947787e801618aad01342ed",
+      "intrinsicWidth": 16,
+      "intrinsicHeight": 24,
+      "ownership": "owned",
+      "redistribution": "allowed",
+      "licenseId": "MIT"
+    }
+  ],
   "nodes": [
     {
       "id": "1:1",
       "type": "FRAME",
       "nameDigest": "41b1ca0da597016ca91b2dc43a4ae94d5a558b38d1649e72a584dddcba420a30",
       "visible": true,
-      "childIds": ["1:2"],
+      "childIds": ["1:2", "1:3"],
       "componentLineage": [],
       "variantProperties": [],
       "facts": [
@@ -103,6 +119,26 @@
         {"path": "text.letterSpacing", "phase": "style", "value": {"kind": "number", "value": 0}},
         {"path": "text.fill", "phase": "style", "value": {"kind": "color", "argb": "FF111111"}},
         {"path": "accessibility.role", "phase": "semantics", "value": {"kind": "string", "value": "heading"}}
+      ]
+    },
+    {
+      "id": "1:3",
+      "type": "RECTANGLE",
+      "nameDigest": "d707dc2f1936efd8707060cbe7cdeaba8f250967ecd32fcd56e2491c7f18e52c",
+      "visible": true,
+      "childIds": [],
+      "componentLineage": [],
+      "variantProperties": [],
+      "facts": [
+        {"path": "geometry.x", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "geometry.y", "phase": "layout", "value": {"kind": "number", "value": 54}},
+        {"path": "geometry.width", "phase": "layout", "value": {"kind": "number", "value": 16}},
+        {"path": "geometry.height", "phase": "layout", "value": {"kind": "number", "value": 24}},
+        {"path": "layout.width", "phase": "layout", "value": {"kind": "string", "value": "FIXED"}},
+        {"path": "layout.height", "phase": "layout", "value": {"kind": "string", "value": "FIXED"}},
+        {"path": "image.asset", "phase": "resource", "value": {"kind": "reference", "referenceType": "asset", "id": "asset:logo"}},
+        {"path": "image.scale", "phase": "style", "value": {"kind": "string", "value": "FIT"}},
+        {"path": "accessibility.decorative", "phase": "semantics", "value": {"kind": "boolean", "value": true}}
       ]
     }
   ]
