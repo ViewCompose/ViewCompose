@@ -8,8 +8,8 @@ import {
 
 test('accepts the complete checked-in client-neutral consumer workflow set', async () => {
   const result = await verifyConsumerWorkflows();
-  assert.equal(result.workflows, 6);
-  assert.equal(result.exactMatches, 6);
+  assert.equal(result.workflows, 7);
+  assert.equal(result.exactMatches, 7);
   assert.equal(result.exactMatchRatio, 1);
 });
 
@@ -33,7 +33,7 @@ test('rejects workflow tool drift, evidence upgrades, and provider-specific skil
     skills: [{
       ...expected.workflows[0],
       path: 'skills/viewcompose-check/SKILL.md',
-      maximumEvidence: 'compared',
+      maximumEvidence: 'verified',
     }],
   };
   delete manifest.workflows;

@@ -178,6 +178,25 @@ test('preserves unsupported effects and prototype interactions while blocking ge
   }
 });
 
+test('reports multiple selected roots as non-generatable during inspection', async () => {
+  const exported = await example();
+  exported.nodes.find((node) => node.id === '1:1').childIds = ['1:2'];
+  exported.document.selectedNodeIds = ['1:1', '1:3'];
+
+  const inspected = await importFigmaExport(request(exported), {requestId: 'figma-multiple-roots'});
+  assert.equal(inspected.status, 'unsupported');
+  assert.equal(inspected.data.auditSummary.selectedRoots, 2);
+  assert.equal(inspected.data.auditSummary.blocking, 1);
+  assert.equal(inspected.data.auditSummary.generationAllowed, false);
+  assert.equal(inspected.data.designIr.unsupported[0].sourcePath, 'document.selectedNodeIds');
+
+  const generated = await importFigmaExport(request(exported, 'generate'), {
+    requestId: 'figma-generate-multiple-roots',
+  });
+  assert.equal(generated.status, 'unsupported');
+  assert.equal(generated.diagnostics[0].code, 'VC-AI-FIGMA-MAPPING-UNSUPPORTED');
+});
+
 test('rejects cyclic or detached selected graphs and honors cancellation', async () => {
   const cyclic = await example();
   cyclic.nodes.find((node) => node.id === '1:3').childIds.push('1:1');

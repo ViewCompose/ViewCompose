@@ -101,6 +101,9 @@ const xmlProjectFixtureRoot = fileURLToPath(
 const xmlLayoutDependencyFixtureRoot = fileURLToPath(
   new URL('../evaluation/fixtures/xml/layout-dependencies/supported/', import.meta.url),
 );
+const figmaExportPath = fileURLToPath(
+  new URL('../contracts/examples/figma-export.json', import.meta.url),
+);
 const outputRoot = resolve(aiRoot, 'build/distribution');
 const npmEnvironment = Object.freeze({
   npm_config_audit: 'false',
@@ -179,8 +182,8 @@ async function runCli(executable, knowledge, tool, arguments_, requestId, env = 
     framework: knowledge.framework,
     limits: {
       timeoutMs: tool === 'validate_code' ||
-        ['compile', 'render', 'compare', 'compare-pixels'].includes(arguments_.mode) ||
-        ['compile', 'render', 'compare', 'compare-pixels']
+        ['compile', 'render', 'compare', 'compare-pixels', 'verify'].includes(arguments_.mode) ||
+        ['compile', 'render', 'compare', 'compare-pixels', 'verify']
           .includes(arguments_.generationRequest?.mode)
         ? 300_000
         : 10_000,
@@ -978,6 +981,93 @@ async function verifyCliFlow(
     throw new Error('Installed CLI did not compile the frozen XML layout dependency migration.');
   }
 
+  const figmaExportJson = await readFile(figmaExportPath, 'utf8');
+  const figmaRequest = {
+    schemaVersion: 1,
+    kind: 'figma-import-request',
+    mode: 'inspect',
+    exportJson: figmaExportJson,
+  };
+  const inspectedFigma = await runCli(
+    cli,
+    knowledge,
+    'convert_figma_to_viewcompose',
+    figmaRequest,
+    'distribution-figma-inspect',
+  );
+  if (
+    inspectedFigma.status !== 'success' ||
+    inspectedFigma.evidence.level !== 'static' ||
+    inspectedFigma.data?.mode !== 'inspect' ||
+    inspectedFigma.data?.audit?.factCoverage?.percent !== 100 ||
+    inspectedFigma.data?.audit?.assetCoverage?.percent !== 100 ||
+    inspectedFigma.data?.auditSummary?.generationAllowed !== true ||
+    JSON.stringify(inspectedFigma).includes(JSON.parse(figmaExportJson).assets[0].data)
+  ) {
+    throw new Error('Installed CLI did not inspect the frozen offline Figma export safely.');
+  }
+  const generatedFigma = await runCli(
+    cli,
+    knowledge,
+    'convert_figma_to_viewcompose',
+    {...figmaRequest, mode: 'generate'},
+    'distribution-figma-generate',
+  );
+  if (
+    generatedFigma.status !== 'success' ||
+    generatedFigma.evidence.level !== 'static' ||
+    generatedFigma.data?.virtualFiles?.length !== 2 ||
+    !generatedFigma.data.virtualFiles.some((file) =>
+      file.mediaType === 'text/x-kotlin' &&
+      file.data.includes('fun UiTreeBuilder.FigmaFileExampleView(')) ||
+    !generatedFigma.data.virtualFiles.some((file) => file.mediaType === 'image/png')
+  ) {
+    throw new Error('Installed CLI did not generate deterministic Figma Kotlin and PNG artifacts.');
+  }
+  const verifiedFigma = await runCli(
+    cli,
+    knowledge,
+    'convert_figma_to_viewcompose',
+    {
+      ...figmaRequest,
+      mode: 'verify',
+      verification: {
+        widthDp: 360,
+        heightDp: 120,
+        density: 1,
+        fontScale: 1,
+        theme: 'Light',
+        layoutDirection: 'Ltr',
+      },
+    },
+    'distribution-figma-verify',
+    {VIEWCOMPOSE_PROJECT_ROOT: repositoryRoot},
+  );
+  if (
+    verifiedFigma.status !== 'success' ||
+    verifiedFigma.evidence.level !== 'compared' ||
+    verifiedFigma.data?.verification?.compilation?.status !== 'passed' ||
+    verifiedFigma.data?.verification?.preview?.status !== 'passed' ||
+    verifiedFigma.data?.verification?.categories?.structure?.conclusion !== 'passed' ||
+    verifiedFigma.data?.verification?.categories?.semantics?.conclusion !== 'passed' ||
+    verifiedFigma.data?.verification?.categories?.geometry?.conclusion !== 'passed' ||
+    verifiedFigma.data?.verification?.categories?.assets?.conclusion !== 'passed' ||
+    verifiedFigma.data?.verification?.categories?.style?.conclusion !== 'incomplete' ||
+    verifiedFigma.data?.verification?.categories?.pixels?.conclusion !== 'not-applicable' ||
+    verifiedFigma.data?.verification?.categories?.perceptual?.conclusion !== 'not-applicable' ||
+    verifiedFigma.data?.verification?.conclusion !== 'incomplete'
+  ) {
+    throw new Error(
+      'Installed CLI did not return bounded Figma compilation, Preview, and layout evidence: ' +
+      JSON.stringify({
+        status: verifiedFigma.status,
+        evidence: verifiedFigma.evidence,
+        diagnosticCodes: verifiedFigma.diagnostics?.map((item) => item.code),
+        verification: verifiedFigma.data?.verification,
+      }),
+    );
+  }
+
   const source = await readFile(compileFixturePath, 'utf8');
   const rejected = await runCli(cli, knowledge, 'validate_code', {
     mode: 'compile',
@@ -1019,6 +1109,9 @@ async function verifyCliFlow(
     xmlImagePreview: renderedImageXml.evidence.outputFingerprint,
     xmlV2: compiledXmlV2.evidence.outputFingerprint,
     xmlLayoutDependencies: compiledXmlLayoutDependencies.evidence.outputFingerprint,
+    figmaInspect: inspectedFigma.evidence.outputFingerprint,
+    figmaGenerate: generatedFigma.evidence.outputFingerprint,
+    figmaVerify: verifiedFigma.evidence.outputFingerprint,
   };
 }
 
@@ -1027,6 +1120,7 @@ async function verifyMcpMatrix(mcp, contract) {
   const [
     xml,
     xmlV2,
+    figmaExportJson,
     screenshotRequest,
     screenshotExpected,
     inferencePreprocessingRequest,
@@ -1042,6 +1136,7 @@ async function verifyMcpMatrix(mcp, contract) {
   ] = await Promise.all([
     readFile(xmlFixturePath, 'utf8'),
     readFile(xmlV2FixturePath, 'utf8'),
+    readFile(figmaExportPath, 'utf8'),
     readJson(screenshotRequestPath),
     readJson(screenshotResultPath),
     readJson(inferencePreprocessingRequestPath),
@@ -1096,6 +1191,20 @@ async function verifyMcpMatrix(mcp, contract) {
     },
   }]);
   modern.push(...await runMcp(mcp, [{
+    jsonrpc: '2.0',
+    id: 'modern-figma-inspect',
+    method: 'tools/call',
+    params: {
+      name: 'convert_figma_to_viewcompose',
+      arguments: {
+        schemaVersion: 1,
+        kind: 'figma-import-request',
+        mode: 'inspect',
+        exportJson: figmaExportJson,
+      },
+      _meta: modernMeta(modernVersion),
+    },
+  }, {
     jsonrpc: '2.0',
     id: 'modern-xml-layout-dependencies',
     method: 'tools/call',
@@ -1208,14 +1317,19 @@ async function verifyMcpMatrix(mcp, contract) {
     (response) => response.id === 'modern-screenshot-pixel-comparison',
   );
   const modernXmlProject = modern.find((response) => response.id === 'modern-xml-project');
+  const modernFigmaInspect = modern.find((response) => response.id === 'modern-figma-inspect');
   const modernXmlV2 = modern.find((response) => response.id === 'modern-xml-v2');
   const modernXmlLayoutDependencies = modern.find(
     (response) => response.id === 'modern-xml-layout-dependencies',
   );
   if (
-    modern.length !== 11 ||
+    modern.length !== 12 ||
     modernList?.result?.tools?.map((tool) => tool.name).join(',') !== contract.contents.tools.join(',') ||
     modernXml?.result?.structuredContent?.status !== 'success' ||
+    modernFigmaInspect?.result?.structuredContent?.status !== 'success' ||
+    modernFigmaInspect?.result?.structuredContent?.data?.mode !== 'inspect' ||
+    modernFigmaInspect?.result?.structuredContent?.data?.audit?.factCoverage?.percent !== 100 ||
+    JSON.stringify(modernFigmaInspect).includes(JSON.parse(figmaExportJson).assets[0].data) ||
     modernScreenshot?.result?.structuredContent?.evidence?.outputFingerprint !==
       screenshotExpected.outputFingerprint ||
     JSON.stringify(modernScreenshot?.result?.structuredContent?.data) !==
@@ -1409,7 +1523,9 @@ async function main() {
       `${compileFingerprints.xmlV2}, and compiled XML layout-dependency migration ` +
       `${compileFingerprints.xmlLayoutDependencies}; generated XML Preview compared as ` +
       `${compileFingerprints.xmlPreview}, and generated XML image Preview compared as ` +
-      `${compileFingerprints.xmlImagePreview}.\n`,
+      `${compileFingerprints.xmlImagePreview}; inspected Figma ${compileFingerprints.figmaInspect}, ` +
+      `generated Figma ${compileFingerprints.figmaGenerate}, and verified Figma ` +
+      `${compileFingerprints.figmaVerify}.\n`,
     );
   } finally {
     if (!uninstalled) {

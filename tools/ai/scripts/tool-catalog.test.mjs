@@ -14,6 +14,7 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     'diagnose_layout',
     'analyze_project',
     'convert_xml_to_viewcompose',
+    'convert_figma_to_viewcompose',
     'prepare_screenshot',
     'validate_screenshot_inference',
     'resolve_screenshot_inference',
@@ -27,8 +28,8 @@ test('publishes one stable catalog for retrieval, validation, Preview diagnosis,
     assert.equal(definition.annotations.readOnlyHint, true);
     assert.ok(TOOL_DEFINITIONS[name].defaultLimits.maxOutputBytes <=
       (['prepare_screenshot', 'validate_screenshot_inference', 'resolve_screenshot_inference',
-        'generate_screenshot_viewcompose'].includes(name)
-        ? 2_000_000
+        'generate_screenshot_viewcompose', 'convert_figma_to_viewcompose'].includes(name)
+        ? 3_145_728
         : 1024 * 1024));
   }
 });
@@ -57,6 +58,19 @@ test('the executable catalog rejects unbounded arrays and undeclared arguments',
     source: '<TextView />',
   }, TOOL_DEFINITIONS.convert_xml_to_viewcompose.inputSchema);
   assert.deepEqual(missingXmlMode, ['$: expected exactly one oneOf match, found 0']);
+
+  assert.deepEqual(validateSchemaValue({
+    schemaVersion: 1,
+    kind: 'figma-import-request',
+    mode: 'inspect',
+    exportJson: '{}',
+  }, TOOL_DEFINITIONS.convert_figma_to_viewcompose.inputSchema), []);
+  assert.notDeepEqual(validateSchemaValue({
+    schemaVersion: 1,
+    kind: 'figma-import-request',
+    mode: 'verify',
+    exportJson: '{}',
+  }, TOOL_DEFINITIONS.convert_figma_to_viewcompose.inputSchema), []);
 
   const projectContext = validateSchemaValue({
     projectRoot: '/workspace/sample',

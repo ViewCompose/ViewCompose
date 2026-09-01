@@ -568,6 +568,24 @@ test('maps compile, render, layout diagnosis, project, and XML limits into provi
     sourceRoots: ['app/src/main/java'],
     mode: 'generate',
   }), {convertXml: handler('convert_xml_to_viewcompose', 'static')});
+  await dispatchToolRequest(await request('convert_figma_to_viewcompose', {
+    schemaVersion: 1,
+    kind: 'figma-import-request',
+    mode: 'inspect',
+    exportJson: '{}',
+  }), {
+    convertFigma: async (arguments_, options) => {
+      captured.push({tool: 'convert_figma_to_viewcompose', arguments_: {...arguments_, ...options}});
+      return toolResult({
+        requestId: options.requestId,
+        tool: 'convert_figma_to_viewcompose',
+        status: 'success',
+        level: 'static',
+        diagnostics: [],
+        data: {},
+      });
+    },
+  });
 
   assert.equal(captured[0].arguments_.limits.maxSourceBytes, 256 * 1024);
   assert.equal(captured[0].arguments_.signal instanceof AbortSignal, true);
@@ -583,6 +601,8 @@ test('maps compile, render, layout diagnosis, project, and XML limits into provi
   assert.equal(captured[4].arguments_.projectRoot, '/workspace/sample');
   assert.deepEqual(captured[4].arguments_.resourceRoots, ['app/src/main/res']);
   assert.deepEqual(captured[4].arguments_.sourceRoots, ['app/src/main/java']);
+  assert.equal(captured[5].arguments_.mode, 'inspect');
+  assert.equal(captured[5].arguments_.signal instanceof AbortSignal, true);
 });
 
 test('propagates transport cancellation into the bounded execution signal', async () => {

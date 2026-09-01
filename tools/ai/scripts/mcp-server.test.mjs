@@ -56,6 +56,7 @@ const pixelReferenceResultPath = new URL(
   '../evaluation/fixtures/visual/screenshot-pixel/pixel-reference.result.json',
   import.meta.url,
 );
+const figmaExportPath = new URL('../contracts/examples/figma-export.json', import.meta.url);
 const protocolVersionKey = 'io.modelcontextprotocol/protocolVersion';
 const clientInfoKey = 'io.modelcontextprotocol/clientInfo';
 const clientCapabilitiesKey = 'io.modelcontextprotocol/clientCapabilities';
@@ -99,6 +100,7 @@ test('discovers the stateless modern server and deterministically lists the shar
     'diagnose_layout',
     'analyze_project',
     'convert_xml_to_viewcompose',
+    'convert_figma_to_viewcompose',
     'prepare_screenshot',
     'validate_screenshot_inference',
     'resolve_screenshot_inference',
@@ -138,6 +140,33 @@ test('returns the exact provider-neutral result through CLI and MCP', async () =
   );
   assert.equal(JSON.parse(response.result.content[0].text).evidence.bundleFingerprint,
     direct.evidence.bundleFingerprint);
+  assert.equal(response.result.isError, false);
+});
+
+test('returns the same offline Figma inspection through CLI and MCP', async () => {
+  const exported = await readFile(figmaExportPath, 'utf8');
+  const arguments_ = {
+    schemaVersion: 1,
+    kind: 'figma-import-request',
+    mode: 'inspect',
+    exportJson: exported,
+  };
+  const id = 'figma-inspect-parity';
+  const direct = await dispatchToolRequest(await createToolRequest({
+    tool: 'convert_figma_to_viewcompose',
+    arguments: arguments_,
+    requestId: mcpToolRequestId(id),
+  }));
+  const response = await new ViewComposeMcpSession().receive(request(id, 'tools/call', {
+    name: 'convert_figma_to_viewcompose',
+    arguments: arguments_,
+  }));
+  assert.deepEqual(
+    semanticToolResult(response.result.structuredContent),
+    semanticToolResult(direct),
+  );
+  assert.equal(response.result.structuredContent.data.mode, 'inspect');
+  assert.equal(response.result.structuredContent.data.audit.factCoverage.percent, 100);
   assert.equal(response.result.isError, false);
 });
 
@@ -500,7 +529,7 @@ test('supports the 2025-11-25 initialize lifecycle without weakening modern requ
     params: {},
   });
   assert.equal(listing.result.resultType, undefined);
-  assert.equal(listing.result.tools.length, 13);
+  assert.equal(listing.result.tools.length, 14);
 });
 
 test('emits bounded opt-in progress and suppresses all output after cancellation', async () => {

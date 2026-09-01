@@ -59,6 +59,7 @@ export const DESIGN_IR_V2_SCHEMA = Object.freeze(
 );
 
 export const FIGMA_IMPORT_REQUEST_SCHEMA = Object.freeze({
+  type: 'object',
   ...structuredClone(FIGMA_IMPORT_SCHEMA.$defs.request),
   $defs: structuredClone(FIGMA_IMPORT_SCHEMA.$defs),
 });

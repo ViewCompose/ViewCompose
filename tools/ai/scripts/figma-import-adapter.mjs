@@ -942,6 +942,17 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
     unsupported: unsupported.sort((left, right) =>
       left.nodeId.localeCompare(right.nodeId) || left.sourcePath.localeCompare(right.sourcePath)),
   };
+  if (ir.roots.length !== 1) {
+    ir.unsupported.push({
+      nodeId: exported.document.selectedNodeIds[0],
+      sourcePath: 'document.selectedNodeIds',
+      code: 'VC-AI-FIGMA-MAPPING-UNSUPPORTED',
+      reason: 'Figma v1 generation requires exactly one selected root.',
+      sourceValueFingerprint: fingerprint(exported.document.selectedNodeIds),
+      severity: 'error',
+      disposition: 'blocked',
+    });
+  }
   const violations = validateSchemaValue(ir, DESIGN_IR_V2_SCHEMA);
   if (violations.length > 0) {
     fail(
@@ -958,9 +969,9 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
     mapped: decisions.filter((item) => item.status === 'mapped').length,
     flattened: decisions.filter((item) => item.status === 'flattened').length,
     preservedOnly: decisions.filter((item) => item.status === 'preserved-only').length,
-    unsupported: unsupported.length,
-    blocking: unsupported.filter((item) => item.severity === 'error').length,
-    generationAllowed: unsupported.every((item) => item.severity !== 'error'),
+    unsupported: ir.unsupported.length,
+    blocking: ir.unsupported.filter((item) => item.severity === 'error').length,
+    generationAllowed: ir.unsupported.every((item) => item.severity !== 'error'),
   };
   return {ir, summary};
 }
