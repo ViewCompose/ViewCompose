@@ -52,7 +52,7 @@
     "changeFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "proposalFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
     "authorizationValidationFingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-    "appliedResultHandoffFingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "patchOutputFingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "baselineEvidenceFingerprint": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     "candidateEvidenceFingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
     "preApplyEvidenceFingerprint": "1010101010101010101010101010101010101010101010101010101010101010"
@@ -90,5 +90,5 @@
       "eligible-pixels"
     ]
   },
-  "requestFingerprint": "4440333f030ca7413b26544baee5ef7e9dd51d7a516f6d3ed69ba1cafa6b6636"
+  "requestFingerprint": "73dde53e66a512e43211b7bd3350e8fe335a4fd3df01e6960a1e6a6d67a49c93"
 }

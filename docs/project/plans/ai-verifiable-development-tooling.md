@@ -939,7 +939,7 @@ Three versioned schemas now freeze the canonical request, append-only hash-chain
 immutable apply/rollback receipt. They bind the physical-root and framework-profile fingerprints,
 root-relative Kotlin path, regular single-link file identity, exact UTF-8 preimage and property span,
 replacement and reconstructed candidate hashes, displayed diff, Design IR/proposal/authorization/
-handoff/evidence lineage, ten-minute expiry, one nonce, recovery identities, and post-apply evidence.
+typed-patch/evidence lineage, ten-minute expiry, one nonce, recovery identities, and post-apply evidence.
 Recovery bytes live in an owner-only platform user-state directory outside the project and source
 control. Apply is unavailable unless the backend can provide no-follow, beneath-root,
 directory-handle-relative atomic replacement and durable sync semantics.

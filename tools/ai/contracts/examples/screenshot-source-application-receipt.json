@@ -4,7 +4,7 @@
   "operation": "apply",
   "status": "applied-verified",
   "transactionId": "1313131313131313131313131313131313131313131313131313131313131313",
-  "requestFingerprint": "4440333f030ca7413b26544baee5ef7e9dd51d7a516f6d3ed69ba1cafa6b6636",
+  "requestFingerprint": "73dde53e66a512e43211b7bd3350e8fe335a4fd3df01e6960a1e6a6d67a49c93",
   "project": {
     "physicalRootFingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
     "relativePath": "app/src/main/java/example/LoginScreen.kt",
@@ -71,5 +71,5 @@
     "linkedReceiptFingerprint": null
   },
   "journalChainFingerprint": "2323232323232323232323232323232323232323232323232323232323232323",
-  "receiptFingerprint": "9019068b3e85bae932aac2e8e01c4fec7c90847ff0512d54aa7f38deafd6088d"
+  "receiptFingerprint": "681bbf1bb7c0f4876fb17a34c7f391b7f3eb392cf57f33788a7046d724f234f1"
 }

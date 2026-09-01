@@ -131,6 +131,8 @@ const sourcePaths = Object.freeze([
   'scripts/screenshot-repair-host-grant-adapter.mjs',
   'scripts/screenshot-repair-proposer.mjs',
   'scripts/screenshot-repair-terminal-store.mjs',
+  'scripts/screenshot-source-edit.mjs',
+  'scripts/screenshot-source-application-preparer.mjs',
   'scripts/verify-phase5-screenshot-source-application.mjs',
   'scripts/schema-validator.mjs',
   'scripts/screenshot-contract.mjs',
