@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "viewcompose-project-analysis-rules-v1",
+  "applicability": {
+    "mode": "active-exact-profile",
+    "versionLanes": ["current-source", "released"]
+  },
+  "rules": [
+    {
+      "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "ruleVersion": 1,
+      "title": "Declare image content description intent",
+      "family": "accessibility",
+      "severity": "warning",
+      "confidence": "high",
+      "suppressible": true,
+      "mechanism": "An exact governed Image call omits the contentDescription named argument.",
+      "suggestion": "Provide meaningful text, or use explicit null only when the image is decorative.",
+      "evidence": ["guide.image-loading", "image.foundation"],
+      "supportedSyntax": [
+        "Exact unaliased com.viewcompose.ui.foundation.Image import with a balanced argument list.",
+        "Exact unaliased Image import followed by an explicit contentDescription named argument."
+      ],
+      "unsupportedSyntax": [
+        "Import aliases, star imports, custom wrappers, malformed calls, and inferred overloads."
+      ]
+    },
+    {
+      "ruleId": "VC-AI-ARTIFACT-REQUIRED",
+      "ruleVersion": 1,
+      "title": "Declare the exact owning ViewCompose artifact",
+      "family": "dependency",
+      "severity": "warning",
+      "confidence": "high",
+      "suppressible": false,
+      "mechanism": "An exact governed import resolves to an owning artifact absent from literal dependency declarations in the scanned scope.",
+      "suggestion": "Declare the owning artifact explicitly or include the Gradle file that declares it.",
+      "evidence": ["generated/current-source/artifacts.json", "generated/current-source/symbols.jsonl"],
+      "supportedSyntax": [
+        "Exact governed imports and literal com.viewcompose dependency declarations in the scanned scope."
+      ],
+      "unsupportedSyntax": [
+        "Transitive dependency inference, convention plugins, and dynamic dependency expressions."
+      ]
+    },
+    {
+      "ruleId": "VC-AI-PROJECT-UNKNOWN-ARTIFACT",
+      "ruleVersion": 1,
+      "title": "Reject unknown ViewCompose artifact coordinates",
+      "family": "dependency",
+      "severity": "warning",
+      "confidence": "high",
+      "suppressible": false,
+      "mechanism": "A literal com.viewcompose coordinate names an artifact absent from the active exact Knowledge profile.",
+      "suggestion": "Correct the coordinate or install the AI tooling profile that exactly matches the project framework release.",
+      "evidence": ["generated/current-source/artifacts.json"],
+      "supportedSyntax": [
+        "Literal Gradle string, module/name table, or current-project ViewCompose coordinates."
+      ],
+      "unsupportedSyntax": [
+        "Computed group or artifact names, plugin-owned declarations, and nonliteral catalog expressions."
+      ]
+    },
+    {
+      "ruleId": "VC-AI-PROJECT-UNKNOWN-IMPORT",
+      "ruleVersion": 1,
+      "title": "Reject unknown ViewCompose namespaces",
+      "family": "symbol-resolution",
+      "severity": "warning",
+      "confidence": "high",
+      "suppressible": false,
+      "mechanism": "An exact import under the reserved com.viewcompose namespace is absent from the active exact Knowledge profile.",
+      "suggestion": "Use a governed current-profile symbol or align the AI tooling with the project framework release.",
+      "evidence": ["generated/current-source/symbols.jsonl"],
+      "supportedSyntax": [
+        "Exact unaliased Kotlin or Java import under com.viewcompose with a known or unknown namespace."
+      ],
+      "unsupportedSyntax": [
+        "Import aliases, star imports, generated imports, and custom source preprocessors."
+      ]
+    },
+    {
+      "ruleId": "VC-AI-PROJECT-VERSION-LANE",
+      "ruleVersion": 1,
+      "title": "Keep framework dependencies on the active exact profile",
+      "family": "version-integrity",
+      "severity": "warning",
+      "confidence": "high",
+      "suppressible": false,
+      "mechanism": "A literal released ViewCompose dependency version differs from the active exact Knowledge profile.",
+      "suggestion": "Install the exact tooling profile for this framework release or upgrade the framework separately before reinitializing tooling.",
+      "evidence": ["generated/current-source/artifacts.json", "generated/released/index.json"],
+      "supportedSyntax": [
+        "Literal released versions on known com.viewcompose artifacts."
+      ],
+      "unsupportedSyntax": [
+        "Dynamic, catalog-referenced, conflicting, or otherwise unresolved version expressions."
+      ]
+    }
+  ]
+}

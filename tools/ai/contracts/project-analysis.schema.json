@@ -120,6 +120,7 @@
             "alias",
             "custom-wrapper",
             "dynamic-dependency",
+            "invalid-suppression",
             "malformed-call",
             "star-import",
             "type-resolution",

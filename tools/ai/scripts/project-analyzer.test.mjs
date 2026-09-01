@@ -182,3 +182,83 @@ test('reports unknown artifacts and versions outside the current bundle without 
     await rm(root, {recursive: true, force: true});
   }
 });
+
+test('returns versioned rule, quality, profile, and deterministic finding metadata', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'viewcompose-ai-analysis-payload-'));
+  try {
+    await writeFile(
+      join(root, 'build.gradle.kts'),
+      'dependencies { implementation("com.viewcompose:viewcompose-ui-foundation:0.0.1") }\n',
+    );
+    await writeFile(
+      join(root, 'Screen.kt'),
+      'import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = icon) }\n',
+    );
+    const first = await analyzeProject({projectRoot: root});
+    const second = await analyzeProject({projectRoot: root});
+    assert.equal(first.data.analysis.schemaVersion, 1);
+    assert.equal(first.data.analysis.profile.match, 'different');
+    assert.equal(first.data.analysis.quality.rules.every(
+      ({precision, recall}) => precision === 1 && recall === 1,
+    ), true);
+    assert.ok(first.data.analysis.findings.some(
+      ({ruleId, confidence}) =>
+        ruleId === 'VC-AI-A11Y-IMAGE-DESCRIPTION' && confidence === 'high',
+    ));
+    assert.deepEqual(first.data.analysis, second.data.analysis);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('audits a reasoned next-construct suppression without projecting a legacy diagnostic', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'viewcompose-ai-analysis-suppression-'));
+  try {
+    await writeFile(
+      join(root, 'Screen.kt'),
+      `
+        import com.viewcompose.ui.foundation.Image
+        // viewcompose-ai:suppress-next VC-AI-A11Y-IMAGE-DESCRIPTION -- decorative divider
+        fun screen() { Image(source = icon) }
+      `,
+    );
+    const result = await analyzeProject({projectRoot: root});
+    const finding = result.data.analysis.findings.find(
+      ({ruleId}) => ruleId === 'VC-AI-A11Y-IMAGE-DESCRIPTION',
+    );
+    assert.equal(finding.suppression.state, 'suppressed');
+    assert.equal(finding.suppression.reason, 'decorative divider');
+    assert.equal(result.data.analysis.summary.suppressed, 1);
+    assert.equal(result.diagnostics.some(
+      ({code}) => code === 'VC-AI-A11Y-IMAGE-DESCRIPTION',
+    ), false);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('consumes suppression on the next safe construct and reports unsupported lexical boundaries', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'viewcompose-ai-analysis-boundaries-'));
+  try {
+    await writeFile(
+      join(root, 'Screen.kt'),
+      `
+        import com.viewcompose.ui.foundation.Image
+        import com.viewcompose.ui.foundation.Row as VcRow
+        // viewcompose-ai:suppress-next VC-AI-A11Y-IMAGE-DESCRIPTION -- first image reviewed
+        fun screen() {
+          Image(source = first, contentDescription = null)
+          Image(source = second)
+        }
+      `,
+    );
+    const result = await analyzeProject({projectRoot: root});
+    const imageFinding = result.data.analysis.findings.find(
+      ({ruleId}) => ruleId === 'VC-AI-A11Y-IMAGE-DESCRIPTION',
+    );
+    assert.equal(imageFinding.suppression.state, 'none');
+    assert.ok(result.data.analysis.scan.unsupported.some(({kind}) => kind === 'alias'));
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});

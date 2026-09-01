@@ -25,7 +25,7 @@ const kotlinKeywords = new Set([
 
 let symbolIndexPromise;
 
-function maskNonCode(source) {
+export function maskNonCode(source) {
   const characters = source.split('');
   const mask = (index) => {
     if (characters[index] !== '\n' && characters[index] !== '\r') characters[index] = ' ';
@@ -126,6 +126,7 @@ function parseKotlinSurface(source) {
       exactImports.set(match[2] ?? imported.split('.').at(-1), {
         imported,
         offset: match.index + match[0].indexOf(imported),
+        alias: match[2] ?? null,
       });
     }
   }
@@ -134,6 +135,68 @@ function parseKotlinSurface(source) {
       .map((match) => match[1]),
   );
   return {packageName, exactImports, wildcardImports, declaredFunctions};
+}
+
+export async function analyzeKotlinImageCalls({source, path = 'Snippet.kt'} = {}) {
+  const index = await loadValidatorIndex();
+  const codeSource = maskNonCode(source);
+  const surface = parseKotlinSurface(codeSource);
+  const imageSymbol = index.bySimpleName.get('Image')?.find(
+    (symbol) => symbol.capabilityId === 'image.foundation',
+  );
+  if (!imageSymbol) return {opportunities: [], unsupported: []};
+  const governedImport = `${imageSymbol.namespace}.${imageSymbol.simpleName}`;
+  const unsupported = [];
+  for (const entry of surface.exactImports.values()) {
+    if (entry.imported === governedImport && entry.alias !== null) {
+      unsupported.push({
+        kind: 'alias',
+        reason: 'Aliased ViewCompose Image calls require semantic name resolution.',
+        source: sourceLocation(source, path, entry.offset, entry.imported.length),
+      });
+    }
+  }
+  if (surface.wildcardImports.has(imageSymbol.namespace)) {
+    const wildcardOffset = codeSource.indexOf(`${imageSymbol.namespace}.*`);
+    unsupported.push({
+      kind: 'star-import',
+      reason: 'Star imports do not prove that an unqualified Image call resolves to ViewCompose.',
+      source: sourceLocation(source, path, Math.max(0, wildcardOffset), imageSymbol.namespace.length + 2),
+    });
+  }
+  const directImport = surface.exactImports.get('Image');
+  if (directImport?.imported !== governedImport) return {opportunities: [], unsupported};
+  if (surface.declaredFunctions.has('Image')) {
+    const declaration = /\bfun\s+(?:[A-Za-z0-9_.<>?]+\.)?Image\s*\(/u.exec(codeSource);
+    unsupported.push({
+      kind: 'custom-wrapper',
+      reason: 'A local Image declaration shadows the governed import and requires type resolution.',
+      source: sourceLocation(source, path, declaration?.index ?? directImport.offset, 'Image'.length),
+    });
+    return {opportunities: [], unsupported};
+  }
+
+  const opportunities = [];
+  for (const match of codeSource.matchAll(/(?<![.A-Za-z0-9_])Image\s*\(/gu)) {
+    const openOffset = codeSource.indexOf('(', match.index);
+    const closeOffset = findMatchingParen(codeSource, openOffset);
+    if (closeOffset < 0) {
+      unsupported.push({
+        kind: 'malformed-call',
+        reason: 'The Image argument list is unbalanced, so named arguments cannot be resolved.',
+        source: sourceLocation(source, path, match.index, 'Image'.length),
+      });
+      continue;
+    }
+    const argumentsText = codeSource.slice(openOffset + 1, closeOffset);
+    opportunities.push({
+      missingContentDescription: !/\bcontentDescription\s*=/u.test(argumentsText),
+      source: sourceLocation(source, path, match.index, 'Image'.length),
+      artifactId: imageSymbol.artifactId,
+      capabilityId: imageSymbol.capabilityId,
+    });
+  }
+  return {opportunities, unsupported};
 }
 
 function resolvesUnqualified(name, surface, index) {
@@ -257,27 +320,19 @@ export async function validateKotlin({
     }));
   }
 
-  if (resolvesUnqualified('Image', surface, index)) {
-    for (const match of codeSource.matchAll(/(?<![.A-Za-z0-9_])Image\s*\(/gu)) {
-      const openOffset = codeSource.indexOf('(', match.index);
-      const closeOffset = findMatchingParen(codeSource, openOffset);
-      if (closeOffset < 0) continue;
-      const argumentsText = codeSource.slice(openOffset + 1, closeOffset);
-      if (!/\bcontentDescription\s*=/u.test(argumentsText)) {
-        const imageSymbol = index.bySimpleName.get('Image').find(
-          (symbol) => symbol.capabilityId === 'image.foundation',
-        );
-        diagnostics.push(diagnostic({
-          code: 'VC-AI-A11Y-IMAGE-DESCRIPTION',
-          severity: 'warning',
-          message: 'ViewCompose Image must declare contentDescription, including an explicit null for decorative content.',
-          nextAction: 'Set contentDescription to meaningful text, or explicitly set null only when the image is decorative.',
-          source: sourceLocation(source, path, match.index, 'Image'.length),
-          capabilityId: imageSymbol?.capabilityId,
-          artifactId: imageSymbol?.artifactId,
-        }));
-      }
-    }
+  const imageAnalysis = await analyzeKotlinImageCalls({source, path});
+  for (const opportunity of imageAnalysis.opportunities.filter(
+    (entry) => entry.missingContentDescription,
+  )) {
+    diagnostics.push(diagnostic({
+      code: 'VC-AI-A11Y-IMAGE-DESCRIPTION',
+      severity: 'warning',
+      message: 'ViewCompose Image must declare contentDescription, including an explicit null for decorative content.',
+      nextAction: 'Set contentDescription to meaningful text, or explicitly set null only when the image is decorative.',
+      source: opportunity.source,
+      capabilityId: opportunity.capabilityId,
+      artifactId: opportunity.artifactId,
+    }));
   }
 
   const uniqueDiagnostics = [...new Map(

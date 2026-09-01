@@ -27,6 +27,8 @@ const packageContractPath = fileURLToPath(
 const releasedProfileId = '895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064';
 const releasedBundleRoot = `generated/released/${releasedProfileId}`;
 const sourcePaths = Object.freeze([
+  'analysis/quality.json',
+  'analysis/rules.json',
   'contracts/agent-client-integration.schema.json',
   'contracts/examples/agent-client-integration.json',
   'contracts/bootstrap.schema.json',
@@ -76,6 +78,7 @@ const sourcePaths = Object.freeze([
   'generated/current-source/rules.json',
   'generated/current-source/samples.jsonl',
   'generated/current-source/symbols.jsonl',
+  'evaluation/project-analysis-corpus.json',
   'generated/released/index.json',
   `${releasedBundleRoot}/artifacts.json`,
   `${releasedBundleRoot}/capabilities.json`,
@@ -108,6 +111,8 @@ const sourcePaths = Object.freeze([
   'scripts/mcp-server.mjs',
   'scripts/preview-adapter.mjs',
   'scripts/project-analyzer.mjs',
+  'scripts/project-analysis-engine.mjs',
+  'scripts/verify-project-analysis.mjs',
   'scripts/repair-orchestrator.mjs',
   'scripts/screenshot-repair-candidate-evaluator.mjs',
   'scripts/screenshot-repair-authorization-validator.mjs',

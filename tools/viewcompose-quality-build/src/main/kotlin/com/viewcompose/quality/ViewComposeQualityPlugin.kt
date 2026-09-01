@@ -525,6 +525,29 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("tools/ai/package.json"),
             )
         }
+        project.tasks.register<Exec>("verifyAiProjectAnalysis") {
+            group = "verification"
+            description =
+                "Verifies versioned high-confidence project-analysis rules and measured quality."
+            workingDir(project.rootDir.resolve("tools/ai"))
+            commandLine("npm", "run", "verify:project-analysis")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("tools/ai")) {
+                    include(
+                        "analysis/**/*.json",
+                        "contracts/project-analysis*.json",
+                        "evaluation/project-analysis-corpus.json",
+                        "generated/current-source/**/*.json",
+                        "generated/current-source/**/*.jsonl",
+                        "scripts/project-analysis-engine.mjs",
+                        "scripts/project-analyzer.mjs",
+                        "scripts/static-validator.mjs",
+                        "scripts/verify-project-analysis.mjs",
+                    )
+                },
+                project.rootDir.resolve("tools/ai/package.json"),
+            )
+        }
         project.tasks.register<Exec>("verifyAiRetrieval") {
             group = "verification"
             description =
