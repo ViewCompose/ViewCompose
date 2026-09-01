@@ -22,7 +22,7 @@ function isMissingRegistryVersion(error) {
   return /(?:\bE404\b|404 Not Found|is not in this registry)/u.test(detail);
 }
 
-function inventoryResult(stdout, mode) {
+function inventoryResult(stdout, mode, packageName) {
   const parsed = JSON.parse(stdout);
   if (mode === 'published-payload') {
     if (!Array.isArray(parsed) || parsed.length !== 1) {
@@ -32,6 +32,19 @@ function inventoryResult(stdout, mode) {
   }
   if (Array.isArray(parsed) || parsed === null || typeof parsed !== 'object') {
     throw new Error('npm publish dry-run did not return one package inventory.');
+  }
+  if (parsed.id === undefined) {
+    const entries = Object.entries(parsed);
+    if (
+      entries.length !== 1 ||
+      entries[0][0] !== packageName ||
+      entries[0][1] === null ||
+      typeof entries[0][1] !== 'object' ||
+      Array.isArray(entries[0][1])
+    ) {
+      throw new Error('npm publish dry-run did not return one package inventory.');
+    }
+    return entries[0][1];
   }
   return parsed;
 }
@@ -97,7 +110,7 @@ export async function verifyNpmPackageInventory(
         ['pack', packageIdentity, '--ignore-scripts', '--json', '--pack-destination', downloadRoot],
         options,
       ));
-      const downloaded = inventoryResult(stdout, mode);
+      const downloaded = inventoryResult(stdout, mode, contract.package.name);
       if (downloaded.filename !== distribution.manifest.archive.path) {
         throw new Error('Published npm archive filename differs from the frozen package manifest.');
       }
@@ -124,7 +137,7 @@ export async function verifyNpmPackageInventory(
     }
   }
 
-  const result = inventoryResult(stdout, mode);
+  const result = inventoryResult(stdout, mode, contract.package.name);
   const expectedPaths = distribution.manifest.files.map((file) => file.path).sort();
   const actualPaths = result.files?.map((file) => file.path).sort() ?? [];
   if (

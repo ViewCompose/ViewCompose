@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.4.1",
+    "version": "0.5.0",
     "format": "npm-tgz",
     "nodeEngine": ">=24.19.0",
     "license": "MIT",

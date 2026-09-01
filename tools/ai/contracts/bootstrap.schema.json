@@ -14,7 +14,7 @@
       "required": ["name", "version", "nodeEngine", "binary", "installScripts", "manager"],
       "properties": {
         "name": {"const": "@viewcompose/ai-tooling"},
-        "version": {"const": "0.4.1"},
+        "version": {"const": "0.5.0"},
         "nodeEngine": {"const": ">=24.19.0"},
         "binary": {"const": "ai-tooling"},
         "installScripts": {"const": false},

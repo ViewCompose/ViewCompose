@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Execute Wave B by freezing and publishing the versioned analyze_project result, rule catalog, suppression, corpus-quality, and compatibility contracts before enabling the first high-confidence rules; do not begin Figma work until the installed package passes the analyzer gates.
+next_action: Merge and publish @viewcompose/ai-tooling 0.5.0 through the protected OIDC release, then reproduce the versioned analyze_project result from a fresh public-registry install and record immutable provenance before starting Wave C Figma contract work.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -684,6 +684,31 @@ cannot inflate true-negative counts. Acceptance also requires zero source or bui
 traversal/secret/output-limit safety, deterministic ordering, exact current-profile attribution,
 legacy-diagnostic compatibility, and successful installed-package analysis of fresh and existing
 project fixtures. Wave C cannot begin until this package is publicly released and reverified.
+
+#### Wave B pre-release acceptance evidence (2026-09-01)
+
+The contract and implementation slices now expose five versioned high-confidence rules through the
+existing `analyze_project` surface. The comparison context is the `0.4.1` analyzer, which returned
+inventory and legacy diagnostics without rule versions, framework applicability, quality
+denominators, suppression audit, or explicit unsupported coverage. The `0.5.0` candidate retains
+those fields and adds one schema-validated `data.analysis` payload; CLI and MCP produce identical
+normalized results, and the packed distribution invokes the same result from an installed binary.
+
+The frozen corpus contains 125 positive, 250 eligible negative, and 25 deliberately unsupported
+opportunities across five rules. Absolute results are 125/125 detected positives, 0/250 false
+positive eligible negatives, 0/125 false negatives, and 25/25 explicit unsupported results. The
+normalized change is from four unmeasured project diagnostics plus one snippet-only Image rule to
+five project-level rules with 100% observed precision and recall inside their declared lexical
+boundaries. `verifyAiProjectAnalysis` and `verifyDevelopmentToolingIsolation` both passed on JDK
+21.0.12.1; the focused Node suites passed 19/19 analyzer/static tests and 17/17 MCP tests.
+
+Conclusion: **improved**. Existing consumers retain their diagnostic codes while newer consumers
+receive exact rule, profile, evidence, quality, suppression, and unsupported metadata. Limitations:
+the corpus measures only documented literal/lexical forms; it does not substantiate alias, star
+import, wrapper, transitive dependency, lifecycle, control/data-flow, performance, theme, unit,
+touch-target, Modifier-order, or arbitrary Kotlin semantic claims. The next action is the protected
+`0.5.0` publication and fresh public-install reproduction; Wave B remains open until that immutable
+evidence is merged.
 
 ### Execution Wave C — provider-neutral Figma design-tree adapter
 

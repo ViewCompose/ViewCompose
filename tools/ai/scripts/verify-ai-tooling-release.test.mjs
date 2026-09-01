@@ -13,7 +13,7 @@ const ciWorkflow = await readFile(resolve(repositoryRoot, '.github/workflows/ci.
 
 test('accepts the frozen immutable GitHub Release workflow', async () => {
   const result = await verifyAiToolingRelease({checkAssets: false});
-  assert.deepEqual(result, {tag: 'ai-tooling-v0.4.1', assets: 3});
+  assert.deepEqual(result, {tag: 'ai-tooling-v0.5.0', assets: 3});
 });
 
 test('rejects tag, provenance, and mutable release drift', async () => {

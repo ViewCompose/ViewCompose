@@ -110,10 +110,30 @@ fixed hard caps above request-level file, byte, depth, timeout, and output limit
 does not return the oversized inventory. Without executing Gradle, the current analyzer derives
 exact ViewCompose coordinates and current-bundle version disposition, governed imports, owning
 artifacts and capabilities, Android SDK declarations, Preview sources, and Android XML or Jetpack
-Compose migration candidates. It reports unresolved namespaces, unknown artifacts, missing exact
-artifact declarations, and version-lane differences as structured findings. Regex-derived facts do
-not claim transitive dependency resolution, version-catalog alias resolution, deprecation state, or
-migration fidelity, and the analyzer never mutates code.
+Compose migration candidates. Release `0.5.0` preserves that inventory and the legacy diagnostic
+projection while adding the versioned `data.analysis` payload defined by
+`contracts/project-analysis.schema.json`: active exact profile, bounded scan coverage, applicable
+rule descriptors, immutable per-rule quality, typed findings, suppression audit, and explicit
+unsupported syntax.
+
+The first catalog enables only five deterministic high-confidence rules: unknown reserved-namespace
+imports, unknown ViewCompose artifacts, missing exact owning-artifact declarations, literal
+current-profile version differences, and exact unaliased `Image` calls without an explicit
+`contentDescription` decision. Each rule has 25 positive and 50 eligible negative labeled
+opportunities; the checked-in snapshot records 125/125 true positives, 0/250 false positives,
+0/125 false negatives, and 25/25 explicit unsupported opportunities. Aliases, star imports,
+wrappers, dynamic coordinates, malformed calls, and semantic inference do not become negative
+evidence. Only the Image rule supports the reason-required next-construct directive
+`viewcompose-ai:suppress-next`; suppressed findings remain auditable and are omitted from the legacy
+projection. The analyzer does not claim transitive resolution, lifecycle/control flow, performance,
+deprecation, migration fidelity, or source mutation.
+
+Run the independent quality gate with:
+
+```bash
+npm --prefix tools/ai run verify:project-analysis
+./gradlew verifyAiProjectAnalysis
+```
 
 Invoke the Phase 2 internal CLI by writing exactly one frozen request envelope to stdin:
 
@@ -538,7 +558,7 @@ primary consumer path is one exact-version transactional operation run from the 
 root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.5.0 init --client <codex|claude-code|cursor>
 ```
 
 `init` merges only the `viewcompose` MCP entry into `.codex/config.toml`, `.mcp.json`, or
@@ -555,7 +575,7 @@ paths never depend on npm's ephemeral extraction directory. An explicit physical
 Inspect the installed state and its honest capability boundary with:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.5.0 doctor --client <codex|claude-code|cursor>
 ```
 
 The default result is `project-bound-ready` when the exact configuration and Skills are present,
@@ -607,14 +627,14 @@ The public consumer launches the exact npm version, which remains provenance-bou
 immutable GitHub Release:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.5.0 init --client <codex|claude-code|cursor>
 ```
 
 Install and uninstall one exact local artifact in an isolated prefix without contacting a registry:
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.4.1.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.5.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
@@ -639,7 +659,9 @@ infer released-project compatibility for it. Release `0.3.0` introduced explicit
 framework profiles. Release `0.4.0` introduced the durable npm bootstrap, but its three named
 binaries left npm without a default executable for the documented shorthand. Release `0.4.1`
 retains the exact framework profile and adds the package-name `ai-tooling` alias for the existing
-transactional Agent entry point.
+transactional Agent entry point. Release `0.5.0` retains that onboarding contract and adds the
+versioned high-confidence project-analysis payload, rule catalog, quality snapshot, unsupported
+coverage, and installed-package verification.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and

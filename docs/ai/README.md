@@ -12,14 +12,16 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - npm @viewcompose/ai-tooling 0.4.1 with GitHub Release ai-tooling-v0.4.1 provenance
+  - npm @viewcompose/ai-tooling 0.5.0 with GitHub Release ai-tooling-v0.5.0 provenance
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
   - Codex, Claude Code, and Cursor project profiles verified 2026-09-01
 verification_commands:
   - npm --prefix tools/ai run verify:bootstrap-adoption
+  - npm --prefix tools/ai run verify:project-analysis
   - npm --prefix tools/ai run verify:phase3-agent-clients
+  - ./gradlew verifyAiProjectAnalysis
   - ./gradlew verifyAiDistribution
   - ./gradlew verifyAiToolingRelease
 lifecycle: Update when a supported client format, Skill path, package release, tool set, or evidence boundary changes.
@@ -42,15 +44,15 @@ validation evidence; it never embeds or contacts a model provider.
 Run exactly one of these commands from the physical root of the Android project:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 init --client codex
+npx --yes @viewcompose/ai-tooling@0.5.0 init --client codex
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 init --client claude-code
+npx --yes @viewcompose/ai-tooling@0.5.0 init --client claude-code
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 init --client cursor
+npx --yes @viewcompose/ai-tooling@0.5.0 init --client cursor
 ```
 
 `init` transactionally merges the `viewcompose` MCP entry and installs all six canonical Skills.
@@ -74,7 +76,7 @@ SDK platform 36. The release includes its own Gradle 9.3.1 wrapper and fixed bui
 do not install Gradle or align their project's AGP/Kotlin versions. The bootstrap writes only to the
 project integration surfaces and the operating system's user cache; never use `sudo` for it.
 
-### Exact framework-version binding in `0.4.1`
+### Exact framework-version binding in `0.5.0`
 
 `init` reads the project's independently versioned `com.viewcompose` coordinates without executing
 project Gradle logic. It accepts exact literals, used entries from the default
@@ -86,7 +88,7 @@ and generated Preview all load that same bundle.
 A project without a ViewCompose dependency is a new-project case and selects the Release's newest
 stable profile. Dynamic, conflicting, unsupported, or otherwise unresolved versions—including a
 ViewCompose import without dependency identity—fail before any project write. The tool does not
-silently change framework dependencies. The first `0.4.1` profile represents the current published
+silently change framework dependencies. The `0.5.0` profile represents the current published
 Artifact vector; an older version vector remains unchanged until a Release explicitly carries its
 matching profile.
 
@@ -96,7 +98,7 @@ matching profile.
 package version and client choice from the project root:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.5.0 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` means the MCP entry and every Skill match the installed release, the physical
@@ -141,6 +143,50 @@ The installed project-bound mode supports:
 Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A static result
 does not prove compilation, and generated Kotlin does not prove rendering or visual parity.
 
+## Versioned project analysis
+
+Release `0.5.0` upgrades the existing `analyze_project` MCP tool without adding a competing alias.
+The tool remains bounded and read-only: it does not execute the project wrapper, Gradle settings,
+plugins, tasks, compiler extensions, application code, or source writes. Its existing inventory and
+diagnostic fields remain available, while `data.analysis` adds the exact framework profile, scan
+coverage, applicable rule catalog, immutable corpus-quality snapshot, typed findings, suppression
+audit, and unsupported-syntax records.
+
+The first public catalog contains only five high-confidence rules:
+
+- unknown imports under the reserved `com.viewcompose` namespace;
+- unknown `com.viewcompose` Artifact coordinates;
+- an exact governed import without its owning Artifact declaration in the scanned scope;
+- a literal ViewCompose version that differs from the selected exact framework profile; and
+- an exact, unaliased ViewCompose `Image` call without an explicit `contentDescription` decision.
+
+Every enabled rule has a stable ID and version, source span, mechanism, evidence, safe suggestion,
+framework applicability, categorical `high` confidence, and independent precision/recall
+denominators. The frozen corpus currently measures 25 positive and 50 eligible negative
+opportunities per rule: 125/125 positives were detected, 0/250 eligible negatives produced a false
+finding, and 25/25 deliberately unsupported opportunities remained explicit. The accepted result is
+100% observed precision and recall inside the documented lexical boundary; it is not a claim about
+arbitrary Kotlin semantics.
+
+Aliases, star imports, custom wrappers, dynamic dependency expressions, malformed calls, and
+type/control/data-flow questions are reported as unsupported rather than silently treated as safe.
+Lifecycle pairing, touch-target size, Modifier ordering, unit/theme preferences, AndroidView commit
+semantics, structural simplification, recomposition, allocation, and performance findings remain
+disabled until a maintained AST or semantic layer can support them.
+
+Only the Image rule is suppressible. A suppression is rule-scoped, requires a non-empty reason, and
+is consumed by the next analyzable Image construct:
+
+{/* non-executable sample_id="ai.project-analysis-suppression" reason="The intentionally incomplete Image call demonstrates the analyzer finding and must not be copied as valid UI source." visible_explanation="This diagnostic-only snippet deliberately omits contentDescription so the suppression contract is visible." */}
+```kotlin
+// viewcompose-ai:suppress-next VC-AI-A11Y-IMAGE-DESCRIPTION -- legacy wrapper records decoration
+Image(source = divider)
+```
+
+Suppressed findings remain in `data.analysis.findings` with their reason and directive span, but are
+not projected into legacy diagnostics. Dependency, profile, path, execution, timeout, and other
+integrity findings cannot be suppressed.
+
 Try this first request in the selected Agent:
 
 > Use ViewCompose to create a Material 3 login screen. Retrieve the exact APIs and compiled samples
@@ -149,7 +195,7 @@ Try this first request in the selected Agent:
 
 ## Deep evidence execution boundary
 
-Release `0.4.1` compiles generated Kotlin and renders generated screens against exact ViewCompose
+Release `0.5.0` compiles generated Kotlin and renders generated screens against exact ViewCompose
 artifacts from Maven Central. A packaged content-addressed harness owns Gradle 9.3.1, AGP 9.1.1,
 Kotlin 2.2.10, Android 36, JVM target 11, and the allowlisted ViewCompose/Preview coordinates. The
 consumer project root is a read-only authorization boundary: the tooling does not execute its
@@ -177,7 +223,7 @@ rendering is a later, explicitly isolated capability.
 Check, download, and migrate to the newest compatible tooling Release with one command:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 upgrade --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.5.0 upgrade --client <codex|claude-code|cursor>
 ```
 
 The command detects the project versions first and inspects only immutable `ai-tooling-v<semver>`
@@ -196,7 +242,7 @@ upgrade, or remove the active side-by-side package.
 Remove the current project integration:
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.1 uninstall --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.5.0 uninstall --client <codex|claude-code|cursor>
 ```
 
 The command removes only the exact ViewCompose MCP entry and canonical Skill bytes; unrelated client
@@ -206,7 +252,7 @@ is retained for integrity and compatible reuse.
 
 ## Integrity and troubleshooting
 
-The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.1)
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.5.0)
 contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
 checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
 Attestations for all three assets. See GitHub's
@@ -237,11 +283,13 @@ transactional Agent entry point. Public verification passed, and the `bootstrap`
 removed. Both earlier versions remain immutable audit history, `0.4.0` is deprecated with an
 actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from ordinary stable
 semver ranges. The temporary npm token and GitHub secret were revoked before either stable tag.
-Use the exact stable `@viewcompose/ai-tooling@0.4.1` selector documented above.
+Release `0.5.0` retains that onboarding correction and adds the versioned high-confidence project
+analysis contract described above. Use the exact stable `@viewcompose/ai-tooling@0.5.0` selector
+documented above.
 
 | Symptom | Action |
 | --- | --- |
-| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal `@viewcompose/ai-tooling@0.4.1` selector. Do not substitute `latest`. |
+| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal `@viewcompose/ai-tooling@0.5.0` selector. Do not substitute `latest`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
 | `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
 | `upgrade` returns `no-compatible-update` | Keep the current integration. No published tooling Release contains an exact framework profile for this project yet. Do not install a global-latest package as a workaround. |
