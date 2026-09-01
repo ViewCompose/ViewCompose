@@ -12,7 +12,7 @@ capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - npm @viewcompose/ai-tooling 0.6.0 release candidate for GitHub Release ai-tooling-v0.6.0
+  - npm @viewcompose/ai-tooling 0.6.0 with immutable GitHub Release ai-tooling-v0.6.0
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
@@ -41,9 +41,8 @@ validation evidence; it never embeds or contacts a model provider.
 
 ## Install in one command
 
-This `next`-lane page documents the `0.6.0` Wave C release candidate. The exact commands become
-public when the protected `ai-tooling-v0.6.0` tag workflow completes; until then, existing projects
-remain on exact `0.5.0` and must not follow an unpublished or mutable selector.
+Release `0.6.0` is public. Use its exact selector so the installed tools, Skills, Knowledge Pack,
+and framework profile remain one verified version; do not replace it with a floating selector.
 
 Run exactly one of these commands from the physical root of the Android project:
 
@@ -310,11 +309,43 @@ Attestations for all three assets. See GitHub's
 [artifact attestation verification guide](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)
 for an optional independent provenance check.
 
+Public `0.6.0` acceptance completed on 2026-09-01. Protected
+[run `33498765977`](https://github.com/ViewCompose/ViewCompose/actions/runs/33498765977)
+published the package from merge and tag commit
+`67f99e12c02b36671843a6eb09546178c2760518` through the `ai-tooling-release` environment and GitHub
+OIDC Trusted Publisher in 10 minutes 24 seconds. npm exposes `latest -> 0.6.0`; its provenance
+predicate is SLSA v1 and its integrity is
+`sha512-R3+kHFNVUqfUr1n2EHPmM+L2107DLux35TRGSxBdCenFAqV0dznzUXRcGsbKjjFlRXbrtwJ9ZPMEUy6XgMwwRQ==`.
+The immutable Release contains exactly the 663,115-byte tarball, 35,817-byte `manifest.json`, and
+179-byte `SHA256SUMS`. The tarball SHA-256 is
+`de4b36df76ab842df18e0449967542b23de017104828700070caedb0e0671934`; all 3/3 assets passed the
+published checksums and GitHub attestation verification.
+
+In one repository-external Android project on macOS, the literal public selector completed
+`init`, `doctor`, and `uninstall` for Codex, Claude Code, and Cursor. Every client reached
+`project-bound-ready`, installed 7/7 exact Skills, and removed only its managed configuration and
+21/21 total Skill copies. The installed Figma CLI and MCP reproduced 39/39 declared facts and 1/1
+declared asset during inspection. Generation returned deterministic Kotlin and PNG files; real
+released-Maven compilation and Preview rendering passed, followed by structure 9/9, semantics 8/8,
+geometry 8/8, and assets 1/1. Style was explicitly `incomplete`, while pixel and perceptual evidence
+were `not-applicable` because no trusted Figma reference render was accepted.
+
+Relative to `0.5.0`, the public package adds one tool (13 to 14), one Skill (6 to 7), and one offline
+Figma workflow (0 to 1); Android runtime artifacts are unchanged. The interpreted conclusion is
+**improved** provider-neutral design import with **no material Android runtime behavior change** and
+no visual-parity claim. The external run covered one normalized Figma export and one macOS host and
+did not launch proprietary Agent binaries; hosted CI separately verifies native onboarding on
+Linux, macOS, and Windows. Direct Figma login, plugin/REST/`.fig` import, custom-font and unsupported
+effect generation, style or pixel parity, and source writes remain outside this release. Detailed
+denominators and the next Wave D action are retained in the
+[active AI tooling plan](../project/plans/ai-verifiable-development-tooling.md).
+
 Public `0.5.0` acceptance completed on 2026-09-01. Protected
 [run `33486262197`](https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197)
 published the package from exact tag commit
 `99894e8220de78421c428a80b1d0f2b01c0f0f24` through the `ai-tooling-release` environment in
-9 minutes 14 seconds. npm exposes only `latest -> 0.5.0`. Its SLSA v1 provenance names
+9 minutes 14 seconds. At that acceptance point, npm exposed `latest -> 0.5.0`; `0.6.0` now
+supersedes that tag. The `0.5.0` SLSA v1 provenance names
 `ViewCompose/ViewCompose`, `.github/workflows/ai-tooling-release.yml`,
 `refs/tags/ai-tooling-v0.5.0`, the GitHub-hosted builder, and that exact run. The 637,133-byte
 tarball has SHA-256 `a19e1c5680f34d744e313926af7d9081f51ea97e3ace64b6c732527d7104da04` and npm
@@ -345,9 +376,8 @@ removed. The earlier versions remain immutable audit history, `0.4.0` is depreca
 actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from ordinary stable semver
 ranges. The temporary npm token and GitHub secret were revoked before any stable tag.
 Release `0.5.0` retains that onboarding correction and adds the versioned high-confidence project
-analysis contract described above. Release candidate `0.6.0` retains that analyzer and adds the
-offline Figma contract described above. Use the exact `@viewcompose/ai-tooling@0.6.0` selector only
-after its protected tag publication completes.
+analysis contract described above. Public `0.6.0` retains that analyzer and adds the offline Figma
+contract described above. Use the exact `@viewcompose/ai-tooling@0.6.0` selector.
 
 | Symptom | Action |
 | --- | --- |
