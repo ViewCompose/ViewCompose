@@ -19,7 +19,7 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: Release 0.5.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Wave C has produced the tested 0.6.0 release candidate with one strict offline Figma import tool and a seventh client-neutral Skill; public tag publication and repository-external reproduction remain open. Compose migration and public source repair remain unactivated.
+baseline: Release 0.6.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Wave C is publicly accepted with one strict offline Figma import tool, a seventh client-neutral Skill, and repository-external inspect, generate, compile, Preview, comparison, MCP, and three-client onboarding evidence. Compose migration and public source repair remain unactivated.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
   - Extend the existing read-only analyze_project surface with a versioned finding contract, measurable high-confidence rules, explicit unsupported coverage, and audited suppressions.
@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Merge the Wave C release pull request, publish immutable ai-tooling-v0.6.0 through the protected OIDC workflow, reproduce exact public installation and Figma inspect/generate/verify outside the repository, and merge the final evidence update before starting Wave D.
+next_action: Begin Wave D by freezing the public attended screenshot-repair source-application transaction, exact preimage and allowed-path contract, diff and durable receipt evidence, atomic rollback behavior, and client-neutral human-authorization workflow before exposing any source write.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -52,10 +52,10 @@ bootstrap authority and selectors. Product priority was then changed to maximize
 Android View users: enhanced analysis, Figma import, and attended screenshot repair now precede the
 lower-probability Compose migration path. Wave B completed with public
 `@viewcompose/ai-tooling@0.5.0` and installed-package reproduction of the versioned analyzer. Wave C
-now has a locally accepted `0.6.0` release candidate with offline Figma inspection, deterministic
-generation, compilation, Preview, and bounded comparison; immutable publication and external
-reproduction remain the execution boundary. The chronological handoffs below remain evidence
-rather than competing next actions.
+completed with public `@viewcompose/ai-tooling@0.6.0`, protected OIDC provenance, offline Figma
+inspection and generation, real compilation and Preview comparison, MCP parity, and exact-version
+onboarding reproduction for all three clients. Wave D is now the sole next action. The
+chronological handoffs below remain evidence rather than competing next actions.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
 
@@ -725,7 +725,8 @@ twice, attested the three exact assets, created the immutable
 [GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.5.0), and
 published npm `@viewcompose/ai-tooling@0.5.0` through the existing GitHub OIDC Trusted Publisher.
 
-The npm registry exposes only `latest -> 0.5.0`. Its SLSA v1 statement names repository
+At Wave B acceptance, the npm registry exposed `latest -> 0.5.0`; public `0.6.0` now supersedes that
+tag without changing the immutable `0.5.0` evidence. The `0.5.0` SLSA v1 statement names repository
 `https://github.com/ViewCompose/ViewCompose`, workflow `.github/workflows/ai-tooling-release.yml`,
 ref `refs/tags/ai-tooling-v0.5.0`, GitHub-hosted builder, invocation
 `https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197/attempts/1`, and subject
@@ -761,8 +762,8 @@ write is authorized by this evidence.
 
 ### Execution Wave C — provider-neutral Figma design-tree adapter
 
-**Status: release candidate accepted locally on 2026-09-01.** Public `0.6.0` publication and
-repository-external reproduction remain required before Wave D starts.
+**Status: complete on 2026-09-01.** Public `0.6.0` publication and repository-external reproduction
+are recorded below. Wave D may begin only after this evidence update merges.
 
 #### Objective
 
@@ -814,7 +815,8 @@ undeclared or unsupported fact stay visible and block generation. The new
 `viewcompose-import-figma` Skill preserves that audit-first sequence and brings the client-neutral
 workflow set from 6 to 7 while the public tool catalog changes from 13 to 14.
 
-On local macOS with Node 24 and JDK 21.0.12.1, the complete AI script suite passed 352/352 cases.
+On local macOS with Node 26 and JDK 21.0.12.1, the complete AI script suite passed 353/353 cases,
+including an adversarial Kotlin-boundary case for document identities and text payloads.
 The installed-distribution gate produced 2/2 byte-identical packages, accepted 1/1 npm dry-run
 inventory and 1/1 offline install/uninstall lifecycle, exercised 3/3 Agent profiles with 21/21
 exact Skill copies, and passed 2/2 MCP protocol versions. The installed package reproduced Figma
@@ -836,6 +838,45 @@ connector, style comparator, trusted reference render, pixel/perceptual comparis
 source-write authority. The next action is the Wave C pull request, hosted gates, protected
 `ai-tooling-v0.6.0` publication, exact external installation and Figma reproduction, then a final
 evidence PR. Wave D remains blocked until those steps merge.
+
+#### Wave C public-release acceptance evidence (2026-09-01)
+
+PR [#268](https://github.com/ViewCompose/ViewCompose/pull/268) passed the Linux, macOS, and Windows
+bootstrap matrix, documentation build, `qaPreview`, complete `qaQuick`, release-intent, and plan
+checks before merging as `67f99e12c02b36671843a6eb09546178c2760518`. The immutable
+`ai-tooling-v0.6.0` tag points at that merge commit. Protected
+[run `33498765977`](https://github.com/ViewCompose/ViewCompose/actions/runs/33498765977) completed
+in 10 minutes 24 seconds through the `ai-tooling-release` environment and GitHub OIDC Trusted
+Publisher. npm exposes `@viewcompose/ai-tooling@0.6.0` with `latest -> 0.6.0`, integrity
+`sha512-R3+kHFNVUqfUr1n2EHPmM+L2107DLux35TRGSxBdCenFAqV0dznzUXRcGsbKjjFlRXbrtwJ9ZPMEUy6XgMwwRQ==`,
+and SLSA v1 provenance. The immutable
+[GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.6.0)
+contains exactly the 663,115-byte tarball, 35,817-byte `manifest.json`, and 179-byte `SHA256SUMS`.
+The tarball SHA-256 is
+`de4b36df76ab842df18e0449967542b23de017104828700070caedb0e0671934`; all 3/3 assets passed the
+published checksum list and GitHub attestation verification.
+
+One repository-external Android project on macOS used the literal public selector with Node
+26.8.1, JDK 17.0.17, and Android SDK 36. Codex, Claude Code, and Cursor each completed
+`init`/`doctor`/`uninstall`, reached `project-bound-ready`, installed 7/7 exact Skills, and removed
+only the managed configuration and 21/21 total Skill copies. The installed Figma CLI reproduced
+100% fact coverage (39/39), 100% asset coverage (1/1), inspection fingerprint
+`a21c75ed7149a30986083cbedc38164d9d510057e4a55c9523a4da906f2a746d`, and generation fingerprint
+`776a453c3b905bd5509d5862d79f795c0aca84fb0252701ba2d6bfb0fc6675a8`. The generated Kotlin and
+PNG then compiled and rendered through the released-Maven lane. Structure passed 9/9, semantics
+8/8, geometry 8/8, and assets 1/1. Style remained `incomplete`; pixel and perceptual evidence
+remained `not-applicable`. A direct MCP request reproduced the same inspection fingerprint and
+coverage without an error.
+
+Relative to public `0.5.0`, the normalized public change is one tool (13 to 14), one Skill (6 to 7),
+and one offline Figma flow (0 to 1), while Android runtime artifacts remain unchanged. Conclusion:
+**improved** provider-neutral design import with **no material Android runtime behavior change** and
+no style, pixel, perceptual, or arbitrary-document parity claim. Limitations: public reproduction
+used one normalized export and one macOS host; hosted CI covers native onboarding on three operating
+systems but did not launch proprietary Agent binaries. The release has no Figma plugin, REST client,
+`.fig` parser, provider credential, trusted reference render, style comparator, or source-write
+authority. Wave C is complete. The next action is Wave D's transactionally applied, explicitly
+attended screenshot-repair boundary; Compose Waves E and F remain lower priority.
 
 ### Execution Wave D — public attended screenshot repair
 

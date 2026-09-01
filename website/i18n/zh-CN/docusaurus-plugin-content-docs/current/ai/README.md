@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: cf24d6596bba3d9e63052905ee4d499aedf97cb9a4eca57d294cc72fd1c9cf5f
+translation_source_hash: d73ade9ca56ff1d69919722effdc6669f7a2887dc1129da2e6f9665959d4f812
 translation_status: current
 ---
 
@@ -19,9 +19,8 @@ Coding Client 仍然负责模型、Credential、对话和用户授权的源码�
 
 ## 一条命令完成安装
 
-本 `next` Lane 页面记录 Wave C 的 `0.6.0` Release Candidate。以下精确命令会在受保护的
-`ai-tooling-v0.6.0` Tag Workflow 完成后公开可用；在此之前，已有 Project 应继续使用精确
-`0.5.0`，不得跟随尚未发布或可变的 Selector。
+Release `0.6.0` 已公开发布。请使用它的精确 Selector，确保安装的工具、Skill、Knowledge Pack
+与框架 Profile 始终属于同一个已验证版本；不要改用浮动 Selector。
 
 在 Android Project 的物理根目录执行以下任意一条命令：
 
@@ -256,11 +255,40 @@ Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创�
 如需独立校验 Provenance，请参考 GitHub 的
 [Artifact Attestation 校验指南](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)。
 
+公开 `0.6.0` 验收已于 2026-09-01 完成。受保护的
+[Run `33498765977`](https://github.com/ViewCompose/ViewCompose/actions/runs/33498765977)
+通过 `ai-tooling-release` Environment 与 GitHub OIDC Trusted Publisher，从 Merge 和 Tag Commit
+`67f99e12c02b36671843a6eb09546178c2760518` 发布 Package，用时 10 分 24 秒。npm 暴露
+`latest -> 0.6.0`；Provenance Predicate 为 SLSA v1，Integrity 为
+`sha512-R3+kHFNVUqfUr1n2EHPmM+L2107DLux35TRGSxBdCenFAqV0dznzUXRcGsbKjjFlRXbrtwJ9ZPMEUy6XgMwwRQ==`。
+不可变 Release 精确包含 663,115 字节 Tarball、35,817 字节 `manifest.json` 与 179 字节
+`SHA256SUMS`。Tarball 的 SHA-256 为
+`de4b36df76ab842df18e0449967542b23de017104828700070caedb0e0671934`；全部 3/3 个 Asset 均通过
+已发布 Checksum 与 GitHub Attestation 校验。
+
+在一份 Repository 外的 macOS Android Project 中，字面量公开 Selector 分别为 Codex、
+Claude Code 与 Cursor 完成 `init`、`doctor` 和 `uninstall`。每个 Client 都达到
+`project-bound-ready`，安装 7/7 份精确 Skill，并且只删除自己的受管理配置与总计 21/21 份
+Skill Copy。已安装 Figma CLI 与 MCP 在检查时复现 39/39 条声明事实和 1/1 个声明 Asset。
+生成阶段返回确定性 Kotlin 与 PNG 文件；随后真实 Released-Maven 编译与 Preview 渲染通过，
+结构为 9/9、语义为 8/8、几何为 8/8、Asset 为 1/1。由于契约不接收可信 Figma Reference
+Render，Style 被明确标为 `incomplete`，Pixel 与 Perceptual Evidence 为 `not-applicable`。
+
+相较 `0.5.0`，公开 Package 增加 1 个工具（13 到 14）、1 个 Skill（6 到 7）和 1 条离线
+Figma Workflow（0 到 1），Android Runtime Artifact 不变。解释后的结论是：Provider-neutral
+Design Import **improved**，Android Runtime Behavior **no material change**，且不声称 Visual
+Parity。外部复现只覆盖一份标准化 Figma Export 和一台 macOS Host，也未启动专有 Agent Binary；
+Hosted CI 另行验证 Linux、macOS 与 Windows 原生接入。直接 Figma 登录、Plugin/REST/`.fig`
+导入、自定义字体与不支持 Effect 的生成、Style 或 Pixel Parity，以及源码写入仍不属于本 Release。
+详细分母与下一项 Wave D 工作保存在
+[当前 AI 工具计划](../project/plans/ai-verifiable-development-tooling.md)中。
+
 公开 `0.5.0` 验收已于 2026-09-01 完成。受保护的
 [Run `33486262197`](https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197)
 通过 `ai-tooling-release` Environment，从精确 Tag Commit
-`99894e8220de78421c428a80b1d0f2b01c0f0f24` 发布 Package，用时 9 分 14 秒。npm 目前只
-暴露 `latest -> 0.5.0`。SLSA v1 Provenance 精确记录 `ViewCompose/ViewCompose`、
+`99894e8220de78421c428a80b1d0f2b01c0f0f24` 发布 Package，用时 9 分 14 秒。在当时的验收点，
+npm 暴露 `latest -> 0.5.0`；现在该 Tag 已由 `0.6.0` 取代。`0.5.0` 的 SLSA v1 Provenance
+精确记录 `ViewCompose/ViewCompose`、
 `.github/workflows/ai-tooling-release.yml`、`refs/tags/ai-tooling-v0.5.0`、GitHub-hosted Builder
 与该 Run。637,133 字节 Tarball 的 SHA-256 为
 `a19e1c5680f34d744e313926af7d9081f51ea97e3ace64b6c732527d7104da04`，npm Integrity 为
@@ -286,8 +314,8 @@ Alias。公开验证已经通过，`bootstrap` 标签也已删除。早期版本
 `0.4.0` 已弃用并明确指向 `0.4.1`，普通稳定 SemVer Range 仍不会选中
 `0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在任何稳定 Tag 创建前撤销。
 Release `0.5.0` 保留该接入修正，并新增上文所述的版本化、高置信度 Project 分析契约。
-Release Candidate `0.6.0` 保留该 Analyzer，并新增上文所述的离线 Figma 契约。仅在受保护的
-Tag 发布完成后使用精确 Selector `@viewcompose/ai-tooling@0.6.0`。
+公开 `0.6.0` 保留该 Analyzer，并新增上文所述的离线 Figma 契约。请使用精确 Selector
+`@viewcompose/ai-tooling@0.6.0`。
 
 | 现象 | 处理方式 |
 | --- | --- |
