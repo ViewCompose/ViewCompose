@@ -728,6 +728,26 @@ canonical-path rule.
 
 ### Release-gate acceptance evidence
 
+On 2026-09-01, protected
+[run `33486262197`](https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197)
+published `@viewcompose/ai-tooling@0.5.0` from tag commit
+`99894e8220de78421c428a80b1d0f2b01c0f0f24` through the existing OIDC Trusted Publisher in
+9 minutes 14 seconds. npm exposes `latest -> 0.5.0`; its SLSA v1 statement names the exact
+repository, `.github/workflows/ai-tooling-release.yml`, tag ref, GitHub-hosted builder, and run. The
+637,133-byte tarball has SHA-256
+`a19e1c5680f34d744e313926af7d9081f51ea97e3ace64b6c732527d7104da04` and npm integrity
+`sha512-ffUtj1NwYZWx9JhlJEsw30AE+ZeQIDuMb1WaJ3r4CaOqzu1Y6F6EwO3NBIMSs6NkgSDrsLmi8JWGJ1GijwRSmg==`;
+the exact tarball, Manifest, and checksum list passed checksums and 3/3 GitHub attestations.
+
+Repository-external public-registry checks completed 3/3 client `init`/`doctor`/`uninstall`
+lifecycles and 18/18 Skill removals at `project-bound-ready`. The durable installed binary returned
+schema-v1 static analysis for the exact released profile and the expected high-confidence
+`VC-AI-A11Y-IMAGE-DESCRIPTION` finding. Relative to `0.4.1`, this is **improved** installed analyzer
+evidence with **no material change** to one-command onboarding. The public reproduction used one
+macOS host and did not launch proprietary client binaries; hosted Linux/macOS/Windows adoption and
+the documented lexical analyzer boundary remain the applicable limitations. Wave B is complete;
+the next action is the provider-neutral offline Figma contract freeze.
+
 On 2026-08-30, the first cold `prepareAiPreviewLane` run changed from 0/1 successful executions
 (missing producer JAR) to 1/1 after declaring the exact transformed classpath inputs: 184 tasks,
 170 executed, 14 up-to-date, and 23 seconds. That is a `+100` percentage-point normalized cold-start

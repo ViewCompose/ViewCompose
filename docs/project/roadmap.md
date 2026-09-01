@@ -135,16 +135,17 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 35. `viewcompose-shadow-android` provides ordered outer layers, foreground inner layers, bounded
     raster caches, an experimental RenderNode backend, and structured diagnostics. `Auto` remains
     ExactBitmap based on the first release-mode benchmark.
-36. AI-verifiable tooling Release `0.4.1` publishes a freshness-gated 38-artifact profile with 30
+36. AI-verifiable tooling Release `0.5.0` publishes a freshness-gated 38-artifact profile with 30
     knowledge-owning Artifacts, 531 symbols, the compact `llms.txt`, 13 shared CLI/MCP tools, and
     six standard Agent Skills. Its reproducible npm package and immutable GitHub Release are
     attested through protected OIDC publishing; one exact-version project-root command durably
     configures Codex, Claude Code, or Cursor. The current framework profile is selected by exact
-    dependency identity and mismatches fail closed. Bounded phases also provide Android XML
-    conversion plus screenshot preprocessing, typed inference import/resolution, Kotlin generation,
-    compile/Preview, semantic/geometry comparison, eligible exact-pixel comparison, and internal
-    attended repair contracts; every lane preserves its actual evidence level and unsupported
-    semantics.
+    dependency identity and mismatches fail closed. Versioned project analysis adds five measured
+    high-confidence rules, audited suppression, explicit unsupported coverage, and compatible legacy
+    diagnostics. Bounded phases also provide Android XML conversion plus screenshot preprocessing,
+    typed inference import/resolution, Kotlin generation, compile/Preview, semantic/geometry
+    comparison, eligible exact-pixel comparison, and internal attended repair contracts; every lane
+    preserves its actual evidence level and unsupported semantics.
 
 ### 2.2 Demo and verification
 
@@ -202,7 +203,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | Diagnostics | Correlated render sessions and Studio inspector, bounded production failure aggregation, render/layout trees, per-node patches, Locals, recomposition reasons, source navigation, request-driven real-View highlighting, finite sampled composition/reconciliation/binding timing, and accepted idle/request/Release isolation budgets | No active expansion; any continuous observer, new timing domain, or broader device contract requires a newly attributed plan and ADR-backed inactive-path evidence |
 | UI Testing | Core instrumentation plus P1 focus/keyboard, nested-scroll, and rollback cases | Multi-API, TV, ChromeOS, overlay host, and theme assertions |
 | Developer Preview | Compose Preview, Paparazzi, and Studio plugin with static render, source linkage, diagnostics, bounded cache, and incremental refresh | More domains and Dark/Tablet snapshots |
-| AI-verifiable development tooling | Release `0.4.1` provides a version-bound Knowledge Bundle/`llms.txt`, 13 CLI/MCP tools, six Agent Skills, protected OIDC npm/GitHub distribution, exact-version one-command Codex/Claude Code/Cursor onboarding, static/compile/Preview/layout evidence, bounded project analysis and XML conversion, and bounded screenshot-to-validated-Kotlin/compare/attended-repair foundations | Wave A public adoption is complete. Follow the remaining frozen order in the [active plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md): versioned high-confidence project analysis, provider-neutral Figma Design IR import, attended public screenshot repair after transactional source-write and rollback acceptance, Compose semantic mapping and Skill guidance, and finally bounded Compose AST conversion. Maintain only explicitly released framework profiles; every mismatch fails closed |
+| AI-verifiable development tooling | Release `0.5.0` provides a version-bound Knowledge Bundle/`llms.txt`, 13 CLI/MCP tools, six Agent Skills, protected OIDC npm/GitHub distribution, exact-version one-command Codex/Claude Code/Cursor onboarding, static/compile/Preview/layout evidence, versioned high-confidence project analysis, bounded XML conversion, and bounded screenshot-to-validated-Kotlin/compare/attended-repair foundations | Waves A and B are publicly accepted. Follow the remaining frozen order in the [active plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md): provider-neutral Figma Design IR import, attended public screenshot repair after transactional source-write and rollback acceptance, Compose semantic mapping and Skill guidance, and finally bounded Compose AST conversion. Maintain only explicitly released framework profiles; every mismatch fails closed |
 | ConstraintLayout | Alpha DSL plus classified reconciliation, typed chain/wrap/physical-direction APIs, typed Grid, declarative CircularFlow, exact helper/rollback/lifecycle coverage, pairwise visual acceptance, API 24/33/36 device coverage, and a stable-row-safe released/candidate/direct matrix | The [archived parity/performance expansion](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md) completed Phases 0--4 with **no material change** release safety and no whole-frame optimization win. Keep MotionScene/MotionLayout out of scope; require a new attributed plan for multi-OEM performance or any additional parity work |
 | Animation | Core/DSL layers, physical spring/decay/results, shared generic and seekable Transition, full AnimatedContent and rich visibility transforms, animateContentSize/animateBounds, navigation-aware shared motion, raw Android interop, and request-driven read-only timeline tooling | The [archived Animation capability expansion](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md) completed Phases 0–7 with bounded ownership and `no material change` release-safety conclusions. Keep MotionLayout, continuous profiling, and live-device mutation unscheduled until a new attributed requirement is approved |
 | Gesture | Policy core, DSL, dispatcher, nested scroll, structured cancellation, and tap/drag/anchored/transform support | Third-party native scrollers and real-device multi-touch |
