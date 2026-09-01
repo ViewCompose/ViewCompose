@@ -19,7 +19,7 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: Release 0.6.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Wave C is publicly accepted with one strict offline Figma import tool, a seventh client-neutral Skill, and repository-external inspect, generate, compile, Preview, comparison, MCP, and three-client onboarding evidence. Wave D has frozen its separate read-only preparation and attended source-application planes, typed single-property edit, transaction journal, terminal receipt, explicit rollback, and adversarial denominator; implementation and public source writes remain unactivated. Compose migration remains deferred.
+baseline: Release 0.6.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Wave C is publicly accepted with one strict offline Figma import tool, a seventh client-neutral Skill, and repository-external inspect, generate, compile, Preview, comparison, MCP, and three-client onboarding evidence. Wave D now has an implemented 0.7.0 release candidate with a non-source-writing preparation tool that stores bounded user state, separate attended source-application executable, typed single-property edit, secure transaction journal, crash recovery, terminal receipt, explicit rollback, and eighth Skill; public publication and repository-external reproduction are not yet accepted. Compose migration remains deferred at lowest priority.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
   - Extend the existing read-only analyze_project surface with a versioned finding contract, measurable high-confidence rules, explicit unsupported coverage, and audited suppressions.
@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Implement Wave D's deterministic generated-Kotlin property-span mapper and secure filesystem transaction backend against the frozen request, journal, receipt, TTY authorization, crash-recovery, and explicit-rollback contracts; keep MCP source writes unavailable.
+next_action: Complete Wave D's package and documentation gates, merge its 0.7.0 release-candidate pull request, publish only from the protected ai-tooling-v0.7.0 tag, reproduce exact install and attended apply/recovery/rollback outside the repository, and record immutable evidence before considering the lower-priority Compose waves.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -54,7 +54,11 @@ lower-probability Compose migration path. Wave B completed with public
 `@viewcompose/ai-tooling@0.5.0` and installed-package reproduction of the versioned analyzer. Wave C
 completed with public `@viewcompose/ai-tooling@0.6.0`, protected OIDC provenance, offline Figma
 inspection and generation, real compilation and Preview comparison, MCP parity, and exact-version
-onboarding reproduction for all three clients. Wave D is now the sole next action. The
+onboarding reproduction for all three clients. Wave D has implemented its bounded property mapper,
+secure directory-handle transaction host, crash reconciliation, non-source-writing MCP preparation,
+separate attended CLI, and eighth client-neutral Skill as the `0.7.0` release candidate. Its public
+publication and repository-external apply/recovery/rollback evidence are now the sole next action;
+Compose mapping and conversion remain lowest priority. The
 chronological handoffs below remain evidence rather than competing next actions.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
@@ -880,8 +884,8 @@ attended screenshot-repair boundary; Compose Waves E and F remain lower priority
 
 ### Execution Wave D — public attended screenshot repair
 
-**Status: contract and security denominator frozen on 2026-09-01.** Implementation, public CLI/MCP
-preparation, client workflows, and source-write activation remain open.
+**Status: `0.7.0` release candidate implemented and locally accepted on 2026-09-01.** Public
+publication and repository-external attended reproduction remain open.
 
 #### Objective
 
@@ -964,7 +968,45 @@ preimage recovery, and later-user-edit preservation. Relative to the contract-on
 is an **improved** executable safety boundary with **no material Android runtime behavior change**.
 The evidence is local macOS APFS with JDK 21 and injected process failures rather than sudden power
 loss; CI must still exercise the accepted JDK 17 lane and public-package installation. The next
-action is the separate attended CLI, read-only MCP preparation tool, and client-neutral Skill.
+action is the protected tag publication followed by repository-external attended reproduction.
+
+#### Accepted release-candidate implementation (2026-09-01)
+
+The public candidate adds `prepare_screenshot_repair` as tool 15/15, marks its MCP annotation
+non-read-only because preparation persists owner-only user state outside the project, and adds
+`viewcompose-repair` as the fifth executable plus
+`viewcompose-repair-screenshot` as Skill 8/8. `evaluate` reproduces the six ordered gates,
+`propose` reproduces the single-property rollback, and `prepare` stores only an inert owner-only
+request outside the project. Only the separately launched executable exposes `show`, attended
+`apply`, recovery reconciliation, and separately attended `rollback`. Its parser rejects duplicate
+project roots and every approval bypass tested.
+
+The complete AI script suite passed 373/373 cases. The secure host and transaction subset passed
+10/10 on JDK 17, including real atomic replacement, stale-preimage and unavailable-filesystem
+rejection, explicit rollback, validation-failure preservation, missing-confirmation no-write,
+pre/post-replacement crash recovery, and concurrency exclusion. The exact package passed 2/2
+reproducible builds, 1/1 npm inventory, 1/1 offline install/uninstall lifecycle, 1/1 SPDX/license
+inventory, 3/3 client profiles with 24/24 exact Skill copies, and 2/2 installed MCP protocol
+versions. Native macOS bootstrap passed 3/3 clients, 3/3 handshakes, and 4/4 path cases. The Skill
+structure validator also accepted the eighth Skill.
+
+The final local tarball is 694,184 bytes with SHA-256
+`b394ce612d73e3d76eb03bd9f86e26f4b27810e4aab5654122d5814ff8f0b13b`; all 3/3 candidate Release
+assets passed the frozen inventory and checksum verifier. Repository gates passed on JDK 21:
+`verifyAiToolingRelease`, documentation structure/language/governance/translation checks,
+`verifyDevelopmentToolingIsolation`, and `verifyReleaseIntent`; release intent found 0 Maven
+artifacts and required no framework changeset. `qaQuick` and `qaPreview` completed 2,316 tasks in
+13 minutes 14 seconds with zero failures.
+
+Relative to public `0.6.0`, the normalized candidate change is one tool (14 to 15), one executable
+(4 to 5), one Skill (7 to 8), and one bounded attended source-application flow (0 to 1), while
+Android runtime and Maven artifacts remain unchanged. Conclusion: **improved** screenshot repair
+utility and source-write containment with **no material Android runtime behavior change**.
+Limitations: the real secure-backend evidence is local macOS APFS rather than hosted sudden-power
+loss; Windows has no attended host in v1; the public registry package, protected provenance, and
+repository-external human-confirmed apply/recovery/rollback are not yet evidence. The next action
+is to merge the release candidate, publish only from `ai-tooling-v0.7.0`, reproduce the exact public
+package outside this repository, and record immutable evidence before closing Wave D.
 
 ### Per-wave pull request and release discipline
 

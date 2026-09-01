@@ -151,7 +151,7 @@ unrelated ViewCompose modules or moving the entire project on one atomic release
 
 ## AI integration
 
-ViewCompose publishes a versioned AI Reference, 14 local stdio MCP tools, and seven standard Agent
+ViewCompose publishes a versioned AI Reference, 15 local stdio MCP tools, and eight standard Agent
 Skills as an exact-version npm package backed by an immutable GitHub Release. Codex, Claude Code,
 and Cursor can be connected to a new or existing Android project with one transactional `npx`
 command—no global install, ViewCompose checkout, local package build, provider key, or manual
@@ -161,6 +161,13 @@ AI tooling `0.6.0` adds a fail-closed offline Figma path: an Agent can audit one
 export, generate deterministic ViewCompose Kotlin and redistributable PNG resources, then compile,
 render, and compare the supported structure, semantics, geometry, and assets. ViewCompose never
 logs into Figma or accepts a token, and the result does not claim style, pixel, or perceptual parity.
+
+AI tooling `0.7.0` adds attended screenshot repair without giving MCP source-write authority. An
+Agent can reproduce six-gate baseline/candidate evidence and prepare one content-addressed repair
+for a generated literal property; the user separately reviews and confirms the exact diff through
+`viewcompose-repair`. Atomic apply, crash recovery, immutable receipts, post-apply verification, and
+explicit conflict-safe rollback are included. There is no unattended, whole-file, arbitrary-source,
+commit, push, or pull-request path.
 
 The package also carries an isolated harness that compiles against released Maven artifacts and
 renders and diagnoses tool-generated screens without executing the consumer project's Gradle build.
