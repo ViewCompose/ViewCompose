@@ -44,6 +44,7 @@
         "height": {"mode": "hug", "valueDp": 30},
         "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
         "gapDp": 0,
+        "mainAxisArrangement": "start",
         "horizontalAlignment": "start",
         "verticalAlignment": "start",
         "clip": "none"

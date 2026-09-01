@@ -195,14 +195,62 @@ test('rejects cyclic or detached selected graphs and honors cancellation', async
   assert.equal(cancelled.diagnostics[0].code, 'VC-AI-FIGMA-CANCELLED');
 });
 
-test('keeps generate and verify inactive until the RenderPlan evidence slice lands', async () => {
+test('generates virtual files and returns bounded Preview verification evidence', async () => {
   const exported = await example();
-  for (const mode of ['generate', 'verify']) {
-    const result = await importFigmaExport(request(exported, mode), {requestId: `figma-${mode}`});
-    assert.equal(result.status, 'unsupported');
-    assert.equal(
-      result.diagnostics[0].code,
-      mode === 'generate' ? 'VC-AI-FIGMA-GENERATION-FAILED' : 'VC-AI-FIGMA-VERIFICATION-FAILED',
-    );
-  }
+  const generated = await importFigmaExport(request(exported, 'generate'), {
+    requestId: 'figma-generate',
+  });
+  assert.equal(generated.status, 'success');
+  assert.equal(generated.data.mode, 'generate');
+  assert.equal(generated.data.virtualFiles.length, 2);
+  assert.deepEqual(
+    generated.data.virtualFiles.map((file) => file.mediaType).sort(),
+    ['image/png', 'text/x-kotlin'],
+  );
+
+  let renderRequest;
+  const verified = await importFigmaExport(request(exported, 'verify'), {
+    requestId: 'figma-verify',
+    render: async (rendered) => {
+      renderRequest = rendered;
+      return {
+        status: 'success',
+        diagnostics: [],
+        truncated: false,
+        evidence: {
+          level: 'rendered',
+          cache: 'miss',
+          compilerLane: 'figma-test-compiler',
+          renderLane: 'figma-test-renderer',
+          outputFingerprint: 'e'.repeat(64),
+        },
+        data: {generatedPreview: {requestFingerprint: 'f'.repeat(64)}},
+      };
+    },
+    compare: async () => ({
+      status: 'success',
+      evidenceLevel: 'compared',
+      diagnostics: [],
+      comparison: {
+        comparisonFingerprint: 'd'.repeat(64),
+        nodes: [{
+          checks: [
+            {category: 'identity', status: 'passed'},
+            {category: 'structure', status: 'passed'},
+            {category: 'semantic', status: 'passed'},
+            {category: 'geometry', status: 'passed'},
+          ],
+        }],
+      },
+    }),
+  });
+  assert.equal(verified.status, 'success');
+  assert.equal(verified.evidence.level, 'compared');
+  assert.equal(verified.data.mode, 'verify');
+  assert.equal(verified.data.verification.compilation.status, 'passed');
+  assert.equal(verified.data.verification.preview.status, 'passed');
+  assert.equal(verified.data.verification.categories.style.conclusion, 'incomplete');
+  assert.equal(verified.data.verification.conclusion, 'incomplete');
+  assert.equal(renderRequest.previewConfiguration.widthDp, 360);
+  assert.equal(renderRequest.generationReport.kind, 'figma-generation-report');
 });

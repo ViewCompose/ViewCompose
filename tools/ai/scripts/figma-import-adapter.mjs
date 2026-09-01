@@ -9,6 +9,13 @@ import {
 import {canonicalJson} from './screenshot-contract.mjs';
 import {validateSchemaValue} from './schema-validator.mjs';
 import {parseStrictJson, StrictJsonError} from './strict-json.mjs';
+import {
+  createFigmaRenderPlan,
+  FigmaRenderPlanError,
+  generateFigmaArtifacts,
+} from './figma-render-plan.mjs';
+import {renderGeneratedPreview} from './generated-preview-adapter.mjs';
+import {compareGeneratedLayout} from './layout-comparator.mjs';
 import {diagnostic, loadKnowledgeManifest, toolResult, utf8Bytes} from './tool-core.mjs';
 
 const TOOL_NAME = 'convert_figma_to_viewcompose';
@@ -585,6 +592,7 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
     };
     const padding = {left: 0, top: 0, right: 0, bottom: 0};
     let gapDp = 0;
+    let mainAxisArrangement = 'start';
     let horizontalAlignment = 'start';
     let verticalAlignment = 'start';
     let clip = 'none';
@@ -620,13 +628,28 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
       }
       const primaryValue = valueOf(primary);
       const counterValue = valueOf(counter);
-      const alignment = {MIN: 'start', CENTER: 'center', MAX: 'end', BASELINE: 'baseline'};
+      const arrangement = {
+        MIN: 'start', CENTER: 'center', MAX: 'end', SPACE_BETWEEN: 'space-between',
+        SPACE_AROUND: 'space-around', SPACE_EVENLY: 'space-evenly',
+      };
+      const alignment = {MIN: 'start', CENTER: 'center', MAX: 'end'};
+      mainAxisArrangement = arrangement[primaryValue] ?? 'start';
+      const crossAxisAlignment = alignment[counterValue];
+      if (!Object.hasOwn(arrangement, primaryValue) || crossAxisAlignment === undefined) {
+        for (const fact of [primary, counter]) {
+          decide(node, fact, {
+            status: 'unsupported', severity: 'error', disposition: 'blocked',
+            reasonCode: 'VC-AI-FIGMA-MAPPING-UNSUPPORTED',
+            reason: 'Alignment is outside the bounded start/center/end and main-axis spacing subset.',
+          });
+        }
+      }
       if (mode === 'row') {
         horizontalAlignment = alignment[primaryValue] ?? 'start';
-        verticalAlignment = alignment[counterValue] ?? 'start';
+        verticalAlignment = crossAxisAlignment ?? 'start';
       } else {
         verticalAlignment = alignment[primaryValue] ?? 'start';
-        horizontalAlignment = alignment[counterValue] ?? 'start';
+        horizontalAlignment = crossAxisAlignment ?? 'start';
       }
       for (const [fact, target] of [[primary, 'layout.primaryAlignment'], [counter, 'layout.counterAlignment']]) {
         decide(node, fact, {targetPath: target, reasonCode: 'VC-AI-FIGMA-LAYOUT-MAPPED'});
@@ -644,6 +667,7 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
       height: sizing(heightMode, height),
       padding,
       gapDp,
+      mainAxisArrangement,
       horizontalAlignment,
       verticalAlignment,
       clip,
@@ -715,19 +739,29 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
           reason: 'Only declared generic system font families are renderable in v1.',
         });
       } else {
-        properties.push({name: 'fontFamily', value: irEnum('generic-font-family', fontRecord.genericFamily)});
-        decide(node, font, {targetPath: 'properties.fontFamily', reasonCode: 'VC-AI-FIGMA-STYLE-MAPPED'});
+        properties.push(
+          {name: 'fontFamily', value: irEnum('generic-font-family', fontRecord.genericFamily)},
+          {name: 'fontWeight', value: irLiteral(fontRecord.weight)},
+          {name: 'fontStyle', value: irEnum('font-style', fontRecord.style)},
+        );
+        decide(node, font, {
+          targetPath: 'properties.fontFamily,fontWeight,fontStyle',
+          reasonCode: 'VC-AI-FIGMA-STYLE-MAPPED',
+        });
       }
       properties.push(
         {name: 'text', value: irLiteral(valueOf(characters))},
         {name: 'fontSize', value: irDimension(valueOf(fontSize) * textUnit, 'sp')},
         {name: 'lineHeight', value: irDimension(valueOf(lineHeight) * textUnit, 'sp')},
-        {name: 'letterSpacing', value: irDimension(valueOf(letterSpacing) * textUnit, 'sp')},
+        {
+          name: 'letterSpacingEm',
+          value: irLiteral(valueOf(letterSpacing) / Math.max(valueOf(fontSize), Number.EPSILON)),
+        },
         {name: 'color', value: {kind: 'color', argb: valueOf(fill)}},
       );
       for (const [fact, target] of [
         [characters, 'properties.text'], [fontSize, 'properties.fontSize'],
-        [lineHeight, 'properties.lineHeight'], [letterSpacing, 'properties.letterSpacing'],
+        [lineHeight, 'properties.lineHeight'], [letterSpacing, 'properties.letterSpacingEm'],
         [fill, 'properties.color'],
       ]) {
         decide(node, fact, {
@@ -745,11 +779,11 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
       const source = facts.get('image.asset');
       const scale = required(node, facts, 'image.scale');
       const asset = assets.get(valueOf(source))?.asset;
-      if (!asset || asset.redistribution !== 'allowed') {
+      if (!asset || asset.redistribution !== 'allowed' || asset.mediaType !== 'image/png') {
         decide(node, source, {
           status: 'unsupported', severity: 'error', disposition: 'blocked',
           reasonCode: 'VC-AI-FIGMA-MAPPING-UNSUPPORTED',
-          reason: 'Image assets require verified bytes and explicit redistribution permission.',
+          reason: 'Figma v1 generation requires verified redistributable PNG bytes.',
         });
       } else {
         properties.push({name: 'source', value: {kind: 'resource', resourceId: asset.id}});
@@ -771,19 +805,14 @@ function auditAndMap(exported, graph, assets, inputFingerprint) {
       kind = 'vector';
       const source = required(node, facts, 'vector.asset');
       const asset = assets.get(valueOf(source))?.asset;
-      if (
-        !asset || asset.mediaType !== 'application/vnd.viewcompose.vector+json' ||
-        asset.redistribution !== 'allowed'
-      ) {
-        decide(node, source, {
-          status: 'unsupported', severity: 'error', disposition: 'blocked',
-          reasonCode: 'VC-AI-FIGMA-MAPPING-UNSUPPORTED',
-          reason: 'Vector nodes require one inert declared vector-command asset with redistribution permission.',
-        });
-      } else {
+      if (asset?.mediaType === 'application/vnd.viewcompose.vector+json') {
         properties.push({name: 'source', value: {kind: 'resource', resourceId: asset.id}});
-        decide(node, source, {targetPath: 'properties.source', reasonCode: 'VC-AI-FIGMA-ASSET-MAPPED'});
       }
+      decide(node, source, {
+        status: 'unsupported', severity: 'error', disposition: 'blocked',
+        reasonCode: 'VC-AI-FIGMA-MAPPING-UNSUPPORTED',
+        reason: 'Inert vector commands remain inspectable but are not emitted by the Figma v1 generator.',
+      });
       mapAccessibility(node, facts, properties, semantics);
     } else if (node.type === 'RECTANGLE') {
       kind = 'box';
@@ -946,7 +975,7 @@ function inputIdentity(exported) {
 }
 
 async function failureResult({requestId, error, elapsedMs}) {
-  const known = error instanceof FigmaImportError;
+  const known = error instanceof FigmaImportError || error instanceof FigmaRenderPlanError;
   return toolResult({
     requestId,
     tool: TOOL_NAME,
@@ -967,7 +996,67 @@ async function failureResult({requestId, error, elapsedMs}) {
   });
 }
 
-export async function importFigmaExport(arguments_, {requestId, signal} = {}) {
+function verificationCategory({eligible, evaluated = eligible, passed = evaluated, failed = 0, notApplicable = 0}) {
+  let conclusion = 'incomplete';
+  if (eligible === 0 && notApplicable > 0) conclusion = 'not-applicable';
+  else if (failed > 0) conclusion = 'failed';
+  else if (eligible === evaluated && evaluated === passed) conclusion = 'passed';
+  return {eligible, evaluated, passed, failed, notApplicable, conclusion};
+}
+
+function mappingCount(ir, phase) {
+  return ir.mappingLedger.filter((item) => item.phase === phase).length;
+}
+
+function comparisonCategory(comparison, categories) {
+  const checks = comparison.nodes.flatMap((node) => node.checks)
+    .filter((item) => categories.includes(item.category));
+  const failed = checks.filter((item) => item.status === 'failed').length;
+  const passed = checks.filter((item) => item.status === 'passed').length;
+  const notApplicable = checks.filter((item) => item.status === 'not-applicable').length;
+  return verificationCategory({
+    eligible: checks.length,
+    evaluated: passed + failed,
+    passed,
+    failed,
+    notApplicable,
+  });
+}
+
+function generatedResultBase({mode, inputFingerprint, irFingerprint, profile, summary}) {
+  return {
+    schemaVersion: 1,
+    kind: 'figma-import-result',
+    mode,
+    inputFingerprint,
+    irFingerprint,
+    profile,
+    auditSummary: summary,
+  };
+}
+
+function assertGeneratedArtifacts(artifacts) {
+  const total = artifacts.virtualFiles.reduce((bytes, file) => bytes + file.bytes, 0);
+  if (
+    artifacts.virtualFiles.length > FIGMA_IMPORT_LIMITS.maxVirtualFiles ||
+    artifacts.virtualFiles.some((file) => file.bytes > FIGMA_IMPORT_LIMITS.maxVirtualFileBytes) ||
+    total > FIGMA_IMPORT_LIMITS.maxVirtualFileBytesTotal
+  ) {
+    fail(
+      'VC-AI-FIGMA-LIMIT-EXCEEDED',
+      'Generated Figma virtual files exceed the bounded file or aggregate byte ceiling.',
+      'Reduce the selected design or embedded assets.',
+      'limited',
+    );
+  }
+}
+
+export async function importFigmaExport(arguments_, {
+  requestId,
+  signal,
+  render = renderGeneratedPreview,
+  compare = compareGeneratedLayout,
+} = {}) {
   const started = performance.now();
   try {
     throwIfCancelled(signal);
@@ -1027,23 +1116,167 @@ export async function importFigmaExport(arguments_, {requestId, signal} = {}) {
       identity: manifest.framework.identity,
       match: 'exact',
     };
-    if (arguments_.mode !== 'inspect') {
-      if (!summary.generationAllowed) {
-        fail(
-          'VC-AI-FIGMA-MAPPING-UNSUPPORTED',
-          'Figma generation is blocked by error-level unsupported mapping decisions.',
-          'Inspect the mapping ledger and reduce or normalize unsupported source facts.',
-          'unsupported',
-        );
-      }
+    if (arguments_.mode !== 'inspect' && !summary.generationAllowed) {
       fail(
-        arguments_.mode === 'generate'
-          ? 'VC-AI-FIGMA-GENERATION-FAILED'
-          : 'VC-AI-FIGMA-VERIFICATION-FAILED',
-        `${arguments_.mode} is frozen but not activated by the inspect adapter slice.`,
-        'Use inspect until the shared RenderPlan generation and evidence slice is accepted.',
+        'VC-AI-FIGMA-MAPPING-UNSUPPORTED',
+        'Figma generation is blocked by error-level unsupported mapping decisions.',
+        'Inspect the mapping ledger and reduce or normalize unsupported source facts.',
         'unsupported',
       );
+    }
+    if (arguments_.mode !== 'inspect') {
+      const plan = createFigmaRenderPlan({designIr: ir, assets});
+      const artifacts = generateFigmaArtifacts(plan);
+      assertGeneratedArtifacts(artifacts);
+      if (arguments_.mode === 'generate') {
+        const data = {
+          ...generatedResultBase({
+            mode: 'generate', inputFingerprint, irFingerprint, profile, summary,
+          }),
+          virtualFiles: artifacts.virtualFiles,
+        };
+        const violations = validateSchemaValue(data, FIGMA_IMPORT_SCHEMA);
+        if (
+          violations.length > 0 ||
+          utf8Bytes(JSON.stringify(data)) > FIGMA_IMPORT_LIMITS.maxResultBytes
+        ) {
+          fail(
+            violations.length > 0
+              ? 'VC-AI-FIGMA-GENERATION-FAILED'
+              : 'VC-AI-FIGMA-LIMIT-EXCEEDED',
+            violations.length > 0
+              ? `Figma generate result violates v1: ${violations.slice(0, 3).join('; ')}`
+              : 'Figma generate result exceeds the 3 MiB public envelope.',
+            'Reduce the selection or repair the deterministic generator.',
+            violations.length > 0 ? 'failed' : 'limited',
+          );
+        }
+        return toolResult({
+          requestId,
+          tool: TOOL_NAME,
+          status: 'success',
+          level: 'static',
+          diagnostics: [],
+          data,
+          elapsedMs: performance.now() - started,
+          outputFingerprint: artifacts.artifactSetFingerprint,
+        });
+      }
+      throwIfCancelled(signal);
+      const requested = arguments_.verification;
+      const preview = await render({
+        generatedKotlin: artifacts.kotlin,
+        generationReport: artifacts.report,
+        previewBindings: artifacts.previewBindings,
+        previewConfiguration: {
+          widthDp: requested.widthDp,
+          heightDp: requested.heightDp,
+          density: requested.density,
+          fontScale: requested.fontScale,
+          localeTag: 'en-US',
+          layoutDirection: requested.layoutDirection,
+          theme: requested.theme,
+          apiLevel: null,
+        },
+        requestId,
+        signal,
+      });
+      if (preview.status !== 'success') {
+        return toolResult({
+          requestId,
+          tool: TOOL_NAME,
+          status: preview.status,
+          level: preview.evidence?.level ?? 'static',
+          diagnostics: preview.diagnostics,
+          elapsedMs: performance.now() - started,
+          cache: preview.evidence?.cache,
+          compilerLane: preview.evidence?.compilerLane,
+          renderLane: preview.evidence?.renderLane,
+          outputFingerprint: preview.evidence?.outputFingerprint,
+          truncated: preview.truncated,
+        });
+      }
+      const compared = await compare({
+        designIr: artifacts.comparisonDesignIr,
+        previewBindings: artifacts.previewBindings,
+        preview: preview.data,
+        previewEvidence: preview.evidence,
+      });
+      if (!compared.comparison) {
+        return toolResult({
+          requestId,
+          tool: TOOL_NAME,
+          status: compared.status,
+          level: compared.evidenceLevel ?? 'rendered',
+          diagnostics: compared.diagnostics,
+          elapsedMs: performance.now() - started,
+          cache: preview.evidence.cache,
+          compilerLane: preview.evidence.compilerLane,
+          renderLane: preview.evidence.renderLane,
+          outputFingerprint: preview.evidence.outputFingerprint,
+        });
+      }
+      const style = mappingCount(ir, 'style');
+      const resource = mappingCount(ir, 'resource');
+      const verification = {
+        compilation: {
+          status: 'passed',
+          fingerprint: fingerprint({
+            lane: preview.evidence.compilerLane,
+            kotlin: artifacts.report.kotlinFingerprint,
+            request: preview.data.generatedPreview.requestFingerprint,
+          }),
+        },
+        preview: {status: 'passed', fingerprint: preview.evidence.outputFingerprint},
+        categories: {
+          structure: comparisonCategory(compared.comparison, ['identity', 'structure']),
+          semantics: comparisonCategory(compared.comparison, ['semantic']),
+          geometry: comparisonCategory(compared.comparison, ['geometry']),
+          style: verificationCategory({eligible: style, evaluated: 0, passed: 0}),
+          assets: verificationCategory({eligible: resource}),
+          pixels: verificationCategory({eligible: 0, evaluated: 0, passed: 0, notApplicable: 1}),
+          perceptual: verificationCategory({
+            eligible: 0, evaluated: 0, passed: 0, notApplicable: 1,
+          }),
+        },
+        conclusion: compared.status !== 'success'
+          ? 'failed'
+          : style === 0 ? 'passed' : 'incomplete',
+      };
+      const data = {
+        ...generatedResultBase({mode: 'verify', inputFingerprint, irFingerprint, profile, summary}),
+        artifactSetFingerprint: artifacts.artifactSetFingerprint,
+        verification,
+      };
+      const violations = validateSchemaValue(data, FIGMA_IMPORT_SCHEMA);
+      if (
+        violations.length > 0 ||
+        utf8Bytes(JSON.stringify(data)) > FIGMA_IMPORT_LIMITS.maxVerificationBytes
+      ) {
+        fail(
+          violations.length > 0
+            ? 'VC-AI-FIGMA-VERIFICATION-FAILED'
+            : 'VC-AI-FIGMA-LIMIT-EXCEEDED',
+          violations.length > 0
+            ? `Figma verify result violates v1: ${violations.slice(0, 3).join('; ')}`
+            : 'Figma verification evidence exceeds the 512 KiB ceiling.',
+          'Reject the partial verification and repair the deterministic evidence adapter.',
+          violations.length > 0 ? 'failed' : 'limited',
+        );
+      }
+      return toolResult({
+        requestId,
+        tool: TOOL_NAME,
+        status: compared.status,
+        level: compared.evidenceLevel,
+        diagnostics: compared.diagnostics.slice(0, FIGMA_IMPORT_LIMITS.maxDiagnostics),
+        data,
+        elapsedMs: performance.now() - started,
+        cache: preview.evidence.cache,
+        compilerLane: preview.evidence.compilerLane,
+        renderLane: preview.evidence.renderLane,
+        outputFingerprint: compared.comparison.comparisonFingerprint,
+      });
     }
     const data = {
       schemaVersion: 1,

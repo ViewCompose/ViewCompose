@@ -261,6 +261,7 @@
         "height",
         "padding",
         "gapDp",
+        "mainAxisArrangement",
         "horizontalAlignment",
         "verticalAlignment",
         "clip"
@@ -273,6 +274,9 @@
         "height": {"$ref": "#/$defs/layoutSize"},
         "padding": {"$ref": "#/$defs/edges"},
         "gapDp": {"type": "number", "minimum": 0, "maximum": 4096},
+        "mainAxisArrangement": {
+          "enum": ["start", "center", "end", "space-between", "space-around", "space-evenly"]
+        },
         "horizontalAlignment": {"enum": ["start", "center", "end", "stretch"]},
         "verticalAlignment": {"enum": ["start", "center", "end", "baseline", "stretch"]},
         "clip": {"enum": ["none", "rectangle", "uniform-rounded-rectangle"]},

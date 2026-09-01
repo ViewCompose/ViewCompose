@@ -29,6 +29,7 @@ const KIND_BY_RENDER_TYPE = Object.freeze({
   Button: 'button',
   Column: 'column',
   Image: 'image',
+  Row: 'row',
   Text: 'text',
   TextField: 'text-field',
 });
@@ -441,11 +442,15 @@ function nodeChecks(mapping, mappedById, bindings, viewport, density) {
       .filter((child) => child.key !== null && child.key !== undefined)
       .findIndex((child) => child === identity) ?? design.siblingIndex;
     let ordered = actualIndex === expectedIndex;
-    if (ordered && design.parent?.node.kind === 'column' && expectedIndex > 0) {
+    if (
+      ordered && ['column', 'row'].includes(design.parent?.node.kind) && expectedIndex > 0
+    ) {
       const previousDesign = design.parent.node.children[expectedIndex - 1];
       const previous = mappedById.get(previousDesign.id);
       if (previous?.mapped && expectedVisibility(previous.design.node) !== 'gone') {
-        ordered = previous.semanticNative.bounds.bottom <= semanticNative.bounds.top;
+        ordered = design.parent.node.kind === 'column'
+          ? previous.semanticNative.bounds.bottom <= semanticNative.bounds.top
+          : previous.semanticNative.bounds.right <= semanticNative.bounds.left;
       }
     }
     checks.push(check(
