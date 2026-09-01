@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-source-application-journal-v1.schema.json",
+  "title": "ViewCompose attended screenshot source-application journal entry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "transactionId",
+    "requestFingerprint",
+    "sequence",
+    "previousEntryFingerprint",
+    "state",
+    "recordedAt",
+    "source",
+    "recovery",
+    "evidence",
+    "entryFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "screenshot-source-application-journal-entry"},
+    "transactionId": {"$ref": "#/$defs/sha256"},
+    "requestFingerprint": {"$ref": "#/$defs/sha256"},
+    "sequence": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "previousEntryFingerprint": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+    },
+    "state": {
+      "enum": [
+        "PREPARED",
+        "APPLYING",
+        "APPLIED_UNVERIFIED",
+        "APPLIED_VERIFIED",
+        "APPLIED_VALIDATION_FAILED",
+        "APPLIED_EVIDENCE_ERROR",
+        "APPLIED_CONFLICT",
+        "NOT_APPLIED",
+        "ROLLING_BACK",
+        "ROLLED_BACK",
+        "ROLLBACK_CONFLICT"
+      ]
+    },
+    "recordedAt": {"$ref": "#/$defs/timestamp"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relativePath", "preimageSha256", "candidateSha256", "observedSha256"],
+      "properties": {
+        "relativePath": {"type": "string", "minLength": 3, "maxLength": 1024},
+        "preimageSha256": {"$ref": "#/$defs/sha256"},
+        "candidateSha256": {"$ref": "#/$defs/sha256"},
+        "observedSha256": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestSha256", "preimageSha256", "candidateSha256", "durable"],
+      "properties": {
+        "requestSha256": {"$ref": "#/$defs/sha256"},
+        "preimageSha256": {"$ref": "#/$defs/sha256"},
+        "candidateSha256": {"$ref": "#/$defs/sha256"},
+        "durable": {"type": "boolean"}
+      }
+    },
+    "evidence": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "sourceSha256", "evidenceFingerprint"],
+          "properties": {
+            "status": {"enum": ["verified", "failed", "error", "conflict"]},
+            "sourceSha256": {"$ref": "#/$defs/sha256"},
+            "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ]
+    },
+    "entryFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

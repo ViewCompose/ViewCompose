@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/screenshot-source-application-receipt-v1.schema.json",
+  "title": "ViewCompose attended screenshot source-application terminal receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "operation",
+    "status",
+    "transactionId",
+    "requestFingerprint",
+    "project",
+    "approval",
+    "atomicReplace",
+    "evidence",
+    "recovery",
+    "rollback",
+    "journalChainFingerprint",
+    "receiptFingerprint"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "screenshot-source-application-receipt"},
+    "operation": {"enum": ["apply", "rollback"]},
+    "status": {
+      "enum": [
+        "applied-verified",
+        "applied-validation-failed",
+        "applied-evidence-error",
+        "applied-conflict",
+        "not-applied",
+        "rolled-back",
+        "rollback-conflict"
+      ]
+    },
+    "transactionId": {"$ref": "#/$defs/sha256"},
+    "requestFingerprint": {"$ref": "#/$defs/sha256"},
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "physicalRootFingerprint",
+        "relativePath",
+        "preimageSha256",
+        "candidateSha256",
+        "terminalSha256"
+      ],
+      "properties": {
+        "physicalRootFingerprint": {"$ref": "#/$defs/sha256"},
+        "relativePath": {"type": "string", "minLength": 3, "maxLength": 1024},
+        "preimageSha256": {"$ref": "#/$defs/sha256"},
+        "candidateSha256": {"$ref": "#/$defs/sha256"},
+        "terminalSha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "confirmedSuffix", "approvedAt", "singleUse"],
+      "properties": {
+        "channel": {"const": "controlling-tty"},
+        "confirmedSuffix": {"type": "string", "pattern": "^[A-F0-9]{12}$"},
+        "approvedAt": {"$ref": "#/$defs/timestamp"},
+        "singleUse": {"const": true}
+      }
+    },
+    "atomicReplace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "committed", "directorySynced", "terminalReread"],
+      "properties": {
+        "backend": {"const": "secure-directory-stream-v1"},
+        "committed": {"type": "boolean"},
+        "directorySynced": {"type": "boolean"},
+        "terminalReread": {"type": "boolean"}
+      }
+    },
+    "evidence": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "sourceSha256",
+            "static",
+            "compilation",
+            "render",
+            "semanticGeometry",
+            "eligiblePixels",
+            "evidenceFingerprint"
+          ],
+          "properties": {
+            "status": {"enum": ["verified", "failed", "error", "conflict"]},
+            "sourceSha256": {"$ref": "#/$defs/sha256"},
+            "static": {"$ref": "#/$defs/gate"},
+            "compilation": {"$ref": "#/$defs/gate"},
+            "render": {"$ref": "#/$defs/gate"},
+            "semanticGeometry": {"$ref": "#/$defs/gate"},
+            "eligiblePixels": {"$ref": "#/$defs/gate"},
+            "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ]
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stateRootFingerprint", "preimageSha256", "candidateSha256", "durable"],
+      "properties": {
+        "stateRootFingerprint": {"$ref": "#/$defs/sha256"},
+        "preimageSha256": {"$ref": "#/$defs/sha256"},
+        "candidateSha256": {"$ref": "#/$defs/sha256"},
+        "durable": {"type": "boolean"}
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible", "requiredCurrentSha256", "linkedReceiptFingerprint"],
+      "properties": {
+        "eligible": {"type": "boolean"},
+        "requiredCurrentSha256": {"$ref": "#/$defs/sha256"},
+        "linkedReceiptFingerprint": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]
+        }
+      }
+    },
+    "journalChainFingerprint": {"$ref": "#/$defs/sha256"},
+    "receiptFingerprint": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "passed", "total", "evidenceFingerprint"],
+      "properties": {
+        "status": {"enum": ["passed", "failed", "not-applicable", "error", "conflict"]},
+        "passed": {"type": "integer", "minimum": 0, "maximum": 4194304},
+        "total": {"type": "integer", "minimum": 0, "maximum": 4194304},
+        "evidenceFingerprint": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

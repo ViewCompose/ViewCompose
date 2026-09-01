@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-source-application-request",
+  "status": "prepared",
+  "nonce": "0123456789abcdef0123456789abcdef",
+  "createdAt": "2026-09-01T12:00:00.000Z",
+  "expiresAt": "2026-09-01T12:10:00.000Z",
+  "project": {
+    "physicalRootFingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+    "frameworkProfileFingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+    "relativePath": "app/src/main/java/example/LoginScreen.kt",
+    "fileIdentity": {
+      "kind": "regular-file",
+      "key": "dev:1:ino:42",
+      "linkCount": 1
+    },
+    "encoding": "utf-8",
+    "preimage": {
+      "bytes": 1024,
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  },
+  "edit": {
+    "kind": "replace-generated-property-value",
+    "nodeId": "title",
+    "propertyName": "text",
+    "byteStart": 512,
+    "byteEnd": 519,
+    "expectedSpan": {
+      "bytes": 7,
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "replacement": {
+      "encoding": "base64",
+      "data": "IkhlbGxvIg==",
+      "bytes": 7,
+      "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    },
+    "candidate": {
+      "bytes": 1022,
+      "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    "diff": {
+      "format": "unified-v1",
+      "text": "@@ LoginScreen.kt:512 @@\n-\"Welcome\"\n+\"Hello\"\n",
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    }
+  },
+  "lineage": {
+    "inputDesignIrFingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+    "resultDesignIrFingerprint": "9999999999999999999999999999999999999999999999999999999999999999",
+    "changeFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "proposalFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "authorizationValidationFingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "appliedResultHandoffFingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "baselineEvidenceFingerprint": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "candidateEvidenceFingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "preApplyEvidenceFingerprint": "1010101010101010101010101010101010101010101010101010101010101010"
+  },
+  "authorization": {
+    "mode": "controlling-tty-exact-request",
+    "confirmationSuffix": "ABCDEF123456",
+    "singleUse": true,
+    "bypassAllowed": false
+  },
+  "recovery": {
+    "location": "platform-user-state-outside-project",
+    "sourceControl": false,
+    "permissions": "owner-only",
+    "preimageSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "candidateSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "rollbackTargetSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "policy": {
+    "version": 1,
+    "sourceOwnership": "exact-tool-generated-kotlin",
+    "maxFiles": 1,
+    "maxEdits": 1,
+    "arbitrarySource": false,
+    "wholeFileReplacement": false,
+    "mcpSourceWrite": false,
+    "shellExecution": false,
+    "networkAccess": false,
+    "automaticRollback": false,
+    "postApplyEvidence": [
+      "static",
+      "compiled",
+      "rendered",
+      "semantic-geometry",
+      "eligible-pixels"
+    ]
+  },
+  "requestFingerprint": "4440333f030ca7413b26544baee5ef7e9dd51d7a516f6d3ed69ba1cafa6b6636"
+}

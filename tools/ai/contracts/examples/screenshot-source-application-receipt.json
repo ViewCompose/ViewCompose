@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "kind": "screenshot-source-application-receipt",
+  "operation": "apply",
+  "status": "applied-verified",
+  "transactionId": "1313131313131313131313131313131313131313131313131313131313131313",
+  "requestFingerprint": "4440333f030ca7413b26544baee5ef7e9dd51d7a516f6d3ed69ba1cafa6b6636",
+  "project": {
+    "physicalRootFingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+    "relativePath": "app/src/main/java/example/LoginScreen.kt",
+    "preimageSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "candidateSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "terminalSha256": "6666666666666666666666666666666666666666666666666666666666666666"
+  },
+  "approval": {
+    "channel": "controlling-tty",
+    "confirmedSuffix": "ABCDEF123456",
+    "approvedAt": "2026-09-01T12:00:30.000Z",
+    "singleUse": true
+  },
+  "atomicReplace": {
+    "backend": "secure-directory-stream-v1",
+    "committed": true,
+    "directorySynced": true,
+    "terminalReread": true
+  },
+  "evidence": {
+    "status": "verified",
+    "sourceSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "static": {
+      "status": "passed",
+      "passed": 1,
+      "total": 1,
+      "evidenceFingerprint": "1616161616161616161616161616161616161616161616161616161616161616"
+    },
+    "compilation": {
+      "status": "passed",
+      "passed": 1,
+      "total": 1,
+      "evidenceFingerprint": "1717171717171717171717171717171717171717171717171717171717171717"
+    },
+    "render": {
+      "status": "passed",
+      "passed": 1,
+      "total": 1,
+      "evidenceFingerprint": "1818181818181818181818181818181818181818181818181818181818181818"
+    },
+    "semanticGeometry": {
+      "status": "passed",
+      "passed": 8,
+      "total": 8,
+      "evidenceFingerprint": "1919191919191919191919191919191919191919191919191919191919191919"
+    },
+    "eligiblePixels": {
+      "status": "passed",
+      "passed": 2523781,
+      "total": 2523781,
+      "evidenceFingerprint": "2020202020202020202020202020202020202020202020202020202020202020"
+    },
+    "evidenceFingerprint": "2121212121212121212121212121212121212121212121212121212121212121"
+  },
+  "recovery": {
+    "stateRootFingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+    "preimageSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "candidateSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "durable": true
+  },
+  "rollback": {
+    "eligible": true,
+    "requiredCurrentSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "linkedReceiptFingerprint": null
+  },
+  "journalChainFingerprint": "2323232323232323232323232323232323232323232323232323232323232323",
+  "receiptFingerprint": "9019068b3e85bae932aac2e8e01c4fec7c90847ff0512d54aa7f38deafd6088d"
+}

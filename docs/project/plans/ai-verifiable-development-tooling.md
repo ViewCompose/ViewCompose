@@ -19,7 +19,7 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: Release 0.6.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Wave C is publicly accepted with one strict offline Figma import tool, a seventh client-neutral Skill, and repository-external inspect, generate, compile, Preview, comparison, MCP, and three-client onboarding evidence. Compose migration and public source repair remain unactivated.
+baseline: Release 0.6.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Wave C is publicly accepted with one strict offline Figma import tool, a seventh client-neutral Skill, and repository-external inspect, generate, compile, Preview, comparison, MCP, and three-client onboarding evidence. Wave D has frozen its separate read-only preparation and attended source-application planes, typed single-property edit, transaction journal, terminal receipt, explicit rollback, and adversarial denominator; implementation and public source writes remain unactivated. Compose migration remains deferred.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
   - Extend the existing read-only analyze_project surface with a versioned finding contract, measurable high-confidence rules, explicit unsupported coverage, and audited suppressions.
@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Begin Wave D by freezing the public attended screenshot-repair source-application transaction, exact preimage and allowed-path contract, diff and durable receipt evidence, atomic rollback behavior, and client-neutral human-authorization workflow before exposing any source write.
+next_action: Implement Wave D's deterministic generated-Kotlin property-span mapper and secure filesystem transaction backend against the frozen request, journal, receipt, TTY authorization, crash-recovery, and explicit-rollback contracts; keep MCP source writes unavailable.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -880,6 +880,9 @@ attended screenshot-repair boundary; Compose Waves E and F remain lower priority
 
 ### Execution Wave D — public attended screenshot repair
 
+**Status: contract and security denominator frozen on 2026-09-01.** Implementation, public CLI/MCP
+preparation, client workflows, and source-write activation remain open.
+
 #### Objective
 
 Turn the accepted internal proposal/authorization/host-grant/terminal-outcome/applied-result chain
@@ -913,6 +916,44 @@ and rollback under injected crashes, conflict/preimage/symlink/replay/concurrenc
 general MCP write capability, exact post-apply evidence, user-visible diff and recovery steps, and
 installed-package reproduction. Only then may public documentation describe “attended automatic
 repair”; unattended or arbitrary-source repair remains out of scope.
+
+#### Accepted source-application freeze (2026-09-01)
+
+Wave D uses two authority planes. MCP may prepare and return only one inert, content-addressed
+source-application request. It exposes no apply, rollback, approval, grant, shell, build, commit,
+push, or source-write operation. A separately invoked `viewcompose-repair` host will reconstruct the
+candidate, display the complete bounded diff and evidence summary, and require the controlling TTY
+to enter the exact request suffix. No `--yes`, stdin, environment-variable approval, reusable token,
+or serialized internal grant is accepted.
+
+The v1 edit is narrower than whole-file replacement. It replaces one generated Kotlin property
+value span derived from the already validated one-property Design IR rollback. Callers cannot submit
+raw replacement text, unified patches, arbitrary candidate files, imports, declarations, insertions,
+or deletions. The complete current generated source must equal the physical preimage, and the CLI
+must reconstruct and hash the complete candidate before authorization and again immediately before
+commit. Validation failure never triggers automatic rollback because a long compile or Preview run
+could race with later user edits; rollback is a separate attended transaction and refuses any target
+that no longer equals the committed candidate.
+
+Three versioned schemas now freeze the canonical request, append-only hash-chained journal entry, and
+immutable apply/rollback receipt. They bind the physical-root and framework-profile fingerprints,
+root-relative Kotlin path, regular single-link file identity, exact UTF-8 preimage and property span,
+replacement and reconstructed candidate hashes, displayed diff, Design IR/proposal/authorization/
+handoff/evidence lineage, ten-minute expiry, one nonce, recovery identities, and post-apply evidence.
+Recovery bytes live in an owner-only platform user-state directory outside the project and source
+control. Apply is unavailable unless the backend can provide no-follow, beneath-root,
+directory-handle-relative atomic replacement and durable sync semantics.
+
+The checked-in denominator contains 3/3 schema-valid examples, 8/8 schema-level safety rejections,
+12/12 runtime no-write rejection cases, and 10/10 apply/rollback crash boundaries. The required
+host outcomes are only unchanged preimage (`NOT_APPLIED`), committed candidate
+(`APPLIED_UNVERIFIED` pending reconciliation), or no-write conflict (`APPLIED_CONFLICT`). This
+changes the previous informal downstream-write requirement to a machine-checked contract and is
+therefore **improved** safety specification with **no material Android runtime behavior change** and
+no public source-write capability. The limitations are explicit: controlling-TTY attendance does
+not defend against an actor that already controls the user's OS account or terminal; recovery may
+contain source bytes; secure filesystem support is platform-dependent; rollback is not a merge
+facility. The next action is the property-span mapper and secure transaction/recovery backend.
 
 ### Per-wave pull request and release discipline
 
