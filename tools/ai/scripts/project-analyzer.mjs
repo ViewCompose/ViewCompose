@@ -2,6 +2,11 @@ import {lstat, readFile, readdir, realpath} from 'node:fs/promises';
 import {basename, extname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {diagnostic, toolResult, utf8Bytes} from './tool-core.mjs';
 import {activeKnowledgePath} from './framework-profile-selection.mjs';
+import {analyzeKotlinImageCalls, maskNonCode} from './static-validator.mjs';
+import {
+  buildProjectAnalysis,
+  parseSuppressionDirectives,
+} from './project-analysis-engine.mjs';
 
 const artifactsPath = activeKnowledgePath('artifacts.json');
 const symbolsPath = activeKnowledgePath('symbols.jsonl');
@@ -129,13 +134,72 @@ function sourcePosition(content, path, offset) {
   };
 }
 
+function maskCommentsPreservingStrings(source) {
+  const characters = source.split('');
+  const mask = (index) => {
+    if (characters[index] !== '\n' && characters[index] !== '\r') characters[index] = ' ';
+  };
+  let index = 0;
+  let quote = null;
+  let escaped = false;
+  while (index < source.length) {
+    if (quote !== null) {
+      const character = source[index];
+      if (escaped) {
+        escaped = false;
+      } else if (character === '\\') {
+        escaped = true;
+      } else if (character === quote) {
+        quote = null;
+      }
+      index += 1;
+      continue;
+    }
+    if (source[index] === '"' || source[index] === '\'') {
+      quote = source[index];
+      index += 1;
+      continue;
+    }
+    if (source.startsWith('//', index)) {
+      while (index < source.length && source[index] !== '\n') {
+        mask(index);
+        index += 1;
+      }
+      continue;
+    }
+    if (source.startsWith('/*', index)) {
+      let depth = 0;
+      while (index < source.length) {
+        if (source.startsWith('/*', index)) {
+          depth += 1;
+          mask(index);
+          mask(index + 1);
+          index += 2;
+        } else if (source.startsWith('*/', index)) {
+          depth -= 1;
+          mask(index);
+          mask(index + 1);
+          index += 2;
+          if (depth === 0) break;
+        } else {
+          mask(index);
+          index += 1;
+        }
+      }
+      continue;
+    }
+    index += 1;
+  }
+  return characters.join('');
+}
+
 function pushUnique(map, key, value, identity) {
   const values = map.get(key) ?? [];
   if (!values.some((entry) => identity(entry) === identity(value))) values.push(value);
   map.set(key, values);
 }
 
-function parseDependencies(content, path, knowledge, findings) {
+function parseDependencies(content, path, knowledge, findings, unsupported) {
   const coordinatePatterns = [
     /["']com\.viewcompose:([a-z0-9][a-z0-9-]*):([^"']+)["']/gu,
     /module\s*=\s*["']com\.viewcompose:([a-z0-9][a-z0-9-]*)["'][^\n]*?version\s*=\s*["']([^"']+)["']/gu,
@@ -146,6 +210,13 @@ function parseDependencies(content, path, knowledge, findings) {
       const artifactId = match[1];
       if (!dependencyArtifactPattern.test(artifactId)) continue;
       const version = match[2];
+      if (/[$<{]/u.test(version)) {
+        unsupported.push({
+          kind: 'dynamic-dependency',
+          reason: 'The ViewCompose dependency version is dynamic or unresolved.',
+          source: sourcePosition(content, path, match.index),
+        });
+      }
       pushUnique(findings.dependencies, artifactId, {
         artifactId,
         version,
@@ -164,27 +235,46 @@ function parseDependencies(content, path, knowledge, findings) {
       expectedCurrentVersion: knowledge.artifactVersions.get(artifactId),
       path,
       ...sourcePosition(content, path, match.index),
-    }, (entry) => `${entry.version}:${entry.path}:${entry.startLine}`);
+      }, (entry) => `${entry.version}:${entry.path}:${entry.startLine}`);
+  }
+  for (const match of content.matchAll(/["'](com\.viewcompose:[^"']*)["']/gu)) {
+    if (/^com\.viewcompose:[a-z0-9][a-z0-9-]*:[^\s:]+$/u.test(match[1])) continue;
+    unsupported.push({
+      kind: 'dynamic-dependency',
+      reason: 'The ViewCompose dependency coordinate is not one complete literal group, artifact, and version.',
+      source: sourcePosition(content, path, match.index),
+    });
   }
 }
 
-function parseImports(content, path, knowledge, findings) {
-  for (const match of content.matchAll(/^\s*import\s+(com\.viewcompose\.[A-Za-z_][A-Za-z0-9_.]*(?:\.\*)?)/gmu)) {
+function parseImports(content, path, knowledge, findings, unsupported) {
+  for (const match of content.matchAll(/^\s*import\s+(com\.viewcompose\.[A-Za-z_][A-Za-z0-9_.]*(?:\.\*)?)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?/gmu)) {
     const importName = match[1];
     if (!importedNamePattern.test(importName)) continue;
+    if (match[2]) {
+      unsupported.push({
+        kind: 'alias',
+        reason: 'Aliased ViewCompose imports require semantic name resolution.',
+        source: sourcePosition(content, path, match.index),
+      });
+      continue;
+    }
+    if (importName.endsWith('.*')) {
+      unsupported.push({
+        kind: 'star-import',
+        reason: 'Star imports do not prove which ViewCompose symbols are used.',
+        source: sourcePosition(content, path, match.index),
+      });
+      continue;
+    }
     let facts;
     let resolution;
-    if (importName.endsWith('.*')) {
-      facts = knowledge.namespaces.get(importName.slice(0, -2));
-      resolution = facts ? 'wildcard-namespace' : 'unknown-namespace';
+    facts = knowledge.imports.get(importName);
+    if (facts) {
+      resolution = 'governed-symbol';
     } else {
-      facts = knowledge.imports.get(importName);
-      if (facts) {
-        resolution = 'governed-symbol';
-      } else {
-        facts = knowledge.namespaces.get(importName.slice(0, importName.lastIndexOf('.')));
-        resolution = facts ? 'supporting-symbol' : 'unknown-namespace';
-      }
+      facts = knowledge.namespaces.get(importName.slice(0, importName.lastIndexOf('.')));
+      resolution = facts ? 'supporting-symbol' : 'unknown-namespace';
     }
     const uniqueFacts = facts ? [...new Map(facts.map((fact) => [
       `${fact.artifactId}:${fact.capabilityId}:${fact.symbolId}`,
@@ -297,66 +387,6 @@ function finalizeFindings(findings, knowledge) {
     migrations: findings.migrations,
     previewSources: [...new Set(findings.previewSources)].sort(),
   };
-}
-
-function projectDiagnostics(findings) {
-  const diagnostics = [];
-  for (const entry of findings.unknownImports) {
-    diagnostics.push(diagnostic({
-      code: 'VC-AI-PROJECT-UNKNOWN-IMPORT',
-      severity: 'warning',
-      message: `Import ${entry.importName} does not resolve to a namespace in the current Knowledge Bundle.`,
-      nextAction: 'Replace the import with a governed current-lane symbol or select the matching released bundle.',
-      source: {
-        path: entry.path,
-        startLine: entry.startLine,
-        startColumn: entry.startColumn,
-      },
-    }));
-  }
-  for (const entry of findings.dependencies.filter((dependency) => dependency.expectedCurrentVersion === null)) {
-    diagnostics.push(diagnostic({
-      code: 'VC-AI-PROJECT-UNKNOWN-ARTIFACT',
-      severity: 'warning',
-      message: `Dependency com.viewcompose:${entry.artifactId} is not present in the current Knowledge Bundle.`,
-      nextAction: 'Correct the coordinate or select the exact released bundle that owns it.',
-      artifactId: entry.artifactId,
-      source: {
-        path: entry.path,
-        startLine: entry.startLine,
-        startColumn: entry.startColumn,
-      },
-    }));
-  }
-  for (const artifact of findings.artifacts.filter((entry) => !entry.declared)) {
-    const usage = findings.imports.find((entry) => entry.artifactIds.includes(artifact.artifactId));
-    diagnostics.push(diagnostic({
-      code: 'VC-AI-ARTIFACT-REQUIRED',
-      severity: 'warning',
-      message: `Imported symbols are owned by ${artifact.artifactId}, but no exact dependency was found in the inspected files.`,
-      nextAction: 'Declare the owning artifact explicitly or include the Gradle file that declares it.',
-      artifactId: artifact.artifactId,
-      source: usage ? {
-        path: usage.path,
-        startLine: usage.startLine,
-        startColumn: usage.startColumn,
-      } : undefined,
-    }));
-  }
-  const versions = new Set(
-    findings.dependencies
-      .filter((entry) => entry.state === 'different-from-current-bundle')
-      .map((entry) => entry.version),
-  );
-  if (versions.size > 0) {
-    diagnostics.push(diagnostic({
-      code: 'VC-AI-PROJECT-VERSION-LANE',
-      severity: 'warning',
-      message: `Detected released dependency versions outside the current-source bundle: ${[...versions].sort().join(', ')}.`,
-      nextAction: 'Select exact released Knowledge Bundles before validating those APIs.',
-    }));
-  }
-  return diagnostics.slice(0, 200);
 }
 
 export async function inspectProjectRequest(spec, {requestId = 'analyze-project'} = {}) {
@@ -506,6 +536,9 @@ export async function analyzeProject({
     migrations: {androidXml: [], jetpackCompose: []},
     previewSources: [],
   };
+  const imageOpportunities = [];
+  const suppressionDirectives = [];
+  const unsupported = [];
   const queue = [{path: target, depth: 0}];
   while (queue.length > 0) {
     if (performance.now() - started > limits.timeoutMs) {
@@ -592,11 +625,19 @@ export async function analyzeProject({
     if (basename(current.path).includes('gradle')) signals.gradleFiles += 1;
     if (readableExtensions.has(extension) && metadata.size <= 256 * 1024) {
       const content = await readFile(current.path, 'utf8');
+      const codeContent = kotlinExtensions.has(extension) ? maskNonCode(content) : content;
+      const dependencyContent = maskCommentsPreservingStrings(content);
       signals.viewComposeImports += (content.match(/\b(?:import|implementation)\b[^\n]*\bcom\.viewcompose\b/gu) ?? []).length;
-      parseDependencies(content, projectPath, knowledge, collectedFindings);
-      parseImports(content, projectPath, knowledge, collectedFindings);
-      parseConfiguration(content, projectPath, collectedFindings);
-      parseMigrationSignals(content, projectPath, extension, collectedFindings);
+      parseDependencies(dependencyContent, projectPath, knowledge, collectedFindings, unsupported);
+      parseImports(codeContent, projectPath, knowledge, collectedFindings, unsupported);
+      parseConfiguration(codeContent, projectPath, collectedFindings);
+      parseMigrationSignals(codeContent, projectPath, extension, collectedFindings);
+      if (extension === '.kt' || extension === '.kts') {
+        const imageAnalysis = await analyzeKotlinImageCalls({source: content, path: projectPath});
+        imageOpportunities.push(...imageAnalysis.opportunities);
+        unsupported.push(...imageAnalysis.unsupported);
+        suppressionDirectives.push(...parseSuppressionDirectives(content, projectPath));
+      }
     }
   }
   files.sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0);
@@ -604,7 +645,21 @@ export async function analyzeProject({
   signals.viewComposeArtifacts = findings.artifacts.length;
   signals.viewComposeCapabilities = findings.capabilities.length;
   signals.migrationFiles = findings.migrations.androidXml.length + findings.migrations.jetpackCompose.length;
-  const diagnostics = projectDiagnostics(findings);
+  const evaluated = await buildProjectAnalysis({
+    inventory: findings,
+    scan: {
+      files: files.length,
+      bytes: totalBytes,
+      kotlinFiles: signals.kotlinFiles,
+      gradleFiles: signals.gradleFiles,
+      xmlFiles: signals.xmlFiles,
+      excludedEntries: excludedCount,
+    },
+    imageOpportunities,
+    suppressionDirectives,
+    unsupported,
+  });
+  const diagnostics = evaluated.diagnostics;
   const data = {
     projectRoot: root,
     readOnly: true,
@@ -613,6 +668,7 @@ export async function analyzeProject({
     excludedCount,
     signals,
     findings,
+    analysis: evaluated.analysis,
     limits,
   };
   const serializedBytes = utf8Bytes(JSON.stringify(data));

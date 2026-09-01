@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "corpusVersion": "viewcompose-project-analysis-corpus-v1",
+  "catalogVersion": "viewcompose-project-analysis-rules-v1",
+  "formatVariants": [
+    {"id": "plain", "prefix": "", "suffix": ""},
+    {"id": "package", "prefix": "package corpus\n", "suffix": ""},
+    {"id": "leading-comment", "prefix": "// format variant\n", "suffix": ""},
+    {"id": "trailing-comment", "prefix": "", "suffix": "\n// format variant"},
+    {"id": "blank-lines", "prefix": "\n\n", "suffix": "\n\n"}
+  ],
+  "ruleMatrices": [
+    {
+      "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "ruleVersion": 1,
+      "positive": [
+        {"id": "image-missing-positional", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(icon) }", "expectedFindings": 1},
+        {"id": "image-missing-source", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = icon) }", "expectedFindings": 1},
+        {"id": "image-missing-multiline", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(\n source = icon,\n tint = color\n) }", "expectedFindings": 1},
+        {"id": "image-missing-null-source", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = null) }", "expectedFindings": 1},
+        {"id": "image-missing-nested-argument", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = select(icon, fallback)) }", "expectedFindings": 1}
+      ],
+      "eligibleNegative": [
+        {"id": "image-explicit-null", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = icon, contentDescription = null) }", "expectedFindings": 0},
+        {"id": "image-explicit-text", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = icon, contentDescription = title) }", "expectedFindings": 0},
+        {"id": "image-explicit-multiline", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nfun screen() { Image(\n source = icon,\n contentDescription = title\n) }", "expectedFindings": 0},
+        {"id": "image-comment", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\n// Image(source = icon)", "expectedFindings": 0},
+        {"id": "image-block-comment", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\n/* Image(source = icon) */", "expectedFindings": 0},
+        {"id": "image-string", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nval text = \"Image(source = icon)\"", "expectedFindings": 0},
+        {"id": "image-raw-string", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image\nval text = \"\"\"Image(source = icon)\"\"\"", "expectedFindings": 0},
+        {"id": "image-local-function", "path": "Screen.kt", "source": "fun Image(value: Any?) = value\nfun screen() { Image(icon) }", "expectedFindings": 0},
+        {"id": "image-view", "path": "Screen.kt", "source": "fun screen() { android.widget.ImageView(context) }", "expectedFindings": 0},
+        {"id": "image-other-component", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Text\nfun screen() { Text(text = title) }", "expectedFindings": 0}
+      ],
+      "unsupported": [
+        {"id": "image-alias", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image as VcImage\nfun screen() { VcImage(source = icon) }", "expectedFindings": 0}
+      ]
+    },
+    {
+      "ruleId": "VC-AI-ARTIFACT-REQUIRED",
+      "ruleVersion": 1,
+      "positive": [
+        {"id": "missing-foundation-column", "path": "build.gradle.kts", "source": "import com.viewcompose.ui.foundation.Column", "expectedFindings": 1},
+        {"id": "missing-animation", "path": "build.gradle.kts", "source": "import com.viewcompose.animation.AnimatedVisibility", "expectedFindings": 1},
+        {"id": "missing-camerax", "path": "build.gradle.kts", "source": "import com.viewcompose.camerax.CameraXLensFacing", "expectedFindings": 1},
+        {"id": "missing-constraintlayout", "path": "build.gradle.kts", "source": "import com.viewcompose.constraintlayout.ConstraintBaselineAnchorTarget", "expectedFindings": 1},
+        {"id": "missing-diagnostics", "path": "build.gradle.kts", "source": "import com.viewcompose.diagnostics.BoundedRenderFailureAggregator", "expectedFindings": 1}
+      ],
+      "eligibleNegative": [
+        {"id": "declared-foundation-column", "path": "build.gradle.kts", "source": "import com.viewcompose.ui.foundation.Column\ndependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:{{VERSION:viewcompose-ui-foundation}}\") }", "expectedFindings": 0},
+        {"id": "declared-foundation-row", "path": "build.gradle.kts", "source": "import com.viewcompose.ui.foundation.Row\ndependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:{{VERSION:viewcompose-ui-foundation}}\") }", "expectedFindings": 0},
+        {"id": "declared-foundation-text", "path": "build.gradle.kts", "source": "import com.viewcompose.ui.foundation.Text\ndependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:{{VERSION:viewcompose-ui-foundation}}\") }", "expectedFindings": 0},
+        {"id": "declared-foundation-button", "path": "build.gradle.kts", "source": "import com.viewcompose.ui.foundation.Button\ndependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:{{VERSION:viewcompose-ui-foundation}}\") }", "expectedFindings": 0},
+        {"id": "declared-foundation-image", "path": "build.gradle.kts", "source": "import com.viewcompose.ui.foundation.Image\ndependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:{{VERSION:viewcompose-ui-foundation}}\") }", "expectedFindings": 0},
+        {"id": "declared-animation", "path": "build.gradle.kts", "source": "import com.viewcompose.animation.AnimatedVisibility\ndependencies { implementation(\"com.viewcompose:viewcompose-animation:{{VERSION:viewcompose-animation}}\") }", "expectedFindings": 0},
+        {"id": "declared-camerax", "path": "build.gradle.kts", "source": "import com.viewcompose.camerax.CameraXLensFacing\ndependencies { implementation(\"com.viewcompose:viewcompose-camerax-androidx:{{VERSION:viewcompose-camerax-androidx}}\") }", "expectedFindings": 0},
+        {"id": "declared-constraintlayout", "path": "build.gradle.kts", "source": "import com.viewcompose.constraintlayout.ConstraintBaselineAnchorTarget\ndependencies { implementation(\"com.viewcompose:viewcompose-constraintlayout-androidx:{{VERSION:viewcompose-constraintlayout-androidx}}\") }", "expectedFindings": 0},
+        {"id": "declared-diagnostics", "path": "build.gradle.kts", "source": "import com.viewcompose.diagnostics.BoundedRenderFailureAggregator\ndependencies { implementation(\"com.viewcompose:viewcompose-diagnostics:{{VERSION:viewcompose-diagnostics}}\") }", "expectedFindings": 0},
+        {"id": "no-viewcompose-import", "path": "build.gradle.kts", "source": "import kotlin.collections.List", "expectedFindings": 0}
+      ],
+      "unsupported": [
+        {"id": "missing-star-import", "path": "build.gradle.kts", "source": "import com.viewcompose.ui.foundation.*", "expectedFindings": 0}
+      ]
+    },
+    {
+      "ruleId": "VC-AI-PROJECT-UNKNOWN-ARTIFACT",
+      "ruleVersion": 1,
+      "positive": [
+        {"id": "unknown-artifact-ghost", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-ghost:1.0.0\") }", "expectedFindings": 1},
+        {"id": "unknown-artifact-ui", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-ui:1.0.0\") }", "expectedFindings": 1},
+        {"id": "unknown-artifact-magic", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-magic:1.0.0\") }", "expectedFindings": 1},
+        {"id": "unknown-artifact-compose", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-compose:1.0.0\") }", "expectedFindings": 1},
+        {"id": "unknown-artifact-legacy", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-legacy:1.0.0\") }", "expectedFindings": 1}
+      ],
+      "eligibleNegative": [
+        {"id": "known-artifact-foundation", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:{{VERSION:viewcompose-ui-foundation}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-animation", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-animation:{{VERSION:viewcompose-animation}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-camerax", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-camerax-androidx:{{VERSION:viewcompose-camerax-androidx}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-constraintlayout", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-constraintlayout-androidx:{{VERSION:viewcompose-constraintlayout-androidx}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-diagnostics", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-diagnostics:{{VERSION:viewcompose-diagnostics}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-gesture", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-gesture:{{VERSION:viewcompose-gesture}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-graphics", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-graphics:{{VERSION:viewcompose-graphics}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-host", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-host-android:{{VERSION:viewcompose-host-android}}\") }", "expectedFindings": 0},
+        {"id": "known-artifact-material3", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-material3:{{VERSION:viewcompose-material3}}\") }", "expectedFindings": 0},
+        {"id": "other-group", "path": "build.gradle.kts", "source": "dependencies { implementation(\"androidx.core:core-ktx:1.0.0\") }", "expectedFindings": 0}
+      ],
+      "unsupported": [
+        {"id": "unknown-artifact-dynamic", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:\" + artifact + \":\" + version) }", "expectedFindings": 0}
+      ]
+    },
+    {
+      "ruleId": "VC-AI-PROJECT-UNKNOWN-IMPORT",
+      "ruleVersion": 1,
+      "positive": [
+        {"id": "unknown-import-ghost", "path": "Screen.kt", "source": "import com.viewcompose.ghost.Ghost", "expectedFindings": 1},
+        {"id": "unknown-import-magic", "path": "Screen.kt", "source": "import com.viewcompose.magic.Column", "expectedFindings": 1},
+        {"id": "unknown-import-legacy", "path": "Screen.kt", "source": "import com.viewcompose.legacy.Text", "expectedFindings": 1},
+        {"id": "unknown-import-compose", "path": "Screen.kt", "source": "import com.viewcompose.compose.Row", "expectedFindings": 1},
+        {"id": "unknown-import-internal", "path": "Screen.kt", "source": "import com.viewcompose.unknown.Widget", "expectedFindings": 1}
+      ],
+      "eligibleNegative": [
+        {"id": "known-import-column", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Column", "expectedFindings": 0},
+        {"id": "known-import-row", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Row", "expectedFindings": 0},
+        {"id": "known-import-text", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Text", "expectedFindings": 0},
+        {"id": "known-import-button", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Button", "expectedFindings": 0},
+        {"id": "known-import-animation", "path": "Screen.kt", "source": "import com.viewcompose.animation.AnimatedVisibility", "expectedFindings": 0},
+        {"id": "known-import-camerax", "path": "Screen.kt", "source": "import com.viewcompose.camerax.CameraXLensFacing", "expectedFindings": 0},
+        {"id": "known-import-diagnostics", "path": "Screen.kt", "source": "import com.viewcompose.diagnostics.BoundedRenderFailureAggregator", "expectedFindings": 0},
+        {"id": "other-import-kotlin", "path": "Screen.kt", "source": "import kotlin.collections.List", "expectedFindings": 0},
+        {"id": "unknown-import-comment", "path": "Screen.kt", "source": "// import com.viewcompose.ghost.Ghost", "expectedFindings": 0},
+        {"id": "unknown-import-string", "path": "Screen.kt", "source": "val text = \"import com.viewcompose.ghost.Ghost\"", "expectedFindings": 0}
+      ],
+      "unsupported": [
+        {"id": "unknown-import-alias", "path": "Screen.kt", "source": "import com.viewcompose.ui.foundation.Image as VcImage", "expectedFindings": 0}
+      ]
+    },
+    {
+      "ruleId": "VC-AI-PROJECT-VERSION-LANE",
+      "ruleVersion": 1,
+      "positive": [
+        {"id": "old-foundation", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:0.0.1\") }", "expectedFindings": 1},
+        {"id": "old-animation", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-animation:0.0.2\") }", "expectedFindings": 1},
+        {"id": "old-camerax", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-camerax-androidx:0.0.3\") }", "expectedFindings": 1},
+        {"id": "future-diagnostics", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-diagnostics:9.0.0\") }", "expectedFindings": 1},
+        {"id": "future-material3", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-material3:2.0.0\") }", "expectedFindings": 1}
+      ],
+      "eligibleNegative": [
+        {"id": "current-foundation", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:{{VERSION:viewcompose-ui-foundation}}\") }", "expectedFindings": 0},
+        {"id": "current-animation", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-animation:{{VERSION:viewcompose-animation}}\") }", "expectedFindings": 0},
+        {"id": "current-camerax", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-camerax-androidx:{{VERSION:viewcompose-camerax-androidx}}\") }", "expectedFindings": 0},
+        {"id": "current-constraintlayout", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-constraintlayout-androidx:{{VERSION:viewcompose-constraintlayout-androidx}}\") }", "expectedFindings": 0},
+        {"id": "current-diagnostics", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-diagnostics:{{VERSION:viewcompose-diagnostics}}\") }", "expectedFindings": 0},
+        {"id": "current-gesture", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-gesture:{{VERSION:viewcompose-gesture}}\") }", "expectedFindings": 0},
+        {"id": "current-graphics", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-graphics:{{VERSION:viewcompose-graphics}}\") }", "expectedFindings": 0},
+        {"id": "current-host", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-host-android:{{VERSION:viewcompose-host-android}}\") }", "expectedFindings": 0},
+        {"id": "current-material3", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-material3:{{VERSION:viewcompose-material3}}\") }", "expectedFindings": 0},
+        {"id": "other-group-version", "path": "build.gradle.kts", "source": "dependencies { implementation(\"androidx.core:core-ktx:0.0.1\") }", "expectedFindings": 0}
+      ],
+      "unsupported": [
+        {"id": "dynamic-version", "path": "build.gradle.kts", "source": "dependencies { implementation(\"com.viewcompose:viewcompose-ui-foundation:$version\") }", "expectedFindings": 0}
+      ]
+    }
+  ]
+}

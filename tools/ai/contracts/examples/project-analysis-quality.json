@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "qualityVersion": "viewcompose-project-analysis-quality-v1",
+  "catalogVersion": "viewcompose-project-analysis-rules-v1",
+  "corpusVersion": "viewcompose-project-analysis-corpus-v1",
+  "rules": [
+    {
+      "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "ruleVersion": 1,
+      "positiveOpportunities": 25,
+      "eligibleNegativeOpportunities": 50,
+      "truePositives": 25,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "unsupportedOpportunities": 5,
+      "precision": 1,
+      "recall": 1
+    }
+  ]
+}

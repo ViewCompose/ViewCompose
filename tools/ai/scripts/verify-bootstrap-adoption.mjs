@@ -13,7 +13,7 @@ const expectedClients = Object.freeze({
   'claude-code': {configPath: '.mcp.json', skillRoot: '.claude/skills'},
   cursor: {configPath: '.cursor/mcp.json', skillRoot: '.agents/skills'},
 });
-const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.4.1'});
+const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.5.0'});
 
 function contained(root, candidate) {
   const path = relative(resolve(root), resolve(candidate));

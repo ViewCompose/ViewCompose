@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "corpusVersion": "viewcompose-project-analysis-corpus-v1",
+  "catalogVersion": "viewcompose-project-analysis-rules-v1",
+  "formatVariants": [
+    {"id": "plain", "prefix": "", "suffix": ""},
+    {"id": "package", "prefix": "package sample\n", "suffix": ""},
+    {"id": "leading-comment", "prefix": "// corpus variant\n", "suffix": ""},
+    {"id": "trailing-comment", "prefix": "", "suffix": "\n// corpus variant"},
+    {"id": "blank-lines", "prefix": "\n\n", "suffix": "\n\n"}
+  ],
+  "ruleMatrices": [
+    {
+      "ruleId": "VC-AI-A11Y-IMAGE-DESCRIPTION",
+      "ruleVersion": 1,
+      "positive": [
+        {"id": "positive-1", "path": "Screen1.kt", "source": "Image(source = icon)", "expectedFindings": 1},
+        {"id": "positive-2", "path": "Screen2.kt", "source": "Image(\n source = icon\n)", "expectedFindings": 1},
+        {"id": "positive-3", "path": "Screen3.kt", "source": "Image(source = null)", "expectedFindings": 1},
+        {"id": "positive-4", "path": "Screen4.kt", "source": "Image(source = icon, tint = color)", "expectedFindings": 1},
+        {"id": "positive-5", "path": "Screen5.kt", "source": "Image(icon)", "expectedFindings": 1}
+      ],
+      "eligibleNegative": [
+        {"id": "negative-1", "path": "Screen6.kt", "source": "Image(source = icon, contentDescription = null)", "expectedFindings": 0},
+        {"id": "negative-2", "path": "Screen7.kt", "source": "Image(source = icon, contentDescription = title)", "expectedFindings": 0},
+        {"id": "negative-3", "path": "Screen8.kt", "source": "Text(text = title)", "expectedFindings": 0},
+        {"id": "negative-4", "path": "Screen9.kt", "source": "Button(text = title)", "expectedFindings": 0},
+        {"id": "negative-5", "path": "Screen10.kt", "source": "val value = 1", "expectedFindings": 0},
+        {"id": "negative-6", "path": "Screen11.kt", "source": "// Image(source = icon)", "expectedFindings": 0},
+        {"id": "negative-7", "path": "Screen12.kt", "source": "val text = \"Image(source = icon)\"", "expectedFindings": 0},
+        {"id": "negative-8", "path": "Screen13.kt", "source": "/* Image(source = icon) */", "expectedFindings": 0},
+        {"id": "negative-9", "path": "Screen14.kt", "source": "fun Image() = Unit", "expectedFindings": 0},
+        {"id": "negative-10", "path": "Screen15.kt", "source": "android.widget.ImageView(context)", "expectedFindings": 0}
+      ],
+      "unsupported": [
+        {"id": "unsupported-alias", "path": "Alias.kt", "source": "import com.viewcompose.ui.foundation.Image as VcImage\nVcImage(source = icon)", "expectedFindings": 0}
+      ]
+    }
+  ]
+}

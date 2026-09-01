@@ -9,20 +9,20 @@ const archive = gzipSync(payload, {level: 1});
 const publishedArchive = gzipSync(payload, {level: 9});
 const publishedRoot = '/tmp/viewcompose-ai-published-test';
 const distribution = {
-  archivePath: '/tmp/viewcompose-ai-tooling-0.4.1.tgz',
+  archivePath: '/tmp/viewcompose-ai-tooling-0.5.0.tgz',
   manifest: {
-    archive: {path: 'viewcompose-ai-tooling-0.4.1.tgz'},
+    archive: {path: 'viewcompose-ai-tooling-0.5.0.tgz'},
     files: [{path: 'README.md'}, {path: 'package.json'}],
   },
 };
 const contract = {
-  package: {name: '@viewcompose/ai-tooling', version: '0.4.1'},
+  package: {name: '@viewcompose/ai-tooling', version: '0.5.0'},
 };
 const inventory = {
-  id: '@viewcompose/ai-tooling@0.4.1',
+  id: '@viewcompose/ai-tooling@0.5.0',
   name: '@viewcompose/ai-tooling',
-  version: '0.4.1',
-  filename: 'viewcompose-ai-tooling-0.4.1.tgz',
+  version: '0.5.0',
+  filename: 'viewcompose-ai-tooling-0.5.0.tgz',
   files: [{path: 'package.json'}, {path: 'README.md'}],
 };
 
@@ -43,6 +43,31 @@ test('uses npm publish dry-run before the exact version exists', async () => {
   });
   assert.equal(mode, 'publish-dry-run');
   assert.deepEqual(calls.map((arguments_) => arguments_[0]), ['view', 'publish']);
+});
+
+test('accepts the package-keyed npm publish dry-run inventory', async () => {
+  const mode = await verifyNpmPackageInventory(distribution, contract, {
+    execute: async (_command, arguments_) => {
+      if (arguments_[0] === 'view') throw missingVersion();
+      return {stdout: JSON.stringify({'@viewcompose/ai-tooling': inventory})};
+    },
+  });
+  assert.equal(mode, 'publish-dry-run');
+});
+
+test('rejects an ambiguous package-keyed npm publish dry-run inventory', async () => {
+  await assert.rejects(
+    verifyNpmPackageInventory(distribution, contract, {
+      execute: async (_command, arguments_) => {
+        if (arguments_[0] === 'view') throw missingVersion();
+        return {stdout: JSON.stringify({
+          '@viewcompose/ai-tooling': inventory,
+          '@viewcompose/unexpected': inventory,
+        })};
+      },
+    }),
+    /did not return one package inventory/u,
+  );
 });
 
 test('uses registry integrity and exact uncompressed payload after publication', async () => {

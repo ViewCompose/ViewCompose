@@ -502,12 +502,33 @@ async function verifyCliFlow(
   cli,
   knowledge,
   installedPackageRoot,
+  projectAnalysisRoot,
   generatedPreviewContract,
   layoutComparisonContract,
   screenshotGeneratedPreviewContract,
   screenshotComparisonContract,
   screenshotPixelComparisonContract,
 ) {
+  const projectAnalysis = await runCli(
+    cli,
+    knowledge,
+    'analyze_project',
+    {projectRoot: projectAnalysisRoot},
+    'distribution-project-analysis',
+  );
+  if (
+    projectAnalysis.status !== 'success' ||
+    projectAnalysis.evidence.level !== 'static' ||
+    projectAnalysis.data?.analysis?.schemaVersion !== 1 ||
+    projectAnalysis.data.analysis.findings.filter(
+      ({ruleId}) => ruleId === 'VC-AI-A11Y-IMAGE-DESCRIPTION',
+    ).length !== 1 ||
+    projectAnalysis.data.analysis.quality.rules.some(
+      ({precision, recall}) => precision !== 1 || recall !== 1,
+    )
+  ) {
+    throw new Error('Installed CLI did not reproduce the versioned project-analysis contract.');
+  }
   const [screenshotRequest, screenshotExpected] = await Promise.all([
     readJson(screenshotRequestPath),
     readJson(screenshotResultPath),
@@ -1330,10 +1351,17 @@ async function main() {
     await verifyInstalledFiles(packageRoot, primary.manifest);
     await verifyInventory(packageRoot, contract);
     await verifyInstalledAgentClients(agent, packageRoot, temporaryRoot);
+    const projectAnalysisRoot = resolve(temporaryRoot, 'project-analysis');
+    await mkdir(projectAnalysisRoot);
+    await writeFile(
+      resolve(projectAnalysisRoot, 'Screen.kt'),
+      'import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = icon) }\n',
+    );
     const compileFingerprints = await verifyCliFlow(
       cli,
       knowledge,
       packageRoot,
+      projectAnalysisRoot,
       generatedPreviewContract,
       layoutComparisonContract,
       screenshotGeneratedPreviewContract,

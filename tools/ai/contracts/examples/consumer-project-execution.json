@@ -3,7 +3,7 @@
   "contractId": "viewcompose-consumer-project-execution-v1",
   "toolingRelease": {
     "package": "@viewcompose/ai-tooling",
-    "version": "0.4.1",
+    "version": "0.5.0",
     "knowledgeLane": "current-source"
   },
   "authorization": {

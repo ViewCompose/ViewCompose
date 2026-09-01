@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.viewcompose.com/ai/project-analysis-corpus-v1.schema.json",
+  "title": "ViewCompose project-analysis labeled corpus v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "corpusVersion", "catalogVersion", "formatVariants", "ruleMatrices"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "corpusVersion": { "$ref": "#/$defs/stableId" },
+    "catalogVersion": { "$ref": "#/$defs/stableId" },
+    "formatVariants": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "prefix", "suffix"],
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "prefix": { "type": "string" },
+          "suffix": { "type": "string" }
+        }
+      }
+    },
+    "ruleMatrices": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "ruleVersion", "positive", "eligibleNegative", "unsupported"],
+        "properties": {
+          "ruleId": { "$ref": "#/$defs/ruleCode" },
+          "ruleVersion": { "type": "integer", "minimum": 1 },
+          "positive": {
+            "type": "array",
+            "minItems": 5,
+            "items": { "$ref": "#/$defs/case" }
+          },
+          "eligibleNegative": {
+            "type": "array",
+            "minItems": 10,
+            "items": { "$ref": "#/$defs/case" }
+          },
+          "unsupported": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/case" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "ruleCode": {
+      "type": "string",
+      "pattern": "^VC-AI-[A-Z0-9-]+$"
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "source", "expectedFindings"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "path": { "type": "string", "minLength": 3, "maxLength": 512 },
+        "source": { "type": "string", "minLength": 1, "maxLength": 262144 },
+        "expectedFindings": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    }
+  }
+}

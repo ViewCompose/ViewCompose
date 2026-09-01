@@ -308,6 +308,10 @@ async function verifySchemas(versions) {
       'screenshot-repair-applied-result-handoff.schema.json',
     evaluationCorpus: 'evaluation-corpus.schema.json',
     metricContract: 'metric-contract.schema.json',
+    projectAnalysis: 'project-analysis.schema.json',
+    projectAnalysisCatalog: 'project-analysis-catalog.schema.json',
+    projectAnalysisCorpus: 'project-analysis-corpus.schema.json',
+    projectAnalysisQuality: 'project-analysis-quality.schema.json',
     bootstrap: 'bootstrap.schema.json',
   };
   for (const [contract, file] of Object.entries(contractSchemas)) {
@@ -395,6 +399,10 @@ async function verifyExamples(schemas) {
     ['layout-comparison.json', 'layout-comparison.schema.json'],
     ['screenshot-preprocessing-request.json', 'screenshot-preprocessing.schema.json'],
     ['screenshot-preprocessing-result.json', 'screenshot-preprocessing.schema.json'],
+    ['project-analysis.json', 'project-analysis.schema.json'],
+    ['project-analysis-catalog.json', 'project-analysis-catalog.schema.json'],
+    ['project-analysis-corpus.json', 'project-analysis-corpus.schema.json'],
+    ['project-analysis-quality.json', 'project-analysis-quality.schema.json'],
     ['bootstrap.json', 'bootstrap.schema.json'],
   ];
   for (const [exampleName, schemaName] of examples) {

@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 66ab17a35a14c7899e59fd53c72594c4803377d161bcb5fb4d07f6e39d53016f
+translation_source_hash: 5438c9a830626e8a488adc549cecadf18b6ca4209c82e8d5cb9bfd021da4504e
 translation_status: current
 ---
 
@@ -134,7 +134,7 @@ translation_status: current
 | Diagnostics | 已关联的渲染 Session 与 Studio Inspector、受限的生产故障聚合、Render/Layout Tree、逐节点 Patch、CompositionLocal、重组原因、源码跳转、按请求触发的真实 View 高亮、有限采样的 Composition/Reconciliation/Binding 逐节点耗时，以及已验收的空闲/请求/Release 隔离预算 | 当前没有扩展计划；持续观察器、新耗时域或更广设备契约必须重新建立可归因计划，并提供 ADR 支持的非激活路径证据 |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| AI 可验证开发工具 | Release `0.4.1` 已提供版本绑定的 Knowledge Bundle/`llms.txt`、13 个 CLI/MCP 工具、6 个 Agent Skill、受保护 OIDC npm/GitHub Distribution、精确版本单命令 Codex/Claude Code/Cursor 接入、静态/编译/Preview/布局证据、有界项目分析和 XML 转换，以及有界截图到已验证 Kotlin/比较/人工授权修复基础 | Wave A 公开接入已经完成。按[有效计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)剩余冻结顺序推进：先冻结 Compose 语义映射与 Skill 契约，再完成有界 Compose AST 转换、增强只读分析、Figma Design IR 导入，最后在事务化源码写入与回滚门禁通过后公开人工授权截图修复。只维护明确发布的框架 Profile，任何版本不匹配都拒绝接入并保持原状 |
+| AI 可验证开发工具 | Release `0.4.1` 已提供版本绑定的 Knowledge Bundle/`llms.txt`、13 个 CLI/MCP 工具、6 个 Agent Skill、受保护 OIDC npm/GitHub Distribution、精确版本单命令 Codex/Claude Code/Cursor 接入、静态/编译/Preview/布局证据、有界项目分析和 XML 转换，以及有界截图到已验证 Kotlin/比较/人工授权修复基础 | Wave A 公开接入已经完成。按[有效计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)剩余冻结顺序推进：先交付版本化、高置信度项目分析，再完成提供方中立的 Figma Design IR 导入，并在事务化源码写入与回滚门禁通过后公开人工授权截图修复；Compose 语义映射与 Skill 指导随后推进，有界 Compose AST 转换放在最后。只维护明确发布的框架 Profile，任何版本不匹配都拒绝接入并保持原状 |
 | ConstraintLayout | Alpha DSL 加分类协调、类型化 Chain/Wrap/物理方向 API、类型化 Grid、声明式 CircularFlow、精确 Helper/回滚/Lifecycle 覆盖、Pairwise 视觉验收、API 24/33/36 设备覆盖，以及稳定行发版安全的 Released/Candidate/Direct 矩阵 | [已归档的能力与性能扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)完成了 Phase 0～4，发版安全为 **no material change**，没有全帧优化胜利。保持 MotionScene/MotionLayout 范围外；多 OEM 性能或新增能力必须新建归因计划 |
 | Animation | 已具备动画 Core/DSL 分层、物理 spring/decay/result、共享的通用与可 seek Transition、完整 AnimatedContent 与丰富显隐变换、animateContentSize/animateBounds、导航共享运动、原始 Android interop，以及请求驱动的只读时间线工具 | [已归档的动画能力扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)完成了 Phase 0～7，保持有界所有权与 `no material change` 的发版安全结论。MotionLayout、持续 profiler 和真机远程修改继续不排期，直到新的归因需求获批 |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |

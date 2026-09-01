@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {readFile} from 'node:fs/promises';
+import {mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {Readable, Writable} from 'node:stream';
 import {fileURLToPath} from 'node:url';
 import test from 'node:test';
@@ -137,6 +139,34 @@ test('returns the exact provider-neutral result through CLI and MCP', async () =
   assert.equal(JSON.parse(response.result.content[0].text).evidence.bundleFingerprint,
     direct.evidence.bundleFingerprint);
   assert.equal(response.result.isError, false);
+});
+
+test('returns the same versioned project analysis through CLI and MCP', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'viewcompose-mcp-project-analysis-'));
+  try {
+    await writeFile(
+      join(root, 'Screen.kt'),
+      'import com.viewcompose.ui.foundation.Image\nfun screen() { Image(source = icon) }\n',
+    );
+    const id = 'project-analysis-parity';
+    const arguments_ = {projectRoot: root};
+    const direct = await dispatchToolRequest(await createToolRequest({
+      tool: 'analyze_project',
+      arguments: arguments_,
+      requestId: mcpToolRequestId(id),
+    }));
+    const response = await new ViewComposeMcpSession().receive(request(id, 'tools/call', {
+      name: 'analyze_project',
+      arguments: arguments_,
+    }));
+    assert.deepEqual(
+      semanticToolResult(response.result.structuredContent),
+      semanticToolResult(direct),
+    );
+    assert.equal(response.result.structuredContent.data.analysis.schemaVersion, 1);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
 });
 
 test('returns the same offline screenshot inference import through CLI and MCP', async () => {

@@ -173,7 +173,7 @@ const executableDefinitions = {
   },
   analyze_project: {
     title: 'Analyze a ViewCompose Project',
-    description: 'Inspect a bounded root read-only for framework facts, risks, and migration signals.',
+    description: 'Inspect a bounded root read-only with versioned high-confidence rules, quality evidence, unsupported coverage, and migration signals.',
     inputSchema: {
       type: 'object',
       additionalProperties: false,
