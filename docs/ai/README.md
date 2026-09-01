@@ -16,7 +16,7 @@ supported_versions:
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
-  - Codex, Claude Code, and Cursor project profiles verified 2026-08-31
+  - Codex, Claude Code, and Cursor project profiles verified 2026-09-01
 verification_commands:
   - npm --prefix tools/ai run verify:bootstrap-adoption
   - npm --prefix tools/ai run verify:phase3-agent-clients
@@ -213,16 +213,31 @@ Attestations for all three assets. See GitHub's
 [artifact attestation verification guide](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)
 for an optional independent provenance check.
 
+Public release acceptance completed on 2026-09-01. Protected
+[run `33473341135`](https://github.com/ViewCompose/ViewCompose/actions/runs/33473341135)
+published `0.4.1` from exact tag commit
+`fec75d4842b99cf9a59eaa2ba6d169c2cfc37aa1` through the `ai-tooling-release` environment.
+The npm provenance predicate is SLSA v1 and names that tag, workflow, commit, environment, and run.
+All 3/3 GitHub assets passed attestation verification; the tarball SHA-256 is
+`4f1bcd8ab5ebb84a2c6775409511f045f8cb745b1b9576d08930c17318d794e4`, and a fresh npm download
+reproduced it exactly. Repository-external fresh-cache lifecycles reached
+`project-bound-ready` for Codex, Claude Code, and Cursor, then removed only their managed
+configuration and 18/18 total Skill copies. npm now exposes only `latest -> 0.4.1`; no
+`bootstrap` dist-tag or temporary release secret remains. Detailed denominators, limitations, and
+the interpreted conclusion are retained in the
+[active AI tooling plan](../project/plans/ai-verifiable-development-tooling.md).
+
 The npm version history also contains `0.4.0-bootstrap.0`. It is a one-time, provenance-bearing
 prerelease used only to create the package identity required before npm could bind the stable
 GitHub Trusted Publisher. npm assigned the first package version to `latest` as well as
 `bootstrap`, and rejected authenticated attempts to remove that default intermediate tag. Stable
 `0.4.0` replaced `latest`, but public acceptance found that npm could not infer a default executable
 from its three named binaries. Release `0.4.1` adds the package-name `ai-tooling` alias for the same
-transactional Agent entry point; after its public verification, the `bootstrap` tag is removed.
-Both earlier versions remain immutable audit history, and `0.4.0-bootstrap.0` remains excluded from
-ordinary stable semver ranges. The temporary npm token and GitHub secret were revoked before either
-stable tag. Use the exact stable `@viewcompose/ai-tooling@0.4.1` selector documented above.
+transactional Agent entry point. Public verification passed, and the `bootstrap` tag has been
+removed. Both earlier versions remain immutable audit history, `0.4.0` is deprecated with an
+actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from ordinary stable
+semver ranges. The temporary npm token and GitHub secret were revoked before either stable tag.
+Use the exact stable `@viewcompose/ai-tooling@0.4.1` selector documented above.
 
 | Symptom | Action |
 | --- | --- |

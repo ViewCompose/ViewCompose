@@ -17,6 +17,7 @@ import {resolve} from 'node:path';
 import {promisify} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {createDistribution} from './package-distribution.mjs';
+import {verifyNpmPackageInventory} from './npm-package-inventory.mjs';
 
 const execFileAsync = promisify(execFile);
 const aiRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -494,40 +495,6 @@ async function verifyInventory(packageRoot, contract) {
   const encoded = JSON.stringify({packageMetadata, distribution, sbom, licenses});
   if (encoded.includes(repositoryRoot)) {
     throw new Error('Installed metadata contains a local absolute repository path.');
-  }
-}
-
-async function verifyNpmPublishDryRun(distribution, contract) {
-  const {stdout} = await execFileAsync('npm', [
-    'publish',
-    distribution.archivePath,
-    '--dry-run',
-    '--ignore-scripts',
-    '--json',
-    '--access',
-    'public',
-  ], {
-    cwd: repositoryRoot,
-    encoding: 'utf8',
-    maxBuffer: 4 * 1024 * 1024,
-    env: {
-      ...process.env,
-      npm_config_audit: 'false',
-      npm_config_fund: 'false',
-      npm_config_update_notifier: 'false',
-    },
-  });
-  const result = JSON.parse(stdout);
-  const expectedPaths = distribution.manifest.files.map((file) => file.path).sort();
-  const actualPaths = result.files?.map((file) => file.path).sort() ?? [];
-  if (
-    result.id !== `${contract.package.name}@${contract.package.version}` ||
-    result.name !== contract.package.name ||
-    result.version !== contract.package.version ||
-    result.filename !== distribution.manifest.archive.path ||
-    JSON.stringify(actualPaths) !== JSON.stringify(expectedPaths)
-  ) {
-    throw new Error('npm publish dry-run inventory differs from the frozen package manifest.');
   }
 }
 
@@ -1331,7 +1298,9 @@ async function main() {
     if (!checksums.includes(`${primary.manifest.archive.sha256}  ${primary.manifest.archive.path}`)) {
       throw new Error('SHA256SUMS does not cover the packaged archive.');
     }
-    await verifyNpmPublishDryRun(primary, contract);
+    const npmInventoryMode = await verifyNpmPackageInventory(primary, contract, {
+      cwd: repositoryRoot,
+    });
 
     await execFileAsync('npm', [
       'install',
@@ -1396,7 +1365,7 @@ async function main() {
 
     process.stdout.write(
       `Verified ViewCompose AI distribution: 2/2 reproducible builds, ` +
-      `1/1 npm publish dry-run inventory, ` +
+      `1/1 npm package inventory (${npmInventoryMode}), ` +
       `1/1 offline install-uninstall lifecycle, 1/1 SPDX/license inventory, ` +
       `3/3 installed agent profiles with init/doctor/uninstall and 18/18 exact Skill copies, ` +
       `2/2 installed MCP protocol versions, compiled example ${compileFingerprints.sample}, ` +
