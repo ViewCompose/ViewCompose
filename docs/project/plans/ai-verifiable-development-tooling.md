@@ -22,11 +22,11 @@ non_goals:
 baseline: Release 0.4.1 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Its exact-version one-command bootstrap durably configures Codex, Claude Code, or Cursor, binds the released Knowledge Pack to the detected framework vector, and exposes source-free compile/Preview/layout evidence plus bounded XML and screenshot generation. Compose migration, deeper project diagnostics, Figma import, and public source repair remain unactivated.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
-  - Freeze and publish a current-version Jetpack Compose-to-ViewCompose semantic mapping and client-neutral conversion Skill before implementing automatic conversion.
-  - Implement a bounded compiler/AST-based Compose converter over the accepted mapping and Design IR, with explicit unsupported results and compile evidence.
-  - Extend the existing read-only analyze_project surface with precision-gated ViewCompose structure, lifecycle, accessibility, unit, theme, and performance rules.
+  - Extend the existing read-only analyze_project surface with a versioned finding contract, measurable high-confidence rules, explicit unsupported coverage, and audited suppressions.
   - Add a provider-neutral Figma design-tree adapter to the same Design IR only after provenance, asset, privacy, and unsupported-semantics contracts are frozen.
   - Publicly activate attended screenshot repair only after a separate authorized source-application transaction, diff, durable outcome, and rollback boundary passes its gates.
+  - Freeze and publish a current-version Jetpack Compose-to-ViewCompose semantic mapping and client-neutral conversion Skill only after the higher-value analyzer, Figma, and screenshot-repair waves are complete.
+  - Implement a bounded compiler/AST-based Compose converter over the accepted mapping and Design IR, with explicit unsupported results and compile evidence, as the final scheduled wave.
 completion:
   - A new or existing Android project can install the exact compatible AI tooling, configure one supported Agent, copy all Skills, and receive a readiness result from one project-root command without a ViewCompose checkout or global npm install.
   - The one-command path passes fresh macOS, Linux, and Windows adoption fixtures and never points MCP configuration at an ephemeral npx directory.
@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Begin Wave B by freezing the current-version Jetpack Compose semantic map and client-neutral conversion Skill contract; do not implement automatic conversion until the mapping corpus, unsupported taxonomy, compiled target samples, Skill parity, and bilingual documentation gates are explicit.
+next_action: Execute Wave B by freezing and publishing the versioned analyze_project result, rule catalog, suppression, corpus-quality, and compatibility contracts before enabling the first high-confidence rules; do not begin Figma work until the installed package passes the analyzer gates.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -48,8 +48,11 @@ maven_release_changesets:
 
 Wave A completed on 2026-09-01 with public `@viewcompose/ai-tooling@0.4.1`, exact-version
 one-command adoption for all three clients, protected OIDC provenance, and removal of temporary
-bootstrap authority and selectors. The current execution boundary is Wave B contract freeze; the
-chronological handoffs below remain evidence rather than competing next actions.
+bootstrap authority and selectors. Product priority was then changed to maximize value for existing
+Android View users: enhanced analysis, Figma import, and attended screenshot repair now precede the
+lower-probability Compose migration path. The current execution boundary is the Wave B analyzer
+contract freeze; the chronological handoffs below remain evidence rather than competing next
+actions.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
 
@@ -372,11 +375,11 @@ temporary `bootstrap` dist-tag must be removed; the immutable prerelease remains
 | Order | Execution wave | User outcome | Entry condition | Exit gate |
 | --- | --- | --- | --- | --- |
 | 1 | A — public npm bootstrap and cross-platform onboarding | One project-root command installs, configures, and diagnoses ViewCompose AI tooling | Release `0.3.0` remains reproducible and attested | Exact-version npm publication plus fresh macOS, Linux, and Windows adoption passes |
-| 2 | B — Compose semantic map and Agent Skill | Agents translate Compose intent with an explicit supported/partial/manual/unsupported map | Wave A is released | Current mapping corpus, compiled target samples, Skill parity, and docs pass |
-| 3 | C — bounded Compose AST conversion | A supported stateless Compose subset converts through Design IR to compiled ViewCompose Kotlin | Wave B mapping is frozen | AST fixtures, unsupported honesty, CLI/MCP parity, compilation, and installed-package gates pass |
-| 4 | D — enhanced ViewCompose analysis | Existing projects receive actionable, evidence-ranked ViewCompose findings | Wave C is released or explicitly closed without activation | Rule precision/recall, safety, read-only, performance, CLI/MCP, and corpus gates pass |
-| 5 | E — Figma design-tree adapter | Exported Figma structure converts through Design IR with provenance and assets preserved | Waves B–D are stable and Design IR gaps are enumerated | Offline import, provenance, resource, compile/render/compare, privacy, and installed-package gates pass |
-| 6 | F — attended screenshot repair activation | Users can review and explicitly apply a bounded repair with rollback | The source-application transaction boundary is independently accepted | Diff preview, authorization, atomic apply, durable outcome, rollback, replay, and public-surface gates pass |
+| 2 | B — enhanced ViewCompose analysis | Existing projects receive actionable, evidence-ranked ViewCompose findings | Wave A is released | Per-rule precision/recall, unsupported coverage, safety, read-only, CLI/MCP, and installed-package gates pass |
+| 3 | C — Figma design-tree adapter | Exported Figma structure converts through Design IR with provenance and assets preserved | Wave B analyzer payload is stable and released | Offline import, provenance, resource, compile/render/compare, privacy, and installed-package gates pass |
+| 4 | D — attended screenshot repair activation | Users can review and explicitly apply a bounded repair with rollback | The source-application transaction boundary is independently accepted | Diff preview, authorization, atomic apply, durable outcome, rollback, replay, and public-surface gates pass |
+| 5 | E — Compose semantic map and Agent Skill | Agents translate Compose intent with an explicit supported/partial/manual/unsupported map | Waves B–D are released | Current mapping corpus, compiled target samples, Skill parity, and docs pass |
+| 6 | F — bounded Compose AST conversion | A supported stateless Compose subset converts through Design IR to compiled ViewCompose Kotlin | Wave E mapping is frozen | AST fixtures, unsupported honesty, CLI/MCP parity, compilation, and installed-package gates pass |
 
 “Released” in this table means the wave has its accepted contracts, implementation, tests, public
 English and Chinese guidance, immutable package evidence, and a merged pull request. A local green
@@ -407,9 +410,11 @@ test, draft package, or internal tool mode does not unblock the next wave.
 7. **No consumer build execution.** Compile, Preview, and layout evidence continue through the
    packaged allowlisted harness. No wave may execute the consumer wrapper, settings, plugins,
    arbitrary tasks, application process, or device deployment as an implementation shortcut.
-8. **Source mutation stays last.** Waves A–E are read-only with respect to application source.
-   Public repair cannot reuse an in-memory authority object as source-write permission and cannot
-   activate before the Wave F transaction and rollback contract passes.
+8. **Source mutation remains independently gated.** Waves A–C and E–F are read-only with respect to
+   application source. Public repair cannot reuse an in-memory authority object as source-write
+   permission and cannot activate before the Wave D transaction and rollback contract passes. Its
+   earlier priority does not grant authority to the later Compose waves or weaken their read-only
+   contracts.
 9. **Reconsideration trigger.** Historical profile support requires concrete adoption evidence, a
    named support window, storage/CI budgets, and a separately accepted plan. A single request to
    support an old version is recorded but does not silently expand this plan.
@@ -548,7 +553,7 @@ documented one command and no repository-local preparation. The accepted externa
 provenance, and Release evidence is recorded above; a green in-repository package test alone would
 not have been sufficient.
 
-### Execution Wave B — Compose semantic map and Agent Skill
+### Execution Wave E — Compose semantic map and Agent Skill
 
 #### Objective
 
@@ -588,9 +593,9 @@ Use separate commits for mapping schema/corpus, compiled target samples, Skill/w
 documentation. Accept only when every mapped target resolves to the current Knowledge Pack, every
 accepted generated target compiles, all six existing Skills plus the new Skill retain installed-byte
 and client-profile parity, unsupported categories are queryable, and curated migration prompts do
-not fabricate APIs. Publish the resulting AI package before Wave C starts.
+not fabricate APIs. Publish the resulting AI package before Wave F starts.
 
-### Execution Wave C — bounded Compose AST conversion
+### Execution Wave F — bounded Compose AST conversion
 
 #### Objective and v1 boundary
 
@@ -600,7 +605,7 @@ or model-only source rewriting cannot produce an accepted conversion result.
 
 The v1 corpus begins with local composable function bodies, a direct supported layout/component
 tree, literal or resource-backed values, and modifier semantics already marked `exact` or
-`translated` by Wave B. State/effect ownership, navigation graphs, arbitrary control flow, custom
+`translated` by Wave E. State/effect ownership, navigation graphs, arbitrary control flow, custom
 composables without an accepted expansion, reflection, generated code, build plugins, and behavior
 inference remain unsupported until separately added with fixtures.
 
@@ -610,7 +615,7 @@ inference remain unsupported until separately added with fixtures.
    content-addressed lineage and exact source spans.
 2. Parse only explicit caller-supplied source or bounded files under an explicit physical project
    root. Do not execute Gradle, compiler plugins, annotation processors, scripts, or source code.
-3. Resolve symbols against the frozen Compose baseline and Wave B map. Unknown overloads,
+3. Resolve symbols against the frozen Compose baseline and Wave E map. Unknown overloads,
    expressions, defaults, modifiers, ambient values, state, effects, or custom calls yield typed
    unsupported findings; they never become guessed Design IR.
 4. Preserve strings, drawables, dimensions, accessibility, IDs/keys when meaningful, imports,
@@ -630,9 +635,9 @@ and docs/release commits. The initial corpus must contain positive, boundary, ma
 unsupported, adversarial path, and API-hallucination cases. Acceptance requires deterministic AST
 output, 100% compile success for the declared supported corpus, 100% typed rejection for the
 declared unsupported corpus, no consumer execution or writes, installed-package reproduction, and
-an immutable released package before Wave D.
+an immutable released package before this plan can close.
 
-### Execution Wave D — enhanced read-only ViewCompose analysis
+### Execution Wave B — enhanced read-only ViewCompose analysis
 
 #### Objective
 
@@ -640,35 +645,47 @@ Extend the existing `analyze_project` tool instead of creating a duplicate
 `analyze_viewcompose` alias. Findings must help an Agent review real ViewCompose code while
 remaining read-only, bounded, version-aware, and measurable.
 
-#### Required rule families
+#### Contract and first public rule boundary
 
-1. Structural complexity: redundant or pathological Row/Column/container nesting, unstable identity,
-   repeated modifier segments, and simplifications that preserve semantics.
-2. Recomposition and allocation: state reads at overly broad scopes, repeated View/Drawable/resource
-   creation, avoidable node churn, unstable collection keys, and repeated expensive conversion.
-3. Lifecycle and ownership: application/View/Context retention, effect cleanup, coroutine scope,
-   listener/callback release, AndroidView ownership, and session-bound resource misuse.
-4. Accessibility and input: missing descriptions/roles/state, undersized touch targets, click without
-   semantics, focus order, disabled/selected state, and input-unit mistakes.
-5. Layout, units, and theme: dp/sp misuse, conflicting sizing, impossible constraints, clipping,
-   hard-coded theme values, Material token bypass, and RTL/font-scale hazards.
-6. Performance evidence: only rules with a traceable mechanism and accepted fixture may claim a
-   performance risk; stylistic preferences remain informational and cannot masquerade as regressions.
-
-Each rule owns a stable rule ID, applicable framework versions, severity, confidence, source span,
-mechanism, evidence link, safe suggestion, false-positive corpus, and suppression contract. Begin
-with high-confidence deterministic rules. Do not ship broad model-authored warnings as static facts.
+1. Keep the existing tool envelope and `analyze_project` name. Add one versioned `analysis` payload
+   under the existing result data with resolved profile, bounded scan coverage, applicable catalog,
+   corpus quality, typed findings, unsupported coverage, and suppression totals. Existing diagnostics
+   remain a mechanically generated, backward-compatible projection of unsuppressed findings.
+2. Every finding owns a stable rule ID and rule version, severity, categorical confidence, exact
+   source span, mechanism, evidence, manual-safe suggestion, framework applicability, suppression
+   state, and optional reason/directive span. Numeric confidence is forbidden; measured precision
+   and recall belong to the immutable quality snapshot.
+3. The first catalog is limited to the already deterministic unknown ViewCompose import/artifact,
+   missing exact owning-artifact declaration, current-profile version mismatch, and exact
+   ViewCompose `Image` content-description checks. The Image rule reports only when the governed
+   symbol and argument list resolve; explicit `null`, aliases, wrappers, malformed calls, and other
+   ambiguous forms produce no finding or an explicit unsupported record.
+4. One source directive may suppress only the next analyzable construct for one suppressible rule.
+   It requires an exact rule ID and non-empty reason, remains visible in the typed result, and cannot
+   suppress profile, dependency-integrity, path, execution, timeout, or other security findings.
+5. Kotlin/Gradle extraction masks strings and nested comments and uses balanced delimiters. XML uses
+   a bounded tokenizer, and version catalogs use an explicit literal TOML subset. Dynamic Gradle,
+   star imports, overload/type inference, aliases, custom wrappers, control/data flow, and unknown
+   syntax remain unsupported rather than guessed.
+6. Lifecycle pairing, touch-target sizing, modifier ordering, dp/sp preferences, AndroidView commit
+   semantics, structural simplification, recomposition/allocation, and performance claims stay out of
+   the enabled catalog until a maintained Kotlin AST or semantic layer supplies defensible evidence.
+7. Later rule families may cover structure, lifecycle, accessibility, units, theme, and performance,
+   but each addition requires an independently versioned rule, mechanism, supported-syntax corpus,
+   false-positive corpus, quality result, and installed-package proof before public activation.
 
 #### Commit and acceptance boundaries
 
-Commit rule contracts/corpus before implementations, then rule-family slices, CLI/MCP output parity,
-performance/resource limits, and docs/release. Acceptance requires named precision and recall
-denominators per rule, zero source or build execution, traversal/secret/output-limit safety, stable
-diagnostics under repeated runs, exact current-version attribution, and successful installed-package
-analysis of fresh and existing project fixtures. Low-confidence rules remain experimental and are
-not counted in public analyzer claims.
+Commit schemas/catalog/corpus before implementation, then extraction/evaluation/suppression,
+CLI/MCP compatibility, resource limits, and docs/release. Every enabled rule must achieve 100%
+observed precision and recall within its documented supported syntax, with at least 25 positive and
+50 eligible negative labeled opportunities; unsupported opportunities are reported separately and
+cannot inflate true-negative counts. Acceptance also requires zero source or build execution,
+traversal/secret/output-limit safety, deterministic ordering, exact current-profile attribution,
+legacy-diagnostic compatibility, and successful installed-package analysis of fresh and existing
+project fixtures. Wave C cannot begin until this package is publicly released and reverified.
 
-### Execution Wave E — provider-neutral Figma design-tree adapter
+### Execution Wave C — provider-neutral Figma design-tree adapter
 
 #### Objective
 
@@ -700,9 +717,9 @@ Use input/schema/security, deterministic adapter, Design IR/resource handling, e
 CLI/MCP/Skill, and docs/release commits. Acceptance requires supported/unsupported goldens,
 deterministic offline import, exact provenance and asset verification, privacy/path/size adversarial
 tests, compiled generated output, accepted Preview/semantic/geometry denominators, and
-installed-package reproduction. Wave E does not authorize source writes.
+installed-package reproduction. Wave C does not authorize source writes.
 
-### Execution Wave F — public attended screenshot repair
+### Execution Wave D — public attended screenshot repair
 
 #### Objective
 
