@@ -1,4 +1,3 @@
-import {createReadStream, createWriteStream} from 'node:fs';
 import {
   appendFile,
   chmod,
@@ -366,23 +365,31 @@ async function verifyApplied(bundle, source, {
   return evidence;
 }
 
-export async function confirmFromControllingTty({operation, suffix, summary}) {
+export async function confirmFromControllingTty({operation, suffix, summary}, {
+  openTty = open,
+} = {}) {
   if (platform() === 'win32') {
     fail('VC-AI-SOURCE-APPLICATION-TTY-REQUIRED', 'The v1 attended host requires a POSIX controlling TTY.');
   }
-  const input = createReadStream('/dev/tty');
-  const output = createWriteStream('/dev/tty');
-  const reader = createInterface({input, output});
+  let terminal;
+  let input;
+  let output;
+  let reader;
   try {
+    terminal = await openTty('/dev/tty', 'r+');
+    input = terminal.createReadStream({autoClose: false});
+    output = terminal.createWriteStream({autoClose: false});
+    reader = createInterface({input, output});
     output.write(`${summary}\nType ${operation.toUpperCase()} ${suffix} to continue: `);
     const answer = await reader.question('');
     return answer === `${operation.toUpperCase()} ${suffix}`;
   } catch {
     fail('VC-AI-SOURCE-APPLICATION-TTY-REQUIRED', 'A controlling TTY is required.');
   } finally {
-    reader.close();
-    input.destroy();
-    output.end();
+    reader?.close();
+    input?.destroy();
+    output?.destroy();
+    await terminal?.close().catch(() => {});
   }
 }
 
