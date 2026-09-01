@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 08b48f1ad08c4f8c5088dab3d20e6a5da01fa203357c62faaff1ec7a74295b93
+translation_source_hash: 01daf3667788fd469e4bdc328d69e284a8ca0fc1c7dccc7d033d175730cdc706
 translation_status: current
 ---
 
@@ -22,15 +22,15 @@ Coding Client 仍然负责模型、Credential、对话和用户授权的源码�
 在 Android Project 的物理根目录执行以下任意一条命令：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client codex
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client codex
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client claude-code
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client claude-code
 ```
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client cursor
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client cursor
 ```
 
 `init` 会解析当前物理目录，在任何写入前检测精确 ViewCompose Dependency Vector，把已验证 Package
@@ -50,7 +50,7 @@ API 查询、生成、静态验证和 Project 分析只要求 Node.js 24.19.0 �
 9.3.1 Wrapper 与固定 Build Harness，用户无需安装 Gradle，也无需让现有 Project 的 AGP/Kotlin
 版本与工具链对齐。Bootstrap 只写入 Project 接入面与操作系统用户 Cache；不要为此使用 `sudo`。
 
-### `0.4.0` 的精确框架版本绑定
+### `0.4.1` 的精确框架版本绑定
 
 `init` 不会执行 Project Gradle Logic，而是读取 Project 中独立版本化的 `com.viewcompose`
 Coordinate。它接受精确 Literal、默认 `libs.versions.toml` 中实际使用的 Entry，以及 Dependency
@@ -60,7 +60,7 @@ Pack；并在安装 Skill 前把 Content-addressed Profile ID 写入 MCP Environ
 
 不含 ViewCompose Dependency 的 Project 属于新项目，会选择该 Release 最新稳定 Profile。Dynamic、
 互相冲突、不支持或其他无法解析的版本——包括存在 ViewCompose Import 却没有 Dependency Identity——
-都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。首个 `0.4.0` Profile 表示当前
+都会在任何 Project 写入前失败。工具不会静默修改框架 Dependency。首个 `0.4.1` Profile 表示当前
 已发布 Artifact Vector；旧版本 Vector 只有在某个 Release 明确携带匹配 Profile 后才会升级。
 
 ## 确认安装状态
@@ -69,7 +69,7 @@ Pack；并在安装 Skill 前把 Content-addressed Profile ID 写入 MCP Environ
 版本与客户端选项：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 doctor --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 doctor --client <codex|claude-code|cursor>
 ```
 
 `project-bound-ready` 表示 MCP Entry 与全部 Skill 都和已安装 Release 一致，物理 Project 根目录
@@ -118,7 +118,7 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
 
 ## 深层证据执行边界
 
-Release `0.4.0` 使用 Maven Central 中的精确 ViewCompose Artifact 编译生成 Kotlin，并渲染生成
+Release `0.4.1` 使用 Maven Central 中的精确 ViewCompose Artifact 编译生成 Kotlin，并渲染生成
 页面。Package 内的 Content-addressed Harness 固定使用 Gradle 9.3.1、AGP 9.1.1、Kotlin
 2.2.10、Android 36、JVM Target 11 和 Allowlist 中的 ViewCompose/Preview Coordinate。Consumer
 Project 根目录只是只读授权边界：工具不会执行它的 Wrapper、Settings、Plugin、Task 或 Build
@@ -142,7 +142,7 @@ RGBA 比对。直接调用 `render_preview` 和 `diagnose_layout` 仍只适用�
 用一条命令检查、下载并迁移到最新兼容的工具 Release：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 upgrade --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 upgrade --client <codex|claude-code|cursor>
 ```
 
 该命令先检测 Project 版本，并且只检查不可变的 `ai-tooling-v<semver>` Release。它会跳过框架
@@ -159,7 +159,7 @@ Dependency。精确版本 Bootstrap 会沿着已验证的受管理 MCP Entry 找
 删除当前 Project 接入：
 
 ```bash
-npx --yes @viewcompose/ai-tooling@0.4.0 uninstall --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 uninstall --client <codex|claude-code|cursor>
 ```
 
 该命令只删除精确的 ViewCompose MCP Entry 与规范 Skill 字节，无关客户端设置和文件会保留。
@@ -168,7 +168,7 @@ Package；Content-addressed Package Cache 会保留，用于完整性校验与�
 
 ## 完整性与故障排查
 
-[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.0)
+[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.4.1)
 包含 Tarball、`manifest.json` 与 `SHA256SUMS`。发布 Workflow 会构建 Package 两次、检查精确
 Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创建 GitHub Artifact Attestation。
 如需独立校验 Provenance，请参考 GitHub 的
@@ -177,14 +177,15 @@ Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创�
 npm 版本历史中还包含 `0.4.0-bootstrap.0`。它是一次性的、带 Provenance 的预发布 Package，
 只用于先建立 npm Package Identity，以便绑定稳定版 GitHub Trusted Publisher。npm 在首次
 创建 Package 时同时把该版本分配给 `latest` 与 `bootstrap`，并拒绝了经过身份验证的默认标签
-删除请求；稳定版发布会把 `latest` 替换为精确的 `0.4.0`，随后删除 `bootstrap`。普通稳定
-SemVer Range 不会选中该预发布版本，它也不是受支持的消费者入口。其临时 npm Token 与 GitHub
-Secret 已在创建稳定标签前撤销。不要安装或调用该预发布版本，请使用上文记录的精确稳定
-Selector `@viewcompose/ai-tooling@0.4.0`。
+删除请求。稳定版 `0.4.0` 已替换 `latest`，但公开验收发现 npm 无法从它的 3 个命名 Binary 中
+推断默认入口。Release `0.4.1` 为同一个事务化 Agent 入口增加与 Package 名匹配的 `ai-tooling`
+Alias；公开验证成功后再删除 `bootstrap` 标签。两个旧版本都保留为不可变审计历史，普通稳定
+SemVer Range 仍不会选中 `0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在两个稳定
+Tag 创建前撤销。请使用上文记录的精确稳定 Selector `@viewcompose/ai-tooling@0.4.1`。
 
 | 现象 | 处理方式 |
 | --- | --- |
-| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并使用字面量 `@viewcompose/ai-tooling@0.4.0`；不要替换为 `latest`。 |
+| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并使用字面量 `@viewcompose/ai-tooling@0.4.1`；不要替换为 `latest`。 |
 | `doctor` 报告 `repair-required` | 只有现有文件未修改时才重新运行 `init`；否则先检查报告中的冲突。 |
 | `doctor` 报告 `host-prerequisites-required` | 安装 JDK 17 或 21 与 Android SDK Platform 36 后重新运行 `doctor`；无需另装 Gradle。 |
 | `upgrade` 返回 `no-compatible-update` | 保持当前接入不变。当前还没有已发布的工具 Release 为该 Project 提供精确框架 Profile；不要改为安装全局最新 Package。 |

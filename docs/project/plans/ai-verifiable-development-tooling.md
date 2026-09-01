@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-01
-next_action: Merge the bootstrap-cleanup pull request, create ai-tooling-v0.4.0 from that merge commit, approve and verify the OIDC npm and GitHub release, remove the bootstrap dist-tag, and merge the final Wave A evidence update; do not begin Wave B before those gates pass.
+next_action: Merge the default-bin correction, publish ai-tooling-v0.4.1 from that merge through the protected OIDC workflow, verify the exact documented shorthand for all three clients from the public registry, deprecate 0.4.0, remove the bootstrap dist-tag, and merge final Wave A evidence; do not begin Wave B before those gates pass.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -130,6 +130,63 @@ macOS bootstrap compatibility with **no material Android runtime behavior change
 case-alias evidence is one local case-insensitive macOS filesystem; Linux and Windows remain the
 hosted adoption matrix. The next action remains the cleanup PR followed by the immutable stable tag
 and final public-install evidence.
+
+#### Wave A stable-publication correction evidence (2026-09-01)
+
+Cleanup pull request [#263](https://github.com/ViewCompose/ViewCompose/pull/263) passed the hosted
+Linux, macOS, and Windows adoption matrix plus the complete repository gates and merged as
+`9805d58e10d93cfbb6d02745c794182d9c066c14`. Tag `ai-tooling-v0.4.0` points to that cleanup merge.
+Protected [release run `33469275204`](https://github.com/ViewCompose/ViewCompose/actions/runs/33469275204)
+completed all steps in 9 minutes 11 seconds, including reproducible distribution, the unpublished
+identity guard, GitHub attestations, immutable Release creation, and npm Trusted Publishing. The
+registry exposes exact stable `0.4.0`, `latest` points to it, the SLSA v1 statement names
+`.github/workflows/ai-tooling-release.yml` at the exact stable tag, and all 3/3 GitHub Release assets
+passed their SHA-256 and GitHub attestation checks.
+
+The required repository-external acceptance then ran the literal documented command from an empty
+physical project with a fresh npm cache. The result was 0/1 successful shorthand launches:
+`npx --yes @viewcompose/ai-tooling@0.4.0 init --client codex` exited 1 before project writes because
+npm could not determine an executable. The published manifest contains `viewcompose-ai`,
+`viewcompose-agent`, and `viewcompose-mcp`, but no binary matching the unscoped package name
+`ai-tooling`; npm therefore cannot infer one default among the three. The explicit diagnostic form
+using `--package=@viewcompose/ai-tooling@0.4.0 -- viewcompose-agent` reached
+`project-bound-ready`, installed 6/6 Skills, passed `doctor`, and removed the configuration plus
+6/6 Skills, proving the payload rather than the public one-command contract is at fault.
+
+The normalized public shorthand result remains 0% rather than the required 100%, so the conclusion
+is **mixed**: publication, provenance, assets, payload, and explicit lifecycle improved to an
+accepted state, while the primary onboarding command regressed from a green packed-candidate test
+to a public npm selection failure. The packed adoption verifier had exercised an explicit
+`viewcompose-agent` binary and therefore did not measure the documented npm inference boundary.
+Release `0.4.0`, its tag, Release, assets, and attestations remain immutable audit history and are
+not rewritten or unpublished. Wave A now requires corrective `0.4.1`, which retains all explicit
+binaries, adds `ai-tooling` as an alias of the transactional Agent entry point, and changes the
+packed adoption gate to execute the same shorthand users copy. Only after 3/3 clients pass that
+exact public-registry command may `0.4.0` be deprecated, `bootstrap` removed, Wave A closed, and
+Wave B begin.
+
+The corrective packed candidate now passes 3/3 shorthand client lifecycles, 3/3 durable MCP
+handshakes, and 4/4 native path cases on local macOS, including a tarball and projects under paths
+with spaces and non-ASCII characters. Relative to the published `0.4.0` shorthand result, local
+success changed from 0/1 to 3/3, an absolute gain of three accepted client profiles and a normalized
+change from 0% to 100%. The conclusion is **improved** default-entry selection with no Android
+runtime or framework-API change. This remains packed-candidate evidence on one case-insensitive
+macOS host; hosted Linux/macOS/Windows adoption, public `0.4.1` installation, provenance, assets,
+`0.4.0` deprecation, and `bootstrap` removal remain required before Wave A closes.
+
+The complete local AI script suite passed 322/322 cases with zero failures. The clean JDK 21,
+Node 24, and release-pinned npm 11.8 Gradle run completed 194 tasks in 2 minutes 48 seconds
+(11 executed and 183 up-to-date): 2/2 package builds were byte-reproducible, the npm dry-run and
+offline lifecycle passed 1/1 each, installed profiles passed 3/3 with 18/18 exact Skill copies,
+both MCP protocol versions passed, all compile/Preview/layout/screenshot/XML/pixel lanes retained
+their accepted identities, and 3/3 Release assets passed. Documentation verification accepted 132
+English pages, 129 Chinese pages, 129/129 current translations, 80/80 documentation-script tests,
+and zero Governance V2 issues. Development-tooling isolation passed. Release-intent detected zero
+Maven artifacts, ignored artifacts, or shared release paths, so this npm-only correction requires no
+Maven release changeset. Compared with the previous 322/322 and 129/129 denominators, failure rates
+remain 0% and translation coverage remains 100%; the only normalized behavioral change is the
+shorthand adoption result above. The conclusion remains **improved** with no material framework
+runtime change; public and hosted evidence is still pending.
 
 #### Wave A contract-freeze evidence (2026-08-31)
 
@@ -313,11 +370,12 @@ consumer source writes, or execution of any implementation wave.
 
 Replace the current global GitHub-tarball installation plus explicit
 `--project-root "$(pwd -P)"` invocation with one shell-independent command run from the physical root
-of a new or existing Android project. The target release is `0.4.0`, because the distribution
-contract is a feature over `0.3.0`:
+of a new or existing Android project. The accepted target is corrective release `0.4.1`: stable
+`0.4.0` published successfully but failed the public default-executable selection described above.
+The feature contract remains the Wave A change over `0.3.0`:
 
 ```text
-npx --yes @viewcompose/ai-tooling@0.4.0 init --client <codex|claude-code|cursor>
+npx --yes @viewcompose/ai-tooling@0.4.1 init --client <codex|claude-code|cursor>
 ```
 
 The documentation may render separate copy buttons for each client, but all three commands must
@@ -370,7 +428,7 @@ Wave A uses one pull request with reviewable commits in this order:
    non-ASCII characters.
 4. `docs(ai): publish one-command client setup` — English and Chinese AI Integration pages, README
    entry points, troubleshooting, exact version, security/provenance, and old two-command removal.
-5. `chore(ai): prepare 0.4.0 release evidence` — publication inputs, immutable asset/version checks,
+5. `chore(ai): prepare 0.4.1 release evidence` — publication inputs, immutable asset/version checks,
    and release intent required by repository policy. The actual npm/GitHub publication happens only
    after merge and protected-gate success.
 
@@ -390,7 +448,7 @@ include Compose, analyzer, Figma, or source-repair code in this pull request.
 | Security | No lifecycle script, `sudo`, arbitrary consumer Gradle execution, provider credential, path escape, mutable URL, or unverified archive is accepted |
 | Reproducibility | Two package builds are byte-identical; npm dry-run contents match the attested GitHub tarball contract and exact version |
 | Documentation | README and the standalone AI chapter provide per-client copyable commands, prerequisites, outcomes, upgrade/remove, and troubleshooting in English and Chinese |
-| Release | npm `0.4.0` and GitHub `ai-tooling-v0.4.0` identities, checksums, provenance, assets, and public clean-install result are recorded after publication |
+| Release | npm `0.4.1` and GitHub `ai-tooling-v0.4.1` identities, checksums, provenance, assets, and public clean-install result are recorded after publication; immutable `0.4.0` failure evidence remains visible |
 
 Wave A closes only after a user can start in an unrelated Android project with the documented one
 command and no repository-local preparation. A green in-repository package test is insufficient.

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 5,
   "profileSetId": "viewcompose-agent-clients-v5",
-  "lastVerified": "2026-08-31",
+  "lastVerified": "2026-09-01",
   "package": {
     "name": "@viewcompose/ai-tooling",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "transport": "stdio",
     "mcpExecutable": "viewcompose-mcp",
     "clientExecutable": "viewcompose-agent",
