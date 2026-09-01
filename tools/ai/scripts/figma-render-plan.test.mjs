@@ -95,3 +95,24 @@ test('refuses multiple roots and error-level mapping decisions', async () => {
     /requires one supported root/u,
   );
 });
+
+test('keeps adversarial document identities and text inside Kotlin syntax boundaries', async () => {
+  const {inspected, assets} = await fixture();
+  const adversarial = structuredClone(inspected.data.designIr);
+  adversarial.documentId = '9 class ${Injected}\n) { injectedCall()';
+  const textNode = adversarial.roots[0].children.find((node) => node.kind === 'text');
+  const text = textNode.properties.find((property) => property.name === 'text');
+  text.value.value = '" ); injectedCall() // ${runtime}\nnext';
+
+  const generated = generateFigmaArtifacts(createFigmaRenderPlan({
+    designIr: adversarial,
+    assets,
+  }));
+
+  assert.match(generated.kotlin, /fun UiTreeBuilder\.Generated9ClassInjectedInjectedCallView\(/u);
+  assert.ok(generated.kotlin.includes(
+    'text = "\\\" ); injectedCall() // \\${runtime}\\nnext",',
+  ));
+  assert.equal(generated.kotlin.match(/^\) \{ injectedCall\(\)$/gmu), null);
+  assert.equal(generated.virtualFiles[0].path.includes('..'), false);
+});
