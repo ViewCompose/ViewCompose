@@ -36,8 +36,8 @@ completion:
   - XML, Compose, screenshot, and Figma paths share one explicit Design IR, preserve provenance and unsupported semantics, and never silently invent application behavior.
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
-last_verified: 2026-08-31
-next_action: Merge and run the one-time 0.4.0-bootstrap.0 npm identity workflow, bind ai-tooling-release as the trusted publisher, revoke and remove the temporary bootstrap authority, then publish and verify exact 0.4.0 npm and GitHub identities; do not begin Wave B until those external gates pass.
+last_verified: 2026-09-01
+next_action: Merge the bootstrap-cleanup pull request, create ai-tooling-v0.4.0 from that merge commit, approve and verify the OIDC npm and GitHub release, remove the bootstrap dist-tag, and merge the final Wave A evidence update; do not begin Wave B before those gates pass.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -61,6 +61,75 @@ accepted on 2026-08-31. Publication is therefore no longer an open action.
 
 The product priority is now adoption cost, followed by capability breadth. Work must execute in
 this order unless this plan and the unified roadmap are changed together:
+
+#### Wave A npm identity activation evidence (2026-09-01)
+
+The one-time bootstrap started from clean `main` commit
+`e43bcb853d53bc2e1021e1da6fc0a26d04d821d0`. Before dispatch, the protected
+`ai-tooling-release` environment contained `NPM_BOOTSTRAP_TOKEN`, npm returned `E404` for
+`@viewcompose/ai-tooling`, and the bootstrap workflow had zero prior runs. It was dispatched exactly
+once as [run `33461590751`](https://github.com/ViewCompose/ViewCompose/actions/runs/33461590751),
+and the protected deployment was approved through the GitHub API. The job ran for 8 minutes 44
+seconds; checkout, JDK/Node/Gradle/Android setup, the complete frozen release gate, the empty-package
+guard, two byte-identical prerelease seeds, the packed-tree comparison, MCP handshake, and npm
+publication all passed. npm accepted `@viewcompose/ai-tooling@0.4.0-bootstrap.0` with public access
+and a signed GitHub provenance statement at transparency-log index `2670521028`.
+
+The final workflow step queried the new package approximately 0.34 seconds after npm accepted it and
+received `E404`, so the run concluded `failure` rather than masking the unmet observation. The same
+immutable version became publicly readable at `2026-09-01T02:24:56Z`, approximately 5 minutes 2
+seconds after publication, within npm's publish-time scanning window. The workflow was not rerun:
+there is one dispatch, one publication, and no second attempt that could overwrite or ambiguously
+accept the identity. Public verification then found exactly one version,
+`0.4.0-bootstrap.0`; the `bootstrap` dist-tag points to it; exact stable `0.4.0` remains `E404`; and
+`dist.attestations.provenance.predicateType` is exactly `https://slsa.dev/provenance/v1`.
+
+npm also assigned `latest` to the first package version despite the explicit `--tag bootstrap`.
+Authenticated removal attempts with npm 11.8.0 and with Node 24.19.0 plus npm 12.0.2 both reached
+the registry and returned `400 Bad Request`; the external registry therefore did not permit the
+frozen no-`latest` intermediate state. This is a bounded bootstrap limitation, not an accepted
+consumer selector: every public command remains pinned to exact `0.4.0`, ordinary stable ranges
+exclude the prerelease, and the stable OIDC publication must replace `latest` with `0.4.0`. The
+temporary `bootstrap` dist-tag remains until that stable identity is verified, after which it must
+be removed while the immutable prerelease stays in version history.
+
+Trusted Publishing was then created with Node 24.19.0 and npm 12.0.2. Trust relationship
+`37e878fb-a68c-4633-ad92-d98fdbafeb4a` binds package `@viewcompose/ai-tooling` to GitHub repository
+`ViewCompose/ViewCompose`, workflow `ai-tooling-release.yml`, environment
+`ai-tooling-release`, and direct publish permission (`createPackage`). `npm trust list` reproduced
+that exact record. The GitHub environment secret was deleted and a subsequent API lookup confirmed
+its absence. The scope-restricted bootstrap token was revoked after a security-key challenge, and
+`npm token list --json` reported zero remaining tokens and no matching bootstrap name.
+
+Compared with the pre-dispatch state, public npm identities changed from 0 to 1, trusted-publisher
+relationships from 0 to 1, and temporary publication authorities from 2 to 0; stable consumer
+versions remain 0 until the tag release. The conclusion is **mixed**: package creation,
+provenance, OIDC binding, and credential withdrawal succeeded, while immediate registry
+verification and the no-`latest` intermediate assumption did not match current npm behavior. The
+next action is to merge the cleanup that removes the one-time workflow and transformer, tag only
+that cleanup merge, publish stable `0.4.0` through OIDC, verify public installation and release
+assets, remove `bootstrap`, and record the final Wave A evidence before starting Wave B.
+
+Cleanup acceptance exposed one macOS compatibility defect before the stable tag: an existing
+case-insensitive cache whose stored spelling was `viewcompose` was reopened through the newer
+`ViewCompose` spelling. Initialization wrote the lexical spelling, while the following integrity
+inspection compared it with `realpath` and misclassified the case-only alias as symbolic-link
+traversal. The accepted repair canonicalizes only the newly materialized durable-cache path after
+proving, prefix by prefix, that both spellings identify the same filesystem objects and that neither
+prefix is a symbolic link. Project roots and active package roots retain their original strict
+canonical-path check.
+
+Before the repair, 0/1 installed Codex `doctor` checks accepted the real historical-cache fixture;
+after it, 1/1 reached `project-bound-ready`, a `+100` percentage-point normalized change. The
+focused client suite passed 14/14 cases, including 1/1 case-only APFS alias and 1/1 cache-symlink
+rejection. The complete release gate then passed 2/2 reproducible package builds, 1/1 offline
+install/uninstall lifecycle, 3/3 installed Agent profiles, 18/18 exact Skill copies, 2/2 MCP
+protocol versions, the Kotlin and XML compile lanes, generated Preview and layout comparisons, and
+exact RGBA comparison; it also verified all 3/3 Release assets. The conclusion is **improved**
+macOS bootstrap compatibility with **no material Android runtime behavior change**. The positive
+case-alias evidence is one local case-insensitive macOS filesystem; Linux and Windows remain the
+hosted adoption matrix. The next action remains the cleanup PR followed by the immutable stable tag
+and final public-install evidence.
 
 #### Wave A contract-freeze evidence (2026-08-31)
 

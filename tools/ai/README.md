@@ -671,20 +671,32 @@ mutable `latest` selector. The package layout follows npm's tarball installation
 SBOM uses the
 [SPDX 2.3 specification](https://spdx.github.io/spdx-spec/v2.3/).
 
-npm requires a package to exist before either Trusted Publishing or staged publishing can be
-configured. The one-time `.github/workflows/ai-tooling-npm-bootstrap.yml` bridge therefore derives
-the complete `0.4.0-bootstrap.0` prerelease from the frozen stable tarball and publishes it only
-under the `bootstrap` dist-tag. The transformer changes exactly eleven enumerated JSON files and
-only their `0.4.0` version-bearing strings; the workflow compares two seed archives byte for byte,
-requires the stable and seed file inventories to match, repeats the tree-difference check after
-packing, and completes an MCP handshake before publication. It accepts no dispatch inputs, runs
-only from the default branch in the protected `ai-tooling-release` environment, and refuses an
-existing package. A short-lived bootstrap credential restricted to the `@viewcompose` scope is the
-sole temporary exception to OIDC authentication. Enable account 2FA before creating it, revoke it
-and remove the workflow before the stable tag, and bind `ai-tooling-release.yml` as the exact npm
-Trusted Publisher. The prerelease is not a consumer entry point and must never receive `latest`;
-after stable publication,
-remove the `bootstrap` dist-tag.
+npm required an existing package identity before Trusted Publishing could be configured. The
+one-time bridge therefore derived the complete `0.4.0-bootstrap.0` prerelease from the frozen stable
+tarball, reproduced its transformed tree and archive, completed an MCP handshake, and published it
+from protected default-branch
+[run `33461590751`](https://github.com/ViewCompose/ViewCompose/actions/runs/33461590751). npm
+accepted the package and signed provenance, but the workflow's immediate post-publish lookup landed
+inside npm's approximately five-minute scan window and returned `E404`; the run was not repeated.
+The registry also assigned `latest` to the first package version despite `--tag bootstrap`, and
+authenticated npm 11.8.0 and 12.0.2 removal attempts both returned `400 Bad Request`. Stable
+publication must therefore replace `latest` with exact `0.4.0`, after which the `bootstrap` tag is
+removed while the prerelease version remains immutable history.
+
+The one-time workflow and transformer are no longer part of the repository. npm trust relationship
+`37e878fb-a68c-4633-ad92-d98fdbafeb4a` binds `@viewcompose/ai-tooling` exactly to
+`ViewCompose/ViewCompose`, `ai-tooling-release.yml`, environment `ai-tooling-release`, with direct
+publish permission. The scope-restricted token was revoked and the GitHub
+`NPM_BOOTSTRAP_TOKEN` environment secret was deleted before the stable tag. All subsequent npm
+publication is owned only by `.github/workflows/ai-tooling-release.yml` through GitHub OIDC.
+
+Stable-tag acceptance also covers existing macOS caches whose filesystem spelling differs only by
+case from the current `ViewCompose` cache name. Durable materialization emits the canonical path
+only after every lexical and canonical prefix resolves to the same filesystem object and neither is
+a symbolic link. The focused client suite passed 14/14 cases, including the real case-only APFS
+fixture and a cache-symlink denial, and the installed-distribution gate passed 3/3 client
+`init`/`doctor`/`uninstall` lifecycles. Active project and package roots still use the stricter exact
+canonical-path rule.
 
 ### Release-gate acceptance evidence
 
