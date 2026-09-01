@@ -71,7 +71,7 @@
       "additionalProperties": false,
       "required": ["backend", "committed", "directorySynced", "terminalReread"],
       "properties": {
-        "backend": {"const": "secure-directory-stream-v1"},
+        "backend": {"const": "directory-handle-atomic-v1"},
         "committed": {"type": "boolean"},
         "directorySynced": {"type": "boolean"},
         "terminalReread": {"type": "boolean"}

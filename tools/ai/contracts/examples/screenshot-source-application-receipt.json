@@ -19,7 +19,7 @@
     "singleUse": true
   },
   "atomicReplace": {
-    "backend": "secure-directory-stream-v1",
+    "backend": "directory-handle-atomic-v1",
     "committed": true,
     "directorySynced": true,
     "terminalReread": true
@@ -71,5 +71,5 @@
     "linkedReceiptFingerprint": null
   },
   "journalChainFingerprint": "2323232323232323232323232323232323232323232323232323232323232323",
-  "receiptFingerprint": "681bbf1bb7c0f4876fb17a34c7f391b7f3eb392cf57f33788a7046d724f234f1"
+  "receiptFingerprint": "0342fdc56e12a73d656b279cc1e3357d74d92385dd1313f30b15f5913d310092"
 }

@@ -942,7 +942,9 @@ replacement and reconstructed candidate hashes, displayed diff, Design IR/propos
 typed-patch/evidence lineage, ten-minute expiry, one nonce, recovery identities, and post-apply evidence.
 Recovery bytes live in an owner-only platform user-state directory outside the project and source
 control. Apply is unavailable unless the backend can provide no-follow, beneath-root,
-directory-handle-relative atomic replacement and durable sync semantics.
+directory-handle-relative atomic replacement and durable sync semantics. The implemented host uses
+`SecureDirectoryStream` where the JDK provider exposes it and a fixed JDK Unix directory-descriptor
+bridge otherwise; both paths fail closed when those semantics cannot be proven.
 
 The checked-in denominator contains 3/3 schema-valid examples, 8/8 schema-level safety rejections,
 12/12 runtime no-write rejection cases, and 10/10 apply/rollback crash boundaries. The required
@@ -953,7 +955,16 @@ therefore **improved** safety specification with **no material Android runtime b
 no public source-write capability. The limitations are explicit: controlling-TTY attendance does
 not defend against an actor that already controls the user's OS account or terminal; recovery may
 contain source bytes; secure filesystem support is platform-dependent; rollback is not a merge
-facility. The next action is the property-span mapper and secure transaction/recovery backend.
+facility. The typed property-span mapper now proves that current and candidate generated Kotlin
+differ only at the authorized literal, and the transaction host has passed 2/2 real secure-backend
+checks plus 6/6 apply, explicit rollback, single-use replay, validation-failure, crash-recovery, and
+concurrency checks. These checks cover exact atomic replacement, stale-preimage rejection,
+unsupported-filesystem failure, applied-candidate recovery without automatic rollback, unchanged
+preimage recovery, and later-user-edit preservation. Relative to the contract-only baseline, this
+is an **improved** executable safety boundary with **no material Android runtime behavior change**.
+The evidence is local macOS APFS with JDK 21 and injected process failures rather than sudden power
+loss; CI must still exercise the accepted JDK 17 lane and public-package installation. The next
+action is the separate attended CLI, read-only MCP preparation tool, and client-neutral Skill.
 
 ### Per-wave pull request and release discipline
 
