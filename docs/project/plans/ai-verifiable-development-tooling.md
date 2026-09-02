@@ -19,7 +19,7 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: Release 0.6.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Wave C is publicly accepted with one strict offline Figma import tool, a seventh client-neutral Skill, and repository-external inspect, generate, compile, Preview, comparison, MCP, and three-client onboarding evidence. Wave D now has an implemented and repository-external human-accepted 0.7.0 release candidate with a non-source-writing preparation tool that stores bounded user state, separate attended source-application executable, typed single-property edit, secure transaction journal, crash recovery, terminal receipt, explicit rollback, and eighth Skill; public publication and public-package reproduction are not yet accepted. Compose migration remains deferred at lowest priority.
+baseline: Release 0.7.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Waves A-D are publicly accepted: exact-version one-command onboarding, high-confidence project analysis, strict offline Figma import, and attended screenshot repair with a non-source-writing preparation tool, separate source-application executable, typed single-property edit, secure transaction journal, crash recovery, immutable receipts, later-edit protection, explicit rollback, and an eighth Skill. Repository-external public-package onboarding, MCP, and transaction-status reproduction pass. Compose migration remains unactivated at lowest priority.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
   - Extend the existing read-only analyze_project surface with a versioned finding contract, measurable high-confidence rules, explicit unsupported coverage, and audited suppressions.
@@ -37,7 +37,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-02
-next_action: Publish the human-accepted Wave D candidate only from the protected ai-tooling-v0.7.0 tag, reproduce the exact public package outside the repository, and record immutable publication and onboarding evidence before considering the lower-priority Compose waves.
+next_action: Maintain the exact released 0.7.0 framework profile and collect adoption/support evidence for analyzer, Figma, and attended repair workflows. Keep Compose mapping and conversion unactivated at lowest priority until explicit user demand justifies a new product decision.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -56,10 +56,11 @@ completed with public `@viewcompose/ai-tooling@0.6.0`, protected OIDC provenance
 inspection and generation, real compilation and Preview comparison, MCP parity, and exact-version
 onboarding reproduction for all three clients. Wave D has implemented its bounded property mapper,
 secure directory-handle transaction host, crash reconciliation, non-source-writing MCP preparation,
-separate attended CLI, and eighth client-neutral Skill as the `0.7.0` release candidate. Its exact
-installed candidate has now passed repository-external human-confirmed apply, crash recovery,
-later-edit rollback refusal, and successful rollback. Protected publication and public-package
-reproduction are the sole next action; Compose mapping and conversion remain lowest priority. The
+separate attended CLI, and eighth client-neutral Skill in public `0.7.0`. Its exact installed
+implementation has passed repository-external human-confirmed apply, crash recovery, later-edit
+rollback refusal, successful rollback, protected SLSA publication, three-client onboarding, MCP,
+and public transaction-status reproduction. Compose mapping and conversion remain unactivated at
+lowest priority. The
 chronological handoffs below remain evidence rather than competing next actions.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
@@ -885,8 +886,7 @@ attended screenshot-repair boundary; Compose Waves E and F remain lower priority
 
 ### Execution Wave D — public attended screenshot repair
 
-**Status: `0.7.0` release candidate implemented and repository-externally accepted on 2026-09-02.**
-Protected publication and public-package reproduction remain open.
+**Status: complete with public `0.7.0` acceptance on 2026-09-02.**
 
 #### Objective
 
@@ -1065,6 +1065,64 @@ Android project cannot establish successful compile, Preview, semantic, or pixel
 package and protected provenance are not public yet. The next action is to merge this evidence,
 create `ai-tooling-v0.7.0` at that merge commit, and reproduce the immutable public package before
 closing Wave D.
+
+#### Accepted public release and repository-external package (2026-09-02)
+
+Pre-tag evidence PR [#272](https://github.com/ViewCompose/ViewCompose/pull/272) passed every required
+check and merged as `83e7dd1c4a3e4c0198bf213a4f1ffa4d68a68708`. The immutable
+`ai-tooling-v0.7.0` tag points exactly to that commit. Before tag creation, the tag, GitHub Release,
+and npm `0.7.0` identity were all absent. Protected
+[run `33581729261`](https://github.com/ViewCompose/ViewCompose/actions/runs/33581729261) used the
+`ai-tooling-release` environment and GitHub OIDC Trusted Publisher; its complete release contract,
+reproducible distribution, identity guards, three asset attestations, GitHub Release, and npm
+publication passed in 9 minutes 58 seconds.
+
+npm now exposes only stable `latest -> 0.7.0` for the current release. The npm package provenance
+predicate is `https://slsa.dev/provenance/v1`; it binds repository `ViewCompose/ViewCompose`,
+workflow `.github/workflows/ai-tooling-release.yml`, ref `refs/tags/ai-tooling-v0.7.0`, commit
+`83e7dd1c4a3e4c0198bf213a4f1ffa4d68a68708`, and run `33581729261`. Its integrity is
+`sha512-YQkbZ4A2GBbIok2QjENelBgo0IQ4OcBGM+H9bmTFtmUMLR97al9ujWQYA/WwXDEeQxvLAzTrkFqZNkU/MTrOuQ==`.
+The GitHub Release contains exactly three assets: the 690,005-byte tarball with SHA-256
+`00886678178c2f29b819cc045cbebd040e3519eb0ec6245621d3f637102cf936`, the 38,796-byte Manifest with
+SHA-256 `383333a5fe1926ce0593f1d240a11190a8c76f6d3ae8b29439dea71a9650f183`, and the 179-byte checksum
+list with SHA-256 `c0cafb9af4518f320463a7cb07d64c23e02ac6be6b2b9700b7a4408ea2eba29f`. Checksums and GitHub
+attestations passed 3/3; the npm registry tarball and GitHub Release tarball were byte-identical.
+
+Fresh repository-external projects ran the literal `@viewcompose/ai-tooling@0.7.0` selector for
+Codex, Claude Code, and Cursor. `init`, `doctor`, and `uninstall` passed 9/9; all three clients
+reached `project-bound-ready`, installed 8/8 Skills each, reported both capability groups ready on
+JDK 17 plus Android SDK 36, and removed 24/24 managed Skill copies. The durable public package
+completed MCP `2025-11-25` initialization, listed 15/15 tools with
+`prepare_screenshot_repair`, and its repair CLI reproduced the earlier attended transaction as
+`rolled-back` with receipt
+`cbd7e24c8af73410d7cf619003001907848480537b244084ec61f6b3a78ef39f` and exact preimage
+`1a504684dae2593c74de6f177dd3e57cc825e03b66d98671cdfabe1ca319e104`.
+
+The protected Linux/Node 24 tarball differs from the pre-tag macOS/Node 26 candidate archive:
+690,005 versus 694,233 bytes and a different archive checksum. Manifest comparison found only four
+changed archive-identity fields. Direct decompression produced two byte-identical 3,813,376-byte tar
+payloads, and `diff -qr` found zero unpacked file differences. The source
+transaction implementation hashes matched at
+`74aa6e04b97d651428842911c9ece8d4417cb4575d7d3bdb30fa44dedddaf35e`, and repair CLI hashes matched
+at `1d92f19de9a2156545c5110ef7b390dcdb1f67716fd00f6dc8ba7febe86beee2`. The pre-tag human test
+therefore exercised the exact installed implementation bytes, while the immutable public gzip
+archive identity is owned by the pinned release environment. The repository's post-publication
+gate was rerun under JDK 21 and passed 187 Gradle tasks in 2 minutes 18 seconds, including 2/2
+reproducible local builds, 1/1 registry-integrity-bound `published-payload` comparison, 1/1 offline
+install/uninstall lifecycle, 3/3 installed client profiles, 24/24 exact Skill copies, 2/2 MCP
+protocol versions, and 3/3 immutable Release assets.
+
+Relative to public `0.6.0`, the normalized result is one tool (14 to 15), one executable (4 to 5),
+one Skill (7 to 8), and one attended bounded source-application flow (0 to 1), with public lifecycle
+readiness unchanged at 3/3 clients. The primary conclusion is **improved** screenshot-repair utility,
+recovery, and source-write containment with **no material Android runtime behavior change**.
+Limitations: one macOS APFS/JDK 21 process-interruption fixture is not sudden power loss; public
+onboarding used one macOS host and did not launch proprietary Agent binaries; Windows has no
+attended source host in v1; and cross-environment gzip archive bytes are not claimed reproducible.
+The accepted uncompressed tar payload remains byte-identical, and hosted CI separately covers
+Linux, macOS, and Windows onboarding in the pinned environment. Wave D is complete. The next action
+is released-profile maintenance and adoption evidence; Compose Waves E and F remain unactivated at
+lowest priority.
 
 ### Per-wave pull request and release discipline
 
