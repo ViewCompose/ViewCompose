@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: bdc1f3dcc70d5b349feb797313e642b81c37de86d1e6b4ae2c9e6e29c1ebdb65
+translation_source_hash: ba73002b5aa4aa7f27873b10134c5d6580a8d709b06a03c5ddd669d21f6333af
 translation_status: current
 ---
 
@@ -135,7 +135,7 @@ translation_status: current
 | Diagnostics | 已关联的渲染 Session 与 Studio Inspector、受限的生产故障聚合、Render/Layout Tree、逐节点 Patch、CompositionLocal、重组原因、源码跳转、按请求触发的真实 View 高亮、有限采样的 Composition/Reconciliation/Binding 逐节点耗时，以及已验收的空闲/请求/Release 隔离预算 | 当前没有扩展计划；持续观察器、新耗时域或更广设备契约必须重新建立可归因计划，并提供 ADR 支持的非激活路径证据 |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| AI 可验证开发工具 | 公开 Release `0.6.0` 已提供版本绑定 Knowledge、单命令接入、高置信度 Project 分析与严格离线 Figma Import。`0.7.0` Release Candidate 把 Package 扩展到 15 个 CLI/MCP 工具和 8 个 Agent Skill，新增不会写 Project 源码、但会持久化有界用户状态的 Screenshot Repair Preparation，以及独立的 Terminal 人工授权、Atomic、可恢复、Conflict-safe 单 Property Apply/Rollback Host，不提供任意源码或 Unattended Write | 通过受保护的不可变 Tag 发布并在 Repository 外复现 `0.7.0`，覆盖 3 个客户端的精确接入，以及人工授权 Apply、Crash Recovery、Validation-failure Preservation 与显式 Rollback 证据。只有 Wave D 通过公开验收后，才重新考虑低优先级 Compose 语义 Mapping/Skill 与最终有界 Compose AST Converter。只维护明确发布的 Framework Profile；任何版本不匹配都 Fail closed |
+| AI 可验证开发工具 | 公开 Release `0.7.0` 已提供版本绑定 Knowledge、单命令接入、高置信度 Project 分析、严格离线 Figma Import、15 个 CLI/MCP 工具和 8 个 Agent Skill。Screenshot Repair 路径不向 MCP 授予源码写入权限，而是使用独立的 Terminal 人工授权、Atomic、可恢复、Conflict-safe 单 Property Apply/Rollback Host，不提供任意源码或 Unattended Write。受保护 SLSA 发布、3 个客户端接入、Interrupted-apply Recovery、Validation-failure Preservation、后续编辑保护与显式 Rollback 均已通过公开验收 | 只维护精确发布的 Framework Profile，任何版本不匹配都 Fail closed；继续收集已发布 Analyzer、Figma 与人工 Repair 路径的接入和支持证据。Compose 语义 Mapping/Skill 与有界 Compose AST Converter 保持未排期和最低优先级，直到明确用户需求支持新的激活决策 |
 | ConstraintLayout | Alpha DSL 加分类协调、类型化 Chain/Wrap/物理方向 API、类型化 Grid、声明式 CircularFlow、精确 Helper/回滚/Lifecycle 覆盖、Pairwise 视觉验收、API 24/33/36 设备覆盖，以及稳定行发版安全的 Released/Candidate/Direct 矩阵 | [已归档的能力与性能扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)完成了 Phase 0～4，发版安全为 **no material change**，没有全帧优化胜利。保持 MotionScene/MotionLayout 范围外；多 OEM 性能或新增能力必须新建归因计划 |
 | Animation | 已具备动画 Core/DSL 分层、物理 spring/decay/result、共享的通用与可 seek Transition、完整 AnimatedContent 与丰富显隐变换、animateContentSize/animateBounds、导航共享运动、原始 Android interop，以及请求驱动的只读时间线工具 | [已归档的动画能力扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)完成了 Phase 0～7，保持有界所有权与 `no material change` 的发版安全结论。MotionLayout、持续 profiler 和真机远程修改继续不排期，直到新的归因需求获批 |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |

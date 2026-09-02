@@ -147,6 +147,10 @@ ViewCompose 把版本化 AI Reference、15 个本地 stdio MCP 工具和 8 个�
 Android Project 根目录执行一条事务化 `npx ... init` 命令即可完成接入；知识检索、生成、验证和
 Project 分析不要求全局安装、ViewCompose Checkout、本地构建 Package、Provider Key 或手动改配置。
 
+```bash
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client <codex|claude-code|cursor>
+```
+
 AI 工具 `0.6.0` 新增 Fail-closed 的离线 Figma 路径：Agent 可以 Audit 一份自包含 Export，生成
 确定性的 ViewCompose Kotlin 与允许再分发的 PNG Resource，再对受支持的结构、语义、几何和 Asset
 执行编译、渲染与比较。ViewCompose 不登录 Figma，也不接收 Token；结果不会声称 Style、Pixel 或

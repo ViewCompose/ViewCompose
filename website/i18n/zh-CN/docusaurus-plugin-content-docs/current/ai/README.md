@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: fb2c8ce9fe9c80b4b074c8cc892b328f76e0ea23ed036a960a95eb2fee4a4315
+translation_source_hash: 957285f2538336b1bfb7e53e55bcd859feee77ff7a537d9ac0b8bfb6613d0a56
 translation_status: current
 ---
 
@@ -19,9 +19,9 @@ Coding Client 仍然负责模型、Credential、对话和用户授权的源码�
 
 ## 一条命令完成安装
 
-Release Candidate `0.7.0` 已冻结等待发布。不可变 GitHub Release 公开后，请使用它的精确
-Selector，确保安装的工具、Skill、Knowledge Pack 与框架 Profile 始终属于同一个已验证版本；
-不要改用浮动 Selector。
+[Release `0.7.0`](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.7.0)
+已经公开。请使用它的精确 Selector，确保安装的工具、Skill、Knowledge Pack 与框架 Profile
+始终属于同一个已验证版本；不要改用浮动 Selector。
 
 在 Android Project 的物理根目录执行以下任意一条命令：
 
@@ -121,7 +121,7 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
 
 ## 人工授权 Screenshot 修复
 
-Release Candidate `0.7.0` 新增 `prepare_screenshot_repair`、
+Release `0.7.0` 新增 `prepare_screenshot_repair`、
 `viewcompose-repair-screenshot` Skill 与独立的 `viewcompose-repair` Executable。Agent 通过 MCP
 复现 Baseline/Current 的六道 Gate 证据、导出一个严格改善的 Rollback Proposal，并存储一份
 内容寻址的惰性 Request；MCP 不写 Project 源码。
@@ -294,11 +294,47 @@ Package；Content-addressed Package Cache 会保留，用于完整性校验与�
 
 ## 完整性与故障排查
 
-[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.6.0)
+[固定 GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.7.0)
 包含 Tarball、`manifest.json` 与 `SHA256SUMS`。发布 Workflow 会构建 Package 两次、检查精确
 Inventory 与 Offline 安装/删除生命周期，并为全部 3 个 Asset 创建 GitHub Artifact Attestation。
 如需独立校验 Provenance，请参考 GitHub 的
 [Artifact Attestation 校验指南](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)。
+
+公开 `0.7.0` 验收已于 2026-09-02 完成。受保护的
+[Run `33581729261`](https://github.com/ViewCompose/ViewCompose/actions/runs/33581729261)
+通过 `ai-tooling-release` Environment 与 GitHub OIDC Trusted Publisher，从精确 Tag Commit
+`83e7dd1c4a3e4c0198bf213a4f1ffa4d68a68708` 发布 Package，用时 9 分 58 秒。npm 暴露
+`latest -> 0.7.0`；SLSA v1 Provenance 精确记录 `ViewCompose/ViewCompose`、
+`.github/workflows/ai-tooling-release.yml`、`refs/tags/ai-tooling-v0.7.0`、该 Commit 与该 Run。
+npm Integrity 为
+`sha512-YQkbZ4A2GBbIok2QjENelBgo0IQ4OcBGM+H9bmTFtmUMLR97al9ujWQYA/WwXDEeQxvLAzTrkFqZNkU/MTrOuQ==`。
+
+不可变 Release 精确包含 690,005 字节 Tarball、38,796 字节 `manifest.json` 和 179 字节
+`SHA256SUMS`。三者的 SHA-256 依次为
+`00886678178c2f29b819cc045cbebd040e3519eb0ec6245621d3f637102cf936`、
+`383333a5fe1926ce0593f1d240a11190a8c76f6d3ae8b29439dea71a9650f183` 与
+`c0cafb9af4518f320463a7cb07d64c23e02ac6be6b2b9700b7a4408ea2eba29f`。全部 3/3 个 Asset
+均通过已发布 Checksum 与 GitHub Attestation 校验；从 npm 下载的 Tarball 与 GitHub Release
+Asset 逐字节一致。
+
+在全新的 Repository 外 Project 中，Codex、Claude Code 与 Cursor 使用字面量公开 Selector
+完成 `init`、`doctor` 和 `uninstall`：9/9 次生命周期命令通过，每个 Client 都达到
+`project-bound-ready`，每个 Client 安装 8/8 份精确 Skill，并删除总计 24/24 份受管理 Skill
+Copy。macOS Host 的 JDK 17 与 Android SDK 36 让 Knowledge/Generation 和
+Compilation/Preview/Layout 两组能力均处于 Ready。持久化的公开 Package 完成 MCP
+`2025-11-25` 初始化，列出 15/15 个工具并包含 `prepare_screenshot_repair`，还成功读取
+Repository 外人工事务的最终 `rolled-back` Receipt 与精确恢复的 Preimage。
+
+Tag 前的 macOS/Node 26 Candidate Archive 为 694,233 字节，受保护的 Linux/Node 24 发布产物为
+690,005 字节。Sidecar 比较只发现 4 个 Archive Identity Field 不同；两份 3,813,376 字节的
+未压缩 Tar Payload 逐字节一致，完整解包后的 Package Tree、Transaction Implementation 与 Repair
+CLI 字节也完全一致。相较公开 `0.6.0`，归一化后的公开
+变化是：工具从 14 增加到 15、Executable 从 4 增加到 5、Skill 从 7 增加到 8，并新增 1 条
+人工授权的有界源码应用流程。解释后的结论是：Screenshot Repair Utility 与源码写入隔离
+**improved**，Android Runtime Behavior **no material change**。限制：人工 Apply/Rollback
+证据只覆盖一台 macOS APFS Host 上的 Process Interruption Fixture，而不是突然断电；v1 不提供
+Windows 人工源码 Host；未启动专有 Agent Binary；已验收的 Tar Payload 与安装文件树保持一致，
+但不声称跨环境生成的 Gzip Archive 字节可复现。Compose Migration 继续保持最低优先级。
 
 公开 `0.6.0` 验收已于 2026-09-01 完成。受保护的
 [Run `33498765977`](https://github.com/ViewCompose/ViewCompose/actions/runs/33498765977)
@@ -359,13 +395,12 @@ Alias。公开验证已经通过，`bootstrap` 标签也已删除。早期版本
 `0.4.0` 已弃用并明确指向 `0.4.1`，普通稳定 SemVer Range 仍不会选中
 `0.4.0-bootstrap.0`。临时 npm Token 与 GitHub Secret 已在任何稳定 Tag 创建前撤销。
 Release `0.5.0` 保留该接入修正，并新增上文所述的版本化、高置信度 Project 分析契约。
-公开 `0.6.0` 保留该 Analyzer，并新增上文所述的离线 Figma 契约。Release Candidate `0.7.0`
-新增人工授权 Repair 契约；其不可变 Release 公开后，请使用精确 Selector
-`@viewcompose/ai-tooling@0.7.0`。
+公开 `0.6.0` 保留该 Analyzer，并新增上文所述的离线 Figma 契约。公开 `0.7.0` 新增人工授权
+Repair 契约；请使用精确 Selector `@viewcompose/ai-tooling@0.7.0`。
 
 | 现象 | 处理方式 |
 | --- | --- |
-| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并在 Release 公开后使用字面量 `@viewcompose/ai-tooling@0.7.0`；不要替换为 `latest`。 |
+| `npx` 无法启动精确 Package | 确认 Node 版本不低于 24.19、可以访问 npm Registry，并使用字面量 `@viewcompose/ai-tooling@0.7.0`；不要替换为 `latest`。 |
 | `doctor` 报告 `repair-required` | 只有现有文件未修改时才重新运行 `init`；否则先检查报告中的冲突。 |
 | `doctor` 报告 `host-prerequisites-required` | 安装 JDK 17 或 21 与 Android SDK Platform 36 后重新运行 `doctor`；无需另装 Gradle。 |
 | `upgrade` 返回 `no-compatible-update` | 保持当前接入不变。当前还没有已发布的工具 Release 为该 Project 提供精确框架 Profile；不要改为安装全局最新 Package。 |
