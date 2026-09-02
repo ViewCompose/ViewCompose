@@ -19,7 +19,15 @@ non_goals:
   - Use runtime VNode or renderer internals as the interchange representation for migration and design tools.
   - Replace canonical KDoc, compiled samples, module manuals, migration guides, or capability governance with a parallel AI-only documentation system.
   - Market ViewCompose as AI-first before the accepted accuracy, safety, latency, compatibility, and reproducibility gates pass.
-baseline: Release 0.7.0 is published through GitHub OIDC as an attested npm package and immutable GitHub Release. Waves A-D are publicly accepted: exact-version one-command onboarding, high-confidence project analysis, strict offline Figma import, and attended screenshot repair with a non-source-writing preparation tool, separate source-application executable, typed single-property edit, secure transaction journal, crash recovery, immutable receipts, later-edit protection, explicit rollback, and an eighth Skill. Repository-external public-package onboarding, MCP, and transaction-status reproduction pass. Compose migration remains unactivated at lowest priority.
+baseline: >-
+  Release 0.7.0 is published through GitHub OIDC as an attested npm package and immutable GitHub
+  Release. Waves A-D are publicly accepted: exact-version one-command onboarding, high-confidence
+  project analysis, strict offline Figma import, and attended screenshot repair with a
+  non-source-writing preparation tool, separate source-application executable, typed
+  single-property edit, secure transaction journal, crash recovery, immutable receipts,
+  later-edit protection, explicit rollback, and an eighth Skill. Repository-external
+  public-package onboarding, MCP, and transaction-status reproduction pass. Compose migration
+  remains unactivated at lowest priority.
 ordered_work:
   - Replace the two-command global installation path with one version-explicit public npm bootstrap that durably installs, configures, and diagnoses the selected Agent on macOS, Linux, and Windows.
   - Extend the existing read-only analyze_project surface with a versioned finding contract, measurable high-confidence rules, explicit unsupported coverage, and audited suppressions.
