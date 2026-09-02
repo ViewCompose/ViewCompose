@@ -157,6 +157,10 @@ and Cursor can be connected to a new or existing Android project with one transa
 command—no global install, ViewCompose checkout, local package build, provider key, or manual
 configuration edit is needed for knowledge, generation, validation, or project analysis.
 
+```bash
+npx --yes @viewcompose/ai-tooling@0.7.0 init --client <codex|claude-code|cursor>
+```
+
 AI tooling `0.6.0` adds a fail-closed offline Figma path: an Agent can audit one self-contained
 export, generate deterministic ViewCompose Kotlin and redistributable PNG resources, then compile,
 render, and compare the supported structure, semantics, geometry, and assets. ViewCompose never

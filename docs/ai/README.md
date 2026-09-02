@@ -7,16 +7,16 @@ doc_type: tooling
 owner:
   kind: project
   id: ai-development-tooling
-version_lane: next
+version_lane: released
 capability_ids: []
 artifact_ids: []
 sample_ids: []
 supported_versions:
-  - npm @viewcompose/ai-tooling 0.7.0 release candidate for ai-tooling-v0.7.0
+  - npm @viewcompose/ai-tooling 0.7.0 from ai-tooling-v0.7.0
   - Node.js 24.19.0 or newer
   - JDK 17 or 21 and Android SDK 36 for compiled, rendered, and compared evidence
   - MCP 2026-07-28 and 2025-11-25 over local stdio
-  - Codex, Claude Code, and Cursor project profiles verified 2026-09-01
+  - Codex, Claude Code, and Cursor project profiles verified 2026-09-02
 verification_commands:
   - npm --prefix tools/ai run verify:bootstrap-adoption
   - npm --prefix tools/ai run verify:project-analysis
@@ -41,9 +41,9 @@ validation evidence; it never embeds or contacts a model provider.
 
 ## Install in one command
 
-Release candidate `0.7.0` is frozen for publication. Use its exact selector after the immutable
-GitHub Release becomes public so the installed tools, Skills, Knowledge Pack,
-and framework profile remain one verified version; do not replace it with a floating selector.
+[Release `0.7.0`](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.7.0) is
+public. Use its exact selector so the installed tools, Skills, Knowledge Pack, and framework
+profile remain one verified version; do not replace it with a floating selector.
 
 Run exactly one of these commands from the physical root of the Android project:
 
@@ -155,7 +155,7 @@ does not prove compilation, and generated Kotlin does not prove rendering or vis
 
 ## Attended screenshot repair
 
-Release candidate `0.7.0` adds `prepare_screenshot_repair`, the
+Release `0.7.0` adds `prepare_screenshot_repair`, the
 `viewcompose-repair-screenshot` Skill, and the separate `viewcompose-repair` executable. The Agent
 uses MCP to reproduce baseline/current six-gate evidence, derive one strictly improving rollback
 proposal, and store one inert content-addressed request. MCP does not write project source.
@@ -351,12 +351,52 @@ is retained for integrity and compatible reuse.
 
 ## Integrity and troubleshooting
 
-The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.6.0)
+The [pinned GitHub Release](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.7.0)
 contains the tarball, `manifest.json`, and `SHA256SUMS`. Its workflow builds the package twice,
 checks the exact inventory and offline install/uninstall lifecycle, and creates GitHub Artifact
 Attestations for all three assets. See GitHub's
 [artifact attestation verification guide](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/verify-artifact-attestations)
 for an optional independent provenance check.
+
+Public `0.7.0` acceptance completed on 2026-09-02. Protected
+[run `33581729261`](https://github.com/ViewCompose/ViewCompose/actions/runs/33581729261) published
+the package from exact tag commit `83e7dd1c4a3e4c0198bf213a4f1ffa4d68a68708` through the
+`ai-tooling-release` environment and GitHub OIDC Trusted Publisher in 9 minutes 58 seconds. npm
+exposes `latest -> 0.7.0`; its provenance predicate is SLSA v1 and names
+`ViewCompose/ViewCompose`, `.github/workflows/ai-tooling-release.yml`,
+`refs/tags/ai-tooling-v0.7.0`, that commit, and that run. npm integrity is
+`sha512-YQkbZ4A2GBbIok2QjENelBgo0IQ4OcBGM+H9bmTFtmUMLR97al9ujWQYA/WwXDEeQxvLAzTrkFqZNkU/MTrOuQ==`.
+
+The immutable Release contains exactly the 690,005-byte tarball, 38,796-byte `manifest.json`, and
+179-byte `SHA256SUMS`. Their SHA-256 values are respectively
+`00886678178c2f29b819cc045cbebd040e3519eb0ec6245621d3f637102cf936`,
+`383333a5fe1926ce0593f1d240a11190a8c76f6d3ae8b29439dea71a9650f183`, and
+`c0cafb9af4518f320463a7cb07d64c23e02ac6be6b2b9700b7a4408ea2eba29f`. All 3/3 assets passed the
+published checksum and GitHub attestation checks, and the npm-downloaded tarball was byte-identical
+to the GitHub Release asset.
+
+Fresh repository-external projects using the literal public selector completed `init`, `doctor`,
+and `uninstall` for Codex, Claude Code, and Cursor: 9/9 lifecycle commands passed, every client
+reached `project-bound-ready`, 8/8 exact Skills were installed per client, and 24/24 managed Skill
+copies were removed. Both knowledge/generation and compilation/Preview/layout capabilities were
+ready on the macOS host with JDK 17 and Android SDK 36. The durable public package completed MCP
+`2025-11-25` initialization, listed 15/15 tools including `prepare_screenshot_repair`, and read the
+repository-external attended transaction's final `rolled-back` receipt with the exact restored
+preimage.
+
+The pre-tag macOS/Node 26 candidate archive was 694,233 bytes while the protected Linux/Node 24
+publication is 690,005 bytes. Sidecar comparison found differences only in the four
+archive-identity fields; the 3,813,376-byte uncompressed tar payloads were byte-identical, as were
+the complete unpacked package trees, transaction implementation, and repair CLI bytes.
+Relative to public `0.6.0`, the normalized public change is one tool (14 to 15), one executable
+(4 to 5), one Skill (7 to 8), and one attended bounded source-application flow (0 to 1). The
+interpreted conclusion is **improved** screenshot-repair utility and source-write containment with
+**no material Android runtime behavior change**. Limitations: attended apply/rollback evidence is
+one macOS APFS process-interruption fixture rather than sudden power loss; Windows has no attended
+source host in v1; proprietary Agent binaries were not launched; and cross-environment gzip
+archive bytes are not asserted reproducible even though the accepted tar payload and installed
+file tree are identical. Compose
+migration remains deferred at lowest priority.
 
 Public `0.6.0` acceptance completed on 2026-09-01. Protected
 [run `33498765977`](https://github.com/ViewCompose/ViewCompose/actions/runs/33498765977)
@@ -426,12 +466,12 @@ actionable `0.4.1` replacement, and `0.4.0-bootstrap.0` remains excluded from or
 ranges. The temporary npm token and GitHub secret were revoked before any stable tag.
 Release `0.5.0` retains that onboarding correction and adds the versioned high-confidence project
 analysis contract described above. Public `0.6.0` retains that analyzer and adds the offline Figma
-contract described above. Release candidate `0.7.0` adds the attended repair contract; after its
-immutable publication, use the exact `@viewcompose/ai-tooling@0.7.0` selector.
+contract described above. Public `0.7.0` adds the attended repair contract; use the exact
+`@viewcompose/ai-tooling@0.7.0` selector.
 
 | Symptom | Action |
 | --- | --- |
-| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal published `@viewcompose/ai-tooling@0.7.0` selector after its Release is public. Do not substitute `latest`. |
+| `npx` cannot start the exact package | Confirm Node 24.19 or newer, npm registry access, and the literal published `@viewcompose/ai-tooling@0.7.0` selector. Do not substitute `latest`. |
 | `doctor` reports `repair-required` | Run `init` again only if the existing files are unchanged; otherwise review the reported conflict. |
 | `doctor` reports `host-prerequisites-required` | Install JDK 17 or 21 and Android SDK platform 36, then rerun `doctor`; Gradle itself is included. |
 | `upgrade` returns `no-compatible-update` | Keep the current integration. No published tooling Release contains an exact framework profile for this project yet. Do not install a global-latest package as a workaround. |
