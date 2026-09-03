@@ -296,6 +296,28 @@ Style remains incomplete, and pixel/perceptual categories remain not applicable 
 Figma reference render is accepted. A compared result therefore cannot be described as visual or
 pixel parity.
 
+The unpublished `0.8.0` candidate adds an official-design-context branch to the distributed
+`viewcompose-import-figma` Skill without changing that converter contract. When the coding client
+has separately obtained official Figma reference code, a screenshot, and temporary asset links,
+the Skill requires it to freeze the screenshot and complete asset set locally with hashes and
+redistribution decisions before the links expire. Truncated asset lists are completed through
+smaller explicit selections or reported as missing; quota failure stops the path.
+
+The official response remains untrusted reference evidence and is never passed to
+`convert_figma_to_viewcompose` or parsed as a deterministic design tree. With an accepted privacy
+decision, the Skill routes the frozen PNG through `prepare_screenshot`, provider-neutral external
+inference validation and typed resolution, then screenshot generation. Exact downloaded assets
+enter the consumer only through an explicit attended edit followed by the real project build and a
+named device flow. This path is labeled **reference-assisted, attended adaptation** and does not add
+a credentialed connector, provider adapter, direct Figma conversion, deterministic reconstruction,
+or visual-parity claim.
+
+Official Figma PNGs commonly pair a valid `sRGB` chunk with the redundant 4-byte
+`gAMA=45455` marker. The `0.8.0` preprocessor accepts only that exact pair, validates its placement,
+CRC, uniqueness, and value, and strips the ancillary declarations from canonical output without
+changing pixels. Standalone, conflicting, malformed, duplicated, or misplaced gamma declarations
+remain unsupported or invalid.
+
 Screenshot preprocessing v1 is implemented as the public `prepare_screenshot` tool. It accepts only one
 embedded, canonical-base64 PNG with declared byte count, SHA-256, dimensions, density, font scale,
 locale, layout direction, color space, alpha mode, orientation, system-bar insets, and source-pixel

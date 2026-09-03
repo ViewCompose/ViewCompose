@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 import {
   compareWorkflowContracts,
@@ -56,4 +57,24 @@ Use \`validate_code\` with exact framework evidence. Never fabricate an API.
 
 This is read-only. Stop when the same diagnostic repeats without new evidence. Use Codex.
 `), /provider-specific/u);
+});
+
+test('routes official Figma context to the attended screenshot evidence workflow', async () => {
+  const skill = await readFile(
+    new URL('../skills/viewcompose-import-figma/SKILL.md', import.meta.url),
+    'utf8',
+  );
+
+  for (const expected of [
+    '`prepare_screenshot`',
+    '`validate_screenshot_inference`',
+    '`resolve_screenshot_inference`',
+    '`generate_screenshot_viewcompose`',
+    'reference-assisted, attended adaptation',
+    'Do not pass that response to `convert_figma_to_viewcompose`',
+    'Never retain a temporary URL in',
+  ]) {
+    assert.ok(skill.includes(expected), `missing official Figma workflow rule: ${expected}`);
+  }
+  assert.match(skill, /do not say “direct Figma conversion,”/u);
 });

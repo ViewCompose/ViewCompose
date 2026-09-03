@@ -6,6 +6,10 @@ import {semanticToolResult} from './tool-core.mjs';
 
 const exampleUrl = new URL('../contracts/examples/figma-export.json', import.meta.url);
 const mutationRoot = new URL('../evaluation/fixtures/figma/', import.meta.url);
+const officialContextUrl = new URL(
+  '../evaluation/fixtures/workflows/official-figma-design-context.json',
+  import.meta.url,
+);
 
 async function example() {
   return JSON.parse(await readFile(exampleUrl, 'utf8'));
@@ -96,6 +100,18 @@ test('rejects duplicate JSON keys before ordinary parsing loses their identity',
   }, {requestId: 'figma-duplicate'});
   assert.equal(result.status, 'invalid');
   assert.equal(result.diagnostics[0].code, 'VC-AI-FIGMA-CONTRACT-INVALID');
+});
+
+test('keeps official Figma design context on the attended path', async () => {
+  const fixture = JSON.parse(await readFile(officialContextUrl, 'utf8'));
+  const result = await importFigmaExport(request(fixture.capture), {
+    requestId: 'figma-official-design-context',
+  });
+
+  assert.equal(fixture.expectedRoute, 'reference-assisted-attended-adaptation');
+  assert.equal(result.status, fixture.directConverterExpectedStatus);
+  assert.equal(result.diagnostics[0].code, 'VC-AI-FIGMA-CONTRACT-INVALID');
+  assert.match(result.diagnostics[0].message, /schemaVersion/u);
 });
 
 test('resolves typed token aliases and preserves non-primitive variant provenance', async () => {

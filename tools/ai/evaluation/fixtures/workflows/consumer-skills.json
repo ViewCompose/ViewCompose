@@ -67,7 +67,11 @@
         "analyze_project",
         "get_component_reference",
         "get_sample",
-        "validate_code"
+        "validate_code",
+        "prepare_screenshot",
+        "validate_screenshot_inference",
+        "resolve_screenshot_inference",
+        "generate_screenshot_viewcompose"
       ],
       "minimumEvidence": "static",
       "maximumEvidence": "compared",

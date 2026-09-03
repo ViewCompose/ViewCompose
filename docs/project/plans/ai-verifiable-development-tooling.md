@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-03
-next_action: Freeze and implement the smallest client-side bridge from an explicitly supplied official Figma-plugin result and downloaded immutable assets into the existing offline Figma inspection contract, while preserving provider isolation and unsupported-semantics honesty. In the same slice, make public support types resolvable from component signatures and make static validation report unmatched ViewCompose imports instead of returning an unqualified success.
+next_action: Make public support types resolvable from component signatures and make static validation report unmatched ViewCompose imports instead of returning an unqualified success, using the observed UiTextStyle, ImageSource, TextDefaults, weight, and SemanticsRole cases as regression fixtures.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -694,6 +694,12 @@ The trial exposed these additional adoption issues:
     compiled external-consumer example using
     `withTagKey(com.viewcompose.renderer.R.id.viewcompose_test_tag, equalTo(...))`, including the
     renderer resource dependency and the distinction from ordinary `View.tag`.
+36. `AI-FIGMA-PNG-SRGB-GAMMA-001`: the exact official Figma reference render used a valid `sRGB`
+    chunk accompanied by the conventional big-endian `gAMA` value 45455, but the screenshot
+    preprocessor rejected every `gAMA` chunk. The accepted repair permits exactly one valid `sRGB`
+    chunk and at most one matching `gAMA` chunk before image data, strips both metadata chunks from
+    canonical output without changing pixels, and continues to reject standalone, conflicting,
+    malformed, duplicate, or misplaced gamma/profile declarations.
 
 Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
 1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1
@@ -704,13 +710,36 @@ version onboarding, framework implementation, build, installation, scrolling, fi
 semantics, and interaction are usable, but the central Figma handoff is attended manual adaptation
 rather than a supported direct import. Limitations are one design node, one phone, one density,
 one locale/theme, no automated pixel or perceptual comparison, no accessibility-service audit, and
-an external Figma quota reached only after the necessary context was acquired. The next action is
-the official-plugin bridge contract plus support-type and static-import coverage; external
-`testTag` guidance can follow in the same documentation/sample slice.
+an external Figma quota reached only after the necessary context was acquired.
 
-This evidence-only plan update changes no public/protected API, published artifact production
-source, publication input, or compiled sample. It therefore has no capability-impact or immutable
-release-change requirement, and the temporary English-only plan needs no public Chinese mirror.
+The accepted repair deliberately does not invent a direct provider adapter or broaden the frozen
+Figma export schema. The public import Skill now routes official design context through an attended,
+reference-assisted workflow: freeze the screenshot and assets locally with provenance and hashes,
+run the existing screenshot preparation and inference contracts, resolve exact ViewCompose APIs,
+then build and test the consumer project. The deterministic Figma converter still rejects the
+official-plugin-shaped probe with `VC-AI-FIGMA-CONTRACT-INVALID`. After the narrow PNG repair, the
+real 360-by-1460 reference render with input SHA-256
+`a5e65d99988703d62f3319656e086e6a08d58c4c4f417a257925bd069bf26a57` produced a canonical
+108,087-byte PNG with SHA-256
+`19bd3a0109a4618279aa923732d8ba2e05f415d7b89c8cb8cf797dd1b4e0c14b`, zero redactions, and no
+provider transfer or persistence. This moves the exact captured screenshot preprocessing case from
+0/1 to 1/1. The complete script suite passed 378/378 executed tests with one existing conditional
+skip; distribution passed 2/2 reproducible builds, 3/3 installed client profiles, 24/24 exact Skill
+copies, and every existing compile, Preview, screenshot, XML, and Figma lane. Documentation passed
+80/80 script tests and 129/129 required translations. The conclusion for this repair is
+**improved** for attended official-Figma adoption, not direct conversion, deterministic
+reconstruction, or visual parity.
+Limitations remain one design node, model-dependent attended inference, temporary provider assets,
+and no new pixel-parity claim. The next action is support-type resolution and static-import
+coverage; external `testTag` guidance can follow in the same documentation/sample slice.
+This is an npm AI-tooling Skill and preprocessor change; it changes no Maven artifact production
+source, publication input, public/protected Kotlin API, or Android application runtime, so it needs
+no new Maven release changeset or module-manual update.
+
+The original field-trial evidence update changed no public/protected API, published artifact
+production source, publication input, or compiled sample. It therefore had no capability-impact
+or immutable release-change requirement, and the temporary English-only plan needs no public
+Chinese mirror.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
 

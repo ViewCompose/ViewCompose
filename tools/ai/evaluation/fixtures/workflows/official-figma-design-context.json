@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-figma-design-context-fixture",
+  "capture": {
+    "provider": "figma-official-mcp",
+    "operation": "get_design_context",
+    "fileKey": "PcsGk4tx1Yu1zt8bcJwE9Z",
+    "nodeId": "6201:14105",
+    "referenceCodeFormat": "react-tailwind",
+    "referenceRenderIncluded": true,
+    "assetDelivery": "temporary-download-urls"
+  },
+  "expectedRoute": "reference-assisted-attended-adaptation",
+  "directConverterExpectedStatus": "invalid"
+}

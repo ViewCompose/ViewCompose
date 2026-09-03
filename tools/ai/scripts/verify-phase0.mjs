@@ -1459,8 +1459,10 @@ async function verifyScreenshotPreprocessing(schemas) {
     JSON.stringify(contract.input?.acceptedFilterTypes) !== JSON.stringify([0, 1, 2, 3, 4]) ||
     JSON.stringify(contract.input?.acceptedInterlaceMethods) !== JSON.stringify([0]) ||
     contract.input?.acceptedSrgbChunk !== 'zero-or-one-valid-rendering-intent' ||
+    contract.input?.acceptedSrgbGammaChunk !==
+      'zero-or-one-big-endian-45455-only-with-valid-srgb' ||
     JSON.stringify(contract.input?.rejectedSemanticChunks) !== JSON.stringify([
-      'iCCP', 'cHRM', 'gAMA', 'cICP', 'mDCV', 'cLLI', 'tRNS', 'acTL', 'fcTL', 'fdAT',
+      'iCCP', 'cHRM', 'cICP', 'mDCV', 'cLLI', 'tRNS', 'acTL', 'fcTL', 'fdAT',
     ])
   ) {
     throw new Error('Screenshot preprocessing must accept only embedded non-interlaced RGBA PNG');
