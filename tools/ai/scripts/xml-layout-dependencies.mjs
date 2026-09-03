@@ -133,8 +133,43 @@ function cloneNode(node, document) {
 function withoutNamespace(node) {
   return {
     ...node,
-    attributes: node.attributes.filter((attribute) => attribute.name !== 'xmlns:android'),
+    attributes: node.attributes.filter((attribute) => !attribute.name.startsWith('xmlns:')),
   };
+}
+
+function includeOverrides(node, document) {
+  const overrides = node.attributes
+    .filter((attribute) => attribute.name !== 'layout')
+    .map((attribute) => ({
+      ...attribute,
+      origin: {path: document.path, source: document.source},
+    }));
+  const unsupported = overrides.find((attribute) =>
+    !attribute.name.includes(':') || attribute.name.startsWith('xmlns:'));
+  if (unsupported) {
+    return failure('unsupported', 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED',
+      'Include overrides must be qualified Android, app, or tools attributes.',
+      document.path, document.source, unsupported.start);
+  }
+  const width = overrides.some((attribute) => attribute.name === 'android:layout_width');
+  const height = overrides.some((attribute) => attribute.name === 'android:layout_height');
+  if (width !== height) {
+    const incomplete = overrides.find((attribute) =>
+      attribute.name === 'android:layout_width' || attribute.name === 'android:layout_height');
+    return failure('unsupported', 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED',
+      'An include must override android:layout_width and android:layout_height together.',
+      document.path, document.source, incomplete?.start ?? node.start);
+  }
+  return {status: 'success', overrides};
+}
+
+function applyIncludeOverrides(node, overrides) {
+  const byName = new Map(overrides.map((attribute) => [attribute.name, attribute]));
+  const attributes = node.attributes
+    .filter((attribute) => !byName.has(attribute.name))
+    .map((attribute) => ({...attribute}));
+  attributes.push(...overrides.map((attribute) => ({...attribute})));
+  return {...node, attributes};
 }
 
 export async function resolveXmlLayoutDependencies({
@@ -303,24 +338,22 @@ export async function resolveXmlLayoutDependencies({
         document.path, document.source, node.start);
     }
     if (node.name === 'include') {
-      if (
-        node.children.length > 0 ||
-        node.attributes.length !== 1 ||
-        node.attributes[0].name !== 'layout'
-      ) {
-        const unsupported = node.attributes.find((attribute) => attribute.name !== 'layout');
+      const layoutAttributes = node.attributes.filter((attribute) => attribute.name === 'layout');
+      if (node.children.length > 0 || layoutAttributes.length !== 1) {
         return failure('unsupported', 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED',
-          'An include accepts only its unqualified layout attribute.',
-          document.path, document.source, unsupported?.start ?? node.start);
+          'An include must be empty and declare exactly one unqualified layout attribute.',
+          document.path, document.source, node.start);
       }
-      const reference = /^@layout\/[A-Za-z][A-Za-z0-9_]*$/u.test(node.attributes[0].value)
-        ? node.attributes[0].value
+      const reference = /^@layout\/[A-Za-z][A-Za-z0-9_]*$/u.test(layoutAttributes[0].value)
+        ? layoutAttributes[0].value
         : null;
       if (!reference) {
         return failure('unsupported', 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED',
           'The include layout value must be an unqualified @layout/name reference.',
-          document.path, document.source, node.attributes[0].start);
+          document.path, document.source, layoutAttributes[0].start);
       }
+      const overrideResult = includeOverrides(node, document);
+      if (overrideResult.status !== 'success') return overrideResult;
       if (edges.length >= limits.maxIncludeEdges || depth >= limits.maxIncludeDepth) {
         return failure('limited', 'VC-AI-XML-LAYOUT-DEPENDENCY-LIMIT',
           'Layout include depth or edge count exceeds the frozen ceiling.',
@@ -339,7 +372,17 @@ export async function resolveXmlLayoutDependencies({
         source: sourcePosition(document.source, document.path, node.start),
       });
       const expanded = await expandDocument(loaded.document, [...stack, reference], depth + 1, true);
-      return expanded;
+      if (expanded.status !== 'success') return expanded;
+      if (overrideResult.overrides.length === 0) return expanded;
+      if (loaded.document.rootKind === 'merge') {
+        return failure('unsupported', 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED',
+          'An include that expands a merge root cannot safely apply root overrides.',
+          document.path, document.source, overrideResult.overrides[0].start);
+      }
+      return {
+        status: 'success',
+        nodes: [applyIncludeOverrides(expanded.nodes[0], overrideResult.overrides)],
+      };
     }
 
     const cloned = cloneNode(node, document);

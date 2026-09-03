@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 957285f2538336b1bfb7e53e55bcd859feee77ff7a537d9ac0b8bfb6613d0a56
+translation_source_hash: 2c9c80d04599083d94296eec174aaf406ec591d0f57fc3a35713af667ae1c96c
 translation_status: current
 ---
 
@@ -16,6 +16,34 @@ Preview 证据，也不要求全局安装、ViewCompose Checkout、本地构建 
 
 Coding Client 仍然负责模型、Credential、对话和用户授权的源码修改。ViewCompose 只提供确定性的
 框架事实、生成工具与明确的验证证据，既不内置也不连接模型 Provider。
+
+## 安装前：先检查必需命令
+
+一行安装命令由 `npx` 启动；完整的 Node.js 安装会同时提供 `npm` 与 `npx`。
+仅有可用的 `node` 命令还不够：某些 IDE 或 Agent 内置 Runtime 只携带 Node
+Executable，却没有 Package Manager 命令。
+
+打开一个新 Terminal，依次执行三项检查：
+
+```bash
+node --version
+npm --version
+npx --version
+```
+
+只有当三条命令全部成功，且 Node 版本为 `v24.19.0` 或更高时才继续。如果
+`node`、`npm` 或 `npx` 缺失：
+
+1. 从官方 [Node.js 下载页](https://nodejs.org/en/download) 安装完整的 Node.js
+   `24.19.0` 或更高版本。Windows 与 macOS 可使用自带 npm 的官方 Installer；Linux
+   请遵循官方安装说明，或使用用户级 Version Manager。
+2. 关闭并重新打开 Terminal，让 `PATH` 刷新，然后重新执行上述三项检查。
+3. 如果 `node` 可用但 `npm` 或 `npx` 不可用，请用完整安装替换不完整或应用内置的
+   Node Runtime。不要让 ViewCompose 指向临时解压的 Node 目录，因为生成的 MCP
+   配置必须保留一条在 Cache 清理和重启后仍然存在的 Node 路径。
+
+不要为下面的 ViewCompose 命令使用 `sudo`，也不要全局安装
+`@viewcompose/ai-tooling`。精确的 `npx` 命令会自行管理已验证的 Project-bound Cache。
 
 ## 一条命令完成安装
 
@@ -49,10 +77,62 @@ JSON、相对或符号链接路径、不兼容框架版本，以及配置或 Ski
 | Claude Code | `.mcp.json` | `.claude/skills` |
 | Cursor | `.cursor/mcp.json` | `.agents/skills` |
 
+安装后运行 `git status`。生成的 MCP 配置会绑定 Project 的物理绝对路径，因此属于本机配置；
+如果团队没有明确约定，不要提交该文件，也不要覆盖共享的 Client 配置。根据项目策略，可把
+Client 配置路径加入本机或 Repository Ignore Rule。规范 Skill 副本不含本机路径；只有当团队明确
+希望所有 Clone 都使用同一组冻结 Workflow 时才提交它们。请分别 Review 这两类文件，不要一次性
+提交所有生成文件。
+
 API 查询、生成、静态验证和 Project 分析只要求 Node.js 24.19.0 或更高版本。若要取得编译、
 渲染和比对证据，还需要 JDK 17 或 21，以及 Android SDK Platform 36。Release 已携带 Gradle
 9.3.1 Wrapper 与固定 Build Harness，用户无需安装 Gradle，也无需让现有 Project 的 AGP/Kotlin
 版本与工具链对齐。Bootstrap 只写入 Project 接入面与操作系统用户 Cache；不要为此使用 `sudo`。
+
+请明确检查 Java 前置条件；版本越新不代表一定兼容：
+
+```bash
+java -version
+```
+
+第一段版本号必须是 `17` 或 `21`。JDK 25 不在当前 AI Compiler Lane 内。Windows 或 macOS
+用户可从可信 Vendor 安装 JDK 21 Package，然后重新打开 Terminal。Linux 用户可参考下面的用户级
+安装示例；它使用官方
+[Amazon Corretto 21 固定下载与 SHA-256 链接](https://docs.aws.amazon.com/corretto/latest/corretto-21-ug/downloads-list.html)，
+不会修改系统 Java：
+
+```bash
+mkdir -p "$HOME/Downloads/viewcompose-jdk" "$HOME/.jdks/corretto-21"
+curl -fL -o "$HOME/Downloads/viewcompose-jdk/corretto-21.tar.gz" \
+  https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz
+curl -fL -o "$HOME/Downloads/viewcompose-jdk/corretto-21.sha256" \
+  https://corretto.aws/downloads/latest_sha256/amazon-corretto-21-x64-linux-jdk.tar.gz
+cd "$HOME/Downloads/viewcompose-jdk"
+printf '%s  %s\n' "$(cat corretto-21.sha256)" corretto-21.tar.gz | sha256sum --check --strict
+tar -xzf corretto-21.tar.gz -C "$HOME/.jdks/corretto-21" --strip-components=1
+export JAVA_HOME="$HOME/.jdks/corretto-21"
+export PATH="$JAVA_HOME/bin:$PATH"
+java -version
+```
+
+如果 Checksum 命令没有输出 `OK`，请立即停止。`export` 只影响当前 Terminal；只有最后一条
+`java -version` 确认是 JDK 21 后，才应把它们加入 Shell Profile。Android Studio 还有独立的
+**Gradle JDK** 设置；Project Build 也要使用该版本时，请选择同一个持久目录。上述下载 URL 仅适合
+Linux x64；ARM 设备应从官方表格选择匹配的 Architecture，不要直接照用。
+
+现有 Android Application 还有一套独立的 Java/Gradle 兼容要求。第一次构建基线前，请在
+Application 根目录运行：
+
+```bash
+java -version
+./gradlew --version
+```
+
+Android Studio 配置的 **Gradle JDK** 可能与 Terminal JDK 不同；随 Android Studio 更新的 JBR
+也可能新到旧版 Gradle Wrapper 无法加载。如果构建报告 `Unsupported class file major version`，
+请改用该 Project 文档指定或其 Gradle/AGP 版本支持的 JDK，再重新运行以上两条命令。例如，兼容
+JDK 位于 `/path/to/jdk-17` 时，Terminal Session 可执行
+`export JAVA_HOME=/path/to/jdk-17`；在 Android Studio 中构建时，也要在 Gradle 设置中选择同一个
+JDK。不要一开始就通过升级旧 Application 的 Gradle、AGP 或 Source Code 来掩盖环境不匹配。
 
 ### `0.7.0` 的精确框架版本绑定
 
@@ -83,8 +163,12 @@ Lane 误报为成功。
 
 继续完成客户端侧连接检查：
 
-- **Codex：**运行 `codex mcp list`，再检查 `/mcp` 与 `/skills`；首次调用使用
-  `$viewcompose-api-reference`。官方资料：[MCP](https://developers.openai.com/codex/mcp/)与
+- **Codex CLI：**运行 `codex mcp list`，再检查 `/mcp` 与 `/skills`；首次调用使用
+  `$viewcompose-api-reference`。
+- **Codex Desktop：**独立的 `codex` Shell 命令可能并未安装。执行 `init` 后重新打开
+  Project 或创建新 Task，再检查应用内的 MCP 与 Skill 界面，并首次调用
+  `$viewcompose-api-reference`。当 Codex Desktop 是所选 Client 时，缺失 `codex`
+  命令不代表安装失败。官方资料：[MCP](https://developers.openai.com/codex/mcp/)与
   [Agent Skills](https://learn.chatgpt.com/docs/build-skills)。
 - **Claude Code：**如有提示，批准 Project `.mcp.json`，运行 `claude mcp list` 与
   `claude mcp get viewcompose`，再检查 `/mcp`；首次调用使用
@@ -118,6 +202,85 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
 
 证据等级依次为 `knowledge`、`static`、`compiled`、`rendered` 和 `compared`。静态结果不证明
 编译通过，生成 Kotlin 也不证明页面已渲染或达到视觉一致。
+
+XML Conversion 采用 Fail-closed 策略。已发布的 `0.7.0` Converter 可能会把常见 Android XML，
+例如带 ID 或 Constraint 的 `<include>`、Style、仅 Preview 使用的 `tools:` Attribute、Gravity、
+Margin 和 Text Color 报告为 Unsupported，而不是进行近似转换。未发布的 `0.8.0` 现场验证后
+Source Candidate 已经支持普通 Included Root 上的限定名 Override、忽略 `tools:` Preview Fact，
+并转换非负 dp Margin 与可精确映射的 LinearLayout Cross-axis Gravity；在受保护的 Release 发布并
+完成独立复现前，这还不属于 Installed Package Capability。Style、Text Color、ConstraintLayout Relation、Merge Root 的
+Include Override，以及含糊的 Gravity 或 Margin 组合仍然 Fail-closed。缩小所选 Subtree 前，必须
+检查完整 Unsupported List。不要为了得到 Generated Kotlin 而静默删除这些 Attribute；应手动保留
+它们，或让受影响 Surface 继续使用 Android View，直到其行为与视觉 Contract 得到验证。
+
+如果通过底层 `renderInto` API 把 ViewCompose 嵌入现有 Android View Hierarchy，请用
+`AndroidResourceEnvironment(context = container.context)` 在 Render Tree 外安装能感知
+Configuration 变化的 Android UI Environment，并由所属 Lifecycle 释放返回的 Render Session。
+固定的 `UiEnvironment(AndroidEnvironmentBridge.fromContext(container.context))` Snapshot 虽能
+建立初始 Density，却不会跟随后续 Configuration 变化。底层 Host 不会自行从 Container 推断
+Android Density、Font Scale、Locale 或其他 Environment Value。适合整页时优先使用标准 Android
+Content Host。仅编译无法发现 Environment 缺失：在高 Density Device 上，通过编译的 Tree 仍可能
+以错误的物理尺寸渲染。
+
+## 修改现有应用前
+
+`project-bound-ready` 描述的是 ViewCompose 工具链 Lane，并不表示 Consumer Application
+可以构建、Emulator 已就绪，或原有用户流程已经通过。接受任何迁移修改前，先建立改造前基线：
+
+1. 记录 Source Commit、精确 Application Variant、Device 或 AVD 名称、API Level、屏幕尺寸与
+   Density、Locale、Light/Dark Theme、Font Scale、Permission、App Data State 和确定性的 Media
+   Fixture。迁移后的 Candidate 必须使用完全相同的取值。删除一次性 Device User 或 Fixture
+   Directory 前，应保留精确的非个人 Fixture Byte，或保留带版本的确定性 Generator，并同时保存
+   SHA-256 Manifest。Screenshot 或“Hash 曾经一致”的描述无法重新生成 Comparison Input。
+2. 运行 `./gradlew :app:tasks --all`，选择完整且包含 Variant 的 Assemble、Unit-test、
+   Android-test Assembly 与 Connected-test Task。不要猜测缩写 Task Name；带多个 Flavor
+   Dimension 的 Project 可能让缩写产生歧义。
+3. 等待 Device 前，先构建 Application、运行 JVM Test，并组装 Android-test APK。如果改过
+   Production Test Seam 或 Instrumentation Runner，请把 Application APK 与 Android-test APK
+   作为一组匹配产物重新构建并安装；只运行 Android-test Assembly Task 可能让磁盘上仍保留旧的
+   Application APK。修复或明确分类原本就存在的 Test-harness Failure；它们不是迁移 Regression，
+   也不能作为通过的 Baseline Evidence。
+4. 在 Android Studio 中打开 **Tools > Device Manager**，启动已有 AVD，或连接测试 Device。
+   `adb devices` 必须显示 `device`，不能是 `offline`；
+   `adb shell getprop sys.boot_completed` 必须返回 `1`。Linux 用户还应运行 SDK Emulator 的
+   `-accel-check`；如果缺少 `/dev/kvm`，请在管理员协助下启用 CPU Virtualization，并按所用
+   Distribution 安装或加载 KVM 支持，然后重启 AVD。永远没有完成启动的软件模拟实例不能作为
+   Test Evidence。使用真机时，请保持屏幕解锁并确认 USB 安装提示；部分 OEM 系统还要求在
+   Developer Option 中显式开启 **USB 安装**。如果结果是 `INSTALL_FAILED_USER_RESTRICTED`，且
+   启动了 0 个测试，它属于 Device Policy/Setup Failure，不是 Application Test Result；不要为
+   绕过它而关闭无关的系统安全检查。如果 Linux 在连接或切换 Device User 后报告
+   `no permissions`，请安装所用 Distribution 的 Android udev Rule，确认当前用户属于所需的
+   Device-access Group，重新插拔线缆并重启 ADB Server。修改单个 `/dev/bus/usb` Node 的 Mode
+   只能用于临时诊断，因为重新连接可能创建另一个 Node。
+   某些 OEM 系统即使已经安装两个 APK，也会在 Instrumentation Package 第一次启动 Target
+   Application 时再次弹出授权对话框。只应在专用测试 Device 上确认屏幕明确显示的 Test/Target
+   Package Pair。如果 OEM Security Application 仍位于前台，应把该次运行归类为 Setup，且
+   Application Assertion 数为 0；完成授权后重跑完全相同的 Test，不要把被拦截的尝试报告成
+   Application Failure。
+   `adb install -g` 成功只代表安装结果。测试受 Permission 保护的 Action 前，请通过 Platform
+   Package/Permission State 验证 Application 所需的 Runtime 或 Special Permission；也可以走完
+   Application 的正常 Permission Screen，并确认返回后的 Destination。如果该 Action 正确打开
+   Permission Continuation，应把缺少授权归类为 Device Setup，而不是 Navigation Regression。
+   只有在明确获准的专用测试 Device 上才能使用 Root-assisted Grant；重跑前还必须验证精确的
+   Device User 与最终 Permission State。
+5. 在已完成启动的 Device 上运行精确 Connected-test Task，并走查 Project 的关键用户流程。
+   为启动、Navigation/Back Stack、Permission 申请与返回、Loading/Empty/Error State、Selection
+   与 Count 一致性，以及范围内每个删除或恢复操作保存稳定 Checkpoint Screenshot 与 Semantic
+   Assertion。如果使用一次性 Android User 隔离 Media，请记录
+   `adb shell am get-current-user`，并在启动前验证 Fixture 明确位于
+   `/storage/emulated/<user-id>/...`。不要假设 ADB Shell 的 `/sdcard` Alias 会随前台 User
+   切换；授予存储权限前还要确认 User 0 中不存在该 Fixture。
+   如果 Advertisement 或其他 Remote Surface 遮挡人工视觉检查，只能使用 Project 已有的 Test
+   Seam 或 Debug Configuration。记录该排除项，重新构建精确 Candidate，并让所有临时 Source
+   Toggle 保持未提交、与 Migration Diff 分离。No-ad Run 验证的是确定性 Application UI，不能
+   代表包含真实广告的首次使用。
+6. 每完成一个有界迁移 Slice，就在相同 Device State 上重跑同一脚本。任何无法解释的视觉差异、
+   Destination 或 Back Stack 变化、Crash 或 ANR、Count Drift、Permission Continuation 丢失，
+   或已有 Assertion 失败，都会阻断该 Slice。
+
+Generated Preview Comparison 对迁移后的 ViewCompose Surface 仍然有用，但不能替代应用级 Device
+验证。Release `0.7.0` 不会操作任意 Consumer Emulator，也不会认证现有 Application Flow；所选
+Coding Agent 与 Project Test Harness 必须如实收集并报告这些证据。
 
 ## 人工授权 Screenshot 修复
 
@@ -204,6 +367,13 @@ Release `0.5.0` 直接增强现有 `analyze_project` MCP 工具，不增加功�
 Code，也不会写入源码。现有 Inventory 与 Diagnostic Field 保持可用；新增的 `data.analysis` 会
 给出精确框架 Profile、扫描覆盖范围、适用 Rule Catalog、不可变 Corpus Quality Snapshot、类型化
 Finding、Suppression Audit 与 Unsupported Syntax Record。
+
+对于公开版 `0.7.0`，如果旧 Project 根目录中含有 Credential 或无关的 Generated/Tooling
+Data，不要从未限制的 Repository Root 开始分析。请把请求限定到最小的相关源码或配置目录，
+并显式排除敏感目录、Credential 文件、`.codegraph` 及其他较大的工具目录。Analyzer
+只在本机运行且不连接 Provider，但它会盘点 Scope 内的常规文件，并读取受支持的源码与配置格式；
+它的文件名检查不是通用 Secret Scanner。遇到 Limit Diagnostic 不代表可以扩大扫描边界；请先 Review
+并缩小 Scope。后续 Patch 正在跟踪更安全的 Source-only Discovery 和 Fail-closed 敏感文件默认值。
 
 首个公开 Catalog 只包含 5 条高置信度规则：
 

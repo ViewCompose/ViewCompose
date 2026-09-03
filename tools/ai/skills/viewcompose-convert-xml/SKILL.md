@@ -31,9 +31,14 @@ resource, state, and behavior decision.
    to prepare an explicit manual migration plan. Retrieval does not turn unsupported XML semantics
    into an automatic-conversion claim.
 5. If project writes were requested, integrate only the generated function and the caller bindings
-   needed by that layout. Preserve resource ownership, stable keys, state restoration decisions,
-   listeners, ViewBinding references, adapters, and imperative mutations as explicit review work;
-   do not invent missing behavior.
+   needed by that layout. Prefer the Activity/Fragment `setUiContent` host, which installs the
+   Android resource environment. If the migration must stay embedded in an existing `ViewGroup`,
+   wrap the `renderInto` content with
+   `AndroidResourceEnvironment(context = container.context)`, retain the returned `RenderSession`,
+   and dispose it with the host lifecycle. A fixed `UiEnvironment` snapshot is not a substitute
+   because it does not follow configuration changes. Preserve resource ownership, stable keys,
+   state restoration decisions, listeners, ViewBinding references, adapters, and imperative
+   mutations as explicit review work; do not invent missing behavior.
 6. Call `convert_xml_to_viewcompose` in `compile` mode with the same source or project input. After
    any integration edit, run `validate_code` in static and compile modes over the final bounded
    code. Converter compilation proves the isolated generated function, not an unvalidated call

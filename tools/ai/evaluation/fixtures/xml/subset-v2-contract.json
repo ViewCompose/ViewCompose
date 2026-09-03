@@ -29,8 +29,20 @@
     }
   ],
   "addedAttributes": {
-    "commonOptional": ["android:visibility"],
+    "commonOptional": [
+      "android:visibility",
+      "android:layout_margin",
+      "android:layout_marginHorizontal",
+      "android:layout_marginVertical",
+      "android:layout_marginStart",
+      "android:layout_marginTop",
+      "android:layout_marginEnd",
+      "android:layout_marginBottom",
+      "android:layout_marginLeft",
+      "android:layout_marginRight"
+    ],
     "byElement": {
+      "LinearLayout": ["android:gravity"],
       "FrameLayout": ["android:padding"],
       "ImageView": [
         "android:src",
@@ -40,13 +52,17 @@
     },
     "values": {
       "android:visibility": "visible, invisible, or gone",
+      "android:layout_margin*": "non-negative integer dp with mixed physical/relative horizontal semantics rejected",
+      "android:gravity": "exact cross-axis alignment only",
       "android:src": "unqualified @drawable/name",
       "android:contentDescription": "non-empty literal, unqualified @string/name, or explicit @null for decorative content",
       "android:scaleType": "fitCenter, centerCrop, fitXY, or centerInside"
     }
   },
   "normalization": {
-    "modifierOrder": ["size", "padding", "visibility"],
+    "modifierOrder": ["size", "margin", "padding", "visibility"],
+    "previewNamespaceStrategy": "ignore xmlns:tools and tools:* because they have no runtime semantics",
+    "crossAxisGravityStrategy": "map only direction-independent cross-axis values and fail closed on main-axis or compound gravity",
     "drawableResourceStrategy": "caller ImageSource parameter preserving @drawable identity",
     "contentDescriptionStrategy": "required Image parameter unless explicit @null marks decorative content",
     "imageScaleMapping": {
@@ -91,7 +107,22 @@
         {"parameter": "profilePhoto", "type": "String"},
         {"parameter": "statusLabel", "type": "String"}
       ],
+      "expectedKotlinSnippets": ["contentDescription = profilePhoto,"],
       "expectedFunction": "ProfileCardView"
+    },
+    {
+      "source": "common-attributes.xml",
+      "goldenIr": "common-attributes.design-ir.json",
+      "goldenKotlin": "common-attributes.viewcompose.kt",
+      "expectedNodes": 2,
+      "expectedResources": [],
+      "expectedStateBindings": [],
+      "expectedBindings": [],
+      "expectedKotlinSnippets": [
+        "horizontalAlignment = HorizontalAlignment.Center,",
+        "modifier = Modifier.margin(top = 16.dp),"
+      ],
+      "expectedFunction": "CommonAttributesView"
     }
   ],
   "unsupportedFixtures": [

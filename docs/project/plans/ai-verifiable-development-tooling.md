@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-02
-next_action: Maintain the exact released 0.7.0 framework profile and collect adoption/support evidence for analyzer, Figma, and attended repair workflows. Keep Compose mapping and conversion unactivated at lowest priority until explicit user demand justifies a new product decision.
+next_action: Assign the post-field-trial AI tooling a new version, pass the protected distribution gates, and reproduce a clean target-project upgrade before calling the repair shipped. Then compare the committed photo scan-start and scan-result slices against retained same-device baseline fixtures, keeping temporary no-ad configuration outside product commits and adding separate screenshot, duplicate-photo, and process-relaunch fixtures before broadening migration acceptance. Keep Compose mapping and conversion unactivated.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -70,6 +70,491 @@ rollback refusal, successful rollback, protected SLSA publication, three-client 
 and public transaction-status reproduction. Compose mapping and conversion remain unactivated at
 lowest priority. The
 chronological handoffs below remain evidence rather than competing next actions.
+
+### Legacy-project first-use field trial (2026-09-02)
+
+A clean local `photorecovery` `dev` checkout was used as an existing Android View application with
+no ViewCompose dependency. The Linux x86_64 host ran Codex Desktop, Node `24.19.0`, JDK 17, and
+Android SDK 36. The desktop-bundled Node executable did not include `npm` or `npx`; the project also
+contained existing `.codex`, `.claude`, and `.codegraph` directories. No application source or
+dependency was changed during this onboarding slice.
+
+The first literal documentation command failed with `npx: command not found`. Installing a complete
+user-scoped Node distribution supplied npm/npx `11.17.0`; the literal public `init` command then
+installed the project-bound MCP entry and all 8/8 canonical Skills, selected released profile
+`895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064`, and reported
+`project-bound-ready`. Literal repeat `init` was idempotent and `doctor` passed. Exact released
+knowledge retrieval then ranked `Material3Button` first for `Material 3 button` and resolved its
+artifact, signature, defaults, compiled sample, rules, bundle fingerprint, and source identity.
+Static validation of a bounded `Material3Button` snippet passed, but compile mode returned
+`VC-AI-COMPILER-ARTIFACT-UNSUPPORTED` because the released compiler lane accepts only
+`viewcompose-ui-foundation`. A matching Foundation `Button` snippet then compiled from the released
+Maven lane in 23.589 seconds, producing 2 class files / 2,007 bytes and output fingerprint
+`e73fbe8936aff626eb1c93f8df667dc49917119082b4a1d8996f10d0c1eff3cd`.
+
+Before any migration edit, the trial also started a preservation baseline at exact source commit
+`253196b0d1775daa71dfd0edf452be4c7ec2ab13`. The actual complete application variant is
+`pr0205BillingFsiAdjustDebug`. Its APK assembled and 23 JVM test suites passed 129/129 tests with
+zero failures, errors, or skips in one combined 9-minute-40-second cold run. The first Robolectric
+suite spent 267.176 seconds resolving its Android runtime, so this duration is adoption evidence,
+not a steady-state performance claim. The repository's documented shorter tasks such as
+`assemblePr0205BillingDebug` are ambiguous because the current build has four flavor dimensions;
+the corresponding literal dry run failed before task execution. The valid device gate is
+`connectedPr0205BillingFsiAdjustDebugAndroidTest`.
+
+The host had an existing `Medium_Phone_API_36.0` Google Play x86_64 AVD and Android SDK 36, but no
+`/dev/kvm`. The Ryzen processor supports AMD-V, but `lscpu` exposed no virtualization mode and
+`/proc/cpuinfo` contained no standalone `svm` flag. After administrator authentication, the base
+`kvm` module loaded while `kvm_amd` returned `Operation not supported`, which is consistent with
+SVM/AMD-V being disabled in firmware rather than a missing package or user permission. A bounded
+software-only launch reached an ADB `device` transport, but never set `sys.boot_completed`; Android
+repeatedly failed to start the activity service and the trial stopped the unusable instance without
+clearing AVD data. No emulator result is accepted from that attempt.
+
+The first exact Android-test assembly also passed 0/1 gates with 30 Kotlin compilation errors
+across stale tests: activity argument objects had acquired provenance fields, several generic
+intent factories had moved to typed argument objects, and the splash progress resource had been
+renamed. A test-only compatibility repair updated those call sites to the current production
+contracts without changing application source. The same Android-test APK assembly then passed
+1/1 in 11 seconds with 181 actionable tasks (10 executed, 171 up-to-date). This restores a
+compilable inventory of 23 instrumentation source files and 30 declared instrumentation test
+methods across the app and private-files modules; the private-files Android-test APK also assembled
+successfully in 18 seconds. This does not convert any test into executed device evidence. The exact
+connected app gate reached its device task and then failed with `No connected devices!`, confirming
+the remaining boundary is device availability rather than test compilation. The legacy project's
+active README, workflow, and Agent command reference were updated from the ambiguous abbreviated
+tasks to the same exact four-dimension variant.
+
+A subsequently connected unlocked and rooted Xiaomi MI 6 running Android 9 / API 28 reported a
+healthy ADB `device` transport, and the target application ID was absent, so no existing
+same-package install or data was at risk. Both the connected gate and a standalone streamed install
+were initially rejected by MIUI with `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`;
+0 tests started. Enabling the OEM USB-install control allowed the main application APK to install,
+but MIUI continued to reject the separate instrumentation APK. On this dedicated rooted test
+device, pushing each APK to `/data/local/tmp` and invoking the platform package manager as root
+installed both APKs successfully without changing application source.
+
+The app instrumentation runner then discovered 23 tests. One context smoke test passed before a
+stale `MainActivityTest` crashed the process because it launched the activity without its required
+typed arguments. A test-only repair switched that launch to the production intent factory. The
+repaired suite then completed 19 tests before a 12-minute host timeout: 2 passed, 17 failed, the
+20th was interrupted, and 3 never started. Failures were dominated by activities remaining behind
+the real `Please wait... May contain ads.` loading surface or having no resumed activity; the suite
+also contains at least one stale localized-title assertion. It does not isolate advertising and
+remote readiness and therefore cannot yet serve as a deterministic migration gate. These are
+pre-existing harness failures, not migration regressions. The separate self-instrumenting
+private-files APK installed through the same root path and passed all 3/3 discovered tests in 0.21
+seconds, proving that the device and AndroidX runner themselves are functional.
+
+The recommended baseline repair then added a custom instrumentation runner and default-off internal
+test seams. Before `Application.onCreate`, the runner disables advertising, the Debug panel, and
+the process hot-start monitor only for instrumentation. Individual tests explicitly and
+temporarily keep empty directory/scanning pages open or bypass the Recovered permission redirect
+when their purpose is UI and navigation rather than storage access. Stale API-28 permission text,
+home-title, and rapid-tap assertions were aligned with the current production contracts. The main
+suite then passed all 23/23 discovered tests with zero failures in 1,002.463 seconds; the private
+suite remained 3/3, and the JVM suite was repeated at 129/129 with zero failures or errors. Against
+the declared 23-test denominator, the main instrumentation pass result improved from 2/23 (8.7%)
+to 23/23 (100%), a 91.3-percentage-point increase, while incomplete execution fell from 4 tests to
+zero and observed failures fell from 17 to zero. The conclusion is **improved** deterministic UI
+and navigation evidence. The seams intentionally exclude real advertising, hot-start interception,
+permission acquisition, personal storage, and empty-result redirects, so they do not prove scan,
+delete, recover, remote-content, or process-relaunch behavior. The next acceptance step is a
+disposable non-personal media fixture for those flows, not broader access to device contents.
+
+After clearing only the newly installed application's temporary data, a manual no-permission flow
+captured stable screenshots and semantic page state for first launch/home, Settings, Language,
+return to Home, the photo-recovery permission explanation, and return to Home. The MI 6 was held at
+API 28, 1080x1920, density 480, and Traditional Chinese. No application crash or ANR appeared in
+the bounded flow log. The manual flow never activated the permission button and scanned no personal
+media, but a post-flow audit found that the earlier instrumentation runner had left legacy external
+storage permissions granted. Those permissions were revoked, an empty runtime-permission state was
+confirmed, and the permission explanation was recaptured before returning Home. This means the
+earlier screenshot is presentation evidence rather than a clean permission-state assertion. Scan,
+result, selection, delete, recover, and count behavior remain unaccepted. The Debug build's red `D`
+development-tool overlay is visible and can obscure content; baseline and candidate must use the
+same build type and overlay state or explicitly mask that declared nondeterministic region.
+
+After the deterministic suite, clearing the package and launching the ordinary Debug application
+left the red `D` panel enabled, proving that the instrumentation-only isolation did not leak into
+the user path. The captured Home semantic XML was byte-identical to the initial pre-repair baseline;
+both have SHA-256
+`a0cf6a3fecf2bdeb9dd2d9f553b0a5c0c8b6bafe1363a7e790d92c8aacf195ce`, and the bounded log contained
+no crash or ANR. This is **no material change** for the tested normal-Debug Home semantics. It is
+not an exact-pixel claim because system time and battery state changed, and it covers only Home,
+not the media fixture flow accepted in the later run below.
+
+A disposable real-media run then created ephemeral Android user 10 on the same MI 6 and used four
+generated JPEGs in the explicit
+`/storage/emulated/10/Pictures/ViewComposeFixture` directory: two distinct images and one
+byte-identical duplicate pair. The accepted device copies matched all four local SHA-256 values.
+The first ADB push had followed `/sdcard` to user 0 despite user 10 being foreground; that exact
+tool-owned directory was detected, copied to user 10, removed from user 0, and all application data
+was cleared before the accepted run. No user-0 media path or content entered the accepted evidence.
+
+The clean user-10 scan found 20 images rather than four. Database path audit attributed exactly 4
+to the fixture, 15 to MIUI `miad/splash_preload`, and 1 to a MIUI launcher image cache; six file
+results were OEM/system/input-method text logs. The directory page nevertheless preserved a
+`ViewComposeFixture (4)` group. The attended script entered only that group, observed four source
+files with sizes 50.5 KB, 50.5 KB, 3.0 KB, and 2.0 KB, selected all four, and changed the action to
+`Recover (4)`. Recovery produced `4 photos` success and Recovered count `(4)` with the same sizes.
+Selecting and deleting those four recovery copies produced `4 photos` delete success and Recovered
+count `(0)` plus the empty state. All four source hashes remained unchanged, and the bounded log
+contained no crash or ANR. Relative to the former absent fixture denominator, this is **improved**
+real scan, selection, recovery, deletion, and remaining-count evidence. It is also **mixed** global
+count evidence because a fresh secondary user still contains OEM-generated cache and log files.
+
+The real first-use path repeatedly displayed full-screen test advertisements between launch,
+navigation, scan, result, recovery, Recovered, and delete transitions. A banner also occupied the
+bottom of the scan-result page, leaving `View all` below the initial viewport until the user
+scrolled, while the Debug `D` overlay obscured content in several screenshots. The attended run
+closed only visible test-ad controls and declared both advertisement and Debug surfaces
+nondeterministic; it does not make the deterministic runner's ad-disabled behavior representative
+of real first use. Screenshot-removal, duplicate-photo, process-relaunch, and failure-path fixture
+flows remain unaccepted and require their own bounded denominators before migration parity claims.
+
+The migration acceptance protocol is now explicit. Capture the baseline before source changes and
+run the candidate on the same boot-complete device identity, API, resolution, density, locale,
+theme, font scale, permissions, application-data state, and deterministic media fixture. Preserve
+screenshots and semantic assertions for stable checkpoints, masking only declared nondeterministic
+system or remote content. Both sides must run the same build variant and operation script. The
+minimum functional matrix is splash and home, permission request and return, settings -> language
+-> back plus rapid-tap duplicate prevention, photo/screenshot/duplicate-photo scanning and result
+navigation, selection and count consistency, delete/recover and remaining-count behavior,
+Recovered management, process death/relaunch where state is promised, and failure/empty paths.
+Compilation or a generated Preview cannot substitute for this device comparison. Any unexplained
+pixel delta, changed navigation destination or back stack, crash/ANR, count drift, lost permission
+continuation, or failed existing instrumentation assertion blocks the migration slice.
+
+The first bounded migration candidate then replaced only the photo scan-result content surface at
+committed baseline `26b5265a`, while retaining the existing Activity shell, navigation callback,
+analytics path, and XML fallback for the other scan-result types. Exact released Knowledge Pack
+queries selected `viewcompose-host-android` `0.1.0-alpha05` and `viewcompose-ui-foundation`
+`0.1.0-alpha02`. The full project-resource XML conversion stopped with
+`VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED` because the existing `<include>` carried an ID and
+ConstraintLayout attributes. A second content-only conversion still rejected common layout facts,
+including gravity, margins, style, `tools:text`, text color, and a missing decorative-image
+accessibility decision. These failures were honest and fail-closed, but they required the Agent to
+manually preserve the audited mapping instead of completing the advertised existing-layout path.
+
+The resulting Foundation `Column`, `Image`, `Text`, and `Button` source passed the released JDK 17
+compiler lane with 2 class files / 7,213 bytes and output fingerprint
+`2262db45b1642cc997af80a0b2638e8c09f5eec2b41e3b02cf03fc3fc836c01b6`. The first real-device render
+was nevertheless one third of the expected size on the density-480 phone because direct
+`renderInto` usage had no Android environment. Wrapping the tree with
+`UiEnvironment(AndroidEnvironmentBridge.fromContext(this))` restored the expected density. This
+demonstrates a compiled-but-visually-wrong integration path that neither generation nor compile
+validation currently warns about.
+
+After that correction, the same-device stable-content comparison found the image crop byte-for-byte
+unchanged. Across the 1,333,800-pixel migrated-content crop, 162,074 pixels (12.1513%) differed at
+any channel value, almost entirely because the existing button used `(254,254,254)` while the new
+button used `(255,255,255)`; only 8,218 pixels (0.6161%) differed by more than one channel step.
+Headline and result-text antialiasing accounted for 2,119 and 496 changed pixels respectively, with
+the same observed geometry. The conclusion is **no material change** for the tested deterministic
+content, not exact-pixel equality. System status content, real advertising, and the Debug overlay
+were excluded from the crop.
+
+Three photo-result instrumentation tests passed 3/3 in 2.443 seconds, including zero and positive
+counts plus a real ViewCompose button click that opened the existing photo-directory destination.
+The complete main suite passed 22/24. `MainActivityTest` hit AndroidX Espresso 3.5's
+`ASYNC_TASKS_HAVE_IDLED` timeout, and the splash assertion observed Main before its progress view;
+the photo-result, duplicate-result, screenshot-result, and remaining navigation tests passed. A
+temporary worktree at the exact committed baseline reproduced the same Espresso timeout before any
+ViewCompose dependency or source existed, so that failure is classified as a rooted MIUI/API-28
+test-environment incompatibility rather than a migration regression. The candidate app JVM lane
+passed 129/129. The app APK grew from 93,000,637 to 94,763,105 bytes: +1,762,468 bytes, or +1.8951%.
+The combined conclusion is **mixed**: the bounded page and navigation behavior pass with no material
+visual change, while the full instrumentation gate is not green and binary size regressed.
+
+This slice covers one static result surface on one device, with advertisements and debug overlays
+disabled for deterministic assertions. It does not accept photo scanning, recovery/deletion,
+process relaunch, alternate locale/theme/font scale, or the other result-type XML fallbacks as
+migrated behavior. The next action is to improve converter coverage and embedded-host environment
+guidance, retain committed-baseline reproduction for OEM idling failures, and rerun the accepted
+four-photo fixture before broadening or accepting another migration surface.
+
+The migration slice was then committed as `7675b387`. The prior disposable user had already been
+removed, but the retained baseline evidence contained only screenshots and hashes of those evidence
+files—not the four source-image bytes or their individual hashes. Strict same-fixture reproduction
+was therefore impossible. The candidate run created a replacement deterministic four-JPEG fixture:
+two distinct images plus one byte-identical pair, with source bytes and a SHA-256 manifest retained
+before device setup. A fresh disposable user exposed exactly 4 fixture MediaStore rows. As in the
+baseline, the global result was 20 photos: 15 OEM `splash_preload` images, 1 launcher-cache image,
+and the `ViewComposeFixture (4)` directory.
+
+At the user's direction, the normal Debug application was rebuilt with the existing `AdsConfig`
+Debug-disable branch temporarily enabled. That one source toggle remained uncommitted and separate
+from the committed migration, while the Debug `D` overlay remained visible. The no-ad attended flow
+rendered the ViewCompose result as `20 photos found`, opened the existing directory destination,
+showed four fixture files, selected 4, recovered 4, displayed Recovered `(4)`, selected and deleted
+those 4 copies, and ended at Recovered `(0)` with the empty state. All 4/4 source-image hashes still
+matched after the flow, MediaStore still contained 4/4 source rows, and the bounded log contained
+zero crash or ANR matches. Forty-five screenshots, semantic dumps, logs, and manifests were retained
+outside the repository before the disposable user and its media were removed.
+
+This is **improved** candidate functional evidence for scan-result navigation, fixture-directory
+selection, recovery, recovered-list management, deletion, and 4-to-0 remaining-count behavior. It
+does not upgrade the conclusion to same-fixture baseline parity because the replacement fixture has
+different bytes and sizes, and it does not represent real-ad first use. Screenshot-removal,
+duplicate-photo-specific grouping, process relaunch, alternate locale/theme/font scale, and failure
+paths remain unaccepted. The next migration surface remains blocked until fixture preservation is
+part of baseline capture rather than an after-the-fact narrative.
+
+The trial exposed these adoption issues:
+
+1. `AI-ADOPTION-PREREQ-001`: the quick start named a Node version but did not require users to
+   verify `npm` and `npx`. A working application-bundled `node` command therefore looked ready even
+   though the literal installer could not start. The public English and Chinese onboarding pages
+   now include three-command preflight and beginner recovery guidance.
+2. `AI-ADOPTION-BOOTSTRAP-001`: when a temporary complete Node distribution was used only to obtain
+   npx, `init` persisted that temporary `process.execPath` into the MCP entry. Re-entering with the
+   durable Node executable then refused to replace the package-owned entry as a conflict. Exact
+   uninstall followed by reinstall recovered safely, but bootstrap needs a durable-runtime check,
+   an actionable diagnostic, and a regression fixture for runtime-path changes.
+3. `AI-ADOPTION-CODEX-001`: Codex Desktop was present but the standalone `codex` executable was not,
+   so the documented `codex mcp list` check could not run. The onboarding page now separates CLI
+   and Desktop checks. A fresh Desktop task remains required to accept the actual client discovery
+   path; direct package invocation is not presented as proprietary-client evidence.
+4. `AI-ANALYZER-SCOPE-001`: default `analyze_project` traversal entered `.codegraph` and reached its
+   file/byte limit before Kotlin or XML application sources. The diagnostic recommended narrowing
+   or raising limits but did not give a safe preset or effective limit values. Large generated and
+   tool-owned trees must be excluded before they consume inventory or byte budgets.
+5. `AI-ANALYZER-PRIVACY-001`: a second explicitly bounded run excluded `.codegraph`, `.git`,
+   `.gradle`, and `build`, but the analyzer still inventoried unrelated files including a path under
+   `keys/` and read the supported `.json` format of `app/google-services.json`. No secret content
+   was requested, printed, or transmitted, and the extensionless path was metadata-only; however,
+   generic JSON readability and incomplete sensitive-path defaults violate least-privilege,
+   fail-closed project analysis. Whole-repository trials stopped immediately.
+6. `AI-ADOPTION-MCP-VERSION-001`: the durable installed process completed MCP `2025-11-25`
+   initialization and listed 15/15 tools without stderr, but `serverInfo.version` reported `0.1.0`
+   while the installed npm package and tooling readiness identity were `0.7.0`. Define whether this
+   field is a separately versioned server contract or the product release version, then either
+   document that distinction or align the value so client UI does not imply a stale installation.
+7. `AI-ADOPTION-VCS-001`: installation left the client configuration and eight Skills untracked,
+   but onboarding did not explain their different version-control policies. The MCP configuration
+   contains the local physical absolute root and is not portable; canonical Skill copies contain no
+   machine path and may be intentionally shared. The public pages now require a post-install
+   `git status` review and separate decisions for machine-local configuration and frozen workflows.
+8. `AI-VALIDATE-ARTIFACT-001`: exact retrieval presents `Material3Button`, its owning
+   `viewcompose-material3` Artifact, and a compiled source sample, while `validate_code` rejects that
+   Artifact before compilation because its released lane is UI-Foundation-only. This preserves an
+   honest evidence ceiling but prevents the onboarding page's Material 3 first request from reaching
+   compiled evidence. Extend the hermetic allowlist and fixtures to the documented Material 3 path,
+   or make the onboarding example and compiler boundary explicit until that support ships.
+9. `AI-ADOPTION-GRADLE-VARIANT-001`: the legacy project's active documentation named shortened
+   Gradle tasks that became ambiguous after additional flavor dimensions were introduced. AI
+   adoption needs to enumerate exact variants and validate the selected assemble, unit-test, and
+   connected-test task triplet instead of copying or guessing abbreviated task names.
+10. `AI-ADOPTION-DEVICE-001`: `doctor` reported Android SDK 36 and the compilation/Preview/layout
+    lanes as `project-bound-ready`, although no boot-complete device was available and the existing
+    AVD could not run reliably without KVM. Device readiness needs a separate, honest diagnostic:
+    SDK tools on path or resolved by absolute location, ADB transport, AVD/system-image identity,
+    acceleration availability, `sys.boot_completed`, unlocked state, and an actionable distinction
+    between absent device, boot failure, and missing host privilege.
+11. `AI-ADOPTION-REGRESSION-001`: snippet validation and Preview evidence do not establish that a
+    legacy application still looks and behaves the same after migration. The workflow needs a
+    baseline/candidate device-evidence contract that pins environment and fixture identities, runs
+    the same declared user flows, compares stable screenshots plus semantic assertions, and refuses
+    a success claim when either side or any critical flow is missing.
+12. `AI-ADOPTION-TEST-BASELINE-001`: a repository may advertise connected-device tests while the
+    test source no longer compiles against production navigation contracts. Adoption must assemble
+    the selected Android-test artifact before waiting for a device, classify pre-existing harness
+    failures separately from migration regressions, and require an explicit test-only repair diff
+    before that harness can become baseline evidence.
+13. `AI-ADOPTION-DEVICE-INSTALL-001`: an unlocked physical device can report a healthy ADB transport
+    while an OEM USB-install policy rejects the application before instrumentation starts. Device
+    readiness must include a harmless install preflight, preserve the exact platform error, direct
+    the user to the OEM's explicit USB-install approval when required, and report zero-started-test
+    failures as environment setup rather than application regression. A root package-manager
+    fallback may be offered only for an explicitly authorized dedicated rooted test device, with
+    exact APK identities and cleanup guidance; it is not a normal beginner prerequisite.
+14. `AI-ADOPTION-TEST-DETERMINISM-001`: a compilable instrumentation APK can still be unusable as a
+    regression baseline when real advertising or remote configuration owns launch readiness. The
+    adoption workflow must report discovered, completed, failed, interrupted, and never-started
+    counts separately; enforce a bounded timeout; classify external-loading surfaces; and require
+    a test build or dependency seam that deterministically disables or fakes remote content before
+    treating page assertions as migration evidence.
+15. `AI-ADOPTION-DEVICE-STATE-001`: instrumentation can leave runtime permissions or application
+    state that survives the operator's assumed reset boundary and contaminates a later manual
+    first-use baseline. The workflow must audit package permissions and app data before capture,
+    revoke or clear only explicitly scoped test state, then recheck the exact state instead of
+    inferring it from whether the operator tapped a permission dialog.
+16. `AI-ADOPTION-JDK-COMPAT-001`: Android Studio updated its bundled JBR to Java 25.0.2 while this
+    legacy Gradle wrapper could not load class-file major version 69. The same source built with the
+    already installed JDK 17.0.14. Beginner preflight must show both `java -version` and
+    `./gradlew --version`, distinguish the terminal JDK from Android Studio's Gradle JDK, and direct
+    users to a project-compatible JDK before suggesting a Gradle, AGP, or source upgrade. The public
+    English and Chinese onboarding pages now document that recovery.
+17. `AI-ADOPTION-APK-PAIR-001`: assembling only the Android-test artifact after adding a production
+    test seam produced a fresh test APK beside a stale application APK. Installation succeeded but
+    instrumentation failed with `NoSuchMethodError`, indistinguishable from a source defect without
+    comparing the two build products. The baseline workflow must rebuild and install the selected
+    application and Android-test APKs as one variant-matched pair whenever either side's binary
+    contract changes; the public onboarding pages now state this requirement.
+18. `AI-ADOPTION-DEBUG-TOOLING-001`: app-process development tooling can invalidate component tests
+    without changing the screen under test. Here the Debug panel could cover later activities and
+    the process monitor redirected direct `ActivityScenario` launches through Splash. Test
+    readiness must inventory active debug overlays and lifecycle interceptors and require a
+    default-off instrumentation seam, followed by a normal Debug launch proving that the seam did
+    not leak into production-like execution.
+19. `AI-ADOPTION-LINUX-UDEV-001`: switching Android users caused the Xiaomi USB device to be
+    re-enumerated, and the Linux host had no matching Android udev rule. The node reverted to
+    root-owned mode, `adb devices` reported `no permissions`, and the ADB server retained that stale
+    transport even after a temporary mode correction until it restarted. Beginner device preflight
+    needs durable distribution udev-rule/group guidance plus reconnect and server-restart checks;
+    a one-node `chmod` is diagnostic only. The public English and Chinese pages now explain this.
+20. `AI-ADOPTION-MULTIUSER-STORAGE-001`: after Android user 10 became foreground,
+    `adb shell am get-current-user` returned 10 but the shell `/sdcard` alias still wrote the first
+    fixture to `/data/media/0`. Adoption automation must bind the user id to an explicit
+    `/storage/emulated/<id>` identity, verify the physical fixture location before permission or
+    launch, and prove that user 0 does not contain it. The public pages now forbid inferring this
+    boundary from the foreground user alone.
+21. `AI-ADOPTION-FIXTURE-COUNT-001`: a fresh secondary Android user did not provide an exact empty
+    global media denominator. MIUI generated 15 advertising preload images, one launcher-cache
+    image, and six text logs before the application scan, producing global counts of 20 images and
+    6 files around a four-image fixture. Evidence must record path taxonomy and define a dedicated
+    fixture-directory denominator; it must not treat secondary-user creation as proof that all
+    device-wide counts belong to the fixture.
+22. `AI-ADOPTION-REAL-ADS-001`: deterministic instrumentation passed by disabling advertising, but
+    the real first-use script encountered repeated full-screen ads across nearly every transition.
+    The scan-result banner also pushed `View all` below the initial viewport, while the Debug panel
+    obscured portions of several pages. Baseline capture needs separate deterministic and real-ad
+    modes, declared nondeterministic regions, bounded close/wait handling, and an explicit failure
+    when an action is inaccessible rather than silently tapping coordinates through an overlay.
+23. `AI-ADOPTION-XML-CONVERTER-COVERAGE-001`: the advertised project-resource conversion path could
+    not process an ordinary `<include>` carrying an ID and ConstraintLayout attributes. Narrowing
+    to the included content still rejected gravity, margins, style, preview text, and text color.
+    The complete unsupported audit prevented silent loss, but a beginner cannot distinguish safe
+    structural narrowing from deletion of a visual contract. Add coverage for common Android XML
+    composition and styling facts or produce a guided preservation plan that identifies exactly
+    which facts must remain in Views or be reintroduced manually.
+24. `AI-ADOPTION-EMBEDDED-HOST-ENVIRONMENT-001`: generated Foundation code compiled successfully but
+    direct `renderInto` rendered at one-third scale on a density-480 device until the Agent manually
+    installed `UiEnvironment(AndroidEnvironmentBridge.fromContext(...))`. Low-level embedded-host
+    guidance and generation must make density, font scale, locale, lifecycle ownership, and session
+    disposal explicit; compile evidence must not imply an Android environment is installed.
+25. `AI-ADOPTION-OEM-TEST-AUTH-001`: after root-assisted APK installation, MIUI presented a separate
+    authorization dialog when the instrumentation package first launched the target. Until the
+    operator approved the exact package pair, the OEM security application owned the foreground
+    and no application assertion was valid. Device preflight needs an attended first-test launch,
+    foreground-package check, zero-started assertion classification, and exact rerun guidance.
+26. `AI-ADOPTION-ESPRESSO-IDLING-001`: AndroidX Espresso 3.5 timed out waiting for legacy AsyncTasks
+    on the rooted MIUI/API-28 device, including in a temporary worktree at the exact committed
+    pre-ViewCompose baseline. Same-device baseline reproduction is required before assigning such
+    failures to a migration. When the product contract permits it, direct Activity view-tree and
+    lifecycle assertions can provide a bounded alternative, but their denominator and weaker
+    synchronization semantics must remain explicit.
+27. `AI-ADOPTION-FIXTURE-RETENTION-001`: the accepted baseline recorded that four device copies
+    matched local SHA-256 values, then deleted the disposable user, but retained neither the source
+    bytes, their individual hashes, nor a versioned generator. The candidate could reproduce the
+    same four-item taxonomy but not the same inputs. Baseline tooling must persist a non-personal
+    fixture bundle or deterministic generator plus manifest before destructive cleanup, verify it
+    is readable, and bind that identity into every candidate result.
+28. `AI-ADOPTION-MANUAL-NO-ADS-001`: the deterministic instrumentation runner already disabled ads,
+    but attended UI verification still required editing `AdsConfig`, rebuilding, and carefully
+    keeping that toggle outside the migration commit. Legacy-project adoption needs an explicit
+    project-owned manual-test build or runtime seam, plus evidence metadata that distinguishes
+    deterministic no-ad UI from real-ad first use without normalizing ad removal into product code.
+29. `AI-ADOPTION-RESOURCE-SCAN-SCOPE-001`: after include handling was repaired, project-form XML
+    conversion still stopped on unrelated localized formatted strings, self-closing empty strings,
+    `translatable="false"`, colors, attributes, declare-styleables, the tools namespace, and ordinary
+    bare or dotted style parents before it reached the selected layout's actual unsupported facts.
+    Project context must remain strict for referenced resource semantics without treating every
+    well-formed, unrelated values declaration as part of the migration denominator. The repair
+    candidate preserves bounded string/style evidence, skips unrelated recognized declarations,
+    and now reaches the relevant `android:gravity` style limitation in
+    `app/src/main/res/values/button_styles.xml` instead of failing on a German notification string.
+30. `AI-ADOPTION-DEVICE-PERMISSION-PREFLIGHT-001`: `adb install -r -g` reported success for both
+    matched APKs on the rooted MIUI/API-28 device, but the target package initially had an empty
+    runtime-permission set. The first photo scan-start run therefore passed its visible-content
+    assertion but redirected both action checks to the existing permission Activity. After an
+    authorized root grant for user 0 and an explicit `dumpsys package` check showed both
+    `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE` as granted, the same two action checks
+    entered the existing scanning Activity with the expected modes. Device preflight must verify
+    each application-required permission fact after installation; `-g` exit success is not proof,
+    and a permission continuation is not a migration navigation failure.
+
+The first post-trial repair candidate keeps `renderInto` as the deliberate low-level API and moves
+the missing environment contract into the generated call-site checklist and XML conversion Skill.
+It uses the existing configuration-aware `AndroidResourceEnvironment` rather than a fixed
+`UiEnvironment` snapshot. The candidate also applies qualified overrides to ordinary included
+roots, preserves their source provenance, ignores preview-only `tools:` facts, maps non-negative dp
+margins and exact LinearLayout cross-axis gravity, accepts common unrelated values-file syntax, and
+keeps merge-root overrides, ambiguous layout-direction combinations, unsupported style semantics,
+ConstraintLayout, custom Views, and missing image accessibility decisions fail-closed.
+
+Acceptance evidence on 2026-09-02 used user-scoped Corretto 21.0.12. The AI test suite passed
+375/375 executed tests with one declared skip. Phase 4 retained 3/3 deterministic Design IR
+goldens, 9/9 provenance nodes, 4/4 honest unsupported fixtures, 1/1 project-context compile, 1/1
+include/merge compile, and 3/3 XML Kotlin compiles. Documentation verification passed 80/80 script
+tests, 129 current translations, structure, Governance V2, and development-tooling isolation. On
+the MI 6/API-28/density-480 target, the application and matched test APK assembled, 129/129 JVM
+tests passed, installation succeeded, and six focused device tests passed 6/6 in 4.308 seconds.
+The three scan-result tests covered zero and positive results plus the existing directory
+destination. The three scan-start tests covered visible migrated content plus both existing
+permission/navigation paths, entering `PhotoScanningActivity` with `ALL` and `DELETED_ONLY` after
+the verified user-0 storage grants. The target's configuration-aware environment fix is commit
+`3107c5b0`; the bounded scan-start migration is commit `8aecc2bd`. Its retained 1080x1920 screenshot
+showed the intended image, button geometry, typography, rounded surfaces, and background on the
+density-480 device, and the implementation retained the exact legacy dp dimensions. Visual parity
+is nevertheless **inconclusive** because no matching pre-migration screenshot was retained for an
+exact comparison; functional evidence is **improved** with no observed regression in the bounded
+paths. Advertising remained disabled only through the user's uncommitted `AdsConfig` Debug toggle.
+Re-running the source candidate against `activity_scan_start.xml` reaches the relevant unsupported
+`android:gravity` at `button_styles.xml:5` instead of unrelated resource syntax, so the Activity
+shell and unsupported style semantics remained in Views while only the audited content subtree was
+migrated. Conclusion: **improved** deterministic converter, diagnostic, embedded-host, and bounded
+device evidence within the local source candidate. The earlier locally built 693,032-byte archive
+(`730651427a6d3f1a52e3a50214f8f8edbaa237ce0dcf98175af088770ea28fce`) still carried the immutable
+published `0.7.0` version, so distribution verification correctly rejected it as different from the
+published npm payload; it was never accepted as an installable `0.7.0`.
+
+Follow-up acceptance on 2026-09-03 assigned the field-trial changes to the unpublished `0.8.0`
+candidate. Its 693,236-byte archive has SHA-256
+`2e677ebfef9a41f596ec0ff7b8b87788653e95f651c2d54ec6e486dc79dfbb29`. The full AI suite passed
+375/375 executed tests with one declared skip; the XML gate passed 3/3 deterministic Kotlin goldens,
+3/3 resource reports, and 3/3 hermetic compiles. Distribution acceptance passed 2/2 reproducible
+builds, the unpublished npm identity publish dry-run, offline install/uninstall, 3/3 client profiles,
+24/24 exact Skill copies, 2/2 MCP protocol versions, and the packaged compile/render/compare lanes.
+Repository acceptance passed the three-asset release contract, 80/80 documentation tests, 129/129
+current Chinese translations, documentation structure, and development-tooling isolation. A clean
+archive of target commit `8aecc2bd`, with prior AI-managed files intentionally absent, then completed
+local `0.8.0` Codex initialization and diagnosis as `project-bound-ready`: 8/8 Skills, the exact
+released framework profile, JDK 17, and Android SDK 36 were ready. The installed candidate reported
+the intended fail-closed `android:gravity` diagnostic at `button_styles.xml:5` for
+`activity_scan_start.xml`. On the unchanged MI 6 target, both storage permissions were verified and
+the three scan-result plus three scan-start tests passed 6/6 in 4.732 seconds. Conclusion:
+**improved**, with no observed regression in the two migrated pages and with a reproducible local
+candidate identity. Limitations: `0.8.0` remains unpublished, the clean exercise proves first-use
+adoption rather than a public Release-driven transactional upgrade, and visual parity remains
+inconclusive without a retained pre-migration screenshot. The next action is to review and commit the
+candidate; publication, tag creation, and public upgrade reproduction remain separate authorized
+release actions.
+
+The field-trial conclusion is **mixed**: package installation, readiness, idempotent re-entry,
+released knowledge retrieval, static validation, the UI Foundation hermetic compiler lane, exact
+application assembly, 129/129 JVM tests, root-assisted test-APK installation, and the bounded
+no-permission manual device flow are usable after prerequisites are complete. The repaired main
+instrumentation gate now passes 23/23 and the private gate passes 3/3 with test-only external
+content and lifecycle isolation. The explicit four-photo fixture now accepts scan, directory,
+selection, recovery, recovered-list, recovered-copy deletion, and 4-to-0 remaining-count behavior
+with unchanged source hashes and no crash or ANR. Material 3
+compilation is unsupported, Codex Desktop discovery remains unverified, whole-project analysis is
+unsafe for unrestricted legacy roots, global counts include OEM caches, and full device
+visual/functional parity remains unproved until the same accepted photo flow is reproduced by a
+migration candidate using a retained identical fixture, and separate screenshot, duplicate-photo,
+and process-relaunch fixtures pass. A replacement four-photo candidate fixture passed the complete
+scan-to-recover-to-delete flow, but does not satisfy that identical-input comparison gate.
+The analyzer issue has medium privacy severity and high remediation priority because the current
+implementation is local and returned no secret values, but documentation alone cannot enforce a
+safe read boundary. The next implementation must inventory, read, and budget only approved source
+extensions and specifically allowlisted configuration filenames; exclude credentials, service
+configuration, `keys/`, `.codegraph`, generated trees, root escapes, and symlink traversal before
+metadata or content access; keep `requestedPath` subject to the same policy; and expose effective
+limits in diagnostics. Adversarial fixtures must prove excluded files are neither opened, returned,
+nor budgeted. A public patch requires an immutable AI-tooling release change and a recommendation
+to upgrade from `0.7.0` before unrestricted project analysis resumes.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
 

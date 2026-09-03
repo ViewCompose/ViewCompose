@@ -30,12 +30,13 @@
     "defaultDirectory": "values",
     "qualifiedDefinitions": "inventory-only",
     "selection": "first default definition by explicit resource-root precedence, then normalized path",
-    "stringPolicy": "preserve the resource identity and record the default literal as evidence",
+    "stringPolicy": "preserve the resource identity and record text-only default literals, including printf placeholders, empty declarations, and boolean translatable/formatted metadata, as evidence",
     "dimensionPolicy": "resolve non-negative finite dp, sp, or px values without density conversion",
+    "unreferencedValuesPolicy": "skip bounded recognized color, scalar, array, plural, attr, and declare-styleable declarations without claiming their semantics",
     "unsupported": [
       "framework or package-qualified resources",
       "resource aliases and theme attributes",
-      "formatted strings, plurals, arrays, markup, and XLIFF",
+      "string markup and XLIFF, plus referenced plurals and arrays",
       "duplicate definitions at the same precedence",
       "a resource with no default values definition"
     ]
@@ -43,7 +44,7 @@
   "styleResolution": {
     "attribute": "style",
     "reference": "unqualified @style/name",
-    "parent": "explicit unqualified @style/name only",
+    "parent": "bare name or unqualified @style/name; a selected parent chain must resolve inside the explicit roots",
     "precedence": "inline attribute, child style item, nearest parent item",
     "itemAttributes": [
       "android:layout_width",
@@ -55,7 +56,8 @@
       "android:inputType"
     ],
     "cycles": "fail closed",
-    "implicitDottedParents": false,
+    "implicitDottedParents": "parsed without blocking unrelated styles; unresolved selected parents fail closed",
+    "toolsPreviewMetadata": "accepted on the resources root and style items without runtime meaning",
     "themeAttributes": false
   },
   "callSiteInventory": {

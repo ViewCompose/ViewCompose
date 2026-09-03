@@ -210,20 +210,27 @@ Project form implements only the additional subset frozen by
 definitions plus explicit style-parent chains from the named roots and returns a bounded lexical
 Kotlin/Java call-site inventory. It never chooses a build variant, runs inspected-project Gradle
 logic, follows symbolic links, or claims call-site completeness. Qualified resources are inventory
-evidence only; themes, aliases, implicit style parents, resource conflicts, formatted resources,
-and unsafe or missing defaults fail closed. The returned `projectContext` and migration report use
-project-relative paths and fingerprints and contain no raw application source.
+evidence only. Formatted and empty strings, standard boolean string metadata, bare or `@style/`
+parent names, dotted framework style parents, the standard tools namespace, and unrelated bounded
+values declarations do not block analysis. Themes, aliases, resource conflicts, unsupported facts
+on a referenced style, and unsafe or missing defaults fail closed. The returned `projectContext`
+and migration report use project-relative paths and fingerprints and contain no raw application
+source.
 
 Project form also resolves the explicit-root layout graph frozen by
 `evaluation/fixtures/xml/layout-dependency-contract.json`. Unqualified `@layout/name` includes use
 the first declared default `layout/` root. Ordinary included roots remain nodes, while an included
-`merge` root contributes its ordered children at the include position. Every graph edge and IR node
-retains its original project-relative file and line. Source-only includes, standalone merge roots,
-missing layouts, cycles, include overrides, symbolic links, and dependency ceilings fail closed;
-the tool never performs AGP variant or resource merging.
+`merge` root contributes its ordered children at the include position. Qualified Android, app, and
+tools attributes on an ordinary include override the included root with source provenance; width
+and height must be overridden together. Every graph edge and IR node retains its original
+project-relative file and line. Source-only includes, standalone merge roots, missing layouts,
+cycles, merge-root overrides, unsafe include attributes, symbolic links, and dependency ceilings
+fail closed; the tool never performs AGP variant or resource merging.
 
-Layout v2 adds `FrameLayout` as ordered-overlay `Box`, `ImageView` as `Image`, and
-`android:visibility`. Drawable references become caller-owned `ImageSource` parameters; the tool
+Layout v2 adds `FrameLayout` as ordered-overlay `Box`, `ImageView` as `Image`,
+`android:visibility`, non-negative integer-dp margins, preview-only `tools:` facts, and exact
+LinearLayout cross-axis gravity. Ambiguous physical/relative margin combinations and gravity that
+also changes main-axis arrangement remain unsupported. Drawable references become caller-owned `ImageSource` parameters; the tool
 does not invent an `R` class or resource ID. Image descriptions must be a non-empty literal, a
 string resource, or explicit `@null` decoration. Omission returns
 `VC-AI-XML-ACCESSIBILITY-REQUIRED` and no Kotlin. `fitCenter`, `centerCrop`, `fitXY`, and
@@ -240,7 +247,9 @@ Kotlin, wrapper, framework bundle, configuration, compiler lane, and render lane
 content-addressed. The harness is offline and cannot select or execute the inspected project's
 build, task, dependencies, resources, scripts, or output paths.
 
-Generated Preview v1 supports exact `String` values, fresh `TextFieldState` values with explicit
+The generated migration report requires the standard Activity/Fragment `setUiContent` host or a
+low-level `renderInto` integration wrapped in `AndroidResourceEnvironment(container.context)`, with
+the returned `RenderSession` disposed by the host lifecycle. Generated Preview v1 supports exact `String` values, fresh `TextFieldState` values with explicit
 initial text, and exact embedded PNG bytes for `ImageSource`. An embedded image provides canonical
 base64, decoded byte count, SHA-256, and dimensions; the adapter validates bounded PNG chunks and
 CRC values, then stages one immutable tool-owned `R.drawable` resource by full hash. It accepts no
@@ -590,6 +599,10 @@ entrypoint limit.
 
 ## Common AI agent onboarding
 
+The current repository source packages an unpublished `0.8.0` candidate. Public consumers must
+continue using the immutable `0.7.0` selector until `0.8.0` is published and independently
+reproduced; contributor validation may use only the locally built `0.8.0` archive.
+
 The package exposes one client-neutral lifecycle command for Codex, Claude Code, and Cursor. The
 primary consumer path is one exact-version transactional operation run from the physical project
 root:
@@ -671,7 +684,7 @@ Install and uninstall one exact local artifact in an isolated prefix without con
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.7.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.8.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
@@ -705,6 +718,10 @@ Skill. It does not add a Figma credentialed connector or visual-parity claim.
 Release `0.7.0` retains those contracts and adds attended, transactional screenshot repair for one
 generated literal property. Its MCP surface remains source-read-only; only the separate terminal
 command can apply or explicitly roll back exact content-addressed bytes.
+The unpublished `0.8.0` candidate retains that boundary and adds the field-trial fixes for qualified
+ordinary-root include overrides, preview-only `tools:` attributes, non-negative dp margins, exact
+LinearLayout cross-axis gravity, unrelated resource-value parsing, and the embedded-host environment
+checklist. It is not a public capability until the protected release and reproduction gates pass.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and

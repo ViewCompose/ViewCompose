@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "documentId": "common-attributes",
+  "source": {
+    "kind": "android-xml",
+    "identity": "tools/ai/evaluation/fixtures/xml/common-attributes.xml",
+    "fingerprint": "c2e5a1ee7a67945f9196755f21b372d5e379635f0515278bc8f679612ec88411"
+  },
+  "roots": [
+    {
+      "id": "xml:0",
+      "kind": "column",
+      "properties": [
+        {
+          "name": "orientation",
+          "value": { "kind": "enum", "type": "linear-orientation", "value": "vertical" }
+        },
+        {
+          "name": "horizontalAlignment",
+          "value": { "kind": "enum", "type": "horizontal-alignment", "value": "center" }
+        }
+      ],
+      "modifiers": [
+        {
+          "kind": "size",
+          "arguments": [
+            { "name": "width", "value": { "kind": "layout-dimension", "value": "match-parent" } },
+            { "name": "height", "value": { "kind": "layout-dimension", "value": "wrap-content" } }
+          ]
+        }
+      ],
+      "semantics": [],
+      "events": [],
+      "state": [],
+      "children": [
+        {
+          "id": "id:title",
+          "kind": "text",
+          "properties": [],
+          "modifiers": [
+            {
+              "kind": "size",
+              "arguments": [
+                { "name": "width", "value": { "kind": "layout-dimension", "value": "wrap-content" } },
+                { "name": "height", "value": { "kind": "layout-dimension", "value": "wrap-content" } }
+              ]
+            },
+            {
+              "kind": "margin",
+              "arguments": [
+                { "name": "top", "value": { "kind": "dimension", "value": 16, "unit": "dp" } }
+              ]
+            }
+          ],
+          "semantics": [],
+          "events": [],
+          "state": [],
+          "children": [],
+          "provenance": {
+            "sourceId": "@id/title",
+            "sourceSpan": "tools/ai/evaluation/fixtures/xml/common-attributes.xml:9",
+            "confidence": 1,
+            "decision": "Map TextView to Text and preserve its string resource as a caller binding."
+          }
+        }
+      ],
+      "provenance": {
+        "sourceId": "LinearLayout[0]",
+        "sourceSpan": "tools/ai/evaluation/fixtures/xml/common-attributes.xml:2",
+        "confidence": 1,
+        "decision": "Map a vertical LinearLayout to Column and preserve size and padding."
+      }
+    }
+  ],
+  "unsupported": []
+}

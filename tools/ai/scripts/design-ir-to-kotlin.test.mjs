@@ -45,6 +45,8 @@ test('generates the exact deterministic ViewCompose Kotlin golden and migration 
   );
   assert.deepEqual(first.report.bindings.states.map((binding) => binding.parameter), ['emailState']);
   assert.equal(first.report.callSiteReview.required, true);
+  assert.ok(first.report.callSiteReview.items.some((item) =>
+    item.includes('AndroidResourceEnvironment(container.context)')));
 });
 
 test('rejects schema-invalid, blocked, behavioral, and non-normalized IR', async () => {

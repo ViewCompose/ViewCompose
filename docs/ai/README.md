@@ -39,6 +39,36 @@ The coding client still owns the model, credentials, conversation, and user-auth
 changes. ViewCompose supplies deterministic framework facts, generation tools, and explicit
 validation evidence; it never embeds or contacts a model provider.
 
+## Before installation: check the required commands
+
+The one-command installer is launched by `npx`, which is supplied by a complete Node.js
+installation together with `npm`. A working `node` command alone is not sufficient: embedded IDE
+or agent runtimes sometimes provide the Node executable without the package-manager commands.
+
+Open a new terminal and run all three checks:
+
+```bash
+node --version
+npm --version
+npx --version
+```
+
+Continue only when every command succeeds and Node reports `v24.19.0` or newer. If `node`, `npm`, or
+`npx` is missing:
+
+1. Install a complete Node.js `24.19.0` or newer distribution from the official
+   [Node.js download page](https://nodejs.org/en/download). On Windows or macOS, the official
+   installer includes npm; on Linux, use the official installation guidance or a user-scoped
+   version manager.
+2. Close and reopen the terminal so its `PATH` is refreshed, then repeat all three checks.
+3. If `node` works but `npm` or `npx` does not, replace that incomplete or application-bundled Node
+   runtime with a complete installation. Do not point ViewCompose at a temporary extracted Node
+   directory, because the generated MCP configuration must retain a Node path that survives cache
+   cleanup and restart.
+
+Do not use `sudo` for the ViewCompose command below and do not install
+`@viewcompose/ai-tooling` globally. The exact `npx` command owns its verified, project-bound cache.
+
 ## Install in one command
 
 [Release `0.7.0`](https://github.com/ViewCompose/ViewCompose/releases/tag/ai-tooling-v0.7.0) is
@@ -74,11 +104,66 @@ fail without leaving a partial integration. Automation may still pass
 | Claude Code | `.mcp.json` | `.claude/skills` |
 | Cursor | `.cursor/mcp.json` | `.agents/skills` |
 
+Run `git status` after installation. The generated MCP configuration binds the physical absolute
+project root and is therefore machine-local; do not commit that file or overwrite a shared client
+configuration without an explicit team policy. Add the client configuration path to the local or
+repository ignore rules when appropriate. The canonical Skill copies contain no machine path and
+may be committed only when the team intentionally wants the same frozen workflows in every clone.
+Review these two surfaces separately instead of committing every generated file together.
+
 Node.js 24.19.0 or newer is sufficient for reference, generation, static validation, and project
 analysis. Compiled, rendered, and compared evidence additionally requires JDK 17 or 21 and Android
 SDK platform 36. The release includes its own Gradle 9.3.1 wrapper and fixed build harness, so users
 do not install Gradle or align their project's AGP/Kotlin versions. The bootstrap writes only to the
 project integration surfaces and the operating system's user cache; never use `sudo` for it.
+
+Check the Java prerequisite explicitly; a newer JDK is not automatically compatible:
+
+```bash
+java -version
+```
+
+The first version number must be `17` or `21`. JDK 25 is outside the current AI compiler lane. On
+Windows or macOS, install a JDK 21 package from a trusted vendor and reopen the terminal. On Linux,
+the following user-scoped example uses the official
+[Amazon Corretto 21 permanent download and SHA-256 links](https://docs.aws.amazon.com/corretto/latest/corretto-21-ug/downloads-list.html)
+and does not change the system Java installation:
+
+```bash
+mkdir -p "$HOME/Downloads/viewcompose-jdk" "$HOME/.jdks/corretto-21"
+curl -fL -o "$HOME/Downloads/viewcompose-jdk/corretto-21.tar.gz" \
+  https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz
+curl -fL -o "$HOME/Downloads/viewcompose-jdk/corretto-21.sha256" \
+  https://corretto.aws/downloads/latest_sha256/amazon-corretto-21-x64-linux-jdk.tar.gz
+cd "$HOME/Downloads/viewcompose-jdk"
+printf '%s  %s\n' "$(cat corretto-21.sha256)" corretto-21.tar.gz | sha256sum --check --strict
+tar -xzf corretto-21.tar.gz -C "$HOME/.jdks/corretto-21" --strip-components=1
+export JAVA_HOME="$HOME/.jdks/corretto-21"
+export PATH="$JAVA_HOME/bin:$PATH"
+java -version
+```
+
+Stop if the checksum command does not print `OK`. The `export` lines affect only the current
+terminal; add them to the shell profile only after the final `java -version` identifies JDK 21.
+Android Studio uses a separate **Gradle JDK** setting, so select the same durable directory there
+when the project build should use it. The download URL above is for Linux x64; choose the matching
+architecture from the linked official table instead of reusing it on ARM.
+
+An existing Android application has a separate Java/Gradle compatibility requirement. Before its
+first baseline build, run both commands from the application root:
+
+```bash
+java -version
+./gradlew --version
+```
+
+Android Studio's configured **Gradle JDK** can differ from the terminal JDK, and a bundled JBR can
+be updated beyond what an old Gradle wrapper can load. If the build reports
+`Unsupported class file major version`, select the JDK documented by that project or supported by
+its Gradle/AGP version, then rerun both commands. For example, when the compatible JDK is installed
+at `/path/to/jdk-17`, a terminal session can use `export JAVA_HOME=/path/to/jdk-17`; configure the
+same JDK under Android Studio's Gradle settings when building there. Do not start by upgrading the
+legacy application's Gradle, AGP, or source code merely to hide this environment mismatch.
 
 ### Exact framework-version binding in `0.7.0`
 
@@ -112,9 +197,14 @@ an unavailable evidence lane is never reported as successful.
 
 Complete the client-side connection check:
 
-- **Codex:** run `codex mcp list`, then inspect `/mcp` and `/skills`; start with
-  `$viewcompose-api-reference`. See the official [MCP](https://developers.openai.com/codex/mcp/)
-  and [Agent Skills](https://learn.chatgpt.com/docs/build-skills) documentation.
+- **Codex CLI:** run `codex mcp list`, then inspect `/mcp` and `/skills`; start with
+  `$viewcompose-api-reference`.
+- **Codex desktop:** the standalone `codex` shell command may not be installed. Reopen the project
+  or start a new task after `init`, inspect the app's MCP and Skills surfaces, and start with
+  `$viewcompose-api-reference`. A missing `codex` command is not an installation failure when the
+  desktop app is the selected client. See the official
+  [MCP](https://developers.openai.com/codex/mcp/) and
+  [Agent Skills](https://learn.chatgpt.com/docs/build-skills) documentation.
 - **Claude Code:** approve the project `.mcp.json` if prompted, run `claude mcp list` and
   `claude mcp get viewcompose`, then inspect `/mcp`; start with
   `/viewcompose-api-reference`. See the official [MCP](https://code.claude.com/docs/en/mcp) and
@@ -152,6 +242,98 @@ The installed project-bound mode supports:
 
 Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A static result
 does not prove compilation, and generated Kotlin does not prove rendering or visual parity.
+
+XML conversion is fail-closed. The published `0.7.0` converter may report common Android XML such
+as an `<include>` with an ID or constraints, styles, preview-only `tools:` attributes, gravity,
+margins, and text colors as unsupported instead of approximating them. The unpublished `0.8.0`
+post-field-trial source candidate accepts qualified overrides on an ordinary included root, ignores
+`tools:` preview facts, and maps non-negative dp margins plus exact LinearLayout cross-axis gravity;
+that candidate is not an installed-package capability until the protected release is published and
+independently reproduced. Styles, text
+colors, ConstraintLayout relations, merge-root include overrides, and ambiguous gravity or margin
+combinations remain fail-closed. Review the complete unsupported list before narrowing the selected
+subtree. Do not silently remove those attributes merely to obtain generated Kotlin; preserve them
+manually or keep the affected surface in Android Views until its behavior and visual contract can
+be verified.
+
+When ViewCompose is embedded into an existing Android View hierarchy through the low-level
+`renderInto` API, install the configuration-aware Android UI environment around the rendered tree
+with `AndroidResourceEnvironment(context = container.context)`, and dispose the returned render
+session with the owning lifecycle. A fixed
+`UiEnvironment(AndroidEnvironmentBridge.fromContext(container.context))` snapshot can establish
+initial density but does not follow later configuration changes. The low-level host does not infer
+Android density, font scale, locale, or other environment values from the container by itself.
+Prefer the standard Android content host when it fits the screen. Compilation alone cannot detect a
+missing environment: on a high-density device, a compile-valid tree can render at the wrong physical
+size.
+
+## Before changing an existing application
+
+`project-bound-ready` describes the ViewCompose tooling lanes. It does not mean that the consumer
+application builds, that an emulator is ready, or that existing user flows pass. Establish a
+pre-change baseline before accepting any migration edit:
+
+1. Record the source commit, exact application variant, device or AVD name, API level, screen size
+   and density, locale, light/dark theme, font scale, permissions, app-data state, and deterministic
+   media fixture. Use the same values for the migrated candidate. Before deleting a disposable
+   device user or fixture directory, retain the exact non-personal fixture bytes or its versioned
+   deterministic generator together with a SHA-256 manifest. A screenshot or a statement that
+   hashes once matched cannot recreate the comparison input.
+2. Run `./gradlew :app:tasks --all` and select the complete variant-specific assemble, unit-test,
+   Android-test assembly, and connected-test tasks. Do not guess a shortened task name: projects
+   with multiple flavor dimensions can make it ambiguous.
+3. Build the application, run its JVM tests, and assemble its Android-test APK before waiting for a
+   device. When production test seams or the instrumentation runner changed, build and install the
+   application APK and Android-test APK as one matched pair; an Android-test assembly task alone
+   may leave an older application APK on disk. Repair or explicitly classify pre-existing
+   test-harness failures; they are not migration regressions and cannot be used as passing baseline
+   evidence.
+4. In Android Studio, open **Tools > Device Manager** and start an existing AVD, or connect a test
+   device. `adb devices` must report `device`, not `offline`, and
+   `adb shell getprop sys.boot_completed` must return `1`. On Linux, run the SDK emulator's
+   `-accel-check`; if `/dev/kvm` is missing, enable CPU virtualization and install/load the KVM
+   support required by the distribution with administrator help, then restart the AVD. Do not use
+   a software-only instance that never reaches boot completion as test evidence. On a physical
+   device, keep the screen unlocked and approve the USB installation prompt. Some OEM systems also
+   require an explicit **Install via USB** developer option. An `INSTALL_FAILED_USER_RESTRICTED`
+   result with zero started tests is a device-policy/setup failure, not an application-test result;
+   do not disable unrelated system security checks to bypass it. If Linux reports `no permissions`
+   after connecting or switching device users, install the distribution's Android udev rules,
+   confirm the current user has the required device-access group, reconnect the cable, and restart
+   the ADB server. Changing one `/dev/bus/usb` node's mode is only a temporary diagnostic because a
+   reconnect can create a different node.
+   Some OEM systems show a second authorization dialog when the instrumentation package first
+   launches the target application, even after both APKs are installed. Approve only the displayed
+   test/target package pair on a dedicated test device. If the OEM security application remains in
+   the foreground, classify the run as setup with zero application assertions, then rerun the exact
+   test after approval; do not report the blocked attempt as an application failure.
+   Treat `adb install -g` success only as an installation result. Before testing a permission-gated
+   action, verify the application's required runtime or special permission with the platform's
+   package/permission state, or complete the application's normal permission screen and confirm the
+   returned destination. If the action correctly opens that permission continuation, classify the
+   missing grant as device setup rather than a navigation regression. Use root-assisted grants only
+   on an explicitly authorized dedicated test device, and verify the exact device user and resulting
+   permission state before rerunning.
+5. On the boot-complete device, run the exact connected-test task and walk the project's critical
+   user flows. Capture stable checkpoint screenshots and semantic assertions for launch,
+   navigation/back stack, permissions and return, loading/empty/error states, selection and count
+   consistency, and every destructive or restorative operation in scope. When a disposable Android
+   user isolates media, record `adb shell am get-current-user` and verify the fixture's explicit
+   `/storage/emulated/<user-id>/...` identity before launch. Do not assume that an ADB shell's
+   `/sdcard` alias changed with the foreground user; verify the fixture is absent from user 0 before
+   granting storage permission.
+   If advertisements or another remote surface obscure an attended visual check, use only an
+   existing project-owned test seam or Debug configuration. Record the exclusion, rebuild the exact
+   candidate, and keep any temporary source toggle uncommitted and separate from the migration diff.
+   A no-ad run verifies deterministic application UI; it does not represent real-ad first use.
+6. After each bounded migration slice, rerun the same script on the same device state. Any
+   unexplained visual delta, changed destination/back stack, crash or ANR, count drift, lost
+   permission continuation, or failed existing assertion blocks the slice.
+
+Generated Preview comparison remains useful for the migrated ViewCompose surface, but it does not
+replace application-level device verification. Release `0.7.0` does not operate arbitrary consumer
+emulators or certify existing application flows; the selected coding Agent and project test harness
+must collect and report that evidence honestly.
 
 ## Attended screenshot repair
 
@@ -250,6 +432,15 @@ plugins, tasks, compiler extensions, application code, or source writes. Its exi
 diagnostic fields remain available, while `data.analysis` adds the exact framework profile, scan
 coverage, applicable rule catalog, immutable corpus-quality snapshot, typed findings, suppression
 audit, and unsupported-syntax records.
+
+For public `0.7.0`, do not start a legacy-project analysis at an unrestricted repository root when
+that tree contains credentials or unrelated generated/tooling data. Scope the request to the
+smallest relevant source or configuration directory and explicitly exclude sensitive directories,
+credential files, `.codegraph`, and other large tool-owned trees. The analyzer is local and does
+not contact a provider, but it inventories in-scope regular files and reads supported source and
+configuration formats; its filename checks are not a general secret scanner. A limit diagnostic is
+not permission to increase the scan boundary. Review and narrow the scope first. A follow-up patch
+is tracking safer source-only discovery and fail-closed sensitive-file defaults.
 
 The first public catalog contains only five high-confidence rules:
 

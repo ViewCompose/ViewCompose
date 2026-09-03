@@ -38,6 +38,35 @@ test('returns standalone deterministic XML migration data without invoking compi
   assert.equal(compiled, 0);
 });
 
+test('preserves preview-only tools attributes, margins, and cross-axis LinearLayout gravity', async () => {
+  const source = `<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    tools:background="@drawable/preview_only">
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        tools:text="Preview title" />
+</LinearLayout>`;
+  const result = await convertXmlToViewCompose({
+    source,
+    path: 'res/layout/common-attributes.xml',
+    mode: 'generate',
+    requestId: 'xml-common-attributes',
+  });
+
+  assert.equal(result.status, 'success');
+  assert.ok(result.data.kotlin.includes('horizontalAlignment = HorizontalAlignment.Center'));
+  assert.ok(result.data.kotlin.includes('margin(top = 16.dp)'));
+  assert.equal(result.data.designIr.unsupported.length, 0);
+});
+
 test('returns standalone XML v2 image and accessibility bindings', async () => {
   const result = await convertXmlToViewCompose({
     source: await fixture('profile-card.xml'),
