@@ -19,14 +19,36 @@
   },
   "androidAssetPolicy": {
     "preserveOriginalSvg": true,
-    "preferredOutput": "vector-drawable",
-    "conversion": "mechanical-android-sdk",
+    "classification": {
+      "vectorDrawable": [
+        "solid-flat-paths",
+        "flat-multicolor-paths",
+        "simple-groups-transforms-supported-clips"
+      ],
+      "rasterOnly": [
+        "filter-blur-artwork-shadow-glow",
+        "mask-gradient-pattern-texture",
+        "embedded-raster-blend-mode-unoutlined-text-unsupported-stroke"
+      ],
+      "runtimeShadow": "android-shape-or-elevation"
+    },
+    "vectorConversion": "mechanical-android-sdk-with-render-check",
     "handTracedPathsAllowed": false,
     "rasterFallback": {
       "minimumScale": 3,
       "resourceDirectory": "drawable-xxhdpi",
-      "unqualifiedOneXAllowed": false
-    }
+      "unqualifiedOneXAllowed": false,
+      "complexUiWithAlpha": "lossless-webp",
+      "exactPngOrNinePatchOrUnverifiedWebp": "png",
+      "photographicWithExplicitQuality": "lossy-webp"
+    },
+    "requiredEvidence": [
+      "source-output-hashes",
+      "detected-features-and-decision-reason",
+      "converter-or-encoder-mode",
+      "alpha-density-dimensions-or-viewport",
+      "real-build-and-reference-render-check"
+    ]
   },
   "directConverterExpectedStatus": "invalid"
 }

@@ -430,13 +430,19 @@ The Agent must follow these boundaries:
    redistribution, and license decisions. Do not retain temporary provider URLs in application
    source. If an asset list is truncated, inspect smaller selected nodes until coverage is complete;
    if quota or access blocks completion, stop and name the missing evidence.
-4. Preserve original SVG bytes and record a disposition for every used Android asset. Prefer a
-   mechanical Android SDK conversion to VectorDrawable when supported; do not hand-trace or
-   simplify paths. If conversion cannot preserve the asset, rasterize for a declared target density
-   and use its density-qualified directory. For `xxhdpi`, the bitmap must be at least three times
-   the SVG's intrinsic dimensions; a 1x bitmap in unqualified `drawable/` is not an acceptable
-   fallback. Record source/output hashes, conversion identity, output type, dimensions or viewport,
-   and density, then verify every resource in the real build.
+4. Preserve original SVG bytes, classify visual features, and record one disposition for every used
+   Android asset. Flat solid single- or multi-color paths with simple groups/transforms and
+   supported clips must remain VectorDrawable through mechanical Android SDK conversion. Filters,
+   blur, artwork shadows/glow, masks, gradients, patterns/textures, embedded raster images, blend
+   modes, unoutlined text, and unsupported strokes require raster output; converter success alone
+   does not prove fidelity. Keep ordinary component elevation out of the icon and implement it with
+   Android shape/elevation; rasterize only when the soft shadow belongs to the artwork. Prefer
+   lossless WebP for complex UI artwork with alpha or exact edges, PNG for exact PNG evidence,
+   9-patch, or an unverified WebP toolchain, and lossy WebP only for photographic/textured content
+   with an explicit quality threshold. Use a density-qualified directory; `xxhdpi` requires at least
+   three times the intrinsic dimensions, while a 1x raster in unqualified `drawable/` is invalid.
+   Record source/output hashes, detected features and reason, converter/encoder mode, alpha,
+   dimensions or viewport, and density. Build the resource and compare it with the frozen reference.
 5. Do not pass the official design-context response to `convert_figma_to_viewcompose`, parse its
    generated React/CSS as a deterministic design tree, or invent the required export fields. That
    tool remains reserved for a separately reviewed complete `viewcompose-figma-export/1`.

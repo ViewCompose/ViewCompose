@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: c09f2235cbe57c951b7e8d789d1ce93c5c11ad65c2030a45cdcc3ae5fc0b3bf6
+translation_source_hash: 7d907a5c29fd025c7ffba716a7c92773e139c5b44b80c91e7430884094e5ffaa
 translation_status: current
 ---
 
@@ -367,12 +367,17 @@ Agent 必须遵守以下边界：
    Relative Path、Byte Count、SHA-256、Ownership、Redistribution 与 License Decision。不要在
    Application Source 中保留临时 Provider URL。如果 Asset List 被截断，请检查更小的 Selected
    Node，直到 Coverage 完整；如果 Quota 或 Access 阻止完成，则停止并列出缺失 Evidence。
-4. 保留原始 SVG Byte，并为每个实际使用的 Android Asset 记录处置方式。转换器支持时，优先使用
-   Android SDK 机械转换为 VectorDrawable；不要手工描摹或简化 Path。转换无法保真时，应按声明的
-   目标 Density 生成 Raster，并放入相应的 Density-qualified Directory。对于 `xxhdpi`，Bitmap
-   的宽高至少是 SVG 固有尺寸的三倍；放在无限定 `drawable/` 中的 1x Bitmap 不是合格降级方案。
-   记录 Source/Output Hash、转换工具标识、输出类型、尺寸或 Viewport 和 Density，并在真实 Build
-   中验证每项 Resource。
+4. 保留原始 SVG Byte，分类视觉特征，并为每个实际使用的 Android Asset 记录唯一处置方式。只有
+   Solid 单色或扁平多色 Path、简单 Group/Transform 与受支持 Clip 的素材，才能通过 Android SDK
+   机械转换并保持为 VectorDrawable。含 Filter、Blur、图稿内 Shadow/Glow、Mask、Gradient、
+   Pattern/Texture、嵌入 Raster、Blend Mode、未转 Path 的 Text 或不受支持 Stroke 的素材必须
+   Rasterize；转换器成功本身不能证明保真。普通 Component Elevation 不应烘焙进 Icon，应由 Android
+   Shape/Elevation 实现；只有 Soft Shadow 属于图稿本身时才 Rasterize。带 Alpha 或精确边缘的复杂
+   UI Artwork 优先使用 Lossless WebP；需要精确 PNG 证据、9-patch，或 WebP Toolchain 未经验证时
+   使用 PNG；只有带显式 Quality Threshold 的照片或纹理才使用 Lossy WebP。Raster 必须进入
+   Density-qualified Directory；`xxhdpi` 的宽高至少是固有尺寸三倍，无限定 `drawable/` 中的 1x
+   Raster 无效。记录 Source/Output Hash、检测到的 Feature 与 Decision Reason、Converter/Encoder
+   Mode、Alpha、尺寸或 Viewport 和 Density；构建 Resource，并与冻结的 Reference 比较。
 5. 不要把官方 Design Context 响应传给 `convert_figma_to_viewcompose`，不要把它生成的 React/CSS
    解析成确定性 Design Tree，也不要编造必需的 Export Field。该工具仍然只用于经过单独 Review
    的完整 `viewcompose-figma-export/1`。

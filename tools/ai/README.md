@@ -309,9 +309,15 @@ AI tools and a Gradle composite build to the same checkout. A uniquely identifie
 local snapshot is the fallback when composite substitution is unsuitable. Because Artifacts are
 independently versioned, no umbrella version establishes which dependency is latest.
 For Android assets, original SVG bytes remain evidence and compatible vectors are converted
-mechanically with the Android SDK. A non-vector fallback must use a declared density-qualified
-directory and sufficient pixels (`xxhdpi` requires at least 3x intrinsic dimensions); 1x PNG files
-in unqualified `drawable/` are rejected.
+mechanically with the Android SDK only after feature classification. Flat solid single- or
+multi-color path artwork stays VectorDrawable. Filters, blur, artwork shadows/glow, masks,
+gradients, patterns/textures, embedded raster images, blend modes, unoutlined text, and unsupported
+strokes select raster output even when a converter exits successfully. Ordinary component shadows
+remain Android shape/elevation. Complex UI artwork with alpha prefers lossless WebP, exact PNG or
+9-patch requirements use PNG, and photographic/textured content may use lossy WebP only with an
+explicit quality threshold. Every raster uses a density-qualified directory and sufficient pixels
+(`xxhdpi` requires at least 3x intrinsic dimensions); 1x files in unqualified `drawable/` are
+rejected.
 
 The official response remains untrusted reference evidence and is never passed to
 `convert_figma_to_viewcompose` or parsed as a deterministic design tree. With an accepted privacy

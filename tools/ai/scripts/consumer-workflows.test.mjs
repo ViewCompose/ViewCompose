@@ -77,14 +77,18 @@ test('routes official Figma context to the attended screenshot evidence workflow
     'reference-assisted, attended adaptation',
     'Do not pass that response to `convert_figma_to_viewcompose`',
     'Never retain a temporary URL in',
-    'mechanical Android SDK SVG-to-VectorDrawable',
+    'converted mechanically with the Android SDK',
     'never hand-trace or simplify path data',
     'at least 3x',
-    'never put a 1x raster in unqualified `drawable/`',
+    'a 1x raster in unqualified `drawable/` is invalid',
+    'converter exit code alone is insufficient',
+    'ordinary component elevation out of the asset',
+    'prefer lossless WebP',
   ]) {
     assert.ok(skill.includes(expected), `missing official Figma workflow rule: ${expected}`);
   }
   assert.match(skill, /do not say “direct Figma conversion,”/u);
+  assert.match(skill, /Reserve lossy WebP\s+for photographic or textured content/u);
   assert.match(
     skill,
     /Use\s+`current-source` only when the user is explicitly evaluating a ViewCompose checkout/u,
@@ -97,14 +101,36 @@ test('routes official Figma context to the attended screenshot evidence workflow
   });
   assert.deepEqual(fixture.androidAssetPolicy, {
     preserveOriginalSvg: true,
-    preferredOutput: 'vector-drawable',
-    conversion: 'mechanical-android-sdk',
+    classification: {
+      vectorDrawable: [
+        'solid-flat-paths',
+        'flat-multicolor-paths',
+        'simple-groups-transforms-supported-clips',
+      ],
+      rasterOnly: [
+        'filter-blur-artwork-shadow-glow',
+        'mask-gradient-pattern-texture',
+        'embedded-raster-blend-mode-unoutlined-text-unsupported-stroke',
+      ],
+      runtimeShadow: 'android-shape-or-elevation',
+    },
+    vectorConversion: 'mechanical-android-sdk-with-render-check',
     handTracedPathsAllowed: false,
     rasterFallback: {
       minimumScale: 3,
       resourceDirectory: 'drawable-xxhdpi',
       unqualifiedOneXAllowed: false,
+      complexUiWithAlpha: 'lossless-webp',
+      exactPngOrNinePatchOrUnverifiedWebp: 'png',
+      photographicWithExplicitQuality: 'lossy-webp',
     },
+    requiredEvidence: [
+      'source-output-hashes',
+      'detected-features-and-decision-reason',
+      'converter-or-encoder-mode',
+      'alpha-density-dimensions-or-viewport',
+      'real-build-and-reference-render-check',
+    ],
   });
 });
 

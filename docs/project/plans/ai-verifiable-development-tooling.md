@@ -720,6 +720,12 @@ The trial exposed these additional adoption issues:
     `:viewcompose-android` project, and no publication or Maven fallback is involved. Keep the
     unique local snapshot path only as an explicitly documented fallback for builds that cannot use
     a composite.
+40. `AI-FIGMA-ASSET-FORMAT-SEMANTICS-001`: the first asset repair still selected VectorDrawable
+    primarily from converter support, which cannot distinguish a flat icon from artwork whose
+    filter, blur, shadow, mask, gradient, texture, or blend is visually essential. The accepted
+    policy classifies source features first, keeps component elevation in Android shape/elevation,
+    requires flat path artwork to stay vector, and routes complex artwork to lossless WebP, PNG, or
+    quality-bounded lossy WebP according to alpha, exactness, 9-patch, and photographic intent.
 
 Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
 1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1
@@ -767,11 +773,18 @@ to `project :ViewCompose:viewcompose-android (by composite build)`. Its Codex pr
 release-history bypass, or Maven Central fallback is involved.
 
 All 24 used official SVG assets were preserved and mechanically converted with the Android SDK
-converter into 24 VectorDrawable resources. A project `preBuild` check now enforces 24/24 declared
-sources and outputs, requires a valid vector path or an `xxhdpi` PNG at least 3x intrinsic size,
-and rejects undeclared or unqualified `figma_*` files. The debug application and Android-test APKs
-built successfully. On the same rooted Xiaomi MI 6, API 28, 1080 by 1920, density 480 device, all
-3/3 instrumentation tests passed in 138.38 seconds: the two existing scroll/fixed-chrome and click
+converter into 24 VectorDrawable resources. The content-aware project `preBuild` check classifies
+all 24/24 used flat SVGs as vector and both 2/2 retained blend-mode fixtures as raster-only. It
+requires flat artwork to remain a valid VectorDrawable; complex artwork must use an `xxhdpi` WebP
+or PNG at least 3x intrinsic size. Every raster disposition must also declare lossless complex UI,
+exact PNG, or quality-bounded photographic intent; the check reads the WebP container and rejects
+a lossy/lossless encoding mismatch. It rejects the opposite format, undeclared output, and
+unqualified `figma_*` files. The current screen needs no raster disposition because all 24 used
+assets are flat vectors. The debug application and Android-test APKs
+built successfully through 215 composite-build tasks, with the content-aware gate executing rather
+than reusing cached output. On the same rooted Xiaomi MI 6, API 28, 1080 by 1920, density 480
+device, all
+3/3 instrumentation tests passed in 138.148 seconds: the two existing scroll/fixed-chrome and click
 flows remained intact, and the new test proved that 24/24 icons resolved as `VectorDrawable`.
 Two device screenshots were inspected at original resolution; icon edges were crisp and the fixed
 chrome and scrolling layout remained intact. No automated pixel or perceptual comparison was added.
@@ -782,11 +795,14 @@ confirmed zero affected Maven Artifacts.
 
 Relative to the audited state, dependency intent moved from 0/1 correctly selected lanes to 1/1,
 used vector assets from 0/24 to 24/24, and declared device flows from 2/2 to 3/3 without regressing
-the original two flows. The conclusion is **improved** for exact-checkout evaluation and Android
-asset fidelity. Limitations remain one design node, one device/density, visual inspection rather
-than a measured parity threshold, and no beginner-safe snapshot command for consumers that cannot
-use composite builds. The next action remains support-type resolution and static import coverage;
-a future non-composite consumer should receive that local snapshot command.
+the original two flows. Explicit feature-based format decisions moved from 0/1 to 1/1, with 24/24
+flat-vector and 2/2 complex blend-mode classifications matching the retained source evidence. The
+conclusion is **improved** for exact-checkout evaluation and Android asset fidelity. Limitations
+remain one design node, one device/density, no committed complex-raster output example (so the
+WebP parser and encoding-intent rejection compile but do not execute in this sample), visual
+inspection rather than a measured parity threshold, and no beginner-safe snapshot command for
+consumers that cannot use composite builds. The next action remains support-type resolution and
+static import coverage; a future non-composite consumer should receive that local snapshot command.
 
 This audit repair changes npm-distributed Skills, their workflow fixture, documentation, and an
 external sample application. It changes no Maven Artifact production source, publication input,

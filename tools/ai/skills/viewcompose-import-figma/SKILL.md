@@ -45,29 +45,38 @@ reference-assisted attended route below and is not a deterministic export.
    ownership, redistribution decision, and license when known. Never retain a temporary URL in
    application source. If asset results are truncated or provider quota prevents complete capture,
    enumerate smaller selected nodes or stop with the exact missing-asset list.
-3. Preserve each downloaded original as evidence, then record an explicit Android disposition for
-   every used asset. For SVG input, prefer a mechanical Android SDK SVG-to-VectorDrawable
-   conversion when the converter supports the source; never hand-trace or simplify path data. If
-   conversion cannot preserve the asset, create a declared raster fallback at the target density
-   and place it in the matching density-qualified resource directory. An `xxhdpi` fallback must be
-   at least 3x the SVG's intrinsic dimensions; never put a 1x raster in unqualified `drawable/`.
-   Record source and output hashes, converter identity, output kind, dimensions or viewport, and
-   density. Verify that every application resource resolves before visual comparison.
-4. If the screenshot may be processed under the user's privacy decision, call
+3. Preserve each downloaded original as evidence, classify its visual features, then record one
+   explicit Android disposition for every used asset. Flat path artwork with solid single- or
+   multi-color fills/strokes, simple groups/transforms, and supported clips must remain vector and
+   be converted mechanically with the Android SDK; never hand-trace or simplify path data. A
+   converter exit code alone is insufficient: reject VectorDrawable for filters, blur, artwork
+   shadows or glow, masks, gradients, patterns/textures, embedded raster images, blend modes,
+   unoutlined text, or unsupported strokes. Keep ordinary component elevation out of the asset and
+   express it with the project's Android shape/elevation system; rasterize only when the soft shadow
+   is part of the artwork itself.
+4. For complex UI artwork with alpha or exact edges, prefer lossless WebP and use PNG when exact
+   PNG evidence, 9-patch behavior, or an unverified WebP toolchain requires it. Reserve lossy WebP
+   for photographic or textured content whose quality threshold is explicit. Put every raster in
+   the declared density-qualified resource directory; an `xxhdpi` result must be at least 3x the
+   source's intrinsic dimensions, and a 1x raster in unqualified `drawable/` is invalid. Record
+   source and output hashes, detected features, decision reason, converter/encoder identity, lossless
+   or lossy mode, alpha, output dimensions or viewport, and density. Build every resource and
+   compare the rendered asset with the frozen reference before accepting it.
+5. If the screenshot may be processed under the user's privacy decision, call
    `prepare_screenshot` with canonical embedded PNG bytes and explicit density, font scale, locale,
    layout direction, system-bar, crop, redaction, transfer, persistence, and disclosure facts. A
    preprocessing success proves only a frozen pixel input.
-5. Build a provider-neutral external inference that distinguishes observed pixels from reference
+6. Build a provider-neutral external inference that distinguishes observed pixels from reference
    code hints and unresolved structure, text, accessibility, resources, state, and behavior. Import
    it with `validate_screenshot_inference`; never invent behavior or a strict Figma export merely to
    make generation available. Use `resolve_screenshot_inference` only for exact user answers to its
    typed questions, then use `generate_screenshot_viewcompose` when the resolved result explicitly
    permits generation.
-6. Treat generated Kotlin as a candidate for reference-assisted, attended adaptation. Reconcile it
+7. Treat generated Kotlin as a candidate for reference-assisted, attended adaptation. Reconcile it
    with the exact locally frozen assets and the user's requested interactions, retrieve every API
    through `get_component_reference` or `get_sample`, and run `validate_code`. For an existing
    project, call `analyze_project` first and preserve its architecture and unrelated files.
-7. Run the real project build and the smallest relevant device flow. Report frozen-input hashes,
+8. Run the real project build and the smallest relevant device flow. Report frozen-input hashes,
    unresolved facts, compilation, rendering, comparison categories, and device-test counts
    separately. Say “reference-assisted, attended adaptation”; do not say “direct Figma conversion,”
    “deterministic reconstruction,” or “visual parity” without independent accepted measurements.
