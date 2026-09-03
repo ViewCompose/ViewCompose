@@ -44,8 +44,8 @@ completion:
   - XML, Compose, screenshot, and Figma paths share one explicit Design IR, preserve provenance and unsupported semantics, and never silently invent application behavior.
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
-last_verified: 2026-09-02
-next_action: Assign the post-field-trial AI tooling a new version, pass the protected distribution gates, and reproduce a clean target-project upgrade before calling the repair shipped. Then compare the committed photo scan-start and scan-result slices against retained same-device baseline fixtures, keeping temporary no-ad configuration outside product commits and adding separate screenshot, duplicate-photo, and process-relaunch fixtures before broadening migration acceptance. Keep Compose mapping and conversion unactivated.
+last_verified: 2026-09-03
+next_action: Repair the dynamic-state adoption gap with generated and documented retained-session guidance, lifecycle disposal, native-surface preservation, and an executable state-update fixture; then reproduce that guidance from a clean target-project checkout before migrating another stateful page. Keep the target's temporary no-ad configuration outside product commits and keep Compose mapping and conversion unactivated.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -474,6 +474,33 @@ The trial exposed these adoption issues:
     entered the existing scanning Activity with the expected modes. Device preflight must verify
     each application-required permission fact after installation; `-g` exit success is not proof,
     and a permission continuation is not a migration navigation failure.
+31. `AI-ADOPTION-DYNAMIC-STATE-001`: the static XML and embedded-host guidance was sufficient to
+    create a correct first render, but it did not tell a first-time user how a retained
+    `RenderSession` should consume later `StateFlow` updates. The photo-scanning trial required the
+    Agent to discover `RenderSession.render()` manually, introduce a narrow state-render hook in the
+    legacy base Activity, keep the unrelated native rotation lifecycle and navigation untouched,
+    render on the Activity-owned main-thread collection path, and dispose the session from
+    `onDestroy`. Generated guidance and the XML conversion Skill must identify the state owner and
+    update cadence, retain rather than recreate the session, state the lifecycle/thread contract,
+    preserve native siblings and side effects, and require assertions for initial, intermediate or
+    final state plus completion navigation. This is a documentation and generation gap rather than
+    an observed runtime defect: the existing API behaved correctly once wired explicitly.
+
+The bounded dynamic-page candidate migrated only the three changing photo-scanning text elements
+between baseline `8aecc2bd` and target commit `4c89d8ab`. The toolbar, native rotating artwork,
+advertising boundary, Activity navigation, scan ViewModel, and the XML behavior for the other five
+scanner types remained owned by the legacy implementation. On the same MI 6/API-28/1080x1920/
+density-480 device, the stable toolbar and path crops were byte-identical. Excluding the deliberately
+rotating artwork, the progress crop changed 23 pixels out of approximately 259,200 (0.0089%), with a
+maximum channel delta of 1; the broader text crop changed 1,448 pixels out of approximately 712,800
+(0.2031%), with a maximum channel delta of 2. The conclusion is **no material change** for the
+tested deterministic visual surface, not exact full-screen equality. The candidate passed 129/129
+JVM tests and 8/8 focused device tests spanning photo scan-start, live scanning state, completion
+navigation, and scan-result behavior. Limitations remain: advertising was disabled by the user's
+uncommitted Debug toggle, the rotating frame was excluded from pixel comparison, and the run does
+not cover process relaunch, alternate locale/theme/font scale, or the other scanner types as
+migrated pages. The next action is to repair and clean-checkout-reproduce the dynamic-state guidance
+before broadening another stateful migration.
 
 The first post-trial repair candidate keeps `renderInto` as the deliberate low-level API and moves
 the missing environment contract into the generated call-site checklist and XML conversion Skill.
