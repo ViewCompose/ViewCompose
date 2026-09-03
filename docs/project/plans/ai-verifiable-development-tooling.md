@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-03
-next_action: Use only the installed 0.8.0 candidate guidance to migrate one more bounded stateful target-project surface, preserving a same-device baseline and the original lifecycle, native siblings, side effects, and completion flow. Treat the observed tracked-Skill conflict as an upgrade-path input rather than overwriting it with init, keep temporary no-ad configuration outside product commits, and keep Compose mapping and conversion unactivated.
+next_action: Freeze and implement the smallest client-side bridge from an explicitly supplied official Figma-plugin result and downloaded immutable assets into the existing offline Figma inspection contract, while preserving provider isolation and unsupported-semantics honesty. In the same slice, make public support types resolvable from component signatures and make static validation report unmatched ViewCompose imports instead of returning an unqualified success.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -610,6 +610,107 @@ metadata or content access; keep `requestedPath` subject to the same policy; and
 limits in diagnostics. Adversarial fixtures must prove excluded files are neither opened, returned,
 nor budgeted. A public patch requires an immutable AI-tooling release change and a recommendation
 to upgrade from `0.7.0` before unrestricted project analysis resumes.
+
+### Blank-project Figma first-use field trial (2026-09-03)
+
+A separate, newly initialized Android application named `ViewComposeFigmaTrial` tested the
+first-use path from an empty project and a real Figma node. The host used Codex
+Desktop, Node `24.19.0`, npm/npx `11.17.0`, JDK 17, Android SDK 36, AGP `9.1.1`, and the local
+`@viewcompose/ai-tooling@0.8.0` candidate. The Figma official plugin was already installed, so no
+plugin installation was simulated or claimed.
+
+The official Figma design-context request for file `PcsGk4tx1Yu1zt8bcJwE9Z`, node `6201:14105`
+succeeded. It returned a React/Tailwind-oriented reference implementation, a 360-by-1460 reference
+render, and temporary asset URLs. The trial downloaded and retained the reference render plus 26
+SVG assets before those URLs expired. The bulk asset helper returned only its first 20 entries and
+marked the result truncated, while a later metadata request hit the Figma View-seat MCP call limit.
+Neither event invalidated the already acquired design evidence, but both make asset pagination,
+early immutable download, and provider quota boundaries part of an honest first-use workflow.
+
+The literal ViewCompose Figma converter was then given a bounded probe shaped like the actual
+official-plugin result. It returned `invalid` with `VC-AI-FIGMA-CONTRACT-INVALID` because
+`schemaVersion`, `kind`, and `exportVersion` were absent. This is the intended fail-closed behavior
+for an unsupported input, but it establishes 0/1 direct interoperability: the official plugin does
+not emit the caller-supplied `viewcompose-figma-export/1` contract, and ViewCompose currently ships
+no adapter from that plugin output. The screen was therefore implemented by an attended AI
+adaptation from the official context and exact downloaded assets. It must not be reported as an
+automatic Figma import.
+
+The first blank-project build also exposed an Android template detail unrelated to ViewCompose:
+AGP 9 already supplies built-in Kotlin support, so explicitly applying the older
+`org.jetbrains.kotlin.android` plugin produced a duplicate `kotlin` extension. Removing that plugin
+created a valid empty baseline. ViewCompose `init` then reported `projectStatus: empty`, installed
+8/8 Skills, and reached `project-bound-ready`. After the released
+`com.viewcompose:viewcompose-android:0.1.0-alpha02` dependency was added, final `doctor` reported
+`projectStatus: resolved`, the exact released profile
+`895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064`, 8/8 ready Skills, JDK 17,
+SDK 36, and both capability groups ready.
+
+Knowledge lookup found the required `Box`, `Row`, `Column`, `ScrollableColumn`, `Text`, `Image`, and
+modifier callables, but support-type lookup was not self-sufficient. The component signature named
+`UiTextStyle` and `ImageSource` without a resolvable owning-package link; direct lookups based on
+reasonable guessed packages failed, and `TextDefaults` was not indexed despite being public. The
+Agent had to inspect framework source to discover `com.viewcompose.ui.foundation.UiTextStyle`,
+`com.viewcompose.ui.node.ImageSource`, and the correct `SemanticsRole` package. This breaks the
+intended documentation-only first-use experience even though the final APIs are usable.
+
+Static `validate_code` returned success for the first complete screen, but the immediately following
+Gradle compile failed on two unresolved ViewCompose imports: a nonexistent top-level
+`com.viewcompose.ui.modifier.weight` import and the wrong
+`com.viewcompose.ui.node.SemanticsRole` package. The static result listed matched components and
+modifiers but neither rejected nor disclosed its lack of coverage for those imports and support
+types. After the imports were corrected, the application and Android-test APKs assembled.
+
+The implemented screen contains 5 sections and 22 interactive tool entries, uses the downloaded
+Figma artwork, keeps the title and bottom navigation above the scrolling content, and provides a
+button semantic for every tool. On the rooted Xiaomi MI 6 at API 28, 1080 by 1920 pixels, and
+density 480, a matched application/test APK pair installed through the already authorized root
+package-manager fallback. Two focused instrumentation tests passed 2/2 in 92.578 seconds: one
+scrolled to `Utility Tools` and asserted the fixed chrome plus `BMR`; the other clicked
+`Junk Clean` and asserted its feedback. During test authoring, ordinary Espresso `withTagValue`
+could not find a ViewCompose `testTag`; the renderer stores it under
+`com.viewcompose.renderer.R.id.viewcompose_test_tag`, and the external test passed only after using
+`withTagKey` with that resource. The runtime behavior is correct, but the public AI reference does
+not provide this external Espresso recipe.
+
+The trial exposed these additional adoption issues:
+
+32. `AI-FIGMA-OFFICIAL-BRIDGE-001`: the supported offline converter and the official Figma plugin
+    have no directly interoperable payload. Add a client-side, explicitly invoked adapter or a
+    precise export workflow that binds the design node, downloaded asset hashes, unsupported facts,
+    and provider provenance into the existing offline contract. It must not move Figma credentials
+    or implicit network access into the ViewCompose runtime or deterministic converter.
+33. `AI-KNOWLEDGE-SUPPORT-TYPES-001`: component references expose public parameter types without a
+    reliable route to their canonical packages and API records. Index public support types and link
+    every signature type to an exact qualified identity, artifact, version, and sample so a new
+    consumer does not need framework-source inspection or package guessing.
+34. `AI-VALIDATE-IMPORT-COVERAGE-001`: static validation returned an unqualified success while two
+    ViewCompose imports were unresolved by a real project compile. Reject unmatched imports under
+    reserved `com.viewcompose` namespaces, or return an explicit partial-coverage result that names
+    every unchecked import and support type. Add the observed `weight` and `SemanticsRole` cases as
+    regression fixtures; successful static matching must never imply compilation.
+35. `AI-ADOPTION-TESTTAG-001`: the testing bridge uses a keyed Android tag, but the external
+    Espresso matcher is not discoverable from the component/modifier reference. Publish and index a
+    compiled external-consumer example using
+    `withTagKey(com.viewcompose.renderer.R.id.viewcompose_test_tag, equalTo(...))`, including the
+    renderer resource dependency and the distinction from ordinary `View.tag`.
+
+Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
+1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1
+buildable screen with 22/22 represented entries, and passed 2/2 declared device flows. Direct
+official-plugin-to-converter interoperability remained 0/1, and the first static-validation result
+was a false negative against 2/2 real compiler errors. The overall conclusion is **mixed**: exact
+version onboarding, framework implementation, build, installation, scrolling, fixed chrome,
+semantics, and interaction are usable, but the central Figma handoff is attended manual adaptation
+rather than a supported direct import. Limitations are one design node, one phone, one density,
+one locale/theme, no automated pixel or perceptual comparison, no accessibility-service audit, and
+an external Figma quota reached only after the necessary context was acquired. The next action is
+the official-plugin bridge contract plus support-type and static-import coverage; external
+`testTag` guidance can follow in the same documentation/sample slice.
+
+This evidence-only plan update changes no public/protected API, published artifact production
+source, publication input, or compiled sample. It therefore has no capability-impact or immutable
+release-change requirement, and the temporary English-only plan needs no public Chinese mirror.
 
 ### Accepted post-0.3.0 execution handoff (2026-08-31)
 
