@@ -259,7 +259,13 @@ be verified.
 When ViewCompose is embedded into an existing Android View hierarchy through the low-level
 `renderInto` API, install the configuration-aware Android UI environment around the rendered tree
 with `AndroidResourceEnvironment(context = container.context)`, and dispose the returned render
-session with the owning lifecycle. A fixed
+session with the owning lifecycle. For caller-owned dynamic state, inventory the initial value,
+update cadence, throttling, completion, and error behavior before editing. Keep one session, store
+the latest immutable snapshot, and invoke `RenderSession.render()` on the Android main thread after
+each accepted update; never create a session per emission. Keep native siblings, animations,
+advertising, navigation, analytics, and other side effects outside the selected container under
+their existing owners, and stop updates before disposal. Validate the initial state, at least one
+later state, and completion or navigation behavior. A fixed
 `UiEnvironment(AndroidEnvironmentBridge.fromContext(container.context))` snapshot can establish
 initial density but does not follow later configuration changes. The low-level host does not infer
 Android density, font scale, locale, or other environment values from the container by itself.

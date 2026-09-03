@@ -249,7 +249,11 @@ build, task, dependencies, resources, scripts, or output paths.
 
 The generated migration report requires the standard Activity/Fragment `setUiContent` host or a
 low-level `renderInto` integration wrapped in `AndroidResourceEnvironment(container.context)`, with
-the returned `RenderSession` disposed by the host lifecycle. Generated Preview v1 supports exact `String` values, fresh `TextFieldState` values with explicit
+the returned `RenderSession` disposed by the host lifecycle. Its call-site review also requires
+caller-owned dynamic state to retain one session, store the latest immutable snapshot, render each
+accepted update on the Android main thread, preserve native siblings and side effects outside the
+selected container, stop updates before teardown, and test initial, later, and completion or
+navigation states. Generated Preview v1 supports exact `String` values, fresh `TextFieldState` values with explicit
 initial text, and exact embedded PNG bytes for `ImageSource`. An embedded image provides canonical
 base64, decoded byte count, SHA-256, and dimensions; the adapter validates bounded PNG chunks and
 CRC values, then stages one immutable tool-owned `R.drawable` resource by full hash. It accepts no

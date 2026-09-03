@@ -45,8 +45,16 @@ test('generates the exact deterministic ViewCompose Kotlin golden and migration 
   );
   assert.deepEqual(first.report.bindings.states.map((binding) => binding.parameter), ['emailState']);
   assert.equal(first.report.callSiteReview.required, true);
-  assert.ok(first.report.callSiteReview.items.some((item) =>
-    item.includes('AndroidResourceEnvironment(container.context)')));
+  assert.deepEqual(first.report.callSiteReview.items, [
+    'Resolve every caller resource parameter from its recorded Android resource at the ViewCompose host boundary.',
+    'Retain caller ownership and restoration policy for every TextFieldState parameter.',
+    'Inventory every caller-owned state source and update cadence before integration; preserve its initial value, throttling, completion, and error semantics.',
+    'For external imperative state, retain one RenderSession, update the latest immutable snapshot, and call RenderSession.render() on the Android main thread; never create a session for each emission.',
+    'Keep native siblings, animations, advertising, navigation, analytics, and other side effects outside the selected container under their existing owners.',
+    'Review ViewBinding references, listeners, adapters, and imperative mutations outside the XML input.',
+    'Prefer Activity or Fragment setUiContent; when using low-level renderInto, wrap content in AndroidResourceEnvironment(container.context) and dispose the RenderSession with the host lifecycle.',
+    'Stop state collectors from rendering after host teardown, and verify the initial state, at least one later state, and completion or navigation behavior.',
+  ]);
 });
 
 test('rejects schema-invalid, blocked, behavioral, and non-normalized IR', async () => {

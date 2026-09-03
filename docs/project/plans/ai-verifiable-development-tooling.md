@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-03
-next_action: Repair the dynamic-state adoption gap with generated and documented retained-session guidance, lifecycle disposal, native-surface preservation, and an executable state-update fixture; then reproduce that guidance from a clean target-project checkout before migrating another stateful page. Keep the target's temporary no-ad configuration outside product commits and keep Compose mapping and conversion unactivated.
+next_action: Use only the installed 0.8.0 candidate guidance to migrate one more bounded stateful target-project surface, preserving a same-device baseline and the original lifecycle, native siblings, side effects, and completion flow. Treat the observed tracked-Skill conflict as an upgrade-path input rather than overwriting it with init, keep temporary no-ad configuration outside product commits, and keep Compose mapping and conversion unactivated.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -501,6 +501,34 @@ uncommitted Debug toggle, the rotating frame was excluded from pixel comparison,
 not cover process relaunch, alternate locale/theme/font scale, or the other scanner types as
 migrated pages. The next action is to repair and clean-checkout-reproduce the dynamic-state guidance
 before broadening another stateful migration.
+
+The `0.8.0` repair candidate now emits eight mandatory call-site review items for every successful
+XML generation. They explicitly cover state ownership and cadence, initial/throttled/completion/error
+semantics, one retained session, main-thread `RenderSession.render()`, native siblings and existing
+side-effect owners, configuration-aware Android resources, teardown, and initial/later/completion
+or navigation assertions. The installed `viewcompose-convert-xml` Skill carries the same workflow,
+and the public English and Simplified Chinese AI integration pages explain the boundary. A new
+Robolectric fixture executed three external immutable state snapshots through one retained Android
+session, reused the same mounted `TextView`, preserved a native sibling, removed only the selected
+container tree on disposal, and rejected a later render. The complete Host Android unit suite passed
+53/53 with zero failures, errors, or skips.
+
+Acceptance on 2026-09-03 passed 375/375 executed AI tests with one declared platform-specific skip,
+Phase 0, 3/3 deterministic XML Kotlin goldens, 3/3 resource reports, 3/3 hermetic XML compiles,
+80/80 documentation script tests, 129/129 current Chinese translations, Documentation Governance
+V2, and development-tooling isolation. Distribution verification passed 2/2 reproducible package
+builds, 3/3 installed Agent profiles, 24/24 exact Skill copies, 2/2 MCP protocol versions, and the
+packaged compilation/render/comparison lanes. In a temporary checkout of target commit `4c89d8ab`,
+literal `init` first refused to overwrite the previously tracked older XML Skill and reported
+`repair-required`. After only the temporary checkout's prior AI Skill directory was moved aside to
+model true first use, the same local package completed initialization and diagnosis as
+`project-bound-ready` with 8/8 Skills. Its installed CLI generated `DynamicProbeView` and returned
+all eight dynamic call-site items. The conclusion is **improved** generation, installed workflow,
+and executable lifecycle evidence with no framework-runtime change. Limitations: `0.8.0` remains
+unpublished, the clean-first-use replay intentionally excluded the target's tracked older Skills,
+the upgrade command was not exercised, and no new device run was required because target and
+framework production sources were unchanged. The next action is one further installed-guidance-only
+stateful migration before deciding whether another tooling repair is necessary.
 
 The first post-trial repair candidate keeps `renderInto` as the deliberate low-level API and moves
 the missing environment contract into the generated call-site checklist and XML conversion Skill.

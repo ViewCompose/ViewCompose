@@ -800,7 +800,11 @@ async function verifyCliFlow(
     generated.status !== 'success' ||
     generated.evidence.level !== 'static' ||
     !generated.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
-    generated.data?.migrationReport?.bindings?.resources?.length !== 3
+    generated.data?.migrationReport?.bindings?.resources?.length !== 3 ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('retain one RenderSession')) ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('initial state, at least one later state'))
   ) {
     throw new Error('Installed CLI did not generate the frozen standalone XML migration.');
   }

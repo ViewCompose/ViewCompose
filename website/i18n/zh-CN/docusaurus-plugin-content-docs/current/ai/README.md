@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 2c9c80d04599083d94296eec174aaf406ec591d0f57fc3a35713af667ae1c96c
+translation_source_hash: 8589327e1215931bd1ee46c305801393b117478301b6b7a6b044d5d091d7eb73
 translation_status: current
 ---
 
@@ -216,7 +216,12 @@ Include Override，以及含糊的 Gravity 或 Margin 组合仍然 Fail-closed�
 如果通过底层 `renderInto` API 把 ViewCompose 嵌入现有 Android View Hierarchy，请用
 `AndroidResourceEnvironment(context = container.context)` 在 Render Tree 外安装能感知
 Configuration 变化的 Android UI Environment，并由所属 Lifecycle 释放返回的 Render Session。
-固定的 `UiEnvironment(AndroidEnvironmentBridge.fromContext(container.context))` Snapshot 虽能
+处理由调用方拥有的动态 State 时，修改代码前先盘点初始值、更新频率、Throttle、完成状态与错误
+行为。保留一个 Session，保存最新的不可变 Snapshot，并在每次接受新状态后从 Android 主线程调用
+`RenderSession.render()`；不要为每次 Emission 创建 Session。Native Sibling、Animation、
+Advertising、Navigation、Analytics 与其他 Side Effect 应继续由所选 Container 之外的原 Owner
+管理，并在 Dispose 前停止更新。验证必须覆盖初始状态、至少一个后续状态以及完成或 Navigation
+行为。固定的 `UiEnvironment(AndroidEnvironmentBridge.fromContext(container.context))` Snapshot 虽能
 建立初始 Density，却不会跟随后续 Configuration 变化。底层 Host 不会自行从 Container 推断
 Android Density、Font Scale、Locale 或其他 Environment Value。适合整页时优先使用标准 Android
 Content Host。仅编译无法发现 Environment 缺失：在高 Density Device 上，通过编译的 Tree 仍可能

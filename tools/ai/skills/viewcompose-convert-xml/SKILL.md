@@ -35,10 +35,16 @@ resource, state, and behavior decision.
    Android resource environment. If the migration must stay embedded in an existing `ViewGroup`,
    wrap the `renderInto` content with
    `AndroidResourceEnvironment(context = container.context)`, retain the returned `RenderSession`,
-   and dispose it with the host lifecycle. A fixed `UiEnvironment` snapshot is not a substitute
-   because it does not follow configuration changes. Preserve resource ownership, stable keys,
-   state restoration decisions, listeners, ViewBinding references, adapters, and imperative
-   mutations as explicit review work; do not invent missing behavior.
+   and dispose it with the host lifecycle. Before editing, inventory every caller-owned state
+   source and its update cadence, initial value, throttling, completion, and error behavior. When
+   existing Activity or Fragment code already collects that state, retain one session, store the
+   latest immutable snapshot, and call `RenderSession.render()` on the Android main thread after
+   each accepted update; never create a new session for each emission. Stop the collector from
+   rendering after teardown. A fixed `UiEnvironment` snapshot is not a substitute because it does
+   not follow configuration changes. Preserve resource ownership, stable keys, state restoration
+   decisions, native siblings and animations, advertising, navigation, analytics, listeners,
+   ViewBinding references, adapters, and imperative mutations as explicit review work; do not
+   invent missing behavior.
 6. Call `convert_xml_to_viewcompose` in `compile` mode with the same source or project input. After
    any integration edit, run `validate_code` in static and compile modes over the final bounded
    code. Converter compilation proves the isolated generated function, not an unvalidated call
@@ -56,6 +62,9 @@ resource, state, and behavior decision.
    semantic and geometry checks, unsupported fragments, call-site inventory and completeness,
    diagnostics, and maximum evidence actually achieved. Never collapse failed checks into one
    similarity score or upgrade `rendered` to `compared` after a mismatch.
+9. For a dynamic surface, verify the initial state, at least one later state, and the original
+   completion or navigation behavior. Compilation and one static screenshot do not prove that
+   retained updates still render or that legacy side effects remain owned by their original host.
 
 ## Stop and authority
 
