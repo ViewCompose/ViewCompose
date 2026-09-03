@@ -700,10 +700,31 @@ The trial exposed these additional adoption issues:
     chunk and at most one matching `gAMA` chunk before image data, strips both metadata chunks from
     canonical output without changing pixels, and continues to reject standalone, conflicting,
     malformed, duplicate, or misplaced gamma/profile declarations.
+37. `AI-VERSION-LANE-INTENT-001`: the first trial used the newest published
+    `viewcompose-android:0.1.0-alpha02`, but the intended experiment was the current checkout. The
+    dependency was current for the `released` lane and wrong for the trial's `current-source`
+    lane. Require the Agent to select the lane before project mutation, treat Artifacts as
+    independently versioned, and bind checkout trials to source-bound tooling plus a Gradle
+    composite build of the same checkout. A uniquely identified same-revision local snapshot is a
+    fallback only when composite substitution is unsuitable.
+38. `AI-FIGMA-ANDROID-ASSET-QUALITY-001`: the official plugin supplied exact SVG assets, but the
+    attended Android adaptation rasterized 24 used icons at approximately 1x and put them in
+    unqualified `drawable/`. Require preserved SVG originals, mechanical Android SDK conversion to
+    VectorDrawable when supported, and a declared density-qualified raster fallback with sufficient
+    pixels (`xxhdpi` is at least 3x). Hand-traced paths and unqualified 1x PNG fallbacks are invalid.
+39. `AI-CURRENT-SOURCE-CONSUMER-BINDING-001`: source-bound AI initialization did not explain how a
+    consumer application should bind Android dependencies to the same checkout. The first repair
+    attempt used all-module Maven version/source-revision overrides, disabled local signing, and
+    bypassed a release-history gate. The accepted trial uses Gradle composite substitution instead:
+    the consumer declares `current-source`, `dependencyInsight` resolves the included
+    `:viewcompose-android` project, and no publication or Maven fallback is involved. Keep the
+    unique local snapshot path only as an explicitly documented fallback for builds that cannot use
+    a composite.
 
 Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
 1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1
-buildable screen with 22/22 represented entries, and passed 2/2 declared device flows. Direct
+buildable screen with 22/22 represented entries, and passed 3/3 declared device flows after the
+asset correction. Direct
 official-plugin-to-converter interoperability remained 0/1, and the first static-validation result
 was a false negative against 2/2 real compiler errors. The overall conclusion is **mixed**: exact
 version onboarding, framework implementation, build, installation, scrolling, fixed chrome,
@@ -735,6 +756,42 @@ coverage; external `testTag` guidance can follow in the same documentation/sampl
 This is an npm AI-tooling Skill and preprocessor change; it changes no Maven artifact production
 source, publication input, public/protected Kotlin API, or Android application runtime, so it needs
 no new Maven release changeset or module-manual update.
+
+The manual dependency-and-asset audit then reproduced both defects and separated their origins.
+Maven Central and the repository publication ledger agreed that
+`viewcompose-android:0.1.0-alpha02` was the latest published version; the failure was lane selection,
+not stale registry metadata. The repaired trial declares the diagnostic selector
+`com.viewcompose:viewcompose-android:current-source`, while `dependencyInsight` proves substitution
+to `project :ViewCompose:viewcompose-android (by composite build)`. Its Codex profile reached
+`source-bound-ready` with 8/8 Skills against the same checkout. No local publication, signing key,
+release-history bypass, or Maven Central fallback is involved.
+
+All 24 used official SVG assets were preserved and mechanically converted with the Android SDK
+converter into 24 VectorDrawable resources. A project `preBuild` check now enforces 24/24 declared
+sources and outputs, requires a valid vector path or an `xxhdpi` PNG at least 3x intrinsic size,
+and rejects undeclared or unqualified `figma_*` files. The debug application and Android-test APKs
+built successfully. On the same rooted Xiaomi MI 6, API 28, 1080 by 1920, density 480 device, all
+3/3 instrumentation tests passed in 138.38 seconds: the two existing scroll/fixed-chrome and click
+flows remained intact, and the new test proved that 24/24 icons resolved as `VectorDrawable`.
+Two device screenshots were inspected at original resolution; icon edges were crisp and the fixed
+chrome and scrolling layout remained intact. No automated pixel or perceptual comparison was added.
+Node `24.19.0` passed 379/379 executed AI-tooling tests with one existing conditional skip; the
+focused workflow gate retained 8/8 exact contracts. Documentation passed 80/80 script tests and
+129/129 required Chinese translations. Development-tooling isolation passed, and release intent
+confirmed zero affected Maven Artifacts.
+
+Relative to the audited state, dependency intent moved from 0/1 correctly selected lanes to 1/1,
+used vector assets from 0/24 to 24/24, and declared device flows from 2/2 to 3/3 without regressing
+the original two flows. The conclusion is **improved** for exact-checkout evaluation and Android
+asset fidelity. Limitations remain one design node, one device/density, visual inspection rather
+than a measured parity threshold, and no beginner-safe snapshot command for consumers that cannot
+use composite builds. The next action remains support-type resolution and static import coverage;
+a future non-composite consumer should receive that local snapshot command.
+
+This audit repair changes npm-distributed Skills, their workflow fixture, documentation, and an
+external sample application. It changes no Maven Artifact production source, publication input,
+public/protected Kotlin API, or governed compiled sample, so no Maven release Changeset,
+capability-impact disposition, or module-manual update is required.
 
 The original field-trial evidence update changed no public/protected API, published artifact
 production source, publication input, or compiled sample. It therefore had no capability-impact

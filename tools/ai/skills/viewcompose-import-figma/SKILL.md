@@ -11,6 +11,13 @@ reference-assisted attended route below and is not a deterministic export.
 
 ## Exact version and evidence
 
+- Select the version lane before changing the consumer project. Use `released` for an ordinary
+  first-use project and the newest exact compatible published Artifact versions. Use
+  `current-source` only when the user is explicitly evaluating a ViewCompose checkout; bind the AI
+  tooling to that source root and consume the same checkout through a Gradle composite build. Use a
+  uniquely identified same-revision local snapshot only when composite substitution is unsuitable.
+  ViewCompose modules are independently versioned, so never infer “latest” from one umbrella
+  version or silently substitute a released Artifact for a current-source trial.
 - Use only the Figma import contract and Knowledge Pack shipped with the exact framework-matched
   ViewCompose AI tooling. Retrieve current component and sample evidence before adapting generated
   Kotlin; never fabricate an API or silently substitute a newer framework contract.
@@ -38,21 +45,29 @@ reference-assisted attended route below and is not a deterministic export.
    ownership, redistribution decision, and license when known. Never retain a temporary URL in
    application source. If asset results are truncated or provider quota prevents complete capture,
    enumerate smaller selected nodes or stop with the exact missing-asset list.
-3. If the screenshot may be processed under the user's privacy decision, call
+3. Preserve each downloaded original as evidence, then record an explicit Android disposition for
+   every used asset. For SVG input, prefer a mechanical Android SDK SVG-to-VectorDrawable
+   conversion when the converter supports the source; never hand-trace or simplify path data. If
+   conversion cannot preserve the asset, create a declared raster fallback at the target density
+   and place it in the matching density-qualified resource directory. An `xxhdpi` fallback must be
+   at least 3x the SVG's intrinsic dimensions; never put a 1x raster in unqualified `drawable/`.
+   Record source and output hashes, converter identity, output kind, dimensions or viewport, and
+   density. Verify that every application resource resolves before visual comparison.
+4. If the screenshot may be processed under the user's privacy decision, call
    `prepare_screenshot` with canonical embedded PNG bytes and explicit density, font scale, locale,
    layout direction, system-bar, crop, redaction, transfer, persistence, and disclosure facts. A
    preprocessing success proves only a frozen pixel input.
-4. Build a provider-neutral external inference that distinguishes observed pixels from reference
+5. Build a provider-neutral external inference that distinguishes observed pixels from reference
    code hints and unresolved structure, text, accessibility, resources, state, and behavior. Import
    it with `validate_screenshot_inference`; never invent behavior or a strict Figma export merely to
    make generation available. Use `resolve_screenshot_inference` only for exact user answers to its
    typed questions, then use `generate_screenshot_viewcompose` when the resolved result explicitly
    permits generation.
-5. Treat generated Kotlin as a candidate for reference-assisted, attended adaptation. Reconcile it
+6. Treat generated Kotlin as a candidate for reference-assisted, attended adaptation. Reconcile it
    with the exact locally frozen assets and the user's requested interactions, retrieve every API
    through `get_component_reference` or `get_sample`, and run `validate_code`. For an existing
    project, call `analyze_project` first and preserve its architecture and unrelated files.
-6. Run the real project build and the smallest relevant device flow. Report frozen-input hashes,
+7. Run the real project build and the smallest relevant device flow. Report frozen-input hashes,
    unresolved facts, compilation, rendering, comparison categories, and device-test counts
    separately. Say “reference-assisted, attended adaptation”; do not say “direct Figma conversion,”
    “deterministic reconstruction,” or “visual parity” without independent accepted measurements.

@@ -303,6 +303,16 @@ the Skill requires it to freeze the screenshot and complete asset set locally wi
 redistribution decisions before the links expire. Truncated asset lists are completed through
 smaller explicit selections or reported as missing; quota failure stops the path.
 
+That attended path now selects its dependency lane before implementation. Ordinary consumer work
+uses exact compatible published Artifact versions; an explicit checkout evaluation binds both the
+AI tools and a Gradle composite build to the same checkout. A uniquely identified same-revision
+local snapshot is the fallback when composite substitution is unsuitable. Because Artifacts are
+independently versioned, no umbrella version establishes which dependency is latest.
+For Android assets, original SVG bytes remain evidence and compatible vectors are converted
+mechanically with the Android SDK. A non-vector fallback must use a declared density-qualified
+directory and sufficient pixels (`xxhdpi` requires at least 3x intrinsic dimensions); 1x PNG files
+in unqualified `drawable/` are rejected.
+
 The official response remains untrusted reference evidence and is never passed to
 `convert_figma_to_viewcompose` or parsed as a deterministic design tree. With an accepted privacy
 decision, the Skill routes the frozen PNG through `prepare_screenshot`, provider-neutral external

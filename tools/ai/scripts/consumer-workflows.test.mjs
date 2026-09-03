@@ -60,10 +60,14 @@ This is read-only. Stop when the same diagnostic repeats without new evidence. U
 });
 
 test('routes official Figma context to the attended screenshot evidence workflow', async () => {
-  const skill = await readFile(
-    new URL('../skills/viewcompose-import-figma/SKILL.md', import.meta.url),
-    'utf8',
-  );
+  const [skill, fixtureSource] = await Promise.all([
+    readFile(new URL('../skills/viewcompose-import-figma/SKILL.md', import.meta.url), 'utf8'),
+    readFile(
+      new URL('../evaluation/fixtures/workflows/official-figma-design-context.json', import.meta.url),
+      'utf8',
+    ),
+  ]);
+  const fixture = JSON.parse(fixtureSource);
 
   for (const expected of [
     '`prepare_screenshot`',
@@ -73,8 +77,45 @@ test('routes official Figma context to the attended screenshot evidence workflow
     'reference-assisted, attended adaptation',
     'Do not pass that response to `convert_figma_to_viewcompose`',
     'Never retain a temporary URL in',
+    'mechanical Android SDK SVG-to-VectorDrawable',
+    'never hand-trace or simplify path data',
+    'at least 3x',
+    'never put a 1x raster in unqualified `drawable/`',
   ]) {
     assert.ok(skill.includes(expected), `missing official Figma workflow rule: ${expected}`);
   }
   assert.match(skill, /do not say “direct Figma conversion,”/u);
+  assert.match(
+    skill,
+    /Use\s+`current-source` only when the user is explicitly evaluating a ViewCompose checkout/u,
+  );
+  assert.deepEqual(fixture.versionSelection, {
+    intent: 'evaluate-current-checkout',
+    toolingLane: 'current-source',
+    artifactLane: 'same-checkout-composite-build',
+    publishedFallbackAllowed: false,
+  });
+  assert.deepEqual(fixture.androidAssetPolicy, {
+    preserveOriginalSvg: true,
+    preferredOutput: 'vector-drawable',
+    conversion: 'mechanical-android-sdk',
+    handTracedPathsAllowed: false,
+    rasterFallback: {
+      minimumScale: 3,
+      resourceDirectory: 'drawable-xxhdpi',
+      unqualifiedOneXAllowed: false,
+    },
+  });
+});
+
+test('requires an explicit version lane for new ViewCompose screens', async () => {
+  const skill = await readFile(
+    new URL('../skills/viewcompose-create-screen/SKILL.md', import.meta.url),
+    'utf8',
+  );
+  assert.match(skill, /Select the version lane before adding dependencies/u);
+  assert.match(skill, /independently versioned Artifact/u);
+  assert.match(skill, /Gradle composite build/u);
+  assert.match(skill, /same-revision local snapshot/u);
+  assert.match(skill, /Never call a\s+published version “current source”/u);
 });

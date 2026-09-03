@@ -11,5 +11,22 @@
     "assetDelivery": "temporary-download-urls"
   },
   "expectedRoute": "reference-assisted-attended-adaptation",
+  "versionSelection": {
+    "intent": "evaluate-current-checkout",
+    "toolingLane": "current-source",
+    "artifactLane": "same-checkout-composite-build",
+    "publishedFallbackAllowed": false
+  },
+  "androidAssetPolicy": {
+    "preserveOriginalSvg": true,
+    "preferredOutput": "vector-drawable",
+    "conversion": "mechanical-android-sdk",
+    "handTracedPathsAllowed": false,
+    "rasterFallback": {
+      "minimumScale": 3,
+      "resourceDirectory": "drawable-xxhdpi",
+      "unqualifiedOneXAllowed": false
+    }
+  },
   "directConverterExpectedStatus": "invalid"
 }
