@@ -387,8 +387,12 @@ function publicTopLevelDeclaration(line) {
     if (simpleName) return {simpleName, declarationKind: 'function'};
   }
 
-  const property = /^(?:(?:const|lateinit|expect|actual)\s+)*(?:val|var)\s+([A-Za-z_][A-Za-z0-9_]*)\b/u.exec(declaration);
-  return property ? {simpleName: property[1], declarationKind: 'property'} : null;
+  const property = /^(?:(?:const|lateinit|expect|actual|inline)\s+)*(?:val|var)\s+(.+)$/u.exec(declaration);
+  if (!property) return null;
+  const beforeTypeOrBody = property[1].split(/[:={]/u)[0];
+  const identifiers = [...beforeTypeOrBody.matchAll(/[A-Za-z_][A-Za-z0-9_]*/gu)];
+  const simpleName = identifiers.at(-1)?.[0];
+  return simpleName ? {simpleName, declarationKind: 'property'} : null;
 }
 
 export function discoverPublicImports(source, {artifactId, path}) {

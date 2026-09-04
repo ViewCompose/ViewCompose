@@ -17,11 +17,13 @@ package com.viewcompose.example
 public data class PublicType(val value: Int)
 internal class InternalType
 fun Receiver.publicExtension() = Unit
+val Int.publicUnit: Int get() = this
 private fun hidden() = Unit
 `, {artifactId: 'viewcompose-example', path: 'viewcompose-example/src/main/kotlin/Example.kt'});
   assert.deepEqual(imports.map((entry) => [entry.importName, entry.declarationKind]), [
     ['com.viewcompose.example.PublicType', 'type'],
     ['com.viewcompose.example.publicExtension', 'function'],
+    ['com.viewcompose.example.publicUnit', 'property'],
   ]);
 });
 
@@ -52,7 +54,7 @@ test('builds a deterministic complete bundle from Governance V2 and compiled sam
   assert.deepEqual([...first.files], [...second.files]);
   assert.equal(first.manifest.counts.artifacts, 31);
   assert.equal(first.manifest.counts.capabilities, 82);
-  assert.ok(first.manifest.counts.publicImports > first.manifest.counts.symbols);
+  assert.equal(first.manifest.counts.publicImports, 1180);
   assert.equal(first.manifest.counts.symbols, 540);
   assert.equal(first.manifest.counts.samples, 216);
   assert.equal(first.manifest.counts.rules, 10);
