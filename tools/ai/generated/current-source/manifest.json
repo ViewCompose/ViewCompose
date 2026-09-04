@@ -1,11 +1,11 @@
 {
-  "bundleFingerprint": "bc45e520cd3e6f92310abfd999c3da209518b467e59575a13dbfa70f2ebd08e9",
+  "bundleFingerprint": "7e7a66d6f1e9e1a3f60e7f0b8460aa6c49c5c2f46576c4e4aae619b12cd31ba3",
   "counts": {
     "artifacts": 31,
     "capabilities": 82,
     "publicImports": 1393,
     "rules": 10,
-    "samples": 216,
+    "samples": 218,
     "symbols": 540
   },
   "files": [
@@ -34,10 +34,10 @@
       "sha256": "af3e17718c18ae65b7009d19598ecc770d61d0503a77a9d2ced2c2b5afbc82a6"
     },
     {
-      "bytes": 220813,
+      "bytes": 222359,
       "mediaType": "application/x-ndjson",
       "path": "samples.jsonl",
-      "sha256": "164fde1d9904cb01196f3cb99ada8aaa284612c6673f50279a48841b5ec4da2b"
+      "sha256": "bb1f29712d6a53c6768059dbacb7d7232ab2ba63a87d2a516543824cad69537f"
     },
     {
       "bytes": 4387,

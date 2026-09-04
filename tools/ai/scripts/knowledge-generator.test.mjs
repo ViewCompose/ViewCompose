@@ -56,7 +56,7 @@ test('builds a deterministic complete bundle from Governance V2 and compiled sam
   assert.equal(first.manifest.counts.capabilities, 82);
   assert.equal(first.manifest.counts.publicImports, 1393);
   assert.equal(first.manifest.counts.symbols, 540);
-  assert.equal(first.manifest.counts.samples, 216);
+  assert.equal(first.manifest.counts.samples, 218);
   assert.equal(first.manifest.counts.rules, 10);
   const resolved = first.symbols.filter((symbol) => symbol.declarations.length > 0).length;
   assert.equal(resolved, first.symbols.length);

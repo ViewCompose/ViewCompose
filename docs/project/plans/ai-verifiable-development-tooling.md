@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-04
-next_action: Publish and index the external Espresso keyed-tag recipe, then resume whole-screen target-project migration to expose the next adoption gap.
+next_action: Resume whole-screen target-project migration and use the indexed testing recipe to expose the next adoption gap.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -725,6 +725,34 @@ whole-screen migration pass.
     compiled external-consumer example using
     `withTagKey(com.viewcompose.renderer.R.id.viewcompose_test_tag, equalTo(...))`, including the
     renderer resource dependency and the distinction from ordinary `View.tag`.
+
+Issue 35 was accepted on 2026-09-04. Before this change, the renderer behavior worked but an
+external consumer had 0/1 discoverable recipes for matching `Modifier.testTag` from Espresso and
+had to inspect framework source. The Android Renderer manual now publishes two governed,
+compiled regions: the explicit `androidTestImplementation` dependencies and the
+`withTagKey(RendererR.id.viewcompose_test_tag, equalTo(tag))` matcher. Both compile in
+`:samples:tutorials`, the English and Chinese manuals pass the documentation gates, and exact
+`get_api_reference` lookup for `com.viewcompose.ui.modifier.Modifier.testTag` returns the matcher
+through its capability-related sample list. The current-source Knowledge Bundle contains 218
+samples with fingerprint
+`7e7a66d6f1e9e1a3f60e7f0b8460aa6c49c5c2f46576c4e4aae619b12cd31ba3`.
+
+The unchanged repository-external `ViewComposeFigmaTrial` then rebuilt through the composite
+current-source lane and ran all 3/3 instrumentation tests on the rooted Xiaomi MI 6 at API 28,
+1080 by 1920 pixels, and density 480. The keyed-tag flow scrolled the complete Toolbox screen and
+asserted its fixed chrome and final section; the click-feedback and 24-vector-resource checks also
+remained green. The run completed successfully in 3 minutes 5 seconds. Together with 384/384
+executed AI-tooling tests and one platform-specific skip, this moves discoverable external keyed-tag
+coverage from 0/1 to 1/1 and is **improved**. The final repository gates also passed the
+five-case static/security corpus, documentation
+structure with 129/129 current Chinese translations, development-tooling isolation, and the full
+distribution reproduction: 2/2 deterministic builds, all three installed client profiles, 24/24
+Skill copies, exact semantic comparison at 27/27 checks, and exact pixel comparison at
+2,523,781/2,523,781 pixels. Limitations remain one Android renderer resource key, one Espresso
+version, one external screen, and one device/API level; this does not define a cross-platform
+semantics-testing API or make ordinary `withTagValue(...)` valid. The next action is to resume
+whole-screen target-project migration and use this recipe while exposing the next adoption gap.
+
 36. `AI-FIGMA-PNG-SRGB-GAMMA-001`: the exact official Figma reference render used a valid `sRGB`
     chunk accompanied by the conventional big-endian `gAMA` value 45455, but the screenshot
     preprocessor rejected every `gAMA` chunk. The accepted repair permits exactly one valid `sRGB`

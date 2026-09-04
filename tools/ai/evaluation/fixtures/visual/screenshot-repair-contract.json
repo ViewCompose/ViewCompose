@@ -139,9 +139,9 @@
           "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
           "90b399b30272c3c4d9f4b4c399f94dd47a2fcd258c27fd0322de5c6f03337637",
           "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
-          "b30bab65aa8d7b6938c371cad35c599a78f30f0b119cea1f37cb1ff62d641c56",
-          "b30bab65aa8d7b6938c371cad35c599a78f30f0b119cea1f37cb1ff62d641c56",
-          "caf9d942875650808670e681ace5ba42b8a2dc8ff9323ffdb76622568590db12"
+          "4b649dd4050c061796d4911fa56e7dffb094f7eb6fcc73f8b6446918e4aa6dc8",
+          "4b649dd4050c061796d4911fa56e7dffb094f7eb6fcc73f8b6446918e4aa6dc8",
+          "51a37d13f8368e3b10c6f15773da0044cfbb35a2660f29bd98fbefcf1cfe3d66"
         ],
         "expectedChecks": [1, 1, 1, 12, 15],
         "expectedPixels": {
@@ -155,7 +155,7 @@
           "mismatchBounds": null,
           "attributions": [],
           "unassignedMismatchedPixels": 0,
-          "localizationFingerprint": "7699f894ff1173f4ed9e6f4712525e0c49067bcbdd5443ad4d94d49fbe29612a"
+          "localizationFingerprint": "77d790d9abfaa105ecef94b898699282d2132932976cffd86b62413176f36000"
         }
       },
       {

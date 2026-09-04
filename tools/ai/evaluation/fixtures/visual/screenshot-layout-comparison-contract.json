@@ -117,7 +117,7 @@
     "compareGenerationRequestFingerprint": "cfc226ab58a59db11c95f967d7c3518edf1c1138224fb6bcbde3c97cb2905062",
     "compareGenerationReportFingerprint": "90fb38544416443bf7aaeb7f75a1a5cbf49466f29e6bfe58f5ed2741a2d9f4fc",
     "previewRequest": "screenshot-render/wireframe.preview-request.json",
-    "previewRequestFingerprint": "570a844f726fa68d6ba0a61299aa6535238dbd742b32f5262e7bf3e5c0ce9320",
+    "previewRequestFingerprint": "405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a",
     "acceptedOutputFingerprint": "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
     "acceptedRenderTreeFingerprint": "5746bf6dfc564a8724a7d49a20ec6000eeae79441d76ad9a6aa2ff278fcb6f30"
   },
@@ -125,7 +125,7 @@
     {
       "status": "implemented",
       "source": "screenshot wireframe",
-      "expectedComparisonFingerprint": "b30bab65aa8d7b6938c371cad35c599a78f30f0b119cea1f37cb1ff62d641c56",
+      "expectedComparisonFingerprint": "4b649dd4050c061796d4911fa56e7dffb094f7eb6fcc73f8b6446918e4aa6dc8",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "expectedSummary": {
         "designNodes": 4,

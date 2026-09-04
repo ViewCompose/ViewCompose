@@ -252,7 +252,7 @@ function assertRendered(result, fixture, requiredCache) {
     JSON.stringify(preview?.capabilityIds) !== JSON.stringify(fixture.expectedCapabilityIds) ||
     preview?.source?.path !==
       `preview/requests/${
-        '570a844f726fa68d6ba0a61299aa6535238dbd742b32f5262e7bf3e5c0ce9320'
+        '405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a'
       }/input/GeneratedPreview.kt` ||
     preview?.source?.line !== fixture.expectedSourceLine ||
     preview?.source?.column !== 1 ||
@@ -266,7 +266,7 @@ function assertRendered(result, fixture, requiredCache) {
     preview?.generatedPreview?.sourceKind !== 'screenshot' ||
     preview?.generatedPreview?.targetId !== 'tools.ai.GeneratedScreenshotPreview' ||
     preview?.generatedPreview?.requestFingerprint !==
-      '570a844f726fa68d6ba0a61299aa6535238dbd742b32f5262e7bf3e5c0ce9320' ||
+      '405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a' ||
     preview?.generatedPreview?.generatedKotlinFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     preview?.generatedPreview?.wrapperFingerprint !==
