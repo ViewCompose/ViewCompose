@@ -18,7 +18,15 @@ Return evidence-backed findings ordered by impact, with source locations and con
 4. Separate proven compile errors and stable rule findings from architectural suggestions. Do not
    infer layout geometry, performance, runtime lifecycle behavior, or visual correctness from a
    static scan.
-5. Report each finding with severity, diagnostic code, source, affected artifact/capability when
+5. For migrations, compare the claimed `capability-probe`, `subtree`, or `whole-screen` intent with
+   the actual host root and produce a coverage ledger. Report hidden legacy duplicates, undeclared
+   native siblings, or Activity-owned chrome/scrolling/overlay behavior outside a claimed whole
+   screen. Include application-level lifecycle callbacks that query or mutate the root before the
+   screen host installs content. Review state ownership separately: UI-local state belongs in ViewCompose state, existing
+   ViewModel business state should use `viewModel()` plus lifecycle-aware collection under a
+   standard host, and an external collector/manual `RenderSession.render()` path requires an
+   explicit embedded-boundary rationale.
+6. Report each finding with severity, diagnostic code, source, affected artifact/capability when
    available, and the evidence level. If no finding is proven, say so and retain the stated
    limitations.
 

@@ -152,6 +152,12 @@ test('dispatches standalone XML migration through the frozen tool envelope', asy
   assert.equal(result.evidence.level, 'static');
   assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.LoginView('));
   assert.equal(result.data.migrationReport.callSiteReview.required, true);
+  assert.deepEqual(result.data.migrationReport.migrationScope, {
+    declarationRequired: true,
+    allowedIntents: ['capability-probe', 'subtree', 'whole-screen'],
+    selectedIntent: null,
+    wholeScreenCompleteness: 'not-proven',
+  });
 });
 
 test('dispatches XML render mode with explicit generated Preview bindings', async () => {

@@ -145,3 +145,24 @@ test('requires an explicit version lane for new ViewCompose screens', async () =
   assert.match(skill, /same-revision local snapshot/u);
   assert.match(skill, /Never call a\s+published version “current source”/u);
 });
+
+test('requires explicit migration scope, coverage, and state architecture', async () => {
+  const [convertSkill, createSkill, reviewSkill] = await Promise.all([
+    readFile(new URL('../skills/viewcompose-convert-xml/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-create-screen/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-review/SKILL.md', import.meta.url), 'utf8'),
+  ]);
+
+  for (const skill of [convertSkill, createSkill, reviewSkill]) {
+    assert.match(skill, /`capability-probe`, `subtree`, or\s+`whole-screen`/u);
+    assert.match(skill, /coverage ledger/u);
+    assert.match(skill, /hidden legacy/u);
+  }
+  assert.match(convertSkill, /must not silently contract/u);
+  assert.match(convertSkill, /application-level\s+lifecycle callbacks/u);
+  assert.match(convertSkill, /ViewCompose `viewModel\(\)`/u);
+  assert.match(convertSkill, /`collectAsStateWithLifecycle\(\)`/u);
+  assert.match(createSkill, /standard `setUiContent` host/u);
+  assert.match(createSkill, /explicit `AndroidView`/u);
+  assert.match(reviewSkill, /manual `RenderSession\.render\(\)` path requires/u);
+});

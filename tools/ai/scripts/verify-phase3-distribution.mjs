@@ -801,6 +801,11 @@ async function verifyCliFlow(
     generated.evidence.level !== 'static' ||
     !generated.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     generated.data?.migrationReport?.bindings?.resources?.length !== 3 ||
+    generated.data?.migrationReport?.migrationScope?.wholeScreenCompleteness !== 'not-proven' ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('unsupported conversion must not silently narrow')) ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('ViewCompose viewModel and collectAsStateWithLifecycle')) ||
     !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
       item.includes('retain one RenderSession')) ||
     !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>

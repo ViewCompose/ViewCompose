@@ -621,17 +621,27 @@ export async function generateViewComposeKotlin(ir) {
       states: bindings.states,
     },
     preservedIds: bindings.ids,
+    migrationScope: {
+      declarationRequired: true,
+      allowedIntents: ['capability-probe', 'subtree', 'whole-screen'],
+      selectedIntent: null,
+      wholeScreenCompleteness: 'not-proven',
+    },
     callSiteReview: {
       required: true,
       items: [
+        'Declare capability-probe, subtree, or whole-screen intent before editing; unsupported conversion must not silently narrow the selected scope.',
+        'For whole-screen intent, account for the Activity or Fragment root, chrome, scrolling, overlays, native SDK boundaries, state, navigation, animation, application-level lifecycle callbacks that query or mutate the root, and included layouts.',
         'Resolve every caller resource parameter from its recorded Android resource at the ViewCompose host boundary.',
         'Retain caller ownership and restoration policy for every TextFieldState parameter.',
         'Inventory every caller-owned state source and update cadence before integration; preserve its initial value, throttling, completion, and error semantics.',
-        'For external imperative state, retain one RenderSession, update the latest immutable snapshot, and call RenderSession.render() on the Android main thread; never create a session for each emission.',
+        'Choose state integration explicitly: UI-local state uses remember and mutableStateOf; ViewModel-owned business state under a standard Android host uses ViewCompose viewModel and collectAsStateWithLifecycle without a duplicate writable state holder.',
+        'Reserve external imperative state for an explicit embedded subtree or proven owner constraint; retain one RenderSession, update the latest immutable snapshot, and call RenderSession.render() on the Android main thread.',
         'Keep native siblings, animations, advertising, navigation, analytics, and other side effects outside the selected container under their existing owners.',
         'Review ViewBinding references, listeners, adapters, and imperative mutations outside the XML input.',
         'Prefer Activity or Fragment setUiContent; when using low-level renderInto, wrap content in AndroidResourceEnvironment(container.context) and dispose the RenderSession with the host lifecycle.',
         'Stop state collectors from rendering after host teardown, and verify the initial state, at least one later state, and completion or navigation behavior.',
+        'Deliver a migrated, native-boundary, retained, blocked, and unverified coverage ledger; whole-screen completion forbids an unreported hidden legacy-screen fallback.',
       ],
     },
     verification: {

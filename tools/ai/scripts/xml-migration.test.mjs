@@ -34,6 +34,13 @@ test('returns standalone deterministic XML migration data without invoking compi
   assert.equal(result.evidence.level, 'static');
   assert.ok(result.data.kotlin.includes('fun UiTreeBuilder.LoginView('));
   assert.equal(result.data.migrationReport.callSiteReview.required, true);
+  assert.equal(result.data.migrationReport.migrationScope.declarationRequired, true);
+  assert.deepEqual(
+    result.data.migrationReport.migrationScope.allowedIntents,
+    ['capability-probe', 'subtree', 'whole-screen'],
+  );
+  assert.equal(result.data.migrationReport.migrationScope.selectedIntent, null);
+  assert.equal(result.data.migrationReport.migrationScope.wholeScreenCompleteness, 'not-proven');
   assert.equal(result.data.designIr.schemaVersion, 1);
   assert.equal(compiled, 0);
 });

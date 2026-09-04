@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 7d907a5c29fd025c7ffba716a7c92773e139c5b44b80c91e7430884094e5ffaa
+translation_source_hash: c12d16c62435c7b2fe45e33eb802266f8aee3bce38b3fdf7209977f467eee2f2
 translation_status: current
 ---
 
@@ -212,6 +212,20 @@ Source Candidate 已经支持普通 Included Root 上的限定名 Override、忽
 Include Override，以及含糊的 Gravity 或 Margin 组合仍然 Fail-closed。缩小所选 Subtree 前，必须
 检查完整 Unsupported List。不要为了得到 Generated Kotlin 而静默删除这些 Attribute；应手动保留
 它们，或让受影响 Surface 继续使用 Android View，直到其行为与视觉 Contract 得到验证。
+
+修改现有 Activity 或 Fragment 前，先把迁移意图声明为 `capability-probe`、`subtree` 或
+`whole-screen`。Subtree 必须命名所属 Container 与保留的 Native Sibling。Whole-screen 必须覆盖
+Root、Chrome、Scrolling、Overlay、Advertising 或其他 Native SDK Boundary、State、Navigation、
+Animation 与 Included Layout；遇到 Unsupported Conversion 时必须停止，或显式重新协商范围，不能
+静默缩小。Inventory 还必须包含在 Screen Host 安装 Content 前查询或修改 Root 的 Application-level
+Activity Lifecycle Callback。交付时提供 Coverage Ledger，分别列出 Migrated、Native-boundary、Retained、Blocked 与
+Unverified 的区域和行为。仍隐藏保留完整 Legacy 页面时，不能证明 Whole-screen 已完成。
+
+状态 Ownership 也必须在该声明中完成选型。UI-local 临时状态使用 ViewCompose `remember` 与
+`mutableStateOf`。标准 Android `setUiContent` Host 下已有 ViewModel 所拥有的业务状态，应通过
+ViewCompose `viewModel()` 解析，并使用 `collectAsStateWithLifecycle()` 观察；不要把结果复制进第二个
+可写 State Holder。只有显式 Embedded Subtree 或已证明的 Owner Constraint，才可以继续由 Activity
+或 Fragment 外部收集并手动调用 `RenderSession.render()`，且理由必须记录在 Coverage Ledger 中。
 
 如果通过底层 `renderInto` API 把 ViewCompose 嵌入现有 Android View Hierarchy，请用
 `AndroidResourceEnvironment(context = container.context)` 在 Render Tree 外安装能感知

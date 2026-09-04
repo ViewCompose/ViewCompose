@@ -726,6 +726,27 @@ The trial exposed these additional adoption issues:
     policy classifies source features first, keeps component elevation in Android shape/elevation,
     requires flat path artwork to stay vector, and routes complex artwork to lossless WebP, PNG, or
     quality-bounded lossy WebP according to alpha, exactness, 9-patch, and photographic intent.
+41. `AI-ADOPTION-MIGRATION-SCOPE-001`: the old-project trial was described as an Activity migration,
+    but its accepted implementation deliberately replaced only three dynamic text elements and left
+    the toolbar, scrolling shell, artwork, advertisement slot, and root in XML. That bounded probe
+    was useful, but neither the XML conversion Skill nor its migration report required the Agent to
+    declare `capability-probe`, `subtree`, or `whole-screen`, so a user could reasonably interpret
+    subtree evidence as whole-page completion. Require an immutable scope declaration before edits,
+    prohibit silent narrowing, and deliver a region-and-behavior coverage ledger.
+42. `AI-ADOPTION-STATE-ARCHITECTURE-001`: the same bounded implementation preserved an external
+    Activity collector and manually called `RenderSession.render()`. That is correct for an
+    explicitly embedded subtree, but it bypassed the standard full-screen host's ViewModel and
+    lifecycle state integrations. Migration guidance must make state ownership an explicit design
+    decision: UI-local state uses `remember`/`mutableStateOf`, while existing ViewModel business
+    state under `setUiContent` uses `viewModel()` and `collectAsStateWithLifecycle()` without a
+    second writable state holder.
+43. `AI-ADOPTION-EARLY-ROOT-CALLBACK-001`: the first whole-screen attempt crashed before the Activity
+    installed its ViewCompose root because this application invokes an `ActivityLifecycleCallbacks`
+    system-bar adapter from inside `super.onCreate()` and that adapter immediately queries the
+    Activity root. A late-initialized ViewCompose root is therefore unsafe in some legacy hosts.
+    Whole-screen inventory must include application-level callbacks that query or mutate the root;
+    this target keeps their listener on the stable `android.R.id.content` container and preserves
+    the page background across its inset region without inflating the retired XML page.
 
 Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
 1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1
@@ -803,6 +824,45 @@ WebP parser and encoding-intent rejection compile but do not execute in this sam
 inspection rather than a measured parity threshold, and no beginner-safe snapshot command for
 consumers that cannot use composite builds. The next action remains support-type resolution and
 static import coverage; a future non-composite consumer should receive that local snapshot command.
+
+The subsequent legacy-page audit declared the photo scanning Activity as `whole-screen` rather than
+silently extending the earlier text-only probe. The target now uses the standard Activity
+`setUiContent` host, resolves the existing `ScanningViewModel` through ViewCompose `viewModel()`, and
+observes its `StateFlow` through `collectAsStateWithLifecycle()` without a duplicate writable state.
+Its coverage ledger is: migrated root background, toolbar/back action, scrolling content, scan-art
+shell and center icon, all dynamic text, lifecycle-aware state observation, and completion
+navigation; native boundaries are the existing rotating `ImageView`/`ObjectAnimator` and ad SDK
+`FrameLayout`; retained behavior is base-Activity analytics, back dialog, ad-scene selection, and the
+shared XML page used by the other five scanner types; blocked is empty; unverified remains real-ad
+rendering, configuration/process recreation, alternate locale/theme/font scale, and the other three
+scanner types beyond the duplicate-photo and screenshot launch checks. The photo Activity no longer
+inflates or hides a legacy XML copy.
+
+Gradle dependency evidence resolved the recommended aggregate
+`viewcompose-android:0.1.0-alpha02` plus host `0.1.0-alpha05`, UI Foundation, Lifecycle, and ViewModel
+`0.1.0-alpha02` artifacts. The application and Android-test APKs built at 94,823,839 and 649,234
+bytes; relative to the prior 94,763,105-byte text-only candidate, the application grew 60,734 bytes
+(0.0641%). Fifteen of fifteen scan-focused JVM tests passed. Three full 129-test attempts were
+**inconclusive** because each exposed different pre-existing asynchronous failures outside the
+changed scan surface; every isolated rerun passed, so these results are recorded as a target-project
+test-stability defect rather than a successful full-suite gate. On the rooted MI 6/API-28/1080x1920/
+density-480 device, four focused flows passed 4/4: initial and later photo state, photo completion
+navigation, duplicate-photo legacy rendering, and screenshot legacy rendering. The first
+whole-screen device run found an early root-query crash from the application's system-bar lifecycle
+callback; after binding that callback to the stable Activity content root it passed. Original-size
+visual inspection then found and corrected the content-root status-bar background, and the final
+PNG had SHA-256 `025b493edc1196a6da2159ba6036ee3ed74a005f7625d4498c5bd7742f935dba`.
+The rotating frame, live path/count, and clock prevent a full-frame exact pixel claim; the visual
+conclusion is **no material change** for the inspected stable geometry and styling. Advertising was
+disabled only by the user's uncommitted Debug toggle and remains outside this commit.
+
+For the tooling repair, Node 24.19.0 passed 380/380 executed tests with one existing conditional
+skip. Distribution passed 2/2 reproducible builds, publish dry-run inventory, offline lifecycle,
+3/3 installed profiles, 24/24 exact Skill copies, MCP protocol, and every existing compile/render/
+comparison lane. Documentation passed 80/80 script tests, 129/129 current Chinese translations,
+structure, Governance V2, development-tooling isolation, and zero Maven release impact. The result
+is **improved** for migration-scope honesty and standard full-screen state architecture, with the
+target's unrelated full-suite nondeterminism retained as the next project-level test-harness action.
 
 This audit repair changes npm-distributed Skills, their workflow fixture, documentation, and an
 external sample application. It changes no Maven Artifact production source, publication input,

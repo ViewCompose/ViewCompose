@@ -256,6 +256,24 @@ subtree. Do not silently remove those attributes merely to obtain generated Kotl
 manually or keep the affected surface in Android Views until its behavior and visual contract can
 be verified.
 
+Before editing an existing Activity or Fragment, declare the migration intent as
+`capability-probe`, `subtree`, or `whole-screen`. A subtree names its owning container and retained
+native siblings. A whole-screen migration accounts for the root, chrome, scrolling, overlays,
+advertising or other native SDK boundaries, state, navigation, animation, and included layouts;
+unsupported conversion must block or explicitly renegotiate that intent rather than silently
+shrinking it. The inventory also includes application-level Activity lifecycle callbacks that query
+or mutate the root before the screen host installs content. Delivery includes a coverage ledger with migrated, native-boundary, retained,
+blocked, and unverified regions and behaviors. A hidden legacy copy means whole-screen completeness
+is not proven.
+
+Choose state ownership as part of that declaration. UI-local transient state uses ViewCompose
+`remember` and `mutableStateOf`. Existing ViewModel-owned business state under the standard Android
+`setUiContent` host resolves through ViewCompose `viewModel()` and is observed with
+`collectAsStateWithLifecycle()`; do not mirror the result into a second writable state holder.
+External Activity/Fragment collection plus manual `RenderSession.render()` remains valid only for
+an explicit embedded subtree or a proven owner constraint, which must be recorded in the coverage
+ledger.
+
 When ViewCompose is embedded into an existing Android View hierarchy through the low-level
 `renderInto` API, install the configuration-aware Android UI environment around the rendered tree
 with `AndroidResourceEnvironment(context = container.context)`, and dispose the returned render
