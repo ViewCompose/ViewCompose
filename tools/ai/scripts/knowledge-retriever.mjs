@@ -102,6 +102,7 @@ export function loadKnowledgeIndex() {
       'capabilities.json',
       'llms-full.txt',
       'llms.txt',
+      'public-imports.jsonl',
       'rules.json',
       'samples.jsonl',
       'symbols.jsonl',
@@ -127,12 +128,14 @@ export function loadKnowledgeIndex() {
 
     const artifacts = JSON.parse(contents.get('artifacts.json')).artifacts;
     const capabilities = JSON.parse(contents.get('capabilities.json')).capabilities;
+    const publicImports = parseJsonLines(contents.get('public-imports.jsonl'));
     const symbols = parseJsonLines(contents.get('symbols.jsonl'));
     const samples = parseJsonLines(contents.get('samples.jsonl'));
     const rules = JSON.parse(contents.get('rules.json')).rules;
     const actualCounts = {
       artifacts: artifacts.length,
       capabilities: capabilities.length,
+      publicImports: publicImports.length,
       symbols: symbols.length,
       samples: samples.length,
       rules: rules.length,
@@ -146,6 +149,8 @@ export function loadKnowledgeIndex() {
     const bySymbolId = new Map(symbols.map((entry) => [entry.symbolId, entry]));
     const bySampleId = new Map(samples.map((entry) => [entry.sampleId, entry]));
     const byRuleCode = new Map(rules.map((entry) => [entry.code, entry]));
+    const publicImportByName = new Map(publicImports.map((entry) => [entry.importName, entry]));
+    const publicImportsBySimpleName = new Map();
     const symbolsBySimpleName = new Map();
     const symbolsByImport = new Map();
     const symbolsByCapability = new Map();
@@ -155,6 +160,9 @@ export function loadKnowledgeIndex() {
       addToIndex(symbolsByImport, `${symbol.namespace}.${symbol.simpleName}`, symbol);
       addToIndex(symbolsByCapability, symbol.capabilityId, symbol);
     }
+    for (const entry of publicImports) {
+      addToIndex(publicImportsBySimpleName, entry.simpleName.toLowerCase(), entry);
+    }
     for (const capability of capabilities) {
       addToIndex(capabilitiesByArtifact, capability.artifactId, capability);
     }
@@ -162,6 +170,7 @@ export function loadKnowledgeIndex() {
       manifest,
       artifacts,
       capabilities,
+      publicImports,
       symbols,
       samples,
       rules,
@@ -170,6 +179,8 @@ export function loadKnowledgeIndex() {
       bySymbolId,
       bySampleId,
       byRuleCode,
+      publicImportByName,
+      publicImportsBySimpleName,
       symbolsBySimpleName,
       symbolsByImport,
       symbolsByCapability,
@@ -485,6 +496,34 @@ export async function retrieveApiReference(arguments_, {requestId = 'get-api-ref
         artifact: artifactSummary(index.byArtifactId.get(symbol.artifactId)),
         capability,
         sample: sampleForCapability(capability, index),
+      },
+      elapsedMs: performance.now() - started,
+    });
+  }
+  const publicTypeCandidates = (
+    index.publicImportByName.has(arguments_.identifier)
+      ? [index.publicImportByName.get(arguments_.identifier)]
+      : index.publicImportsBySimpleName.get(arguments_.identifier.toLowerCase()) ?? []
+  ).filter((entry) => entry.declarationKind === 'type');
+  if (publicTypeCandidates.length === 1) {
+    const supportType = publicTypeCandidates[0];
+    const relatedCapabilities = (supportType.relatedCapabilityIds ?? []).map((capabilityId) => {
+      const related = index.byCapabilityId.get(capabilityId);
+      return {
+        capability: related,
+        sample: sampleForCapability(related, index),
+      };
+    });
+    return toolResult({
+      requestId,
+      tool: 'get_api_reference',
+      status: 'success',
+      level: 'knowledge',
+      data: {
+        referenceType: 'support-type',
+        supportType,
+        artifact: artifactSummary(index.byArtifactId.get(supportType.artifactId)),
+        relatedCapabilities,
       },
       elapsedMs: performance.now() - started,
     });

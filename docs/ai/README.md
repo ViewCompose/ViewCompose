@@ -252,6 +252,14 @@ The installed project-bound mode supports:
 Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A static result
 does not prove compilation, and generated Kotlin does not prove rendering or visual parity.
 
+The unpublished `0.8.0` source candidate adds an exact public-import catalog to its Knowledge Pack.
+Component records link every resolvable ViewCompose support type in their signatures to its
+qualified name and owning artifact; `get_api_reference` can therefore resolve support types by
+exact or unambiguous simple name and return the related capability and compiled sample. Static
+validation rejects every exact `com.viewcompose` import that is absent from the same catalog. This
+catches both a guessed package and an attempt to import a receiver member such as
+`Modifier.weight`, while still keeping static and compiled evidence separate.
+
 XML conversion is fail-closed. The published `0.7.0` converter may report common Android XML such
 as an `<include>` with an ID or constraints, styles, preview-only `tools:` attributes, gravity,
 margins, and text colors as unsupported instead of approximating them. The unpublished `0.8.0`

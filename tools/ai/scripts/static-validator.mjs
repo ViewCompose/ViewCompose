@@ -3,6 +3,7 @@ import {diagnostic, sourceLocation, toolResult, utf8Bytes} from './tool-core.mjs
 import {activeKnowledgePath} from './framework-profile-selection.mjs';
 
 const symbolsPath = activeKnowledgePath('symbols.jsonl');
+const publicImportsPath = activeKnowledgePath('public-imports.jsonl');
 const kotlinKeywords = new Set([
   'catch',
   'class',
@@ -96,8 +97,12 @@ export function maskNonCode(source) {
 }
 
 export function loadValidatorIndex() {
-  symbolIndexPromise ??= readFile(symbolsPath, 'utf8').then((content) => {
+  symbolIndexPromise ??= Promise.all([
+    readFile(symbolsPath, 'utf8'),
+    readFile(publicImportsPath, 'utf8'),
+  ]).then(([content, publicImportContent]) => {
     const symbols = content.trimEnd().split('\n').map(JSON.parse);
+    const publicImports = publicImportContent.trimEnd().split('\n').filter(Boolean).map(JSON.parse);
     const byImport = new Map();
     const bySimpleName = new Map();
     for (const symbol of symbols) {
@@ -109,7 +114,8 @@ export function loadValidatorIndex() {
       simpleEntries.push(symbol);
       bySimpleName.set(symbol.simpleName, simpleEntries);
     }
-    return {symbols, byImport, bySimpleName};
+    const publicImportByName = new Map(publicImports.map((entry) => [entry.importName, entry]));
+    return {symbols, publicImports, publicImportByName, byImport, bySimpleName};
   });
   return symbolIndexPromise;
 }
@@ -285,13 +291,12 @@ export async function validateKotlin({
 
   for (const {imported, offset} of surface.exactImports.values()) {
     const matches = index.byImport.get(imported);
-    const simpleName = imported.split('.').at(-1);
-    if (!matches && index.bySimpleName.has(simpleName)) {
+    if (!index.publicImportByName.has(imported)) {
       diagnostics.push(diagnostic({
         code: 'VC-AI-UNKNOWN-SYMBOL',
         severity: 'error',
-        message: `The selected Knowledge Bundle does not contain ${imported}.`,
-        nextAction: 'Use the exact current symbol from symbols.jsonl or select another framework lane.',
+        message: `The selected Knowledge Bundle public import catalog does not contain ${imported}.`,
+        nextAction: 'Use an exact current import from public-imports.jsonl or select another framework lane.',
         source: sourceLocation(source, path, offset, imported.length),
       }));
     } else if (matches) {
@@ -354,6 +359,7 @@ export async function validateKotlin({
     data: {
       path,
       symbolIndexCount: index.symbols.length,
+      publicImportCount: index.publicImports.length,
       matchedSymbolIds: [...matchedSymbolIds].sort(),
     },
     elapsedMs: performance.now() - started,

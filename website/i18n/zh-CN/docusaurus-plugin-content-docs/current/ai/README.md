@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 90ff887fff65970fac5ab21c74772fa474628967583dffaa7d57b871f167b622
+translation_source_hash: 0b30c0a39c16a11ab5ca470e776732816086ffce778982166cdfe99ce8f73738
 translation_status: current
 ---
 
@@ -209,6 +209,13 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
 
 证据等级依次为 `knowledge`、`static`、`compiled`、`rendered` 和 `compared`。静态结果不证明
 编译通过，生成 Kotlin 也不证明页面已渲染或达到视觉一致。
+
+未发布的 `0.8.0` Source Candidate 在 Knowledge Pack 中新增精确的 Public Import Catalog。
+Component Record 会把 Signature 中所有可解析的 ViewCompose Support Type 链接到限定名和所属
+Artifact；`get_api_reference` 因此可以按精确名称或无歧义的 Simple Name 查询 Support Type，并返回
+关联的 Capability 与 Compiled Sample。静态验证会拒绝不在同一 Catalog 中的每个精确
+`com.viewcompose` Import。这样既能发现猜错 Package，也能发现把 `Modifier.weight` 这类 Receiver
+Member 当作 Top-level Function 导入的问题，同时继续严格区分 Static 与 Compiled Evidence。
 
 XML Conversion 采用 Fail-closed 策略。已发布的 `0.7.0` Converter 可能会把常见 Android XML，
 例如带 ID 或 Constraint 的 `<include>`、Style、仅 Preview 使用的 `tools:` Attribute、Gravity、

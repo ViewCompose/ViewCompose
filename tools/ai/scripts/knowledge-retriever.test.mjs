@@ -16,6 +16,7 @@ test('loads one integrity-checked immutable knowledge index', async () => {
   assert.equal(index.manifest.bundleFingerprint, 'e23da5d9835d00dd31eda167152a875ebefa3f519b992874635113eed5a9a537');
   assert.equal(index.artifacts.length, 31);
   assert.equal(index.capabilities.length, 82);
+  assert.equal(index.publicImports.length, 1176);
   assert.equal(index.symbols.length, 540);
   assert.equal(index.samples.length, 216);
   assert.equal(index.rules.length, 10);
@@ -89,11 +90,27 @@ test('resolves exact symbol, capability, and artifact references without conflat
   assert.ok(artifact.data.capabilities.some((entry) => entry.capabilityId === 'foundation.components'));
 });
 
+test('resolves public support types and links them back to governed signatures and samples', async () => {
+  const imageSource = await retrieveApiReference({...lane, identifier: 'ImageSource'});
+  assert.equal(imageSource.status, 'success');
+  assert.equal(imageSource.data.referenceType, 'support-type');
+  assert.equal(imageSource.data.supportType.importName, 'com.viewcompose.ui.node.ImageSource');
+  assert.ok(imageSource.data.supportType.declarations.length > 0);
+  assert.ok(imageSource.data.relatedCapabilities.some((entry) =>
+    entry.capability.capabilityId === 'image.foundation' &&
+    entry.sample.sampleClass === 'compiled-region'));
+
+  const semanticsRole = await retrieveApiReference({...lane, identifier: 'SemanticsRole'});
+  assert.equal(semanticsRole.data.supportType.importName, 'com.viewcompose.ui.modifier.SemanticsRole');
+});
+
 test('returns component parameters, applicable rules, ownership, and its compiled sample', async () => {
   const column = await retrieveComponentReference({...lane, name: 'Column'});
   assert.equal(column.status, 'success');
   assert.equal(column.data.importName, 'com.viewcompose.ui.foundation.Column');
   const parameters = column.data.symbol.declarations[0].parameters;
+  assert.ok(column.data.symbol.signatureTypes.some((entry) =>
+    entry.importName === 'com.viewcompose.ui.unit.UiDp'));
   assert.deepEqual(parameters.find((entry) => entry.name === 'spacing'), {
     name: 'spacing',
     type: 'UiDp',

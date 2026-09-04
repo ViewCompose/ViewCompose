@@ -62,10 +62,13 @@ npm --prefix tools/ai run verify:phase2-static
 ./gradlew verifyAiStaticTooling
 ```
 
-The static validator reports only facts it can establish from the generated governed-symbol index.
-Supporting public types that are referenced by capability signatures but do not have their own
-governed entry are not declared nonexistent merely because they are absent from `symbols.jsonl`.
-Static success is evidence level `static`, never `compiled`.
+The generated bundle keeps governed capability symbols in `symbols.jsonl` and a complete catalog
+of public top-level framework imports in `public-imports.jsonl`. Governed signatures link their
+ViewCompose support types to exact qualified names and artifact ownership, so `get_api_reference`
+can resolve types such as `ImageSource`, `UiTextStyle`, and `SemanticsRole` without source-tree
+inspection. The static validator rejects every exact `com.viewcompose` import absent from the
+catalog; a member extension such as `Modifier.weight` is therefore not mistaken for an importable
+top-level function. Static success is evidence level `static`, never `compiled`.
 
 Run the pinned Phase 2 compiler corpus with JDK 21:
 

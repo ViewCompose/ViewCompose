@@ -13,7 +13,9 @@ const fixture = (name) => readFile(
 test('derives the validator index from all generated source-resolved symbols', async () => {
   const index = await loadValidatorIndex();
   assert.equal(index.symbols.length, 540);
+  assert.equal(index.publicImports.length, 1176);
   assert.ok(index.byImport.has('com.viewcompose.ui.foundation.Column'));
+  assert.ok(index.publicImportByName.has('com.viewcompose.ui.node.ImageSource'));
   assert.ok(index.bySimpleName.has('padding'));
 });
 
@@ -86,4 +88,13 @@ test('rejects a governed ViewCompose symbol imported from a nonexistent package'
     'utf8',
   ));
   assert.deepEqual(validateSchemaValue(result, schema), []);
+});
+
+test('rejects every unmatched exact import in the reserved ViewCompose namespace', async () => {
+  for (const name of ['invalid-weight-import.kt', 'invalid-semantics-role-import.kt']) {
+    const result = await validateKotlin({source: await fixture(name), path: name});
+    assert.equal(result.status, 'invalid');
+    assert.deepEqual(result.diagnostics.map(({code}) => code), ['VC-AI-UNKNOWN-SYMBOL']);
+    assert.match(result.diagnostics[0].message, /public import catalog/u);
+  }
 });
