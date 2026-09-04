@@ -44,8 +44,8 @@ completion:
   - XML, Compose, screenshot, and Figma paths share one explicit Design IR, preserve provenance and unsupported semantics, and never silently invent application behavior.
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
-last_verified: 2026-09-03
-next_action: Make public support types resolvable from component signatures and make static validation report unmatched ViewCompose imports instead of returning an unqualified success, using the observed UiTextStyle, ImageSource, TextDefaults, weight, and SemanticsRole cases as regression fixtures.
+last_verified: 2026-09-04
+next_action: Reproduce Codex Desktop task-resume MCP discovery from an otherwise healthy project-bound installation, define and verify the recovery path, then publish beginner guidance without presenting direct server invocation as client discovery evidence; support-type resolution and unmatched-import validation remain the next tooling corrections after that blocker.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -747,6 +747,15 @@ The trial exposed these additional adoption issues:
     Whole-screen inventory must include application-level callbacks that query or mutate the root;
     this target keeps their listener on the stable `android.R.id.content` container and preserves
     the page background across its inset region without inflating the retired XML page.
+44. `AI-ADOPTION-CODEX-RESUME-MCP-001`: after Codex Desktop crashed and the existing task resumed,
+    the target still contained its managed `.codex/config.toml`, all 8/8 exact Skills, durable Node
+    runtime, and cached MCP entry, but the resumed task exposed 0 ViewCompose tools. A direct legacy
+    protocol handshake against that exact configured entry remained healthy and listed all 15/15
+    tools, separating package/runtime health from client task discovery. The second whole-screen
+    migration therefore proceeded manually and is not MCP or installed-Skill acceptance evidence.
+    Reproduce crash/restart, project reopen, and new-task paths; then make post-resume tool discovery
+    an explicit readiness check and document only a verified recovery. Direct server invocation must
+    remain a diagnostic and cannot be presented as proof that the proprietary client registered it.
 
 Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
 1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1
@@ -863,6 +872,44 @@ comparison lane. Documentation passed 80/80 script tests, 129/129 current Chines
 structure, Governance V2, development-tooling isolation, and zero Maven release impact. The result
 is **improved** for migration-scope honesty and standard full-screen state architecture, with the
 target's unrelated full-suite nondeterminism retained as the next project-level test-harness action.
+
+The next legacy-project slice first stabilized that unit-test denominator. The shared coroutine
+rule now binds both `Dispatchers.Main` and the Mavericks state-store context to the same test
+dispatcher, eliminating stale reads from Mavericks' cached private executor. The 47 focused
+ViewModel tests passed, followed by two complete 129/129 runs with zero failures, errors, or skips.
+After the new page tests were added, the final complete denominator passed 132/132. The repair was
+committed in the target as `cbc87f62`.
+
+The app-process Activity was then declared as a second `whole-screen` migration. Its coverage
+ledger is: migrated root and toolbar/back action, explicit loading/content/empty/retry states,
+running count, complete lazy process list, stop affordance, existing ViewModel ownership through
+ViewCompose `viewModel()`, lifecycle collection through `collectAsStateWithLifecycle()`, system
+application-details navigation, delayed force-stop guide, and `onRestart` item refresh; the sole
+native UI boundary is an `AndroidView` `ImageView` for runtime `Drawable` application icons;
+retained behavior is the Activity system-bar and back-ad contracts; the retired Activity layout,
+row layout, View Binding path, and RecyclerView adapter were deleted; blocked is empty; unverified
+remains empty-state device rendering, an actual force-stop state transition, process recreation,
+real advertising, and alternate locale/theme/font scale.
+
+The pre-migration MI 6/API-28/1080x1920/density-480 screenshot had SHA-256
+`ae70e7c24e695dff229a13d1b7dc6ade62f4a953256e8f55f9bf04eff7871d6b`. Original-resolution review
+of the first candidate found a 12dp toolbar displacement, oversized title, and one borderline app
+name wrapping earlier than the legacy row. Correcting the audited dimensions produced the final
+candidate screenshot with SHA-256
+`0c7eebed6bfcacad3ac7ec50ea9462317b1a2c3062aae31ebf1112b559684bc7`; visual inspection found the
+stable geometry, typography, icons, colors, and list viewport aligned. This is **no material
+change** for the inspected screen, not an automated pixel-equivalence claim because system time and
+other live status content changed.
+
+Three AppProcess ViewModel tests passed inside the 132/132 JVM denominator. The final matched
+application/test APK pair installed through the already authorized root package-manager path, and
+the whole-screen device assertion passed 1/1 in 47.223 seconds. An attended tap on the first running
+row opened MIUI's application-details Activity, then the existing guide Activity became resumed
+after the declared delay; no application crash was observed in the bounded log. The target commit
+is `c5067fee`. Advertising remained disabled only by the user's uncommitted Debug toggle. Because
+the resumed Codex task had no registered ViewCompose tools despite the healthy direct MCP probe,
+this slice validates the framework APIs and migration result but not the installed converter,
+validator, or client Skill workflow.
 
 This audit repair changes npm-distributed Skills, their workflow fixture, documentation, and an
 external sample application. It changes no Maven Artifact production source, publication input,
