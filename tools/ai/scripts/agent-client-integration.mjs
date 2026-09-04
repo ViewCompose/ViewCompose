@@ -33,6 +33,7 @@ const managedTomlStart = '# ViewCompose AI managed configuration — start';
 const managedTomlEnd = '# ViewCompose AI managed configuration — end';
 const upgradeJournalPath = '.viewcompose/ai-upgrade-v1.json';
 const bootstrapJournalName = '.viewcompose-ai-bootstrap-v1.json';
+const maxCodexUserConfigBytes = 1024 * 1024;
 
 function durableIntegrityError(message) {
   const error = new Error(message);
@@ -81,6 +82,62 @@ function contained(root, candidate) {
 
 function tomlString(value) {
   return JSON.stringify(value);
+}
+
+function decodedTomlKey(value) {
+  if (value.startsWith("'") && value.endsWith("'")) return value.slice(1, -1);
+  try {
+    const decoded = JSON.parse(value);
+    return typeof decoded === 'string' ? decoded : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function hasExactCodexProjectTrust(content, projectRoot) {
+  let exactProjectTable = false;
+  for (const line of content.split(/\r?\n/u)) {
+    const table = /^\s*\[\s*projects\.("(?:\\.|[^"\\])*"|'[^']*')\s*\]\s*(?:#.*)?$/u.exec(line);
+    if (table) {
+      exactProjectTable = decodedTomlKey(table[1]) === projectRoot;
+      continue;
+    }
+    if (/^\s*\[.*\]\s*(?:#.*)?$/u.test(line)) {
+      exactProjectTable = false;
+      continue;
+    }
+    if (exactProjectTable && /^\s*trust_level\s*=\s*["']trusted["']\s*(?:#.*)?$/u.test(line)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export async function detectAgentClientProjectAccess({
+  client,
+  projectRoot,
+  codexConfigPath = resolve(process.env.CODEX_HOME ?? resolve(homedir(), '.codex'), 'config.toml'),
+} = {}) {
+  const profile = profileFor(client);
+  const root = await requireCanonicalDirectory(projectRoot, 'Consumer project root');
+  if (profile.id !== 'codex') return {status: 'ready'};
+  const required = {
+    status: 'required',
+    detail: 'Codex ignores project-scoped .codex/config.toml until the exact project root is trusted. ' +
+      'Open this project in Codex, approve trust when prompted, then start a new task from this project ' +
+      'and verify that viewcompose appears in the MCP tools list.',
+  };
+  try {
+    const metadata = await metadataOrNull(codexConfigPath);
+    if (
+      !metadata?.isFile() || metadata.isSymbolicLink() ||
+      metadata.size > maxCodexUserConfigBytes
+    ) return required;
+    const content = await readFile(codexConfigPath, 'utf8');
+    return hasExactCodexProjectTrust(content, root) ? {status: 'ready'} : required;
+  } catch {
+    return required;
+  }
 }
 
 function expectedServerDefinition(projectRoot, {
@@ -1120,6 +1177,7 @@ export async function diagnoseAgentClient({
   mcpServerPath = defaultMcpServerPath,
   detectJava = detectJavaRuntime,
   detectSdk = detectAndroidSdk,
+  detectClientProject = detectAgentClientProjectAccess,
 } = {}) {
   const canonicalSourceRoot = await canonicalSourceRootOrUndefined(sourceRoot);
   let activeInstallation;
@@ -1182,7 +1240,12 @@ export async function diagnoseAgentClient({
   const missing = prepared.operations.filter((item) => item.status === 'missing').map((item) => item.id);
   const conflicts = prepared.operations.filter((item) => item.status === 'conflict').map((item) => item.id);
   const skillsStatus = conflicts.length > 0 ? 'conflict' : missing.length > 0 ? 'missing' : 'ready';
-  const configurationReady = configStatus === 'ready' && skillsStatus === 'ready';
+  const installationReady = configStatus === 'ready' && skillsStatus === 'ready';
+  const clientProject = installationReady
+    ? await detectClientProject({client: prepared.profile.id, projectRoot: prepared.root})
+    : {status: 'not-checked'};
+  const clientProjectReady = clientProject?.status === 'ready';
+  const configurationReady = installationReady && clientProjectReady;
   const java = detectJava();
   const androidSdk = detectSdk(36);
   const hostReady = [17, 21].includes(java?.feature) && androidSdk?.apiLevel === 36;
@@ -1211,7 +1274,8 @@ export async function diagnoseAgentClient({
     config: {
       path: prepared.profile.configPath,
       status: configStatus,
-      ...(configDetail ? {detail: configDetail} : {}),
+      ...(configDetail ? {detail: configDetail} :
+        !clientProjectReady && clientProject?.detail ? {detail: clientProject.detail} : {}),
     },
     skills: {
       path: prepared.profile.skillRoot,

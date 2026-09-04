@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-04
-next_action: Reproduce Codex Desktop task-resume MCP discovery from an otherwise healthy project-bound installation, define and verify the recovery path, then publish beginner guidance without presenting direct server invocation as client discovery evidence; support-type resolution and unmatched-import validation remain the next tooling corrections after that blocker.
+next_action: Complete one attended Codex Desktop acceptance run from a newly created task that is bound to the saved and trusted target project; then implement support-type resolution and unmatched-import validation as the next tooling corrections.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -747,15 +747,16 @@ The trial exposed these additional adoption issues:
     Whole-screen inventory must include application-level callbacks that query or mutate the root;
     this target keeps their listener on the stable `android.R.id.content` container and preserves
     the page background across its inset region without inflating the retired XML page.
-44. `AI-ADOPTION-CODEX-RESUME-MCP-001`: after Codex Desktop crashed and the existing task resumed,
-    the target still contained its managed `.codex/config.toml`, all 8/8 exact Skills, durable Node
-    runtime, and cached MCP entry, but the resumed task exposed 0 ViewCompose tools. A direct legacy
-    protocol handshake against that exact configured entry remained healthy and listed all 15/15
-    tools, separating package/runtime health from client task discovery. The second whole-screen
-    migration therefore proceeded manually and is not MCP or installed-Skill acceptance evidence.
-    Reproduce crash/restart, project reopen, and new-task paths; then make post-resume tool discovery
-    an explicit readiness check and document only a verified recovery. Direct server invocation must
-    remain a diagnostic and cannot be presented as proof that the proprietary client registered it.
+44. `AI-ADOPTION-CODEX-PROJECT-SCOPE-001`: the initial crash/resume diagnosis was disproved. The
+    resumed Task was bound to the ViewCompose Project, while the target was neither a saved Codex
+    Project nor trusted by its exact physical root. Codex therefore ignored the target's managed
+    `.codex/config.toml`; parent-directory trust did not activate it. Adding exact target-project
+    trust made `codex mcp list` discover `viewcompose`, while a direct legacy protocol handshake
+    against the configured entry still listed 15/15 tools and established only package/runtime
+    health. The second whole-screen migration therefore remains manual evidence, not MCP or
+    installed-Skill acceptance evidence. `doctor` must fail closed until exact Codex project trust
+    exists, beginner guidance must require a new Task bound to that same saved Project, and direct
+    server invocation must never be presented as proof that the proprietary client registered it.
 
 Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
 1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1
@@ -907,9 +908,15 @@ the whole-screen device assertion passed 1/1 in 47.223 seconds. An attended tap 
 row opened MIUI's application-details Activity, then the existing guide Activity became resumed
 after the declared delay; no application crash was observed in the bounded log. The target commit
 is `c5067fee`. Advertising remained disabled only by the user's uncommitted Debug toggle. Because
-the resumed Codex task had no registered ViewCompose tools despite the healthy direct MCP probe,
-this slice validates the framework APIs and migration result but not the installed converter,
-validator, or client Skill workflow.
+the Codex Task was bound to ViewCompose rather than the target Project, it correctly had no
+registered target-project ViewCompose tools despite the healthy direct MCP probe. This slice
+validates the framework APIs and migration result but not the installed converter, validator, or
+client Skill workflow. The corrected `doctor` now distinguishes exact Codex project trust from a
+merely installed project configuration: the focused fixture passes 14/14 runnable tests with one
+platform-specific skip, including the parent-trust rejection and exact-root acceptance. Distribution
+and fresh-adoption fixtures create client-owned trust explicitly; the package never edits or grants
+user trust. The remaining proprietary-client acceptance step is one new Codex Desktop Task created
+from the saved and trusted target Project.
 
 This audit repair changes npm-distributed Skills, their workflow fixture, documentation, and an
 external sample application. It changes no Maven Artifact production source, publication input,

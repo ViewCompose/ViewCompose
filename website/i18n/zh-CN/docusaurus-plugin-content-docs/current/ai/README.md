@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: c12d16c62435c7b2fe45e33eb802266f8aee3bce38b3fdf7209977f467eee2f2
+translation_source_hash: 90ff887fff65970fac5ab21c74772fa474628967583dffaa7d57b871f167b622
 translation_status: current
 ---
 
@@ -157,18 +157,25 @@ npx --yes @viewcompose/ai-tooling@0.7.0 doctor --client <codex|claude-code|curso
 ```
 
 `project-bound-ready` 表示 MCP Entry 与全部 Skill 都和已安装 Release 一致，物理 Project 根目录
-已绑定，并且已满足深层证据所需的 JDK/Android SDK 前提。报告会分别列出
+已绑定，已满足深层证据所需的 JDK/Android SDK 前提；如果选择的是 Codex，还表示 Codex 已将
+这个精确 Project 根目录标记为可信。只信任它的上级目录并不够。报告会分别列出
 `knowledgeAndGeneration`、`compilationPreviewAndLayout` 和 Host 前提，因此不会把不可用的证据
-Lane 误报为成功。
+Lane 误报为成功。Package 只诊断 Codex Trust，不会替用户授予 Trust，也不会编辑用户的全局
+Codex 配置。
 
 继续完成客户端侧连接检查：
 
-- **Codex CLI：**运行 `codex mcp list`，再检查 `/mcp` 与 `/skills`；首次调用使用
-  `$viewcompose-api-reference`。
-- **Codex Desktop：**独立的 `codex` Shell 命令可能并未安装。执行 `init` 后重新打开
-  Project 或创建新 Task，再检查应用内的 MCP 与 Skill 界面，并首次调用
-  `$viewcompose-api-reference`。当 Codex Desktop 是所选 Client 时，缺失 `codex`
-  命令不代表安装失败。官方资料：[MCP](https://developers.openai.com/codex/mcp/)与
+- **Codex CLI：**先在 Codex 中打开精确的 Android Project，并在出现提示时批准 Project Trust。
+  然后在同一个物理 Project 根目录运行 `codex mcp list`，再检查 `/mcp` 与 `/skills`；首次调用
+  使用 `$viewcompose-api-reference`。
+- **Codex Desktop：**把精确的 Android Project 添加或打开为 Codex Project，并在出现提示时批准
+  Trust。在该 Project 根目录执行 `init`，然后从同一个 Project 创建新 Task。绑定到其他 Project
+  的 Task 不会加载目标 Project 的 `.codex/config.toml`，已经运行中的 Task 也不能证明新写入的配置
+  已被发现。检查应用内的 MCP 与 Skill 界面，确认存在 `viewcompose`，再首次调用
+  `$viewcompose-api-reference`。如果缺失，先确认 Task 所属 Project，再重新执行 `doctor`；直接启动
+  MCP Server 只能证明 Server 健康，不能证明 Desktop 已发现它。独立的 `codex` Shell 命令可以
+  缺失，选择 Codex Desktop 时不要求安装该命令。官方资料：
+  [MCP](https://developers.openai.com/codex/mcp/)与
   [Agent Skills](https://learn.chatgpt.com/docs/build-skills)。
 - **Claude Code：**如有提示，批准 Project `.mcp.json`，运行 `claude mcp list` 与
   `claude mcp get viewcompose`，再检查 `/mcp`；首次调用使用

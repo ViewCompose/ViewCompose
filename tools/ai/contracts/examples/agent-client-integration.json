@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "profileSetId": "viewcompose-agent-clients-v5",
-  "lastVerified": "2026-09-03",
+  "lastVerified": "2026-09-04",
   "package": {
     "name": "@viewcompose/ai-tooling",
     "version": "0.8.0",
@@ -24,7 +24,7 @@
     "maxUpgradeCommands": 1,
     "protocolVersions": ["2026-07-28", "2025-11-25"],
     "vendorBinaryAutomation": false,
-    "limitation": "CI validates generated configuration, transactional lifecycle behavior, exact Skill bytes, and both frozen MCP protocol handshakes; it does not authenticate or automate proprietary client binaries."
+    "limitation": "CI validates generated configuration, exact Codex project-trust diagnosis, transactional lifecycle behavior, exact Skill bytes, and both frozen MCP protocol handshakes; it does not grant client trust, authenticate or automate proprietary client binaries, or prove that an already-running task hot-loads changed project configuration."
   },
   "clients": [
     {

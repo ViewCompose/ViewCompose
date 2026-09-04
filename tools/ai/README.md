@@ -680,7 +680,9 @@ npx --yes @viewcompose/ai-tooling@0.7.0 doctor --client <codex|claude-code|curso
 ```
 
 The default result is `project-bound-ready` when the exact configuration and Skills are present,
-JDK 17 or 21 is available, and Android SDK platform 36 is installed. Knowledge/generation and
+JDK 17 or 21 is available, Android SDK platform 36 is installed, and the exact project root is
+trusted when Codex is selected. Parent-directory trust does not satisfy that Codex check. The
+package diagnoses trust from the user configuration but never grants it. Knowledge/generation and
 compilation/Preview/layout readiness are reported separately, and `init` includes this diagnosis in
 its own result. `VIEWCOMPOSE_PROJECT_ROOT` is always bound to the physical consumer root; an
 optional `VIEWCOMPOSE_SOURCE_ROOT` remains only for contributor compatibility. The installed

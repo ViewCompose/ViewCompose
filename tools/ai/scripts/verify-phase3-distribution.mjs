@@ -281,10 +281,11 @@ async function verifyInstalledFiles(packageRoot, manifest) {
   }
 }
 
-async function runAgentCommand(agent, arguments_) {
+async function runAgentCommand(agent, arguments_, environment = {}) {
   const result = await execFileAsync(agent, arguments_, {
     cwd: repositoryRoot,
     encoding: 'utf8',
+    env: {...process.env, ...environment},
     maxBuffer: 1024 * 1024,
   });
   if (result.stderr !== '') throw new Error('Installed agent integration command emitted stderr.');
@@ -308,17 +309,27 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
     realpath(repositoryRoot),
   ]);
   const installedMcp = await realpath(resolve(packageRoot, 'scripts/mcp-server.mjs'));
+  const agentHome = resolve(temporaryRoot, 'agent-home');
+  const commandEnvironment = {HOME: agentHome, USERPROFILE: agentHome};
+  await mkdir(resolve(agentHome, '.codex'), {recursive: true});
   for (const profile of profiles.clients) {
     const projectRoot = resolve(temporaryRoot, `agent-${profile.id}`);
     await mkdir(projectRoot);
     const canonicalProjectRoot = await realpath(projectRoot);
+    if (profile.id === 'codex') {
+      await writeFile(resolve(agentHome, '.codex/config.toml'), [
+        `[projects.${JSON.stringify(canonicalProjectRoot)}]`,
+        'trust_level = "trusted"',
+        '',
+      ].join('\n'));
+    }
     const standaloneConfig = await runAgentCommand(agent, [
       'config',
       '--client',
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]);
+    ], commandEnvironment);
     const sourceBoundConfig = await runAgentCommand(agent, [
       'config',
       '--client',
@@ -327,7 +338,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       canonicalProjectRoot,
       '--source-root',
       canonicalSourceRoot,
-    ]);
+    ], commandEnvironment);
     if (profile.config.format === 'json') {
       const standalone = JSON.parse(standaloneConfig);
       const parsed = JSON.parse(sourceBoundConfig);
@@ -361,10 +372,11 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (
       first.mode !== 'project-bound' ||
       first.config.status !== 'installed' ||
+      first.readiness.status !== 'project-bound-ready' ||
       first.skills.installed.length !== skills.skills.length ||
       first.skills.unchanged.length !== 0
     ) {
@@ -381,7 +393,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (
       doctor.status !== 'project-bound-ready' ||
       doctor.capabilities.knowledgeAndGeneration !== 'ready' ||
@@ -394,7 +406,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (
       second.config.status !== 'unchanged' ||
       second.skills.installed.length !== 0 ||
@@ -408,7 +420,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (removed.config.status !== 'removed' || removed.skills.removed.length !== skills.skills.length) {
       throw new Error(`Installed ${profile.id} lifecycle did not uninstall cleanly.`);
     }

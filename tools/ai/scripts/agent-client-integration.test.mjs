@@ -6,7 +6,8 @@ import test from 'node:test';
 import {
   AGENT_CLIENT_PROFILES,
   commitDurablePackageIntegrity,
-  diagnoseAgentClient,
+  detectAgentClientProjectAccess,
+  diagnoseAgentClient as diagnoseAgentClientProduction,
   initializeAgentClient,
   installAgentClientSkills,
   isAbsoluteProjectRoot,
@@ -19,6 +20,10 @@ import {
 const aiRoot = await realpath(new URL('../', import.meta.url));
 const sourceRoot = resolve(aiRoot, '../..');
 const releasedProfile = '895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064';
+const diagnoseAgentClient = (options) => diagnoseAgentClientProduction({
+  ...options,
+  detectClientProject: async () => ({status: 'ready'}),
+});
 
 async function createAiPackage(root, version, skillSuffix) {
   await mkdir(resolve(root, 'contracts'), {recursive: true});
@@ -149,6 +154,56 @@ test('recognizes POSIX, Windows drive, and Windows UNC absolute project-root syn
   assert.equal(isAbsoluteProjectRoot('C:\\workspace\\app', 'win32'), true);
   assert.equal(isAbsoluteProjectRoot('\\\\server\\share\\app', 'win32'), true);
   assert.equal(isAbsoluteProjectRoot('C:workspace\\app', 'win32'), false);
+});
+
+test('requires exact Codex project trust before reporting project-bound readiness', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-trust-')));
+  const packageRoot = resolve(temporary, 'package');
+  const projectRoot = resolve(temporary, 'project');
+  const cacheRoot = resolve(temporary, 'cache');
+  const codexConfigPath = resolve(temporary, 'codex-config.toml');
+  const detectClientProject = (options) => detectAgentClientProjectAccess({
+    ...options,
+    codexConfigPath,
+  });
+  const host = {
+    detectJava: () => ({feature: 17, javaHome: '/jdk-17'}),
+    detectSdk: () => ({apiLevel: 36, root: '/android-sdk'}),
+  };
+  try {
+    await createAiPackage(packageRoot, '0.4.0', 'trust');
+    await mkdir(projectRoot);
+    await initializeAgentClient({
+      client: 'codex', projectRoot, aiRoot: packageRoot, cacheRoot,
+    });
+    await writeFile(codexConfigPath, [
+      `[projects.${JSON.stringify(resolve(temporary))}]`,
+      'trust_level = "trusted"',
+      '',
+    ].join('\n'));
+
+    const untrusted = await diagnoseAgentClientProduction({
+      client: 'codex', projectRoot, detectClientProject, ...host,
+    });
+    assert.equal(untrusted.status, 'repair-required');
+    assert.equal(untrusted.config.status, 'ready');
+    assert.match(untrusted.config.detail, /exact project root is trusted/u);
+    assert.equal(untrusted.capabilities.knowledgeAndGeneration, 'repair-required');
+
+    await writeFile(codexConfigPath, [
+      `[projects.${JSON.stringify(projectRoot)}]`,
+      'trust_level = "trusted"',
+      '',
+    ].join('\n'));
+    const trusted = await diagnoseAgentClientProduction({
+      client: 'codex', projectRoot, detectClientProject, ...host,
+    });
+    assert.equal(trusted.status, 'project-bound-ready');
+    assert.equal(trusted.config.status, 'ready');
+    assert.equal(trusted.config.detail, undefined);
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
 });
 
 test('binds MCP to a durable content-addressed package that survives source removal', async () => {

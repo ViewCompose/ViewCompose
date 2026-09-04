@@ -131,6 +131,7 @@ export async function verifyAgentClientIntegration() {
         aiRoot,
         nodeExecutable: process.execPath,
         mcpServerPath,
+        detectClientProject: async () => ({status: 'ready'}),
       });
       if (
         doctor.status !== 'project-bound-ready' ||

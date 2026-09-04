@@ -191,18 +191,27 @@ npx --yes @viewcompose/ai-tooling@0.7.0 doctor --client <codex|claude-code|curso
 ```
 
 `project-bound-ready` means the MCP entry and every Skill match the installed release, the physical
-project root is bound, and the JDK/Android SDK prerequisites for deep evidence are available. The
-report separates `knowledgeAndGeneration`, `compilationPreviewAndLayout`, and host prerequisites, so
-an unavailable evidence lane is never reported as successful.
+project root is bound, the JDK/Android SDK prerequisites for deep evidence are available, and Codex
+has marked that exact project root as trusted when Codex is the selected client. Trusting only a
+parent directory is not sufficient. The report separates `knowledgeAndGeneration`,
+`compilationPreviewAndLayout`, and host prerequisites, so an unavailable evidence lane is never
+reported as successful. The package diagnoses Codex trust but never grants it or edits the user's
+global Codex configuration.
 
 Complete the client-side connection check:
 
-- **Codex CLI:** run `codex mcp list`, then inspect `/mcp` and `/skills`; start with
-  `$viewcompose-api-reference`.
-- **Codex desktop:** the standalone `codex` shell command may not be installed. Reopen the project
-  or start a new task after `init`, inspect the app's MCP and Skills surfaces, and start with
-  `$viewcompose-api-reference`. A missing `codex` command is not an installation failure when the
-  desktop app is the selected client. See the official
+- **Codex CLI:** first open the exact Android project in Codex and approve project trust when
+  prompted. From that same physical project root, run `codex mcp list`, then inspect `/mcp` and
+  `/skills`; start with `$viewcompose-api-reference`.
+- **Codex desktop:** add or open the exact Android project as a Codex project and approve trust when
+  prompted. Run `init` from that project root, then start a new task from that same project. A task
+  attached to a different project does not load the target project's `.codex/config.toml`, and an
+  already-running task is not proof that a newly written configuration was discovered. Inspect the
+  app's MCP and Skills surfaces, confirm `viewcompose`, and start with
+  `$viewcompose-api-reference`. If it is missing, confirm the task's project first and repeat
+  `doctor`; direct execution of the MCP server proves only server health, not desktop discovery. The
+  standalone `codex` shell command may be absent and is not required when the desktop app is the
+  selected client. See the official
   [MCP](https://developers.openai.com/codex/mcp/) and
   [Agent Skills](https://learn.chatgpt.com/docs/build-skills) documentation.
 - **Claude Code:** approve the project `.mcp.json` if prompted, run `claude mcp list` and
