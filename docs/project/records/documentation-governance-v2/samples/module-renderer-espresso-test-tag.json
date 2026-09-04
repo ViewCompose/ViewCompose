@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.renderer-espresso-test-tag",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "modifier.interaction",
+  "document_ids": ["module.viewcompose-renderer-android"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/androidTest/java/com/viewcompose/samples/tutorials/CapabilityTutorialsTest.kt",
+  "region": "renderer-android-espresso-test-tag",
+  "build_target": ":samples:tutorials:compileDebugAndroidTestKotlin"
+}

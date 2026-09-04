@@ -154,6 +154,7 @@ export function loadKnowledgeIndex() {
     const symbolsBySimpleName = new Map();
     const symbolsByImport = new Map();
     const symbolsByCapability = new Map();
+    const samplesByCapability = new Map();
     const capabilitiesByArtifact = new Map();
     for (const symbol of symbols) {
       addToIndex(symbolsBySimpleName, symbol.simpleName.toLowerCase(), symbol);
@@ -165,6 +166,9 @@ export function loadKnowledgeIndex() {
     }
     for (const capability of capabilities) {
       addToIndex(capabilitiesByArtifact, capability.artifactId, capability);
+    }
+    for (const sample of samples) {
+      addToIndex(samplesByCapability, sample.capabilityId, sample);
     }
     return {
       manifest,
@@ -184,6 +188,7 @@ export function loadKnowledgeIndex() {
       symbolsBySimpleName,
       symbolsByImport,
       symbolsByCapability,
+      samplesByCapability,
       capabilitiesByArtifact,
     };
   });
@@ -272,6 +277,12 @@ function symbolSummary(symbol, index) {
 function sampleForCapability(capability, index) {
   if (!capability?.sample?.sampleId) return null;
   return index.bySampleId.get(capability.sample.sampleId) ?? null;
+}
+
+function relatedSamplesForCapability(capability, index) {
+  return capability
+    ? index.samplesByCapability.get(capability.capabilityId) ?? []
+    : [];
 }
 
 function searchScore(symbol, rawQuery, normalizedQuery, queryTokens) {
@@ -496,6 +507,7 @@ export async function retrieveApiReference(arguments_, {requestId = 'get-api-ref
         artifact: artifactSummary(index.byArtifactId.get(symbol.artifactId)),
         capability,
         sample: sampleForCapability(capability, index),
+        relatedSamples: relatedSamplesForCapability(capability, index),
       },
       elapsedMs: performance.now() - started,
     });
@@ -548,6 +560,7 @@ export async function retrieveApiReference(arguments_, {requestId = 'get-api-ref
         symbols: (index.symbolsByCapability.get(capability.capabilityId) ?? [])
           .map((entry) => symbolSummary(entry, index)),
         sample: sampleForCapability(capability, index),
+        relatedSamples: relatedSamplesForCapability(capability, index),
       },
       elapsedMs: performance.now() - started,
     });
@@ -636,6 +649,7 @@ export async function retrieveComponentReference(arguments_, {requestId = 'get-c
       artifact: artifactSummary(index.byArtifactId.get(symbol.artifactId)),
       capability,
       sample: sampleForCapability(capability, index),
+      relatedSamples: relatedSamplesForCapability(capability, index),
       rules: applicableRules(symbol, overloads, index),
     },
     elapsedMs: performance.now() - started,

@@ -7,6 +7,7 @@ owner:
   id: viewcompose-renderer-android
 version_lane: released
 capability_ids:
+  - modifier.interaction
   - renderer.tree-transactions
   - renderer.reconciliation
   - renderer.diagnostics
@@ -15,6 +16,8 @@ artifact_ids:
   - viewcompose-renderer-android
 sample_ids:
   - module.renderer-dependency
+  - module.renderer-espresso-dependencies
+  - module.renderer-espresso-test-tag
   - module.renderer-tree-transaction
   - module.renderer-observed-properties
   - module.renderer-reconciliation
@@ -485,6 +488,37 @@ Because the current line is alpha, the documentation site intentionally does not
   a label or index is never treated as logical identity. SegmentedControl recreates its internal
   shape drawable when density or layout direction changes so resolved corners cannot retain an
   obsolete environment.
+
+## Espresso keyed test tags
+
+`Modifier.testTag("tool-sections")` is exposed by the Android renderer as a keyed View tag. It does
+not replace `View.getTag()`, so Espresso's `withTagValue(...)` matcher cannot find it. Keep the
+renderer resource on the `androidTest` classpath and match the keyed value instead.
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="renderer-android-espresso-dependencies" sample_id="module.renderer-espresso-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
+```kotlin
+dependencies {
+    add(
+        "androidTestImplementation",
+        "com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02",
+    )
+    add("androidTestImplementation", "androidx.test.espresso:espresso-core:3.7.0")
+}
+```
+
+Use the stable renderer-owned resource ID with `withTagKey(...)`:
+
+{/* compiled-region source="samples/tutorials/src/androidTest/java/com/viewcompose/samples/tutorials/CapabilityTutorialsTest.kt" region="renderer-android-espresso-test-tag" sample_id="module.renderer-espresso-test-tag" build_target=":samples:tutorials:compileDebugAndroidTestKotlin" */}
+```kotlin
+fun assertViewComposeNodeIsDisplayed(tag: String) {
+    onView(withTagKey(RendererR.id.viewcompose_test_tag, equalTo(tag)))
+        .check(matches(isDisplayed()))
+}
+```
+
+Import `com.viewcompose.renderer.R as RendererR`. Treat `viewcompose_test_tag` as a test bridge:
+use application-defined tag values for stable test intent, and do not persist the integer resource
+ID or assume it is Android's unkeyed `View.tag` property.
 
 ## Android host and threading rules
 

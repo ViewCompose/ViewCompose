@@ -4,10 +4,21 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withTagKey
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.viewcompose.renderer.R as RendererR
+import org.hamcrest.Matchers.equalTo
 import org.junit.Test
 import org.junit.runner.RunWith
+
+// DOCS_REGION_START(renderer-android-espresso-test-tag)
+fun assertViewComposeNodeIsDisplayed(tag: String) {
+    onView(withTagKey(RendererR.id.viewcompose_test_tag, equalTo(tag)))
+        .check(matches(isDisplayed()))
+}
+// DOCS_REGION_END(renderer-android-espresso-test-tag)
 
 @RunWith(AndroidJUnit4::class)
 class CapabilityTutorialsTest {

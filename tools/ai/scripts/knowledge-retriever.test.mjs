@@ -81,6 +81,13 @@ test('resolves exact symbol, capability, and artifact references without conflat
   assert.equal(symbol.data.artifact.version, '0.1.0-alpha02');
   assert.deepEqual(symbol.data.capability.versionState, {lane: 'released', version: '0.1.0-alpha01'});
 
+  const testTag = await retrieveApiReference({
+    ...lane,
+    identifier: 'com.viewcompose.ui.modifier.Modifier.testTag',
+  });
+  assert.ok(testTag.data.relatedSamples.some((entry) =>
+    entry.sampleId === 'module.renderer-espresso-test-tag'));
+
   const capability = await retrieveApiReference({...lane, identifier: 'foundation.components'});
   assert.equal(capability.data.referenceType, 'capability');
   assert.ok(capability.data.symbols.some((entry) => entry.simpleName === 'Column'));

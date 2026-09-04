@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: effcc943f35769588188742b7f6a4c2fe228002cc26a45b849d73675e42fb392
+translation_source_hash: f77d43bec08e90546ca11e9cb9371bf235253f077b32d71a51d0031b3786b8f8
 translation_status: current
 ---
 
@@ -378,6 +378,37 @@ Matrix。Phase 4 负责该基准与最终指导。
   Navigation/Segment View 可以在同一容器内复用，但 Label 或 Index 绝不充当逻辑身份。
   Density 或布局方向变化时，SegmentedControl 会重建内部 Shape Drawable，避免解析后的圆角继续
   持有过期环境。
+
+## Espresso 键控测试标签
+
+`Modifier.testTag("tool-sections")` 会被 Android Renderer 暴露为键控 View Tag。它不会替换
+`View.getTag()`，因此 Espresso 的 `withTagValue(...)` Matcher 无法找到它。应把 Renderer
+资源加入 `androidTest` 类路径，并按 Key 匹配对应值。
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="renderer-android-espresso-dependencies" sample_id="module.renderer-espresso-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
+```kotlin
+dependencies {
+    add(
+        "androidTestImplementation",
+        "com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02",
+    )
+    add("androidTestImplementation", "androidx.test.espresso:espresso-core:3.7.0")
+}
+```
+
+使用 Renderer 持有的稳定资源 ID 配合 `withTagKey(...)`：
+
+{/* compiled-region source="samples/tutorials/src/androidTest/java/com/viewcompose/samples/tutorials/CapabilityTutorialsTest.kt" region="renderer-android-espresso-test-tag" sample_id="module.renderer-espresso-test-tag" build_target=":samples:tutorials:compileDebugAndroidTestKotlin" */}
+```kotlin
+fun assertViewComposeNodeIsDisplayed(tag: String) {
+    onView(withTagKey(RendererR.id.viewcompose_test_tag, equalTo(tag)))
+        .check(matches(isDisplayed()))
+}
+```
+
+导入 `com.viewcompose.renderer.R as RendererR`。把 `viewcompose_test_tag` 视为测试桥接：使用由
+应用定义的 Tag 值表达稳定测试意图，不要持久化整数资源 ID，也不要假定它就是 Android 未键控的
+`View.tag` 属性。
 
 ## Android host 与线程规则
 
