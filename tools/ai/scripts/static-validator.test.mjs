@@ -13,7 +13,7 @@ const fixture = (name) => readFile(
 test('derives the validator index from all generated source-resolved symbols', async () => {
   const index = await loadValidatorIndex();
   assert.equal(index.symbols.length, 540);
-  assert.equal(index.publicImports.length, 1176);
+  assert.equal(index.publicImports.length, 1393);
   assert.ok(index.byImport.has('com.viewcompose.ui.foundation.Column'));
   assert.ok(index.publicImportByName.has('com.viewcompose.ui.node.ImageSource'));
   assert.ok(index.bySimpleName.has('padding'));

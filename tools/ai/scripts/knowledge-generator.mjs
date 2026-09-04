@@ -15,6 +15,7 @@ const execFileAsync = promisify(execFile);
 const capabilityRecordPath = 'docs/project/records/documentation-governance-v2/capabilities';
 const sampleRecordPath = 'docs/project/records/documentation-governance-v2/samples';
 const capabilityReferencePath = 'website/src/data/capability-reference.json';
+const publishingPropertiesPath = 'gradle/viewcompose-publishing.properties';
 const rulesPath = resolve(aiRoot, 'knowledge/rules.json');
 const generatorBaseVersion = '1.0.0';
 
@@ -144,6 +145,24 @@ export async function gitRevisionKnowledgeSourceProvider(
 
 function normalizeWhitespace(value) {
   return value.replace(/\s+/gu, ' ').trim();
+}
+
+function publishingArtifactVersions(source) {
+  const properties = new Map();
+  for (const rawLine of source.replaceAll('\r\n', '\n').split('\n')) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const separator = line.indexOf('=');
+    if (separator > 0) properties.set(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
+  }
+  const modules = (properties.get('apiDocs.strictModules') ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return modules.map((artifact) => ({
+    artifact,
+    version: properties.get(`module.${artifact}.version`) ?? null,
+  }));
 }
 
 function trimIndent(value) {
@@ -458,6 +477,11 @@ async function buildPublicImports(artifacts, sourceProvider, sourceText) {
     }
   }
   const imports = mergePublicImports(entries);
+  const artifactById = new Map(artifacts.map((entry) => [entry.artifact, entry]));
+  for (const entry of imports) {
+    const artifact = artifactById.get(entry.artifactId);
+    entry.artifactVersion = artifact?.version ?? null;
+  }
   for (const entry of imports.filter((candidate) => candidate.declarationKind === 'type')) {
     entry.declarations = [];
     for (const sourceLocation of entry.sources) {
@@ -614,11 +638,18 @@ export async function buildKnowledgeBundle(options = {}) {
   const artifactVersions = options.artifactVersions instanceof Map
     ? options.artifactVersions
     : new Map(Object.entries(options.artifactVersions ?? {}));
-  const [capabilityReference, capabilityRecords, sampleRecords, rulesDocument] = await Promise.all([
+  const [
+    capabilityReference,
+    capabilityRecords,
+    sampleRecords,
+    rulesDocument,
+    publishingProperties,
+  ] = await Promise.all([
     sourceProvider.readText(capabilityReferencePath).then(JSON.parse),
     sourceProvider.readJsonDirectory(capabilityRecordPath),
     sourceProvider.readJsonDirectory(sampleRecordPath),
     readJson(rulesPath),
+    sourceProvider.readText(publishingPropertiesPath),
   ]);
   const recordByCapability = new Map(
     capabilityRecords.map((record) => [record.capability_id, record]),
@@ -656,7 +687,11 @@ export async function buildKnowledgeBundle(options = {}) {
       };
     })
     .sort((left, right) => left.artifact.localeCompare(right.artifact));
-  const publicImports = await buildPublicImports(artifacts, sourceProvider, sourceText);
+  const catalogArtifacts = publishingArtifactVersions(publishingProperties).map((artifact) => ({
+    ...artifact,
+    version: artifactVersions.get(artifact.artifact) ?? artifact.version,
+  }));
+  const publicImports = await buildPublicImports(catalogArtifacts, sourceProvider, sourceText);
   const publicImportByName = new Map(publicImports.map((entry) => [entry.importName, entry]));
   const publicTypesBySimpleName = new Map();
   for (const entry of publicImports.filter((candidate) => candidate.declarationKind === 'type')) {

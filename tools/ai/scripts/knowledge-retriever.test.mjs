@@ -13,10 +13,10 @@ const lane = {versionLane: 'current-source'};
 
 test('loads one integrity-checked immutable knowledge index', async () => {
   const index = await loadKnowledgeIndex();
-  assert.equal(index.manifest.bundleFingerprint, 'e23da5d9835d00dd31eda167152a875ebefa3f519b992874635113eed5a9a537');
+  assert.equal(index.manifest.bundleFingerprint, '901fcc09c04526619d02e456226b0b9b1288975344e07c43df269c6332952370');
   assert.equal(index.artifacts.length, 31);
   assert.equal(index.capabilities.length, 82);
-  assert.equal(index.publicImports.length, 1176);
+  assert.equal(index.publicImports.length, 1393);
   assert.equal(index.symbols.length, 540);
   assert.equal(index.samples.length, 216);
   assert.equal(index.rules.length, 10);
@@ -102,6 +102,10 @@ test('resolves public support types and links them back to governed signatures a
 
   const semanticsRole = await retrieveApiReference({...lane, identifier: 'SemanticsRole'});
   assert.equal(semanticsRole.data.supportType.importName, 'com.viewcompose.ui.modifier.SemanticsRole');
+
+  const textState = await retrieveApiReference({...lane, identifier: 'TextFieldState'});
+  assert.equal(textState.data.artifact.artifactId, 'viewcompose-text-core');
+  assert.equal(textState.data.artifact.version, '0.1.0-alpha04');
 });
 
 test('returns component parameters, applicable rules, ownership, and its compiled sample', async () => {

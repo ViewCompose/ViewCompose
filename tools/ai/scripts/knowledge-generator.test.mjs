@@ -54,7 +54,7 @@ test('builds a deterministic complete bundle from Governance V2 and compiled sam
   assert.deepEqual([...first.files], [...second.files]);
   assert.equal(first.manifest.counts.artifacts, 31);
   assert.equal(first.manifest.counts.capabilities, 82);
-  assert.equal(first.manifest.counts.publicImports, 1180);
+  assert.equal(first.manifest.counts.publicImports, 1393);
   assert.equal(first.manifest.counts.symbols, 540);
   assert.equal(first.manifest.counts.samples, 216);
   assert.equal(first.manifest.counts.rules, 10);
@@ -66,6 +66,9 @@ test('builds a deterministic complete bundle from Governance V2 and compiled sam
     entry.declarations.length > 0));
   assert.ok(first.publicImports.some((entry) =>
     entry.importName === 'com.viewcompose.ui.modifier.SemanticsRole'));
+  assert.ok(first.publicImports.some((entry) =>
+    entry.importName === 'com.viewcompose.text.TextFieldState' &&
+    entry.artifactVersion === '0.1.0-alpha04'));
   const image = first.symbols.find((symbol) =>
     symbol.symbolId === 'com.viewcompose.ui.foundation.UiTreeBuilder.Image');
   assert.ok(image.signatureTypes.some((entry) =>

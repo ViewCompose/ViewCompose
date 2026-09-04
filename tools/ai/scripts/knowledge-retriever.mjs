@@ -522,7 +522,13 @@ export async function retrieveApiReference(arguments_, {requestId = 'get-api-ref
       data: {
         referenceType: 'support-type',
         supportType,
-        artifact: artifactSummary(index.byArtifactId.get(supportType.artifactId)),
+        artifact: artifactSummary(index.byArtifactId.get(supportType.artifactId)) ?? {
+          artifactId: supportType.artifactId,
+          version: supportType.artifactVersion,
+          versionState: 'published-dependency',
+          apiReference: `/api/${supportType.artifactId}/${supportType.artifactVersion}/`,
+          moduleManual: `/modules/${supportType.artifactId}/${supportType.artifactVersion}/`,
+        },
         relatedCapabilities,
       },
       elapsedMs: performance.now() - started,
