@@ -81,7 +81,7 @@ test('builds the exact frozen generated Preview request and Kotlin wrapper', asy
   );
   assert.equal(
     plan.requestFingerprint,
-    'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
+    '26f6c767b7dde4a039560095f746ab0602a75de990e7efc7d044e07062a2ea4a',
   );
   assert.equal(
     plan.wrapperFingerprint,
@@ -104,7 +104,7 @@ test('builds the exact frozen embedded PNG request, wrapper, and resource plan',
   assert.equal(plan.wrapper, await fixture('generated-preview/profile-card.preview-wrapper.kt'));
   assert.equal(
     plan.requestFingerprint,
-    '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26',
+    'a46f7f18ba70cabe9b5c2a3841195b57bd503e4dcd08f966d15b2cbd8bdf18f3',
   );
   assert.equal(
     plan.wrapperFingerprint,
@@ -138,7 +138,7 @@ test('builds the exact screenshot Preview profile and fixed callback values', as
   );
   assert.equal(
     plan.requestFingerprint,
-    '64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed',
+    '570a844f726fa68d6ba0a61299aa6535238dbd742b32f5262e7bf3e5c0ce9320',
   );
   assert.equal(
     plan.wrapperFingerprint,
@@ -257,12 +257,12 @@ test('stages immutable source and accepts only complete pinned render evidence',
       assert.equal(target.modulePath, ':preview');
       assert.deepEqual(target.gradleArguments, [
         '-PviewComposeAiPreviewRequestKey=' +
-          'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
+          '26f6c767b7dde4a039560095f746ab0602a75de990e7efc7d044e07062a2ea4a',
       ]);
       const input = resolve(
         repository,
         'build/ai/preview/requests',
-        'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
+        '26f6c767b7dde4a039560095f746ab0602a75de990e7efc7d044e07062a2ea4a',
         'input',
       );
       assert.equal(await readFile(resolve(input, 'GeneratedView.kt'), 'utf8'),
@@ -298,7 +298,7 @@ test('stages immutable source and accepts only complete pinned render evidence',
   assert.equal(result.evidence.level, 'rendered');
   assert.equal(
     result.data.generatedPreview.requestFingerprint,
-    'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
+    '26f6c767b7dde4a039560095f746ab0602a75de990e7efc7d044e07062a2ea4a',
   );
   assert.equal(result.data.generatedPreview.pngSha256, 'b'.repeat(64));
   assert.equal(result.data.generatedPreview.renderTreeSha256, 'c'.repeat(64));
@@ -311,7 +311,7 @@ test('stages an exact PNG resource and reports its public identity without raw b
     await fixture('generated-preview/image-binding.preview-request.json'),
   );
   const requestKey =
-    '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26';
+    'a46f7f18ba70cabe9b5c2a3841195b57bd503e4dcd08f966d15b2cbd8bdf18f3';
   const resourceName =
     'vc_ai_4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5';
   const result = await renderGeneratedPreview({
@@ -390,7 +390,7 @@ test('rejects changed PNG CRC and a symbolic-link asset before Gradle execution'
   const repository = await mkdtemp(resolve(tmpdir(), 'viewcompose-generated-preview-asset-link-'));
   context.after(() => rm(repository, {recursive: true, force: true}));
   const requestKey =
-    '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26';
+    'a46f7f18ba70cabe9b5c2a3841195b57bd503e4dcd08f966d15b2cbd8bdf18f3';
   const drawable = resolve(repository, 'build/ai/preview/requests', requestKey, 'res/drawable');
   await mkdir(drawable, {recursive: true});
   const external = resolve(repository, 'external.png');
@@ -421,7 +421,7 @@ test('rejects changed PNG CRC and a symbolic-link asset before Gradle execution'
 test('rejects changed bytes in an existing content-addressed input', async (context) => {
   const repository = await mkdtemp(resolve(tmpdir(), 'viewcompose-generated-preview-poison-'));
   context.after(() => rm(repository, {recursive: true, force: true}));
-  const requestKey = 'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a';
+  const requestKey = '26f6c767b7dde4a039560095f746ab0602a75de990e7efc7d044e07062a2ea4a';
   const input = resolve(repository, 'build/ai/preview/requests', requestKey, 'input');
   await mkdir(input, {recursive: true});
   await writeFile(resolve(input, 'GeneratedView.kt'), 'tampered\n');
@@ -447,7 +447,7 @@ test('rejects changed bytes in an existing content-addressed input', async (cont
 
 test('rejects symbolic-link build and diagnosis ancestors in the tool cache', async (context) => {
   const expectedRequest = JSON.parse(await fixture('generated-preview/login.preview-request.json'));
-  const requestKey = 'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a';
+  const requestKey = '26f6c767b7dde4a039560095f746ab0602a75de990e7efc7d044e07062a2ea4a';
 
   const stageRepository = await mkdtemp(resolve(tmpdir(), 'viewcompose-generated-build-link-'));
   context.after(() => rm(stageRepository, {recursive: true, force: true}));

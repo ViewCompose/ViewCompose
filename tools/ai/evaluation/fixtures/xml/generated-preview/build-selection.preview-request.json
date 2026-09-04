@@ -3,7 +3,7 @@
   "framework": {
     "versionLane": "current-source",
     "identity": "78127e51cd740ccdbd58d326e05426caf4e49795",
-    "bundleFingerprint": "e23da5d9835d00dd31eda167152a875ebefa3f519b992874635113eed5a9a537"
+    "bundleFingerprint": "bc45e520cd3e6f92310abfd999c3da209518b467e59575a13dbfa70f2ebd08e9"
   },
   "generatedSource": {
     "packageName": "generated.viewcompose",

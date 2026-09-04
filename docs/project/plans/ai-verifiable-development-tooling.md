@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-04
-next_action: Implement support-type resolution and unmatched-import validation as the next tooling corrections, then reproduce both against repository-external consumer fixtures before returning to further target-project page migration.
+next_action: Publish and index the external Espresso keyed-tag recipe, then resume whole-screen target-project migration to expose the next adoption gap.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -689,6 +689,37 @@ The trial exposed these additional adoption issues:
     reserved `com.viewcompose` namespaces, or return an explicit partial-coverage result that names
     every unchecked import and support type. Add the observed `weight` and `SemanticsRole` cases as
     regression fixtures; successful static matching must never imply compilation.
+
+Issues 33 and 34 were accepted on 2026-09-04. The current-source Knowledge Bundle now contains
+1,393 source-derived public top-level imports from every strict published module, including
+transitive support modules. Each import records its declaration kind, artifact, declared version,
+source locations, and, for types, normalized declarations and source fingerprint. Governed symbol
+records link the ViewCompose types used by their signatures to exact qualified identities;
+`get_api_reference` resolves an exact or unambiguous support type and returns its artifact plus
+related capabilities and compiled samples. The generated current-source bundle fingerprint is
+`bc45e520cd3e6f92310abfd999c3da209518b467e59575a13dbfa70f2ebd08e9`.
+
+The static validator now accepts an exact `com.viewcompose` import only when that import exists in
+the same generated catalog. Regression fixtures reject the observed nonexistent top-level
+`com.viewcompose.ui.modifier.weight` import and the wrong
+`com.viewcompose.ui.node.SemanticsRole` package. A repository-external reproduction used the
+corrected `ViewComposeFigmaTrial` `ToolboxScreen.kt`: the unchanged file returned `success` with 17
+governed symbols matched, while independent in-memory mutations for each observed bad import both
+returned `invalid` with `VC-AI-UNKNOWN-SYMBOL`. This is an `improved` result: the two compile-time
+misses are now rejected without rejecting the real `Modifier.weight` member calls, correct
+`SemanticsRole`, `ImageSource`, `UiTextStyle`, `dp`, or `sp` imports. The limitation is explicit:
+this gate verifies exact imports and governed call resolution, not Kotlin type checking, wildcard
+import contents, or compilation.
+
+Validation passed with 384/384 executed Node tests and one platform-specific skip, deterministic
+current and released Knowledge Bundle verification, the five-case Phase 2 static/security corpus,
+retrieval recall 1.00, project-analysis precision and recall 100%, and the combined Gradle
+`verifyAiStaticTooling`, `verifyAiDistribution`, `verifyDocumentationStructure`, and
+`verifyDevelopmentToolingIsolation` gate. The distribution run completed 2/2 reproducible builds,
+all three installed client profiles, 24/24 Skill copies, both MCP protocol versions, compiled
+screenshot and XML samples, exact semantic and pixel comparisons, and both generated XML Preview
+comparisons. The next action is issue 35's external Espresso keyed-tag recipe before another
+whole-screen migration pass.
 35. `AI-ADOPTION-TESTTAG-001`: the testing bridge uses a keyed Android tag, but the external
     Espresso matcher is not discoverable from the component/modifier reference. Publish and index a
     compiled external-consumer example using

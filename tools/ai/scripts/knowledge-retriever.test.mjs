@@ -13,7 +13,7 @@ const lane = {versionLane: 'current-source'};
 
 test('loads one integrity-checked immutable knowledge index', async () => {
   const index = await loadKnowledgeIndex();
-  assert.equal(index.manifest.bundleFingerprint, '901fcc09c04526619d02e456226b0b9b1288975344e07c43df269c6332952370');
+  assert.equal(index.manifest.bundleFingerprint, 'bc45e520cd3e6f92310abfd999c3da209518b467e59575a13dbfa70f2ebd08e9');
   assert.equal(index.artifacts.length, 31);
   assert.equal(index.capabilities.length, 82);
   assert.equal(index.publicImports.length, 1393);

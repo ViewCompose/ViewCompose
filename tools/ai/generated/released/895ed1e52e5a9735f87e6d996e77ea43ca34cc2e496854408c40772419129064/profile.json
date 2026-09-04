@@ -242,7 +242,7 @@
     "executesConsumerBuildLogic": false
   },
   "knowledge": {
-    "bundleFingerprint": "9ee4560b30f2d26378314d5b8c8acf20343662f5a8c1d5bfc0442944c4d09660",
+    "bundleFingerprint": "74cfe8816f5810564d41a0d839ecae865a3d9df0975fb38cc62272eb659ea925",
     "sourcePolicy": "exact-artifact-release-revisions",
     "versionLane": "released"
   },

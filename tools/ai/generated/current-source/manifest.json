@@ -1,8 +1,9 @@
 {
-  "bundleFingerprint": "e23da5d9835d00dd31eda167152a875ebefa3f519b992874635113eed5a9a537",
+  "bundleFingerprint": "bc45e520cd3e6f92310abfd999c3da209518b467e59575a13dbfa70f2ebd08e9",
   "counts": {
     "artifacts": 31,
     "capabilities": 82,
+    "publicImports": 1393,
     "rules": 10,
     "samples": 216,
     "symbols": 540
@@ -21,10 +22,16 @@
       "sha256": "242cecc7e8de0b8ec816d5cf43cf08c4dff92ac118dcf1d446ecdbd6278e4fca"
     },
     {
-      "bytes": 633576,
+      "bytes": 1103844,
+      "mediaType": "application/x-ndjson",
+      "path": "public-imports.jsonl",
+      "sha256": "69d8cb79af018c424c31866a6c9d152f9e1c9e2994a3c2b7d849bebb3811e069"
+    },
+    {
+      "bytes": 903670,
       "mediaType": "application/x-ndjson",
       "path": "symbols.jsonl",
-      "sha256": "23fd8dee99ecc8cdcfc208b86b8d444b703f3af70361a32ba74794a53505be4d"
+      "sha256": "af3e17718c18ae65b7009d19598ecc770d61d0503a77a9d2ced2c2b5afbc82a6"
     },
     {
       "bytes": 220813,
@@ -55,7 +62,7 @@
     "identity": "78127e51cd740ccdbd58d326e05426caf4e49795",
     "versionLane": "current-source"
   },
-  "generatorVersion": "1.0.0+445d68268972",
+  "generatorVersion": "1.0.0+d54ab2e08414",
   "schemaVersion": 1,
   "source": {
     "capabilityFingerprint": "2f97d77ce237ec69e1e17e094140b4d071b6f4e4167edf35bb866af0e6a9d2d5",

@@ -118,9 +118,9 @@
     "pixelGenerationRequestFingerprint": "53287747971524763ed8114e59c65f5d284b27e23acaff83db4203c95fed1858",
     "pixelGenerationReportFingerprint": "ef8428bca1dee88772f8c63ab7a9f7a8385357963039559f9456e15beab75fdd",
     "semanticComparisonContract": "screenshot-layout-comparison-contract.json",
-    "semanticComparisonFingerprint": "779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517",
+    "semanticComparisonFingerprint": "b30bab65aa8d7b6938c371cad35c599a78f30f0b119cea1f37cb1ff62d641c56",
     "previewRequest": "screenshot-render/wireframe.preview-request.json",
-    "previewRequestFingerprint": "64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed",
+    "previewRequestFingerprint": "570a844f726fa68d6ba0a61299aa6535238dbd742b32f5262e7bf3e5c0ce9320",
     "renderOutputFingerprint": "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
     "renderPngFingerprint": "c47698f63473b22763bbeffd020b8c9741d26b92f5c0069f0b6c4acca6f63663"
   },
@@ -128,7 +128,7 @@
     {
       "status": "implemented",
       "source": "canonicalized screenshot render reference",
-      "expectedComparisonFingerprint": "7504b5c23ed6e9fe142002572e08f24115e73fc311e4329057f8384f749bdd43",
+      "expectedComparisonFingerprint": "caf9d942875650808670e681ace5ba42b8a2dc8ff9323ffdb76622568590db12",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "configuration": {
         "density": 2.625,
@@ -156,7 +156,7 @@
         "mismatchBounds": null,
         "attributions": 0,
         "unassignedMismatchedPixels": 0,
-        "localizationFingerprint": "a15f3cd4260b7cae54307be32acb40f03196571a960afa2a7411d4fb327fac9b"
+        "localizationFingerprint": "7699f894ff1173f4ed9e6f4712525e0c49067bcbdd5443ad4d94d49fbe29612a"
       }
     }
   ],

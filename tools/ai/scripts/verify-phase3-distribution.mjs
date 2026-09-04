@@ -729,7 +729,17 @@ async function verifyCliFlow(
     comparedScreenshot.data?.preview?.renderTree?.sha256 !==
       screenshotComparisonContract.lineage.acceptedRenderTreeFingerprint
   ) {
-    throw new Error('Installed CLI did not compare the screenshot-generated layout exactly.');
+    throw new Error(
+      'Installed CLI did not compare the screenshot-generated layout exactly: ' +
+      JSON.stringify({
+        status: comparedScreenshot.status,
+        evidence: comparedScreenshot.evidence,
+        diagnosticCodes: comparedScreenshot.diagnostics?.map((item) => item.code),
+        comparisonFingerprint: comparedScreenshot.data?.comparison?.comparisonFingerprint,
+        summary: comparedScreenshot.data?.comparison?.summary,
+        renderTreeFingerprint: comparedScreenshot.data?.preview?.renderTree?.sha256,
+      }),
+    );
   }
   const [pixelGenerationRequest, pixelReferenceRequest, pixelReferenceResult] = await Promise.all([
     readJson(screenshotPixelGenerationRequestPath),
@@ -1362,9 +1372,9 @@ async function verifyMcpMatrix(mcp, contract) {
     modernScreenshotGeneration?.result?.structuredContent?.evidence?.outputFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     modernScreenshotComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      '779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517' ||
+      'b30bab65aa8d7b6938c371cad35c599a78f30f0b119cea1f37cb1ff62d641c56' ||
     modernScreenshotPixelComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      '7504b5c23ed6e9fe142002572e08f24115e73fc311e4329057f8384f749bdd43' ||
+      'caf9d942875650808670e681ace5ba42b8a2dc8ff9323ffdb76622568590db12' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
