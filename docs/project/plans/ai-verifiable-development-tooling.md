@@ -45,7 +45,7 @@ completion:
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
 last_verified: 2026-09-04
-next_action: Complete one attended Codex Desktop acceptance run from a newly created task that is bound to the saved and trusted target project; then implement support-type resolution and unmatched-import validation as the next tooling corrections.
+next_action: Implement support-type resolution and unmatched-import validation as the next tooling corrections, then reproduce both against repository-external consumer fixtures before returning to further target-project page migration.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -915,8 +915,19 @@ client Skill workflow. The corrected `doctor` now distinguishes exact Codex proj
 merely installed project configuration: the focused fixture passes 14/14 runnable tests with one
 platform-specific skip, including the parent-trust rejection and exact-root acceptance. Distribution
 and fresh-adoption fixtures create client-owned trust explicitly; the package never edits or grants
-user trust. The remaining proprietary-client acceptance step is one new Codex Desktop Task created
-from the saved and trusted target Project.
+user trust.
+
+The attended Codex Desktop acceptance then opened the target as a saved Project and created a new
+Task whose physical working directory was the target root. Compared with the earlier differently
+bound Task exposing 0 ViewCompose tools, the corrected path discovered 1/1 `viewcompose` MCP server,
+loaded 8/8 exact project Skills, and completed 1/1 read-only `analyze_project` invocation without
+diagnostic errors. The first broad inventory stopped honestly at its 200-file ceiling; a narrowed
+`page/home` run completed over 9 Kotlin files with no truncation and correctly reported 0
+ViewCompose imports, Artifacts, Capabilities, or findings in that region. The normalized client
+discovery change is 0/1 to 1/1 and the conclusion is **improved**. This proves the saved-project,
+exact-trust, new-Task recovery on one Codex Desktop/Linux installation; it does not prove hot reload
+inside an already-running Task or proprietary-client behavior on macOS and Windows. The next action
+is the previously deferred support-type resolution and unmatched-import validation correction.
 
 This audit repair changes npm-distributed Skills, their workflow fixture, documentation, and an
 external sample application. It changes no Maven Artifact production source, publication input,
