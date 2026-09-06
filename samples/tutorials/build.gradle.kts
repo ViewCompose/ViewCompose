@@ -40,5 +40,5 @@ dependencies {
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(project(":viewcompose-renderer-android"))
+    androidTestImplementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02")
 }

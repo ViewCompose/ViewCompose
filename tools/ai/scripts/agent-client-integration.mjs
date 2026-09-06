@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import {createHash, randomUUID} from 'node:crypto';
-import {realpathSync} from 'node:fs';
+import {constants, realpathSync} from 'node:fs';
 import {
+  access,
   copyFile,
   lstat,
   mkdir,
@@ -13,8 +14,8 @@ import {
   rmdir,
   writeFile,
 } from 'node:fs/promises';
-import {homedir, platform} from 'node:os';
-import {basename, dirname, isAbsolute, parse, posix, relative, resolve, sep, win32} from 'node:path';
+import {homedir, platform, tmpdir} from 'node:os';
+import {basename, delimiter, dirname, isAbsolute, parse, posix, relative, resolve, sep, win32} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {detectAndroidSdk, detectJavaRuntime} from './tool-core.mjs';
 import {detectFrameworkProjectProfile} from './framework-project-profile.mjs';
@@ -39,6 +40,67 @@ function durableIntegrityError(message) {
   const error = new Error(message);
   error.code = 'VC_AI_DURABLE_INTEGRITY';
   return error;
+}
+
+function durableRuntimeError(message) {
+  const error = new Error(message);
+  error.code = 'VC_AI_NODE_RUNTIME_TRANSIENT';
+  return error;
+}
+
+function isVolatileNodePath(path, temporaryDirectory = tmpdir()) {
+  const normalized = resolve(path);
+  const lowered = normalized.toLowerCase().replaceAll('\\', '/');
+  return contained(resolve(temporaryDirectory), normalized) ||
+    lowered.includes('/.npm/_npx/') ||
+    lowered.includes('/node_modules/.bin/');
+}
+
+async function requireDurableNodeExecutable(path, temporaryDirectory = tmpdir()) {
+  if (!isAbsolute(path) || isVolatileNodePath(path, temporaryDirectory)) {
+    throw durableRuntimeError(
+      'ViewCompose AI cannot persist a temporary Node.js runtime. Install Node.js 24.19 or newer ' +
+      'in a stable system, nvm, or user-local directory, ensure `node` is on PATH, and run init again.',
+    );
+  }
+  try {
+    const canonical = await realpath(path);
+    const metadata = await lstat(canonical);
+    await access(canonical, constants.X_OK);
+    if (!metadata.isFile() || isVolatileNodePath(canonical, temporaryDirectory)) {
+      throw durableRuntimeError('The selected Node.js runtime is not a durable executable file.');
+    }
+    return canonical;
+  } catch (error) {
+    if (error?.code === 'VC_AI_NODE_RUNTIME_TRANSIENT') throw error;
+    throw durableRuntimeError(
+      'The Node.js runtime selected for ViewCompose AI is missing or not executable. Install ' +
+      'Node.js 24.19 or newer in a stable location, ensure `node` is on PATH, and run init again.',
+    );
+  }
+}
+
+export async function resolveDurableNodeExecutable({
+  currentExecutable = process.execPath,
+  pathEnvironment = process.env.PATH ?? '',
+  temporaryDirectory = tmpdir(),
+} = {}) {
+  const executableName = platform() === 'win32' ? 'node.exe' : 'node';
+  const candidates = [
+    currentExecutable,
+    ...pathEnvironment.split(delimiter).filter(Boolean).map((entry) => resolve(entry, executableName)),
+  ];
+  for (const candidate of [...new Set(candidates)]) {
+    try {
+      return await requireDurableNodeExecutable(candidate, temporaryDirectory);
+    } catch (error) {
+      if (error?.code !== 'VC_AI_NODE_RUNTIME_TRANSIENT') throw error;
+    }
+  }
+  throw durableRuntimeError(
+    'Only a temporary Node.js runtime is available. Install Node.js 24.19 or newer in a stable ' +
+    'system, nvm, or user-local directory, ensure `node` is on PATH, and run init again.',
+  );
 }
 
 export const AGENT_CLIENT_PROFILES = Object.freeze({
@@ -719,6 +781,7 @@ export async function inspectAgentClientInstallation({client, projectRoot} = {})
   const root = await requireCanonicalDirectory(projectRoot, 'Consumer project root');
   const inspected = await inspectManagedIntegration(profile, root);
   const active = aiRootForManagedServer(inspected.server, root);
+  const durableNodeExecutable = await requireDurableNodeExecutable(inspected.server.command);
   const aiRoot = await requireCanonicalDirectory(active.aiRoot, 'Active AI package root');
   const distribution = JSON.parse(await readFile(resolve(aiRoot, 'distribution.json'), 'utf8'));
   if (
@@ -741,7 +804,7 @@ export async function inspectAgentClientInstallation({client, projectRoot} = {})
     projectRoot: root,
     aiRoot,
     mcpServerPath: inspected.server.args[0],
-    nodeExecutable: inspected.server.command,
+    nodeExecutable: durableNodeExecutable,
     frameworkProfile: active.frameworkProfile,
     version: distribution.package.version,
   });
@@ -885,7 +948,7 @@ export async function migrateAgentClient({
   projectRoot,
   newAiRoot,
   frameworkProfile,
-  nodeExecutable = process.execPath,
+  nodeExecutable,
   afterWrite,
 } = {}) {
   const profile = profileFor(client);
@@ -925,9 +988,12 @@ export async function migrateAgentClient({
   ) {
     throw new Error('AI package identity or Skill set requires an unsupported migration contract.');
   }
+  const durableNodeExecutable = nodeExecutable === undefined
+    ? await resolveDurableNodeExecutable()
+    : await requireDurableNodeExecutable(nodeExecutable);
   const newServer = expectedServerDefinition(root, {
     frameworkProfile,
-    nodeExecutable,
+    nodeExecutable: durableNodeExecutable,
     mcpServerPath: resolve(canonicalNewAiRoot, 'scripts/mcp-server.mjs'),
   });
   let nextConfig;
@@ -938,7 +1004,7 @@ export async function migrateAgentClient({
   } else {
     const nextBlock = managedTomlBlock(root, undefined, {
       frameworkProfile,
-      nodeExecutable,
+      nodeExecutable: durableNodeExecutable,
       mcpServerPath: newServer.args[0],
     });
     nextConfig = inspected.original.replace(inspected.block, nextBlock);
@@ -1113,7 +1179,7 @@ export async function initializeAgentClient({
   projectRoot = process.cwd(),
   sourceRoot,
   aiRoot = defaultAiRoot,
-  nodeExecutable = process.execPath,
+  nodeExecutable,
   mcpServerPath = defaultMcpServerPath,
   cacheRoot,
 } = {}) {
@@ -1124,6 +1190,9 @@ export async function initializeAgentClient({
     sourceRoot: canonicalSourceRoot,
     aiRoot,
   });
+  const durableNodeExecutable = nodeExecutable === undefined
+    ? await resolveDurableNodeExecutable()
+    : await requireDurableNodeExecutable(nodeExecutable);
   const durable = canonicalSourceRoot === undefined
     ? await materializeDurablePackage(aiRoot, framework.profileId, cacheRoot)
     : {aiRoot, durableInstallRoot: null};
@@ -1136,7 +1205,7 @@ export async function initializeAgentClient({
     root: prepared.root,
     sourceRoot: canonicalSourceRoot,
     frameworkProfile: framework.profileId,
-    options: {nodeExecutable, mcpServerPath: effectiveMcpServerPath},
+    options: {nodeExecutable: durableNodeExecutable, mcpServerPath: effectiveMcpServerPath},
   });
   let configChanged = false;
   let created = [];
@@ -1173,7 +1242,7 @@ export async function diagnoseAgentClient({
   projectRoot = process.cwd(),
   sourceRoot,
   aiRoot = defaultAiRoot,
-  nodeExecutable = process.execPath,
+  nodeExecutable,
   mcpServerPath = defaultMcpServerPath,
   detectJava = detectJavaRuntime,
   detectSdk = detectAndroidSdk,
@@ -1186,11 +1255,13 @@ export async function diagnoseAgentClient({
     try {
       activeInstallation = await inspectAgentClientInstallation({client, projectRoot});
     } catch (error) {
-      if (error?.code === 'VC_AI_DURABLE_INTEGRITY') activeInstallationError = error;
+      if (['VC_AI_DURABLE_INTEGRITY', 'VC_AI_NODE_RUNTIME_TRANSIENT'].includes(error?.code)) {
+        activeInstallationError = error;
+      }
     }
   }
   const effectiveAiRoot = activeInstallation?.aiRoot ?? aiRoot;
-  const effectiveNodeExecutable = activeInstallation?.nodeExecutable ?? nodeExecutable;
+  let effectiveNodeExecutable = activeInstallation?.nodeExecutable;
   const effectiveMcpServerPath = activeInstallation?.mcpServerPath ?? mcpServerPath;
   const prepared = await prepareSkillOperations({client, projectRoot, aiRoot: effectiveAiRoot});
   let configStatus = 'conflict';
@@ -1198,6 +1269,9 @@ export async function diagnoseAgentClient({
   let framework;
   try {
     if (activeInstallationError) throw activeInstallationError;
+    effectiveNodeExecutable ??= nodeExecutable === undefined
+      ? await resolveDurableNodeExecutable()
+      : await requireDurableNodeExecutable(nodeExecutable);
     if (activeInstallation) {
       const projectProfile = await detectFrameworkProjectProfile({projectRoot: prepared.root});
       const inventory = await loadReleasedFrameworkProfiles({aiRoot: effectiveAiRoot});
@@ -1428,9 +1502,11 @@ async function main() {
       sourceRoot,
       aiRoot: defaultAiRoot,
     });
+    const nodeExecutable = await resolveDurableNodeExecutable();
     process.stdout.write(renderAgentClientConfig(values.client, projectRoot, {
       sourceRoot,
       frameworkProfile: framework.profileId,
+      nodeExecutable,
     }));
     return;
   }

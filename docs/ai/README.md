@@ -227,6 +227,11 @@ CI verifies the real packaged bootstrap on fresh Linux, macOS, and Windows proje
 with spaces and non-ASCII characters, all three clients, integrated diagnosis, idempotent re-entry,
 npx-cache removal, durable MCP launch, exact Skill bytes, MCP handshake, and uninstall. It does not
 automate or authenticate proprietary client binaries, so the checks above remain visible user steps.
+The unpublished `0.8.0` candidate resolves the MCP command to a canonical executable outside
+temporary directories and npm's transient npx cache before writing project configuration. If only
+a temporary or missing Node runtime is available, `init` stops before project writes and `doctor`
+reports an actionable repair instead of preserving a path that disappears with the launcher cache.
+The MCP `serverInfo.version` now matches the packaged `0.8.0` tooling identity.
 
 ## What works without ViewCompose source
 
@@ -248,6 +253,11 @@ The installed project-bound mode supports:
 - the eight workflows for API lookup, screen creation, XML conversion, Figma import, screenshot
   repair, review, validation, and layout debugging, with each workflow retaining the evidence
   level it actually obtained.
+
+For existing-screen work, the `create-screen`, `convert-xml`, and `review` Skills in the unpublished
+`0.8.0` candidate also require the same variant, matched APK pair, device state, fixture identity,
+dynamic-flow, no-ad, real-ad, and crash/ANR evidence described below. Missing or changed inputs stay
+explicitly unverified rather than being inferred from compilation or one screenshot.
 
 Evidence levels are `knowledge`, `static`, `compiled`, `rendered`, and `compared`. A static result
 does not prove compilation, and generated Kotlin does not prove rendering or visual parity.
@@ -537,14 +547,17 @@ diagnostic fields remain available, while `data.analysis` adds the exact framewo
 coverage, applicable rule catalog, immutable corpus-quality snapshot, typed findings, suppression
 audit, and unsupported-syntax records.
 
-For public `0.7.0`, do not start a legacy-project analysis at an unrestricted repository root when
-that tree contains credentials or unrelated generated/tooling data. Scope the request to the
-smallest relevant source or configuration directory and explicitly exclude sensitive directories,
-credential files, `.codegraph`, and other large tool-owned trees. The analyzer is local and does
-not contact a provider, but it inventories in-scope regular files and reads supported source and
-configuration formats; its filename checks are not a general secret scanner. A limit diagnostic is
-not permission to increase the scan boundary. Review and narrow the scope first. A follow-up patch
-is tracking safer source-only discovery and fail-closed sensitive-file defaults.
+For public `0.7.0`, scope legacy-project analysis to the smallest relevant source or configuration
+directory and explicitly exclude credentials and unrelated generated/tooling data. The unpublished
+`0.8.0` candidate makes repository-root analysis fail closed by default: `.codegraph`, build/cache,
+IDE, native-build, Node dependency, and tool-owned trees are excluded before file or byte budgets;
+`keys`, `secrets`, `credentials`, `.ssh`, keystores, environment files, `gradle.properties`,
+`local.properties`, `google-services.json`, and `GoogleService-Info.plist` are denied before content
+reads. Only Kotlin/Java sources, exact Gradle build/settings files, `libs.versions.toml`, and Android
+`src/**/res/layout*/*.xml` layouts enter inventory and parsing; arbitrary JSON, TOML, and XML do not.
+The analyzer is local and does not contact a provider, and these defaults remain a bounded
+allowlist rather than a general secret scanner. A limit diagnostic is not permission to expand the
+scan boundary.
 
 The first public catalog contains only five high-confidence rules:
 
@@ -604,7 +617,10 @@ access for the exact package, Gradle distribution, or Maven dependencies; the du
 cache remains usable after npm removes its temporary npx files. Model-provider network access is
 never required.
 
-`validate_code` compile mode accepts bounded Kotlin snippets. XML and screenshot generation tools
+`validate_code` compile mode accepts bounded Kotlin snippets. The unpublished `0.8.0` compiler
+allowlist covers `viewcompose-ui-foundation`, `viewcompose-material3`, and the recommended
+`viewcompose-material3-android` aggregate through one fixed released-Maven classpath; callers still
+cannot inject coordinates, tasks, scripts, or repositories. XML and screenshot generation tools
 own their generated source, compile it, render it, reopen the exact PNG and render tree, and attach
 layout diagnosis before returning evidence. XML render mode additionally compares declared
 semantics and geometry; an eligible screenshot reference can add exact RGBA comparison. Direct

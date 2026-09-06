@@ -44,8 +44,8 @@ completion:
   - XML, Compose, screenshot, and Figma paths share one explicit Design IR, preserve provenance and unsupported semantics, and never silently invent application behavior.
   - Accuracy, false-positive, latency, resource, privacy, and security thresholds are frozen before implementation and satisfied by reproducible CI or accepted device evidence.
   - All affected capability, API, sample, module, architecture, tooling, security, migration, release-intent, and localized documentation gates pass before archival.
-last_verified: 2026-09-04
-next_action: Resume whole-screen target-project migration and use the indexed testing recipe to expose the next adoption gap.
+last_verified: 2026-09-06
+next_action: Review the 0.8.0 candidate pull request, then reproduce its packaged onboarding and Material 3 compile lane outside the repository before publication.
 maven_release_changesets:
   - release/changes/20260829-preview-worker-jvm21-resolution.json
 ---
@@ -816,6 +816,48 @@ whole-screen target-project migration and use this recipe while exposing the nex
     installed-Skill acceptance evidence. `doctor` must fail closed until exact Codex project trust
     exists, beginner guidance must require a new Task bound to that same saved Project, and direct
     server invocation must never be presented as proof that the proprietary client registered it.
+
+### Active adoption issue closure (2026-09-06)
+
+The final pre-PR repair closes the remaining active implementation issues from the field trial.
+`AI-ADOPTION-BOOTSTRAP-001` now canonicalizes an executable Node runtime, rejects temporary and npx
+cache paths before project writes, and reports the same failure through `doctor` for an existing
+managed entry. `AI-ANALYZER-SCOPE-001` and `AI-ANALYZER-PRIVACY-001` now exclude generated/tool-owned
+and sensitive paths before budget accounting, remove generic JSON/TOML/XML readability, and admit
+only the bounded source/configuration allowlist. `AI-ADOPTION-MCP-VERSION-001` defines
+`serverInfo.version` as the AI tooling package version and aligns it to candidate `0.8.0`.
+`AI-VALIDATE-ARTIFACT-001` extends the immutable compiler harness to Foundation, Material 3, and the
+recommended Material 3 Android aggregate; a real released-Maven `Material3Button` request compiled
+successfully with output fingerprint
+`5ba0667b428c4a93b053baa00a7156354cdb0a6e1c76e4895c928098d1d303f0`.
+
+The `viewcompose-create-screen`, `viewcompose-convert-xml`, and `viewcompose-review` Skills now carry
+the public existing-project baseline/candidate contract: exact variant and APK pair, device state,
+retained fixture identity, initial/later/completion behavior, deterministic no-ad versus separate
+real-ad evidence, and crash/ANR checks. This is **improved** prevention and compile evidence with no
+framework runtime behavior change. The focused analyzer, Agent lifecycle, compiler, MCP, workflow,
+and Skill validation suites pass. Limitations remain: device execution stays attended and
+project-owned, the analysis allowlist is intentionally narrower than a general repository index,
+and installed-package reproduction remains required after merge before publication.
+
+Fresh pre-PR validation passed 388/388 executable AI-tooling tests with one macOS-only conditional
+skip, 3/3 Skill package validations, 2/2 released-artifact repair candidates, 1/1 rollback proposal,
+10/10 authorization fail-closed denominators, 17/17 host-grant invalid denominators, and 4/4
+terminal execution outcomes. The content-addressed candidate, proposal, authorization, host-grant,
+and terminal-outcome fixtures were resealed from the current released-artifact evaluator after the
+compiler harness identity advanced, and the complete attended chain passed through durable applied-
+result handoff. The distribution verifier then passed 2/2 reproducible packages, 3/3 installed
+agent profiles, 24/24 exact Skill copies, and 2/2 MCP protocol versions. The final `qaQuick` plus
+`verifyAiToolingRelease` lifecycle succeeded across 2,313 scheduled tasks (590 executed and 1,723
+reused from the immediately preceding forced run). That forced run exposed two additional
+state-sensitive defects: the new Material 3 test depended on a pre-existing compiler cache, and the
+tutorial instrumentation sample bypassed Maven through a project dependency. A private per-test
+cache made the compiler assertion pass twice from independent state, while the tutorial now uses
+the documented released renderer coordinate and passes both tutorial policy and Android-test
+compilation. Relative to those two failing gates, the final result is **improved** from 0/2 to 2/2
+passing. Limitations are one Linux host, a temporary local QA signing identity, and no independent
+post-merge installed-package run. The next action is pull-request review followed by repository-
+external installation and target-project reproduction before publishing `0.8.0`.
 
 Compared with an absent blank-project/Figma baseline, the trial moved project readiness from 0 to
 1 resolved project, retained 1 reference render and 26/26 referenced SVG assets, produced 1

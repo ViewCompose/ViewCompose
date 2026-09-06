@@ -44,6 +44,17 @@ available for that code.
    changed UI was truly rendered. Never claim whole-screen completion while a hidden legacy screen
    remains the unreported fallback.
 
+## Existing-project device regression
+
+For a changed existing Activity or Fragment, record the exact application variant, unit-test task,
+instrumentation task, matched application/test APK pair, device/user/storage/permission state, and
+the critical baseline flow before editing. Preserve the exact fixture bytes or their reproducible
+generator plus SHA-256 manifest. After integration, repeat the same flow on the same device state
+and verify initial UI, at least one later state, completion or navigation, source-fixture integrity,
+and crash/ANR absence. A project-owned Debug no-ad seam may be used for deterministic UI evidence,
+but keep the activation uncommitted and run real-ad behavior separately. Report any missing baseline
+or device evidence as unverified; compilation or one screenshot cannot establish regression parity.
+
 ## Stop and authority
 
 Project writes are authorized only by the user's create/change request. Do not add dependencies,

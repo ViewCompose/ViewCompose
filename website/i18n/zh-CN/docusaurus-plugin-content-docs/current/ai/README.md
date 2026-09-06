@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 0b30c0a39c16a11ab5ca470e776732816086ffce778982166cdfe99ce8f73738
+translation_source_hash: 339df149e045606bdb75b9f619ebd91af7a86019dfb248abb5d75a5f3c7f3f2e
 translation_status: current
 ---
 
@@ -189,6 +189,10 @@ Codex 配置。
 CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootstrap，覆盖带空格和非 ASCII
 字符的路径、3 个客户端、集成诊断、幂等重复执行、清理 npx Cache 后的持久 MCP 启动、精确 Skill
 字节、MCP 握手和卸载。它不会自动控制或登录专有客户端 Binary，因此上述检查仍是明确的用户步骤。
+未发布的 `0.8.0` Candidate 会在写入 Project 配置前，把 MCP Command 解析为临时目录和 npm
+短期 npx Cache 之外的规范 Executable。如果只有临时或已缺失的 Node Runtime，`init` 会在写入
+Project 前停止，`doctor` 会返回可执行的修复说明，不再保存会随 Launcher Cache 消失的路径。
+MCP 的 `serverInfo.version` 现在也与打包后的 `0.8.0` 工具身份一致。
 
 ## 无需 ViewCompose 源码即可使用的能力
 
@@ -206,6 +210,10 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
   Host 执行 Apply、Recovery 与 Rollback；
 - API 查询、页面创建、XML 转换、Figma Import、Screenshot Repair、Review、验证和布局调试共
   8 个 Workflow；每个 Workflow 只保留实际取得的证据等级。
+
+对于已有 Screen，未发布 `0.8.0` Candidate 中的 `create-screen`、`convert-xml` 与 `review` Skill
+还会要求下文同一套 Variant、配对 APK、Device State、Fixture Identity、动态流程、无广告、真实广告
+以及 Crash/ANR Evidence。输入缺失或变化时必须明确标记为未验证，不能从编译或单张 Screenshot 推断。
 
 证据等级依次为 `knowledge`、`static`、`compiled`、`rendered` 和 `compared`。静态结果不证明
 编译通过，生成 Kotlin 也不证明页面已渲染或达到视觉一致。
@@ -456,12 +464,16 @@ Code，也不会写入源码。现有 Inventory 与 Diagnostic Field 保持可�
 给出精确框架 Profile、扫描覆盖范围、适用 Rule Catalog、不可变 Corpus Quality Snapshot、类型化
 Finding、Suppression Audit 与 Unsupported Syntax Record。
 
-对于公开版 `0.7.0`，如果旧 Project 根目录中含有 Credential 或无关的 Generated/Tooling
-Data，不要从未限制的 Repository Root 开始分析。请把请求限定到最小的相关源码或配置目录，
-并显式排除敏感目录、Credential 文件、`.codegraph` 及其他较大的工具目录。Analyzer
-只在本机运行且不连接 Provider，但它会盘点 Scope 内的常规文件，并读取受支持的源码与配置格式；
-它的文件名检查不是通用 Secret Scanner。遇到 Limit Diagnostic 不代表可以扩大扫描边界；请先 Review
-并缩小 Scope。后续 Patch 正在跟踪更安全的 Source-only Discovery 和 Fail-closed 敏感文件默认值。
+对于公开版 `0.7.0`，请把旧 Project 分析限定到最小的相关源码或配置目录，并显式排除 Credential
+与无关的 Generated/Tooling Data。未发布的 `0.8.0` Candidate 默认让 Repository-root 分析
+Fail-closed：`.codegraph`、Build/Cache、IDE、Native Build、Node Dependency 和工具自有目录会在
+消耗文件或字节 Budget 前排除；`keys`、`secrets`、`credentials`、`.ssh`、Keystore、Environment
+File、`gradle.properties`、`local.properties`、`google-services.json` 与
+`GoogleService-Info.plist` 会在内容读取前拒绝。只有 Kotlin/Java Source、精确 Gradle
+Build/Settings File、`libs.versions.toml` 与 Android `src/**/res/layout*/*.xml` Layout 会进入
+Inventory 和解析；任意 JSON、TOML 与 XML 不会进入。Analyzer 只在本机运行且不连接 Provider；
+这些默认规则是有界 Allowlist，而不是通用 Secret Scanner。遇到 Limit Diagnostic 不代表可以扩大
+扫描边界。
 
 首个公开 Catalog 只包含 5 条高置信度规则：
 
@@ -515,7 +527,10 @@ Namespace。Package 安装本身仍然无脚本；首次 npx 或深层证据请�
 Gradle Distribution 或 Maven Dependency，但 npm 清理临时 npx 文件后，持久且已验证的 Cache 仍可
 继续使用。整个流程不需要模型 Provider 的网络访问。
 
-`validate_code` 的 Compile Mode 接收有界 Kotlin Snippet。XML 与 Screenshot 生成工具只执行自己
+`validate_code` 的 Compile Mode 接收有界 Kotlin Snippet。未发布 `0.8.0` 的 Compiler Allowlist
+通过一个固定的 Released-Maven Classpath 支持 `viewcompose-ui-foundation`、
+`viewcompose-material3` 与推荐的 `viewcompose-material3-android` Aggregate；调用方仍不能注入
+Coordinate、Task、Script 或 Repository。XML 与 Screenshot 生成工具只执行自己
 确定性生成的源码，依次编译、渲染、重新打开精确 PNG 与 Render Tree，并在返回证据前附加布局诊断。
 XML Render Mode 还会比对声明的语义与几何；符合资格的 Screenshot Reference 可以继续进行精确
 RGBA 比对。直接调用 `render_preview` 和 `diagnose_layout` 仍只适用于另行 Allowlist 的固定 Target，

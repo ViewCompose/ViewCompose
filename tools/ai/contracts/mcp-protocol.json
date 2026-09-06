@@ -10,7 +10,7 @@
   "server": {
     "name": "viewcompose-ai",
     "title": "ViewCompose AI",
-    "version": "0.1.0"
+    "version": "0.8.0"
   },
   "limits": {
     "maxMessageBytes": 4194304,

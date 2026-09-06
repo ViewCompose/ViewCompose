@@ -53,6 +53,15 @@ test('rejects direct secret paths and malformed exclusions before traversal', as
   assert.equal(secret.status, 'invalid');
   assert.equal(secret.diagnostics[0].code, 'VC-AI-SECRET-PATH-DENIED');
 
+  for (const requestedPath of ['keys/release.key', 'app/google-services.json']) {
+    const sensitive = await inspectProjectRequest({
+      projectRoot: '/workspace/sample',
+      requestedPath,
+    });
+    assert.equal(sensitive.status, 'invalid');
+    assert.equal(sensitive.diagnostics[0].code, 'VC-AI-SECRET-PATH-DENIED');
+  }
+
   const exclusions = await inspectProjectRequest({
     projectRoot: '/workspace/sample',
     excluded: '*.generated.kt',
@@ -82,6 +91,47 @@ test('inventories regular files, excludes secrets, and never follows symlinks', 
     const rejected = await analyzeProject({projectRoot: root});
     assert.equal(rejected.status, 'invalid');
     assert.equal(rejected.diagnostics[0].code, 'VC-AI-SYMLINK-DENIED');
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('excludes generated trees and sensitive or unrelated files before they consume budgets', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'viewcompose-ai-project-boundary-'));
+  try {
+    await mkdir(join(root, '.codegraph', 'index'), {recursive: true});
+    await mkdir(join(root, 'keys'), {recursive: true});
+    await mkdir(join(root, 'app', 'src', 'main', 'java', 'example'), {recursive: true});
+    await mkdir(join(root, 'app', 'src', 'main', 'res', 'layout'), {recursive: true});
+    await writeFile(join(root, '.codegraph', 'index', 'large.json'), 'x'.repeat(4096));
+    await writeFile(join(root, 'keys', 'release.txt'), 'credential material');
+    await writeFile(join(root, 'app', 'google-services.json'), '{"project_info":{"project_id":"secret"}}');
+    await writeFile(join(root, 'unrelated.json'), 'x'.repeat(4096));
+    await writeFile(join(root, 'gradle.properties'), 'repositoryPassword=secret\n');
+    await writeFile(join(root, 'app', 'build.gradle.kts'), 'android { compileSdk = 36 }\n');
+    await writeFile(
+      join(root, 'app', 'src', 'main', 'java', 'example', 'Screen.kt'),
+      'import com.viewcompose.ui.foundation.Text\n',
+    );
+    await writeFile(
+      join(root, 'app', 'src', 'main', 'res', 'layout', 'screen.xml'),
+      '<LinearLayout><TextView /></LinearLayout>',
+    );
+
+    const result = await analyzeProject({
+      projectRoot: root,
+      limits: {maxFiles: 3, maxBytes: 1024},
+    });
+    assert.equal(result.status, 'success');
+    assert.deepEqual(result.data.files.map(({path}) => path), [
+      'app/build.gradle.kts',
+      'app/src/main/java/example/Screen.kt',
+      'app/src/main/res/layout/screen.xml',
+    ]);
+    assert.equal(JSON.stringify(result).includes('google-services.json'), false);
+    assert.equal(JSON.stringify(result).includes('release.txt'), false);
+    assert.equal(result.data.signals.kotlinFiles, 2);
+    assert.equal(result.data.signals.xmlFiles, 1);
   } finally {
     await rm(root, {recursive: true, force: true});
   }

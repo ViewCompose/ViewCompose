@@ -166,3 +166,22 @@ test('requires explicit migration scope, coverage, and state architecture', asyn
   assert.match(createSkill, /explicit `AndroidView`/u);
   assert.match(reviewSkill, /manual `RenderSession\.render\(\)` path requires/u);
 });
+
+test('requires reproducible existing-project device regression evidence', async () => {
+  const skills = await Promise.all([
+    readFile(new URL('../skills/viewcompose-convert-xml/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-create-screen/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-review/SKILL.md', import.meta.url), 'utf8'),
+  ]);
+  for (const skill of skills) {
+    assert.match(skill, /matched application\/test APK pair/u);
+    assert.match(skill, /device\/user\/storage\/permission state/u);
+    assert.match(skill, /SHA-256 manifest/u);
+    assert.match(skill, /initial\s+UI, at least one later state/u);
+    assert.match(skill, /crash\/ANR\s+absence/u);
+    assert.match(skill, /Debug no-ad seam/u);
+    assert.match(skill, /uncommitted/u);
+    assert.match(skill, /real-ad behavior/u);
+    assert.match(skill, /regression parity/u);
+  }
+});

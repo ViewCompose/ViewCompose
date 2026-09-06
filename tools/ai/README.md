@@ -79,8 +79,9 @@ npm --prefix tools/ai run verify:phase2-compile
 
 The preparation task resolves only the harness's fixed classpath. The compiler request itself runs
 Gradle offline with a fixed task, Android 36/JVM 11 lane, one GiB heap, two workers, and no daemon,
-build cache, or configuration cache. Requests may select only generated stable IDs and the current
-`viewcompose-ui-foundation` artifact allowlist; they cannot supply a dependency coordinate, Gradle
+build cache, or configuration cache. Requests may select only generated stable IDs and the fixed
+`viewcompose-ui-foundation`, `viewcompose-material3`, and `viewcompose-material3-android` artifact
+allowlist; they cannot supply a dependency coordinate, Gradle
 task, project path, output path, or build script. Content-addressed inputs are immutable, cached
 class output is re-fingerprinted before reuse, and timeouts, cancellation, output limits, compiler
 diagnostics, and cache poisoning use stable result codes. Android resource fixtures and additional
@@ -108,7 +109,9 @@ hard byte limits, and a combined output fingerprint. Cached artifacts receive th
 new render; poisoned cache entries fail closed.
 
 Project analysis accepts one absolute root, rejects path escape and all requested build execution,
-never follows symbolic links, excludes common build output and secret-bearing files, and enforces
+never follows symbolic links, excludes generated/tool-owned trees and sensitive path families
+before they consume traversal budgets, admits only Kotlin/Java, exact Gradle build/settings,
+`libs.versions.toml`, and Android layout XML files, and enforces
 fixed hard caps above request-level file, byte, depth, timeout, and output limits. Output truncation
 does not return the oversized inventory. Without executing Gradle, the current analyzer derives
 exact ViewCompose coordinates and current-bundle version disposition, governed imports, owning
@@ -777,7 +780,10 @@ command can apply or explicitly roll back exact content-addressed bytes.
 The unpublished `0.8.0` candidate retains that boundary and adds the field-trial fixes for qualified
 ordinary-root include overrides, preview-only `tools:` attributes, non-negative dp margins, exact
 LinearLayout cross-axis gravity, unrelated resource-value parsing, and the embedded-host environment
-checklist. It is not a public capability until the protected release and reproduction gates pass.
+checklist. It also rejects transient Node runtime persistence, aligns MCP server identity, applies a
+source/config analysis allowlist, compiles the Material 3 onboarding path, and carries reproducible
+device-regression checks in the three existing-screen Skills. It is not a public capability until
+the protected release and reproduction gates pass.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and

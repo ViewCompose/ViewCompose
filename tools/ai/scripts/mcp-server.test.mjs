@@ -78,6 +78,7 @@ test('freezes modern and legacy MCP versions without implicit downgrade', () => 
   assert.equal(MCP_PROTOCOL.preferredVersion, '2026-07-28');
   assert.deepEqual(MCP_PROTOCOL.supportedVersions, ['2026-07-28', '2025-11-25']);
   assert.equal(MCP_PROTOCOL.transport, 'stdio');
+  assert.equal(MCP_PROTOCOL.server.version, '0.8.0');
   assert.equal(MCP_PROTOCOL.compatibility.implicitVersionDowngrade, false);
 });
 

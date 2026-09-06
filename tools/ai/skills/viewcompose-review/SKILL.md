@@ -30,6 +30,17 @@ Return evidence-backed findings ordered by impact, with source locations and con
    available, and the evidence level. If no finding is proven, say so and retain the stated
    limitations.
 
+## Existing-project regression evidence
+
+For an existing Activity or Fragment, check whether baseline and candidate use the same exact
+application variant, unit-test task, instrumentation task, matched application/test APK pair,
+device/user/storage/permission state, fixture bytes or reproducible generator with SHA-256 manifest,
+and critical flow. Candidate evidence must cover initial UI, at least one later state, completion or
+navigation, source-fixture integrity, and crash/ANR absence. Treat a project-owned Debug no-ad seam
+as deterministic UI evidence only when its activation stays uncommitted, and keep real-ad behavior
+as a separate check. Missing or changed inputs make regression parity unverified even when code
+compiles or one screenshot matches.
+
 ## Stop and authority
 
 A review request is read-only. Offer a patch, but edit only after the user asks for a fix. Do not

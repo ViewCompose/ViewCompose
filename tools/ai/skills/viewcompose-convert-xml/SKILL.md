@@ -82,8 +82,19 @@ resource, state, and behavior decision.
    diagnostics, and maximum evidence actually achieved. Never collapse failed checks into one
    similarity score or upgrade `rendered` to `compared` after a mismatch.
 10. For a dynamic surface, verify the initial state, at least one later state, and the original
-   completion or navigation behavior. Compilation and one static screenshot do not prove that
-   retained updates still render or that legacy side effects remain owned by their original host.
+    completion or navigation behavior. Compilation and one static screenshot do not prove that
+    retained updates still render or that legacy side effects remain owned by their original host.
+
+## Existing-project device regression
+
+Before changing an Activity or Fragment, record the exact application variant, unit-test task,
+instrumentation task, matched application/test APK pair, device/user/storage/permission state, and
+the critical baseline flow. Preserve the exact fixture bytes or their reproducible generator plus a
+SHA-256 manifest. After migration, repeat the same flow on the same device state and verify initial
+UI, at least one later state, completion or navigation, source-fixture integrity, and crash/ANR
+absence. A project-owned Debug no-ad seam may provide deterministic UI evidence only when its
+activation remains uncommitted; verify real-ad behavior separately. If the baseline, fixture, APK
+pair, or device state differs, label the result unverified rather than claiming regression parity.
 
 ## Stop and authority
 

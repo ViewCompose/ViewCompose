@@ -131,8 +131,8 @@
         "id": "initial-exact",
         "expectedCandidateFingerprint": "c024d7afaff87f86b25cdd7247fc6b4d9804da09a2daa1ba440e6c9c3a1aded2",
         "expectedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
-        "expectedEvaluationFingerprint": "28591f6de8533c32ff7ac919d695b40392f543a0fc1ab43850d0e702ddb3e77e",
-        "expectedEvidenceFingerprint": "9660c0fa52128c829885ce226858e9db6cda87f9a86ec349421ee42b14dc48b9",
+        "expectedEvaluationFingerprint": "88871bbbd242d74ed5846d5c2489a090f4ba7d46d5eaeca2463d43a5eed42aad",
+        "expectedEvidenceFingerprint": "ddb25a6c2a60b10587cfbbfeaff5a9169c2a5f5c304e587f032ccce2c3345048",
         "expectedEvidenceDiagnosticCodes": [],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "passed"],
         "expectedGateEvidence": [
@@ -163,17 +163,17 @@
         "patch": "screenshot-repair/title-text.patch.json",
         "expectedCandidateFingerprint": "6b097111aee082f6c89c29ab79abeb7a9e8e3c5a0c29786603dd8032681c1ad4",
         "expectedDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
-        "expectedEvaluationFingerprint": "192517e3a159e52981c933f51f3bd63617d60ccadf7aa06a504cc9cd0c59c37b",
-        "expectedEvidenceFingerprint": "f5d313cbf24308fcd3091de36eeda27ad20946b067f7c0ece94ad65ba8fd45cd",
+        "expectedEvaluationFingerprint": "eee6189a53da16e4dd8f29005fff731d4d7563c8aa2daecc17358e82980b2fc0",
+        "expectedEvidenceFingerprint": "286de50bda0e7b9b5ab72d7cadf6aeb927b197fa3c0fbffb0b0d495db4319772",
         "expectedEvidenceDiagnosticCodes": ["VC-AI-PIXEL-MISMATCH"],
         "expectedGateStatuses": ["passed", "passed", "passed", "passed", "passed", "failed"],
         "expectedGateEvidence": [
           "ea77e571ae5977da628cdb40f12d83f664c2ed43b9375c42743ecd574098c219",
           "7024fa4d88eab0f03998696a02f50fed1fdb958ebe3d50696041126500648ca5",
           "1c59187f64dbba8098fe5a659c85af44456f8e463c138a25a47947ddb5bfda78",
-          "a2ce37fbce8bfb3cc98a0360bf79ace938edd01eb33ba9e80fbe1f644c8532b2",
-          "a2ce37fbce8bfb3cc98a0360bf79ace938edd01eb33ba9e80fbe1f644c8532b2",
-          "267c063f902117b54a965ab6f42a8ea92e72bac8a4b94568114850961e48e55b"
+          "75c2973bf41a945f8d98c11850bdea66f89d2edead8220ca76b7ee1e2960cdc9",
+          "75c2973bf41a945f8d98c11850bdea66f89d2edead8220ca76b7ee1e2960cdc9",
+          "e19441067652f191f4862c54757c39815f7e57b7f2cfa2fc76a679194fc2a82f"
         ],
         "expectedChecks": [1, 1, 1, 12, 15],
         "expectedPixels": {
@@ -198,7 +198,7 @@
             }
           ],
           "unassignedMismatchedPixels": 0,
-          "localizationFingerprint": "ad1e1e4c1f6acdc3b7d7d9a40b671b882c63a2e71c55eb11f627afbe7af935fc"
+          "localizationFingerprint": "faa1222f1de213845a3da6cce7653fe0f1a4f1070b102c6d159709134262bbe7"
         }
       }
     ]
