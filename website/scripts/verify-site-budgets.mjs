@@ -127,7 +127,7 @@ export async function verifySiteBudgets({
   for (const index of searchIndexSizes) {
     check(
       index.bytes,
-      budgets.maxSearchIndexMiBPerLocale * MIB,
+      budgets.maxSearchIndexMiBPerLocaleSegment * MIB,
       `search index (${relativePath(index.path)})`,
       formatMiB,
     );
@@ -146,6 +146,26 @@ export async function verifySiteBudgets({
   for (const locale of budgets.requiredSearchLocales) {
     if (!searchLocales.has(locale)) {
       violations.push(`missing search index for locale ${locale}`);
+    }
+    const localePrefix = locale === 'en' ? '' : `${locale}/`;
+    const localeSearchIndexes = searchIndexSizes
+      .map(({path}) => relativePath(path))
+      .filter((path) => {
+        const segments = path.split('/');
+        return locale === 'en' ? segments.length === 1 : path.startsWith(localePrefix);
+      })
+      .map((path) => path.slice(localePrefix.length));
+    for (const context of budgets.requiredSearchContexts ?? []) {
+      const normalizedContext = context.replaceAll('/', '-');
+      const unhashedFilename = `search-index-${normalizedContext}.json`;
+      const hashedPrefix = `search-index-${normalizedContext}-`;
+      const hasContext = localeSearchIndexes.some((filename) =>
+        filename === unhashedFilename ||
+        (filename.startsWith(hashedPrefix) && filename.endsWith('.json')),
+      );
+      if (!hasContext) {
+        violations.push(`missing search index context ${context} for locale ${locale}`);
+      }
     }
   }
   for (const [redirect, target] of Object.entries(budgets.requiredRedirects)) {
@@ -171,7 +191,7 @@ export async function verifySiteBudgets({
     `JavaScript ${formatMiB(javascriptBytes)}/${formatMiB(budgets.maxTotalJavaScriptMiB * MIB)}`,
     `largest JS ${formatKiB(largestJavaScript?.bytes ?? 0)}/${formatKiB(budgets.maxLargestJavaScriptKiB * KIB)}`,
     `CSS ${formatKiB(cssBytes)}/${formatKiB(budgets.maxTotalCssKiB * KIB)}`,
-    `${searchIndexSizes.length} search indexes`,
+    `${searchIndexSizes.length} segmented search indexes`,
   ];
   if (buildDurationSeconds !== undefined) {
     summary.push(`build ${buildDurationSeconds.toFixed(1)} s/${budgets.maxBuildSeconds} s`);

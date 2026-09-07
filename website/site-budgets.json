@@ -1,16 +1,27 @@
 {
   "maxBuildSeconds": 120,
-  "maxNonApiOutputMiB": 47.1,
+  "maxNonApiOutputMiB": 47.8,
   "maxAverageApiVersionMiB": 4.5,
   "maxApiVersionMiB": 24,
   "maxApiRoutingOverheadMiB": 1,
   "maxLargestJavaScriptKiB": 768,
   "maxTotalJavaScriptMiB": 8,
   "maxTotalCssKiB": 128,
-  "maxSearchIndexMiBPerLocale": 6.25,
+  "maxSearchIndexMiBPerLocaleSegment": 6.25,
   "requiredSearchLocales": [
     "en",
     "zh-CN"
+  ],
+  "requiredSearchContexts": [
+    "documentation",
+    "ai",
+    "tutorials",
+    "guides",
+    "architecture",
+    "migration",
+    "modules",
+    "tooling",
+    "project"
   ],
   "requiredRedirects": {
     "docs/index.html": "/documentation/",

@@ -110,6 +110,14 @@ ledgers may use `search-partition-detail` when an adjacent searchable heading an
 API contracts, command references, and reader-facing guides may not use that partition. Search UI
 messages remain reviewed in the standard `zh-CN` catalog.
 
+Search output is structurally segmented by the public top-level routes: documentation overview,
+AI integration, tutorials, guides, architecture, migration, modules, tooling, and project
+maintenance. The navbar loads the current route's segment, and the results page provides a
+localized segment selector. Every public document therefore remains searchable without requiring
+one monolithic locale index. The budget gate applies the unchanged per-file ceiling to every
+segment and requires the complete locale-by-segment matrix, so a missing translation segment or an
+accidental return to a single index fails CI.
+
 Exceptionally large temporary execution plans remain repository-only production drafts when the
 active-plan index retains a searchable purpose and scope summary and every durable public contract
 and command remains in its searchable owning documentation. Canonical indexes keep repository-
@@ -119,11 +127,12 @@ The target is therefore reviewable from the public index without adding temporar
 to rendered output, localized fallbacks, search, or the sitemap. A missing target, a non-draft
 broken link, or any other unresolved route still fails the build.
 
-The per-locale search budget is 6.25 MiB. Reviewed bilingual architecture and contract additions
-moved it from 4 through 6 MiB; the lazy-collection branch then partitioned exhaustive plan and
-benchmark detail before the final 6.25 MiB ceiling. Exact transition evidence is consolidated
-below. Reaching this ceiling again requires structural index segmentation rather than another
-content-only partition or threshold increase; API and command guidance remains searchable.
+The per-segment, per-locale search budget is 6.25 MiB. Reviewed bilingual architecture and
+contract additions moved it from 4 through 6 MiB; the lazy-collection branch then partitioned
+exhaustive plan and benchmark detail before the final 6.25 MiB ceiling. Exact transition evidence
+is consolidated below. Reaching this ceiling again requires structural index segmentation rather
+than another content-only partition or threshold increase; API and command guidance remains
+searchable.
 
 Rendered code blocks remain complete on their owning pages and keep their compiled-source links,
 but local full-text search indexes the surrounding explanation instead of duplicating every code
@@ -154,15 +163,16 @@ literal element bodies byte for byte; immutable source manifests and cache integ
 upstream.
 
 The budget model separates expected release-history growth from regressions. Current ceilings are
-47.1 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
+47.8 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
 overhead, 8 MiB total and 768 KiB largest-file JavaScript, 128 KiB CSS, 6.25 MiB per locale search
-index, and 120 seconds for the Docusaurus build. Locale-prefixed API copies remain forbidden.
+segment, and 120 seconds for the Docusaurus build. Locale-prefixed API copies remain forbidden.
 
 The ceiling moved from 41 MiB to 46.9 MiB only after paired attribution and consolidation. A
 reviewed 2026-08-30 exception moved it to 47.1 MiB after the required top-level bilingual AI
 Integration chapter was consolidated from two routes to one and still exceeded the prior ceiling.
-The ratchet resumes at 47.1 MiB: recover capacity structurally before adding another route, remove
-redundant deployed representations, and never remove current contracts or valid release history.
+The search-segmentation acceptance moves the ceiling to 47.8 MiB. The ratchet resumes there:
+recover capacity structurally before adding another route, remove redundant deployed
+representations, and never remove current contracts or valid release history.
 Existing guarded transforms remove unused locale copies, machine-only governance/translation front
 matter, immutable-manual hydration, and generated indentation without changing routes or readable
 content. Historical same-corpus measurements and limitations remain in source below rather than
@@ -320,6 +330,18 @@ headroom. This is one local production build and measures uncompressed output ra
 size, runtime, or query latency; it makes no performance-improvement claim. The next action is to
 hold this ceiling, reuse the single AI route, and reclaim measured capacity before adding another
 AI documentation page.
+
+On 2026-09-07, the same-corpus monolithic build produced 49,280,799 non-API bytes and search
+indexes of 6,014,297 English bytes and 6,618,181 Chinese bytes; the Chinese index exceeded the
+unchanged 6.25 MiB ceiling by 64,581 bytes. Segmenting all nine public top-level routes produced a
+largest index of 2,048,055 bytes, reducing the maximum reader download by 4,570,126 bytes
+(`69.0541%`). The split indexes added 776,685 bytes (`6.1483%`) of index metadata and moved total
+non-API output to 50,060,856 bytes, an increase of 780,057 bytes (`1.5829%`). The result is
+**mixed**: bounded on-demand search payload and future per-area capacity improved, while total
+uncompressed output regressed. The reviewed 47.8 MiB non-API ceiling accepts only this measured
+segmentation overhead; all public routes and search content remain present. These local builds do
+not measure transfer compression, query latency, or hosted-runner variance. The next action is the
+hosted pull-request build with the required locale-by-segment matrix still enforced.
 
 {/* Historical measurement ledger retained in source; the compact summary above is the public representation.
 
