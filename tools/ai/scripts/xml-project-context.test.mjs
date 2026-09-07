@@ -54,6 +54,44 @@ test('fails closed on style cycles and theme attributes', async () => {
   assert.equal(themeAttribute.diagnostics[0].code, 'VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED');
 });
 
+test('does not let unrelated formatted, color, or declare-styleable resources block a layout', async (context) => {
+  const root = await mkdtemp(resolve(tmpdir(), 'viewcompose-xml-unrelated-resources-'));
+  context.after(() => rm(root, {recursive: true, force: true}));
+  const layoutPath = 'app/src/main/res/layout/screen.xml';
+  await mkdir(resolve(root, dirname(layoutPath)), {recursive: true});
+  await mkdir(resolve(root, 'app/src/main/res/values'), {recursive: true});
+  await mkdir(resolve(root, 'app/src/main/res/values-de'), {recursive: true});
+  await writeFile(resolve(root, layoutPath), `<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="@string/title" />
+`);
+  await writeFile(resolve(root, 'app/src/main/res/values/values.xml'), `<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="title" translatable="false">Title</string>
+    <string name="unused_empty" />
+    <color name="unused_color">#ffffffff</color>
+    <attr name="unused_flag" format="boolean" />
+    <declare-styleable name="UnusedWidget"><attr name="unused_size" format="dimension" /></declare-styleable>
+    <style name="UnusedBase"><item name="android:layout_width" tools:targetApi="q">wrap_content</item></style>
+    <style name="UnusedChild" parent="Widget.AppCompat.TextView" />
+</resources>
+`);
+  await writeFile(resolve(root, 'app/src/main/res/values-de/strings.xml'),
+    '<resources><string name="notification_count">%1$s Dateien</string></resources>\n');
+
+  const result = await resolveXmlProjectContext({
+    projectRoot: root,
+    layoutPath,
+    resourceRoots: ['app/src/main/res'],
+  });
+
+  assert.equal(result.status, 'success');
+  assert.equal(result.context.resources.find((resource) => resource.reference === '@string/title')
+    ?.effectiveValue.value, 'Title');
+});
+
 test('rejects traversal, symlinks, missing defaults, and duplicate definitions', async () => {
   const root = await mkdtemp(resolve(tmpdir(), 'viewcompose-xml-context-'));
   try {

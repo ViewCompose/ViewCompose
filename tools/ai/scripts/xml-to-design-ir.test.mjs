@@ -184,12 +184,12 @@ test('requires a bounded logical source identity and the exact Android namespace
 test('meets every frozen Phase 4 Design IR and unsupported-honesty denominator', async () => {
   const summary = await verifyPhase4DesignIr();
   assert.deepEqual(summary.supported, {
-    deterministicMatches: 2,
-    schemaMatches: 2,
-    resourceMatches: 2,
-    fixtures: 2,
-    provenanceNodes: 7,
-    totalNodes: 7,
+    deterministicMatches: 3,
+    schemaMatches: 3,
+    resourceMatches: 3,
+    fixtures: 3,
+    provenanceNodes: 9,
+    totalNodes: 9,
   });
   assert.deepEqual(summary.unsupported, {matches: 4, fixtures: 4});
 });

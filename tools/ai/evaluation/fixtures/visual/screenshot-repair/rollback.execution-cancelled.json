@@ -4,10 +4,10 @@
   "status": "cancelled",
   "reason": "cancelled",
   "lineage": {
-    "hostGrantDecisionFingerprint": "df7a62497a1dce84a1461b16aa1d7481e0feb5e9fc0e7154026851f3bd1bb51e",
-    "hostGrantRequestFingerprint": "3765e61fcffdeada154d8cfd028aca3ff6ecdea1e1b94a7834e9cc06cc00cbd1",
-    "authorizationFingerprint": "b85294c2284c3e42d495507e5223981c72c3251235ffa0a7be7b24664190d7f3",
-    "proposalFingerprint": "f407aa353cb219f36e98922d83bd178196402ac93fac47088cff1685ef7cf44f",
+    "hostGrantDecisionFingerprint": "309445115d6dd0428016e5833bea375484a194f527c044ec1d3731f539351ff7",
+    "hostGrantRequestFingerprint": "7a658a7bacaa6941b076e2135f31101484ba186d32352bc5e00d3ee4c848c17c",
+    "authorizationFingerprint": "edae2324520e22dd61d5e16eeddd48973fd1ba3c1e7d4cae60b6c9b126746b61",
+    "proposalFingerprint": "8313b5eab8e050e5f5f16a251c4de7f8034e686aafd2d6ba10b89f13f8068ce1",
     "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
     "inputDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
     "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
@@ -55,5 +55,5 @@
       "nextAction": "Do not retry this authorization; request a new review if repair is still required."
     }
   ],
-  "outcomeFingerprint": "264d0bfb702ae5e4ae00b9a2309b0dcbafca38d80dd1d371685226d46884016a"
+  "outcomeFingerprint": "b053895e4f29e39900d2702916fbf767eb586d45b9fd3f30bf5c87004d439188"
 }

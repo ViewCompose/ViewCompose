@@ -122,6 +122,7 @@ function parsePng(asset, signal) {
   let idatEnded = false;
   let sawIend = false;
   let sawSrgb = false;
+  let sawSrgbGamma = false;
   let chunkCount = 0;
   const idatParts = [];
   while (cursor < bytes.length) {
@@ -239,16 +240,34 @@ function parsePng(asset, signal) {
         );
       }
       if (type === 'sRGB') {
-        if (sawSrgb || length !== 1 || bytes[dataStart] > 3) {
+        if (sawSrgb || sawIdat || length !== 1 || bytes[dataStart] > 3) {
           fail(
             'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID',
-            'Screenshot PNG contains an invalid or duplicate sRGB rendering-intent chunk.',
-            'Re-encode the screenshot with at most one valid sRGB chunk.',
+            'Screenshot PNG contains an invalid, duplicate, or misplaced sRGB rendering-intent chunk.',
+            'Re-encode the screenshot with at most one valid sRGB chunk before image data.',
           );
         }
         sawSrgb = true;
       }
-      if (['iCCP', 'cHRM', 'gAMA', 'cICP', 'mDCV', 'cLLI', 'tRNS', 'acTL', 'fcTL', 'fdAT']
+      if (type === 'gAMA') {
+        if (sawSrgbGamma || sawIdat || length !== 4) {
+          fail(
+            'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID',
+            'Screenshot PNG contains an invalid, duplicate, or misplaced gAMA chunk.',
+            'Use at most one 4-byte sRGB companion gAMA chunk before image data.',
+          );
+        }
+        if (bytes.readUInt32BE(dataStart) !== 45_455) {
+          fail(
+            'VC-AI-SCREENSHOT-PNG-UNSUPPORTED',
+            'Screenshot PNG gAMA does not match the standard sRGB companion value 45455.',
+            'Use an sRGB PNG with gAMA 45455 or omit the redundant gAMA chunk.',
+            'unsupported',
+          );
+        }
+        sawSrgbGamma = true;
+      }
+      if (['iCCP', 'cHRM', 'cICP', 'mDCV', 'cLLI', 'tRNS', 'acTL', 'fcTL', 'fdAT']
         .includes(type)) {
         fail(
           'VC-AI-SCREENSHOT-PNG-UNSUPPORTED',
@@ -265,6 +284,14 @@ function parsePng(asset, signal) {
       'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID',
       'Screenshot PNG is missing required IHDR, IDAT, or IEND data.',
       'Provide a complete standards-conforming PNG.',
+    );
+  }
+  if (sawSrgbGamma && !sawSrgb) {
+    fail(
+      'VC-AI-SCREENSHOT-PNG-UNSUPPORTED',
+      'Screenshot PNG gAMA 45455 is accepted only together with an explicit sRGB chunk.',
+      'Add the matching sRGB rendering-intent chunk or omit the redundant gAMA chunk.',
+      'unsupported',
     );
   }
 

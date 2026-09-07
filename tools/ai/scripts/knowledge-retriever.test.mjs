@@ -13,11 +13,12 @@ const lane = {versionLane: 'current-source'};
 
 test('loads one integrity-checked immutable knowledge index', async () => {
   const index = await loadKnowledgeIndex();
-  assert.equal(index.manifest.bundleFingerprint, 'e23da5d9835d00dd31eda167152a875ebefa3f519b992874635113eed5a9a537');
+  assert.equal(index.manifest.bundleFingerprint, '7e7a66d6f1e9e1a3f60e7f0b8460aa6c49c5c2f46576c4e4aae619b12cd31ba3');
   assert.equal(index.artifacts.length, 31);
   assert.equal(index.capabilities.length, 82);
+  assert.equal(index.publicImports.length, 1393);
   assert.equal(index.symbols.length, 540);
-  assert.equal(index.samples.length, 216);
+  assert.equal(index.samples.length, 218);
   assert.equal(index.rules.length, 10);
   assert.deepEqual(Object.keys(KNOWLEDGE_TOOL_DEFINITIONS).sort(), [
     'get_api_reference',
@@ -80,6 +81,13 @@ test('resolves exact symbol, capability, and artifact references without conflat
   assert.equal(symbol.data.artifact.version, '0.1.0-alpha02');
   assert.deepEqual(symbol.data.capability.versionState, {lane: 'released', version: '0.1.0-alpha01'});
 
+  const testTag = await retrieveApiReference({
+    ...lane,
+    identifier: 'com.viewcompose.ui.modifier.Modifier.testTag',
+  });
+  assert.ok(testTag.data.relatedSamples.some((entry) =>
+    entry.sampleId === 'module.renderer-espresso-test-tag'));
+
   const capability = await retrieveApiReference({...lane, identifier: 'foundation.components'});
   assert.equal(capability.data.referenceType, 'capability');
   assert.ok(capability.data.symbols.some((entry) => entry.simpleName === 'Column'));
@@ -89,11 +97,31 @@ test('resolves exact symbol, capability, and artifact references without conflat
   assert.ok(artifact.data.capabilities.some((entry) => entry.capabilityId === 'foundation.components'));
 });
 
+test('resolves public support types and links them back to governed signatures and samples', async () => {
+  const imageSource = await retrieveApiReference({...lane, identifier: 'ImageSource'});
+  assert.equal(imageSource.status, 'success');
+  assert.equal(imageSource.data.referenceType, 'support-type');
+  assert.equal(imageSource.data.supportType.importName, 'com.viewcompose.ui.node.ImageSource');
+  assert.ok(imageSource.data.supportType.declarations.length > 0);
+  assert.ok(imageSource.data.relatedCapabilities.some((entry) =>
+    entry.capability.capabilityId === 'image.foundation' &&
+    entry.sample.sampleClass === 'compiled-region'));
+
+  const semanticsRole = await retrieveApiReference({...lane, identifier: 'SemanticsRole'});
+  assert.equal(semanticsRole.data.supportType.importName, 'com.viewcompose.ui.modifier.SemanticsRole');
+
+  const textState = await retrieveApiReference({...lane, identifier: 'TextFieldState'});
+  assert.equal(textState.data.artifact.artifactId, 'viewcompose-text-core');
+  assert.equal(textState.data.artifact.version, '0.1.0-alpha04');
+});
+
 test('returns component parameters, applicable rules, ownership, and its compiled sample', async () => {
   const column = await retrieveComponentReference({...lane, name: 'Column'});
   assert.equal(column.status, 'success');
   assert.equal(column.data.importName, 'com.viewcompose.ui.foundation.Column');
   const parameters = column.data.symbol.declarations[0].parameters;
+  assert.ok(column.data.symbol.signatureTypes.some((entry) =>
+    entry.importName === 'com.viewcompose.ui.unit.UiDp'));
   assert.deepEqual(parameters.find((entry) => entry.name === 'spacing'), {
     name: 'spacing',
     type: 'UiDp',

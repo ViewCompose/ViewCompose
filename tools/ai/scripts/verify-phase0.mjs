@@ -588,7 +588,24 @@ async function verifyXmlSubsetV2(schemas) {
     JSON.stringify(contract.addedElements?.map((element) => element.source)) !==
       JSON.stringify(['FrameLayout', 'ImageView']) ||
     JSON.stringify(contract.addedAttributes?.commonOptional) !==
-      JSON.stringify(['android:visibility']) ||
+      JSON.stringify([
+        'android:visibility',
+        'android:layout_margin',
+        'android:layout_marginHorizontal',
+        'android:layout_marginVertical',
+        'android:layout_marginStart',
+        'android:layout_marginTop',
+        'android:layout_marginEnd',
+        'android:layout_marginBottom',
+        'android:layout_marginLeft',
+        'android:layout_marginRight',
+      ]) ||
+    JSON.stringify(contract.addedAttributes?.byElement?.LinearLayout) !==
+      JSON.stringify(['android:gravity']) ||
+    contract.normalization?.previewNamespaceStrategy !==
+      'ignore xmlns:tools and tools:* because they have no runtime semantics' ||
+    contract.normalization?.crossAxisGravityStrategy !==
+      'map only direction-independent cross-axis values and fail closed on main-axis or compound gravity' ||
     contract.normalization?.drawableResourceStrategy !==
       'caller ImageSource parameter preserving @drawable identity' ||
     contract.normalization?.contentDescriptionStrategy !==
@@ -652,7 +669,7 @@ async function verifyXmlSubsetV2(schemas) {
       !goldenKotlin.includes(`fun UiTreeBuilder.${fixture.expectedFunction}(`) ||
       fixture.expectedBindings.some(({parameter, type}) =>
         !goldenKotlin.includes(`    ${parameter}: ${type},`)) ||
-      !goldenKotlin.includes('contentDescription = profilePhoto,') ||
+      fixture.expectedKotlinSnippets.some((snippet) => !goldenKotlin.includes(snippet)) ||
       !goldenKotlin.endsWith('\n')
     ) {
       throw new Error(`${fixture.goldenKotlin}: XML subset v2 Kotlin contract is incomplete`);
@@ -735,8 +752,13 @@ async function verifyXmlProjectContext(schemas) {
   if (
     JSON.stringify(contract.resourceResolution?.types) !== JSON.stringify(['string', 'dimen']) ||
     contract.resourceResolution?.qualifiedDefinitions !== 'inventory-only' ||
+    contract.resourceResolution?.unreferencedValuesPolicy !==
+      'skip bounded recognized color, scalar, array, plural, attr, and declare-styleable declarations without claiming their semantics' ||
     contract.styleResolution?.cycles !== 'fail closed' ||
-    contract.styleResolution?.implicitDottedParents !== false ||
+    contract.styleResolution?.implicitDottedParents !==
+      'parsed without blocking unrelated styles; unresolved selected parents fail closed' ||
+    contract.styleResolution?.toolsPreviewMetadata !==
+      'accepted on the resources root and style items without runtime meaning' ||
     contract.styleResolution?.themeAttributes !== false ||
     contract.callSiteInventory?.analysis !== 'bounded-lexical' ||
     contract.callSiteInventory?.completeness !== 'not-proven' ||
@@ -875,7 +897,11 @@ async function verifyXmlLayoutDependencies(schemas) {
     contract.execution?.automaticVariantSelection !== false ||
     contract.selection?.qualifiedLayouts !== 'inventory-only' ||
     contract.selection?.resourceRootPrecedence !== 'first declared root wins' ||
-    contract.include?.overrideAttributes !== false ||
+    contract.include?.overrideAttributes !==
+      'qualified attributes replace the ordinary included root with including-source provenance' ||
+    contract.include?.sizeOverride !==
+      'android:layout_width and android:layout_height must be supplied together' ||
+    contract.include?.mergeRootOverrides !== 'fail closed' ||
     contract.merge?.activation !== 'included-root-only' ||
     contract.provenance?.rawSourceInOutput !== false
   ) {
@@ -1433,8 +1459,10 @@ async function verifyScreenshotPreprocessing(schemas) {
     JSON.stringify(contract.input?.acceptedFilterTypes) !== JSON.stringify([0, 1, 2, 3, 4]) ||
     JSON.stringify(contract.input?.acceptedInterlaceMethods) !== JSON.stringify([0]) ||
     contract.input?.acceptedSrgbChunk !== 'zero-or-one-valid-rendering-intent' ||
+    contract.input?.acceptedSrgbGammaChunk !==
+      'zero-or-one-big-endian-45455-only-with-valid-srgb' ||
     JSON.stringify(contract.input?.rejectedSemanticChunks) !== JSON.stringify([
-      'iCCP', 'cHRM', 'gAMA', 'cICP', 'mDCV', 'cLLI', 'tRNS', 'acTL', 'fcTL', 'fdAT',
+      'iCCP', 'cHRM', 'cICP', 'mDCV', 'cLLI', 'tRNS', 'acTL', 'fcTL', 'fdAT',
     ])
   ) {
     throw new Error('Screenshot preprocessing must accept only embedded non-interlaced RGBA PNG');

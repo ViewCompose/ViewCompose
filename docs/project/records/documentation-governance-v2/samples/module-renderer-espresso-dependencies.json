@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.renderer-espresso-dependencies",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "modifier.interaction",
+  "document_ids": ["module.viewcompose-renderer-android"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "renderer-android-espresso-dependencies",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

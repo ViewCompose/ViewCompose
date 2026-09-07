@@ -18,9 +18,28 @@ Return evidence-backed findings ordered by impact, with source locations and con
 4. Separate proven compile errors and stable rule findings from architectural suggestions. Do not
    infer layout geometry, performance, runtime lifecycle behavior, or visual correctness from a
    static scan.
-5. Report each finding with severity, diagnostic code, source, affected artifact/capability when
+5. For migrations, compare the claimed `capability-probe`, `subtree`, or `whole-screen` intent with
+   the actual host root and produce a coverage ledger. Report hidden legacy duplicates, undeclared
+   native siblings, or Activity-owned chrome/scrolling/overlay behavior outside a claimed whole
+   screen. Include application-level lifecycle callbacks that query or mutate the root before the
+   screen host installs content. Review state ownership separately: UI-local state belongs in ViewCompose state, existing
+   ViewModel business state should use `viewModel()` plus lifecycle-aware collection under a
+   standard host, and an external collector/manual `RenderSession.render()` path requires an
+   explicit embedded-boundary rationale.
+6. Report each finding with severity, diagnostic code, source, affected artifact/capability when
    available, and the evidence level. If no finding is proven, say so and retain the stated
    limitations.
+
+## Existing-project regression evidence
+
+For an existing Activity or Fragment, check whether baseline and candidate use the same exact
+application variant, unit-test task, instrumentation task, matched application/test APK pair,
+device/user/storage/permission state, fixture bytes or reproducible generator with SHA-256 manifest,
+and critical flow. Candidate evidence must cover initial UI, at least one later state, completion or
+navigation, source-fixture integrity, and crash/ANR absence. Treat a project-owned Debug no-ad seam
+as deterministic UI evidence only when its activation stays uncommitted, and keep real-ad behavior
+as a separate check. Missing or changed inputs make regression parity unverified even when code
+compiles or one screenshot matches.
 
 ## Stop and authority
 

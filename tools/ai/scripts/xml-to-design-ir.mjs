@@ -26,7 +26,7 @@ const supportedElements = new Set([
   'ImageView',
 ]);
 const elementAttributes = Object.freeze({
-  LinearLayout: new Set(['android:orientation', 'android:padding']),
+  LinearLayout: new Set(['android:orientation', 'android:padding', 'android:gravity']),
   FrameLayout: new Set(['android:padding']),
   TextView: new Set(['android:text']),
   EditText: new Set(['android:hint', 'android:inputType']),
@@ -38,6 +38,15 @@ const commonAttributes = new Set([
   'android:layout_width',
   'android:layout_height',
   'android:visibility',
+  'android:layout_margin',
+  'android:layout_marginHorizontal',
+  'android:layout_marginVertical',
+  'android:layout_marginStart',
+  'android:layout_marginTop',
+  'android:layout_marginEnd',
+  'android:layout_marginBottom',
+  'android:layout_marginLeft',
+  'android:layout_marginRight',
 ]);
 const inputTypes = new Set(['text', 'textEmailAddress', 'textPassword', 'number']);
 const imageScaleTypes = new Map([
@@ -425,17 +434,102 @@ function lowerCamel(value) {
 }
 
 function unsupportedFragment({node, attribute, code, reason, source, path, sourceId}) {
+  const fragmentSource = attribute?.origin?.source ?? source;
+  const fragmentPath = attribute?.origin?.path ?? path;
   const offset = attribute?.start ?? node.start;
   return {
     sourceId: attribute ? `${sourceId}.${attribute.name}` : sourceId,
-    sourceSpan: `${path}:${lineNumber(source, offset)}`,
+    sourceSpan: `${fragmentPath}:${lineNumber(fragmentSource, offset)}`,
     code,
     reason,
-    preservedSource: (attribute?.raw ?? node.raw ?? source.slice(node.start, node.end ?? node.start + 1))
+    preservedSource: (attribute?.raw ?? node.raw ?? fragmentSource.slice(node.start, node.end ?? node.start + 1))
       .slice(0, 16384),
     disposition: 'blocked',
-    diagnosticSource: {path, source, offset},
+    diagnosticSource: {path: fragmentPath, source: fragmentSource, offset},
   };
+}
+
+function addMargins(node, attributes, state, source, path, sourceId, modifiers) {
+  const names = [
+    'android:layout_margin',
+    'android:layout_marginHorizontal',
+    'android:layout_marginVertical',
+    'android:layout_marginStart',
+    'android:layout_marginTop',
+    'android:layout_marginEnd',
+    'android:layout_marginBottom',
+    'android:layout_marginLeft',
+    'android:layout_marginRight',
+  ];
+  const present = names.map((name) => attributes.get(name)).filter(Boolean);
+  if (present.length === 0) return;
+  const parsed = new Map();
+  for (const attribute of present) {
+    const value = dpDimension(attribute.value);
+    if (!value) {
+      addUnsupported(state, unsupportedFragment({
+        node,
+        attribute,
+        code: 'VC-AI-XML-VALUE-UNSUPPORTED',
+        reason: `${attribute.name} must be a non-negative integer dp value.`,
+        source,
+        path,
+        sourceId,
+      }));
+    } else {
+      parsed.set(attribute.name, value);
+    }
+  }
+  if (parsed.size !== present.length) return;
+
+  const hasRelative = parsed.has('android:layout_marginStart') ||
+    parsed.has('android:layout_marginEnd');
+  const hasPhysicalHorizontal = parsed.has('android:layout_margin') ||
+    parsed.has('android:layout_marginHorizontal') ||
+    parsed.has('android:layout_marginLeft') ||
+    parsed.has('android:layout_marginRight');
+  if (hasRelative && hasPhysicalHorizontal) {
+    const attribute = present.find((candidate) =>
+      candidate.name === 'android:layout_marginStart' ||
+      candidate.name === 'android:layout_marginEnd');
+    addUnsupported(state, unsupportedFragment({
+      node,
+      attribute,
+      code: 'VC-AI-XML-VALUE-UNSUPPORTED',
+      reason: 'Mixed physical and relative horizontal margins require runtime layout-direction resolution.',
+      source,
+      path,
+      sourceId,
+    }));
+    return;
+  }
+
+  const all = parsed.get('android:layout_margin');
+  if (all && parsed.size === 1) {
+    modifiers.push({kind: 'margin', arguments: [{name: 'all', value: all}]});
+    return;
+  }
+  const vertical = parsed.get('android:layout_marginVertical') ?? all;
+  const top = parsed.get('android:layout_marginTop') ?? vertical;
+  const bottom = parsed.get('android:layout_marginBottom') ?? vertical;
+  if (hasRelative) {
+    const arguments_ = [
+      ['start', parsed.get('android:layout_marginStart')],
+      ['top', top],
+      ['end', parsed.get('android:layout_marginEnd')],
+      ['bottom', bottom],
+    ].filter(([, value]) => value).map(([name, value]) => ({name, value}));
+    modifiers.push({kind: 'margin-relative', arguments: arguments_});
+    return;
+  }
+  const horizontal = parsed.get('android:layout_marginHorizontal') ?? all;
+  const arguments_ = [
+    ['left', parsed.get('android:layout_marginLeft') ?? horizontal],
+    ['top', top],
+    ['right', parsed.get('android:layout_marginRight') ?? horizontal],
+    ['bottom', bottom],
+  ].filter(([, value]) => value).map(([name, value]) => ({name, value}));
+  modifiers.push({kind: 'margin', arguments: arguments_});
 }
 
 function addUnsupported(state, fragment) {
@@ -545,6 +639,7 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
       }));
       continue;
     }
+    if (attribute.name === 'xmlns:tools' || attribute.name.startsWith('tools:')) continue;
     if (attribute.value.includes('@{') || attribute.value.includes('@=')) {
       addUnsupported(state, unsupportedFragment({
         node,
@@ -623,6 +718,7 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
       ],
     });
   }
+  addMargins(node, attributes, state, source, sourcePath, sourceId, modifiers);
   let kind;
   let decision;
   if (node.name === 'LinearLayout') {
@@ -644,6 +740,42 @@ function mapNode(node, sourcePath, source, state, sourceIndex) {
       name: 'orientation',
       value: {kind: 'enum', type: 'linear-orientation', value: orientation},
     });
+    const gravityAttribute = attributes.get('android:gravity');
+    if (gravityAttribute) {
+      const alignment = orientation === 'vertical'
+        ? new Map([
+            ['start', 'start'],
+            ['left', 'start'],
+            ['center_horizontal', 'center'],
+            ['end', 'end'],
+            ['right', 'end'],
+          ]).get(gravityAttribute.value)
+        : new Map([
+            ['top', 'top'],
+            ['center_vertical', 'center'],
+            ['bottom', 'bottom'],
+          ]).get(gravityAttribute.value);
+      if (alignment) {
+        properties.push({
+          name: orientation === 'vertical' ? 'horizontalAlignment' : 'verticalAlignment',
+          value: {
+            kind: 'enum',
+            type: orientation === 'vertical' ? 'horizontal-alignment' : 'vertical-alignment',
+            value: alignment,
+          },
+        });
+      } else {
+        addUnsupported(state, unsupportedFragment({
+          node,
+          attribute: gravityAttribute,
+          code: 'VC-AI-XML-VALUE-UNSUPPORTED',
+          reason: `android:gravity must map exactly to the ${orientation === 'vertical' ? 'horizontal' : 'vertical'} cross axis.`,
+          source,
+          path: sourcePath,
+          sourceId,
+        }));
+      }
+    }
     const paddingAttribute = attributes.get('android:padding');
     if (paddingAttribute) {
       const padding = dpDimension(paddingAttribute.value);

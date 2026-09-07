@@ -202,9 +202,13 @@ function parseStyleItems(source, start, end, path) {
     if (!match) return failure('unsupported', 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED',
       'Only text-only style items with a name attribute are supported.', path, source, cursor);
     const attributes = parseAttributes(source, match[1], cursor + '<item'.length);
-    if (!attributes || attributes.size !== 1 || !attributes.has('name')) {
+    if (
+      !attributes ||
+      !attributes.has('name') ||
+      [...attributes.keys()].some((name) => name !== 'name' && !name.startsWith('tools:'))
+    ) {
       return failure('unsupported', 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED',
-        'Style items require exactly one name attribute.', path, source, cursor);
+        'Style items require one name attribute and may carry tools-only preview metadata.', path, source, cursor);
     }
     const value = decodeXmlText(match[2].trim());
     if (value === null || value.length === 0) {
@@ -214,6 +218,9 @@ function parseStyleItems(source, start, end, path) {
     items.push({
       attribute: attributes.get('name').value,
       rawValue: value,
+      path,
+      source,
+      offset: cursor,
       startLine: lineNumber(source, cursor),
     });
     cursor += match[0].length;
@@ -228,12 +235,21 @@ function parseValuesFile(source, path, qualifiers, precedence) {
       'Resource declarations cannot contain DOCTYPE or entity declarations.', path, source, offset);
   }
   const declarationEnd = stripLeadingDeclaration(source);
-  const root = /<resources\s*>/gu;
+  const root = /<resources\b([^>]*)>/gu;
   root.lastIndex = declarationEnd;
   const opening = root.exec(source);
   if (!opening || source.slice(declarationEnd, opening.index).trim()) {
     return failure('invalid', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
       'A values file must contain one plain resources root.', path, source, declarationEnd);
+  }
+  const rootAttributes = parseAttributes(source, opening[1], opening.index + '<resources'.length);
+  if (
+    rootAttributes === null ||
+    [...rootAttributes].some(([name, attribute]) =>
+      name !== 'xmlns:tools' || attribute.value !== 'http://schemas.android.com/tools')
+  ) {
+    return failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
+      'The resources root accepts only the standard tools preview namespace.', path, source, opening.index);
   }
   const closing = source.lastIndexOf('</resources>');
   if (closing < opening.index + opening[0].length || source.slice(closing + '</resources>'.length).trim()) {
@@ -249,12 +265,50 @@ function parseValuesFile(source, path, qualifiers, precedence) {
       'Values XML contains an unclosed comment.', path, source, next.error);
     cursor = next.cursor;
     if (cursor >= closing) break;
+    const emptyStringMatch = /^<string\b([^>]*)\/>/su.exec(source.slice(cursor, closing));
+    if (emptyStringMatch) {
+      const attributes = parseAttributes(source, emptyStringMatch[1], cursor + '<string'.length);
+      if (
+        !attributes ||
+        !attributes.has('name') ||
+        [...attributes].some(([attribute, value]) =>
+          !['name', 'translatable', 'formatted'].includes(attribute) ||
+          attribute !== 'name' && !['true', 'false'].includes(value.value))
+      ) {
+        return failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
+          'String resources accept a name and optional boolean translatable or formatted metadata.', path, source, cursor);
+      }
+      const name = attributes.get('name').value;
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/u.test(name)) {
+        return failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
+          'Resource names must be stable unqualified identifiers.', path, source, cursor);
+      }
+      definitions.push({
+        type: 'string',
+        name,
+        path,
+        startLine: lineNumber(source, cursor),
+        qualifiers,
+        precedence,
+        value: {kind: 'string', value: ''},
+      });
+      cursor += emptyStringMatch[0].length;
+      continue;
+    }
     const valueMatch = /^<(string|dimen)\b([^>]*)>([^<]*)<\/\1\s*>/su.exec(source.slice(cursor, closing));
     if (valueMatch) {
       const attributes = parseAttributes(source, valueMatch[2], cursor + valueMatch[1].length + 1);
-      if (!attributes || attributes.size !== 1 || !attributes.has('name')) {
+      if (
+        !attributes ||
+        !attributes.has('name') ||
+        [...attributes].some(([attribute, value]) =>
+          valueMatch[1] === 'string'
+            ? !['name', 'translatable', 'formatted'].includes(attribute) ||
+              attribute !== 'name' && !['true', 'false'].includes(value.value)
+            : attribute !== 'name')
+      ) {
         return failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
-          'String and dimension resources require exactly one name attribute.', path, source, cursor);
+          'String resources accept optional boolean metadata; dimension resources require exactly one name attribute.', path, source, cursor);
       }
       const name = attributes.get('name').value;
       if (!/^[A-Za-z][A-Za-z0-9_]*$/u.test(name)) {
@@ -265,9 +319,9 @@ function parseValuesFile(source, path, qualifiers, precedence) {
       const decoded = decodeXmlText(rawValue);
       let value;
       if (valueMatch[1] === 'string') {
-        if (decoded === null || /%(?:\d+\$)?[A-Za-z]/u.test(decoded)) {
+        if (decoded === null) {
           return failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
-            'Formatted or entity-bearing strings are outside the project-context subset.', path, source, cursor);
+            'The string resource contains an unsupported XML entity.', path, source, cursor);
         }
         value = {kind: 'string', value: decoded};
       } else {
@@ -290,6 +344,22 @@ function parseValuesFile(source, path, qualifiers, precedence) {
       cursor += valueMatch[0].length;
       continue;
     }
+    const ignoredOpening = /^<(color|bool|integer|fraction|item|array|string-array|integer-array|plurals|attr|declare-styleable)\b[^>]*>/su
+      .exec(source.slice(cursor, closing));
+    if (ignoredOpening) {
+      if (ignoredOpening[0].endsWith('/>')) {
+        cursor += ignoredOpening[0].length;
+        continue;
+      }
+      const endTag = `</${ignoredOpening[1]}>`;
+      const ignoredEnd = source.indexOf(endTag, cursor + ignoredOpening[0].length);
+      if (ignoredEnd < 0 || ignoredEnd > closing) {
+        return failure('invalid', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
+          `Resource declaration ${ignoredOpening[1]} is not closed.`, path, source, cursor);
+      }
+      cursor = ignoredEnd + endTag.length;
+      continue;
+    }
     const selfClosingStyle = /^<style\b([^>]*)\/>/su.exec(source.slice(cursor, closing));
     const styleOpening = /^<style\b([^>]*)>/su.exec(source.slice(cursor, closing));
     const styleMatch = selfClosingStyle ?? styleOpening;
@@ -304,9 +374,13 @@ function parseValuesFile(source, path, qualifiers, precedence) {
     }
     const name = attributes.get('name').value;
     const parent = attributes.get('parent')?.value;
-    if (!/^[A-Za-z][A-Za-z0-9_]*$/u.test(name) || (parent && !/^@style\/[A-Za-z][A-Za-z0-9_]*$/u.test(parent))) {
+    const parentName = parent
+      ? /^@style\/([A-Za-z][A-Za-z0-9_.]*)$/u.exec(parent)?.[1] ??
+        /^([A-Za-z][A-Za-z0-9_.]*)$/u.exec(parent)?.[1]
+      : undefined;
+    if (!/^[A-Za-z][A-Za-z0-9_.]*$/u.test(name) || (parent && !parentName)) {
       return failure('unsupported', 'VC-AI-XML-RESOURCE-UNSUPPORTED',
-        'Style names and parents must be explicit unqualified identifiers.', path, source, cursor);
+        'Style names and parents must be stable Android style identifiers or @style/name references.', path, source, cursor);
     }
     let items = [];
     let consumed = styleMatch[0].length;
@@ -328,7 +402,7 @@ function parseValuesFile(source, path, qualifiers, precedence) {
     }
     styles.push({
       name,
-      parent: parent?.slice('@style/'.length),
+      parent: parentName,
       items,
       path,
       startLine: lineNumber(source, cursor),
@@ -758,12 +832,12 @@ export async function resolveXmlProjectContext({
       const items = [];
       for (const item of resolvedStyle.items) {
         if (!allowed.has(item.attribute)) {
-          styleFailure = failure('unsupported', 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `${item.attribute} is not supported on ${node.name}.`, item.path);
+          styleFailure = failure('unsupported', 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `${item.attribute} is not supported on ${node.name}.`, item.path, item.source, item.offset);
           return;
         }
         const value = attributeValue(item.rawValue, item.attribute);
         if (!value || value.kind === 'resource' && value.type === 'style') {
-          styleFailure = failure('unsupported', item.rawValue.startsWith('?') ? 'VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED' : 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `Style item ${item.attribute} has an unsupported value.`, item.path);
+          styleFailure = failure('unsupported', item.rawValue.startsWith('?') ? 'VC-AI-XML-THEME-ATTRIBUTE-UNSUPPORTED' : 'VC-AI-XML-STYLE-ITEM-UNSUPPORTED', `Style item ${item.attribute} has an unsupported value.`, item.path, item.source, item.offset);
           return;
         }
         if (value.kind === 'resource') referencedResourceKeys.add(definitionKey(value.type, value.name));

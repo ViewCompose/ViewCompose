@@ -3,7 +3,7 @@ import test from 'node:test';
 import {verifyPhase4GeneratedPreview} from './verify-phase4-generated-preview.mjs';
 
 const loginExpected = Object.freeze({
-  request: 'e8e7bee0775fd57e81c84073b4249406b2189536438ebb851d9d6ec6898ec69a',
+  request: '9a3e4d8d0871e25378ab758951bc7786c233232315defb8714b784bae48e414e',
   kotlin: '6c4f6dafef9e0b4808eefab440d14e331b1a3b55bc8becff7a05d3669cc73be1',
   wrapper: '8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821',
   build: '761d759c682110d9702f169c7b885a30ac77e3821401a22c21629c508760e18c',
@@ -18,7 +18,7 @@ const loginExpected = Object.freeze({
   treeStructure: {vnodeCount: 5, mountedNodeCount: 5, maxVNodeDepth: 3, maxMountedDepth: 3},
   assets: [],
   designIr: 'a938f6c0bd8333e195414353766d7e577bbcab0584c219cf4d123869192964d4',
-  comparison: 'a9507e2e496a5d43fe7be925b16e6abe4646a219fb3ede78f0b3f4238f966ebd',
+  comparison: 'f4c5914bc711810375e12148a707d13a934cd0254b5ba8630a369ba81650f7be',
   comparisonSummary: {
     designNodes: 4,
     mappedNodes: 4,
@@ -67,7 +67,7 @@ const loginExpected = Object.freeze({
 });
 
 const profileExpected = Object.freeze({
-  request: '3411584d19996d667cd82da9ae2f6dff98e41bb5f28288a04760fd5ceaf6ba26',
+  request: 'e911b8ce4f947dc1d0ce5108b47e37313a9f8e1b2e501d632561eef27521d376',
   kotlin: '15b15098e92b62bc9730ab7b3f2bde7715596f22069490a18b1e7830ff92ad35',
   wrapper: '461d7c9e7b9898b9b9f7373775fa10c8a180097664627b442d36a8b2abd2a4b2',
   build: '7a5e1e105705669c6e103cf101533c8417bbba5f5acace9316d5dbc1d4b7e46a',
@@ -93,7 +93,7 @@ const profileExpected = Object.freeze({
     heightPx: 1,
   }],
   designIr: '8a860b20a34b87d0eae3918f12d1968e3653e0fe46da0cceffa68f70e9c25b09',
-  comparison: '7410eb175279e971e035612ee40c19e3247f1bc4ffb520ec95490d25008079bb',
+  comparison: 'a033c31109b3a4170bf2859dd5bd4cbb4d375a92f6633edcd327915e89c64c45',
   comparisonSummary: {
     designNodes: 3,
     mappedNodes: 3,

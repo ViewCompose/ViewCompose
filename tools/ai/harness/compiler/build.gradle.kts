@@ -48,7 +48,7 @@ android {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha02")
 }
 
 val prepareAiSnippet by tasks.registering(Sync::class) {

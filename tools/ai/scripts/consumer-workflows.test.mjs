@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 import {
   compareWorkflowContracts,
@@ -56,4 +57,131 @@ Use \`validate_code\` with exact framework evidence. Never fabricate an API.
 
 This is read-only. Stop when the same diagnostic repeats without new evidence. Use Codex.
 `), /provider-specific/u);
+});
+
+test('routes official Figma context to the attended screenshot evidence workflow', async () => {
+  const [skill, fixtureSource] = await Promise.all([
+    readFile(new URL('../skills/viewcompose-import-figma/SKILL.md', import.meta.url), 'utf8'),
+    readFile(
+      new URL('../evaluation/fixtures/workflows/official-figma-design-context.json', import.meta.url),
+      'utf8',
+    ),
+  ]);
+  const fixture = JSON.parse(fixtureSource);
+
+  for (const expected of [
+    '`prepare_screenshot`',
+    '`validate_screenshot_inference`',
+    '`resolve_screenshot_inference`',
+    '`generate_screenshot_viewcompose`',
+    'reference-assisted, attended adaptation',
+    'Do not pass that response to `convert_figma_to_viewcompose`',
+    'Never retain a temporary URL in',
+    'converted mechanically with the Android SDK',
+    'never hand-trace or simplify path data',
+    'at least 3x',
+    'a 1x raster in unqualified `drawable/` is invalid',
+    'converter exit code alone is insufficient',
+    'ordinary component elevation out of the asset',
+    'prefer lossless WebP',
+  ]) {
+    assert.ok(skill.includes(expected), `missing official Figma workflow rule: ${expected}`);
+  }
+  assert.match(skill, /do not say “direct Figma conversion,”/u);
+  assert.match(skill, /Reserve lossy WebP\s+for photographic or textured content/u);
+  assert.match(
+    skill,
+    /Use\s+`current-source` only when the user is explicitly evaluating a ViewCompose checkout/u,
+  );
+  assert.deepEqual(fixture.versionSelection, {
+    intent: 'evaluate-current-checkout',
+    toolingLane: 'current-source',
+    artifactLane: 'same-checkout-composite-build',
+    publishedFallbackAllowed: false,
+  });
+  assert.deepEqual(fixture.androidAssetPolicy, {
+    preserveOriginalSvg: true,
+    classification: {
+      vectorDrawable: [
+        'solid-flat-paths',
+        'flat-multicolor-paths',
+        'simple-groups-transforms-supported-clips',
+      ],
+      rasterOnly: [
+        'filter-blur-artwork-shadow-glow',
+        'mask-gradient-pattern-texture',
+        'embedded-raster-blend-mode-unoutlined-text-unsupported-stroke',
+      ],
+      runtimeShadow: 'android-shape-or-elevation',
+    },
+    vectorConversion: 'mechanical-android-sdk-with-render-check',
+    handTracedPathsAllowed: false,
+    rasterFallback: {
+      minimumScale: 3,
+      resourceDirectory: 'drawable-xxhdpi',
+      unqualifiedOneXAllowed: false,
+      complexUiWithAlpha: 'lossless-webp',
+      exactPngOrNinePatchOrUnverifiedWebp: 'png',
+      photographicWithExplicitQuality: 'lossy-webp',
+    },
+    requiredEvidence: [
+      'source-output-hashes',
+      'detected-features-and-decision-reason',
+      'converter-or-encoder-mode',
+      'alpha-density-dimensions-or-viewport',
+      'real-build-and-reference-render-check',
+    ],
+  });
+});
+
+test('requires an explicit version lane for new ViewCompose screens', async () => {
+  const skill = await readFile(
+    new URL('../skills/viewcompose-create-screen/SKILL.md', import.meta.url),
+    'utf8',
+  );
+  assert.match(skill, /Select the version lane before adding dependencies/u);
+  assert.match(skill, /independently versioned Artifact/u);
+  assert.match(skill, /Gradle composite build/u);
+  assert.match(skill, /same-revision local snapshot/u);
+  assert.match(skill, /Never call a\s+published version “current source”/u);
+});
+
+test('requires explicit migration scope, coverage, and state architecture', async () => {
+  const [convertSkill, createSkill, reviewSkill] = await Promise.all([
+    readFile(new URL('../skills/viewcompose-convert-xml/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-create-screen/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-review/SKILL.md', import.meta.url), 'utf8'),
+  ]);
+
+  for (const skill of [convertSkill, createSkill, reviewSkill]) {
+    assert.match(skill, /`capability-probe`, `subtree`, or\s+`whole-screen`/u);
+    assert.match(skill, /coverage ledger/u);
+    assert.match(skill, /hidden legacy/u);
+  }
+  assert.match(convertSkill, /must not silently contract/u);
+  assert.match(convertSkill, /application-level\s+lifecycle callbacks/u);
+  assert.match(convertSkill, /ViewCompose `viewModel\(\)`/u);
+  assert.match(convertSkill, /`collectAsStateWithLifecycle\(\)`/u);
+  assert.match(createSkill, /standard `setUiContent` host/u);
+  assert.match(createSkill, /explicit `AndroidView`/u);
+  assert.match(reviewSkill, /manual `RenderSession\.render\(\)` path requires/u);
+});
+
+test('requires reproducible existing-project device regression evidence', async () => {
+  const skills = await Promise.all([
+    readFile(new URL('../skills/viewcompose-convert-xml/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-create-screen/SKILL.md', import.meta.url), 'utf8'),
+    readFile(new URL('../skills/viewcompose-review/SKILL.md', import.meta.url), 'utf8'),
+  ]);
+  for (const skill of skills) {
+    assert.match(skill, /matched application\/test APK pair/u);
+    assert.match(skill, /device\/user\/storage\/permission state/u);
+    assert.match(skill, /SHA-256 manifest/u);
+    assert.match(skill, /initial\s+UI, at least one later state/u);
+    assert.match(skill, /crash\/ANR\s+absence/u);
+    assert.match(skill, /Debug no-ad seam/u);
+    assert.match(skill, /uncommitted/u);
+    assert.match(skill, /real-ad behavior/u);
+    assert.match(skill, /regression parity/u);
+  }
 });

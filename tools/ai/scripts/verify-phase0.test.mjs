@@ -10,7 +10,7 @@ test('accepts the checked-in Phase 0 contracts and evaluation corpus', async () 
   assert.equal(summary.cases, 74);
   assert.equal(summary.fixtures, 71);
   assert.equal(summary.xmlFixtures, 4);
-  assert.equal(summary.xmlV2Fixtures, 2);
+  assert.equal(summary.xmlV2Fixtures, 3);
   assert.equal(summary.xmlProjectContextFixtures, 3);
   assert.equal(summary.xmlLayoutDependencyFixtures, 3);
   assert.equal(summary.generatedPreviewFixtures, 5);

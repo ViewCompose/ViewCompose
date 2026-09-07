@@ -102,6 +102,7 @@ export function loadKnowledgeIndex() {
       'capabilities.json',
       'llms-full.txt',
       'llms.txt',
+      'public-imports.jsonl',
       'rules.json',
       'samples.jsonl',
       'symbols.jsonl',
@@ -127,12 +128,14 @@ export function loadKnowledgeIndex() {
 
     const artifacts = JSON.parse(contents.get('artifacts.json')).artifacts;
     const capabilities = JSON.parse(contents.get('capabilities.json')).capabilities;
+    const publicImports = parseJsonLines(contents.get('public-imports.jsonl'));
     const symbols = parseJsonLines(contents.get('symbols.jsonl'));
     const samples = parseJsonLines(contents.get('samples.jsonl'));
     const rules = JSON.parse(contents.get('rules.json')).rules;
     const actualCounts = {
       artifacts: artifacts.length,
       capabilities: capabilities.length,
+      publicImports: publicImports.length,
       symbols: symbols.length,
       samples: samples.length,
       rules: rules.length,
@@ -146,22 +149,32 @@ export function loadKnowledgeIndex() {
     const bySymbolId = new Map(symbols.map((entry) => [entry.symbolId, entry]));
     const bySampleId = new Map(samples.map((entry) => [entry.sampleId, entry]));
     const byRuleCode = new Map(rules.map((entry) => [entry.code, entry]));
+    const publicImportByName = new Map(publicImports.map((entry) => [entry.importName, entry]));
+    const publicImportsBySimpleName = new Map();
     const symbolsBySimpleName = new Map();
     const symbolsByImport = new Map();
     const symbolsByCapability = new Map();
+    const samplesByCapability = new Map();
     const capabilitiesByArtifact = new Map();
     for (const symbol of symbols) {
       addToIndex(symbolsBySimpleName, symbol.simpleName.toLowerCase(), symbol);
       addToIndex(symbolsByImport, `${symbol.namespace}.${symbol.simpleName}`, symbol);
       addToIndex(symbolsByCapability, symbol.capabilityId, symbol);
     }
+    for (const entry of publicImports) {
+      addToIndex(publicImportsBySimpleName, entry.simpleName.toLowerCase(), entry);
+    }
     for (const capability of capabilities) {
       addToIndex(capabilitiesByArtifact, capability.artifactId, capability);
+    }
+    for (const sample of samples) {
+      addToIndex(samplesByCapability, sample.capabilityId, sample);
     }
     return {
       manifest,
       artifacts,
       capabilities,
+      publicImports,
       symbols,
       samples,
       rules,
@@ -170,9 +183,12 @@ export function loadKnowledgeIndex() {
       bySymbolId,
       bySampleId,
       byRuleCode,
+      publicImportByName,
+      publicImportsBySimpleName,
       symbolsBySimpleName,
       symbolsByImport,
       symbolsByCapability,
+      samplesByCapability,
       capabilitiesByArtifact,
     };
   });
@@ -261,6 +277,12 @@ function symbolSummary(symbol, index) {
 function sampleForCapability(capability, index) {
   if (!capability?.sample?.sampleId) return null;
   return index.bySampleId.get(capability.sample.sampleId) ?? null;
+}
+
+function relatedSamplesForCapability(capability, index) {
+  return capability
+    ? index.samplesByCapability.get(capability.capabilityId) ?? []
+    : [];
 }
 
 function searchScore(symbol, rawQuery, normalizedQuery, queryTokens) {
@@ -485,6 +507,41 @@ export async function retrieveApiReference(arguments_, {requestId = 'get-api-ref
         artifact: artifactSummary(index.byArtifactId.get(symbol.artifactId)),
         capability,
         sample: sampleForCapability(capability, index),
+        relatedSamples: relatedSamplesForCapability(capability, index),
+      },
+      elapsedMs: performance.now() - started,
+    });
+  }
+  const publicTypeCandidates = (
+    index.publicImportByName.has(arguments_.identifier)
+      ? [index.publicImportByName.get(arguments_.identifier)]
+      : index.publicImportsBySimpleName.get(arguments_.identifier.toLowerCase()) ?? []
+  ).filter((entry) => entry.declarationKind === 'type');
+  if (publicTypeCandidates.length === 1) {
+    const supportType = publicTypeCandidates[0];
+    const relatedCapabilities = (supportType.relatedCapabilityIds ?? []).map((capabilityId) => {
+      const related = index.byCapabilityId.get(capabilityId);
+      return {
+        capability: related,
+        sample: sampleForCapability(related, index),
+      };
+    });
+    return toolResult({
+      requestId,
+      tool: 'get_api_reference',
+      status: 'success',
+      level: 'knowledge',
+      data: {
+        referenceType: 'support-type',
+        supportType,
+        artifact: artifactSummary(index.byArtifactId.get(supportType.artifactId)) ?? {
+          artifactId: supportType.artifactId,
+          version: supportType.artifactVersion,
+          versionState: 'published-dependency',
+          apiReference: `/api/${supportType.artifactId}/${supportType.artifactVersion}/`,
+          moduleManual: `/modules/${supportType.artifactId}/${supportType.artifactVersion}/`,
+        },
+        relatedCapabilities,
       },
       elapsedMs: performance.now() - started,
     });
@@ -503,6 +560,7 @@ export async function retrieveApiReference(arguments_, {requestId = 'get-api-ref
         symbols: (index.symbolsByCapability.get(capability.capabilityId) ?? [])
           .map((entry) => symbolSummary(entry, index)),
         sample: sampleForCapability(capability, index),
+        relatedSamples: relatedSamplesForCapability(capability, index),
       },
       elapsedMs: performance.now() - started,
     });
@@ -591,6 +649,7 @@ export async function retrieveComponentReference(arguments_, {requestId = 'get-c
       artifact: artifactSummary(index.byArtifactId.get(symbol.artifactId)),
       capability,
       sample: sampleForCapability(capability, index),
+      relatedSamples: relatedSamplesForCapability(capability, index),
       rules: applicableRules(symbol, overloads, index),
     },
     elapsedMs: performance.now() - started,

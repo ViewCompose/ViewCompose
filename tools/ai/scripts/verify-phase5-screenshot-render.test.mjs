@@ -10,7 +10,7 @@ test('freezes screenshot Preview bindings and accepted evidence without running 
   assert.equal(result.cacheHits, 0);
   assert.equal(
     result.requestFingerprint,
-    '64957e0715f5bef6423275feb1c28637738e325c167641beca9d8616e90f55ed',
+    '405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a',
   );
   assert.equal(
     result.wrapperFingerprint,

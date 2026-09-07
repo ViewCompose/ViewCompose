@@ -1,10 +1,11 @@
 {
-  "bundleFingerprint": "e23da5d9835d00dd31eda167152a875ebefa3f519b992874635113eed5a9a537",
+  "bundleFingerprint": "7e7a66d6f1e9e1a3f60e7f0b8460aa6c49c5c2f46576c4e4aae619b12cd31ba3",
   "counts": {
     "artifacts": 31,
     "capabilities": 82,
+    "publicImports": 1393,
     "rules": 10,
-    "samples": 216,
+    "samples": 218,
     "symbols": 540
   },
   "files": [
@@ -21,16 +22,22 @@
       "sha256": "242cecc7e8de0b8ec816d5cf43cf08c4dff92ac118dcf1d446ecdbd6278e4fca"
     },
     {
-      "bytes": 633576,
+      "bytes": 1103844,
       "mediaType": "application/x-ndjson",
-      "path": "symbols.jsonl",
-      "sha256": "23fd8dee99ecc8cdcfc208b86b8d444b703f3af70361a32ba74794a53505be4d"
+      "path": "public-imports.jsonl",
+      "sha256": "69d8cb79af018c424c31866a6c9d152f9e1c9e2994a3c2b7d849bebb3811e069"
     },
     {
-      "bytes": 220813,
+      "bytes": 903670,
+      "mediaType": "application/x-ndjson",
+      "path": "symbols.jsonl",
+      "sha256": "af3e17718c18ae65b7009d19598ecc770d61d0503a77a9d2ced2c2b5afbc82a6"
+    },
+    {
+      "bytes": 222359,
       "mediaType": "application/x-ndjson",
       "path": "samples.jsonl",
-      "sha256": "164fde1d9904cb01196f3cb99ada8aaa284612c6673f50279a48841b5ec4da2b"
+      "sha256": "bb1f29712d6a53c6768059dbacb7d7232ab2ba63a87d2a516543824cad69537f"
     },
     {
       "bytes": 4387,
@@ -55,7 +62,7 @@
     "identity": "78127e51cd740ccdbd58d326e05426caf4e49795",
     "versionLane": "current-source"
   },
-  "generatorVersion": "1.0.0+445d68268972",
+  "generatorVersion": "1.0.0+d54ab2e08414",
   "schemaVersion": 1,
   "source": {
     "capabilityFingerprint": "2f97d77ce237ec69e1e17e094140b4d071b6f4e4167edf35bb866af0e6a9d2d5",

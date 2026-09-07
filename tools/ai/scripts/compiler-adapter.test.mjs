@@ -16,6 +16,12 @@ const validSource = `
   import com.viewcompose.ui.foundation.UiTreeBuilder
   fun UiTreeBuilder.example() { Text("Ready") }
 `;
+const material3Source = `
+  package example
+  import com.viewcompose.material3.Material3Button
+  import com.viewcompose.ui.foundation.UiTreeBuilder
+  fun UiTreeBuilder.example() { Material3Button(text = "Continue", onClick = {}) }
+`;
 const fixedExecution = Object.freeze({
   projectRoot: process.cwd(),
   androidSdk: Object.freeze({root: '/fixed/android-sdk', apiLevel: 36}),
@@ -46,8 +52,20 @@ test('request keys cover source, artifact allowlist, lane, and bundle identity',
     artifactIds: ['viewcompose-ui-foundation'],
     bundleFingerprint: 'a'.repeat(64),
   });
+  const material3 = compilerRequestKey({
+    source: validSource,
+    artifactIds: ['viewcompose-material3-android', 'viewcompose-material3'],
+    bundleFingerprint: 'a'.repeat(64),
+  });
+  const reorderedMaterial3 = compilerRequestKey({
+    source: validSource,
+    artifactIds: ['viewcompose-material3', 'viewcompose-material3-android'],
+    bundleFingerprint: 'a'.repeat(64),
+  });
   assert.match(first, /^[a-f0-9]{64}$/u);
   assert.notEqual(first, second);
+  assert.notEqual(first, material3);
+  assert.equal(material3, reorderedMaterial3);
   assert.match(COMPILER_LANE, /released-maven.*jdk-17-or-21.*agp-9\.1\.1.*kotlin-2\.2\.10/u);
 });
 
@@ -95,7 +113,8 @@ test('compiles in the fixed plan and accepts only an integrity-verified cache hi
   }
 });
 
-test('rejects static failures and artifacts outside the fixed compiler classpath', async () => {
+test('accepts the fixed Material 3 path and rejects artifacts outside the compiler classpath', async () => {
+  const cacheRoot = await mkdtemp(join(tmpdir(), 'viewcompose-ai-material3-compiler-'));
   let executions = 0;
   const runCompiler = async (plan) => {
     executions += 1;
@@ -103,35 +122,46 @@ test('rejects static failures and artifacts outside the fixed compiler classpath
   };
   const common = {
     ...fixedExecution,
+    cacheRoot,
     javaFeature: 21,
     javaHome: '/fixed/jdk-21',
     runCompiler,
   };
-  const staticFailure = await compileKotlin({
-    source: `
-      package example
-      import com.viewcompose.ui.foundation.Column
-      import com.viewcompose.ui.foundation.UiTreeBuilder
-      fun UiTreeBuilder.example() { Column { padding(16) } }
-    `,
-  }, common);
-  assert.equal(staticFailure.status, 'invalid');
-  assert.equal(staticFailure.evidence.level, 'static');
+  try {
+    const staticFailure = await compileKotlin({
+      source: `
+        package example
+        import com.viewcompose.ui.foundation.Column
+        import com.viewcompose.ui.foundation.UiTreeBuilder
+        fun UiTreeBuilder.example() { Column { padding(16) } }
+      `,
+    }, common);
+    assert.equal(staticFailure.status, 'invalid');
+    assert.equal(staticFailure.evidence.level, 'static');
 
-  const artifactFailure = await compileKotlin({
-    source: validSource,
-    artifactIds: ['viewcompose-material3-android'],
-  }, common);
-  assert.equal(artifactFailure.status, 'unsupported');
-  assert.equal(artifactFailure.diagnostics[0].code, 'VC-AI-COMPILER-ARTIFACT-UNSUPPORTED');
+    const material3 = await compileKotlin({
+      source: material3Source,
+      artifactIds: ['viewcompose-material3', 'viewcompose-material3-android'],
+    }, common);
+    assert.equal(material3.status, 'success');
 
-  const invalidSelection = await compileKotlin({
-    source: validSource,
-    artifactIds: 'viewcompose-ui-foundation',
-  }, common);
-  assert.equal(invalidSelection.status, 'invalid');
-  assert.equal(invalidSelection.diagnostics[0].code, 'VC-AI-COMPILER-SELECTION-INVALID');
-  assert.equal(executions, 0);
+    const artifactFailure = await compileKotlin({
+      source: validSource,
+      artifactIds: ['viewcompose-oneui7'],
+    }, common);
+    assert.equal(artifactFailure.status, 'unsupported');
+    assert.equal(artifactFailure.diagnostics[0].code, 'VC-AI-COMPILER-ARTIFACT-UNSUPPORTED');
+
+    const invalidSelection = await compileKotlin({
+      source: validSource,
+      artifactIds: 'viewcompose-ui-foundation',
+    }, common);
+    assert.equal(invalidSelection.status, 'invalid');
+    assert.equal(invalidSelection.diagnostics[0].code, 'VC-AI-COMPILER-SELECTION-INVALID');
+    assert.equal(executions, 1);
+  } finally {
+    await rm(cacheRoot, {recursive: true, force: true});
+  }
 });
 
 test('rejects unsafe or unbounded compiler inputs before process execution', async () => {

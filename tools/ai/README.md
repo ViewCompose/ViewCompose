@@ -62,10 +62,13 @@ npm --prefix tools/ai run verify:phase2-static
 ./gradlew verifyAiStaticTooling
 ```
 
-The static validator reports only facts it can establish from the generated governed-symbol index.
-Supporting public types that are referenced by capability signatures but do not have their own
-governed entry are not declared nonexistent merely because they are absent from `symbols.jsonl`.
-Static success is evidence level `static`, never `compiled`.
+The generated bundle keeps governed capability symbols in `symbols.jsonl` and a complete catalog
+of public top-level framework imports in `public-imports.jsonl`. Governed signatures link their
+ViewCompose support types to exact qualified names and artifact ownership, so `get_api_reference`
+can resolve types such as `ImageSource`, `UiTextStyle`, and `SemanticsRole` without source-tree
+inspection. The static validator rejects every exact `com.viewcompose` import absent from the
+catalog; a member extension such as `Modifier.weight` is therefore not mistaken for an importable
+top-level function. Static success is evidence level `static`, never `compiled`.
 
 Run the pinned Phase 2 compiler corpus with JDK 21:
 
@@ -76,8 +79,9 @@ npm --prefix tools/ai run verify:phase2-compile
 
 The preparation task resolves only the harness's fixed classpath. The compiler request itself runs
 Gradle offline with a fixed task, Android 36/JVM 11 lane, one GiB heap, two workers, and no daemon,
-build cache, or configuration cache. Requests may select only generated stable IDs and the current
-`viewcompose-ui-foundation` artifact allowlist; they cannot supply a dependency coordinate, Gradle
+build cache, or configuration cache. Requests may select only generated stable IDs and the fixed
+`viewcompose-ui-foundation`, `viewcompose-material3`, and `viewcompose-material3-android` artifact
+allowlist; they cannot supply a dependency coordinate, Gradle
 task, project path, output path, or build script. Content-addressed inputs are immutable, cached
 class output is re-fingerprinted before reuse, and timeouts, cancellation, output limits, compiler
 diagnostics, and cache poisoning use stable result codes. Android resource fixtures and additional
@@ -105,7 +109,9 @@ hard byte limits, and a combined output fingerprint. Cached artifacts receive th
 new render; poisoned cache entries fail closed.
 
 Project analysis accepts one absolute root, rejects path escape and all requested build execution,
-never follows symbolic links, excludes common build output and secret-bearing files, and enforces
+never follows symbolic links, excludes generated/tool-owned trees and sensitive path families
+before they consume traversal budgets, admits only Kotlin/Java, exact Gradle build/settings,
+`libs.versions.toml`, and Android layout XML files, and enforces
 fixed hard caps above request-level file, byte, depth, timeout, and output limits. Output truncation
 does not return the oversized inventory. Without executing Gradle, the current analyzer derives
 exact ViewCompose coordinates and current-bundle version disposition, governed imports, owning
@@ -210,20 +216,27 @@ Project form implements only the additional subset frozen by
 definitions plus explicit style-parent chains from the named roots and returns a bounded lexical
 Kotlin/Java call-site inventory. It never chooses a build variant, runs inspected-project Gradle
 logic, follows symbolic links, or claims call-site completeness. Qualified resources are inventory
-evidence only; themes, aliases, implicit style parents, resource conflicts, formatted resources,
-and unsafe or missing defaults fail closed. The returned `projectContext` and migration report use
-project-relative paths and fingerprints and contain no raw application source.
+evidence only. Formatted and empty strings, standard boolean string metadata, bare or `@style/`
+parent names, dotted framework style parents, the standard tools namespace, and unrelated bounded
+values declarations do not block analysis. Themes, aliases, resource conflicts, unsupported facts
+on a referenced style, and unsafe or missing defaults fail closed. The returned `projectContext`
+and migration report use project-relative paths and fingerprints and contain no raw application
+source.
 
 Project form also resolves the explicit-root layout graph frozen by
 `evaluation/fixtures/xml/layout-dependency-contract.json`. Unqualified `@layout/name` includes use
 the first declared default `layout/` root. Ordinary included roots remain nodes, while an included
-`merge` root contributes its ordered children at the include position. Every graph edge and IR node
-retains its original project-relative file and line. Source-only includes, standalone merge roots,
-missing layouts, cycles, include overrides, symbolic links, and dependency ceilings fail closed;
-the tool never performs AGP variant or resource merging.
+`merge` root contributes its ordered children at the include position. Qualified Android, app, and
+tools attributes on an ordinary include override the included root with source provenance; width
+and height must be overridden together. Every graph edge and IR node retains its original
+project-relative file and line. Source-only includes, standalone merge roots, missing layouts,
+cycles, merge-root overrides, unsafe include attributes, symbolic links, and dependency ceilings
+fail closed; the tool never performs AGP variant or resource merging.
 
-Layout v2 adds `FrameLayout` as ordered-overlay `Box`, `ImageView` as `Image`, and
-`android:visibility`. Drawable references become caller-owned `ImageSource` parameters; the tool
+Layout v2 adds `FrameLayout` as ordered-overlay `Box`, `ImageView` as `Image`,
+`android:visibility`, non-negative integer-dp margins, preview-only `tools:` facts, and exact
+LinearLayout cross-axis gravity. Ambiguous physical/relative margin combinations and gravity that
+also changes main-axis arrangement remain unsupported. Drawable references become caller-owned `ImageSource` parameters; the tool
 does not invent an `R` class or resource ID. Image descriptions must be a non-empty literal, a
 string resource, or explicit `@null` decoration. Omission returns
 `VC-AI-XML-ACCESSIBILITY-REQUIRED` and no Kotlin. `fitCenter`, `centerCrop`, `fitXY`, and
@@ -240,7 +253,22 @@ Kotlin, wrapper, framework bundle, configuration, compiler lane, and render lane
 content-addressed. The harness is offline and cannot select or execute the inspected project's
 build, task, dependencies, resources, scripts, or output paths.
 
-Generated Preview v1 supports exact `String` values, fresh `TextFieldState` values with explicit
+The generated migration report requires the standard Activity/Fragment `setUiContent` host or a
+low-level `renderInto` integration wrapped in `AndroidResourceEnvironment(container.context)`, with
+the returned `RenderSession` disposed by the host lifecycle. Its call-site review also requires
+an explicit `capability-probe`, `subtree`, or `whole-screen` intent before editing. Whole-screen
+intent must account for root chrome, scrolling, overlays, native SDK boundaries, state, navigation,
+animation, application-level lifecycle callbacks that query or mutate the root, and included
+layouts; unsupported conversion cannot silently narrow it. Delivery uses a
+migrated/native-boundary/retained/blocked/unverified coverage ledger, and a hidden legacy copy keeps
+whole-screen completeness at `not-proven`. UI-local transient state uses `remember` and
+`mutableStateOf`; ViewModel-owned business state under the standard host uses ViewCompose
+`viewModel()` and `collectAsStateWithLifecycle()` without a second writable state holder.
+For an explicitly embedded boundary, the review requires caller-owned dynamic state to retain one
+session, store the latest immutable snapshot, render each accepted update on the Android main
+thread, preserve native siblings and side effects outside the selected container, stop updates
+before teardown, and test initial, later, and completion or navigation states. Generated Preview
+v1 supports exact `String` values, fresh `TextFieldState` values with explicit
 initial text, and exact embedded PNG bytes for `ImageSource`. An embedded image provides canonical
 base64, decoded byte count, SHA-256, and dimensions; the adapter validates bounded PNG chunks and
 CRC values, then stages one immutable tool-owned `R.drawable` resource by full hash. It accepts no
@@ -282,6 +310,44 @@ compiler and generated Preview profile, then compares structure, semantics, geom
 Style remains incomplete, and pixel/perceptual categories remain not applicable because no trusted
 Figma reference render is accepted. A compared result therefore cannot be described as visual or
 pixel parity.
+
+The unpublished `0.8.0` candidate adds an official-design-context branch to the distributed
+`viewcompose-import-figma` Skill without changing that converter contract. When the coding client
+has separately obtained official Figma reference code, a screenshot, and temporary asset links,
+the Skill requires it to freeze the screenshot and complete asset set locally with hashes and
+redistribution decisions before the links expire. Truncated asset lists are completed through
+smaller explicit selections or reported as missing; quota failure stops the path.
+
+That attended path now selects its dependency lane before implementation. Ordinary consumer work
+uses exact compatible published Artifact versions; an explicit checkout evaluation binds both the
+AI tools and a Gradle composite build to the same checkout. A uniquely identified same-revision
+local snapshot is the fallback when composite substitution is unsuitable. Because Artifacts are
+independently versioned, no umbrella version establishes which dependency is latest.
+For Android assets, original SVG bytes remain evidence and compatible vectors are converted
+mechanically with the Android SDK only after feature classification. Flat solid single- or
+multi-color path artwork stays VectorDrawable. Filters, blur, artwork shadows/glow, masks,
+gradients, patterns/textures, embedded raster images, blend modes, unoutlined text, and unsupported
+strokes select raster output even when a converter exits successfully. Ordinary component shadows
+remain Android shape/elevation. Complex UI artwork with alpha prefers lossless WebP, exact PNG or
+9-patch requirements use PNG, and photographic/textured content may use lossy WebP only with an
+explicit quality threshold. Every raster uses a density-qualified directory and sufficient pixels
+(`xxhdpi` requires at least 3x intrinsic dimensions); 1x files in unqualified `drawable/` are
+rejected.
+
+The official response remains untrusted reference evidence and is never passed to
+`convert_figma_to_viewcompose` or parsed as a deterministic design tree. With an accepted privacy
+decision, the Skill routes the frozen PNG through `prepare_screenshot`, provider-neutral external
+inference validation and typed resolution, then screenshot generation. Exact downloaded assets
+enter the consumer only through an explicit attended edit followed by the real project build and a
+named device flow. This path is labeled **reference-assisted, attended adaptation** and does not add
+a credentialed connector, provider adapter, direct Figma conversion, deterministic reconstruction,
+or visual-parity claim.
+
+Official Figma PNGs commonly pair a valid `sRGB` chunk with the redundant 4-byte
+`gAMA=45455` marker. The `0.8.0` preprocessor accepts only that exact pair, validates its placement,
+CRC, uniqueness, and value, and strips the ancillary declarations from canonical output without
+changing pixels. Standalone, conflicting, malformed, duplicated, or misplaced gamma declarations
+remain unsupported or invalid.
 
 Screenshot preprocessing v1 is implemented as the public `prepare_screenshot` tool. It accepts only one
 embedded, canonical-base64 PNG with declared byte count, SHA-256, dimensions, density, font scale,
@@ -590,6 +656,10 @@ entrypoint limit.
 
 ## Common AI agent onboarding
 
+The current repository source packages an unpublished `0.8.0` candidate. Public consumers must
+continue using the immutable `0.7.0` selector until `0.8.0` is published and independently
+reproduced; contributor validation may use only the locally built `0.8.0` archive.
+
 The package exposes one client-neutral lifecycle command for Codex, Claude Code, and Cursor. The
 primary consumer path is one exact-version transactional operation run from the physical project
 root:
@@ -616,7 +686,9 @@ npx --yes @viewcompose/ai-tooling@0.7.0 doctor --client <codex|claude-code|curso
 ```
 
 The default result is `project-bound-ready` when the exact configuration and Skills are present,
-JDK 17 or 21 is available, and Android SDK platform 36 is installed. Knowledge/generation and
+JDK 17 or 21 is available, Android SDK platform 36 is installed, and the exact project root is
+trusted when Codex is selected. Parent-directory trust does not satisfy that Codex check. The
+package diagnoses trust from the user configuration but never grants it. Knowledge/generation and
 compilation/Preview/layout readiness are reported separately, and `init` includes this diagnosis in
 its own result. `VIEWCOMPOSE_PROJECT_ROOT` is always bound to the physical consumer root; an
 optional `VIEWCOMPOSE_SOURCE_ROOT` remains only for contributor compatibility. The installed
@@ -671,7 +743,7 @@ Install and uninstall one exact local artifact in an isolated prefix without con
 
 ```bash
 npm install --global --prefix <install-prefix> --offline --ignore-scripts \
-  tools/ai/build/distribution/viewcompose-ai-tooling-0.7.0.tgz
+  tools/ai/build/distribution/viewcompose-ai-tooling-0.8.0.tgz
 <install-prefix>/bin/viewcompose-mcp
 npm uninstall --global --prefix <install-prefix> --offline --ignore-scripts \
   @viewcompose/ai-tooling
@@ -705,6 +777,13 @@ Skill. It does not add a Figma credentialed connector or visual-parity claim.
 Release `0.7.0` retains those contracts and adds attended, transactional screenshot repair for one
 generated literal property. Its MCP surface remains source-read-only; only the separate terminal
 command can apply or explicitly roll back exact content-addressed bytes.
+The unpublished `0.8.0` candidate retains that boundary and adds the field-trial fixes for qualified
+ordinary-root include overrides, preview-only `tools:` attributes, non-negative dp margins, exact
+LinearLayout cross-axis gravity, unrelated resource-value parsing, and the embedded-host environment
+checklist. It also rejects transient Node runtime persistence, aligns MCP server identity, applies a
+source/config analysis allowlist, compiles the Material 3 onboarding path, and carries reproducible
+device-regression checks in the three existing-screen Skills. It is not a public capability until
+the protected release and reproduction gates pass.
 
 `framework-project-profile.mjs` is the dependency-free read-only detector for that boundary. It
 accepts exact Gradle coordinate literals, used default version-catalog libraries/bundles, and

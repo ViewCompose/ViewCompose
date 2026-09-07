@@ -217,6 +217,18 @@ dependencies {
     // DOCS_REGION_END(renderer-android-module-dependency)
 }
 
+private val rendererAndroidEspressoDependencies = run {
+    // DOCS_REGION_START(renderer-android-espresso-dependencies)
+dependencies {
+    add(
+        "androidTestImplementation",
+        "com.viewcompose:viewcompose-renderer-android:0.1.0-alpha02",
+    )
+    add("androidTestImplementation", "androidx.test.espresso:espresso-core:3.7.0")
+}
+    // DOCS_REGION_END(renderer-android-espresso-dependencies)
+}
+
 private val androidViewTutorialDependencies = run {
     // DOCS_REGION_START(android-view-dependencies)
 repositories { mavenCentral() }

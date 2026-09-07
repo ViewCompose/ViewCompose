@@ -281,10 +281,11 @@ async function verifyInstalledFiles(packageRoot, manifest) {
   }
 }
 
-async function runAgentCommand(agent, arguments_) {
+async function runAgentCommand(agent, arguments_, environment = {}) {
   const result = await execFileAsync(agent, arguments_, {
     cwd: repositoryRoot,
     encoding: 'utf8',
+    env: {...process.env, ...environment},
     maxBuffer: 1024 * 1024,
   });
   if (result.stderr !== '') throw new Error('Installed agent integration command emitted stderr.');
@@ -308,17 +309,27 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
     realpath(repositoryRoot),
   ]);
   const installedMcp = await realpath(resolve(packageRoot, 'scripts/mcp-server.mjs'));
+  const agentHome = resolve(temporaryRoot, 'agent-home');
+  const commandEnvironment = {HOME: agentHome, USERPROFILE: agentHome};
+  await mkdir(resolve(agentHome, '.codex'), {recursive: true});
   for (const profile of profiles.clients) {
     const projectRoot = resolve(temporaryRoot, `agent-${profile.id}`);
     await mkdir(projectRoot);
     const canonicalProjectRoot = await realpath(projectRoot);
+    if (profile.id === 'codex') {
+      await writeFile(resolve(agentHome, '.codex/config.toml'), [
+        `[projects.${JSON.stringify(canonicalProjectRoot)}]`,
+        'trust_level = "trusted"',
+        '',
+      ].join('\n'));
+    }
     const standaloneConfig = await runAgentCommand(agent, [
       'config',
       '--client',
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]);
+    ], commandEnvironment);
     const sourceBoundConfig = await runAgentCommand(agent, [
       'config',
       '--client',
@@ -327,7 +338,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       canonicalProjectRoot,
       '--source-root',
       canonicalSourceRoot,
-    ]);
+    ], commandEnvironment);
     if (profile.config.format === 'json') {
       const standalone = JSON.parse(standaloneConfig);
       const parsed = JSON.parse(sourceBoundConfig);
@@ -361,10 +372,11 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (
       first.mode !== 'project-bound' ||
       first.config.status !== 'installed' ||
+      first.readiness.status !== 'project-bound-ready' ||
       first.skills.installed.length !== skills.skills.length ||
       first.skills.unchanged.length !== 0
     ) {
@@ -381,7 +393,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (
       doctor.status !== 'project-bound-ready' ||
       doctor.capabilities.knowledgeAndGeneration !== 'ready' ||
@@ -394,7 +406,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (
       second.config.status !== 'unchanged' ||
       second.skills.installed.length !== 0 ||
@@ -408,7 +420,7 @@ async function verifyInstalledAgentClients(agent, packageRoot, temporaryRoot) {
       profile.id,
       '--project-root',
       canonicalProjectRoot,
-    ]));
+    ], commandEnvironment));
     if (removed.config.status !== 'removed' || removed.skills.removed.length !== skills.skills.length) {
       throw new Error(`Installed ${profile.id} lifecycle did not uninstall cleanly.`);
     }
@@ -717,7 +729,17 @@ async function verifyCliFlow(
     comparedScreenshot.data?.preview?.renderTree?.sha256 !==
       screenshotComparisonContract.lineage.acceptedRenderTreeFingerprint
   ) {
-    throw new Error('Installed CLI did not compare the screenshot-generated layout exactly.');
+    throw new Error(
+      'Installed CLI did not compare the screenshot-generated layout exactly: ' +
+      JSON.stringify({
+        status: comparedScreenshot.status,
+        evidence: comparedScreenshot.evidence,
+        diagnosticCodes: comparedScreenshot.diagnostics?.map((item) => item.code),
+        comparisonFingerprint: comparedScreenshot.data?.comparison?.comparisonFingerprint,
+        summary: comparedScreenshot.data?.comparison?.summary,
+        renderTreeFingerprint: comparedScreenshot.data?.preview?.renderTree?.sha256,
+      }),
+    );
   }
   const [pixelGenerationRequest, pixelReferenceRequest, pixelReferenceResult] = await Promise.all([
     readJson(screenshotPixelGenerationRequestPath),
@@ -800,7 +822,16 @@ async function verifyCliFlow(
     generated.status !== 'success' ||
     generated.evidence.level !== 'static' ||
     !generated.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
-    generated.data?.migrationReport?.bindings?.resources?.length !== 3
+    generated.data?.migrationReport?.bindings?.resources?.length !== 3 ||
+    generated.data?.migrationReport?.migrationScope?.wholeScreenCompleteness !== 'not-proven' ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('unsupported conversion must not silently narrow')) ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('ViewCompose viewModel and collectAsStateWithLifecycle')) ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('retain one RenderSession')) ||
+    !generated.data?.migrationReport?.callSiteReview?.items?.some((item) =>
+      item.includes('initial state, at least one later state'))
   ) {
     throw new Error('Installed CLI did not generate the frozen standalone XML migration.');
   }
@@ -1341,9 +1372,9 @@ async function verifyMcpMatrix(mcp, contract) {
     modernScreenshotGeneration?.result?.structuredContent?.evidence?.outputFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     modernScreenshotComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      '779b41a96a08477bcb1f70311e8f42d8330e55a642fd91c261d211f7c31d4517' ||
+      '4b649dd4050c061796d4911fa56e7dffb094f7eb6fcc73f8b6446918e4aa6dc8' ||
     modernScreenshotPixelComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      '7504b5c23ed6e9fe142002572e08f24115e73fc311e4329057f8384f749bdd43' ||
+      '51a37d13f8368e3b10c6f15773da0044cfbb35a2660f29bd98fbefcf1cfe3d66' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin

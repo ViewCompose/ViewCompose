@@ -178,8 +178,8 @@ function validateSupportedIr(ir) {
       return;
     }
     const allowedProperties = {
-      row: new Set(['orientation']),
-      column: new Set(['orientation']),
+      row: new Set(['orientation', 'verticalAlignment']),
+      column: new Set(['orientation', 'horizontalAlignment']),
       box: new Set(),
       text: new Set(['text']),
       'text-field': new Set(['hint', 'inputType']),
@@ -215,7 +215,6 @@ function validateSupportedIr(ir) {
       const orientation = properties.get('orientation');
       const expected = node.kind === 'row' ? 'horizontal' : 'vertical';
       if (
-        node.properties.length !== 1 ||
         orientation?.kind !== 'enum' ||
         orientation.type !== 'linear-orientation' ||
         orientation.value !== expected
@@ -223,6 +222,22 @@ function validateSupportedIr(ir) {
         diagnostics.push(generatorDiagnostic(
           'VC-AI-GENERATOR-UNSUPPORTED',
           `Container ${node.id} does not have the normalized ${expected} orientation.`,
+        ));
+      }
+      const alignmentName = node.kind === 'row' ? 'verticalAlignment' : 'horizontalAlignment';
+      const alignment = properties.get(alignmentName);
+      const alignmentType = node.kind === 'row' ? 'vertical-alignment' : 'horizontal-alignment';
+      const alignmentValues = node.kind === 'row'
+        ? ['top', 'center', 'bottom']
+        : ['start', 'center', 'end'];
+      if (alignment && (
+        alignment.kind !== 'enum' ||
+        alignment.type !== alignmentType ||
+        !alignmentValues.includes(alignment.value)
+      )) {
+        diagnostics.push(generatorDiagnostic(
+          'VC-AI-GENERATOR-UNSUPPORTED',
+          `Container ${node.id} has an unsupported cross-axis alignment.`,
         ));
       }
     }
@@ -332,6 +347,20 @@ function validateSupportedIr(ir) {
             `Node ${node.id} has an unsupported padding modifier.`,
           ));
         }
+      } else if (modifier.kind === 'margin' || modifier.kind === 'margin-relative') {
+        const allowed = modifier.kind === 'margin'
+          ? new Set(['all', 'left', 'top', 'right', 'bottom'])
+          : new Set(['start', 'top', 'end', 'bottom']);
+        if (
+          modifier.arguments.length === 0 ||
+          modifier.arguments.some(({name, value}) =>
+            !allowed.has(name) || value?.kind !== 'dimension' || value.unit !== 'dp' || value.value < 0)
+        ) {
+          diagnostics.push(generatorDiagnostic(
+            'VC-AI-GENERATOR-UNSUPPORTED',
+            `Node ${node.id} has an unsupported ${modifier.kind} modifier.`,
+          ));
+        }
       } else if (modifier.kind === 'visibility') {
         const value = arguments_.get('value');
         if (
@@ -425,6 +454,15 @@ function modifierExpression(node, imports) {
       imports.add('com.viewcompose.ui.modifier.padding');
       imports.add('com.viewcompose.ui.unit.dp');
       calls.push(`padding(${dimensionExpression(all)})`);
+    } else if (modifier.kind === 'margin' || modifier.kind === 'margin-relative') {
+      const argumentsText = modifier.arguments
+        .map(({name, value}) => `${name} = ${dimensionExpression(value)}`)
+        .join(', ');
+      imports.add(modifier.kind === 'margin'
+        ? 'com.viewcompose.ui.modifier.margin'
+        : 'com.viewcompose.ui.modifier.marginRelative');
+      imports.add('com.viewcompose.ui.unit.dp');
+      calls.push(`${modifier.kind === 'margin' ? 'margin' : 'marginRelative'}(${argumentsText})`);
     } else if (modifier.kind === 'visibility') {
       const visibility = arguments_.get('value').value;
       imports.add('com.viewcompose.ui.modifier.Visibility');
@@ -482,6 +520,15 @@ function emitNode(node, bindings, imports, indent, lines) {
   if (node.kind === 'row' || node.kind === 'column' || node.kind === 'box') {
     const name = node.kind === 'row' ? 'Row' : node.kind === 'column' ? 'Column' : 'Box';
     imports.add(`com.viewcompose.ui.foundation.${name}`);
+    if (node.kind === 'row' && properties.has('verticalAlignment')) {
+      const value = properties.get('verticalAlignment').value;
+      imports.add('com.viewcompose.ui.layout.VerticalAlignment');
+      common.push(['verticalAlignment', `VerticalAlignment.${value[0].toUpperCase()}${value.slice(1)}`]);
+    } else if (node.kind === 'column' && properties.has('horizontalAlignment')) {
+      const value = properties.get('horizontalAlignment').value;
+      imports.add('com.viewcompose.ui.layout.HorizontalAlignment');
+      common.push(['horizontalAlignment', `HorizontalAlignment.${value[0].toUpperCase()}${value.slice(1)}`]);
+    }
     emitCall(name, common, indent, () => {
       for (const child of node.children) emitNode(child, bindings, imports, indent + 4, lines);
     }, lines);
@@ -574,12 +621,27 @@ export async function generateViewComposeKotlin(ir) {
       states: bindings.states,
     },
     preservedIds: bindings.ids,
+    migrationScope: {
+      declarationRequired: true,
+      allowedIntents: ['capability-probe', 'subtree', 'whole-screen'],
+      selectedIntent: null,
+      wholeScreenCompleteness: 'not-proven',
+    },
     callSiteReview: {
       required: true,
       items: [
+        'Declare capability-probe, subtree, or whole-screen intent before editing; unsupported conversion must not silently narrow the selected scope.',
+        'For whole-screen intent, account for the Activity or Fragment root, chrome, scrolling, overlays, native SDK boundaries, state, navigation, animation, application-level lifecycle callbacks that query or mutate the root, and included layouts.',
         'Resolve every caller resource parameter from its recorded Android resource at the ViewCompose host boundary.',
         'Retain caller ownership and restoration policy for every TextFieldState parameter.',
+        'Inventory every caller-owned state source and update cadence before integration; preserve its initial value, throttling, completion, and error semantics.',
+        'Choose state integration explicitly: UI-local state uses remember and mutableStateOf; ViewModel-owned business state under a standard Android host uses ViewCompose viewModel and collectAsStateWithLifecycle without a duplicate writable state holder.',
+        'Reserve external imperative state for an explicit embedded subtree or proven owner constraint; retain one RenderSession, update the latest immutable snapshot, and call RenderSession.render() on the Android main thread.',
+        'Keep native siblings, animations, advertising, navigation, analytics, and other side effects outside the selected container under their existing owners.',
         'Review ViewBinding references, listeners, adapters, and imperative mutations outside the XML input.',
+        'Prefer Activity or Fragment setUiContent; when using low-level renderInto, wrap content in AndroidResourceEnvironment(container.context) and dispose the RenderSession with the host lifecycle.',
+        'Stop state collectors from rendering after host teardown, and verify the initial state, at least one later state, and completion or navigation behavior.',
+        'Deliver a migrated, native-boundary, retained, blocked, and unverified coverage ledger; whole-screen completion forbids an unreported hidden legacy-screen fallback.',
       ],
     },
     verification: {

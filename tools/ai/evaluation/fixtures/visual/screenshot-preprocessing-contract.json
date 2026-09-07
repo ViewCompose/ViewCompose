@@ -20,10 +20,10 @@
     "acceptedFilterTypes": [0, 1, 2, 3, 4],
     "acceptedInterlaceMethods": [0],
     "acceptedSrgbChunk": "zero-or-one-valid-rendering-intent",
+    "acceptedSrgbGammaChunk": "zero-or-one-big-endian-45455-only-with-valid-srgb",
     "rejectedSemanticChunks": [
       "iCCP",
       "cHRM",
-      "gAMA",
       "cICP",
       "mDCV",
       "cLLI",

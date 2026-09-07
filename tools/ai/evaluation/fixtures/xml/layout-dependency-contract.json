@@ -18,9 +18,11 @@
     "duplicateAtSamePrecedence": "fail closed"
   },
   "include": {
-    "allowedAttributes": ["layout"],
+    "allowedAttributes": ["layout", "android:*", "app:*", "tools:*"],
     "preserveIncludedRoot": true,
-    "overrideAttributes": false,
+    "overrideAttributes": "qualified attributes replace the ordinary included root with including-source provenance",
+    "sizeOverride": "android:layout_width and android:layout_height must be supplied together",
+    "mergeRootOverrides": "fail closed",
     "sourceOnlyInput": "fail closed"
   },
   "merge": {

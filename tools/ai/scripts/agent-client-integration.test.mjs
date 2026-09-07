@@ -1,17 +1,19 @@
 import assert from 'node:assert/strict';
-import {cp, mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile} from 'node:fs/promises';
+import {chmod, cp, mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile} from 'node:fs/promises';
 import {platform, tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import test from 'node:test';
 import {
   AGENT_CLIENT_PROFILES,
   commitDurablePackageIntegrity,
-  diagnoseAgentClient,
+  detectAgentClientProjectAccess,
+  diagnoseAgentClient as diagnoseAgentClientProduction,
   initializeAgentClient,
   installAgentClientSkills,
   isAbsoluteProjectRoot,
   migrateAgentClient,
   renderAgentClientConfig,
+  resolveDurableNodeExecutable,
   resolveConsumerProjectRoot,
   uninstallAgentClient,
 } from './agent-client-integration.mjs';
@@ -19,6 +21,10 @@ import {
 const aiRoot = await realpath(new URL('../', import.meta.url));
 const sourceRoot = resolve(aiRoot, '../..');
 const releasedProfile = '895ed1e52e5a9735f87e6d996e77ea43ca34cc2e496854408c40772419129064';
+const diagnoseAgentClient = (options) => diagnoseAgentClientProduction({
+  ...options,
+  detectClientProject: async () => ({status: 'ready'}),
+});
 
 async function createAiPackage(root, version, skillSuffix) {
   await mkdir(resolve(root, 'contracts'), {recursive: true});
@@ -143,12 +149,119 @@ test('resolves an omitted project root from the physical current directory', asy
   }
 });
 
+test('selects a durable Node runtime instead of persisting a temporary npx runtime', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-node-runtime-')));
+  const transient = resolve(temporary, 'npx-node');
+  try {
+    await writeFile(transient, '#!/bin/sh\nexit 0\n');
+    await chmod(transient, 0o755);
+    const selected = await resolveDurableNodeExecutable({
+      currentExecutable: transient,
+      pathEnvironment: resolve(process.execPath, '..'),
+      temporaryDirectory: temporary,
+    });
+    assert.equal(selected, await realpath(process.execPath));
+
+    await assert.rejects(resolveDurableNodeExecutable({
+      currentExecutable: transient,
+      pathEnvironment: temporary,
+      temporaryDirectory: temporary,
+    }), (error) => {
+      assert.equal(error.code, 'VC_AI_NODE_RUNTIME_TRANSIENT');
+      assert.match(error.message, /stable.*PATH.*init again/u);
+      return true;
+    });
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
+test('doctor reports a managed entry whose Node runtime became temporary', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-node-doctor-')));
+  const packageRoot = resolve(temporary, 'package');
+  const projectRoot = resolve(temporary, 'project');
+  const transient = resolve(temporary, 'npx-node');
+  try {
+    await createAiPackage(packageRoot, '0.4.0', 'runtime-doctor');
+    await mkdir(projectRoot);
+    await writeFile(transient, '#!/bin/sh\nexit 0\n');
+    await chmod(transient, 0o755);
+    await initializeAgentClient({
+      client: 'cursor',
+      projectRoot,
+      aiRoot: packageRoot,
+      cacheRoot: resolve(temporary, 'cache'),
+    });
+    const configPath = resolve(projectRoot, '.cursor/mcp.json');
+    const config = JSON.parse(await readFile(configPath, 'utf8'));
+    config.mcpServers.viewcompose.command = transient;
+    await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+
+    const diagnosed = await diagnoseAgentClient({client: 'cursor', projectRoot, aiRoot: packageRoot});
+    assert.equal(diagnosed.status, 'repair-required');
+    assert.equal(diagnosed.config.status, 'conflict');
+    assert.match(diagnosed.config.detail, /temporary Node\.js runtime/u);
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
 test('recognizes POSIX, Windows drive, and Windows UNC absolute project-root syntax', () => {
   assert.equal(isAbsoluteProjectRoot('/workspace/app', 'linux'), true);
   assert.equal(isAbsoluteProjectRoot('workspace/app', 'linux'), false);
   assert.equal(isAbsoluteProjectRoot('C:\\workspace\\app', 'win32'), true);
   assert.equal(isAbsoluteProjectRoot('\\\\server\\share\\app', 'win32'), true);
   assert.equal(isAbsoluteProjectRoot('C:workspace\\app', 'win32'), false);
+});
+
+test('requires exact Codex project trust before reporting project-bound readiness', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-trust-')));
+  const packageRoot = resolve(temporary, 'package');
+  const projectRoot = resolve(temporary, 'project');
+  const cacheRoot = resolve(temporary, 'cache');
+  const codexConfigPath = resolve(temporary, 'codex-config.toml');
+  const detectClientProject = (options) => detectAgentClientProjectAccess({
+    ...options,
+    codexConfigPath,
+  });
+  const host = {
+    detectJava: () => ({feature: 17, javaHome: '/jdk-17'}),
+    detectSdk: () => ({apiLevel: 36, root: '/android-sdk'}),
+  };
+  try {
+    await createAiPackage(packageRoot, '0.4.0', 'trust');
+    await mkdir(projectRoot);
+    await initializeAgentClient({
+      client: 'codex', projectRoot, aiRoot: packageRoot, cacheRoot,
+    });
+    await writeFile(codexConfigPath, [
+      `[projects.${JSON.stringify(resolve(temporary))}]`,
+      'trust_level = "trusted"',
+      '',
+    ].join('\n'));
+
+    const untrusted = await diagnoseAgentClientProduction({
+      client: 'codex', projectRoot, detectClientProject, ...host,
+    });
+    assert.equal(untrusted.status, 'repair-required');
+    assert.equal(untrusted.config.status, 'ready');
+    assert.match(untrusted.config.detail, /exact project root is trusted/u);
+    assert.equal(untrusted.capabilities.knowledgeAndGeneration, 'repair-required');
+
+    await writeFile(codexConfigPath, [
+      `[projects.${JSON.stringify(projectRoot)}]`,
+      'trust_level = "trusted"',
+      '',
+    ].join('\n'));
+    const trusted = await diagnoseAgentClientProduction({
+      client: 'codex', projectRoot, detectClientProject, ...host,
+    });
+    assert.equal(trusted.status, 'project-bound-ready');
+    assert.equal(trusted.config.status, 'ready');
+    assert.equal(trusted.config.detail, undefined);
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
 });
 
 test('binds MCP to a durable content-addressed package that survives source removal', async () => {
@@ -359,7 +472,7 @@ test('concurrent durable package materialization converges on one verified cache
 
 test('initializes, diagnoses, and uninstalls standalone integrations transactionally', async () => {
   const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-agent-lifecycle-')));
-  const nodeExecutable = '/opt/viewcompose/node';
+  const nodeExecutable = process.execPath;
   const mcpServerPath = '/opt/viewcompose/mcp-server.mjs';
   try {
     for (const client of Object.keys(AGENT_CLIENT_PROFILES)) {

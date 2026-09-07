@@ -99,6 +99,7 @@ function makePng({
   colorType = 6,
   interlace = 0,
   ancillary = [],
+  postIdat = [],
 }) {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
@@ -109,6 +110,7 @@ function makePng({
     chunk('IHDR', ihdr),
     ...ancillary.map(({type, data}) => chunk(type, data)),
     chunk('IDAT', deflateSync(filteredRows(pixels, width, height, filters), {level: 9})),
+    ...postIdat.map(({type, data}) => chunk(type, data)),
     chunk('IEND', Buffer.alloc(0)),
   ]);
 }
@@ -194,6 +196,7 @@ test('decodes every PNG filter and strips ancillary metadata from canonical outp
     filters: [0, 1, 2, 3, 4],
     ancillary: [
       {type: 'sRGB', data: Buffer.from([0])},
+      {type: 'gAMA', data: Buffer.from([0x00, 0x00, 0xb1, 0x8f])},
       {type: 'tEXt', data: Buffer.from('private=metadata', 'utf8')},
     ],
   });
@@ -215,6 +218,104 @@ test('decodes every PNG filter and strips ancillary metadata from canonical outp
     true,
   );
   assert.equal(Buffer.from(result.data.output.data, 'base64').includes('private=metadata'), false);
+});
+
+test('accepts only the exact sRGB companion gamma and strips it without changing pixels', async () => {
+  const base = await fixture(requestFixture);
+  const width = 2;
+  const height = 2;
+  const pixels = Buffer.from(Array.from({length: width * height * 4}, (_, index) =>
+    (index * 29 + 7) & 0xff));
+  const gamma = Buffer.alloc(4);
+  gamma.writeUInt32BE(45_455);
+
+  async function prepare(ancillary, requestId, postIdat = []) {
+    const request = structuredClone(base);
+    request.screenshot = embeddedAsset(
+      makePng({width, height, pixels, ancillary, postIdat}),
+      width,
+      height,
+    );
+    request.interpretation.crop = {x: 0, y: 0, width, height};
+    request.interpretation.systemBars = {leftPx: 0, topPx: 0, rightPx: 0, bottomPx: 0};
+    request.privacy.redactions = [];
+    request.output.maxWidthPx = width;
+    request.output.maxHeightPx = height;
+    return prepareScreenshot(request, {requestId});
+  }
+
+  const withoutGamma = await prepare(
+    [{type: 'sRGB', data: Buffer.from([0])}],
+    'screenshot-srgb-without-gamma',
+  );
+  for (const [name, ancillary] of [
+    ['srgb-first', [
+      {type: 'sRGB', data: Buffer.from([0])},
+      {type: 'gAMA', data: gamma},
+    ]],
+    ['gamma-first', [
+      {type: 'gAMA', data: gamma},
+      {type: 'sRGB', data: Buffer.from([0])},
+    ]],
+  ]) {
+    const result = await prepare(ancillary, `screenshot-${name}`);
+    assert.equal(result.status, 'success', name);
+    assert.equal(result.data.output.data, withoutGamma.data.output.data, name);
+    assert.deepEqual(pngChunkTypes(result.data.output.data), ['IHDR', 'IDAT', 'IEND'], name);
+  }
+
+  const missingSrgb = await prepare(
+    [{type: 'gAMA', data: gamma}],
+    'screenshot-gamma-without-srgb',
+  );
+  assert.equal(missingSrgb.status, 'unsupported');
+  assert.equal(missingSrgb.diagnostics[0].code, 'VC-AI-SCREENSHOT-PNG-UNSUPPORTED');
+
+  const otherGamma = Buffer.alloc(4);
+  otherGamma.writeUInt32BE(100_000);
+  const nonSrgbGamma = await prepare([
+    {type: 'sRGB', data: Buffer.from([0])},
+    {type: 'gAMA', data: otherGamma},
+  ], 'screenshot-non-srgb-gamma');
+  assert.equal(nonSrgbGamma.status, 'unsupported');
+  assert.equal(nonSrgbGamma.diagnostics[0].code, 'VC-AI-SCREENSHOT-PNG-UNSUPPORTED');
+
+  const duplicateGamma = await prepare([
+    {type: 'sRGB', data: Buffer.from([0])},
+    {type: 'gAMA', data: gamma},
+    {type: 'gAMA', data: gamma},
+  ], 'screenshot-duplicate-gamma');
+  assert.equal(duplicateGamma.status, 'invalid');
+  assert.equal(duplicateGamma.diagnostics[0].code, 'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID');
+
+  const malformedGamma = await prepare([
+    {type: 'sRGB', data: Buffer.from([0])},
+    {type: 'gAMA', data: Buffer.from([0, 0, 0])},
+  ], 'screenshot-malformed-gamma');
+  assert.equal(malformedGamma.status, 'invalid');
+  assert.equal(malformedGamma.diagnostics[0].code, 'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID');
+
+  for (const [name, ancillary, postIdat] of [
+    ['misplaced-gamma', [{type: 'sRGB', data: Buffer.from([0])}], [{type: 'gAMA', data: gamma}]],
+    ['misplaced-srgb', [{type: 'gAMA', data: gamma}], [{type: 'sRGB', data: Buffer.from([0])}]],
+  ]) {
+    const result = await prepare(ancillary, `screenshot-${name}`, postIdat);
+    assert.equal(result.status, 'invalid', name);
+    assert.equal(result.diagnostics[0].code, 'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID', name);
+  }
+
+  const duplicateSrgb = await prepare([
+    {type: 'sRGB', data: Buffer.from([0])},
+    {type: 'sRGB', data: Buffer.from([0])},
+  ], 'screenshot-duplicate-srgb');
+  assert.equal(duplicateSrgb.status, 'invalid');
+  assert.equal(duplicateSrgb.diagnostics[0].code, 'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID');
+
+  const invalidSrgb = await prepare([
+    {type: 'sRGB', data: Buffer.from([4])},
+  ], 'screenshot-invalid-srgb');
+  assert.equal(invalidSrgb.status, 'invalid');
+  assert.equal(invalidSrgb.diagnostics[0].code, 'VC-AI-SCREENSHOT-PNG-INTEGRITY-INVALID');
 });
 
 test('reproduces the large pixel reference without native zlib planner variance', async () => {

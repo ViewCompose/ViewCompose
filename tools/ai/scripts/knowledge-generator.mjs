@@ -15,6 +15,7 @@ const execFileAsync = promisify(execFile);
 const capabilityRecordPath = 'docs/project/records/documentation-governance-v2/capabilities';
 const sampleRecordPath = 'docs/project/records/documentation-governance-v2/samples';
 const capabilityReferencePath = 'website/src/data/capability-reference.json';
+const publishingPropertiesPath = 'gradle/viewcompose-publishing.properties';
 const rulesPath = resolve(aiRoot, 'knowledge/rules.json');
 const generatorBaseVersion = '1.0.0';
 
@@ -72,6 +73,24 @@ export function fileKnowledgeSourceProvider(root = repositoryRoot) {
     async readJsonDirectory(path) {
       return readJsonDirectory(resolve(sourceRoot, safeRepositoryPath(path)));
     },
+    async listFiles(path) {
+      const safePath = safeRepositoryPath(path);
+      const start = resolve(sourceRoot, safePath);
+      const files = [];
+      async function visit(directory) {
+        const entries = await readdir(directory, {withFileTypes: true}).catch((error) => {
+          if (error.code === 'ENOENT') return [];
+          throw error;
+        });
+        for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+          const candidate = resolve(directory, entry.name);
+          if (entry.isDirectory()) await visit(candidate);
+          else if (entry.isFile()) files.push(relative(sourceRoot, candidate).replaceAll('\\', '/'));
+        }
+      }
+      await visit(start);
+      return files.sort();
+    },
   });
 }
 
@@ -112,11 +131,38 @@ export async function gitRevisionKnowledgeSourceProvider(
       const names = stdout.trim().split('\n').filter((name) => name.endsWith('.json')).sort();
       return Promise.all(names.map((name) => gitText(`${safePath}/${name}`).then(JSON.parse)));
     },
+    async listFiles(path) {
+      const safePath = safeRepositoryPath(path);
+      const {stdout} = await execFileAsync(
+        'git',
+        ['ls-tree', '-r', '--name-only', revision, '--', safePath],
+        {cwd: repository, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024},
+      );
+      return stdout.trim().split('\n').filter(Boolean).sort();
+    },
   });
 }
 
 function normalizeWhitespace(value) {
   return value.replace(/\s+/gu, ' ').trim();
+}
+
+function publishingArtifactVersions(source) {
+  const properties = new Map();
+  for (const rawLine of source.replaceAll('\r\n', '\n').split('\n')) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const separator = line.indexOf('=');
+    if (separator > 0) properties.set(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
+  }
+  const modules = (properties.get('apiDocs.strictModules') ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return modules.map((artifact) => ({
+    artifact,
+    version: properties.get(`module.${artifact}.version`) ?? null,
+  }));
 }
 
 function trimIndent(value) {
@@ -337,6 +383,149 @@ export function extractDeclarations(source, symbolId, kind) {
     : findFunctionDeclarations(source, targetName);
 }
 
+function kotlinPackage(source) {
+  return /^\s*package\s+([A-Za-z_][A-Za-z0-9_.]*)/mu.exec(source)?.[1] ?? null;
+}
+
+function publicTopLevelDeclaration(line) {
+  if (/^\s/u.test(line) || !line.trim() || /^\s*(?:\/\/|\/\*|\*)/u.test(line)) return null;
+  let declaration = line.replace(
+    /^(?:@[A-Za-z_][A-Za-z0-9_.]*(?:\([^\n]*\))?\s+)*/u,
+    '',
+  );
+  if (/^(?:private|internal|protected)\b/u.test(declaration)) return null;
+  declaration = declaration.replace(/^public\s+/u, '');
+  const type = /^(?:(?:data|sealed|enum|annotation|value|open|abstract|final|expect|actual|fun)\s+)*(?:class|interface|object|record|typealias)\s+([A-Za-z_][A-Za-z0-9_]*)\b/u.exec(declaration);
+  if (type) return {simpleName: type[1], declarationKind: 'type'};
+
+  const functionDeclaration = /^(?:(?:inline|infix|operator|suspend|tailrec|external|expect|actual)\s+)*fun\s+(.+)$/u.exec(declaration);
+  if (functionDeclaration) {
+    const beforeParameters = functionDeclaration[1].split('(')[0];
+    const identifiers = [...beforeParameters.matchAll(/[A-Za-z_][A-Za-z0-9_]*/gu)];
+    const simpleName = identifiers.at(-1)?.[0];
+    if (simpleName) return {simpleName, declarationKind: 'function'};
+  }
+
+  const property = /^(?:(?:const|lateinit|expect|actual|inline)\s+)*(?:val|var)\s+(.+)$/u.exec(declaration);
+  if (!property) return null;
+  const beforeTypeOrBody = property[1].split(/[:={]/u)[0];
+  const identifiers = [...beforeTypeOrBody.matchAll(/[A-Za-z_][A-Za-z0-9_]*/gu)];
+  const simpleName = identifiers.at(-1)?.[0];
+  return simpleName ? {simpleName, declarationKind: 'property'} : null;
+}
+
+export function discoverPublicImports(source, {artifactId, path}) {
+  const namespace = kotlinPackage(source) ?? /^\s*package\s+([A-Za-z_][A-Za-z0-9_.]*)\s*;/mu.exec(source)?.[1];
+  if (!namespace?.startsWith('com.viewcompose')) return [];
+  return source.replaceAll('\r\n', '\n').split('\n').flatMap((line, index) => {
+    const declaration = publicTopLevelDeclaration(line);
+    if (!declaration) return [];
+    return [{
+      schemaVersion: 1,
+      importName: `${namespace}.${declaration.simpleName}`,
+      simpleName: declaration.simpleName,
+      declarationKind: declaration.declarationKind,
+      artifactId,
+      source: {path, line: index + 1},
+    }];
+  });
+}
+
+function mergePublicImports(entries) {
+  const byImport = new Map();
+  for (const entry of entries) {
+    const existing = byImport.get(entry.importName);
+    if (existing && existing.artifactId !== entry.artifactId) {
+      throw new Error(`Public import ${entry.importName} is owned by multiple artifacts`);
+    }
+    if (existing) {
+      existing.sources.push(entry.source);
+      existing.declarationKinds.add(entry.declarationKind);
+    } else {
+      byImport.set(entry.importName, {
+        ...entry,
+        declarationKinds: new Set([entry.declarationKind]),
+        sources: [entry.source],
+      });
+    }
+  }
+  return [...byImport.values()].map(({source: _source, declarationKinds, ...entry}) => {
+    const kinds = [...declarationKinds].sort();
+    return {
+      ...entry,
+      declarationKind: kinds.includes('type') ? 'type' : kinds[0],
+      declarationKinds: kinds,
+      sources: entry.sources.sort((left, right) =>
+        left.path.localeCompare(right.path) || left.line - right.line),
+    };
+  }).sort((left, right) => left.importName.localeCompare(right.importName));
+}
+
+async function buildPublicImports(artifacts, sourceProvider, sourceText) {
+  if (typeof sourceProvider.listFiles !== 'function') {
+    throw new Error('Knowledge source provider must support deterministic file discovery');
+  }
+  const entries = [];
+  for (const artifact of artifacts) {
+    const paths = await sourceProvider.listFiles(`${artifact.artifact}/src`);
+    for (const path of paths.filter((candidate) =>
+      /\/src\/(?:main|commonMain)\/(?:java|kotlin)\/.+\.(?:kt|java)$/u.test(candidate))) {
+      entries.push(...discoverPublicImports(await sourceText(path), {
+        artifactId: artifact.artifact,
+        path,
+      }));
+    }
+  }
+  const imports = mergePublicImports(entries);
+  const artifactById = new Map(artifacts.map((entry) => [entry.artifact, entry]));
+  for (const entry of imports) {
+    const artifact = artifactById.get(entry.artifactId);
+    entry.artifactVersion = artifact?.version ?? null;
+  }
+  for (const entry of imports.filter((candidate) => candidate.declarationKind === 'type')) {
+    entry.declarations = [];
+    for (const sourceLocation of entry.sources) {
+      const source = await sourceText(sourceLocation.path);
+      entry.declarations = extractDeclarations(source, entry.importName, 'type');
+      if (entry.declarations.length > 0) break;
+    }
+    entry.sourceFingerprint = sha256(
+      `${entry.sources.map((item) => `${item.path}:${item.line}`).join('\n')}\n` +
+      entry.declarations.map((item) => item.signatureHash).join('\n'),
+    );
+  }
+  return imports;
+}
+
+function signatureTypeImports(symbol, source, publicImportByName, publicTypesBySimpleName) {
+  const signatures = symbol.declarations.map((entry) => entry.signature).join('\n');
+  const packageName = kotlinPackage(source);
+  const resolved = new Set();
+  for (const match of source.matchAll(/^\s*import\s+(com\.viewcompose\.[A-Za-z0-9_.]+)(?:\s+as\s+([A-Za-z0-9_]+))?/gmu)) {
+    const imported = publicImportByName.get(match[1]);
+    if (!imported || imported.declarationKind !== 'type') continue;
+    const localName = match[2] ?? imported.simpleName;
+    if (new RegExp(`\\b${escapeRegex(localName)}\\b`, 'u').test(signatures)) resolved.add(imported.importName);
+  }
+  for (const identifier of new Set([...signatures.matchAll(/\b[A-Z][A-Za-z0-9_]*\b/gu)].map((match) => match[0]))) {
+    const samePackage = packageName ? publicImportByName.get(`${packageName}.${identifier}`) : null;
+    if (samePackage?.declarationKind === 'type') resolved.add(samePackage.importName);
+    const candidates = publicTypesBySimpleName.get(identifier) ?? [];
+    if (candidates.length === 1 && signatures.includes(candidates[0].importName)) {
+      resolved.add(candidates[0].importName);
+    }
+  }
+  return [...resolved].sort().map((importName) => {
+    const entry = publicImportByName.get(importName);
+    return {
+      symbolId: importName,
+      importName,
+      simpleName: entry.simpleName,
+      artifactId: entry.artifactId,
+    };
+  });
+}
+
 function extractRegion(source, region) {
   const normalized = source.replaceAll('\r\n', '\n');
   const startMarker = `// DOCS_REGION_START(${region})`;
@@ -449,11 +638,18 @@ export async function buildKnowledgeBundle(options = {}) {
   const artifactVersions = options.artifactVersions instanceof Map
     ? options.artifactVersions
     : new Map(Object.entries(options.artifactVersions ?? {}));
-  const [capabilityReference, capabilityRecords, sampleRecords, rulesDocument] = await Promise.all([
+  const [
+    capabilityReference,
+    capabilityRecords,
+    sampleRecords,
+    rulesDocument,
+    publishingProperties,
+  ] = await Promise.all([
     sourceProvider.readText(capabilityReferencePath).then(JSON.parse),
     sourceProvider.readJsonDirectory(capabilityRecordPath),
     sourceProvider.readJsonDirectory(sampleRecordPath),
     readJson(rulesPath),
+    sourceProvider.readText(publishingPropertiesPath),
   ]);
   const recordByCapability = new Map(
     capabilityRecords.map((record) => [record.capability_id, record]),
@@ -475,6 +671,35 @@ export async function buildKnowledgeBundle(options = {}) {
     return sourceCache.get(path);
   }
 
+  const artifacts = capabilityReference.artifacts
+    .filter((artifact) => artifactFilter === null || artifactFilter.has(artifact.artifact))
+    .map((artifact) => {
+      const version = artifactVersions.get(artifact.artifact);
+      return {
+        schemaVersion: 1,
+        ...artifact,
+        ...(version === undefined ? {} : {
+          version,
+          versionState: 'released',
+          apiReference: `/api/${artifact.artifact}/${version}/`,
+          moduleManual: `/modules/${artifact.artifact}/${version}/`,
+        }),
+      };
+    })
+    .sort((left, right) => left.artifact.localeCompare(right.artifact));
+  const catalogArtifacts = publishingArtifactVersions(publishingProperties).map((artifact) => ({
+    ...artifact,
+    version: artifactVersions.get(artifact.artifact) ?? artifact.version,
+  }));
+  const publicImports = await buildPublicImports(catalogArtifacts, sourceProvider, sourceText);
+  const publicImportByName = new Map(publicImports.map((entry) => [entry.importName, entry]));
+  const publicTypesBySimpleName = new Map();
+  for (const entry of publicImports.filter((candidate) => candidate.declarationKind === 'type')) {
+    const candidates = publicTypesBySimpleName.get(entry.simpleName) ?? [];
+    candidates.push(entry);
+    publicTypesBySimpleName.set(entry.simpleName, candidates);
+  }
+
   const referenceEntries = capabilityReference.groups
     .flatMap((group) => group.entries)
     .filter((entry) => artifactFilter === null || artifactFilter.has(entry.artifact))
@@ -485,7 +710,7 @@ export async function buildKnowledgeBundle(options = {}) {
     if (!sourceRecord) throw new Error(`Missing Governance source for ${entry.symbol}`);
     const source = await sourceText(sourceRecord.source);
     const declarations = extractDeclarations(source, entry.symbol, sourceRecord.kind);
-    symbols.push({
+    const symbol = {
       schemaVersion: 1,
       symbolId: entry.symbol,
       simpleName: entry.symbol.split('.').at(-1),
@@ -507,7 +732,14 @@ export async function buildKnowledgeBundle(options = {}) {
       sourceFingerprint: sha256(
         `${sourceRecord.source}\n${declarations.map((item) => item.signatureHash).join('\n')}`,
       ),
-    });
+    };
+    symbol.signatureTypes = signatureTypeImports(
+      symbol,
+      source,
+      publicImportByName,
+      publicTypesBySimpleName,
+    );
+    symbols.push(symbol);
   }
   const unresolvedSymbols = symbols
     .filter((symbol) => symbol.declarations.length === 0)
@@ -516,6 +748,14 @@ export async function buildKnowledgeBundle(options = {}) {
     throw new Error(
       `Cannot generate source-complete knowledge; unresolved declarations:\n${unresolvedSymbols.join('\n')}`,
     );
+  }
+  for (const entry of publicImports.filter((candidate) => candidate.declarationKind === 'type')) {
+    const referencingSymbols = symbols.filter((symbol) =>
+      symbol.signatureTypes.some((type) => type.importName === entry.importName));
+    entry.referencedBySymbolIds = referencingSymbols.map((symbol) => symbol.symbolId).sort();
+    entry.relatedCapabilityIds = [...new Set(
+      referencingSymbols.map((symbol) => symbol.capabilityId),
+    )].sort();
   }
 
   const samples = [];
@@ -576,22 +816,6 @@ export async function buildKnowledgeBundle(options = {}) {
     })
     .sort((left, right) => left.capabilityId.localeCompare(right.capabilityId));
 
-  const artifacts = capabilityReference.artifacts
-    .filter((artifact) => artifactFilter === null || artifactFilter.has(artifact.artifact))
-    .map((artifact) => {
-      const version = artifactVersions.get(artifact.artifact);
-      return {
-        schemaVersion: 1,
-        ...artifact,
-        ...(version === undefined ? {} : {
-          version,
-          versionState: 'released',
-          apiReference: `/api/${artifact.artifact}/${version}/`,
-          moduleManual: `/modules/${artifact.artifact}/${version}/`,
-        }),
-      };
-    })
-    .sort((left, right) => left.artifact.localeCompare(right.artifact));
   const rules = [...rulesDocument.rules].sort((left, right) => left.code.localeCompare(right.code));
   const selectedReference = {
     ...capabilityReference,
@@ -627,6 +851,7 @@ export async function buildKnowledgeBundle(options = {}) {
   const files = new Map([
     ['artifacts.json', stableJson({schemaVersion: 1, artifacts})],
     ['capabilities.json', stableJson({schemaVersion: 1, capabilities})],
+    ['public-imports.jsonl', `${publicImports.map(jsonLine).join('\n')}\n`],
     ['symbols.jsonl', `${symbols.map(jsonLine).join('\n')}\n`],
     ['samples.jsonl', `${samples.map(jsonLine).join('\n')}\n`],
     ['rules.json', stableJson({schemaVersion: 1, rules})],
@@ -658,13 +883,24 @@ export async function buildKnowledgeBundle(options = {}) {
     counts: {
       artifacts: artifacts.length,
       capabilities: capabilities.length,
+      publicImports: publicImports.length,
       symbols: symbols.length,
       samples: samples.length,
       rules: rules.length,
     },
     bundleFingerprint,
   };
-  return {manifest, files, hostedLlms: compact, symbols, samples, capabilities, artifacts, rules};
+  return {
+    manifest,
+    files,
+    hostedLlms: compact,
+    symbols,
+    publicImports,
+    samples,
+    capabilities,
+    artifacts,
+    rules,
+  };
 }
 
 export async function writeKnowledgeBundle(

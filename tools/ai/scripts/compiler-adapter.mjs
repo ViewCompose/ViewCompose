@@ -27,7 +27,11 @@ import {validateKotlin} from './static-validator.mjs';
 
 export const COMPILER_LANE =
   'released-maven/jdk-17-or-21/gradle-9.3.1/agp-9.1.1/kotlin-2.2.10/android-36/jvm-11';
-export const SUPPORTED_COMPILER_ARTIFACTS = Object.freeze(['viewcompose-ui-foundation']);
+export const SUPPORTED_COMPILER_ARTIFACTS = Object.freeze([
+  'viewcompose-material3',
+  'viewcompose-material3-android',
+  'viewcompose-ui-foundation',
+]);
 export const DEFAULT_COMPILER_LIMITS = Object.freeze({
   maxSourceBytes: 1024 * 1024,
   timeoutMs: 300_000,
@@ -40,6 +44,7 @@ const HARD_COMPILER_LIMITS = Object.freeze({
 });
 const MAX_CLASS_FILES = 10_000;
 const MAX_CLASS_BYTES = 64 * 1024 * 1024;
+const COMPILER_HARNESS_IDENTITY = 'foundation-material3-v1';
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -93,8 +98,9 @@ async function compilerFailure({
 
 export function compilerRequestKey({source, artifactIds, bundleFingerprint}) {
   return sha256(JSON.stringify({
-    schemaVersion: 1,
+    schemaVersion: 2,
     compilerLane: COMPILER_LANE,
+    harnessIdentity: COMPILER_HARNESS_IDENTITY,
     bundleFingerprint,
     artifactIds: [...artifactIds].sort(),
     source,
@@ -360,7 +366,7 @@ export async function compileKotlin({
       requestId,
       status: 'unsupported',
       code: 'VC-AI-COMPILER-ARTIFACT-UNSUPPORTED',
-      message: 'The current compiler lane accepts only the fixed UI Foundation artifact allowlist.',
+      message: 'The current compiler lane accepts only its fixed Foundation and Material 3 artifact allowlist.',
       nextAction: `Use one of: ${SUPPORTED_COMPILER_ARTIFACTS.join(', ')}.`,
       elapsedMs: performance.now() - started,
     });

@@ -23,6 +23,12 @@
       "bytes": 2
     },
     {
+      "path": "public-imports.jsonl",
+      "mediaType": "application/x-ndjson",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 0
+    },
+    {
       "path": "symbols.jsonl",
       "mediaType": "application/x-ndjson",
       "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -45,11 +51,18 @@
       "mediaType": "text/plain",
       "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "bytes": 0
+    },
+    {
+      "path": "llms-full.txt",
+      "mediaType": "text/plain",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 0
     }
   ],
   "counts": {
     "artifacts": 0,
     "capabilities": 0,
+    "publicImports": 0,
     "symbols": 0,
     "samples": 0,
     "rules": 0

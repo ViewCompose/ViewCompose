@@ -10,7 +10,7 @@ test('freezes the implemented internal rollback-only screenshot repair proposal'
     noEligibleDenominators: 6,
     invalidDenominators: 2,
     cancelledDenominators: 1,
-    proposalFingerprint: 'f407aa353cb219f36e98922d83bd178196402ac93fac47088cff1685ef7cf44f',
+    proposalFingerprint: '8313b5eab8e050e5f5f16a251c4de7f8034e686aafd2d6ba10b89f13f8068ce1',
     real: null,
   });
 });

@@ -27,14 +27,32 @@ const HARD_PROJECT_LIMITS = Object.freeze({
 });
 
 const defaultExcludedNames = new Set([
+  '.codegraph',
+  '.cxx',
+  '.externalnativebuild',
   '.git',
   '.gradle',
   '.idea',
+  '.kotlin',
+  '.viewcompose',
   'build',
+  'node_modules',
+  'out',
+  'local.properties',
+]);
+const sensitiveDirectoryNames = new Set([
+  '.ssh',
+  'credentials',
+  'keys',
+  'secrets',
+]);
+const sensitiveFileNames = new Set([
+  'googleservice-info.plist',
+  'google-services.json',
+  'gradle.properties',
   'local.properties',
 ]);
 const secretSuffixes = ['.jks', '.keystore', '.p12', '.pfx', '.pem', '.key'];
-const readableExtensions = new Set(['.gradle', '.java', '.json', '.kts', '.kt', '.toml', '.xml']);
 const kotlinExtensions = new Set(['.java', '.kt', '.kts']);
 const dependencyArtifactPattern = /^[a-z0-9][a-z0-9-]*$/u;
 const importedNamePattern = /^com\.viewcompose\.[A-Za-z_][A-Za-z0-9_.]*(?:\.\*)?$/u;
@@ -86,15 +104,29 @@ function pathEscapes(root, candidate) {
 
 function isSecretPath(path) {
   const name = basename(path).toLowerCase();
-  return name === 'local.properties' ||
+  const segments = path.split(/[\\/]/u).map((segment) => segment.toLowerCase());
+  return segments.some((segment) => sensitiveDirectoryNames.has(segment)) ||
+    sensitiveFileNames.has(name) ||
     name === '.env' ||
     name.startsWith('.env.') ||
     secretSuffixes.some((suffix) => name.endsWith(suffix));
 }
 
+function isApprovedProjectFile(path) {
+  const name = basename(path);
+  const extension = extname(name);
+  if (kotlinExtensions.has(extension)) return true;
+  if (['build.gradle', 'settings.gradle'].includes(name)) return true;
+  if (name === 'libs.versions.toml') return true;
+  if (extension !== '.xml') return false;
+  const segments = path.replaceAll('\\', '/').split('/');
+  const parent = segments.at(-2) ?? '';
+  return segments.includes('src') && /^layout(?:-.+)?$/u.test(parent);
+}
+
 function isExcluded(path, extraExcluded = []) {
   const name = basename(path);
-  if (defaultExcludedNames.has(name) || isSecretPath(path)) return true;
+  if (defaultExcludedNames.has(name.toLowerCase()) || isSecretPath(path)) return true;
   return extraExcluded.some((pattern) => {
     if (pattern.startsWith('*.')) return name.endsWith(pattern.slice(1));
     return name === pattern;
@@ -576,6 +608,10 @@ export async function analyzeProject({
         truncated: true,
       });
     }
+    if (isExcluded(current.path, excluded)) {
+      excludedCount += 1;
+      continue;
+    }
     const metadata = await lstat(current.path);
     if (metadata.isSymbolicLink()) {
       return securityFailure({
@@ -584,10 +620,6 @@ export async function analyzeProject({
         message: `Project analysis rejects symbolic link ${relative(root, current.path)}.`,
         nextAction: 'Replace the link with a root-contained regular file or exclude it.',
       });
-    }
-    if (isExcluded(current.path, excluded)) {
-      excludedCount += 1;
-      continue;
     }
     if (metadata.isDirectory()) {
       const children = await readdir(current.path);
@@ -599,6 +631,11 @@ export async function analyzeProject({
       continue;
     }
     if (!metadata.isFile()) continue;
+    const projectPath = relative(root, current.path).replaceAll(sep, '/');
+    if (!isApprovedProjectFile(projectPath)) {
+      excludedCount += 1;
+      continue;
+    }
     if (files.length >= limits.maxFiles || totalBytes + metadata.size > limits.maxBytes) {
       return toolResult({
         requestId,
@@ -616,14 +653,13 @@ export async function analyzeProject({
         truncated: true,
       });
     }
-    const projectPath = relative(root, current.path).replaceAll(sep, '/');
     files.push({path: projectPath, bytes: metadata.size});
     totalBytes += metadata.size;
     const extension = extname(current.path);
     if (extension === '.kt' || extension === '.kts') signals.kotlinFiles += 1;
     if (extension === '.xml') signals.xmlFiles += 1;
     if (basename(current.path).includes('gradle')) signals.gradleFiles += 1;
-    if (readableExtensions.has(extension) && metadata.size <= 256 * 1024) {
+    if (metadata.size <= 256 * 1024) {
       const content = await readFile(current.path, 'utf8');
       const codeContent = kotlinExtensions.has(extension) ? maskNonCode(content) : content;
       const dependencyContent = maskCommentsPreservingStrings(content);

@@ -59,7 +59,7 @@ test('fails closed on include cycles and dependency limit drift', async () => {
   assert.equal(invalidLimit.diagnostics[0].code, 'VC-AI-XML-LAYOUT-DEPENDENCY-LIMIT');
 });
 
-test('rejects missing layouts, include overrides, standalone merge, symlinks, and expansion limits', async (context) => {
+test('rejects missing layouts, unsafe include overrides, standalone merge, symlinks, and expansion limits', async (context) => {
   const projectRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-layout-dependencies-'));
   context.after(() => rm(projectRoot, {recursive: true, force: true}));
   const layoutRoot = resolve(projectRoot, 'app/src/main/res/layout');
@@ -87,8 +87,38 @@ ${body}
     '    <include layout="@layout/child" android:visibility="gone" />',
   ));
   const override = await resolveXmlLayoutDependencies(request);
-  assert.equal(override.status, 'unsupported');
-  assert.equal(override.diagnostics[0].code, 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED');
+  assert.equal(override.status, 'success');
+  assert.equal(
+    override.expandedRoot.children[0].attributes.find(
+      (attribute) => attribute.name === 'android:visibility',
+    )?.value,
+    'gone',
+  );
+  assert.equal(
+    override.expandedRoot.children[0].attributes.filter(
+      (attribute) => attribute.name === 'android:visibility',
+    ).length,
+    1,
+  );
+
+  await writeFile(resolve(layoutRoot, 'screen.xml'), document(
+    '    <include layout="@layout/child" android:layout_width="48dp" />',
+  ));
+  const incompleteSize = await resolveXmlLayoutDependencies(request);
+  assert.equal(incompleteSize.status, 'unsupported');
+  assert.equal(incompleteSize.diagnostics[0].code, 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED');
+
+  await writeFile(resolve(layoutRoot, 'merged.xml'), `<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</merge>
+`);
+  await writeFile(resolve(layoutRoot, 'screen.xml'), document(
+    '    <include layout="@layout/merged" android:visibility="gone" />',
+  ));
+  const mergeOverride = await resolveXmlLayoutDependencies(request);
+  assert.equal(mergeOverride.status, 'unsupported');
+  assert.equal(mergeOverride.diagnostics[0].code, 'VC-AI-XML-INCLUDE-ATTRIBUTE-UNSUPPORTED');
 
   await writeFile(resolve(layoutRoot, 'screen.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">

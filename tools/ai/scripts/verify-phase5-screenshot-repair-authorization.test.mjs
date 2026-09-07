@@ -10,7 +10,7 @@ test('freezes implemented human authorization validation before repair activatio
     authorizedFixtures: 1,
     invalidDenominators: 10,
     cancelledDenominators: 1,
-    authorizationFingerprint: 'b85294c2284c3e42d495507e5223981c72c3251235ffa0a7be7b24664190d7f3',
+    authorizationFingerprint: 'edae2324520e22dd61d5e16eeddd48973fd1ba3c1e7d4cae60b6c9b126746b61',
     real: null,
   });
 });

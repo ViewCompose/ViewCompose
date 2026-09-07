@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "official-figma-design-context-fixture",
+  "capture": {
+    "provider": "figma-official-mcp",
+    "operation": "get_design_context",
+    "fileKey": "PcsGk4tx1Yu1zt8bcJwE9Z",
+    "nodeId": "6201:14105",
+    "referenceCodeFormat": "react-tailwind",
+    "referenceRenderIncluded": true,
+    "assetDelivery": "temporary-download-urls"
+  },
+  "expectedRoute": "reference-assisted-attended-adaptation",
+  "versionSelection": {
+    "intent": "evaluate-current-checkout",
+    "toolingLane": "current-source",
+    "artifactLane": "same-checkout-composite-build",
+    "publishedFallbackAllowed": false
+  },
+  "androidAssetPolicy": {
+    "preserveOriginalSvg": true,
+    "classification": {
+      "vectorDrawable": [
+        "solid-flat-paths",
+        "flat-multicolor-paths",
+        "simple-groups-transforms-supported-clips"
+      ],
+      "rasterOnly": [
+        "filter-blur-artwork-shadow-glow",
+        "mask-gradient-pattern-texture",
+        "embedded-raster-blend-mode-unoutlined-text-unsupported-stroke"
+      ],
+      "runtimeShadow": "android-shape-or-elevation"
+    },
+    "vectorConversion": "mechanical-android-sdk-with-render-check",
+    "handTracedPathsAllowed": false,
+    "rasterFallback": {
+      "minimumScale": 3,
+      "resourceDirectory": "drawable-xxhdpi",
+      "unqualifiedOneXAllowed": false,
+      "complexUiWithAlpha": "lossless-webp",
+      "exactPngOrNinePatchOrUnverifiedWebp": "png",
+      "photographicWithExplicitQuality": "lossy-webp"
+    },
+    "requiredEvidence": [
+      "source-output-hashes",
+      "detected-features-and-decision-reason",
+      "converter-or-encoder-mode",
+      "alpha-density-dimensions-or-viewport",
+      "real-build-and-reference-render-check"
+    ]
+  },
+  "directConverterExpectedStatus": "invalid"
+}

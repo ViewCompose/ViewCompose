@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {access, lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink} from 'node:fs/promises';
+import {access, lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {relative, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -13,7 +13,7 @@ const expectedClients = Object.freeze({
   'claude-code': {configPath: '.mcp.json', skillRoot: '.claude/skills'},
   cursor: {configPath: '.cursor/mcp.json', skillRoot: '.agents/skills'},
 });
-const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.7.0'});
+const expectedPackage = Object.freeze({name: '@viewcompose/ai-tooling', version: '0.8.0'});
 
 function contained(root, candidate) {
   const path = relative(resolve(root), resolve(candidate));
@@ -168,6 +168,15 @@ async function verifyClient({archivePath, root, client, expectedDurableRoot}) {
   const projectRoot = await realpath(resolve(root, `fresh ${client} project 路径`));
   const npmCache = resolve(root, `ephemeral npx ${client}`);
   const environment = adoptionEnvironment(root, npmCache);
+  if (client === 'codex') {
+    const codexConfigRoot = resolve(environment.HOME, '.codex');
+    await mkdir(codexConfigRoot, {recursive: true});
+    await writeFile(resolve(codexConfigRoot, 'config.toml'), [
+      `[projects.${JSON.stringify(projectRoot)}]`,
+      'trust_level = "trusted"',
+      '',
+    ].join('\n'));
+  }
   const first = parseJsonOutput(
     await runNpxAgent(archivePath, projectRoot, npmCache, ['init', '--client', client]),
     `${client} init`,

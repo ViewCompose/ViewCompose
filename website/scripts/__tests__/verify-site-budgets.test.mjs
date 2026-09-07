@@ -14,8 +14,9 @@ const permissiveBudgets = Object.freeze({
   maxLargestJavaScriptKiB: 1024,
   maxTotalJavaScriptMiB: 1,
   maxTotalCssKiB: 1024,
-  maxSearchIndexMiBPerLocale: 1,
+  maxSearchIndexMiBPerLocaleSegment: 1,
   requiredSearchLocales: [],
+  requiredSearchContexts: [],
   requiredRedirects: {},
 });
 
@@ -73,6 +74,65 @@ test('localized API landing does not count as a duplicated Dokka tree', async ()
     await writeFile(resolve(buildDirectory, 'zh-CN/api/index.html'), 'landing', 'utf8');
 
     await verifySiteBudgets({buildDirectory, budgetsPath});
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('segmented search indexes are budgeted independently', async () => {
+  const {root, buildDirectory, budgetsPath} = await fixture();
+  try {
+    await writeFile(
+      budgetsPath,
+      `${JSON.stringify({
+        ...permissiveBudgets,
+        maxNonApiOutputMiB: 2,
+        maxSearchIndexMiBPerLocaleSegment: 0.75,
+        requiredSearchLocales: ['en'],
+        requiredSearchContexts: ['ai', 'guides'],
+      })}\n`,
+      'utf8',
+    );
+    await writeFile(
+      resolve(buildDirectory, 'search-index-ai-contenthash.json'),
+      'a'.repeat(700 * 1024),
+      'utf8',
+    );
+    await writeFile(
+      resolve(buildDirectory, 'search-index-guides-contenthash.json'),
+      'g'.repeat(700 * 1024),
+      'utf8',
+    );
+
+    const result = await verifySiteBudgets({buildDirectory, budgetsPath});
+
+    assert.equal(Object.keys(result.searchIndexSizes).length, 2);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('every required locale must emit every required search context', async () => {
+  const {root, buildDirectory, budgetsPath} = await fixture();
+  try {
+    await mkdir(resolve(buildDirectory, 'zh-CN'), {recursive: true});
+    await writeFile(
+      budgetsPath,
+      `${JSON.stringify({
+        ...permissiveBudgets,
+        requiredSearchLocales: ['en', 'zh-CN'],
+        requiredSearchContexts: ['ai', 'guides'],
+      })}\n`,
+      'utf8',
+    );
+    await writeFile(resolve(buildDirectory, 'search-index-ai-hash.json'), '{}', 'utf8');
+    await writeFile(resolve(buildDirectory, 'search-index-guides-hash.json'), '{}', 'utf8');
+    await writeFile(resolve(buildDirectory, 'zh-CN/search-index-ai-hash.json'), '{}', 'utf8');
+
+    await assert.rejects(
+      verifySiteBudgets({buildDirectory, budgetsPath}),
+      /missing search index context guides for locale zh-CN/u,
+    );
   } finally {
     await rm(root, {recursive: true, force: true});
   }

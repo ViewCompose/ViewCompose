@@ -166,6 +166,19 @@ const config: Config = {
         highlightSearchTermsOnTargetPage: true,
         explicitSearchResultPath: true,
         searchResultLimits: 8,
+        // Keep every public document searchable while loading only the reader's current top-level
+        // area. The result page exposes these localized contexts as a selector.
+        searchContextByPaths: [
+          {path: 'documentation', label: {en: 'Overview', 'zh-CN': '文档总览'}},
+          {path: 'ai', label: {en: 'AI integration', 'zh-CN': 'AI 接入'}},
+          {path: 'tutorials', label: {en: 'Tutorials', 'zh-CN': '教程'}},
+          {path: 'guides', label: {en: 'Guides', 'zh-CN': '指南'}},
+          {path: 'architecture', label: {en: 'Architecture', 'zh-CN': '架构'}},
+          {path: 'migration', label: {en: 'Migration', 'zh-CN': '迁移'}},
+          {path: 'modules', label: {en: 'Modules', 'zh-CN': '模块'}},
+          {path: 'tooling', label: {en: 'Tooling', 'zh-CN': '工具'}},
+          {path: 'project', label: {en: 'Project', 'zh-CN': '项目维护'}},
+        ],
         ignoreFiles: [
           /^architecture\/decisions\/0021-correlated-render-diagnostics-ownership$/,
           /^archive\/(?:constraintlayout-native-engine-hardening|constraintlayout-parity-performance-expansion|diagnostics-correlation-inspection-observability|paging3-integration)$/,

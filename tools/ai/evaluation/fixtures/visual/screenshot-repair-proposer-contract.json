@@ -72,8 +72,8 @@
   "supportedFixtures": [
     {
       "id": "single-localized-property-regression",
-      "baselineEvidenceFingerprint": "9660c0fa52128c829885ce226858e9db6cda87f9a86ec349421ee42b14dc48b9",
-      "candidateEvidenceFingerprint": "f5d313cbf24308fcd3091de36eeda27ad20946b067f7c0ece94ad65ba8fd45cd",
+      "baselineEvidenceFingerprint": "ddb25a6c2a60b10587cfbbfeaff5a9169c2a5f5c304e587f032ccce2c3345048",
+      "candidateEvidenceFingerprint": "286de50bda0e7b9b5ab72d7cadf6aeb927b197fa3c0fbffb0b0d495db4319772",
       "expectedReason": "strict-pixel-regression-rollback",
       "expectedTarget": {
         "nodeId": "wireframe-title",
@@ -82,7 +82,7 @@
         "name": "text",
         "candidateValueFingerprint": "2d5a9d124f9e9914656016180d61fd19bd01b5215788700dbf90d4a808e78f34",
         "baselineValueFingerprint": "468d5410ab849597bef869faf5a61fe632a374832339a132f6a6c5b9e87b2998",
-        "localizationFingerprint": "ad1e1e4c1f6acdc3b7d7d9a40b671b882c63a2e71c55eb11f627afbe7af935fc",
+        "localizationFingerprint": "faa1222f1de213845a3da6cce7653fe0f1a4f1070b102c6d159709134262bbe7",
         "attributedMismatchedPixels": 1516
       },
       "expectedPatch": {
@@ -98,9 +98,9 @@
         ],
         "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945"
       },
-      "expectedProposalFingerprint": "f407aa353cb219f36e98922d83bd178196402ac93fac47088cff1685ef7cf44f",
-      "expectedRollbackEvaluationFingerprint": "70c8774d32e03d75d91ea66cf1b055747f94a84230147432aa682c14429bcd22",
-      "expectedRollbackEvidenceFingerprint": "65de1792b924bc7750dcd26fbe9fa2c23f5997a5d14379b0e22f1f7a102bf610"
+      "expectedProposalFingerprint": "8313b5eab8e050e5f5f16a251c4de7f8034e686aafd2d6ba10b89f13f8068ce1",
+      "expectedRollbackEvaluationFingerprint": "c58748a6bffd5058878b84871ec7bea2dfe15f37597f00fdd354c26d5c482e0c",
+      "expectedRollbackEvidenceFingerprint": "51cf02ece8bc06fb32e2a166b383280ceb50d4fcacb6ac2658c2933e0bc7c116"
     }
   ],
   "noEligibleFixtures": [

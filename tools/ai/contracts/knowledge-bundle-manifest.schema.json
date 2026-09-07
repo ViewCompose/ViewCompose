@@ -36,7 +36,7 @@
     },
     "files": {
       "type": "array",
-      "minItems": 6,
+      "minItems": 8,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -47,6 +47,7 @@
             "enum": [
               "artifacts.json",
               "capabilities.json",
+              "public-imports.jsonl",
               "symbols.jsonl",
               "samples.jsonl",
               "rules.json",
@@ -63,10 +64,11 @@
     "counts": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["artifacts", "capabilities", "symbols", "samples", "rules"],
+      "required": ["artifacts", "capabilities", "publicImports", "symbols", "samples", "rules"],
       "properties": {
         "artifacts": { "type": "integer", "minimum": 0 },
         "capabilities": { "type": "integer", "minimum": 0 },
+        "publicImports": { "type": "integer", "minimum": 0 },
         "symbols": { "type": "integer", "minimum": 0 },
         "samples": { "type": "integer", "minimum": 0 },
         "rules": { "type": "integer", "minimum": 0 }
