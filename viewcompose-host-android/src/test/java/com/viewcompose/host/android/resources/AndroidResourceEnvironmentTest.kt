@@ -26,11 +26,30 @@ import org.robolectric.annotation.Config
 @Config(sdk = [24, 35])
 class AndroidResourceEnvironmentTest {
     @Test
+    fun `mounted scopes differ at equal revisions and survive refresh`() {
+        val context = configuredContext("en-US")
+        fun environment() = AndroidResourceEnvironmentLifecycle(
+            context, null, UiEnvironmentValues(resourceRevision = 7), false, {},
+        )
+        val first = environment()
+        val second = environment()
+        val before = first.snapshot.value.environment
+        val sibling = second.snapshot.value.environment
+        assertEquals(before.resourceRevision, sibling.resourceRevision)
+        org.junit.Assert.assertNotNull(before.resourceCacheScope)
+        org.junit.Assert.assertNotEquals(before.resourceCacheScope, sibling.resourceCacheScope)
+        first.refresh()
+        assertEquals(before.resourceCacheScope, first.snapshot.value.environment.resourceCacheScope)
+        assertEquals(8L, first.snapshot.value.environment.resourceRevision)
+    }
+
+    @Test
     fun `typed lookups resolve from the mounted resource context`() {
         val context = configuredContext("en-US")
         val root = FrameLayout(context)
         var capturedContext: android.content.Context? = null
         var capturedResources: android.content.res.Resources? = null
+        var capturedCacheScope: String? = null
         var title = ""
         var formatted = ""
         var plural = ""
@@ -46,6 +65,7 @@ class AndroidResourceEnvironmentTest {
             AndroidResourceEnvironment(context) {
                 capturedContext = LocalAndroidContext.current
                 capturedResources = LocalAndroidResources.current
+                capturedCacheScope = Environment.values.resourceCacheScope
                 title = stringResource(TestR.string.resource_title)
                 formatted = stringResource(TestR.string.resource_formatted, 3)
                 plural = pluralStringResource(TestR.plurals.resource_items, 3, 3)
@@ -62,6 +82,7 @@ class AndroidResourceEnvironmentTest {
 
         assertSame(context, capturedContext)
         assertSame(context.resources, capturedResources)
+        org.junit.Assert.assertNotNull(capturedCacheScope)
         assertEquals("Resource title", title)
         assertEquals("Count: 3", formatted)
         assertEquals("3 items", plural)

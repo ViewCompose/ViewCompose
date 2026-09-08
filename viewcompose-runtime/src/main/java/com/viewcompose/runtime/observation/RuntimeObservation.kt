@@ -6,6 +6,46 @@ internal interface ObservableState {
     fun removeObserver(observer: Observation)
 }
 
+/** Keeps each apply's delivery complete and unique, including paths through derived states. */
+internal object ObservationInvalidations {
+    private class Batch {
+        val seen = LinkedHashSet<Observation>()
+        val pending = java.util.ArrayDeque<Observation>()
+
+        fun add(observations: Collection<Observation>) {
+            observations.forEach { if (seen.add(it)) pending.addLast(it) }
+        }
+    }
+
+    private val current = ThreadLocal<Batch?>()
+
+    /** Reentrant applies get independent delivery; their derived invalidations join that apply. */
+    fun dispatch(observations: Collection<Observation>) {
+        if (observations.isEmpty()) return
+        val previous = current.get()
+        val batch = Batch().also { it.add(observations) }
+        current.set(batch)
+        var failure: Throwable? = null
+        try {
+            while (batch.pending.isNotEmpty()) {
+                try {
+                    batch.pending.removeFirst().invalidate()
+                } catch (error: Throwable) {
+                    val first = failure
+                    if (first == null) failure = error else if (first !== error) first.addSuppressed(error)
+                }
+            }
+        } finally {
+            if (previous == null) current.remove() else current.set(previous)
+        }
+        failure?.let { throw it }
+    }
+
+    fun enqueue(observations: Collection<Observation>) {
+        current.get()?.add(observations) ?: dispatch(observations)
+    }
+}
+
 /**
  * Owns the state subscriptions collected by one [RuntimeObservation.observeReads] call.
  *

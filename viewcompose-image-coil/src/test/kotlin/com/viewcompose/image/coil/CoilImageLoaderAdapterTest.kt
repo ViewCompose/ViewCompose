@@ -109,11 +109,12 @@ class CoilImageLoaderAdapterTest {
         val adapter = CoilImageLoaderAdapter(ImageLoader.Builder(context).build())
 
         assertEquals(
-            "viewcompose-resource:${android.R.drawable.ic_menu_gallery}:7",
+            "viewcompose-resource:6:host-a:${android.R.drawable.ic_menu_gallery}:7",
             adapter.resourceCacheIdentity(
                 UiImageRequest(
                     source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
                     resourceRevision = 7L,
+                    resourceCacheScope = "host-a",
                 ),
             ),
         )
@@ -124,9 +125,24 @@ class CoilImageLoaderAdapterTest {
                     source = ImageSource.Url("https://example.com/a.png"),
                     placeholder = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
                     resourceRevision = 7L,
+                    resourceCacheScope = "host-a",
                 ),
             ),
         )
+    }
+
+    @Test
+    fun `shared loader isolates resource scopes and disables unsafe persistent caching`() {
+        val adapter = CoilImageLoaderAdapter(ImageLoader.Builder(context).build())
+        val request = UiImageRequest(source = ImageSource.Resource(android.R.drawable.ic_menu_gallery))
+        val unscoped = adapter.buildRequest(ImageView(context), request)
+        val scoped = adapter.buildRequest(ImageView(context), request.copy(resourceCacheScope = "host-a"))
+        val other = adapter.buildRequest(ImageView(context), request.copy(resourceCacheScope = "host-b"))
+        val refreshed = adapter.buildRequest(ImageView(context), request.copy(resourceCacheScope = "host-a", resourceRevision = 1))
+        assertEquals(coil3.request.CachePolicy.DISABLED, unscoped.memoryCachePolicy)
+        assertEquals(coil3.request.CachePolicy.DISABLED, scoped.diskCachePolicy)
+        assertTrue(scoped.memoryCacheKey != other.memoryCacheKey)
+        assertTrue(scoped.memoryCacheKey != refreshed.memoryCacheKey)
     }
 
     @Test

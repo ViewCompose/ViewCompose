@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * cache, decode-size, transition, and content-scale options are normalized into one Coil request;
  * exact tint and clipping remain renderer responsibilities. The supplied [ImageLoader] remains
  * caller-owned and is never shut down by request disposal.
+ * Primary resource memory keys include the host cache scope and revision. Unknown scopes disable
+ * resource memory caching; resource disk caching is disabled because these identities are transient.
  *
  * @sample com.viewcompose.image.coil.samples.coilImageLoaderAdapterSample
  * @param imageLoader Coil loader used for every accepted request
@@ -67,7 +69,12 @@ class CoilImageLoaderAdapter(
             .data(request.source.toCoilData())
             .target(imageView)
             .apply {
-                resourceCacheIdentity(request)?.let(::memoryCacheKey)
+                if (request.source is ImageSource.Resource) {
+                    val identity = resourceCacheIdentity(request)
+                    if (identity == null) memoryCachePolicy(CachePolicy.DISABLED)
+                    else memoryCacheKey(identity)
+                    diskCachePolicy(CachePolicy.DISABLED)
+                }
                 request.placeholder?.let { placeholder(it.resId) }
                 request.error?.let { error(it.resId) }
                 val decodeSize = request.options.decodeSize
@@ -109,7 +116,8 @@ class CoilImageLoaderAdapter(
 
     internal fun resourceCacheIdentity(request: UiImageRequest): String? {
         val source = request.source as? ImageSource.Resource ?: return null
-        return "viewcompose-resource:${source.resId}:${request.resourceRevision}"
+        val scope = request.resourceCacheScope ?: return null
+        return "viewcompose-resource:${scope.length}:$scope:${source.resId}:${request.resourceRevision}"
     }
 
     private fun ImageContentScale.toCoilScale(): Scale {

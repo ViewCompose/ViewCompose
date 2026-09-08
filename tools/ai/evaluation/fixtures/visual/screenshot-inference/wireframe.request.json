@@ -31,7 +31,7 @@
   "policy": {
     "designIrSchemaVersion": 1,
     "frameworkVersionLane": "current-source",
-    "frameworkIdentity": "78127e51cd740ccdbd58d326e05426caf4e49795",
+    "frameworkIdentity": "048b63af03ca51d8f44a042fc7b26d9bae85ed01",
     "allowedNodeKinds": [
       "box",
       "button",

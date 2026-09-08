@@ -5,10 +5,10 @@
 ## Version and source
 
 - Lane: current-source
-- Source revision: 78127e51cd740ccdbd58d326e05426caf4e49795
-- Capability fingerprint: 2f97d77ce237ec69e1e17e094140b4d071b6f4e4167edf35bb866af0e6a9d2d5
+- Source revision: 048b63af03ca51d8f44a042fc7b26d9bae85ed01
+- Capability fingerprint: 2cbabcbd18d825fb03d2c42d32f61fff6f19925e1f95a0343a4421f67f6a85cb
 - Entries: 540
-- Capabilities: 82
+- Capabilities: 85
 - Artifacts: 31
 
 ## Canonical references

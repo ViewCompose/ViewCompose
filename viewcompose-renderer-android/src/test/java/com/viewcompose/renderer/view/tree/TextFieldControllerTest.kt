@@ -41,6 +41,19 @@ class TextFieldControllerTest {
         get() = RuntimeEnvironment.getApplication()
 
     @Test
+    fun `finishComposingText records undo when native text is unchanged`() {
+        val state = TextFieldState()
+        val view = boundView(state)
+        val connection = requireNotNull(view.onCreateInputConnection(EditorInfo()))
+        assertTrue(connection.setComposingText("ni", 1))
+        assertTrue(connection.finishComposingText())
+        assertTrue(state.canUndo)
+        assertTrue(state.undo())
+        assertEquals("", state.text)
+        assertFalse(state.canUndo)
+    }
+
+    @Test
     fun `external state patch minimally updates editable and restores selection`() {
         val state = TextFieldState(TextFieldValue("hello"))
         val view = boundView(state)

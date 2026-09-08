@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 0c7d17cb33a8850c71d2567e5dab744534e25a788f563ae983c8711d7b202e68
+translation_source_hash: 9ece5056acbecaecbd39adc74611cb8b9894d1283b986e2a9d37c3d838a283d7
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-ui-contract
@@ -417,3 +417,14 @@ Animation Phase 1 硬切 Animated Size 模型层次。自定义 Renderer 必须�
 `ContentSizeSpringSpecModel(dampingRatio, stiffness, maxDurationMillis)` 替代旧带时长 Spring
 近似，在 Host 边界只接受 `ContentSizeAnimationSpecModel`，并重新构建预编译的 Exhaustive
 Consumer。不存在 Infinite-repeat Content-size Model 或 Duration-spring 兼容 Subtype。
+
+## 未发布资源缓存身份与兼容性
+
+`UiEnvironmentValues.resourceCacheScope` 和 `UiImageRequest.resourceCacheScope` 携带进程内唯一的
+不透明内存作用域。挂载所有者保持该值稳定，每次资源或主题变化后推进本地修订号；重新挂载生成新作用域。
+`null` 表示身份未知，内置适配器因此禁用主资源缓存。作用域不持有 Context 或资源句柄，无需清理，
+也不能复用为持久磁盘键。Renderer 只为使用资源的绑定转发作用域，纯远程请求的相等性保持稳定。
+
+新增字段带默认值，普通构造调用在源码层面兼容，但 Kotlin 数据类构造器和 copy 的二进制签名改变。
+升级前必须一起重新编译所有消费者，不能混用旧二进制。自定义宿主可参考 `uiResourceCacheSample`，
+或安装 `AndroidResourceEnvironment`。[图片迁移说明](../../migration/image-loading.md) 负责升级步骤和缓存策略影响。

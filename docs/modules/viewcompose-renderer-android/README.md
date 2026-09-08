@@ -420,6 +420,11 @@ Because the current line is alpha, the documentation site intentionally does not
   layout or parent-data changes replace them. A changed `NativeViewElement.stableKey` replays its
   configuration, while AndroidView update, reset, commit, and release callbacks remain untouched.
   Diagnostics classify this path as a targeted patch with detail `ModifierOnly`.
+- The unreleased checkout restores the native focusability mode and touch-mode flag when a focus
+  override disappears or its View is released. AndroidView keeps its native focus baseline;
+  ordinary components derive defaults from their current click/intrinsic interaction contract.
+  TextField property rebinding preserves an explicit focus override. Removing an override does
+  not restore a stale prior component default or capture the override itself as the next baseline.
 - AndroidView reconciliation separates logical and construction identity. An ordinary
   same-construction update rebinds the retained View without invoking reset. A changed construction
   identity creates and binds a detached candidate first, then swaps it at structural commit and
@@ -648,3 +653,18 @@ hard-cuts the animated-size transport to finite specifications. Custom renderer 
 the physical damping/stiffness/safety-guard model through one equivalent solver, retain velocity on
 spring retarget, and reject infinite layout motion. Reusing the old fixed-duration damped
 interpolator under the `spring` name is not compatible.
+
+## Current-checkout integration evidence
+
+The accepted audit statically identified focus flags surviving removal. The candidate's focused
+Gradle run passes 34 `ModifierFocusInputApplierTest`, `TextFieldControllerTest`, and
+`ImageRequestBindingControllerTest` cases with zero failures or skips. It verifies native focus
+restoration/reapplication, IME composition finalization, resource-scope propagation, and unchanged
+remote-request reuse. Classification: **improved** correctness coverage; a numeric before/after
+failure reduction is unavailable because the original focus finding was static. These are Android
+Robolectric bridge tests, not device keyboard/navigation acceptance. The next action is device
+focus traversal, OEM IMEs, and shared-loader image appearance checks.
+
+The extended 2026-09-07 run passes the complete 545-test Renderer suite with zero failures, errors,
+or skips. It broadens the earlier 34-case selection; this is improved cross-feature regression
+coverage, not 511 newly added tests or a performance result.

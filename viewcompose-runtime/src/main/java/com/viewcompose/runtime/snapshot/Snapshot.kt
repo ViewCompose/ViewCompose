@@ -1,6 +1,10 @@
 package com.viewcompose.runtime
 
 import java.util.concurrent.atomic.AtomicBoolean
+import com.viewcompose.runtime.state.SnapshotStateObject
+
+/** A buffered value and the identity of the write that produced it, including explicit nulls. */
+internal data class SnapshotPendingValue(val value: Any?, val version: Long)
 
 /** Reports whether every buffered write from a [MutableSnapshot] was applied atomically. */
 sealed interface SnapshotApplyResult {
@@ -43,6 +47,8 @@ class SnapshotApplyConflictException(
  */
 open class Snapshot internal constructor(
     internal val readId: Int,
+    internal val tokenId: Int = readId,
+    internal var inheritedValues: Map<SnapshotStateObject, SnapshotPendingValue> = emptyMap(),
 ) : AutoCloseable {
     private val disposed = AtomicBoolean(false)
 
@@ -75,12 +81,14 @@ open class Snapshot internal constructor(
      */
     open fun dispose() {
         if (disposed.compareAndSet(false, true)) {
+            inheritedValues = emptyMap()
             SnapshotRuntime.disposeSnapshot(readId)
         }
     }
 
     internal fun ensureActive() {
         check(!disposed.get()) { "Snapshot is disposed." }
+        check(this !is MutableSnapshot || !applied) { "Snapshot already applied." }
     }
 
     /** Provides factories and transaction helpers for the process-wide snapshot runtime. */
@@ -88,7 +96,8 @@ open class Snapshot internal constructor(
         /**
          * Captures a read-only snapshot of the state visible in the current context.
          *
-         * A snapshot created inside another snapshot inherits that context's read version. The
+         * A snapshot created inside another snapshot freezes that context's visible values,
+         * including buffered writes; later parent writes do not change this read view. The
          * caller owns the result and MUST close or dispose it.
          *
          * @return a new active snapshot pinned to the current visible version
@@ -102,6 +111,8 @@ open class Snapshot internal constructor(
          * successful [MutableSnapshot.apply] merges writes into the parent buffer. Otherwise, apply
          * targets global state. The caller owns the result and MUST dispose it after applying or
          * abandoning its writes.
+         * The child's baseline includes parent writes visible at creation. Later parent writes to
+         * the same state are concurrent changes, even if their resulting values are equal.
          *
          * @return a new active mutable snapshot with no buffered writes
          */
@@ -123,6 +134,9 @@ open class Snapshot internal constructor(
          * When called inside a mutable snapshot, the transaction applies to the parent buffer;
          * otherwise it applies to global state. If [block] throws, no apply is attempted. The
          * temporary snapshot is disposed in every outcome.
+         * After publication, all affected observations are attempted. If notification throws, the
+         * writes remain committed and the first callback failure is rethrown with later failures
+         * suppressed; callers must not retry the transaction as though its writes were abandoned.
          *
          * @sample com.viewcompose.runtime.samples.mutableSnapshotSample
          * @param R type of value returned by [block]
@@ -152,7 +166,7 @@ open class Snapshot internal constructor(
 /**
  * Buffers state writes and applies them atomically to a parent snapshot or global state.
  *
- * Reads first observe this snapshot's buffered writes, then parent buffers, then the version pinned
+ * Reads first observe this snapshot's buffered writes, then parent values frozen at creation, then the version pinned
  * at creation. [apply] may be retried after [SnapshotApplyResult.Failure], but a successful apply is
  * terminal; do not enter or write through the snapshot afterward. The caller MUST [dispose] the
  * snapshot whether it is applied or abandoned.
@@ -163,9 +177,10 @@ open class Snapshot internal constructor(
 class MutableSnapshot internal constructor(
     readId: Int,
     internal val parent: MutableSnapshot?,
-    internal val tokenId: Int,
-) : Snapshot(readId) {
-    internal val writes = LinkedHashMap<com.viewcompose.runtime.state.SnapshotStateObject, Any?>()
+    tokenId: Int,
+    inheritedValues: Map<SnapshotStateObject, SnapshotPendingValue> = emptyMap(),
+) : Snapshot(readId, tokenId, inheritedValues) {
+    internal val writes = LinkedHashMap<SnapshotStateObject, SnapshotPendingValue>()
     internal var localWriteVersion: Int = 0
     internal var applied: Boolean = false
 
@@ -175,6 +190,12 @@ class MutableSnapshot internal constructor(
      * The operation is atomic: a [SnapshotApplyResult.Failure] leaves the destination unchanged and
      * allows the caller to adjust or retry the active snapshot. A successful result, including an
      * empty apply, prevents any subsequent apply call.
+     * Publication makes the snapshot terminal before invalidation callbacks run. Every affected
+     * observation is attempted; the first callback failure is rethrown with later failures
+     * suppressed, without rolling back committed writes. A failed notification is not a retryable
+     * conflict. A child cannot apply to a parent that has already applied or been disposed.
+     * Global notifications read the committed global view, including when apply is called inside
+     * [enter]; the caller's prior snapshot context is restored afterward and remains terminal.
      *
      * @return [SnapshotApplyResult.Success] when all writes apply, or
      * [SnapshotApplyResult.Failure] with the number of unmergeable state objects
@@ -183,11 +204,7 @@ class MutableSnapshot internal constructor(
     fun apply(): SnapshotApplyResult {
         ensureActive()
         check(!applied) { "Snapshot already applied." }
-        return SnapshotRuntime.apply(this).also { result ->
-            if (result is SnapshotApplyResult.Success) {
-                applied = true
-            }
-        }
+        return SnapshotRuntime.apply(this)
     }
 
     /** Discards buffered writes and releases the pinned read version. */

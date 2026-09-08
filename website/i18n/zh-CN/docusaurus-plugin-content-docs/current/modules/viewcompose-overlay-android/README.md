@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-android/README.md
-translation_source_hash: 37351f460f69b6d65c2f82a1fc2dbd6e27a350536f8d2bd3d6f2fa5697b89ce3
+translation_source_hash: d08a670ce73ed73136ecefdef1424e2607770ee7b5e97c98e3eb06868d795314
 translation_status: current
 ---
 
@@ -94,3 +94,23 @@ Java `ServiceLoader` 只允许从本产物发现一个中立 Provider：零个�
 替换为 `viewcompose-overlay-material3-android`。`alpha04` 不保留转发壳，直接恢复为唯一中立
 Android 传输。Material Snackbar 与 Bottom Sheet 现在必须通过显式 Material Adapter 或
 `viewcompose-material3-android` 获得。
+
+## 当前检出版本的清理协议
+
+未发布实现会尝试清理每个拥有的句柄或委托，即使此前的关闭操作抛出异常。终态回调前先移除所有权，
+完成全部尝试后抛出首个异常，其余异常放入 suppressed。重复清理不重试失败的终态回调，其他会话仍保持所有权。
+瞬时反馈 Presenter 失败会释放活动队列槽；子会话释放失败时仍尝试关闭原生窗口。
+该协议不保证一个失败的外部平台 API 已成功释放资源。
+
+审查中的双浮层失败探针只尝试了第一个浮层，并遗留第二个。候选版本尝试两个且不保留任何条目
+（尝试数 1→2，遗留数 1→0），结论为改进。四项 Foundation 清理回归在 854 项独立 JVM 测试中通过。
+`CompositeOverlayCleanupTest` 和 Android Presenter 测试负责集成验证。窗口可见性和平台失败行为仍需真机验收；
+后续保留这些回归，并验证子会话异常时的原生关闭行为。
+
+最终 Gradle 集成验证通过本模块 1 项测试，失败和跳过均为零。中立实现定向执行
+`CompositeOverlayCleanupTest`；设计系统实现包含现有 Presenter 和宿主归属测试。
+这些结果补充 Foundation 异常探针的集成证据，不代表覆盖每种外部平台失败或真机窗口路径。
+
+2026-09-07 扩展 Gradle 运行通过中立 Overlay Android 的全部九项测试，失败、错误和跳过均为零。
+其中包含此前的一项组合清理回归；额外八项已有用例扩大了集成覆盖。结论为回归覆盖改善，
+不能据此认定真机窗口行为或性能变化。

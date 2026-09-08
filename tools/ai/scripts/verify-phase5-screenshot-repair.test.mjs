@@ -9,6 +9,6 @@ test('freezes bounded screenshot repair convergence and fail-closed stops', asyn
     patchGoldens: 1,
     candidateEvaluatorGoldens: 2,
     failClosedDenominators: 5,
-    repairFingerprint: 'e851cb37943ce42df9fa91a30cf36f73a99e2b59e5fd74cd0b061a5a4c444858',
+    repairFingerprint: '25333bc53582ad8a2990d4d08016191a5aac7ef5164741587a17caaa02fa4341',
   });
 });

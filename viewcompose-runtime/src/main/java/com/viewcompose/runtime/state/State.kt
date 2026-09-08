@@ -39,6 +39,8 @@ interface MutableState<T> : State<T> {
      * A write may throw [SnapshotApplyConflictException] when an automatic snapshot encounters an
      * unmergeable concurrent update. Observation callbacks run on the thread that applies the
      * successful write.
+     * If callbacks fail, all affected observations are still attempted and the first failure is
+     * rethrown with later failures suppressed; the write remains committed.
      */
     override var value: T
 }
@@ -49,6 +51,8 @@ interface MutableState<T> : State<T> {
  * [policy] controls whether a write changes the state and whether concurrent snapshot updates can
  * be merged. The returned state participates in [Snapshot] reads and [RuntimeObservation]
  * subscriptions.
+ * Committed writes remain visible even if an invalidation callback throws. Delivery attempts all
+ * affected observations before rethrowing the first callback failure with later failures suppressed.
  *
  * @sample com.viewcompose.runtime.samples.mutableStateSample
  * @param T type of value stored by the state
@@ -68,9 +72,15 @@ fun <T> mutableStateOf(
  * Creates read-only state that computes [block] lazily and observes the states read by it.
  *
  * The first [State.value] read evaluates [block] and caches its result for the current snapshot read
- * token. Dependency invalidation marks the derived state dirty and invalidates its observers; the
+ * view, including the identity and local writes of a mutable snapshot. Dependency invalidation
+ * marks the derived state dirty and invalidates its observers; the
  * next read recomputes the value. Equal derived results are not suppressed. The returned state is
  * intended for thread-confined composition use and does not synchronize concurrent reads.
+ * Upstream subscriptions exist only while the derived state has consumers. Disposing the last
+ * consumer releases them; independent reads remain cached within a stable snapshot view and
+ * validate that view before reuse. Re-observation reconnects dependencies before returning.
+ * [block] must be side-effect-free. A failed calculation retains the last committed dependency
+ * set so an existing consumer can retry on a later invalidation.
  *
  * @sample com.viewcompose.runtime.samples.derivedStateSample
  * @param T type of value produced by the calculation

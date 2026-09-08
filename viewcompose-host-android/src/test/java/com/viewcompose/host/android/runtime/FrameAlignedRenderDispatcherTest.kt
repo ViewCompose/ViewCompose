@@ -13,6 +13,54 @@ import java.util.LinkedHashSet
 
 class FrameAlignedRenderDispatcherTest {
     @Test
+    fun `cancel before a queued background request cannot revive its frame`() {
+        val clock = FakeFrameClock()
+        val queue = ArrayDeque<Runnable>()
+        var main = false
+        var renders = 0
+        val dispatcher = FrameAlignedRenderDispatcher(clock, { renders++ }, { main }, { queue += it })
+        dispatcher.requestFrame()
+        main = true
+        dispatcher.cancelPending()
+        queue.removeFirst().run()
+        clock.fireFrame()
+        assertEquals(0, clock.postCount)
+        assertEquals(0, renders)
+    }
+
+    @Test
+    fun `old queued cancellation does not remove a newer main-thread request`() {
+        val clock = FakeFrameClock()
+        val queue = ArrayDeque<Runnable>()
+        var main = true
+        var renders = 0
+        val dispatcher = FrameAlignedRenderDispatcher(clock, { renders++ }, { main }, { queue += it })
+        dispatcher.requestFrame()
+        main = false
+        dispatcher.cancelPending()
+        main = true
+        dispatcher.requestFrame()
+        queue.removeFirst().run()
+        clock.fireFrame()
+        assertEquals(1, renders)
+    }
+
+    @Test
+    fun `only a new request survives cancellation when both posts are queued`() {
+        val clock = FakeFrameClock()
+        val queue = ArrayDeque<Runnable>()
+        var renders = 0
+        val dispatcher = FrameAlignedRenderDispatcher(clock, { renders++ }, { false }, { queue += it })
+        dispatcher.requestFrame()
+        dispatcher.cancelPending()
+        dispatcher.requestFrame()
+        while (queue.isNotEmpty()) queue.removeFirst().run()
+        clock.fireFrame()
+        assertEquals(1, clock.postCount)
+        assertEquals(1, renders)
+    }
+
+    @Test
     fun `coalesces multiple requests into single frame callback`() {
         val clock = FakeFrameClock()
         var renders = 0
@@ -150,4 +198,3 @@ class FrameAlignedRenderDispatcherTest {
         }
     }
 }
-

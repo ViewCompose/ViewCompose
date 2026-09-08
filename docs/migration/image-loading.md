@@ -103,3 +103,21 @@ fallback. Resource-only images continue to work without an adapter.
 The [image loading guide](../guides/image-loading.md) describes the ownership and disposal rules in
 more detail. The [Image Coil manual](../modules/viewcompose-image-coil/README.md) documents the
 published adapter's compatibility boundary.
+
+## Unreleased resource-scope upgrade
+
+This checkout adds defaulted `resourceCacheScope` fields to `UiEnvironmentValues` and
+`UiImageRequest`. Recompile all consumers: Kotlin data-class constructor and `copy` binary
+signatures change even though ordinary source calls still compile.
+
+Standard Android hosts install the scope automatically. A custom host should preferably install
+`AndroidResourceEnvironment`. Otherwise generate one process-unique scope per mount (for example
+a UUID), retain it through refreshes, and copy it with the local revision into resource requests.
+Advance the revision after every resource/theme mutation. Never persist the scope, share it across
+independent environments, or treat the local revision alone as cache identity.
+
+Leaving the scope `null` is supported and disables resource memory caching in the built-in adapters.
+Primary local resource disk caching is disabled even under the default policy: the framework cannot
+prove a persistent fingerprint for arbitrary themed resources. Remote primary images keep their
+loader's normal caching. Existing files and URLs need no new keys. Recheck resource cache hit rates
+and theme changes when upgrading; the correctness fix does not claim equal cache performance.

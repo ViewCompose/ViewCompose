@@ -184,11 +184,13 @@ private class AndroidOneUi7ModalBottomSheetHandle(
         programmaticDismiss = true
         dialog.setOnDismissListener(null)
         dragArea.setOnTouchListener(null)
-        surfaceSession.dispose()
-        if (dialog.isShowing) {
-            dialog.dismiss()
+        try {
+            finishSurfaceDismissal(surfaceSession::dispose) {
+                if (dialog.isShowing) dialog.dismiss()
+            }
+        } finally {
+            programmaticDismiss = false
         }
-        programmaticDismiss = false
     }
 
     private fun dismissFromGesture() {
@@ -269,4 +271,21 @@ private fun Window.applyNavigationBarColorCompat(
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         isNavigationBarContrastEnforced = enforceContrast
     }
+}
+
+/** Preserves the first failure while always attempting native window teardown. */
+private inline fun finishSurfaceDismissal(disposeSurface: () -> Unit, dismissWindow: () -> Unit) {
+    var failure: Throwable? = null
+    try {
+        disposeSurface()
+    } catch (error: Throwable) {
+        failure = error
+    }
+    try {
+        dismissWindow()
+    } catch (error: Throwable) {
+        val first = failure
+        if (first == null) failure = error else if (first !== error) first.addSuppressed(error)
+    }
+    failure?.let { throw it }
 }

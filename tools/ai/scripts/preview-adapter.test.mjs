@@ -6,6 +6,7 @@ import test from 'node:test';
 import {
   readAcceptedPreviewSnapshot,
   RENDER_LANE,
+  SUPPORTED_PREVIEW_TARGETS,
   renderPreview,
 } from './preview-adapter.mjs';
 
@@ -143,6 +144,50 @@ test('renders only the fixed target and returns contained protocol evidence', as
     assert.ok(plans.every((plan) => !plan.args.includes('--offline')));
     assert.ok(plans.every((plan) => plan.args.includes('-PviewComposeAiPreviewRequestCacheRoot=' +
       resolve(fixture.repository, 'preview/requests'))));
+  } finally {
+    await rm(fixture.repository, {recursive: true, force: true});
+  }
+});
+
+test('isolates generated request task history while sharing dependency downloads', async () => {
+  const fixture = await fixtureRepository();
+  const histories = [];
+  const dependencyHomes = new Set();
+  try {
+    for (const key of ['1'.repeat(64), '2'.repeat(64), '1'.repeat(64)]) {
+      const plans = [];
+      const result = await renderPreview({}, {
+        repository: fixture.repository,
+        javaFeature: 21,
+        javaHome: '/fixed/jdk-21',
+        targets: {
+          'samples.counter.CounterPreview': {
+            ...SUPPORTED_PREVIEW_TARGETS['samples.counter.CounterPreview'],
+            gradleArguments: [`-PviewComposeAiPreviewRequestKey=${key}`],
+          },
+        },
+        runProcess: async (plan) => {
+          plans.push(plan);
+          if (plan.args.includes(':samples:counter:renderDebugViewComposePreview')) {
+            await writeSuccessfulRender(fixture);
+          }
+          return successfulProcess();
+        },
+      });
+      assert.equal(result.status, 'success');
+      const caches = plans.map((plan) => plan.args[plan.args.indexOf('--project-cache-dir') + 1]);
+      assert.ok(caches.every((path) => path === caches[0]));
+      histories.push(caches[0]);
+      for (const plan of plans) {
+        dependencyHomes.add(plan.args[plan.args.indexOf('--gradle-user-home') + 1]);
+      }
+      // Each identity must also survive a fresh render, not only a protocol-cache hit.
+      await rm(resolve(fixture.artifactRoot, 'render-cache'), {recursive: true, force: true});
+      assert.equal(plans.length, 2);
+    }
+    assert.notEqual(histories[0], histories[1]);
+    assert.equal(histories[0], histories[2]);
+    assert.equal(dependencyHomes.size, 1);
   } finally {
     await rm(fixture.repository, {recursive: true, force: true});
   }

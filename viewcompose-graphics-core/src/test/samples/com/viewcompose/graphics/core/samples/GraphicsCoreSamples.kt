@@ -8,12 +8,17 @@ import com.viewcompose.graphics.core.Rect
 import com.viewcompose.graphics.core.drawScene
 import com.viewcompose.graphics.core.path
 
+// DOCS_REGION_START(graphics-core-cache)
 fun drawCacheSample(): List<DrawCommand> {
+    val optional = DrawCache<String?>()
+    check(optional.getOrBuild("missing") { null } == null)
+    check(optional.getOrBuild("missing") { error("cached null is a hit") } == null)
     val cache = DrawCache<List<DrawCommand>>()
     return cache.getOrBuild(key = "100x48-dark") {
         drawSceneSample().commands
     }
 }
+// DOCS_REGION_END(graphics-core-cache)
 
 // DOCS_REGION_START(graphics-core-path)
 val triangle = path {

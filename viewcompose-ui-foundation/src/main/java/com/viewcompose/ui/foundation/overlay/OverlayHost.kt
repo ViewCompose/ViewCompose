@@ -54,7 +54,13 @@ interface OverlayHost {
         requests: List<OverlayRequest>,
     )
 
-    /** Dismisses every active overlay owned by [sessionId]. */
+    /**
+     * Dismisses every active overlay owned by [sessionId].
+     *
+     * Implementations must attempt all owned cleanup even if an earlier dismissal fails. Report
+     * the first failure with later failures suppressed only after remaining cleanup is attempted.
+     * Cleanup must not affect another session or repeat an already attempted terminal callback.
+     */
     fun clear(sessionId: OverlaySessionId)
 }
 

@@ -150,6 +150,14 @@ class UiImageContractTest {
         assertEquals(0L, UiImageRequest(source = ImageSource.Resource(1)).resourceRevision)
     }
 
+    @Test
+    fun `resource scopes distinguish equal local revisions`() {
+        val first = UiImageRequest(source = ImageSource.Resource(1), resourceCacheScope = "host-a")
+        assertNotEquals(first, first.copy(resourceCacheScope = "host-b"))
+        assertEquals(first, first.copy())
+        assertEquals(null, UiImageRequest(source = ImageSource.Resource(1)).resourceCacheScope)
+    }
+
     private data class Payload(val label: String)
 
     private class TestExtension(

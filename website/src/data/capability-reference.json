@@ -450,6 +450,18 @@
       }
     },
     {
+      "capabilityId": "graphics.draw-cache",
+      "referenceId": "reference.graphics.draw-cache",
+      "relatedDocumentIds": [
+        "module.viewcompose-graphics-core"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.graphics-core-cache",
+        "versionLane": "next"
+      }
+    },
+    {
       "capabilityId": "host.android-animation",
       "referenceId": "reference.host.android-animation",
       "relatedDocumentIds": [
@@ -1300,6 +1312,19 @@
       }
     },
     {
+      "capabilityId": "text.editing-state",
+      "referenceId": "reference.text.editing-state",
+      "relatedDocumentIds": [
+        "architecture.text-input-runtime",
+        "module.viewcompose-text-core"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.text-core-state",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "text.input",
       "referenceId": "reference.text.input",
       "relatedDocumentIds": [
@@ -1381,6 +1406,20 @@
         "sampleClass": "compiled-region",
         "sampleId": "module.oneui7-theme",
         "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "ui.resource-cache",
+      "referenceId": "reference.ui.resource-cache",
+      "relatedDocumentIds": [
+        "architecture.android-resource-environment",
+        "module.viewcompose-ui-contract",
+        "migration.image-loading"
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-resource-cache",
+        "versionLane": "next"
       }
     },
     {
@@ -6537,6 +6576,6 @@
     "entryCount": 540,
     "groupCount": 15,
     "ownedEntryCount": 540,
-    "sourceFingerprint": "2f97d77ce237ec69e1e17e094140b4d071b6f4e4167edf35bb866af0e6a9d2d5"
+    "sourceFingerprint": "2cbabcbd18d825fb03d2c42d32f61fff6f19925e1f95a0343a4421f67f6a85cb"
   }
 }

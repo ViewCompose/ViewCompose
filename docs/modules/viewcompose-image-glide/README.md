@@ -68,10 +68,11 @@ inside, or no-transform request options.
 Default cache and transition policies preserve the application's Glide configuration. Disabled
 memory cache maps to `skipMemoryCache(true)`, disabled disk cache maps to `DiskCacheStrategy.NONE`,
 and explicit `None` or `Crossfade` transitions override the configured default for that request.
-Primary Android resources receive an `ObjectKey` signature containing the captured resource
-revision, so configuration-qualified drawables cannot reuse a stale cache entry. Remote-only
-requests retain Glide's normal model/cache identity; resource fallback changes still restart the
-mounted request through renderer request equality.
+In the unreleased checkout, primary resources use Glide's integer resource overload, the target
+Context's theme, and an Android resource signature combined with the captured host scope and
+revision. Missing scopes disable resource memory caching. Resource disk caching is disabled because
+these scope identities cannot be persisted across processes and arbitrary themes. Remote requests
+retain Glide's model/cache identity; resource fallback changes still restart the mounted request.
 
 The adapter returns a disposable handle that clears the exact Glide target request. The renderer
 disposes it before replacement or mounted-node removal. The adapter does not own the target
@@ -98,3 +99,14 @@ The complete generated reference is available in the
 
 The `0.1.0-alpha01` line targets Glide 5.0.7. It does not expose Glide request builders in the
 declarative contract, create a second cache, or replace application-level Glide configuration.
+
+## Current-checkout regression evidence
+
+The audit baseline used equal resource IDs and local revisions as identical shared-cache keys.
+The candidate's Gradle adapter suite passes 9 tests with zero failures or skips, including
+separate mounted scopes, revision changes, missing-scope memory policy, and disabled resource disk
+policy. The Glide suite additionally checks distinct Android night signatures and target themes.
+Cross-host key collision changes from possible to distinct in the tested requests: **improved**
+correctness. Cache reuse across mounts and resource disk caching decrease by design, so performance
+is **inconclusive** until measured. Robolectric request construction is not decoded pixel or device
+acceptance. The next action is real-device theme/resource appearance and cache-hit measurement.

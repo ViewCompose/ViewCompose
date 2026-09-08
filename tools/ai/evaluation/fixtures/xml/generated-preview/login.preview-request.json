@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "framework": {
     "versionLane": "current-source",
-    "identity": "78127e51cd740ccdbd58d326e05426caf4e49795",
-    "bundleFingerprint": "7e7a66d6f1e9e1a3f60e7f0b8460aa6c49c5c2f46576c4e4aae619b12cd31ba3"
+    "identity": "048b63af03ca51d8f44a042fc7b26d9bae85ed01",
+    "bundleFingerprint": "ae92c211910168f15cd04704e072b89674e97b154199dc893a1ca0add4ae9a55"
   },
   "generatedSource": {
     "packageName": "generated.viewcompose",

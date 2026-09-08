@@ -11,3 +11,13 @@ fun oneUi7AndroidOverlayHostSample(rootView: View): OverlayHost =
         rootView = rootView,
         tokens = OneUi7ThemeDefaults.light(),
     )
+
+/** Disposes an owned session while preserving every cleanup failure for the caller. */
+fun clearOverlaySessionSample(
+    host: com.viewcompose.ui.foundation.OverlayHost,
+    session: com.viewcompose.ui.foundation.OverlaySessionId,
+) {
+    // The host attempts all owned delegates before this exception reaches the caller.
+    host.clear(session)
+    host.clear(session)
+}

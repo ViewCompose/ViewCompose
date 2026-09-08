@@ -247,6 +247,14 @@ function gradlePlan({
   args,
 }) {
   const packagedWrapper = resolve(harnessRoot, 'gradlew');
+  const requestKey = args.find((argument) =>
+    argument.startsWith('-PviewComposeAiPreviewRequestKey='))?.split('=')[1];
+  // Different requests relocate the same Gradle tasks' outputs. Sharing their task
+  // history lets Gradle remove another request's classes between discovery and render.
+  // Keep dependency downloads shared while giving each generated request its own history.
+  const requestProjectCache = projectCacheDir !== null && requestKey !== undefined
+    ? resolve(projectCacheDir, 'preview-requests', requestKey)
+    : projectCacheDir;
   return {
     executable: existsSync(packagedWrapper) ? packagedWrapper : resolve(repositoryRoot(), 'gradlew'),
     cwd: harnessRoot,
@@ -266,7 +274,7 @@ function gradlePlan({
       '--no-configuration-cache',
       '--max-workers=2',
       '--console=plain',
-      ...(projectCacheDir === null ? [] : ['--project-cache-dir', projectCacheDir]),
+      ...(requestProjectCache === null ? [] : ['--project-cache-dir', requestProjectCache]),
       ...(gradleUserHome === null ? [] : ['--gradle-user-home', gradleUserHome]),
     ],
   };

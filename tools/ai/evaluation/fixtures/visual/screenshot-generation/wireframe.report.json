@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "kind": "report",
-  "requestFingerprint": "5ebbcec395b2ffbd2c53919149ddd1f9cc3070edf862da2e7795f02ea0dfe0e2",
+  "requestFingerprint": "6d35738e9c998e874afb04c229b9a0cf43ef9399b5bcafbacfaf41f671f6bff4",
   "input": {
-    "resolutionResultFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
+    "resolutionResultFingerprint": "f3619ac91a4dfa658466823ff0e031812d2ddeff902e1e4a997734b365b219db",
     "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603"
   },
   "target": {
@@ -126,5 +126,5 @@
     "visualComparison": "not-claimed"
   },
   "kotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
-  "reportFingerprint": "91da4ff1eaf1f4d2fb0f8c73d8816d2c91030510ff00730ee96abe80f0efa319"
+  "reportFingerprint": "6a1eaddbc8bda251a87e9be20ad6cc539055dccb250591eb9c22e47fdac42fb5"
 }

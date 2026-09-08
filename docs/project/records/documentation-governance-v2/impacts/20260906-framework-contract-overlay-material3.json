@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-overlay-material3",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-overlay-material3-android",
+  "symbol_id": "com.viewcompose.overlay.material3.android.host.AndroidOverlayHost",
+  "capability_id": "overlay.material3",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.overlay.material3.android.host.AndroidOverlayHost"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-overlay-material3-android"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "module.overlay-material3-dependency"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.overlay.material3"
+      ]
+    },
+    "architecture": {
+      "status": "not-applicable",
+      "rationale": "Ownership remains with each existing overlay host and presenter; the corrected complete-cleanup rule is documented in the owning module."
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "Normal overlay declarations and lifecycle usage are unchanged."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The guide still uses the same declaration API; exceptional cleanup behavior is documented by the owning host."
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "Corrects cleanup after failure without changing public signatures or normal dismissal semantics."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

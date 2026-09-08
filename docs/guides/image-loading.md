@@ -109,10 +109,13 @@ and prevents a node spec from owning a View or Drawable. The renderer copies the
 `UiDensity` into each `UiImageRequest`; adapters must use it when converting `Fixed` decode bounds to
 the physical pixels expected by their decoder.
 
-The renderer also copies the subtree's captured `resourceRevision` when any source, placeholder,
-error, or fallback is resource-backed. Equal integer resource IDs can therefore reload after a
-locale, night, density, or theme-resource change. First-party Coil and Glide adapters include that
-revision in primary resource cache identity while leaving remote-only cache identity unchanged.
+The renderer copies the captured resource revision and, in the unreleased checkout, its
+`resourceCacheScope` for resource-backed requests. Android resource providers own a fresh scope per
+mount and advance the revision after configuration or theme refresh. First-party adapters combine
+both for resource memory keys; a local revision alone cannot isolate a shared loader. Missing
+scopes disable resource memory caching, and transient scopes never enable resource disk caching.
+Remote cache identity remains loader-owned. See the [migration notes](../migration/image-loading.md)
+for custom hosts and recompilation requirements.
 
 ## Lifetime and recycled Views
 

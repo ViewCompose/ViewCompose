@@ -4,10 +4,10 @@
   "status": "applied",
   "reason": "patch-applied",
   "lineage": {
-    "hostGrantDecisionFingerprint": "309445115d6dd0428016e5833bea375484a194f527c044ec1d3731f539351ff7",
-    "hostGrantRequestFingerprint": "7a658a7bacaa6941b076e2135f31101484ba186d32352bc5e00d3ee4c848c17c",
-    "authorizationFingerprint": "edae2324520e22dd61d5e16eeddd48973fd1ba3c1e7d4cae60b6c9b126746b61",
-    "proposalFingerprint": "8313b5eab8e050e5f5f16a251c4de7f8034e686aafd2d6ba10b89f13f8068ce1",
+    "hostGrantDecisionFingerprint": "48b7f7e222d87c76b59b464e4f34b10422631c31b5a302b18b3c30e93f44baaf",
+    "hostGrantRequestFingerprint": "983360c6e158ebe62d475c3a21e29e9762cfd3c474cb2c1c7a64ac59d7e4fa71",
+    "authorizationFingerprint": "6bacb1629e95c64e47b93dbb4490090c664728f43be3855c70bddfd52183da59",
+    "proposalFingerprint": "48c6173d6d36e3b632038d7c158d066d8d92160f34e6d96498b64f700d8c9c78",
     "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
     "inputDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
     "reservationReceipt": "5555555555555555555555555555555555555555555555555555555555555555",
@@ -48,5 +48,5 @@
     "outcomeReceipt": "7777777777777777777777777777777777777777777777777777777777777777"
   },
   "diagnostics": [],
-  "outcomeFingerprint": "9132cec0898ebe29289072d056a59bd68a748e9b0f4e113d3f4c80b20bd9375a"
+  "outcomeFingerprint": "99355dedfbb86ddfc6d43cc76cd5d8e8f8cddba564557b87640678a15361bec6"
 }

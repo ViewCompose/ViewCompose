@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "baseline": "d64710459df73f3b42067767bb2f4f273b9eff33",
+  "accepted_on": "2026-09-06",
+  "scope": "Key-path review of 39 published modules and benchmark; additional selected tooling paths. Not line-by-line or device performance acceptance.",
+  "findings": [
+    {
+      "id": "F01",
+      "priority": "P1",
+      "title": "Derived cache aliases snapshot views",
+      "evidence": "source-executed-probe",
+      "observed": "Sibling values 1 and 2 yield 10 and 10.",
+      "expected": "Yield 10 and 20.",
+      "locations": [
+        {
+          "path": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/SnapshotRuntime.kt",
+          "baseline_line": 108
+        },
+        {
+          "path": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/DerivedStateImpl.kt",
+          "baseline_line": 25
+        }
+      ]
+    },
+    {
+      "id": "F02",
+      "priority": "P1",
+      "title": "Nested apply misclassifies previous parent writes",
+      "evidence": "source-executed-probe",
+      "observed": "Parent 0 to 1 then child to 2 fails with one conflict.",
+      "expected": "Sequential child apply succeeds; later parent changes still conflict.",
+      "locations": [
+        {
+          "path": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/SnapshotRuntime.kt",
+          "baseline_line": 171
+        }
+      ]
+    },
+    {
+      "id": "F03",
+      "priority": "P1",
+      "title": "Derived upstream subscriptions outlive consumers",
+      "evidence": "source-executed-probe",
+      "observed": "100 disposed consumers leave 100 upstream observers.",
+      "expected": "The last consumer releases upstream ownership.",
+      "locations": [
+        {
+          "path": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/DerivedStateImpl.kt",
+          "baseline_line": 20
+        },
+        {
+          "path": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/DerivedStateImpl.kt",
+          "baseline_line": 41
+        }
+      ]
+    },
+    {
+      "id": "F04",
+      "priority": "P1",
+      "title": "Throwing observer interrupts committed notification",
+      "evidence": "source-executed-probe",
+      "observed": "Committed value is 1; the remaining observer receives zero notifications; retry conflicts.",
+      "expected": "Commit is terminal before callbacks and every affected observer is attempted.",
+      "locations": [
+        {
+          "path": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/SnapshotRuntime.kt",
+          "baseline_line": 252
+        },
+        {
+          "path": "viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/Snapshot.kt",
+          "baseline_line": 183
+        }
+      ]
+    },
+    {
+      "id": "F05",
+      "priority": "P2",
+      "title": "Same-document IME completion loses undo",
+      "evidence": "source-executed-probe",
+      "observed": "Finishing composition with unchanged text leaves canUndo false.",
+      "expected": "Finalizing composition records one undo unit.",
+      "locations": [
+        {
+          "path": "viewcompose-text-core/src/main/kotlin/com/viewcompose/text/TextFieldState.kt",
+          "baseline_line": 193
+        },
+        {
+          "path": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/widget/ViewComposeEditText.kt",
+          "baseline_line": 408
+        }
+      ]
+    },
+    {
+      "id": "F06",
+      "priority": "P2",
+      "title": "Text history escapes snapshot rollback",
+      "evidence": "source-executed-probe",
+      "observed": "Abandoning an edit restores empty text but leaves canUndo true.",
+      "expected": "Value and history roll back together.",
+      "locations": [
+        {
+          "path": "viewcompose-text-core/src/main/kotlin/com/viewcompose/text/TextFieldState.kt",
+          "baseline_line": 30
+        },
+        {
+          "path": "viewcompose-text-core/src/main/kotlin/com/viewcompose/text/TextFieldState.kt",
+          "baseline_line": 174
+        }
+      ]
+    },
+    {
+      "id": "F07",
+      "priority": "P2",
+      "title": "Resource image cache identity crosses incompatible hosts",
+      "evidence": "static-source-path",
+      "observed": "Equal resource IDs and host-local revisions form equal shared cache keys.",
+      "expected": "Keys distinguish resource environments and preserve SDK signatures.",
+      "locations": [
+        {
+          "path": "viewcompose-image-coil/src/main/java/com/viewcompose/image/coil/CoilImageLoaderAdapter.kt",
+          "baseline_line": 115
+        },
+        {
+          "path": "viewcompose-image-glide/src/main/java/com/viewcompose/image/glide/GlideImageLoaderAdapter.kt",
+          "baseline_line": 123
+        },
+        {
+          "path": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResourceEnvironment.kt",
+          "baseline_line": 162
+        }
+      ]
+    },
+    {
+      "id": "F08",
+      "priority": "P2",
+      "title": "Removed focus modifier leaves native flags",
+      "evidence": "static-source-path",
+      "observed": "Modifier-only removal skips restoration of previously overridden focus flags.",
+      "expected": "Removal and disposal restore owned native properties.",
+      "locations": [
+        {
+          "path": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierFocusInputApplier.kt",
+          "baseline_line": 75
+        }
+      ]
+    },
+    {
+      "id": "F09",
+      "priority": "P2",
+      "title": "Overlay cleanup stops after a failing handle",
+      "evidence": "source-executed-probe",
+      "observed": "First dismissal throws; the second entry remains active.",
+      "expected": "Attempt all cleanup and report collected failures.",
+      "locations": [
+        {
+          "path": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/overlay/runtime/SessionBoundSurfaceOverlayHost.kt",
+          "baseline_line": 55
+        },
+        {
+          "path": "viewcompose-overlay-android/src/main/java/com/viewcompose/overlay/android/AndroidOverlayHost.kt",
+          "baseline_line": 168
+        }
+      ]
+    },
+    {
+      "id": "F10",
+      "priority": "P2",
+      "title": "Child timeout does not bound descendants",
+      "evidence": "source-executed-probe",
+      "observed": "A 150 ms timeout waits 3558 ms for inherited pipes.",
+      "expected": "Terminate the task process tree and bound completion.",
+      "locations": [
+        {
+          "path": "tools/ai/scripts/bounded-process.mjs",
+          "baseline_line": 18
+        }
+      ]
+    },
+    {
+      "id": "F11",
+      "priority": "P3",
+      "title": "Stale frame dispatch survives cancellation",
+      "evidence": "source-executed-probe",
+      "observed": "After cancellation, old queued work posts and renders one frame.",
+      "expected": "Old generations cannot schedule frames.",
+      "locations": [
+        {
+          "path": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/FrameAlignedRenderDispatcher.kt",
+          "baseline_line": 40
+        }
+      ]
+    },
+    {
+      "id": "F12",
+      "priority": "P3",
+      "title": "Nullable drawing cache misses",
+      "evidence": "source-executed-probe",
+      "observed": "The same null result is built twice for an equal key.",
+      "expected": "A successfully cached null is a cache hit.",
+      "locations": [
+        {
+          "path": "viewcompose-graphics-core/src/main/kotlin/com/viewcompose/graphics/core/DrawCache.kt",
+          "baseline_line": 34
+        }
+      ]
+    }
+  ],
+  "baseline_tests": {
+    "standalone_jvm_passed": 818,
+    "ai_tests_passed": 39
+  },
+  "execution_plan": "docs/project/plans/framework-contract-hardening.md"
+}

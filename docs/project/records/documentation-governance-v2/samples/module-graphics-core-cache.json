@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.graphics-core-cache",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "graphics.draw-cache",
+  "document_ids": [
+    "module.viewcompose-graphics-core"
+  ],
+  "version_lane": "next",
+  "source": "viewcompose-graphics-core/src/test/samples/com/viewcompose/graphics/core/samples/GraphicsCoreSamples.kt",
+  "region": "graphics-core-cache",
+  "build_target": ":viewcompose-graphics-core:compileTestKotlin"
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0007-host-owned-android-resource-environment.md
-translation_source_hash: 6913c88f7fd1ab945499a0452d96b6a0370df627a1cd077dc92965c314c2cbbe
+translation_source_hash: d64ca0b8b5146bf5f4cbdd28cc0cfe441341d5d66e22dcd23b355658298301cd
 translation_status: current
 ---
 
@@ -139,3 +139,15 @@ Preview 配置；进程全局 Context 也会破坏 Root/Session 所有权。
 保留该方案要求完成资源查询和生命周期顺序的聚焦单元测试、Renderer/图片修订测试、延迟 Session
 传播测试、Preview 测试、覆盖不重建配置变化的 Demo 仪器化测试、API 文档审计、双语言文档门禁，
 以及仓库快速/完整质量门禁。
+
+## 未发布缓存作用域修正
+
+2026 年 9 月审查发现，宿主内修订号被错误地当作共享缓存身份。修正后，捕获的环境与标准图片请求增加
+进程内唯一的 `resourceCacheScope`。每个 Android Provider 挂载时生成一次，固定配置的预览环境也适用；
+刷新保持作用域不变，只推进修订号。该设计延续现有宿主所有权，不引入图片专用的全局资源管理器。
+
+内存身份由作用域、资源 ID 和修订号组成。自定义宿主缺少作用域时，主资源加载不使用缓存。
+任意 Context 或主题刷新没有框架拥有的跨进程内容指纹，因此内置适配器禁用资源磁盘缓存。
+Glide 同时保留 Android 资源签名和目标主题语义；远程图片仍由 Loader 管理缓存。
+这会减少资源跨挂载复用，需要测量成本后再考虑稳定磁盘身份 API。UI Contract 数据类新增字段要求
+消费者重新编译，具体步骤由图片迁移说明维护。

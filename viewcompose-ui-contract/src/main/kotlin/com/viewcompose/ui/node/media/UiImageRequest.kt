@@ -167,8 +167,11 @@ class UiImageRequestOptions(
  * @property contentScale renderer display scale supplied to the adapter for decode/transform choice
  * @property density captured renderer density used to resolve logical decode dimensions
  * @property resourceRevision host-scoped invalidation identity for resource-backed source,
- * placeholder, or error values; loaders should include it in primary resource cache identity and
- * ignore it for resource-free requests
+ * placeholder, or error values; combine it with [resourceCacheScope] for primary resource memory
+ * identity and ignore it for resource-free requests. It is not a persistent resource version.
+ * @property resourceCacheScope captured process-unique resource environment identity, or `null`
+ * when unknown. First-party adapters disable primary resource caching without a scope and never
+ * use this transient identity for disk caching. Remote sources retain loader-owned cache identity.
  */
 data class UiImageRequest(
     val source: ImageSource,
@@ -178,4 +181,5 @@ data class UiImageRequest(
     val contentScale: ImageContentScale = ImageContentScale.Fit,
     val density: UiDensity = UiDensity.Default,
     val resourceRevision: Long = 0L,
+    val resourceCacheScope: String? = null,
 )

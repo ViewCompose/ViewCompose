@@ -185,3 +185,19 @@ requires focused unit tests for lookup and lifecycle ordering, renderer/image re
 delayed-session propagation tests, preview tests, Demo instrumentation covering non-recreating
 configuration changes, API documentation audits, both-locale documentation gates, and the
 repository's quick/full quality gates.
+
+## Unreleased cache-scope correction
+
+The September 2026 audit found that a host-local revision was incorrectly used as shared cache
+identity. The correction adds a process-unique `resourceCacheScope` to the captured environment and
+normalized image request. Each mounted Android provider creates it once, including fixed preview
+environments, and retains it across refreshes. Only the revision advances. This preserves the
+existing host ownership without introducing an image-specific global resource manager.
+
+Memory identity combines scope, resource ID, and revision. A custom host without a scope receives
+uncached primary resource loads. The first-party adapters disable resource disk caching because
+arbitrary Context/theme refresh has no framework-owned stable cross-process content fingerprint.
+Glide additionally retains Android resource signature and target-theme semantics. Remote images
+continue to use loader-owned caching. This intentionally reduces resource cache reuse across mounts;
+measure that cost before proposing a stable disk identity API. The UI Contract data-class additions
+require consumer recompilation, as documented in the image migration guide.

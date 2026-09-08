@@ -11,6 +11,7 @@ import android.view.KeyEvent as AndroidKeyEvent
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.renderer.modifier.resolve
+import com.viewcompose.renderer.R
 import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.focusGroup
@@ -29,9 +30,100 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class ModifierFocusInputApplierTest {
+    @Test
+    fun `removing focus override restores an intrinsic editable view`() {
+        val view = ViewComposeEditText(RuntimeEnvironment.getApplication())
+        view.isFocusableInTouchMode = true
+        val disabled = vnode(modifier = Modifier.focusable(false))
+        ModifierFocusInputApplier.apply(view, disabled, disabled.modifier.resolve())
+        assertFalse(view.isFocusable)
+        val plain = vnode()
+        ModifierFocusInputApplier.apply(view, plain, plain.modifier.resolve())
+        assertTrue(view.isFocusable)
+        assertTrue(view.isFocusableInTouchMode)
+        ModifierFocusInputApplier.apply(view, disabled, disabled.modifier.resolve())
+        ModifierFocusInputApplier.dispose(view)
+        assertTrue(view.isFocusable)
+        assertTrue(view.isFocusableInTouchMode)
+    }
+
+    @Test
+    @Config(sdk = [35])
+    fun `removing focus override restores automatic native focusability`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        view.focusable = View.FOCUSABLE_AUTO
+        val enabled = vnode(modifier = Modifier.focusable())
+        ModifierFocusInputApplier.apply(view, enabled, enabled.modifier.resolve())
+        assertEquals(View.FOCUSABLE, view.focusable)
+        val plain = vnode()
+        ModifierFocusInputApplier.apply(view, plain, plain.modifier.resolve())
+        assertEquals(View.FOCUSABLE_AUTO, view.focusable)
+        assertFalse(view.isFocusableInTouchMode)
+    }
+
+    @Test
+    fun `focus properties take precedence and their removal restores the baseline`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        view.isFocusable = false
+        val node = vnode(modifier = Modifier.focusable().focusProperties { canFocus = false })
+        ModifierFocusInputApplier.apply(view, node, node.modifier.resolve())
+        assertFalse(view.isFocusable)
+        val enabled = vnode(modifier = Modifier.focusable())
+        ModifierFocusInputApplier.apply(view, enabled, enabled.modifier.resolve())
+        assertTrue(view.isFocusable)
+        ModifierFocusInputApplier.dispose(view)
+        assertFalse(view.isFocusable)
+        assertFalse(view.isFocusableInTouchMode)
+    }
+
+    @Test
+    fun `binder baseline replaces old defaults without removing an active override`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        val node = vnode(modifier = Modifier.focusable(false))
+        ModifierFocusInputApplier.apply(view, node, node.modifier.resolve(), defaultFocusable = false)
+        ModifierFocusInputApplier.apply(view, node, node.modifier.resolve(), defaultFocusable = true)
+        assertFalse(view.isFocusable)
+        val plain = vnode()
+        ModifierFocusInputApplier.apply(view, plain, plain.modifier.resolve(), defaultFocusable = true)
+        assertTrue(view.isFocusable)
+        assertFalse(view.isFocusableInTouchMode)
+    }
+
+    @Test
+    fun `text readOnly rebind preserves an explicit focus override until removal`() {
+        val view = ViewComposeEditText(RuntimeEnvironment.getApplication())
+        val node = vnode(modifier = Modifier.focusable(false))
+        view.setTag(R.id.viewcompose_resolved_modifiers, node.modifier.resolve())
+        InputViewBinder.applyReadOnly(view, true)
+        assertFalse(view.isFocusable)
+        InputViewBinder.applyReadOnly(view, false)
+        assertFalse(view.isFocusable)
+        val plain = vnode()
+        view.setTag(R.id.viewcompose_resolved_modifiers, plain.modifier.resolve())
+        ModifierFocusInputApplier.apply(view, plain, plain.modifier.resolve())
+        assertTrue(view.isFocusable)
+        assertTrue(view.isFocusableInTouchMode)
+    }
+
+    @Test
+    fun `reused view captures its new owners focus baseline`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        view.isFocusable = false
+        val first = vnode(key = "first", modifier = Modifier.focusable())
+        ModifierFocusInputApplier.apply(view, first, first.modifier.resolve())
+        ModifierFocusInputApplier.dispose(view)
+        view.isFocusableInTouchMode = true
+        val next = vnode(key = "next", modifier = Modifier.focusable(false))
+        ModifierFocusInputApplier.apply(view, next, next.modifier.resolve())
+        ModifierFocusInputApplier.dispose(view)
+        assertTrue(view.isFocusable)
+        assertTrue(view.isFocusableInTouchMode)
+    }
+
     @Test
     fun `focus requester follows binding and is detached on disposal`() {
         val view = View(RuntimeEnvironment.getApplication())

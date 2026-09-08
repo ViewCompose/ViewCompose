@@ -130,6 +130,8 @@ class AndroidOverlayHost(
 
     /**
      * Dismisses every surface and transient request owned by [sessionId].
+     * All delegates are attempted before the first cleanup failure is rethrown, with later
+     * failures suppressed. Already forgotten handles are not dismissed again on a repeated clear.
      *
      * @param sessionId render-session owner being permanently cleared
      */
@@ -155,7 +157,7 @@ private fun integration(
 }
 
 /** Fans one desired request set out to type-specific hosts. */
-private class CompositeOverlayHost(
+internal class CompositeOverlayHost(
     private vararg val delegates: OverlayHost,
 ) : OverlayHost {
     override fun commit(
@@ -166,6 +168,15 @@ private class CompositeOverlayHost(
     }
 
     override fun clear(sessionId: OverlaySessionId) {
-        delegates.forEach { host -> host.clear(sessionId) }
+        var failure: Throwable? = null
+        delegates.forEach { host ->
+            try {
+                host.clear(sessionId)
+            } catch (error: Throwable) {
+                val first = failure
+                if (first == null) failure = error else if (first !== error) first.addSuppressed(error)
+            }
+        }
+        failure?.let { throw it }
     }
 }

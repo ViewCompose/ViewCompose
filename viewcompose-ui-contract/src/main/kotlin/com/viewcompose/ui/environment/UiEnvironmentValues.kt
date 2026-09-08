@@ -98,17 +98,23 @@ class UiLocaleList private constructor(
  * advance [resourceRevision] to invalidate resource-backed bindings whose integer resource IDs
  * remain equal across configuration or theme changes.
  *
+ * @sample com.viewcompose.ui.samples.uiResourceCacheSample
  * @property density density and font scale used at the renderer boundary
  * @property locales ordered locale preferences for the subtree
  * @property layoutDirection logical direction used to resolve start/end semantics
  * @property resourceRevision host-scoped resource invalidation identity; this value is monotonic
  * within one mounted host and must not be persisted or compared across hosts
+ * @property resourceCacheScope opaque, process-unique identity of the mounted resource environment;
+ * retain it across refreshes and advance [resourceRevision] for every resource/theme mutation.
+ * Use a fresh identity after remount. `null` means resource cache identity is unknown. This is a
+ * memory-cache scope, never a persistent disk key; custom hosts must not share it across environments.
  */
 data class UiEnvironmentValues(
     val density: UiDensity = UiDensity.Default,
     val locales: UiLocaleList = UiLocaleList.Undetermined,
     val layoutDirection: UiLayoutDirection = UiLayoutDirection.Ltr,
     val resourceRevision: Long = 0L,
+    val resourceCacheScope: String? = null,
 ) {
     /** Provides the environment used when no host-specific values are installed. */
     companion object {

@@ -1,0 +1,68 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-text-history",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-text-core",
+  "symbol_id": "com.viewcompose.text.TextFieldState",
+  "capability_id": "text.editing-state",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.text.TextFieldState"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-text-core"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "module.text-core-state"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.text.editing-state"
+      ]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.text-input-runtime"
+      ]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "Existing input examples remain valid. The editing model and snapshot rollback contract are owned by the Text Core manual and text-input architecture."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "Existing input examples remain valid. The editing model and snapshot rollback contract are owned by the Text Core manual and text-input architecture."
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "Corrects atomic editing/history and documented IME undo semantics without changing signatures or the save format."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

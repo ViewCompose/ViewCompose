@@ -1,6 +1,7 @@
 package com.viewcompose.runtime
 
 import com.viewcompose.runtime.observation.Observation
+import com.viewcompose.runtime.observation.ObservationInvalidations
 import com.viewcompose.runtime.state.SnapshotStateObject
 import java.util.ArrayDeque
 import java.util.TreeMap
@@ -13,10 +14,6 @@ import java.util.WeakHashMap
  * here keeps version allocation and lock ordering consistent.
  */
 internal object SnapshotRuntime {
-    private data class PendingValue(
-        val value: Any?,
-    )
-
     private sealed interface ApplyValue {
         data class Resolved(
             val value: Any?,
@@ -49,8 +46,13 @@ internal object SnapshotRuntime {
     /** Creates a read-only snapshot and retains history visible from its read ID. */
     fun takeSnapshot(): Snapshot = synchronized(runtimeLock) {
         val readId = currentContextReadId() ?: globalSnapshotId
+        val inherited = capturePendingValues()
         registerSnapshotLocked(readId)
-        Snapshot(readId = readId)
+        Snapshot(
+            readId = readId,
+            tokenId = if (inherited.isEmpty()) readId else nextSnapshotId++,
+            inheritedValues = inherited,
+        )
     }
 
     /** Creates a mutable snapshot whose nested writes apply to its parent before global state. */
@@ -58,11 +60,13 @@ internal object SnapshotRuntime {
         val parent = currentMutableSnapshot()
         return synchronized(runtimeLock) {
             val readId = parent?.readId ?: currentContextReadId() ?: globalSnapshotId
+            val inherited = capturePendingValues()
             registerSnapshotLocked(readId)
             MutableSnapshot(
                 readId = readId,
                 parent = parent,
                 tokenId = nextSnapshotId++,
+                inheritedValues = inherited,
             )
         }
     }
@@ -104,19 +108,21 @@ internal object SnapshotRuntime {
         }
     }
 
-    /** Combines the current read ID and local write version for derived-state cache validation. */
+    /** Identifies a frozen read view and its local mutations without aliasing sibling snapshots. */
     fun currentReadToken(): Long {
-        val mutable = currentMutableSnapshot()
-        val readId = mutable?.readId ?: currentReadId()
-        val version = mutable?.localWriteVersion ?: 0
-        return (readId.toLong() shl 32) or (version.toLong() and 0xFFFFFFFFL)
+        val snapshot = contextStack.get()?.peekLast()?.snapshot
+        snapshot?.ensureActive()
+        val identity = snapshot?.tokenId ?: currentGlobalId()
+        val version = (snapshot as? MutableSnapshot)?.localWriteVersion ?: 0
+        return (identity.toLong() shl 32) or (version.toLong() and 0xFFFFFFFFL)
     }
 
-    /** Reads state, preferring buffered writes in the current mutable snapshot chain. */
+    /** Reads state from local writes, the frozen inherited view, or pinned global history. */
     fun readStateValue(state: SnapshotStateObject): Any? {
-        val mutable = currentMutableSnapshot()
-        if (mutable != null) {
-            readPendingValue(mutable, state)?.let { return it.value }
+        val snapshot = contextStack.get()?.peekLast()?.snapshot
+        if (snapshot != null) {
+            snapshot.ensureActive()
+            readPendingValue(snapshot, state)?.let { return it.value }
         }
         return state.readAny(currentReadId())
     }
@@ -170,17 +176,19 @@ internal object SnapshotRuntime {
     /** Merges child writes into the parent buffer without invalidating global observers. */
     private fun applyToParent(snapshot: MutableSnapshot): SnapshotApplyResult {
         val parent = snapshot.parent ?: return SnapshotApplyResult.Success
+        parent.ensureActive()
         var conflicts = 0
         val mergedWrites = LinkedHashMap<SnapshotStateObject, Any?>()
-        for ((state, currentValue) in snapshot.writes) {
-            val previousValue = state.readAny(snapshot.readId)
+        for ((state, pending) in snapshot.writes) {
+            val baseline = snapshot.inheritedValues[state]
+            val previousValue = if (baseline != null) baseline.value else state.readAny(snapshot.readId)
             val appliedValue = readStateInSnapshot(parent, state)
             val resolved = resolveApplyValue(
                 state = state,
                 previousValue = previousValue,
-                currentValue = currentValue,
+                currentValue = pending.value,
                 appliedValue = appliedValue,
-                hasConcurrentChange = parent.writes.containsKey(state),
+                hasConcurrentChange = readPendingValue(parent, state)?.version != baseline?.version,
             )
             when (resolved) {
                 ApplyValue.Conflict -> {
@@ -195,12 +203,9 @@ internal object SnapshotRuntime {
             return SnapshotApplyResult.Failure(conflictCount = conflicts)
         }
         for ((state, resolved) in mergedWrites) {
-            val parentCurrent = readStateInSnapshot(parent, state)
-            if (!state.equivalentAny(parentCurrent, resolved)) {
-                parent.writes[state] = resolved
-                parent.localWriteVersion += 1
-            }
+            writeInMutableSnapshot(parent, state, resolved)
         }
+        snapshot.applied = true
         return SnapshotApplyResult.Success
     }
 
@@ -212,13 +217,13 @@ internal object SnapshotRuntime {
         val invalidations = LinkedHashSet<Observation>()
         synchronized(runtimeLock) {
             val appliedGlobalId = globalSnapshotId
-            for ((state, currentValue) in snapshot.writes) {
+            for ((state, pending) in snapshot.writes) {
                 val previousValue = state.readAny(snapshot.readId)
                 val appliedValue = state.readAny(appliedGlobalId)
                 val resolved = resolveApplyValue(
                     state = state,
                     previousValue = previousValue,
-                    currentValue = currentValue,
+                    currentValue = pending.value,
                     appliedValue = appliedValue,
                     hasConcurrentChange = state.latestSnapshotId() > snapshot.readId,
                 )
@@ -235,6 +240,7 @@ internal object SnapshotRuntime {
                 return SnapshotApplyResult.Failure(conflictCount = conflicts)
             }
             if (resolvedWrites.isEmpty()) {
+                snapshot.applied = true
                 return SnapshotApplyResult.Success
             }
             val commitId = nextSnapshotId++
@@ -244,12 +250,25 @@ internal object SnapshotRuntime {
                 }
             }
             globalSnapshotId = commitId
+            snapshot.applied = true
             changedStates.forEach { state ->
                 invalidations += state.snapshotObservers()
                 trackStateForPruningLocked(state)
             }
         }
-        invalidations.forEach { observer -> observer.invalidate() }
+        // Callbacks observe the published global view even if apply was invoked inside enter.
+        // The caller's terminal or unrelated pending snapshot must not leak into notification work.
+        val previousContext = contextStack.get()
+        if (previousContext == null) {
+            ObservationInvalidations.dispatch(invalidations)
+        } else {
+            contextStack.remove()
+            try {
+                ObservationInvalidations.dispatch(invalidations)
+            } finally {
+                contextStack.set(previousContext)
+            }
+        }
         return SnapshotApplyResult.Success
     }
 
@@ -287,15 +306,19 @@ internal object SnapshotRuntime {
         state: SnapshotStateObject,
         value: Any?,
     ) {
+        snapshot.ensureActive()
         val current = readStateInSnapshot(snapshot, state)
         if (state.equivalentAny(current, value)) {
             return
         }
-        snapshot.writes[state] = value
         snapshot.localWriteVersion += 1
+        snapshot.writes[state] = SnapshotPendingValue(
+            value,
+            (snapshot.tokenId.toLong() shl 32) or (snapshot.localWriteVersion.toLong() and 0xFFFFFFFFL),
+        )
     }
 
-    /** Reads the current buffer, then parent buffers, and finally the read-ID history. */
+    /** Reads the current buffer, then frozen parent values, and finally the read-ID history. */
     private fun readStateInSnapshot(
         snapshot: MutableSnapshot,
         state: SnapshotStateObject,
@@ -304,20 +327,20 @@ internal object SnapshotRuntime {
         return state.readAny(snapshot.readId)
     }
 
-    /** Looks up the mutable-snapshot chain while preserving an explicit buffered `null` as a hit. */
+    /** Preserves an explicit buffered null as a hit without consulting a live parent. */
     private fun readPendingValue(
-        snapshot: MutableSnapshot,
+        snapshot: Snapshot,
         state: SnapshotStateObject,
-    ): PendingValue? {
-        if (snapshot.writes.containsKey(state)) {
-            return PendingValue(snapshot.writes[state])
-        }
-        val parent = snapshot.parent
-        return if (parent != null) {
-            readPendingValue(parent, state)
-        } else {
-            null
-        }
+    ): SnapshotPendingValue? = (snapshot as? MutableSnapshot)?.writes?.get(state)
+        ?: snapshot.inheritedValues[state]
+
+    /** Copies only pending values; committed history remains shared and pinned by read ID. */
+    private fun capturePendingValues(): Map<SnapshotStateObject, SnapshotPendingValue> {
+        val snapshot = contextStack.get()?.peekLast()?.snapshot ?: return emptyMap()
+        snapshot.ensureActive()
+        val writes = (snapshot as? MutableSnapshot)?.writes
+        if (writes.isNullOrEmpty()) return snapshot.inheritedValues
+        return LinkedHashMap(snapshot.inheritedValues).apply { putAll(writes) }
     }
 
     /** Returns the current thread's read ID, or the global version outside a snapshot. */

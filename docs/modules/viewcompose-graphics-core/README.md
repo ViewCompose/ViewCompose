@@ -7,10 +7,12 @@ owner:
   id: viewcompose-graphics-core
 version_lane: released
 capability_ids:
+  - graphics.draw-cache
   - graphics.custom-drawing
 artifact_ids:
   - viewcompose-graphics-core
 sample_ids:
+  - module.graphics-core-cache
   - module.graphics-core-dependency
   - module.graphics-core-path
   - module.graphics-core-scene
@@ -124,10 +126,11 @@ font family, shaping, wrapping, locale, alignment, or rich spans.
 save/restore; `toScene` snapshots and validates. `group` builds a separately validated nested scene.
 After exporting, `clear` can reuse the recorder without changing prior snapshots.
 
-`DrawCache<T>` retains one non-null value under one equality-based key. A different key replaces the
-entry. It does not observe state, synchronize threads, or infer size/density/theme inputs; include
-every semantic dependency in the key and clear it when external inputs change. `null` results are
-never cache hits. Builder failure propagates and leaves the old entry untouched.
+`DrawCache<T>` retains one value under one equality-based key. In the unreleased checkout, both
+keys and values may be `null`; occupancy is tracked separately. Earlier versions rebuilt null
+results. A different key replaces the entry. It does not observe state or synchronize threads;
+include size, density, theme, and other dependencies in the key. `clear()` invalidates occupancy.
+Builder failure propagates and leaves the old entry untouched.
 
 ## Testing custom graphics code
 
@@ -157,3 +160,11 @@ The `0.1.0-alpha02` line establishes Android-aligned coordinate and color conven
 command replay, balanced immutable scenes, shallow immutable paint models, lightweight image
 references, and single-entry explicit-key caching. Platform execution belongs to the renderer and
 composition modifiers belong to `viewcompose-graphics`.
+
+## Current-checkout regression evidence
+
+Against the 2026-09-06 audit baseline, repeated nullable lookup now invokes its builder once instead
+of twice (2 to 1, 50% fewer calls in this exact probe): **improved**. Both new `DrawCacheTest` cases
+pass within the 854-test standalone JVM candidate, covering null keys/values, clear, and failed
+replacement. This is a call-count correction, not a frame-time measurement. The next action is to
+retain these cases in the module suite; no device performance claim follows from this evidence.

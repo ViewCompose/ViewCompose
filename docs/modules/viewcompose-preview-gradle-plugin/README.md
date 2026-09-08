@@ -117,3 +117,13 @@ render-tree denominator.
 
 See [Preview tooling](../../tooling/preview.md), [Preview Core](../viewcompose-preview-core/README.md),
 and the [generated API reference](https://docs.viewcompose.com/api/viewcompose-preview-gradle-plugin/current/).
+
+The 2026-09-07 framework-contract verification completes the previously unaccepted full plugin
+suite: 24/24 tests pass with zero failures, errors, or skips, including the Android TestKit case
+for discovery, release annotation stripping, worker JVM selection, cached rendering, and fast
+refresh. Gradle 9.3.1 runs on JDK 21; the test launcher and fixture use JDK 17 with Android SDK 35.
+Missing TestKit dependency files were filled from the existing Gradle cache only after their full
+SHA-1 matched their content addresses; no test or production source changed. The conclusion is
+`improved` verification completeness, not a normalized performance gain or new real-Layoutlib
+pixel evidence: the functional fixture uses a fake worker. Source-bound AI visual goldens and
+full `qaQuick` acceptance remain open in [capability verification](../../project/capability-verification.md#framework-contract-audit-acceptance).

@@ -16,6 +16,8 @@ import com.viewcompose.ui.unit.dp
 
 /**
  * Presents ViewCompose overlays with neutral Android transport and One UI 7 chrome.
+ * Clearing attempts every delegate and still dismisses the native sheet if nested-session cleanup
+ * fails; the first cleanup failure is rethrown with later failures suppressed.
  *
  * Dialog, popup, Toast, nested-render-session, and lifecycle behavior remain owned by the neutral
  * Android overlay transport. This adapter supplies only One UI Snackbar and modal-bottom-sheet

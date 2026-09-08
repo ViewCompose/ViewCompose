@@ -1,11 +1,11 @@
 {
-  "bundleFingerprint": "7e7a66d6f1e9e1a3f60e7f0b8460aa6c49c5c2f46576c4e4aae619b12cd31ba3",
+  "bundleFingerprint": "ae92c211910168f15cd04704e072b89674e97b154199dc893a1ca0add4ae9a55",
   "counts": {
     "artifacts": 31,
-    "capabilities": 82,
+    "capabilities": 85,
     "publicImports": 1393,
     "rules": 10,
-    "samples": 218,
+    "samples": 220,
     "symbols": 540
   },
   "files": [
@@ -16,28 +16,28 @@
       "sha256": "80e11265e931f512400931e0b56e6a5fac09e4de9ae44aa951b782264fd48e7d"
     },
     {
-      "bytes": 142343,
+      "bytes": 145293,
       "mediaType": "application/json",
       "path": "capabilities.json",
-      "sha256": "242cecc7e8de0b8ec816d5cf43cf08c4dff92ac118dcf1d446ecdbd6278e4fca"
+      "sha256": "e9e1fc5ee44818f43ba45f2eba7baa30c1689da69ce3d4dd26672a808b1470f0"
     },
     {
-      "bytes": 1103844,
+      "bytes": 1104540,
       "mediaType": "application/x-ndjson",
       "path": "public-imports.jsonl",
-      "sha256": "69d8cb79af018c424c31866a6c9d152f9e1c9e2994a3c2b7d849bebb3811e069"
+      "sha256": "e589da60a9eb8852c49cc6fb6f3f56a154a8351de8eedf8e0d86d42d9e2bd104"
     },
     {
-      "bytes": 903670,
+      "bytes": 903847,
       "mediaType": "application/x-ndjson",
       "path": "symbols.jsonl",
-      "sha256": "af3e17718c18ae65b7009d19598ecc770d61d0503a77a9d2ced2c2b5afbc82a6"
+      "sha256": "86cd7ba80fde30274007471459c528e65c8cdcce103558e706c3380c597c9956"
     },
     {
-      "bytes": 222359,
+      "bytes": 224327,
       "mediaType": "application/x-ndjson",
       "path": "samples.jsonl",
-      "sha256": "bb1f29712d6a53c6768059dbacb7d7232ab2ba63a87d2a516543824cad69537f"
+      "sha256": "73eb00652057784ba75f2c20f76d7a9afb4eb959d143d527b3fdaa817942fd4f"
     },
     {
       "bytes": 4387,
@@ -49,23 +49,23 @@
       "bytes": 2646,
       "mediaType": "text/plain",
       "path": "llms.txt",
-      "sha256": "623182f783727faa325e7f1bd9b6ae8d0b9f0431d019b785c150ed156397276c"
+      "sha256": "243305bdbc7c9c3e0e0c598daa056d0e346c9471f5306b7a20eb1f6d903c56af"
     },
     {
-      "bytes": 176440,
+      "bytes": 177377,
       "mediaType": "text/plain",
       "path": "llms-full.txt",
-      "sha256": "a62fda85f4c6e582a0b0b43a2660170f22db485cc5f574860996ebc8d32c2b0f"
+      "sha256": "343a7ac4e2887c838102d029187a6e30e1f3008852be7a7eead2a9eba664d843"
     }
   ],
   "framework": {
-    "identity": "78127e51cd740ccdbd58d326e05426caf4e49795",
+    "identity": "048b63af03ca51d8f44a042fc7b26d9bae85ed01",
     "versionLane": "current-source"
   },
   "generatorVersion": "1.0.0+d54ab2e08414",
   "schemaVersion": 1,
   "source": {
-    "capabilityFingerprint": "2f97d77ce237ec69e1e17e094140b4d071b6f4e4167edf35bb866af0e6a9d2d5",
-    "revision": "78127e51cd740ccdbd58d326e05426caf4e49795"
+    "capabilityFingerprint": "2cbabcbd18d825fb03d2c42d32f61fff6f19925e1f95a0343a4421f67f6a85cb",
+    "revision": "048b63af03ca51d8f44a042fc7b26d9bae85ed01"
   }
 }

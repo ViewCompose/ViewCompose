@@ -51,7 +51,15 @@ function durableRuntimeError(message) {
 function isVolatileNodePath(path, temporaryDirectory = tmpdir()) {
   const normalized = resolve(path);
   const lowered = normalized.toLowerCase().replaceAll('\\', '/');
-  return contained(resolve(temporaryDirectory), normalized) ||
+  const temporaryRoots = [resolve(temporaryDirectory)];
+  try {
+    // A temporary root may itself be an alias, such as /var on macOS. Executable
+    // canonicalization must not make a temporary runtime appear to be durable.
+    temporaryRoots.push(realpathSync(temporaryDirectory));
+  } catch (error) {
+    if (!['ENOENT', 'ENOTDIR'].includes(error?.code)) throw error;
+  }
+  return temporaryRoots.some((root) => contained(root, normalized)) ||
     lowered.includes('/.npm/_npx/') ||
     lowered.includes('/node_modules/.bin/');
 }

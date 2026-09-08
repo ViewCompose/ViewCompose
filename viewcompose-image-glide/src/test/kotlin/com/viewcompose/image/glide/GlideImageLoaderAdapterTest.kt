@@ -146,11 +146,12 @@ class GlideImageLoaderAdapterTest {
         val adapter = GlideImageLoaderAdapter()
 
         assertEquals(
-            "viewcompose-resource:${android.R.drawable.ic_menu_gallery}:9",
+            "viewcompose-resource:6:host-a:${android.R.drawable.ic_menu_gallery}:9",
             adapter.resourceCacheIdentity(
                 UiImageRequest(
                     source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
                     resourceRevision = 9L,
+                    resourceCacheScope = "host-a",
                 ),
             ),
         )
@@ -161,9 +162,43 @@ class GlideImageLoaderAdapterTest {
                     source = ImageSource.Url("https://example.com/a.png"),
                     error = ImageSource.Resource(android.R.drawable.stat_notify_error),
                     resourceRevision = 9L,
+                    resourceCacheScope = "host-a",
                 ),
             ),
         )
+    }
+
+    @Test
+    fun `shared loader isolates resource scopes and disables unsafe persistent caching`() {
+        val adapter = GlideImageLoaderAdapter()
+        val request = UiImageRequest(source = ImageSource.Resource(android.R.drawable.ic_menu_gallery))
+        val unscoped = adapter.buildRequest(Glide.with(context), ImageView(context), request)
+        val scoped = adapter.buildRequest(Glide.with(context), ImageView(context), request.copy(resourceCacheScope = "host-a"))
+        val other = adapter.buildRequest(Glide.with(context), ImageView(context), request.copy(resourceCacheScope = "host-b"))
+        val refreshed = adapter.buildRequest(Glide.with(context), ImageView(context), request.copy(resourceCacheScope = "host-a", resourceRevision = 1))
+        assertFalse(unscoped.isMemoryCacheable)
+        assertEquals(DiskCacheStrategy.NONE, scoped.diskCacheStrategy)
+        assertTrue(scoped.signature != other.signature)
+        assertTrue(scoped.signature != refreshed.signature)
+        org.junit.Assert.assertSame(context.theme, scoped.theme)
+    }
+
+    @Test
+    fun `scoped resources retain Android night signature and target theme`() {
+        val adapter = GlideImageLoaderAdapter()
+        fun configured(night: Int): android.content.Context {
+            val configuration = android.content.res.Configuration(context.resources.configuration)
+            configuration.uiMode = (configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK.inv()) or night
+            return android.view.ContextThemeWrapper(context.createConfigurationContext(configuration), android.R.style.Theme_Material)
+        }
+        val day = configured(android.content.res.Configuration.UI_MODE_NIGHT_NO)
+        val night = configured(android.content.res.Configuration.UI_MODE_NIGHT_YES)
+        val request = UiImageRequest(source = ImageSource.Resource(android.R.drawable.ic_menu_gallery), resourceCacheScope = "same-test-scope")
+        val first = adapter.buildRequest(Glide.with(context), ImageView(day), request)
+        val second = adapter.buildRequest(Glide.with(context), ImageView(night), request)
+        org.junit.Assert.assertNotEquals(first.signature, second.signature)
+        org.junit.Assert.assertSame(day.theme, first.theme)
+        org.junit.Assert.assertSame(night.theme, second.theme)
     }
 
     @Test

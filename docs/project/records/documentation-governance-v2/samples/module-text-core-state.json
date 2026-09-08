@@ -3,8 +3,10 @@
   "sample_id": "module.text-core-state",
   "sample_class": "compiled-region",
   "language": "kotlin",
-  "capability_id": "text.input",
-  "document_ids": ["module.viewcompose-text-core"],
+  "capability_id": "text.editing-state",
+  "document_ids": [
+    "module.viewcompose-text-core"
+  ],
   "version_lane": "released",
   "source": "viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt",
   "region": "text-core-module-state",

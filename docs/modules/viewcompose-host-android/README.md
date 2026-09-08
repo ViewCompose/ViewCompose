@@ -320,3 +320,29 @@ three render callbacks with one `RenderDiagnostics` configuration and adds typed
 integration inputs. Custom platforms may keep the default `null` port. Applications that use
 **Inspect Device Diagnostics** retain `viewcompose-preview` in a debug configuration, while release
 builds carry no device-inspector implementation.
+
+## Current-checkout lifecycle corrections
+
+The unreleased dispatcher assigns generations to pending requests and cancellations. Cancelling
+before an earlier background post reaches the main queue makes that post inert; its queued cancel
+also cannot remove a newer request. The existing dedicated UI-thread callback remains allocation
+free at dispatch. `FrameAlignedRenderDispatcherTest` adds three ordering regressions.
+
+The resource provider assigns a fresh `resourceCacheScope` per mount and retains it across refreshes,
+including hosts with fixed environment values. It publishes that identity together with its local
+revision. Custom hosts outside this provider must supply their own process-unique scope or accept
+uncached local resource loads. Scope identities cannot be persisted as disk keys.
+
+The original cancellation probe scheduled one unwanted frame; the candidate schedules and renders
+zero (1 to 0 unwanted schedules, 100% reduction): **improved**. This probe uses the actual dispatcher
+with a deterministic scheduler, not device Choreographer timing. The next action is the module's
+Android test suite and device pause/resume stress; no frame-time improvement is claimed.
+
+The final targeted Gradle host run passes 22 frame-dispatch and Android-resource-environment tests
+with zero failures or skips, including SDK 24/35 resource providers, scope survival across refresh,
+and distinct scopes at equal local revisions. Together with the cancellation probe, correctness is
+**improved**; device scheduling latency and resource appearance remain outside this evidence.
+
+The extended 2026-09-07 run passes all 57 Host tests with zero failures, errors, or skips. The
+additional 35 existing cases broaden the earlier targeted population and confirm no regressions
+in the executed Host interactions; device timing and appearance still require separate acceptance.

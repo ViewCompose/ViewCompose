@@ -228,7 +228,7 @@ test('returns the same offline screenshot inference import through CLI and MCP',
   );
   assert.equal(
     response.result.structuredContent.data.validationFingerprint,
-    'a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab',
+    '7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68',
   );
   assert.equal(response.result.isError, false);
 });
@@ -268,7 +268,7 @@ test('returns the same typed screenshot resolution through CLI and MCP', async (
   );
   assert.equal(
     response.result.structuredContent.data.resultFingerprint,
-    'acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee',
+    'f3619ac91a4dfa658466823ff0e031812d2ddeff902e1e4a997734b365b219db',
   );
   assert.equal(response.result.isError, false);
 });

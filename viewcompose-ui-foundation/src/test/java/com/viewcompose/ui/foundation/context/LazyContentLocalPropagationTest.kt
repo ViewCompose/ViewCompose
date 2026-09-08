@@ -147,10 +147,19 @@ class LazyContentLocalPropagationTest {
         )
     }
 
-    private fun delayedResourceTokens(resourceRevision: Long): List<Any?> {
+    @Test
+    fun `new resource scope invalidates delayed children at the same local revision`() {
+        val first = delayedResourceTokens(0, "host-a")
+        val second = delayedResourceTokens(0, "host-b")
+        first.take(3).zip(second.take(3)).forEach { (before, after) ->
+            org.junit.Assert.assertNotEquals(before, after)
+        }
+    }
+
+    private fun delayedResourceTokens(resourceRevision: Long, resourceScope: String? = null): List<Any?> {
         val tree = buildVNodeTree {
             UiEnvironment(
-                values = UiEnvironmentValues(resourceRevision = resourceRevision),
+                values = UiEnvironmentValues(resourceRevision = resourceRevision, resourceCacheScope = resourceScope),
             ) {
                 LazyColumn {
                     item(key = "lazy-item", contentRevision = "stable-content") {

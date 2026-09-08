@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-image-coil",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-image-coil",
+  "symbol_id": "com.viewcompose.image.coil.CoilImageLoaderAdapter",
+  "capability_id": "image.coil",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.image.coil.CoilImageLoaderAdapter"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-image-coil"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "guide.image-coil-uri"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.image.coil"
+      ]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.android-resource-environment"
+      ]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "Existing installation remains valid; custom-host scope migration is owned by the image migration guide."
+    },
+    "guide": {
+      "status": "updated",
+      "targets": [
+        "guide.image-loading"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": [
+        "migration.image-loading"
+      ]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

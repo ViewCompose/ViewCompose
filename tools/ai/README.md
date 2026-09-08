@@ -715,6 +715,12 @@ Build the dependency-free npm tarball and its deterministic sidecars with:
 npm --prefix tools/ai run package:distribution
 ```
 
+The unpublished `0.8.0` candidate includes bounded process-tree completion after integration with
+the latest main branch, superseding the audit's initial local `0.7.1` candidate. Its package,
+bootstrap, adoption, and release contracts retain the upstream `0.8.0` identity. Public installation
+instructions continue to name `0.7.0` until the separate release workflow publishes and verifies
+the new package.
+
 The command writes an ignored `tools/ai/build/distribution/` directory containing the `.tgz`, an
 exact per-file `manifest.json`, and `SHA256SUMS`. The package contains the fifteen-tool CLI/MCP core,
 the `viewcompose-agent` onboarding command, `viewcompose-repair`, eight consumer skills, the immutable Knowledge Bundle, the
@@ -912,3 +918,10 @@ level includes the evidence from earlier levels. A shallower result cannot claim
 3. Attach every metric that uses the case as part of its denominator.
 4. State the exact expected outcome and evidence level.
 5. Run the Phase 0 gate. Unsupported behavior is an expected result, not an omitted fixture.
+
+
+The current-checkout process termination contract and interpreted 45-test regression evidence are
+owned by [the AI tooling manual](../../docs/ai/README.md#current-checkout-process-bounds).
+Timeout/cancellation/output overflow owns a POSIX process group and a two-second forced-completion
+grace period; persistent inherited pipes cannot keep the promise pending. Windows task-tree cleanup
+is best effort and still needs platform execution evidence.

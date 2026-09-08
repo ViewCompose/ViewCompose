@@ -62,3 +62,20 @@ test('ignores trees without a source path', () => {
 
   assert.equal(tree.children[0].url, '../../module/File.kt');
 });
+
+test('preserves localized manual links while still rewriting repository source files', () => {
+  const localizedRoot = '/workspace/ViewCompose/website/i18n/zh-CN/docusaurus-plugin-content-docs/current';
+  const tree = {type: 'root', children: [
+    {type: 'link', url: './viewcompose-runtime/README.md#state'},
+    {type: 'link', url: '../../../../../src/sidebarItemsGenerator.ts'},
+  ]};
+
+  rewriteRepositoryFileLinks({...options, localizedDocsRoots: [localizedRoot]})(tree, {
+    path: `${localizedRoot}/modules/README.md`,
+  });
+
+  assert.deepEqual(tree.children.map(({url}) => url), [
+    './viewcompose-runtime/README.md#state',
+    'https://github.com/ViewCompose/ViewCompose/blob/main/website/src/sidebarItemsGenerator.ts',
+  ]);
+});

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "kind": "screenshot-repair-authorization",
   "input": {
-    "baselineEvidenceFingerprint": "ddb25a6c2a60b10587cfbbfeaff5a9169c2a5f5c304e587f032ccce2c3345048",
-    "candidateEvidenceFingerprint": "286de50bda0e7b9b5ab72d7cadf6aeb927b197fa3c0fbffb0b0d495db4319772",
+    "baselineEvidenceFingerprint": "7cffe4921e2e731fffbc697a452b9e6b8a41cd5c35f00893b8f83cc22ea3fcdf",
+    "candidateEvidenceFingerprint": "2fc36a304183f83920f4d42c3d648f567a4ef7f407f390b1d8ddab124389cc3c",
     "baselineDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
     "candidateDesignIrFingerprint": "442747e46f1a1bd35b0e4c5107a0b04d2962203819183cf4193ff1e37b46107d",
     "pixelReferenceFingerprint": "387f26e93333590ec3532004988a0433de392bd3f23691950b794c6e9d073673",
-    "proposalFingerprint": "8313b5eab8e050e5f5f16a251c4de7f8034e686aafd2d6ba10b89f13f8068ce1",
+    "proposalFingerprint": "48c6173d6d36e3b632038d7c158d066d8d92160f34e6d96498b64f700d8c9c78",
     "changeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945"
   },
   "baselineAcceptance": {
@@ -15,7 +15,7 @@
     "reviewerId": "fixture-baseline-reviewer",
     "reviewReceipt": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "approvedPurpose": "screenshot-regression-baseline",
-    "approvedEvidenceFingerprint": "ddb25a6c2a60b10587cfbbfeaff5a9169c2a5f5c304e587f032ccce2c3345048",
+    "approvedEvidenceFingerprint": "7cffe4921e2e731fffbc697a452b9e6b8a41cd5c35f00893b8f83cc22ea3fcdf",
     "sourceRevisionKind": "git-commit",
     "sourceRevision": "a2faf25dc206b428936a42b3d0872007371592b3",
     "acceptanceScope": "exact-evidence-only",
@@ -27,8 +27,8 @@
     "reviewerId": "fixture-repair-approver",
     "reviewReceipt": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     "approvedPurpose": "apply-screenshot-regression-rollback",
-    "approvedProposalFingerprint": "8313b5eab8e050e5f5f16a251c4de7f8034e686aafd2d6ba10b89f13f8068ce1",
-    "approvedCandidateEvidenceFingerprint": "286de50bda0e7b9b5ab72d7cadf6aeb927b197fa3c0fbffb0b0d495db4319772",
+    "approvedProposalFingerprint": "48c6173d6d36e3b632038d7c158d066d8d92160f34e6d96498b64f700d8c9c78",
+    "approvedCandidateEvidenceFingerprint": "2fc36a304183f83920f4d42c3d648f567a4ef7f407f390b1d8ddab124389cc3c",
     "approvedChangeFingerprint": "7a126542aa952fc46f0859d530d72c8fd7e93d268c696e5b514e4cc2c3f9f945",
     "applicationCount": 1,
     "unattendedExecution": false
@@ -46,5 +46,5 @@
     "credentialInput": false,
     "logs": "metadata-only"
   },
-  "authorizationFingerprint": "edae2324520e22dd61d5e16eeddd48973fd1ba3c1e7d4cae60b6c9b126746b61"
+  "authorizationFingerprint": "6bacb1629e95c64e47b93dbb4490090c664728f43be3855c70bddfd52183da59"
 }

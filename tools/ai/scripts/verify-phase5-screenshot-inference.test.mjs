@@ -16,7 +16,7 @@ test('freezes screenshot inference lineage, evidence, uncertainty, and consent w
   assert.equal(summary.networkRequests, 0);
   assert.equal(
     summary.requestFingerprint,
-    '083ac8d466d75c617184b6961e35228f9b53c117e381320fb265c3b97ee2dc2d',
+    '60df429550daff7f9e61494a4ba051dbdc0b19a18a8366dda7542d29962933ea',
   );
   assert.equal(
     summary.designIrFingerprint,
@@ -24,10 +24,10 @@ test('freezes screenshot inference lineage, evidence, uncertainty, and consent w
   );
   assert.equal(
     summary.resultFingerprint,
-    '62694a1787a531bf68f9794c1a54630082e5d8f8fe7ee5becf3214c2ab107a09',
+    '5e4fe63958acdd0e6e9dbcf090c8ef511c93664473e490e0f17f38d176218c77',
   );
   assert.equal(
     summary.validationFingerprint,
-    'a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab',
+    '7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68',
   );
 });

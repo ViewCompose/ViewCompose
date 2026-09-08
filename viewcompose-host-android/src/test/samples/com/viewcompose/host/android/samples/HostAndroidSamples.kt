@@ -62,6 +62,15 @@ fun renderIntoSample(container: ViewGroup) {
 }
 // DOCS_REGION_END(host-render-into)
 
+/** Cancels pending automatic work before reactivating the same mounted session. */
+fun renderActivationBoundarySample(container: ViewGroup) {
+    val session = renderInto(container) { Text("Mounted") }
+    session.setRenderingActive(false)
+    session.setRenderingActive(true)
+    session.render()
+    session.dispose()
+}
+
 fun androidViewInteropSample(builder: UiTreeBuilder) {
     builder.AndroidView(
         factory = { context -> TextView(context) },

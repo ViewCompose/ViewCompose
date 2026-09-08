@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "kind": "request",
   "input": {
-    "validationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab",
-    "inferenceResultFingerprint": "62694a1787a531bf68f9794c1a54630082e5d8f8fe7ee5becf3214c2ab107a09",
+    "validationFingerprint": "7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68",
+    "inferenceResultFingerprint": "5e4fe63958acdd0e6e9dbcf090c8ef511c93664473e490e0f17f38d176218c77",
     "designIrFingerprint": "585b3d1761cc47f9718ff48e09216899faa470ca662e4e98ad705c8686109b5a"
   },
   "authorization": {
@@ -11,7 +11,7 @@
     "reviewerId": "fixture-reviewer",
     "reviewReceipt": "4444444444444444444444444444444444444444444444444444444444444444",
     "approvedPurpose": "resolve-screenshot-inference",
-    "approvedValidationFingerprint": "a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab",
+    "approvedValidationFingerprint": "7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68",
     "sourceInspectionCompleted": true,
     "providerExecution": false,
     "networkAccess": false,

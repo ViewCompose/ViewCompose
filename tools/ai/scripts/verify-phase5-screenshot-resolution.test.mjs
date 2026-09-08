@@ -20,11 +20,11 @@ test('freezes typed human resolution before screenshot code generation', async (
   assert.equal(result.networkRequests, 0);
   assert.equal(
     result.requestFingerprint,
-    'a88e3bba78ea817a197c042d4cbd23f7da518915005092c449513107f410c29b',
+    '986d2992ccf4b45cc21dfa7d1d7995cf9e9efed29633b8b985b9db75e269b66b',
   );
   assert.equal(
     result.resultFingerprint,
-    'acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee',
+    'f3619ac91a4dfa658466823ff0e031812d2ddeff902e1e4a997734b365b219db',
   );
   assert.equal(
     result.resolvedDesignIrFingerprint,

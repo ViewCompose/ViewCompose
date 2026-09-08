@@ -9,6 +9,9 @@ import com.bumptech.glide.RequestManager
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.signature.ObjectKey
+import com.bumptech.glide.signature.AndroidResourceSignature
+import com.bumptech.glide.load.Key
+import java.security.MessageDigest
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target as GlideTarget
@@ -27,6 +30,9 @@ import com.viewcompose.ui.node.UiImageTransition
  * cache, decode-size, transition, and content-scale options map to Glide request options; exact
  * tint and clipping remain renderer responsibilities. The application Glide configuration remains
  * caller-owned through Glide's normal singleton and `AppGlideModule` mechanisms.
+ * Primary resources use the target theme and Android resource signature plus the host memory
+ * scope/revision. Unknown scopes disable resource memory caching. Resource disk caching is disabled
+ * because the host identity cannot safely be reused across processes or reconstructed themes.
  *
  * @sample com.viewcompose.image.glide.samples.glideImageLoaderAdapterSample
  */
@@ -57,11 +63,13 @@ class GlideImageLoaderAdapter : UiImageLoader {
         imageView: ImageView,
         request: UiImageRequest,
     ): RequestBuilder<Drawable> {
-        val builder = requestManager
-            .load(request.source.toGlideModel())
+        val source = request.source
+        val modelRequest = if (source is ImageSource.Resource) requestManager.load(source.resId)
+            else requestManager.load(source.toGlideModel())
+        val builder = modelRequest
             .apply(
                 RequestOptions()
-                    .applyCommonOptions(request)
+                    .applyCommonOptions(imageView.context, request)
                     .applyFallbacks(request),
             )
         return when (val transition = request.options.transition) {
@@ -77,8 +85,15 @@ class GlideImageLoaderAdapter : UiImageLoader {
 
     internal fun mapSourceForTest(source: ImageSource): Any = source.toGlideModel()
 
-    private fun RequestOptions.applyCommonOptions(request: UiImageRequest): RequestOptions {
-        resourceCacheIdentity(request)?.let { identity -> signature(ObjectKey(identity)) }
+    private fun RequestOptions.applyCommonOptions(context: Context, request: UiImageRequest): RequestOptions {
+        if (request.source is ImageSource.Resource) {
+            theme(context.theme)
+            val identity = resourceCacheIdentity(request)
+            if (identity == null) skipMemoryCache(true)
+            else signature(ResourceMemoryKey(AndroidResourceSignature.obtain(context), ObjectKey(identity)))
+            // A host counter and theme scope have no stable cross-process disk meaning.
+            diskCacheStrategy(DiskCacheStrategy.NONE)
+        }
         when (val decodeSize = request.options.decodeSize) {
             com.viewcompose.ui.node.UiImageDecodeSize.Target -> Unit
             com.viewcompose.ui.node.UiImageDecodeSize.Original -> {
@@ -124,7 +139,15 @@ class GlideImageLoaderAdapter : UiImageLoader {
 
     internal fun resourceCacheIdentity(request: UiImageRequest): String? {
         val source = request.source as? ImageSource.Resource ?: return null
-        return "viewcompose-resource:${source.resId}:${request.resourceRevision}"
+        val scope = request.resourceCacheScope ?: return null
+        return "viewcompose-resource:${scope.length}:$scope:${source.resId}:${request.resourceRevision}"
+    }
+
+    private data class ResourceMemoryKey(val platform: Key, val scoped: Key) : Key {
+        override fun updateDiskCacheKey(messageDigest: MessageDigest) {
+            platform.updateDiskCacheKey(messageDigest)
+            scoped.updateDiskCacheKey(messageDigest)
+        }
     }
 
     private class GlideLoadHandle(

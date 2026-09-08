@@ -146,10 +146,21 @@ Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migratio
 archive, including their locale-prefixed forms. Add a redirect only for an intentional historical
 or campaign route; canonical document paths remain the source of truth.
 
-The global sidebar links to the Architecture Decisions index without repeating every ADR on every
-rendered page. The bilingual index remains the complete ordered catalog, and each decision remains
-directly routable, searchable, and linked from that index. This prevents an additional immutable
-decision from multiplying its navigation label across the entire site artifact.
+The global sidebar links to the Architecture Decisions and Published Module catalogs without
+repeating every entry on every rendered page. Each bilingual catalog remains complete and ordered;
+every decision and current module manual remains directly routable, searchable, and linked from its
+catalog. Module links stay within the selected locale on local builds and the hosted site. The
+repository-file link transform recognizes both canonical and localized Markdown roots, leaving
+manual links for Docusaurus to resolve while source-only files retain their repository URLs.
+This prevents catalog additions from multiplying navigation labels across the entire site artifact.
+
+On 2026-09-08, the integrated framework-contract candidate with the same bilingual corpus, Node
+24.19.0, Docusaurus 3.10.2, and six immutable API source revisions produced 50,585,643 non-API bytes
+before this catalog/link correction and 49,275,384 after it: -1,310,259 bytes (-2.59%). The conclusion
+is **improved** artifact size and localized navigation. All 84 site-script tests, 39 current module
+routes in both locales, 133 immutable API versions and their bilingual manuals, accessibility,
+shell, and unchanged 47.8 MiB/120-second budgets pass. This measures deployed bytes, not browser
+interaction latency; retain the full bilingual route and size gates for future catalog growth.
 
 The versioned thresholds live in `website/site-budgets.json`. Immutable Dokka output is canonical
 at `/api/**`; the supported build removes locale-prefixed API copies and the redundant locale social

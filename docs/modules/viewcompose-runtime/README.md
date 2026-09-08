@@ -197,6 +197,37 @@ Holding old snapshots retains additional value records, and frequently abandonin
 order prevents composition reuse. Neither operation blocks arbitrary user calculations; callers
 must keep expensive work outside state accessors and composition blocks or cache it explicitly.
 
+## Current-checkout contract hardening
+
+These corrections belong to the unreleased checkout and do not retroactively change published
+artifact behavior. Nested snapshots freeze the parent's visible pending values at creation; only
+later destination writes participate in conflict detection. Read-only children preserve the same
+baseline. A successful apply, including an empty one, is terminal for entry, writes, and subsequent
+apply; a child cannot publish into a disposed or already applied parent.
+
+Derived caches distinguish mutable views and local writes. Their upstream subscriptions end when
+the last consumer is disposed. Independent reads remain fresh without retaining subscriptions,
+and re-observation reconnects dependencies before returning. Calculation failures preserve the
+previous subscription set, allowing a later invalidation to trigger another attempt.
+
+Notification occurs after publication and terminal state. Every affected Observation is attempted
+at most once per apply, including direct and derived paths; reentrant applies remain independent.
+The first callback failure is rethrown with later failures suppressed. The values are already
+committed: retrying the whole transaction after this error could duplicate application work.
+
+The accepted 2026-09-06 audit baseline at `d64710459df73f3b42067767bb2f4f273b9eff33`
+produced sibling derived values 10/10 instead of 10/20, one false nested conflict, 100 retained
+upstream observations after consumer disposal, and zero deliveries to a healthy observer after a
+throwing observer. The first candidate source execution produces 10/20, successful nested apply,
+zero retained observations, and complete notification with terminal apply. Four reproduced runtime
+defects decrease to zero (100% reduction in these four scenarios); classification: **improved** for
+correctness. The 818-test standalone baseline and first 835-test candidate both pass; the additional
+17 tests exercise isolation, null values, nested merge, lifetime, callback failure, and reentry.
+This comparison uses Kotlin 2.2.10, JDK 21, JVM target 11, and the same source aggregation harness;
+it does not establish a latency improvement, Android behavior, or Gradle dependency isolation.
+Next action: run the final module suite and compiled samples through Gradle, then verify TextField,
+animation, and gesture integrations before closing the execution plan.
+
 ## Related documentation
 
 - [State and snapshot architecture](../../architecture/state-snapshots.md)
@@ -222,3 +253,14 @@ to a remembered `RememberObserver`; application UI uses the effect APIs from
 `viewcompose-ui-foundation`. Prepared composition now enforces owner-thread, terminal-disposal, and
 callback re-entry boundaries. Remember activation failures are retryable, and explicit keyed
 siblings move as complete scopes while duplicate effective identities fail fast.
+
+## Final runtime validation
+
+The final candidate adds one more terminal-context regression: global notifications execute against
+the committed global view even when `apply()` is called inside `enter()`. The caller's context is
+restored afterward, so the applied snapshot still rejects further reads/writes. The new case first
+failed and then passed after notification context isolation. The complete Gradle task
+`:viewcompose-runtime:test` passes 116 tests, including 19 hardening cases, with zero failures or
+skips. Compared with the four accepted audit defects, correctness remains **improved**, with all
+four probes corrected; expanded coverage is not a performance measurement. The next action is to
+retain the module regressions and use separate device/fan-out benchmarks for performance acceptance.

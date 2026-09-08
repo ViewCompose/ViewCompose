@@ -128,6 +128,55 @@ platform tier. Screenshots prove visible geometry; native touch, dismissal, nest
 IME, and reset assertions provide behavior. Re-run affected systems and add API 24 plus the current
 target when a release requires the full matrix.
 
+## Framework contract audit acceptance
+
+The 2026-09-06 audit baseline at `d64710459df73f3b42067767bb2f4f273b9eff33` passed 818
+standalone JVM tests and 39 AI tests while ten probes exposed defects and two findings were
+confirmed from source. All twelve corrections are now integrated with main revision
+`048b63af03ca51d8f44a042fc7b26d9bae85ed01`, including upstream PR #274.
+
+On macOS 14.1.2 arm64, JDK 21, Kotlin 2.2.10, Gradle 9.3.1, and Node 24.19.0, the integrated
+candidate passes 2118 tests across all 40 selected Framework, app, and integration tasks. This
+includes 1270 tests across the twelve changed artifacts; these populations overlap. AI verification
+passes 397/397 tests and Phase 0 contracts. The two additional integration regressions cover
+temporary Node path aliases and isolation of generated Preview task history. Test-count growth
+describes coverage, not a normalized performance gain.
+
+Complete `qaQuick`, `qaPreview`, all three required documentation/tooling-isolation/release-intent
+gates, and the fixed compiler and render corpora pass. Complete versioned API verification rebuilds
+all six immutable source revisions. The website's type, build, accessibility, size-budget, shell,
+and version checks pass. Local Maven publication uses a short-lived test signing key; no public
+Maven or npm artifact is published by this acceptance.
+
+The refreshed Knowledge Bundle contains 85 capabilities, 540 symbols, and 220 samples. Static
+inference/resolution/generation and actual released-Maven render/compare/repair evidence were
+recaptured against its exact source identity. All 37 changed visual fixture files differ only in
+identity strings and derived hashes. XML and screenshot PNG/render-tree bytes and acceptance
+thresholds remain unchanged. The screenshot baseline passes 12/12 semantic and 15/15 structure
+checks with 0 mismatches among 2,523,781 compared pixels. The deliberate regression still produces
+2221 mismatched pixels; the proposed rollback restores 0 and passes all six gates. Invalid,
+cancelled, revoked, and reused authorization cases retain their rejection behavior. These fixed
+released-harness pixels are **no material change**; they do not establish current-source device parity.
+
+The integration also corrects two execution-environment defects: temporary Node executables remain
+transient through physical/aliased temporary roots, and generated Preview requests use separate
+Gradle task histories while sharing dependency downloads. A cold image-binding Preview now retains
+its required resource classes and reproduces the accepted image and comparison denominators.
+The unpublished `0.8.0` package passes deterministic packaging and installed CLI/MCP/Agent flows;
+it supersedes the initial local `0.7.1` candidate. Public consumers remain on `0.7.0`.
+
+The conclusion is **improved** correctness at the audited transaction, subscription, text-history,
+resource, focus, cleanup, process, frame, and cache boundaries. The
+[initial implementation record](./records/framework-contract-audit/20260906-implementation.json)
+preserves the earlier partial acceptance; the
+[integration record](./records/framework-contract-audit/20260908-integration.json) records the
+completed verification, source hashes, environment, and package identity.
+
+Device resource appearance and OEM IME behavior remain with Host, Renderer, and image-adapter
+owners. Windows process-tree behavior remains with AI tooling. Cache reuse and frame performance
+require controlled measurements. Retain these regressions and execute those named follow-ups
+before making broader device or performance claims.
+
 ## Failure triage
 
 - A `RolledBack` report must preserve the old visible tree and must not run candidate commit

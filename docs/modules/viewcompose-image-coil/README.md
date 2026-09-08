@@ -62,12 +62,13 @@ The supplied Coil `ImageLoader` remains independent from individual View lifecyc
 
 ## Caching and ownership
 
-Memory cache, disk cache, network behavior, transformations, and URL interpretation are Coil
-policies. This adapter adds no second cache. For a primary Android resource it supplies a stable
-memory-cache identity containing the captured resource revision, preventing a night/locale/density
-variant from reusing a stale decoded entry. Remote-only requests keep Coil's normal identity; a
-resource placeholder may restart binding without discarding the remote primary cache. A caller-supplied
-`ImageLoader` remains caller-owned and is never shut down by `CoilImageLoaderAdapter`.
+Coil owns network and remote-cache policy; this adapter adds no second cache. In the unreleased
+checkout, primary Android resource memory keys include the captured `resourceCacheScope`, resource
+ID, and revision. Separate mounted hosts therefore cannot collide in a shared loader at equal
+local revisions. A missing scope disables resource memory caching. Primary resource disk caching
+is disabled because a transient host/theme identity is not a persistent content fingerprint.
+Remote primary requests retain Coil's normal cache identity even with resource placeholders.
+The caller continues to own and shut down its `ImageLoader`.
 
 Resource IDs are forwarded unchanged. Invalid resources and request failures therefore follow
 normal Android and Coil error behavior.
@@ -95,3 +96,14 @@ The complete generated reference is available in the
 The `0.1.0-alpha03` line forwards the portable request directly to Coil 3. It does not expose Coil
 transformations in the declarative image contract, manage a global loader, or promise cache policy
 independent of the configured Coil version.
+
+## Current-checkout regression evidence
+
+The audit baseline used equal resource IDs and local revisions as identical shared-cache keys.
+The candidate's Gradle adapter suite passes 7 tests with zero failures or skips, including
+separate mounted scopes, revision changes, missing-scope memory policy, and disabled resource disk
+policy. The Glide suite additionally checks distinct Android night signatures and target themes.
+Cross-host key collision changes from possible to distinct in the tested requests: **improved**
+correctness. Cache reuse across mounts and resource disk caching decrease by design, so performance
+is **inconclusive** until measured. Robolectric request construction is not decoded pixel or device
+acceptance. The next action is real-device theme/resource appearance and cache-hit measurement.

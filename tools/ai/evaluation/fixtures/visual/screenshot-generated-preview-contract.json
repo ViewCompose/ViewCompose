@@ -15,14 +15,14 @@
   },
   "lineage": {
     "acceptedSourceKind": "screenshot",
-    "resolutionResultFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
+    "resolutionResultFingerprint": "f3619ac91a4dfa658466823ff0e031812d2ddeff902e1e4a997734b365b219db",
     "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
-    "sourceGenerationRequestFingerprint": "5ebbcec395b2ffbd2c53919149ddd1f9cc3070edf862da2e7795f02ea0dfe0e2",
-    "sourceGenerationReportFingerprint": "91da4ff1eaf1f4d2fb0f8c73d8816d2c91030510ff00730ee96abe80f0efa319",
-    "renderGenerationRequestFingerprint": "68d3da2054ffe5513a90975d96f47be6cfa1137ad1b1e796114a4a27827b3d49",
-    "renderGenerationReportFingerprint": "464d4f31c5ec59a5083b58309240c76fc69709b42648b79beb4ff281ac2f93db",
+    "sourceGenerationRequestFingerprint": "6d35738e9c998e874afb04c229b9a0cf43ef9399b5bcafbacfaf41f671f6bff4",
+    "sourceGenerationReportFingerprint": "6a1eaddbc8bda251a87e9be20ad6cc539055dccb250591eb9c22e47fdac42fb5",
+    "renderGenerationRequestFingerprint": "ce04c4434e33eecc2d7f29cf9f02a0ee14b5f04f424f371353f6ba84638f1365",
+    "renderGenerationReportFingerprint": "7b7a4fd53af9a9185fec13c46830618c32e3eae09c1f95ef69593294a9ff99be",
     "generatedKotlinFingerprint": "5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9",
-    "previewRequestFingerprint": "405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a",
+    "previewRequestFingerprint": "b13bb85984368bb583097cd6cbc21845907bfa596db54d74001f368b220282a2",
     "previewWrapperFingerprint": "7b0d004f650248f2108e960385efa7e9a324acc600bfcd142f71c4a8b8d5c65b"
   },
   "profile": {

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "summary": "Harden snapshot, subscription, text-history, resource-cache, focus, cleanup, frame, and draw-cache contracts. Recompile consumers for the added UI Contract data-class fields.",
+  "changes": [
+    {
+      "artifact": "viewcompose-graphics-core",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-host-android",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-image-coil",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-image-glide",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-overlay-android",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-overlay-material3-android",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-overlay-oneui7-android",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-renderer-android",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-runtime",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-text-core",
+      "impact": "fix"
+    },
+    {
+      "artifact": "viewcompose-ui-contract",
+      "impact": "breaking"
+    },
+    {
+      "artifact": "viewcompose-ui-foundation",
+      "impact": "fix"
+    }
+  ],
+  "ignored": [],
+  "shared": []
+}

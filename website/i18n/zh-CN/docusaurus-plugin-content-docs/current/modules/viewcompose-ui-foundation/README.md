@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: e7183285db426d78925024fe2bc9d1c9e76b0b4419aafbbf3cc32f7e63d470a8
+translation_source_hash: c04def3f5d56be55c7df6510047560dccef9375b40df1357123e5ab4e8ab00e9
 translation_status: current
 ---
 
@@ -511,3 +511,24 @@ Q2 `SliderNodeProps` 快照中；预编译调用方与自定义渲染器必须�
 Provenance 具有源码默认值，但改变二进制 Constructor、Copy 与 Component Surface，因此预编译
 直接调用方必须重建。这些契约只保存稳定身份与已解析证据，不授权在 UI Foundation 或 Renderer
 中加入 Recipe、Factory 或具名设计系统分支。
+
+## 当前检出版本的清理协议
+
+未发布实现会尝试清理每个拥有的句柄或委托，即使此前的关闭操作抛出异常。终态回调前先移除所有权，
+完成全部尝试后抛出首个异常，其余异常放入 suppressed。重复清理不重试失败的终态回调，其他会话仍保持所有权。
+瞬时反馈 Presenter 失败会释放活动队列槽；子会话释放失败时仍尝试关闭原生窗口。
+该协议不保证一个失败的外部平台 API 已成功释放资源。
+
+审查中的双浮层失败探针只尝试了第一个浮层，并遗留第二个。候选版本尝试两个且不保留任何条目
+（尝试数 1→2，遗留数 1→0），结论为改进。四项 Foundation 清理回归在 854 项独立 JVM 测试中通过。
+`CompositeOverlayCleanupTest` 和 Android Presenter 测试负责集成验证。窗口可见性和平台失败行为仍需真机验收；
+后续保留这些回归，并验证子会话异常时的原生关闭行为。
+
+## 当前检出版本的资源传递
+
+`UiEnvironment` 在捕获的局部值和 `Environment.values` 中保留 `resourceCacheScope`，因此发出的
+节点与延迟执行的列表、分页子会话保持同一个挂载资源所有者。即使本地修订号相同，更换作用域也会改变
+子会话的环境身份。作用域是不透明字符串，不持有 Context。`EnvironmentTest` 和
+`LazyContentLocalPropagationTest` 验证节点输出与延迟子会话失效；完整 Foundation Gradle 套件通过
+403 项测试，失败和跳过均为零，作用域覆盖得到改进。该证据验证传递和生命周期逻辑；共享图片 Loader
+请求测试负责缓存身份验收，资源外观和性能仍需真机验收。
