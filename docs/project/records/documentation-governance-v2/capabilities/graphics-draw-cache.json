@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "capability_id": "graphics.draw-cache",
+  "kind": "dsl",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-graphics-core"
+  },
+  "artifact": "viewcompose-graphics-core",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha02"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.graphics.core.DrawCache",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-graphics-core/src/main/kotlin/com/viewcompose/graphics/core/DrawCache.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.graphics.draw-cache",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.graphics-core-cache"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-graphics-core"
+    ]
+  }
+}

@@ -7,6 +7,7 @@ owner:
   id: text.input
 version_lane: released
 capability_ids:
+  - text.editing-state
   - text.input
 artifact_ids:
   - viewcompose-text-core
@@ -23,6 +24,7 @@ invariants:
   - Only document and directional selection persist across host recreation; composition, history, focus, and keyboard visibility are session-local.
 evidence:
   - viewcompose-text-core/src/test/kotlin/com/viewcompose/text/TextFieldStateTest.kt
+  - viewcompose-text-core/src/test/kotlin/com/viewcompose/text/TextHistorySnapshotTest.kt
   - viewcompose-text-core/src/test/kotlin/com/viewcompose/text/TextDocumentTest.kt
   - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt
   - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/TextFieldControllerTest.kt
@@ -68,6 +70,13 @@ composition when the document changes, create one undo entry, and clear redo. Se
 do not add history. Platform composition updates coalesce into one undo unit when the IME commits
 them. Undo and redo restore documents and selections but never revive an obsolete composition
 session.
+
+The editing value, composition baseline, and both history lists are one immutable snapshot-owned
+tuple. Abandoning or conflicting an enclosing transaction cannot leave history changes behind,
+and pinned readers see the history belonging to their text version. Composition transitions are
+processed before the document-equality fast path: an unchanged-text finish event still commits
+the pending undo unit, while cancellation back to its baseline creates none. History copies share
+immutable documents and are bounded by the configured entry limit.
 
 This distinction prevents validation policy from rejecting an application-owned replacement and
 prevents intermediate text, selection, or history states from becoming observable.

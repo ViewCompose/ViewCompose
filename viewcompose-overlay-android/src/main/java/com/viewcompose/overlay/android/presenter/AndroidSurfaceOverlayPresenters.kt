@@ -176,11 +176,13 @@ private class AndroidDialogOverlayHandle(
         // Host cleanup is not a user dismissal and must not call application close state twice.
         programmaticDismiss = true
         dialog.setOnDismissListener(null)
-        surfaceSession.dispose()
-        if (dialog.isShowing) {
-            dialog.dismiss()
+        try {
+            finishSurfaceDismissal(surfaceSession::dispose) {
+                if (dialog.isShowing) dialog.dismiss()
+            }
+        } finally {
+            programmaticDismiss = false
         }
-        programmaticDismiss = false
     }
 }
 
@@ -425,9 +427,8 @@ private class AndroidPopupOverlayHandle(
         rootView.removeOnAttachStateChangeListener(attachStateListener)
         detachTreeObservers()
         popupWindow.setOnDismissListener(null)
-        surfaceSession.dispose()
-        if (popupWindow.isShowing) {
-            popupWindow.dismiss()
+        finishSurfaceDismissal(surfaceSession::dispose) {
+            if (popupWindow.isShowing) popupWindow.dismiss()
         }
     }
 
@@ -531,3 +532,20 @@ private fun Int.atMostMeasureSpec(): Int {
 // Android's ambient and spot shadows vary by API and light configuration. Twice the effective Z
 // conservatively contains both components without making the window itself a second shadow owner.
 private const val POPUP_NATIVE_SHADOW_OUTSET_MULTIPLIER = 2f
+
+/** Preserves the first failure while always attempting native window teardown. */
+private inline fun finishSurfaceDismissal(disposeSurface: () -> Unit, dismissWindow: () -> Unit) {
+    var failure: Throwable? = null
+    try {
+        disposeSurface()
+    } catch (error: Throwable) {
+        failure = error
+    }
+    try {
+        dismissWindow()
+    } catch (error: Throwable) {
+        val first = failure
+        if (first == null) failure = error else if (first !== error) first.addSuppressed(error)
+    }
+    failure?.let { throw it }
+}

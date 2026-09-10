@@ -39,7 +39,7 @@ function verifyWorkflow(workflow, contract) {
     ['--verify-tag', 'tag existence verification'],
     ['gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME"', 'existing-release inspection'],
     ['gh release download "$GITHUB_REF_NAME"', 'existing-release byte verification'],
-    ['npm view @viewcompose/ai-tooling@0.8.0 version', 'unpublished npm-identity requirement'],
+    [`npm view ${contract.package.name}@${contract.package.version} version`, 'unpublished npm-identity requirement'],
     ['automated recovery cannot prove its OIDC provenance', 'existing npm provenance rejection'],
     ['npm publish', 'npm publication'],
     ['--access public', 'public scoped-package access'],

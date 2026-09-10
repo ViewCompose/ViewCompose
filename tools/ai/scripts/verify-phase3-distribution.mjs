@@ -585,7 +585,7 @@ async function verifyCliFlow(
     validatedInference.status !== 'success' ||
     validatedInference.evidence.level !== 'static' ||
     validatedInference.evidence.outputFingerprint !==
-      'a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab' ||
+      '7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68' ||
     validatedInference.data?.summary?.codeGenerationAllowed !== false
   ) {
     throw new Error('Installed CLI did not validate the frozen screenshot inference golden.');
@@ -602,7 +602,7 @@ async function verifyCliFlow(
     resolvedInference.status !== 'success' ||
     resolvedInference.evidence.level !== 'static' ||
     resolvedInference.evidence.outputFingerprint !==
-      'acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee' ||
+      'f3619ac91a4dfa658466823ff0e031812d2ddeff902e1e4a997734b365b219db' ||
     resolvedInference.data?.summary?.codeGenerationAllowed !== true
   ) {
     throw new Error('Installed CLI did not resolve the frozen screenshot inference golden.');
@@ -642,7 +642,7 @@ async function verifyCliFlow(
     compiledScreenshot.data?.kotlinFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     compiledScreenshot.data?.generationReport?.reportFingerprint !==
-      '91da4ff1eaf1f4d2fb0f8c73d8816d2c91030510ff00730ee96abe80f0efa319'
+      '6a1eaddbc8bda251a87e9be20ad6cc539055dccb250591eb9c22e47fdac42fb5'
   ) {
     throw new Error(
       'Installed CLI did not compile the frozen screenshot Kotlin golden: ' +
@@ -1366,15 +1366,15 @@ async function verifyMcpMatrix(mcp, contract) {
     JSON.stringify(modernScreenshot?.result?.structuredContent?.data) !==
       JSON.stringify(screenshotExpected) ||
     modernScreenshotInference?.result?.structuredContent?.evidence?.outputFingerprint !==
-      'a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab' ||
+      '7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68' ||
     modernScreenshotResolution?.result?.structuredContent?.evidence?.outputFingerprint !==
-      'acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee' ||
+      'f3619ac91a4dfa658466823ff0e031812d2ddeff902e1e4a997734b365b219db' ||
     modernScreenshotGeneration?.result?.structuredContent?.evidence?.outputFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     modernScreenshotComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      '4b649dd4050c061796d4911fa56e7dffb094f7eb6fcc73f8b6446918e4aa6dc8' ||
+      '418db58866f816d110d9490c1d31459be13260d5b63cabd6b55b7ac07e406479' ||
     modernScreenshotPixelComparison?.result?.structuredContent?.evidence?.outputFingerprint !==
-      '51a37d13f8368e3b10c6f15773da0044cfbb35a2660f29bd98fbefcf1cfe3d66' ||
+      'dcb044b3c567961406636af5e8c094f5cd32b34bb89682c43fa59b84a20d3fe4' ||
     !modernXml?.result?.structuredContent?.data?.kotlin?.includes('fun UiTreeBuilder.LoginView(') ||
     modernXmlProject?.result?.structuredContent?.data?.projectContext?.callSites?.length !== 7 ||
     !modernXmlProject?.result?.structuredContent?.data?.kotlin
@@ -1442,7 +1442,9 @@ async function main() {
     readJson(screenshotComparisonContractPath),
     readJson(screenshotPixelComparisonContractPath),
   ]);
-  const temporaryRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-distribution-'));
+  // The simulated HOME must be physical: macOS temporary-root aliases would otherwise
+  // trip the installed CLI's cache-path integrity guard before consumer flows run.
+  const temporaryRoot = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-ai-distribution-')));
   const comparisonRoot = resolve(temporaryRoot, 'comparison');
   const prefix = resolve(temporaryRoot, 'prefix');
   let uninstalled = false;

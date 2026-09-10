@@ -176,6 +176,28 @@ test('selects a durable Node runtime instead of persisting a temporary npx runti
   }
 });
 
+test('rejects temporary Node runtimes through both physical and aliased temporary roots', async () => {
+  const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-node-alias-')));
+  const physicalRoot = resolve(temporary, 'physical');
+  const linkedRoot = resolve(temporary, 'alias');
+  const transient = resolve(physicalRoot, 'node');
+  try {
+    await mkdir(physicalRoot);
+    await symlink(physicalRoot, linkedRoot, 'dir');
+    await writeFile(transient, '#!/bin/sh\nexit 0\n');
+    await chmod(transient, 0o755);
+    for (const executable of [transient, resolve(linkedRoot, 'node')]) {
+      await assert.rejects(resolveDurableNodeExecutable({
+        currentExecutable: executable,
+        pathEnvironment: '',
+        temporaryDirectory: linkedRoot,
+      }), {code: 'VC_AI_NODE_RUNTIME_TRANSIENT'});
+    }
+  } finally {
+    await rm(temporary, {recursive: true, force: true});
+  }
+});
+
 test('doctor reports a managed entry whose Node runtime became temporary', async () => {
   const temporary = await realpath(await mkdtemp(resolve(tmpdir(), 'viewcompose-node-doctor-')));
   const packageRoot = resolve(temporary, 'package');

@@ -526,3 +526,19 @@ fun uiImageRequestSample() {
 private data class SampleImageExtension(
     override val stableKey: Any,
 ) : UiImageRequestExtension
+
+/** Keeps a custom host's memory identity stable while resource revisions advance. */
+fun uiResourceCacheSample() {
+    // DOCS_REGION_START(ui-resource-cache)
+    val mounted = com.viewcompose.ui.environment.UiEnvironmentValues(
+        resourceCacheScope = java.util.UUID.randomUUID().toString(),
+    )
+    val refreshed = mounted.copy(resourceRevision = mounted.resourceRevision + 1)
+    val request = com.viewcompose.ui.node.UiImageRequest(
+        source = com.viewcompose.ui.node.ImageSource.Resource(1),
+        resourceRevision = refreshed.resourceRevision,
+        resourceCacheScope = refreshed.resourceCacheScope,
+    )
+    check(request.resourceCacheScope == mounted.resourceCacheScope)
+    // DOCS_REGION_END(ui-resource-cache)
+}

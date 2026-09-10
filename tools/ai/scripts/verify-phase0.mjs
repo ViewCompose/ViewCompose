@@ -1798,7 +1798,7 @@ async function verifyScreenshotDesignInference(schemas, screenshotPreprocessing)
     contract.validation?.providerExecution !== false ||
     contract.validation?.networkAccess !== false ||
     contract.validation?.expectedValidationFingerprint !==
-      'a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab' ||
+      '7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68' ||
     !TOOL_NAMES.includes(contract.validation.tool) ||
     TOOL_DEFINITIONS[contract.validation.tool]?.defaultLimits?.maxInputBytes !== 4_000_000 ||
     TOOL_DEFINITIONS[contract.validation.tool]?.defaultLimits?.maxOutputBytes !== 2_000_000

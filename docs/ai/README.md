@@ -231,6 +231,12 @@ The unpublished `0.8.0` candidate resolves the MCP command to a canonical execut
 temporary directories and npm's transient npx cache before writing project configuration. If only
 a temporary or missing Node runtime is available, `init` stops before project writes and `doctor`
 reports an actionable repair instead of preserving a path that disappears with the launcher cache.
+Temporary-directory aliases are checked in both their lexical and physical forms. In particular,
+resolving a macOS executable from `/var` to `/private/var` cannot turn a temporary runtime into a
+durable one. The 2026-09-08 macOS/Node 24.19 regression run passes all 18 client-integration tests;
+before this correction the existing doctor case failed, and the added alias case covers both
+executable spellings. The conclusion is `improved` temporary-runtime detection, not a performance
+claim; Windows host execution remains part of the platform matrix.
 The MCP `serverInfo.version` now matches the packaged `0.8.0` tooling identity.
 
 ## What works without ViewCompose source
@@ -796,3 +802,41 @@ contract described above. Public `0.7.0` adds the attended repair contract; use 
 
 Contributor internals are documented in the [AI tooling contract](../../tools/ai/README.md) and the
 active [AI-verifiable tooling plan](../project/plans/ai-verifiable-development-tooling.md).
+
+## Current-checkout process bounds
+
+The unpublished `0.8.0` candidate carries this correction after integrating the latest main branch;
+it supersedes the audit's initial local `0.7.1` candidate. `0.7.0` remains the published consumer
+version. Package, bootstrap, adoption, and release metadata retain the upstream `0.8.0` identity.
+Publication is a separate release step.
+
+The integrated candidate passes 397/397 AI tests, deterministic package reproduction, npm dry-run
+inventory, installed CLI/MCP/Agent workflows, and complete `qaQuick`. Source-bound XML and
+screenshot evidence was recaptured; image bytes, comparison denominators, and rejection thresholds
+are unchanged. See [capability verification](../project/capability-verification.md#framework-contract-audit-acceptance)
+for the accepted integration context and remaining device limits.
+
+Generated Preview requests retain separate Gradle project task histories. They share dependency
+downloads, but a request cannot trigger stale-output cleanup of another request's generated resource
+classes between discovery and render. Seven Preview adapter tests pass, including the new history
+isolation regression; a cold image-binding render reproduces its accepted PNG and render tree.
+This is **improved** execution isolation, not a render-speed claim.
+
+The unreleased bounded runner terminates a POSIX process group on timeout, cancellation, or output
+overflow, then escalates after two seconds. Completion also closes inherited output pipes, so a
+parent that exits before its descendants cannot leave the request waiting indefinitely. Windows
+uses best-effort `taskkill /T /F`; Windows execution and deliberately detached descendants are not
+covered by the macOS process-group evidence. The completion bound remains enforced.
+
+On macOS with Node, the initial candidate passed 45 runner/compiler/analyzer/MCP tests before the
+Knowledge identity refresh, compared with the
+39-test audit baseline; six added cases cover inherited pipes, cancellation, output limits,
+pre-cancellation, normal/spawn-error behavior, and forced termination. The former inherited-pipe
+failure is corrected: **improved**. Test-count growth is coverage, not a latency comparison. The
+next action is Windows process-tree validation before claiming cross-platform descendant cleanup.
+
+The identical 150 ms timeout probe completed in 158 ms on the final macOS candidate versus
+3558 ms on the audit baseline (3400 ms less, approximately 95.6%). Both runs use a descendant
+holding inherited output pipes. This is one boundedness regression observation, not a throughput
+or general latency benchmark. The integrated 397-test run passes all cases, including the six process regressions.
+The previously stale MCP and visual fixtures now pass against the refreshed source identity.

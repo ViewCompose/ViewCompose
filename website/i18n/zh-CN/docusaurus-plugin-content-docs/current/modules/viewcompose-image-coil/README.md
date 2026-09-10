@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-coil/README.md
-translation_source_hash: fd4869631cb4f4041c65e1d9fcc70671b41f8189d19b8715fd65a91ce50b2748
+translation_source_hash: 2fe4cee040d0b6ecec5bcfe5a393a43812aefd25d8ee19c2f30fc1f8e4e91012
 translation_status: current
 ---
 
@@ -45,11 +45,10 @@ dependencies {
 
 ## 缓存与所有权
 
-内存缓存、磁盘缓存、网络行为、Transformation 与 URL 解释都属于 Coil 策略。适配器不会增加第二层
-缓存。Primary 为 Android Resource 时，会提供包含捕获资源版本的稳定 Memory Cache 标识，避免
-Night/Locale/Density 变体复用旧解码项。纯远端请求保留 Coil 的普通标识；Resource Placeholder
-可以触发重绑，但不会丢弃远端 Primary Cache。调用方传入的 `ImageLoader` 仍归调用方所有，
-`CoilImageLoaderAdapter` 永远不会关闭它。
+Coil 拥有网络和远程缓存策略，适配器不增加第二层缓存。当前未发布实现对 Android 本地资源使用
+`resourceCacheScope`、资源 ID 与修订号组成内存缓存键；共享 Loader 的不同挂载宿主即使修订号相同也不会冲突。
+缺少作用域时禁用资源内存缓存。由于临时宿主或主题身份不是持久内容指纹，本地资源磁盘缓存被禁用。
+远程主图即使有资源 Placeholder，也沿用 Coil 的缓存标识。`ImageLoader` 的关闭仍由调用方负责。
 
 资源 ID 会原样转发。无效资源与请求失败遵循 Android 和 Coil 的普通 Error 行为。
 
@@ -74,3 +73,11 @@ Night/Locale/Density 变体复用旧解码项。纯远端请求保留 Coil 的�
 
 `0.1.0-alpha03` 直接把平台无关请求转发给 Coil 3。它不会在声明式图片契约中暴露 Coil
 Transformation，不管理全局 Loader，也不承诺独立于所配置 Coil 版本的缓存策略。
+
+## 当前检出版本的回归证据
+
+审查基线将相同资源 ID 与宿主内修订号映射为相同的共享缓存键。候选版本的 Gradle 适配器套件通过
+7 项测试，失败和跳过均为零，覆盖不同挂载作用域、修订变化、缺少作用域时的内存策略，以及资源磁盘
+策略禁用。Glide 套件另验证 Android 夜间模式签名不同，并使用目标主题。测试请求中的跨宿主键冲突得到消除，
+正确性结论为改进。跨挂载缓存复用和资源磁盘缓存按设计减少，因此性能结论在测量前尚不确定。
+Robolectric 请求构建不代表解码像素或真机验收；后续验证真机主题、资源外观与缓存命中率。

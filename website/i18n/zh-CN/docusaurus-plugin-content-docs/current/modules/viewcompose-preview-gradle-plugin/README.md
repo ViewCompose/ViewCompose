@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-gradle-plugin/README.md
-translation_source_hash: 447250f08a992dce7d5f560cab458b83cb616189cefad5bfc893d7f148561574
+translation_source_hash: c2776d85c065b31ef131ec60bcfd5e7ac40d825c25175cccacc5e88d20b70d51
 translation_status: current
 ---
 
@@ -91,3 +91,11 @@ End-to-end 分母。运维结论为**混合**：跨 Build Pixel Determinism 得�
 
 另见 [Preview 工具](../../tooling/preview.md)、[Preview Core](../viewcompose-preview-core/README.md)
 与[生成式 API Reference](https://docs.viewcompose.com/api/viewcompose-preview-gradle-plugin/current/)。
+
+2026-09-07 的框架契约验证完成了此前未接受的完整插件测试：24/24 项通过，失败、错误、跳过
+均为零，包括验证发现、发布注解剥离、工作进程 JVM 选择、缓存渲染和快速刷新的 Android
+TestKit 用例。Gradle 9.3.1 运行在 JDK 21 上；测试启动器和夹具使用 JDK 17 与 Android SDK 35。
+仅在文件完整 SHA-1 与内容地址一致后，才从已有 Gradle 缓存补齐缺失的 TestKit 依赖；测试和
+生产源码均未修改。结论为验证完整性 `improved`，不代表归一化后的性能提升或新增真实
+Layoutlib 像素证据，因为功能夹具使用模拟工作进程。源码绑定的 AI 视觉金样与完整 `qaQuick`
+验收仍在[能力验证](../../project/capability-verification.md#框架契约审查验收)中跟踪。

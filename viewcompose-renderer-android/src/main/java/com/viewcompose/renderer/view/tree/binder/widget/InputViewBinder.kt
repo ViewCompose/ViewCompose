@@ -13,6 +13,7 @@ import android.widget.RadioButton
 import android.widget.SeekBar
 import android.widget.Switch
 import com.viewcompose.renderer.R
+import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.text.InputTransformation
 import com.viewcompose.text.ReceiveContentConfiguration
 import com.viewcompose.text.TextFieldState
@@ -470,8 +471,12 @@ internal object InputViewBinder {
     ) {
         view.setReadOnlyMode(readOnly)
         view.setTextIsSelectable(readOnly)
-        view.isFocusable = true
-        view.isFocusableInTouchMode = true
+        ModifierFocusInputApplier.applyFocusable(
+            view = view,
+            resolved = view.getTag(R.id.viewcompose_resolved_modifiers) as? ResolvedModifiers ?: ResolvedModifiers(),
+            defaultFocusable = true,
+            defaultFocusableInTouchMode = true,
+        )
         view.isCursorVisible = !readOnly
         view.isLongClickable = true
     }

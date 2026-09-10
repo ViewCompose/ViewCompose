@@ -62,6 +62,9 @@ data class TransientFeedbackQueueSnapshot(
 
 /**
  * Manages snackbar/toast queueing, replacement, and clearing while delegating final presentation to platform presenters.
+ * Session clearing attempts every owned removal. A failed presenter dismissal releases its queue
+ * slot so unrelated sessions can continue; the first cleanup failure retains later failures as
+ * suppressed exceptions.
  */
 class TransientFeedbackOverlayHost(
     private val snackbarPresenter: SnackbarOverlayPresenter,
@@ -88,7 +91,7 @@ class TransientFeedbackOverlayHost(
             }
             val removedIds = desiredRequests.keys
                 .filter { it.sessionId == sessionId && it !in nextRequests }
-            removedIds.forEach { entryId ->
+            removedIds.forEachOverlayCleanup { entryId ->
                 removeDesired(
                     entryId = entryId,
                     reason = TransientFeedbackDismissReason.Removed,
@@ -119,7 +122,7 @@ class TransientFeedbackOverlayHost(
         reconcile {
             desiredRequests.keys
                 .filter { it.sessionId == sessionId }
-                .forEach { entryId ->
+                .forEachOverlayCleanup { entryId ->
                     removeDesired(
                         entryId = entryId,
                         reason = TransientFeedbackDismissReason.SessionCleared,
@@ -177,13 +180,19 @@ class TransientFeedbackOverlayHost(
             return
         }
         active.dismissRequested = true
-        when (active.entry.request.type) {
-            OverlayType.Snackbar -> snackbarPresenter.dismiss(active.entry.entryId, reason)
-            OverlayType.Toast -> toastPresenter.dismiss(active.entry.entryId, reason)
-            OverlayType.Dialog,
-            OverlayType.Popup,
-            OverlayType.ModalBottomSheet,
-            -> Unit
+        try {
+            when (active.entry.request.type) {
+                OverlayType.Snackbar -> snackbarPresenter.dismiss(active.entry.entryId, reason)
+                OverlayType.Toast -> toastPresenter.dismiss(active.entry.entryId, reason)
+                OverlayType.Dialog,
+                OverlayType.Popup,
+                OverlayType.ModalBottomSheet,
+                -> Unit
+            }
+        } catch (error: Throwable) {
+            // A failing presenter may never acknowledge dismissal; do not pin the entire queue.
+            if (activeRequest === active) activeRequest = null
+            throw error
         }
     }
 
@@ -257,12 +266,21 @@ class TransientFeedbackOverlayHost(
 
     private inline fun reconcile(block: () -> Unit) {
         reconciliationDepth += 1
+        var failure: Throwable? = null
         try {
             block()
+        } catch (error: Throwable) {
+            failure = error
         } finally {
             reconciliationDepth -= 1
-            drainQueue()
+            try {
+                drainQueue()
+            } catch (error: Throwable) {
+                val first = failure
+                if (first == null) failure = error else if (first !== error) first.addSuppressed(error)
+            }
         }
+        failure?.let { throw it }
     }
 
     private fun OverlayRequest.toSupportedEntry(

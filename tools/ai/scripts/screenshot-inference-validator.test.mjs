@@ -77,7 +77,7 @@ test('reproduces preprocessing and imports the exact incomplete human golden det
   assert.equal(first.data.validationFingerprint, second.data.validationFingerprint);
   assert.equal(
     first.data.validationFingerprint,
-    'a9ebb9732105d35eab22ed56f67a6b1f02396985a5b19344b6be21b9f59e48ab',
+    '7c14edc232f74463fa02ab6d3dffe215c887c7a1053522a551302351097a4a68',
   );
 });
 

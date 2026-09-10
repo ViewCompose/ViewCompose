@@ -28,6 +28,31 @@ class ImageRequestBindingControllerTest {
     private val view = ImageView(RuntimeEnvironment.getApplication())
 
     @Test
+    fun `binder carries scope for resource sources and preserves remote request reuse`() {
+        val requests = mutableListOf<UiImageRequest>()
+        val loader = UiImageLoader { _, request -> requests += request; UiImageLoadHandle {} }
+        fun bind(source: ImageSource, scope: String) {
+            val node = com.viewcompose.ui.node.VNode(
+                type = com.viewcompose.ui.node.NodeType.Image,
+                spec = com.viewcompose.ui.node.spec.ImageNodeProps(
+                    contentDescription = null, contentScale = com.viewcompose.ui.node.ImageContentScale.Fit,
+                    tint = null, source = source, placeholder = null, error = null, fallback = null,
+                    imageLoader = loader,
+                ),
+                environment = com.viewcompose.ui.environment.UiEnvironmentValues(resourceCacheScope = scope),
+            )
+            MediaViewBinder.bindImage(view, MediaViewBinder.readImageSpec(node))
+        }
+        bind(ImageSource.Resource(android.R.drawable.ic_menu_gallery), "host-a")
+        bind(ImageSource.Resource(android.R.drawable.ic_menu_gallery), "host-b")
+        assertEquals(listOf("host-a", "host-b"), requests.map { it.resourceCacheScope })
+        bind(ImageSource.Url("https://example.com/a.png"), "host-a")
+        bind(ImageSource.Url("https://example.com/a.png"), "host-b")
+        assertEquals(3, requests.size)
+        assertNull(requests.last().resourceCacheScope)
+    }
+
+    @Test
     fun `first request stores one handle`() {
         val loader = RecordingLoader()
 
@@ -71,6 +96,19 @@ class ImageRequestBindingControllerTest {
         ImageRequestBindingController.replace(view, loader, first)
         ImageRequestBindingController.replace(view, loader, first.copy(resourceRevision = 2L))
 
+        assertEquals(2, loader.startCount)
+        assertEquals(1, loader.disposeCount)
+    }
+
+    @Test
+    fun `resource scope replacement disposes a request at the same local revision`() {
+        val loader = RecordingResourceLoader()
+        val first = UiImageRequest(
+            source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+            resourceCacheScope = "first-mount",
+        )
+        ImageRequestBindingController.replace(view, loader, first)
+        ImageRequestBindingController.replace(view, loader, first.copy(resourceCacheScope = "second-mount"))
         assertEquals(2, loader.startCount)
         assertEquals(1, loader.disposeCount)
     }

@@ -3,6 +3,7 @@ package com.viewcompose.host.android.runtime
 import android.os.Handler
 import android.os.Looper
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Coalesces render requests onto the next main-thread frame.
@@ -17,42 +18,55 @@ internal class FrameAlignedRenderDispatcher(
     private val postToMain: ((Runnable) -> Unit)? = null,
 ) : RenderFrameCallback {
     private val disposed = AtomicBoolean(false)
-    private val frameRequested = AtomicBoolean(false)
+    // Even generations are idle; odd generations own one request. Queued work captures its owner.
+    private val requestGeneration = AtomicLong(0L)
+    private var postedGeneration = 0L
 
     override fun doFrame(frameTimeNanos: Long) {
-        if (disposed.get()) {
-            frameRequested.set(false)
-            return
-        }
+        val generation = postedGeneration
+        postedGeneration = 0L
         // Clear first so reentrant invalidation can schedule the following frame.
-        frameRequested.set(false)
+        if (generation == 0L || disposed.get() ||
+            !requestGeneration.compareAndSet(generation, generation + 1L)
+        ) return
         onFrameRender.renderFrame()
-    }
-
-    private val requestOnMain = Runnable {
-        postFrameOnMain()
-    }
-
-    private val cancelOnMain = Runnable {
-        cancelFrameOnMain()
     }
 
     fun requestFrame() {
         if (disposed.get()) return
-        if (!frameRequested.compareAndSet(false, true)) return
+        val generation = claimRequest()
+        if (generation == 0L) return
         if (isOnMainThread()) {
-            postFrameOnMain()
+            postFrameOnMain(generation)
         } else {
-            postOnMain(requestOnMain)
+            postOnMain(Runnable { postFrameOnMain(generation) })
+        }
+    }
+
+    private fun claimRequest(): Long {
+        while (true) {
+            val previous = requestGeneration.get()
+            if (previous and 1L != 0L) return 0L
+            val next = previous + 1L
+            if (requestGeneration.compareAndSet(previous, next)) return next
         }
     }
 
     fun cancelPending() {
-        if (!frameRequested.get()) return
+        val generation = invalidateRequest()
+        if (generation == 0L) return
         if (isOnMainThread()) {
-            cancelFrameOnMain()
+            cancelFrameOnMain(generation)
         } else {
-            postOnMain(cancelOnMain)
+            postOnMain(Runnable { cancelFrameOnMain(generation) })
+        }
+    }
+
+    private fun invalidateRequest(): Long {
+        while (true) {
+            val generation = requestGeneration.get()
+            if (generation and 1L == 0L) return 0L
+            if (requestGeneration.compareAndSet(generation, generation + 1L)) return generation
         }
     }
 
@@ -61,16 +75,22 @@ internal class FrameAlignedRenderDispatcher(
         cancelPending()
     }
 
-    private fun postFrameOnMain() {
-        if (disposed.get()) {
-            frameRequested.set(false)
-            return
+    private fun postFrameOnMain(generation: Long) {
+        if (disposed.get() || requestGeneration.get() != generation) return
+        if (postedGeneration != 0L) frameClock.removeFrameCallback(this)
+        postedGeneration = generation
+        try {
+            frameClock.postFrameCallback(this)
+        } catch (error: Throwable) {
+            postedGeneration = 0L
+            requestGeneration.compareAndSet(generation, generation + 1L)
+            throw error
         }
-        frameClock.postFrameCallback(this)
     }
 
-    private fun cancelFrameOnMain() {
-        if (frameRequested.compareAndSet(true, false)) {
+    private fun cancelFrameOnMain(generation: Long) {
+        if (postedGeneration == generation) {
+            postedGeneration = 0L
             frameClock.removeFrameCallback(this)
         }
     }

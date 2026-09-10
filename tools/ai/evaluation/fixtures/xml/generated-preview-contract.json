@@ -185,7 +185,7 @@
       "wrapper": "generated-preview/login.preview-wrapper.kt",
       "expectedFunction": "LoginView",
       "expectedBindings": 4,
-      "expectedRequestFingerprint": "9a3e4d8d0871e25378ab758951bc7786c233232315defb8714b784bae48e414e",
+      "expectedRequestFingerprint": "8412c725fe9ee4a65b38d0db8ab343b206430cbc085c93ee9a27cc1c36e71367",
       "expectedGeneratedKotlinFingerprint": "6c4f6dafef9e0b4808eefab440d14e331b1a3b55bc8becff7a05d3669cc73be1",
       "expectedWrapperFingerprint": "8d4ff9932ada6621a05b486a22d410d79a674db787c29ac22b1e7e4e0dcf8821",
       "expectedWrapperExpressions": ["emailState = TextFieldState(),"],
@@ -229,7 +229,7 @@
       "expectedAssetWidthPx": 1,
       "expectedAssetHeightPx": 1,
       "expectedResourceName": "vc_ai_4ff6ab670a58c14270e034e2090d9a432caa263a14e0a25785386b0c12f880b5",
-      "expectedRequestFingerprint": "e911b8ce4f947dc1d0ce5108b47e37313a9f8e1b2e501d632561eef27521d376",
+      "expectedRequestFingerprint": "92aeab667adaca25af24ff5490d0318720d0cfb4392be8560f4b8145c4019d2b",
       "expectedGeneratedKotlinFingerprint": "15b15098e92b62bc9730ab7b3f2bde7715596f22069490a18b1e7830ff92ad35",
       "expectedWrapperFingerprint": "461d7c9e7b9898b9b9f7373775fa10c8a180097664627b442d36a8b2abd2a4b2",
       "expectedWrapperExpressions": [

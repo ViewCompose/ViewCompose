@@ -7,9 +7,31 @@ package com.viewcompose.graphics.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class DrawCacheTest {
+    @Test
+    fun `null values and null keys cache until explicitly cleared`() {
+        val cache = DrawCache<String?>()
+        var builds = 0
+        repeat(2) { assertNull(cache.getOrBuild(null) { builds++; null }) }
+        assertEquals(1, builds)
+        cache.clear()
+        assertNull(cache.getOrBuild(null) { builds++; null })
+        assertEquals(2, builds)
+    }
+
+    @Test
+    fun `failed replacement preserves an existing null result`() {
+        val cache = DrawCache<String?>()
+        cache.getOrBuild("old") { null }
+        val failure = IllegalStateException("builder")
+        assertSame(failure, runCatching { cache.getOrBuild("new") { throw failure } }.exceptionOrNull())
+        assertNull(cache.getOrBuild("old") { error("old entry must still be cached") })
+        assertEquals("new", cache.getOrBuild("new") { "new" })
+    }
+
     @Test
     fun `getOrBuild reuses cached value for same key`() {
         val cache = DrawCache<List<Int>>()

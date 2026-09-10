@@ -838,6 +838,32 @@
       }
     },
     {
+      "artifactId": "viewcompose-graphics-core",
+      "capabilityId": "graphics.draw-cache",
+      "kind": "dsl",
+      "referenceId": "reference.graphics.draw-cache",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-graphics-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-graphics-core"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.graphics-core-cache",
+        "versionLane": "next"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.graphics.core.DrawCache"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha02"
+      }
+    },
+    {
       "artifactId": "viewcompose-host-android",
       "capabilityId": "host.android-animation",
       "kind": "integration",
@@ -2629,6 +2655,9 @@
       },
       "schemaVersion": 1,
       "symbolIds": [
+        "com.viewcompose.ui.foundation.OverlayHost",
+        "com.viewcompose.ui.foundation.SessionBoundSurfaceOverlayHost",
+        "com.viewcompose.ui.foundation.TransientFeedbackOverlayHost",
         "com.viewcompose.ui.foundation.UiTreeBuilder.AlertDialog",
         "com.viewcompose.ui.foundation.UiTreeBuilder.Dialog",
         "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenu",
@@ -3438,6 +3467,37 @@
       }
     },
     {
+      "artifactId": "viewcompose-text-core",
+      "capabilityId": "text.editing-state",
+      "kind": "dsl",
+      "referenceId": "reference.text.editing-state",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.text-input-runtime",
+          "documentType": "architecture",
+          "path": "/architecture/text-input"
+        },
+        {
+          "documentId": "module.viewcompose-text-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-text-core"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.text-core-state",
+        "versionLane": "released"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.text.TextFieldState"
+      ],
+      "versionState": {
+        "lane": "released",
+        "version": "0.1.0-alpha04"
+      }
+    },
+    {
       "artifactId": "viewcompose-ui-foundation",
       "capabilityId": "text.input",
       "kind": "dsl",
@@ -3689,6 +3749,42 @@
       "versionState": {
         "lane": "released",
         "version": "0.1.0-alpha01"
+      }
+    },
+    {
+      "artifactId": "viewcompose-ui-contract",
+      "capabilityId": "ui.resource-cache",
+      "kind": "dsl",
+      "referenceId": "reference.ui.resource-cache",
+      "relatedDocuments": [
+        {
+          "documentId": "architecture.android-resource-environment",
+          "documentType": "architecture",
+          "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+        },
+        {
+          "documentId": "migration.image-loading",
+          "documentType": "migration",
+          "path": "/migration/image-loading"
+        },
+        {
+          "documentId": "module.viewcompose-ui-contract",
+          "documentType": "module",
+          "path": "/modules/viewcompose-ui-contract"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.ui-resource-cache",
+        "versionLane": "next"
+      },
+      "schemaVersion": 1,
+      "symbolIds": [
+        "com.viewcompose.ui.environment.UiEnvironmentValues",
+        "com.viewcompose.ui.node.UiImageRequest"
+      ],
+      "versionState": {
+        "lane": "next"
       }
     },
     {

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/text-input.md
-translation_source_hash: cd094bb84bb94526334d125fc543a47300d217dc2933df039caa07b95f1bfd2c
+translation_source_hash: b716d01533b96f208464a2af818b1c3feb2fcbf8622cfa3e7480ad9ef8c223cc
 translation_status: current
 ---
 
@@ -38,6 +38,11 @@ Grapheme Cluster 索引。`TextRange` 保留方向，因此从末端到起点的
 文本编辑限制在 UI 线程。应用编辑绕过 Input Transformation；文档变化会结束组合输入、建立
 一个撤销项并清空重做。只有选区变化时不增加历史。平台组合输入会在 IME Commit 时合并成一个
 撤销单元。撤销与重做会恢复文档和选区，但不会复活已失效的组合 Session。
+
+编辑值、组合输入基线和两个历史列表组成一个由快照管理的不可变元组。外层事务被放弃或提交冲突
+不会遗留历史变动；固定版本的读取会看到与其文本版本对应的历史。组合状态转换先于文档相等的
+快速路径处理：文本未变的结束事件仍会提交待完成的撤销单元，取消回到基线则不会新增记录。
+历史复制共享不可变文档，并受配置的记录数上限约束。
 
 该区分避免应用替换被校验策略拒绝，也避免中间文本、选区或历史状态变为可观察值。
 

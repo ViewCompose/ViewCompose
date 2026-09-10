@@ -7,12 +7,14 @@ owner:
   id: viewcompose-ui-contract
 version_lane: released
 capability_ids:
+  - ui.resource-cache
   - lazy.item-session-reuse
   - renderer.tree-transactions
   - text.platform-font-family
 artifact_ids:
   - viewcompose-ui-contract
 sample_ids:
+  - module.ui-resource-cache
   - module.ui-contract-dependency
   - module.ui-contract-font-family
   - module.ui-contract-lazy-session-reuse
@@ -475,3 +477,18 @@ old duration-bearing spring approximation with `ContentSizeSpringSpecModel(dampi
 stiffness, maxDurationMillis)`, accept only `ContentSizeAnimationSpecModel` at the host
 boundary, and rebuild precompiled exhaustive consumers. There is no infinite-repeat content-size
 model or duration-spring compatibility subtype.
+
+## Unreleased resource cache identity and compatibility
+
+`UiEnvironmentValues.resourceCacheScope` and `UiImageRequest.resourceCacheScope` carry an opaque,
+process-unique memory scope. A mounted owner retains it and advances the local revision after every
+resource/theme mutation; remount creates a new scope. `null` means unknown identity, so first-party
+adapters disable primary resource caching. Scopes contain no Context or resource handle and require
+no cleanup. They must not be reused as persistent disk keys. The renderer forwards scopes only
+for resource-backed bindings, preserving remote-only request equality.
+
+The added defaulted fields are source-compatible for ordinary constructor calls but change Kotlin
+data-class constructor/copy binary signatures. Recompile all consumers together before upgrading;
+do not mix old binaries with this checkout. Custom hosts can follow `uiResourceCacheSample` or
+install `AndroidResourceEnvironment`. The [image migration](../../migration/image-loading.md)
+owns upgrade steps and cache-policy consequences.

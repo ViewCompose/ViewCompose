@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-text-core/README.md
-translation_source_hash: efc77b1583b7d8f510861671220d8b45698ed378e3e0afb2f1370bd87b27dcdf
+translation_source_hash: a9c76cc0cdfd7caa00d225ca58f672abf092bd3083a0992aac69b243914e3360
 translation_status: current
 schema_version: 2
 document_id: module.viewcompose-text-core
@@ -10,6 +10,7 @@ owner:
   id: viewcompose-text-core
 version_lane: released
 capability_ids:
+  - text.editing-state
   - text.input
 artifact_ids:
   - viewcompose-text-core
@@ -122,6 +123,12 @@ check(state.text == "Hello")
 - undo/redo 恢复文档时不会恢复临时 IME composition。
 - `historyLimit` 只限制 undo 栈，默认 100 条。
 
+在尚未发布的工作树中，文本值、撤销/重做列表和组合输入基线构成一个由快照管理的不可变状态。
+外层快照被放弃或发生提交冲突时，这些内容均保持不变；固定版本的读取同时看到历史文本和对应的
+历史可用性。历史操作复制有界的不可变值引用列表，文档内容继续共享。只改选区的程序编辑保留
+待提交的组合输入基线。即使文档与上一次组合更新相同，结束组合输入仍会生成对应的撤销单元；
+取消并回到基线则不添加记录。即使两个历史列表均为空，`clearHistory` 也会清除待提交的基线。
+
 ## 输入转换
 
 `InputTransformation` 接收平台用户编辑提案的隔离 buffer。它可以改写提案，也可以通过
@@ -190,3 +197,12 @@ check(restored == original)
 composition 历史合并、Receive Content 归一化和保存格式 version 1。不要持久化
 `TextFieldState`、`TextFieldBuffer`、活跃 composition range、transformation 实例或平台
 adapter；只持久化兼容 codec 明确编码的值。
+
+## 当前检出版本的回归证据
+
+2026-09-06 对基线 `d64710459df73f3b42067767bb2f4f273b9eff33` 的审查复现了两个文本历史问题：
+结束未变更的组合输入时丢失撤销，以及放弃编辑快照后历史仍被修改。候选版本在相同 13 个模块的
+源码集合上通过 854 项独立 JVM 测试，其中包含 12 项新增 `TextHistorySnapshotTest` 用例。
+两个文本探针均达到预期，失败从 2 降至 0（这些探针减少 100%），结论为改进。
+这证明事务和组合输入语义，不代表真机 IME 或编辑延迟验收。Renderer 的 `TextFieldControllerTest`
+负责原生 `finishComposingText` 桥接验证；后续需要真机验证该桥接，并在性能结论前测量大历史记录负载。

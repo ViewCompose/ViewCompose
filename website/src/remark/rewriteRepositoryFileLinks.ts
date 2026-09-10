@@ -13,6 +13,7 @@ type RemarkFile = {
 export type RepositoryFileLinkOptions = {
   repositoryRoot: string;
   docsRoot: string;
+  localizedDocsRoots?: string[];
   repositorySourceUrl: string;
 };
 
@@ -38,7 +39,10 @@ function rewriteUrl(
   }
 
   const target = resolve(dirname(sourcePath), decodeURI(pathname));
-  if (!isInside(options.repositoryRoot, target) || isInside(options.docsRoot, target)) {
+  const documentationRoots = [options.docsRoot, ...(options.localizedDocsRoots ?? [])];
+  // Localized Markdown is also documentation. Let Docusaurus resolve these links
+  // before treating other repository files as source-only GitHub links.
+  if (!isInside(options.repositoryRoot, target) || documentationRoots.some(root => isInside(root, target))) {
     return url;
   }
 

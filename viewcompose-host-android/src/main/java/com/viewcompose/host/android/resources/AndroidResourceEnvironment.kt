@@ -99,6 +99,8 @@ object LocalAndroidResources {
  * When [environmentValues] is non-null, its density, locales, and layout direction remain fixed;
  * only its resource revision advances. This supports deterministic preview hosts whose Android
  * bridge owns those values separately. Standard application hosts leave it `null`.
+ * Every mounted provider owns a fresh process-unique resource cache scope, including fixed-value
+ * preview hosts. The scope is stable across refreshes and is never suitable for disk persistence.
  *
  * Registration, refresh callbacks, content construction, and disposal are Android-main-thread
  * work. If pre-refresh or resolution fails, the previous snapshot remains active and the exception
@@ -160,6 +162,7 @@ internal class AndroidResourceEnvironmentLifecycle(
     private var started = false
     private var unsubscribeRefresh: (() -> Unit)? = null
     private var revision = fixedEnvironmentValues?.resourceRevision ?: 0L
+    private val resourceCacheScope = java.util.UUID.randomUUID().toString()
 
     val snapshot: MutableState<AndroidResourceSnapshot> = mutableStateOf(
         AndroidResourceSnapshot(resolveEnvironment()),
@@ -203,7 +206,7 @@ internal class AndroidResourceEnvironmentLifecycle(
 
     private fun resolveEnvironment(): UiEnvironmentValues {
         val values = fixedEnvironmentValues ?: AndroidEnvironmentBridge.fromContext(context)
-        return values.copy(resourceRevision = revision)
+        return values.copy(resourceRevision = revision, resourceCacheScope = resourceCacheScope)
     }
 }
 

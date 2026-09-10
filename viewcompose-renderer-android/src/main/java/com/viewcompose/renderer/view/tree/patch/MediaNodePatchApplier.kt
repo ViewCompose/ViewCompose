@@ -60,6 +60,9 @@ internal object MediaNodePatchApplier {
                     imageLoader = next.imageLoader,
                     requestOptions = next.requestOptions,
                     density = view.requireUiEnvironment().density,
+                    resourceCacheScope = view.requireUiEnvironment().resourceCacheScope.takeIf {
+                        next.source is ImageSource.Resource || next.placeholder != null || next.error != null
+                    },
                     resourceRevision = view.requireUiEnvironment().resourceRevision.takeIf {
                         next.source is ImageSource.Resource ||
                             next.placeholder != null ||
@@ -113,6 +116,9 @@ internal object MediaNodePatchApplier {
                     imageLoader = next.imageLoader,
                     requestOptions = next.requestOptions,
                     density = view.requireUiEnvironment().density,
+                    resourceCacheScope = view.requireUiEnvironment().resourceCacheScope.takeIf {
+                        next.source is ImageSource.Resource || next.placeholder != null || next.error != null
+                    },
                     resourceRevision = view.requireUiEnvironment().resourceRevision.takeIf {
                         next.source is ImageSource.Resource ||
                             next.placeholder != null ||

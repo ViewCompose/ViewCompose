@@ -1,7 +1,6 @@
 package com.viewcompose.text
 
 import com.viewcompose.runtime.MutableState
-import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.mutableStateOf
 
 /**
@@ -13,6 +12,9 @@ import com.viewcompose.runtime.mutableStateOf
  * unit when composition commits. Each edit, undo, or redo publishes the complete value and
  * undo/redo availability in one snapshot transaction, so observers never receive a committed text
  * value paired with stale history availability.
+ * The value, composition baseline, and history belong to one immutable snapshot-managed state:
+ * abandoning or conflicting an enclosing snapshot leaves all of them unchanged. History updates
+ * copy bounded lists of immutable value references, not the document contents.
  *
  * @sample com.viewcompose.text.samples.textFieldStateSample
  * @param initialValue first committed editable snapshot
@@ -26,15 +28,18 @@ class TextFieldState(
         require(historyLimit > 0) { "historyLimit must be greater than zero." }
     }
 
-    private val valueState: MutableState<TextFieldValue> = mutableStateOf(initialValue)
-    private val historyVersion: MutableState<Int> = mutableStateOf(0)
-    private val undoStack = ArrayDeque<TextFieldValue>()
-    private val redoStack = ArrayDeque<TextFieldValue>()
-    private var compositionBase: TextFieldValue? = null
+    private data class EditingState(
+        val value: TextFieldValue,
+        val undo: List<TextFieldValue> = emptyList(),
+        val redo: List<TextFieldValue> = emptyList(),
+        val compositionBase: TextFieldValue? = null,
+    )
+
+    private val editingState: MutableState<EditingState> = mutableStateOf(EditingState(initialValue))
 
     /** Current complete editable snapshot. */
     val value: TextFieldValue
-        get() = valueState.value
+        get() = editingState.value.value
 
     /** Current plain-text projection. */
     val text: String
@@ -54,17 +59,11 @@ class TextFieldState(
 
     /** Whether [undo] can restore a previous committed document. */
     val canUndo: Boolean
-        get() {
-            historyVersion.value
-            return undoStack.isNotEmpty()
-        }
+        get() = editingState.value.undo.isNotEmpty()
 
     /** Whether [redo] can reapply a document removed by [undo]. */
     val canRedo: Boolean
-        get() {
-            historyVersion.value
-            return redoStack.isNotEmpty()
-        }
+        get() = editingState.value.redo.isNotEmpty()
 
     /**
      * Applies one atomic application-owned edit.
@@ -75,7 +74,8 @@ class TextFieldState(
      * applied to programmatic edits.
      */
     fun edit(block: TextFieldBuffer.() -> Unit) {
-        val current = valueState.value
+        val previous = editingState.value
+        val current = previous.value
         val buffer = TextFieldBuffer(
             originalValue = current,
             proposedValue = current,
@@ -87,7 +87,7 @@ class TextFieldState(
         } else {
             proposed
         }
-        commitProgrammaticValue(current, next)
+        commitProgrammaticValue(previous, next)
     }
 
     /** Replaces the document with plain [text] as one edit and places the cursor at the end. */
@@ -114,6 +114,8 @@ class TextFieldState(
      *
      * [inputTransformation] may rewrite or reject the proposal before commit. Selection-only and
      * in-progress composition changes update the value without creating independent undo units.
+     * Ending composition finalizes its undo unit even when the document text is unchanged, as with
+     * an IME finish-composition event. A cancellation returning to the baseline adds no undo unit.
      *
      * @param proposedValue complete platform-proposed editable snapshot
      * @param inputTransformation optional synchronous policy applied to an isolated buffer
@@ -123,83 +125,76 @@ class TextFieldState(
         proposedValue: TextFieldValue,
         inputTransformation: InputTransformation? = null,
     ): TextFieldValue {
-        val current = valueState.value
+        val previous = editingState.value
+        val current = previous.value
         val buffer = TextFieldBuffer(
             originalValue = current,
             proposedValue = proposedValue,
         )
         inputTransformation?.transformInput(buffer)
         val accepted = buffer.toTextFieldValue()
-        commitInputValue(current, accepted)
-        return valueState.value
+        commitInputValue(previous, accepted)
+        return value
     }
 
     /** Restores the previous document without IME composition, returning whether history existed. */
     fun undo(): Boolean {
-        if (undoStack.isEmpty()) return false
-        val current = valueState.value.withoutComposition()
-        redoStack.addLast(current)
-        val restored = undoStack.removeLast().withoutComposition()
-        compositionBase = null
-        Snapshot.withMutableSnapshot {
-            valueState.value = restored
-            notifyHistoryChanged()
-        }
+        val previous = editingState.value
+        val restored = previous.undo.lastOrNull() ?: return false
+        editingState.value = previous.copy(
+            value = restored.withoutComposition(),
+            undo = previous.undo.dropLast(1),
+            redo = previous.redo + previous.value.withoutComposition(),
+            compositionBase = null,
+        )
         return true
     }
 
     /** Reapplies the next redo document without IME composition, returning whether history existed. */
     fun redo(): Boolean {
-        if (redoStack.isEmpty()) return false
-        val current = valueState.value.withoutComposition()
-        pushUndo(current)
-        val restored = redoStack.removeLast().withoutComposition()
-        compositionBase = null
-        Snapshot.withMutableSnapshot {
-            valueState.value = restored
-            notifyHistoryChanged()
-        }
+        val previous = editingState.value
+        val restored = previous.redo.lastOrNull() ?: return false
+        editingState.value = previous.copy(
+            value = restored.withoutComposition(),
+            undo = pushUndo(previous.undo, previous.value.withoutComposition()),
+            redo = previous.redo.dropLast(1),
+            compositionBase = null,
+        )
         return true
     }
 
     /** Clears undo, redo, and any pending IME composition baseline without changing [value]. */
     fun clearHistory() {
-        if (undoStack.isEmpty() && redoStack.isEmpty()) return
-        undoStack.clear()
-        redoStack.clear()
-        compositionBase = null
-        notifyHistoryChanged()
+        val previous = editingState.value
+        editingState.value = previous.copy(undo = emptyList(), redo = emptyList(), compositionBase = null)
     }
 
     private fun commitProgrammaticValue(
-        current: TextFieldValue,
+        previous: EditingState,
         next: TextFieldValue,
     ) {
-        if (current == next) return
-        compositionBase = null
-        if (current.document != next.document) {
-            pushUndo(current.withoutComposition())
-            redoStack.clear()
-            Snapshot.withMutableSnapshot {
-                notifyHistoryChanged()
-                valueState.value = next
-            }
+        if (previous.value == next) return
+        if (previous.value.document != next.document) {
+            editingState.value = previous.copy(
+                value = next,
+                undo = pushUndo(previous.undo, previous.value.withoutComposition()),
+                redo = emptyList(),
+                compositionBase = null,
+            )
         } else {
-            valueState.value = next
+            commitInputValue(previous, next)
         }
     }
 
     private fun commitInputValue(
-        current: TextFieldValue,
+        previous: EditingState,
         next: TextFieldValue,
     ) {
+        val current = previous.value
         if (current == next) return
-        if (current.document == next.document) {
-            valueState.value = next
-            return
-        }
-
-        var historyChanged = false
+        var compositionBase = previous.compositionBase
+        var undo = previous.undo
+        var redo = previous.redo
         when {
             current.composition == null && next.composition != null -> {
                 // Capture the pre-composition baseline so the final IME commit is one undo unit.
@@ -210,38 +205,22 @@ class TextFieldState(
                 val base = compositionBase ?: current.withoutComposition()
                 compositionBase = null
                 if (base.document != next.document) {
-                    pushUndo(base)
-                    redoStack.clear()
-                    historyChanged = true
+                    undo = pushUndo(undo, base)
+                    redo = emptyList()
                 }
             }
 
-            current.composition == null && next.composition == null -> {
-                pushUndo(current.withoutComposition())
-                redoStack.clear()
-                historyChanged = true
+            current.composition == null && next.composition == null && current.document != next.document -> {
+                undo = pushUndo(undo, current.withoutComposition())
+                redo = emptyList()
             }
         }
-        if (historyChanged) {
-            Snapshot.withMutableSnapshot {
-                notifyHistoryChanged()
-                valueState.value = next
-            }
-        } else {
-            valueState.value = next
-        }
+        editingState.value = EditingState(next, undo, redo, compositionBase)
     }
 
-    private fun pushUndo(value: TextFieldValue) {
-        if (undoStack.lastOrNull() == value) return
-        undoStack.addLast(value)
-        while (undoStack.size > historyLimit) {
-            undoStack.removeFirst()
-        }
-    }
-
-    private fun notifyHistoryChanged() {
-        historyVersion.value = historyVersion.value + 1
+    private fun pushUndo(history: List<TextFieldValue>, value: TextFieldValue): List<TextFieldValue> {
+        if (history.lastOrNull() == value) return history
+        return history.takeLast(historyLimit - 1) + value
     }
 
     private fun TextFieldValue.withoutComposition(): TextFieldValue {

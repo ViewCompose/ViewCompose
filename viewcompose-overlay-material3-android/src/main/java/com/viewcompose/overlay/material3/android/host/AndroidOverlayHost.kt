@@ -20,6 +20,8 @@ import com.viewcompose.ui.unit.dp
  * outlive its window; render-session teardown calls [clear] to dismiss only that session's entries.
  *
  * All operations and platform callbacks must run on the Android main thread.
+ * Clearing attempts every delegate and still dismisses the native sheet if nested-session cleanup
+ * fails; the first cleanup failure is rethrown with later failures suppressed.
  *
  * @param rootView attached render root used for window context, popup anchors, and snackbar placement
  * @sample com.viewcompose.overlay.material3.android.samples.androidOverlayHostSample

@@ -19,20 +19,19 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 
 /**
- * Applies focus, focus requester, focus observer, and key-input modifiers.
  * Applies focus, focus requester, focus observer, and key input modifiers.
  */
 internal object ModifierFocusInputApplier {
     /**
-     * Binds focus and keyboard-input configuration to a target View.
      * Binds focus and keyboard input configuration to the target View.
      */
     fun apply(
         view: View,
         node: VNode,
         resolved: ResolvedModifiers,
+        defaultFocusable: Boolean? = null,
     ) {
-        applyFocusable(view, resolved)
+        applyFocusable(view, resolved, defaultFocusable)
         applyFocusGroup(view, resolved)
         applyFocusRequester(
             view = view,
@@ -51,8 +50,7 @@ internal object ModifierFocusInputApplier {
     }
 
     /**
-     * Releases focus and key-input listeners and requester bindings.
-     * Releases focus/key-input listeners and requester bindings.
+     * Releases input bindings and restores native focus properties owned by modifiers.
      */
     fun dispose(view: View) {
         (view.getTag(R.id.viewcompose_focus_requester_binding) as? FocusRequesterBinding)
@@ -64,6 +62,7 @@ internal object ModifierFocusInputApplier {
         view.setTag(R.id.viewcompose_focus_observer, null)
 
         restoreFocusGroup(view)
+        restoreFocusable(view)
 
         if (view.getTag(R.id.viewcompose_key_input_listener) != null) {
             view.setOnKeyListener(null)
@@ -72,17 +71,60 @@ internal object ModifierFocusInputApplier {
         view.setTag(R.id.viewcompose_key_input_listener, null)
     }
 
-    private fun applyFocusable(
+    /** Applies the override once over the current native or binder-provided focus baseline. */
+    fun applyFocusable(
         view: View,
         resolved: ResolvedModifiers,
+        defaultFocusable: Boolean? = null,
+        defaultFocusableInTouchMode: Boolean = false,
     ) {
+        val nativeDefault = defaultFocusable?.let {
+            FocusableOriginalState(
+                focusable = if (it) View.FOCUSABLE else View.NOT_FOCUSABLE,
+                inTouchMode = defaultFocusableInTouchMode,
+            )
+        }
         val canFocus = resolved.focusProperties.canFocus
             ?: resolved.focusable?.enabled
-            ?: return
+        if (canFocus == null) {
+            if (nativeDefault != null) {
+                view.setTag(R.id.viewcompose_focusable_original_state, null)
+                nativeDefault.restore(view)
+            } else {
+                restoreFocusable(view)
+            }
+            return
+        }
+        if (nativeDefault != null || view.getTag(R.id.viewcompose_focusable_original_state) == null) {
+            view.setTag(
+                R.id.viewcompose_focusable_original_state,
+                nativeDefault ?: FocusableOriginalState(
+                    focusable = if (Build.VERSION.SDK_INT >= 26) view.focusable
+                        else if (view.isFocusable) View.FOCUSABLE else View.NOT_FOCUSABLE,
+                    inTouchMode = view.isFocusableInTouchMode,
+                ),
+            )
+        }
         view.isFocusable = canFocus
         view.isFocusableInTouchMode = canFocus
         if (!canFocus && view.isFocused) {
             view.clearFocus()
+        }
+    }
+
+    private fun restoreFocusable(view: View) {
+        val original = view.getTag(R.id.viewcompose_focusable_original_state) as? FocusableOriginalState
+            ?: return
+        view.setTag(R.id.viewcompose_focusable_original_state, null)
+        original.restore(view)
+    }
+
+    private data class FocusableOriginalState(val focusable: Int, val inTouchMode: Boolean) {
+        fun restore(view: View) {
+            // Touch-mode focus can change focusability; restore the exact mode last, including AUTO.
+            view.isFocusableInTouchMode = inTouchMode
+            if (Build.VERSION.SDK_INT >= 26) view.focusable = focusable
+            else view.isFocusable = focusable == View.FOCUSABLE
         }
     }
 

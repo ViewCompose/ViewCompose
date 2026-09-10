@@ -108,8 +108,6 @@ internal object ModifierInteractionApplier {
             view.setOnClickListener(listener)
         }
         view.isClickable = hasClickListener || keepIntrinsicInteraction
-        view.isFocusable = hasClickListener || keepIntrinsicInteraction
-        view.isFocusableInTouchMode = false
         ModifierGestureApplier.applyGestureState(
             view = view,
             resolved = resolved,
@@ -118,6 +116,8 @@ internal object ModifierInteractionApplier {
             view = view,
             node = node,
             resolved = resolved,
+            defaultFocusable = if (node.type == NodeType.AndroidView) null
+                else hasClickListener || keepIntrinsicInteraction,
         )
     }
 

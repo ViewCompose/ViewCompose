@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "capability_id": "ui.resource-cache",
+  "kind": "dsl",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-ui-contract"
+  },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": {
+    "lane": "next"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.ui.node.UiImageRequest",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/media/UiImageRequest.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.ui.environment.UiEnvironmentValues",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/environment/UiEnvironmentValues.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.ui.resource-cache",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.ui-resource-cache"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-ui-contract"
+    ],
+    "architecture": [
+      "architecture.android-resource-environment"
+    ],
+    "migration": [
+      "migration.image-loading"
+    ]
+  }
+}

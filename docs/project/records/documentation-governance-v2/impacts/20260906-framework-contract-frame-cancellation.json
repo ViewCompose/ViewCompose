@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-frame-cancellation",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-host-android",
+  "symbol_id": "com.viewcompose.host.android.renderInto",
+  "capability_id": "host.android-container",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.host.android.renderInto"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-host-android"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "module.host-android-render-into"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.host.android-container"
+      ]
+    },
+    "architecture": {
+      "status": "not-applicable",
+      "rationale": "This corrects stale queued cancellation within the existing host lifecycle and does not change public signatures, frame ownership, or normal usage."
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "This corrects stale queued cancellation within the existing host lifecycle and does not change public signatures, frame ownership, or normal usage."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "This corrects stale queued cancellation within the existing host lifecycle and does not change public signatures, frame ownership, or normal usage."
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "This corrects stale queued cancellation within the existing host lifecycle and does not change public signatures, frame ownership, or normal usage."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

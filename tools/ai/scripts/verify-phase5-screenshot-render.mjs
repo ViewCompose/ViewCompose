@@ -231,9 +231,9 @@ function assertRendered(result, fixture, requiredCache) {
     result.data?.kotlinFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     result.data?.generationReport?.requestFingerprint !==
-      '68d3da2054ffe5513a90975d96f47be6cfa1137ad1b1e796114a4a27827b3d49' ||
+      'ce04c4434e33eecc2d7f29cf9f02a0ee14b5f04f424f371353f6ba84638f1365' ||
     result.data?.generationReport?.reportFingerprint !==
-      '464d4f31c5ec59a5083b58309240c76fc69709b42648b79beb4ff281ac2f93db' ||
+      '7b7a4fd53af9a9185fec13c46830618c32e3eae09c1f95ef69593294a9ff99be' ||
     preview?.targetId !== 'tools.ai.GeneratedScreenshotPreview' ||
     preview?.modulePath !== ':preview' ||
     preview?.buildVariant !== 'debug' ||
@@ -252,7 +252,7 @@ function assertRendered(result, fixture, requiredCache) {
     JSON.stringify(preview?.capabilityIds) !== JSON.stringify(fixture.expectedCapabilityIds) ||
     preview?.source?.path !==
       `preview/requests/${
-        '405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a'
+        'b13bb85984368bb583097cd6cbc21845907bfa596db54d74001f368b220282a2'
       }/input/GeneratedPreview.kt` ||
     preview?.source?.line !== fixture.expectedSourceLine ||
     preview?.source?.column !== 1 ||
@@ -266,7 +266,7 @@ function assertRendered(result, fixture, requiredCache) {
     preview?.generatedPreview?.sourceKind !== 'screenshot' ||
     preview?.generatedPreview?.targetId !== 'tools.ai.GeneratedScreenshotPreview' ||
     preview?.generatedPreview?.requestFingerprint !==
-      '405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a' ||
+      'b13bb85984368bb583097cd6cbc21845907bfa596db54d74001f368b220282a2' ||
     preview?.generatedPreview?.generatedKotlinFingerprint !==
       '5812c3ccbd0a6f30a0cc4c3ff4e71453006745d5dd76e63e153b2501131252e9' ||
     preview?.generatedPreview?.wrapperFingerprint !==

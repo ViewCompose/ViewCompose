@@ -22,3 +22,13 @@ fun discoveredAndroidOverlayHostSample(rootView: View): OverlayHost {
 fun overlayRenderContainerSample(container: ViewGroup): RenderContainerHandle {
     return container.asOverlayRenderContainerHandle()
 }
+
+/** Disposes an owned session while preserving every cleanup failure for the caller. */
+fun clearOverlaySessionSample(
+    host: com.viewcompose.ui.foundation.OverlayHost,
+    session: com.viewcompose.ui.foundation.OverlaySessionId,
+) {
+    // The host attempts all owned delegates before this exception reaches the caller.
+    host.clear(session)
+    host.clear(session)
+}

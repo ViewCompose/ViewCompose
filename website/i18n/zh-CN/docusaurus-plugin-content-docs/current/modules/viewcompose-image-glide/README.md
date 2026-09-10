@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-glide/README.md
-translation_source_hash: b51b6fcb5cc315ac797490fe5898f997a8b6513beddda87aa7d7c0053350214f
+translation_source_hash: e344c1689831d11a2f1e4ff97b89da3c34102eeb6533738f5d9d0ab8a5834a0a
 translation_status: current
 ---
 
@@ -52,9 +52,9 @@ Renderer 解析。适配器只接受包装 Android `ImageView` 的 Renderer Targ
 默认缓存与过渡策略会保留应用的 Glide 配置。禁用内存缓存映射为
 `skipMemoryCache(true)`，禁用磁盘缓存映射为 `DiskCacheStrategy.NONE`，显式的 `None` 或
 `Crossfade` 会覆盖当前请求已配置的默认过渡。
-Primary Android Resource 会获得包含捕获资源版本的 `ObjectKey` Signature，Configuration 限定的
-Drawable 不会复用旧 Cache。纯远端请求保留 Glide 普通的 Model/Cache 标识；Resource Fallback
-变化仍会通过 Renderer 的请求相等性重启当前请求。
+当前未发布实现使用 Glide 的整数资源重载、目标 Context 的主题，以及 Android 资源签名与宿主作用域、
+修订号的组合。缺少作用域时禁用资源内存缓存。作用域无法跨进程或任意主题持久复用，因此禁用资源磁盘缓存。
+远程请求保留 Glide 的 Model/Cache 标识；资源 Fallback 变化仍会重启当前请求。
 
 适配器返回的可释放句柄会清理对应 Glide target request。Renderer 会在替换请求或移除挂载节点
 前释放它。适配器不拥有目标 `ImageView`、Glide singleton、应用缓存或 `AppGlideModule`。
@@ -80,3 +80,11 @@ Drawable 不会复用旧 Cache。纯远端请求保留 Glide 普通的 Model/Cac
 
 `0.1.0-alpha01` 面向 Glide 5.0.7。它不会在声明式契约中暴露 Glide request builder，不会创建第二
 层缓存，也不会替换应用级 Glide 配置。
+
+## 当前检出版本的回归证据
+
+审查基线将相同资源 ID 与宿主内修订号映射为相同的共享缓存键。候选版本的 Gradle 适配器套件通过
+9 项测试，失败和跳过均为零，覆盖不同挂载作用域、修订变化、缺少作用域时的内存策略，以及资源磁盘
+策略禁用。Glide 套件另验证 Android 夜间模式签名不同，并使用目标主题。测试请求中的跨宿主键冲突得到消除，
+正确性结论为改进。跨挂载缓存复用和资源磁盘缓存按设计减少，因此性能结论在测量前尚不确定。
+Robolectric 请求构建不代表解码像素或真机验收；后续验证真机主题、资源外观与缓存命中率。

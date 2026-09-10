@@ -1,0 +1,832 @@
+{
+  "schema_version": 1,
+  "record_id": "framework-contract-hardening.20260906",
+  "baseline_revision": "d64710459df73f3b42067767bb2f4f273b9eff33",
+  "candidate": "Uncommitted implementation on the audit baseline; file hashes identify the tested changes.",
+  "environment": {
+    "os": "macOS",
+    "jdk": "21",
+    "kotlin": "2.2.10",
+    "gradle": "9.3.1",
+    "jvm_target": "11",
+    "robolectric": "4.14.1",
+    "android_test_sdks": [
+      24,
+      28,
+      34,
+      35
+    ],
+    "os_version": "14.1.2",
+    "architecture": "arm64",
+    "node": "24.19.0",
+    "npm": "11.8.0",
+    "declared_module_toolchains": {
+      "jvm_modules": "11",
+      "preview_gradle_functional_tests": "17",
+      "gradle_jvm": "21"
+    }
+  },
+  "finding_status": {
+    "F01": "implemented and regression verified",
+    "F02": "implemented and regression verified",
+    "F03": "implemented and regression verified",
+    "F04": "implemented and regression verified",
+    "F05": "implemented and regression verified",
+    "F06": "implemented and regression verified",
+    "F07": "implemented and regression verified",
+    "F08": "implemented and regression verified",
+    "F09": "implemented and regression verified",
+    "F10": "implemented and regression verified",
+    "F11": "implemented and regression verified",
+    "F12": "implemented and regression verified"
+  },
+  "standalone_jvm": {
+    "baseline_passed": 818,
+    "candidate_passed": 865,
+    "failures": 0,
+    "scope": "The original 13-module source aggregation plus the complete eight-case frame-dispatch test class. Counts include overlapping Gradle coverage; five pre-existing host tests broaden the original population.",
+    "interpretation": "improved correctness; test-count growth is coverage, not a performance percentage",
+    "limitation": "The source aggregation excludes RenderSessionFailureTest because it needs its Android test environment. The complete Foundation Gradle suite includes it and passed separately."
+  },
+  "gradle_module_tests": [
+    {
+      "artifact": "viewcompose-runtime",
+      "tests": 116,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-text-core",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-ui-contract",
+      "tests": 84,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-ui-foundation",
+      "tests": 403,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-graphics-core",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-renderer-android",
+      "tests": 545,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-host-android",
+      "tests": 57,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-image-coil",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-image-glide",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-overlay-android",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-overlay-material3-android",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "artifact": "viewcompose-overlay-oneui7-android",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "gradle_total_tests": 1269,
+  "ai_tests": {
+    "baseline_passed": 39,
+    "candidate_passed": 43,
+    "failures": 2,
+    "timeout_probe_ms": {
+      "configured": 150,
+      "baseline_elapsed": 3558,
+      "candidate_elapsed": 158,
+      "reduction_percent": 95.6
+    },
+    "interpretation": "The six process regressions pass and bounded completion improves. After Knowledge refresh, two unchanged MCP screenshot goldens reject the old source identity; the complete runner/compiler/analyzer/MCP selection is not green.",
+    "initial_candidate_passed": 45,
+    "initial_context": "Before refreshing the committed Knowledge identity from 78127e51cd740ccdbd58d326e05426caf4e49795 to the audit baseline.",
+    "candidate_tests": 45
+  },
+  "required_gates": {
+    "verifyDocumentationStructure": "passed",
+    "verifyDevelopmentToolingIsolation": "passed",
+    "verifyViewComposeReleaseIntent": "passed; 12 direct artifacts in one changeset"
+  },
+  "qaQuick": {
+    "status": "not passed; stopped after confirmed failures while further tasks remained queued",
+    "attempt_date": "2026-09-07",
+    "failed_tasks": [
+      "verifyAiDistribution",
+      "verifyAiGeneratedPreview",
+      "verifyAiScreenshotComparison",
+      "verifyAiScreenshotGeneration",
+      "verifyAiScreenshotInference",
+      "verifyAiScreenshotPixelComparison",
+      "verifyAiScreenshotRender"
+    ],
+    "resolved_prerequisites": [
+      "Published release revision fetched using the existing local proxy; SDK 37, Dokka and Layoutlib dependencies checksum verified; local-only test signing enabled.",
+      "The changed npm payload now uses unpublished candidate 0.7.1; deterministic build, npm dry-run inventory and release-asset checks pass."
+    ],
+    "open_evidence": [
+      "Screenshot inference fixtures bind current-source/78127e51cd740ccdbd58d326e05426caf4e49795; the regenerated candidate bundle binds current-source/d64710459df73f3b42067767bb2f4f273b9eff33. Direct diagnosis returns VC-AI-SCREENSHOT-INFERENCE-LINEAGE-MISMATCH. Phase 0 also rejects stale generated-preview identity.",
+      "Initial generated Preview staging returned VC-AI-RENDER-CACHE-POISONED. Screenshot generation reached VC-AI-COMPILER-TIMEOUT in the separate cold execution cache. Comparison, pixel and render failures need re-execution after prerequisites and source identity are aligned."
+    ],
+    "interpretation": "inconclusive for full release-wide acceptance; no expected fingerprints or gate rules were weakened",
+    "owner": "AI tooling",
+    "next_action": "Warm the isolated execution harness, recapture source-bound fixture evidence at the intended Framework/Harness identity, inspect semantic and pixel differences, and rerun complete qaQuick.",
+    "ephemeral_signing_key": "task-owned temporary key deleted after local-publication verification"
+  },
+  "compatibility": {
+    "ui_contract": "Added resourceCacheScope fields change data-class constructor/copy binary signatures; recompile consumers together.",
+    "resource_caches": "Resource memory caches isolate mounted scopes. Missing scope disables primary resource memory caching; transient identities never back resource disk caches. Remote cache identity remains loader-owned."
+  },
+  "limitations": [
+    "No device performance, OEM IME, or decoded-image pixel acceptance is claimed.",
+    "Resource cache reuse across mounts decreases; measure the cost before adding a persistent resource fingerprint API.",
+    "Windows task-tree termination remains best effort and has not been executed on Windows.",
+    "Full qaQuick has not passed; source-bound AI evidence and cold execution-cache prerequisites remain explicit follow-ups."
+  ],
+  "next_action": "AI tooling owns source-bound evidence recapture and full qaQuick acceptance; all 40 selected framework/app/integration test tasks are now accepted.",
+  "candidate_source_sha256": {
+    "tools/ai/scripts/bootstrap-contract.test.mjs": "c7ee06da85735902eadaff5fbe7be96e0368fede3a61ae081f9d1bdd4e82e15f",
+    "tools/ai/scripts/bounded-process.mjs": "8da80cc5616b499c132663a31ae6d0ae0e0e42e6c47241d4543d0187301fec94",
+    "tools/ai/scripts/bounded-process.test.mjs": "f49a4f1143943b96e1f3adba7e634ed053d270bf1e1ee5185b007d07c29df354",
+    "tools/ai/scripts/verify-ai-tooling-release.mjs": "e4e0648e82913231259c1ed428cd3a763791cadb2b5d08dfdfe0c3cc30986ccd",
+    "tools/ai/scripts/verify-ai-tooling-release.test.mjs": "35d7ba512ad03f2802f7c17b87fdb5fdb9a25c2f7970de878061998665350baf",
+    "tools/ai/scripts/verify-bootstrap-adoption.mjs": "7b071af7bb9f78027139a22a76a7deb2dde487353dc4313ae322edb8843291eb",
+    "viewcompose-graphics-core/src/main/kotlin/com/viewcompose/graphics/core/DrawCache.kt": "d668eac616701169e71529001a5be167ae01cad5b6f5fe218a6c6410d309cc31",
+    "viewcompose-graphics-core/src/test/kotlin/com/viewcompose/graphics/core/DrawCacheTest.kt": "75ed8fbc5e4398d718b43eda682940e5041e4cd8318ab29ccfbc69a9f3f58084",
+    "viewcompose-graphics-core/src/test/samples/com/viewcompose/graphics/core/samples/GraphicsCoreSamples.kt": "8902a964cbd0a99e6c0f06e71c05caa2d69f50b4067d9f5661124c57a8da9041",
+    "viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt": "f3bc593c355552840cc88d3bbb6cfb4ff6859b23d4834572f3bd630480d1e581",
+    "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResourceEnvironment.kt": "73cdd8883073ae7c75ac4776f8d25b98fe712796dffbca9545e86ad574c869b5",
+    "viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/FrameAlignedRenderDispatcher.kt": "1fa5e327747ce13bbc93aa9961850a34f3a4a80f1b5683cf565b7de3b52316d1",
+    "viewcompose-host-android/src/test/java/com/viewcompose/host/android/resources/AndroidResourceEnvironmentTest.kt": "a7363ab4c7c249f2913c0a4c57235984a9fc099b9d174346211760b88d86a815",
+    "viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/FrameAlignedRenderDispatcherTest.kt": "8e7fac32312a653fa7c3221c0b715bf0fea9d1b403999ad62b56141c194e3d2d",
+    "viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt": "7e93f78196c3895a5da6a3ddd731beb5482b830de7ea3a0b5a1c42b5dc00bae9",
+    "viewcompose-image-coil/src/main/java/com/viewcompose/image/coil/CoilImageLoaderAdapter.kt": "ac355a9f8e57fdd9fe037fea69bb9c52b7309fa2130168bbf1753465af1cc3fd",
+    "viewcompose-image-coil/src/test/kotlin/com/viewcompose/image/coil/CoilImageLoaderAdapterTest.kt": "77f192bb22dc68a682a844bc160b9dc3d739d42136d91ae8933eda6f5b1e2176",
+    "viewcompose-image-coil/src/test/samples/com/viewcompose/image/coil/samples/ImageCoilSamples.kt": "cd833ec1fd513fe97699799ff34457a0a35d9cdfacfed2fe7708e6bb2bce006f",
+    "viewcompose-image-glide/src/main/java/com/viewcompose/image/glide/GlideImageLoaderAdapter.kt": "60bbef2d5aa87ff399c6706da594654e231f291640140025683d22678fc3028d",
+    "viewcompose-image-glide/src/test/kotlin/com/viewcompose/image/glide/GlideImageLoaderAdapterTest.kt": "01d6ab4cf97aaf65b816ed8e41fadffc776b3635d5ab41be4d2560bfb85456bf",
+    "viewcompose-image-glide/src/test/samples/com/viewcompose/image/glide/samples/ImageGlideSamples.kt": "1b5f56af523640b5ac0b2708333de172c4574f001deee17e5c69ebed91819c83",
+    "viewcompose-overlay-android/src/main/java/com/viewcompose/overlay/android/AndroidOverlayHost.kt": "475592e9387d8e7d67ffc2c0a6939a89485e113625375d06dfea31ede0cb141b",
+    "viewcompose-overlay-android/src/main/java/com/viewcompose/overlay/android/presenter/AndroidSurfaceOverlayPresenters.kt": "7b2b278996ac8c352971dbdb8f6c58d9b76b5bac466c7d85d3dc6c1242a831a4",
+    "viewcompose-overlay-android/src/test/java/com/viewcompose/overlay/android/CompositeOverlayCleanupTest.kt": "10c12c759ac39ed606a778aea453486baad9bfeb601fc27c8e1acdecb35f177e",
+    "viewcompose-overlay-android/src/test/samples/com/viewcompose/overlay/android/samples/OverlayAndroidSamples.kt": "67287ea48c1629b332fc4a5c4dd9e3be908440ba8f05cc4b6c28091e9e85d8ac",
+    "viewcompose-overlay-material3-android/src/main/java/com/viewcompose/overlay/material3/android/host/AndroidOverlayHost.kt": "7ca99a9e64e1a29268f10f686a424da0d13cf8063ad7bdb433ce72dc0443936f",
+    "viewcompose-overlay-material3-android/src/main/java/com/viewcompose/overlay/material3/android/presenter/AndroidModalBottomSheetPresenter.kt": "1ab97613be0c0d3bd9246d2b31d35293d9e19ab53ad6faa6e93d6ec58b2857fd",
+    "viewcompose-overlay-material3-android/src/test/samples/com/viewcompose/overlay/material3/android/samples/OverlayAndroidSamples.kt": "444a9e301902cab2faa4b166e8ed2b9f4bd24dd7c81433d6aedfe3f88bb95f84",
+    "viewcompose-overlay-oneui7-android/src/main/java/com/viewcompose/overlay/oneui7/android/host/AndroidOverlayHost.kt": "af9940d46237fe566910de92a8f11c3403b92242a475b19870c24422f82f2766",
+    "viewcompose-overlay-oneui7-android/src/main/java/com/viewcompose/overlay/oneui7/android/presenter/AndroidOneUi7ModalBottomSheetPresenter.kt": "b17ce4eaa04cd8a938c439a10bab4e0db104b7c0e75f42bff8196f743f6aec44",
+    "viewcompose-overlay-oneui7-android/src/test/samples/com/viewcompose/overlay/oneui7/android/samples/OneUi7AndroidOverlaySamples.kt": "d3433861932fefd17ee05f6e9212c96094de7c01ab2358996abed811c8c10657",
+    "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/ViewTreeRenderer.kt": "b8cf18796694ba80a2e57ba1a68e88203cf81a2dedd526ad07ea8e3e93e26a2d",
+    "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierFocusInputApplier.kt": "929619645f68f1a6b668e67642f1c075a6e61445dec41b272504f281e3a2fabe",
+    "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierInteractionApplier.kt": "8748dd00220a08497e3110a500a2dac334f6795957803b7c348c69ec8a02bf78",
+    "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/widget/InputViewBinder.kt": "c06dad2fa4154e14edcb617538b37ef0ddd9fa59eafb78f6cbba1e82e567319e",
+    "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/widget/MediaViewBinder.kt": "aff9e8c4a2fee671fb8832370815d12c70d94a4a6244af50e229c88a04cc0cd6",
+    "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/patch/MediaNodePatchApplier.kt": "75aa56863a1ec3a24991062f6002e53f33a39a6b91d3ea04761a5be8e7e1a41e",
+    "viewcompose-renderer-android/src/main/res/values/ids.xml": "a9c35221354f54a316559c28536addb927699a2a41208a62b256ab8dfef3f2e3",
+    "viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ImageRequestBindingControllerTest.kt": "19f2983af1dbe619ca693eb21d63f511720f8ccdc41c29cc2be3fe07ee5ef37e",
+    "viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ModifierFocusInputApplierTest.kt": "7abba8ce65eb0685afcd801f1c41b4d7e1113f0392418be1c8d9fe3954e417c1",
+    "viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/TextFieldControllerTest.kt": "ab775cfdc62423c1c3ceb457829e3322209bccaa39fdb51b98a18dbd82b8fb29",
+    "viewcompose-renderer-android/src/test/samples/com/viewcompose/renderer/samples/RendererSamples.kt": "5221ef1734bf9c6e7e3702c2f56b3981206bf232c6314f182748fe2de1701267",
+    "viewcompose-runtime/src/main/java/com/viewcompose/runtime/observation/RuntimeObservation.kt": "19447ab99b3d048f1e289296579e306b0eb2479c13d8c7b92e4154b0170d2740",
+    "viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/Snapshot.kt": "420c94300b7ac687e015ef72005faaf651a2747eab338f84b9e97268f7a4d30a",
+    "viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/SnapshotRuntime.kt": "4654b5faa45f2ea528e99ea189bf650567196a1711693268abbd37723ddd8da0",
+    "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/DerivedStateImpl.kt": "980ab03715f2b5bf6608e74e55e39bf673e8164b697a8ff36ba5fc04fef42c48",
+    "viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt": "8dd8211433e70c747acf5b714a362483cb2f802b37f2c7cf94cc843fca1cd65d",
+    "viewcompose-runtime/src/test/java/com/viewcompose/runtime/RuntimeContractHardeningTest.kt": "208c56129392cc001c6593c4e5ab17f83bb2c521aa635f4dc21338a05841570b",
+    "viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt": "94d357b87010184c17ebf4dc17fda037cebc7947a228e9bba4ddcc6c441fcf61",
+    "viewcompose-text-core/src/main/kotlin/com/viewcompose/text/TextFieldState.kt": "5313bff04d598058fa3df3a01f67a6e689b11cdbfe0df51ba275791961bcec81",
+    "viewcompose-text-core/src/test/kotlin/com/viewcompose/text/TextHistorySnapshotTest.kt": "70036046d045e04eda687fe2f4fe51b06c67590e237af559a27372a7a38362e4",
+    "viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt": "52b5f1ac71f22b0e528d78e683e9c525a82ab801f242508e367d04f3eb5ef09e",
+    "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/environment/UiEnvironmentValues.kt": "1ddd26b50929265b7b0d3119cf53ac9b8237cf88d6a9c5c19050578d1a189763",
+    "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/media/UiImageRequest.kt": "1705b077c971871219bb6dc6675986e8b82a42c51558eda6b7df6b6bfcdeaeb7",
+    "viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/node/UiImageContractTest.kt": "361599b06bd02891e33f3d12fbe79c4163c565b9ebe0d40ac59f10080a260655",
+    "viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt": "0e03272b797f9e637505d197292e72ec7055c43f3061d0f683a63fcd57f74404",
+    "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/Environment.kt": "d5fef241f35e9470e633f1ec9243fb98fbd42ce348cc250f64f624b2cb545761",
+    "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/overlay/OverlayHost.kt": "1482dc4617600551d670a10041460c472c819ee63ffbec107690980928f4e5ac",
+    "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/overlay/runtime/OverlayCleanup.kt": "289fdddbe64692dc8338effeb0cce21c88393478494edf61a2da2570d03c7220",
+    "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/overlay/runtime/SessionBoundSurfaceOverlayHost.kt": "f120aa6143043c10c3fdb54a5415d4ccdf5d932806d6f8e5b90be35b3d4f1e4a",
+    "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/overlay/runtime/TransientFeedbackOverlayHost.kt": "9470dc2373eb3b3a905b6c626a4d96d88ab465ef43a3fa8e5d4dbfded12a9393",
+    "viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/EnvironmentTest.kt": "3be918c0e52fe7ea30dd0ceb364336bd1b13f97f92e1bbb4352be63e2fba1e64",
+    "viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/LazyContentLocalPropagationTest.kt": "369f958243c706eccebd282a3d5fc0a3216adbadd10f44d51e8edfda3b7a549d",
+    "viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/overlay/OverlayCleanupFailureTest.kt": "2e3ee92cdae64e84eb26d70137216f11fec24918a3235c171f66f4768e67372d",
+    "viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/OverlayCleanupSamples.kt": "61c56a9cfa9fcff8d046b78c3bcc80e8d3f29519b3689fa0ab7ba09078efd237",
+    "viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt": "5d013f1550ff4035a70ce6daa1522ce102f6cce866d6ad4af648e6adb951efd5"
+  },
+  "ai_knowledge": {
+    "verification": "passed",
+    "capabilities": 85,
+    "symbols": 540,
+    "samples": 218,
+    "rules": 10,
+    "bundle_hash": "de2aa3ddffd2f48022936bf1b8034d60e13f11071c1d986bd13ba4c769241d79"
+  },
+  "verification_commands": {
+    "working_directory": "repository root; JAVA_HOME selects JDK 21 and PATH includes Node and npm",
+    "jvm_modules": [
+      "./gradlew",
+      "--no-daemon",
+      ":viewcompose-runtime:test",
+      ":viewcompose-text-core:test",
+      ":viewcompose-ui-contract:test",
+      ":viewcompose-graphics-core:test",
+      "--console=plain"
+    ],
+    "android_integration": [
+      "./gradlew",
+      "--no-daemon",
+      "--continue",
+      ":viewcompose-runtime:test",
+      ":viewcompose-ui-foundation:testDebugUnitTest",
+      ":viewcompose-renderer-android:testDebugUnitTest",
+      "--tests",
+      "*ModifierFocusInputApplierTest",
+      "--tests",
+      "*TextFieldControllerTest",
+      "--tests",
+      "*ImageRequestBindingControllerTest",
+      ":viewcompose-image-coil:testDebugUnitTest",
+      ":viewcompose-image-glide:testDebugUnitTest",
+      ":viewcompose-host-android:testDebugUnitTest",
+      "--tests",
+      "*FrameAlignedRenderDispatcherTest",
+      "--tests",
+      "*AndroidResourceEnvironmentTest",
+      ":viewcompose-overlay-android:testDebugUnitTest",
+      "--tests",
+      "*CompositeOverlayCleanupTest",
+      ":viewcompose-overlay-material3-android:testDebugUnitTest",
+      ":viewcompose-overlay-oneui7-android:testDebugUnitTest",
+      "--console=plain"
+    ],
+    "ai": [
+      "node",
+      "--test",
+      "tools/ai/scripts/bounded-process.test.mjs",
+      "tools/ai/scripts/compiler-adapter.test.mjs",
+      "tools/ai/scripts/mcp-server.test.mjs",
+      "tools/ai/scripts/project-analyzer.test.mjs"
+    ],
+    "required_gates": [
+      "./gradlew",
+      "--no-daemon",
+      "verifyDocumentationStructure",
+      "verifyDevelopmentToolingIsolation",
+      "verifyViewComposeReleaseIntent",
+      "--console=plain"
+    ],
+    "ai_knowledge": [
+      "node",
+      "tools/ai/scripts/generate-knowledge.mjs",
+      "--verify"
+    ],
+    "qaQuick": [
+      "./gradlew",
+      "--no-daemon",
+      "--continue",
+      "--max-workers=2",
+      "-Dorg.gradle.internal.http.socketTimeout=30000",
+      "-Dorg.gradle.internal.http.connectionTimeout=15000",
+      "qaQuick",
+      "--console=plain",
+      "--info"
+    ]
+  },
+  "last_verified": "2026-09-07",
+  "ai_patch_candidate": {
+    "version": "0.7.1",
+    "published": false,
+    "public_consumer_version": "0.7.0",
+    "tests": 28,
+    "failures": 0,
+    "deterministic_archive": true,
+    "npm_inventory": "publish-dry-run",
+    "release_assets": 3,
+    "bytes": 691867,
+    "sha256": "2c9311f9cc3a8d28a11203d023ae3ac4d44edc09c66527a9bfa85791ad6ddcb2",
+    "interpretation": "improved release identity consistency: changed bytes no longer reuse the immutable published 0.7.0 identity; package size is an absolute observation, not a performance comparison",
+    "limitation": "Full installed-package distribution verification still depends on outstanding source-bound visual evidence."
+  },
+  "framework_wide_tests": {
+    "status": "All 40 selected tasks passed across completed runs and retries",
+    "tasks": 40,
+    "command": [
+      "./gradlew",
+      "--no-daemon",
+      "--continue",
+      "--max-workers=2",
+      ":viewcompose-runtime:test",
+      ":viewcompose-navigation-core:test",
+      ":viewcompose-navigation-android:testDebugUnitTest",
+      ":viewcompose-ui-contract:test",
+      ":viewcompose-host-android:testDebugUnitTest",
+      ":viewcompose-material3:testDebugUnitTest",
+      ":viewcompose-material3-android:testDebugUnitTest",
+      ":viewcompose-oneui7:testDebugUnitTest",
+      ":viewcompose-android:testDebugUnitTest",
+      ":viewcompose-lifecycle-androidx:testDebugUnitTest",
+      ":viewcompose-viewmodel-androidx:testDebugUnitTest",
+      ":viewcompose-preview-core:test",
+      ":viewcompose-preview-gradle-plugin:test",
+      ":viewcompose-preview-runner:testDebugUnitTest",
+      ":viewcompose-preview-worker-host:test",
+      ":viewcompose-renderer-android:testDebugUnitTest",
+      ":viewcompose-ui-foundation:testDebugUnitTest",
+      ":viewcompose-diagnostics:testDebugUnitTest",
+      ":viewcompose-overlay-android:testDebugUnitTest",
+      ":viewcompose-overlay-material3-android:testDebugUnitTest",
+      ":viewcompose-overlay-oneui7-android:testDebugUnitTest",
+      ":viewcompose-image-coil:testDebugUnitTest",
+      ":viewcompose-image-glide:testDebugUnitTest",
+      ":viewcompose-preview:testDebugUnitTest",
+      ":viewcompose-animation:testDebugUnitTest",
+      ":viewcompose-animation-core:test",
+      ":viewcompose-gesture:testDebugUnitTest",
+      ":viewcompose-gesture-core:test",
+      ":viewcompose-graphics:testDebugUnitTest",
+      ":viewcompose-graphics-core:test",
+      ":viewcompose-shadow-android:testDebugUnitTest",
+      ":viewcompose-constraintlayout-androidx:testDebugUnitTest",
+      ":viewcompose-media3-androidx:testDebugUnitTest",
+      ":viewcompose-exoplayer2-android:testDebugUnitTest",
+      ":viewcompose-google-maps-android:testDebugUnitTest",
+      ":viewcompose-camerax-androidx:testDebugUnitTest",
+      ":viewcompose-paging-androidx:testDebugUnitTest",
+      ":integration-tests:paging-presenter:test",
+      ":app:testDebugUnitTest",
+      ":viewcompose-text-core:test",
+      "--console=plain"
+    ],
+    "completed_tasks": 40,
+    "totals": {
+      "tests": 2117,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "results": [
+      {
+        "task": ":viewcompose-runtime:test",
+        "status": "passed",
+        "tests": 116,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-navigation-core:test",
+        "status": "passed",
+        "tests": 93,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-navigation-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 188,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-ui-contract:test",
+        "status": "passed",
+        "tests": 84,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-host-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 57,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-material3:testDebugUnitTest",
+        "status": "passed",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-material3-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-oneui7:testDebugUnitTest",
+        "status": "passed",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-lifecycle-androidx:testDebugUnitTest",
+        "status": "passed",
+        "tests": 43,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-viewmodel-androidx:testDebugUnitTest",
+        "status": "passed",
+        "tests": 52,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-preview-core:test",
+        "status": "passed",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-preview-gradle-plugin:test",
+        "status": "passed on complete retry after cache preparation",
+        "tests": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-preview-runner:testDebugUnitTest",
+        "status": "passed",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-preview-worker-host:test",
+        "status": "passed",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-renderer-android:testDebugUnitTest",
+        "status": "passed on complete retry",
+        "tests": 545,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-ui-foundation:testDebugUnitTest",
+        "status": "passed",
+        "tests": 403,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-diagnostics:testDebugUnitTest",
+        "status": "passed",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-overlay-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-overlay-material3-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-overlay-oneui7-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-image-coil:testDebugUnitTest",
+        "status": "passed",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-image-glide:testDebugUnitTest",
+        "status": "passed",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-preview:testDebugUnitTest",
+        "status": "passed",
+        "tests": 32,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-animation:testDebugUnitTest",
+        "status": "passed",
+        "tests": 65,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-animation-core:test",
+        "status": "passed",
+        "tests": 39,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-gesture:testDebugUnitTest",
+        "status": "passed",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-gesture-core:test",
+        "status": "passed",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-graphics:testDebugUnitTest",
+        "status": "passed",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-graphics-core:test",
+        "status": "passed",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-shadow-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-constraintlayout-androidx:testDebugUnitTest",
+        "status": "passed",
+        "tests": 27,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-media3-androidx:testDebugUnitTest",
+        "status": "passed",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-exoplayer2-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-google-maps-android:testDebugUnitTest",
+        "status": "passed",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-camerax-androidx:testDebugUnitTest",
+        "status": "passed",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-paging-androidx:testDebugUnitTest",
+        "status": "passed",
+        "tests": 27,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":integration-tests:paging-presenter:test",
+        "status": "passed",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":app:testDebugUnitTest",
+        "status": "passed",
+        "tests": 51,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "task": ":viewcompose-text-core:test",
+        "status": "passed",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "renderer_retry_command": [
+      "./gradlew",
+      "--no-daemon",
+      "--continue",
+      "--max-workers=2",
+      ":viewcompose-renderer-android:testDebugUnitTest",
+      "verifyDocumentationStructure",
+      "verifyDevelopmentToolingIsolation",
+      "verifyViewComposeReleaseIntent",
+      "--console=plain"
+    ],
+    "limitation": "The initial broad run and intermediate retries were interrupted or found a stale documentation capability reference; those invocations were not green. Renderer then passed all 545 tests and Preview Gradle passed all 24 tests on complete retries. Regenerated-reference verification and all three required gates passed separately. These aggregate framework tests do not establish full qaQuick or AI visual acceptance.",
+    "preview_retry_command": [
+      "./gradlew",
+      "--no-daemon",
+      "--max-workers=2",
+      ":viewcompose-preview-gradle-plugin:test",
+      "--console=plain"
+    ],
+    "preview_retry_environment": {
+      "gradle_java": 21,
+      "test_launcher_java": 17,
+      "fixture_sdk": 35,
+      "JAVA_TOOL_OPTIONS": "-Dorg.gradle.internal.http.socketTimeout=30000 -Dorg.gradle.internal.http.connectionTimeout=15000"
+    },
+    "preview_retry_interpretation": "improved verification completeness: the full unchanged 24-test suite, including TestKit, passed after content-addressed dependency cache preparation; the functional fixture uses a fake worker, so this is not new real-Layoutlib pixel evidence or a performance gain"
+  },
+  "candidate_package_metadata_sha256": {
+    ".github/workflows/ai-tooling-release.yml": "7db3d717fa87e62511f72e7172a9c025a83c522d4c7b9338fb9b01b2c4cc8062",
+    "tools/ai/contracts/ai-tooling-release.schema.json": "85f0069343dbe74de66696b89521d9df67857a4809e33814a8bf88746521b06a",
+    "tools/ai/contracts/bootstrap.schema.json": "d169f3499df0199749ea0fc5d9e11d57410e6e2dd7de516cd4253388c33db4e6",
+    "tools/ai/contracts/consumer-project-execution.schema.json": "b6b190f5bd6a6309e53ba085894c2f3edb0c1f913ef8d918ef745a0bfbe6cc79",
+    "tools/ai/contracts/examples/agent-client-integration.json": "b6dd8f152ce21f8286b9270cfdbd11804baee4fc718aa9d8b44ad97d6a3e9646",
+    "tools/ai/contracts/examples/ai-tooling-release.json": "6600779a5f92e63066eb74f95babdee221e8113310bef436c5a1fa215b1a9ee7",
+    "tools/ai/contracts/examples/bootstrap.json": "eda450ca45eb18e2e51e921734d2c69b01a12b5ba1d44855b41c27ca66ec18e5",
+    "tools/ai/contracts/examples/consumer-project-execution.json": "9a81188302f901dbacfc1860a4835ba4fae0e17cf39d11a72a1853f1ceede948",
+    "tools/ai/evaluation/fixtures/distribution/package-contract.json": "86deb14e7f9dcacf92ade925d91da2ec92fff13b481e4199a096a6df6c4fc6bc"
+  },
+  "initial_targeted_gradle_tests": {
+    "tests": 715,
+    "scope": "The earlier direct-module selection; superseded by the complete changed-artifact suites below."
+  },
+  "required_gates_last_verified": "2026-09-07",
+  "combined_ai_tests": {
+    "tests": 73,
+    "passed": 71,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "failed_tests": [
+      "returns the same offline screenshot inference import through CLI and MCP",
+      "returns the same typed screenshot resolution through CLI and MCP"
+    ],
+    "interpretation": "The 28 metadata tests and all six bounded-process regressions pass. Two source-bound screenshot MCP fixtures remain unaccepted with the refreshed Knowledge identity.",
+    "next_action": "Refresh and review the source-bound screenshot fixture lineage, then rerun these exact MCP tests and complete qaQuick."
+  },
+  "workspace_evidence_log_sha256": {
+    "framework-hardening-final-jvm.log": "bc28b8d6ba60db9d9b25a31d66b41cf29cc76fad421ec37d2bd5bb200c25d5c6",
+    "framework-hardening-framework-unit.log": "b1f9018485933d7127dd9b7a0ee5e601c1a6ca3d501e1a28bbb0fb9884894e72",
+    "framework-hardening-renderer-and-gates.log": "808a12e2633e1673e8635f5d06536ed781c151c198de22edf986012d6fd76fa1",
+    "framework-hardening-gates-closure.log": "03167ac7a1ad499b6119299e985bd8d0db84c5aa5d5f5ffc4d92e18a363e32d6",
+    "framework-hardening-docs-final.log": "996206ee9aef4e3ecffbcd63302737613183a3e91ebe20723d0796ec626d8a6c",
+    "framework-hardening-ai-final-tests.log": "3fc22d6f1152ee5a4034320c19a2dd50d18aa6f17ca57d8b64e376b366c7fc12",
+    "framework-hardening-ai-071-package-final.log": "a661aaff4468758020b2d4083f1597bdbabc8245e42984762858f1b400d58702",
+    "framework-hardening-qaquick.log": "1c6acd609a0b9e6eb058702fcfc9746d1cb4116d2afb7d77b52341f75774fb4c",
+    "framework-hardening-ai-lineage-diagnostic.log": "ffcca1de2650a9d798f68baa4dcaac2abe578c76f791204bfd9c468f07b9b06f",
+    "framework-hardening-docs-diagnostic.log": "058998f2878dda0d1bd7c89f3a10a7734d9c395b519cabb5a7f1d1567d721071",
+    "framework-hardening-preview-retry.log": "399b1478c2a000d6b8130d832d5789c6dbb9b542f514f86bd78d4de3656f4421",
+    "framework-hardening-preview-primed.log": "79e441ae3e9cde170f79c695f3b7fdeba6192f29b3539f558276cbbf37ce0ee3",
+    "framework-hardening-preview-cache-prime.log": "47af90de717334f8c375bb968d8a16757f391abfe4476cc940f2d9c187579f53",
+    "framework-hardening-preview-cached-final.log": "22002867dfc646c26270d859430e2cb54c316afe684993849491475165697db5",
+    "framework-hardening-gates-final-acceptance.log": "85902820b78424d6c1c205fb0f92054d772adfa0fed4f61a8269143d1e701b4d"
+  },
+  "workspace_evidence_context": "Log names identify preserved task-workspace evidence, not repository files. Commands and interpreted results above are self-contained; the interrupted full-QA and broad-test logs are not passing-run claims.",
+  "ai_lineage_diagnostic": {
+    "kind": "synthetic-fixture-diagnostic",
+    "frozenIdentity": "78127e51cd740ccdbd58d326e05426caf4e49795",
+    "candidateIdentity": "d64710459df73f3b42067767bb2f4f273b9eff33",
+    "unchangedDesignIr": true,
+    "unchangedNodeEvidence": true,
+    "unchangedResolutionAnswers": true,
+    "frozenFixtureRejected": true,
+    "brokenLineageRejected": true,
+    "inferenceParity": "passed",
+    "resolutionParity": "passed",
+    "validationFingerprint": "899c6229e3a3982f85d4aabfab047ebb01fef4c0c262b7d2e7b5256d6c9c6615",
+    "resolutionFingerprint": "ff8a26032fbf330a7d210faf414089d78ed29a1e81c2ad5facfb490f58b2a648",
+    "limitation": "Not a recaptured or accepted visual golden; no repository fixture or verifier changed.",
+    "interpretation": "improved failure localization: both synthetic current-identity positive paths pass without altering Design IR, evidence or answers, while stale identity and broken-link negatives still reject; frozen test results remain 71/73",
+    "probe_script_sha256": "4076f282ca402294080e1d6be5a06ff900e0902d20e2dcc1771ddc634d1f9fa0"
+  },
+  "preview_testkit_cache_preparation": {
+    "verifiedAndPrimedArtifacts": 1719,
+    "bytes": 1129406102,
+    "metadataCopied": false,
+    "context": "Copied no dependency metadata and changed no test or production source. Filled missing content-addressed TestKit cache files from the existing Gradle cache after verifying full file SHA-1 against the cache address. Retried after preparation completed; earlier download-wait retries were interrupted and are not accepted test results."
+  }
+}

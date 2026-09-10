@@ -110,14 +110,14 @@
   ],
   "lineage": {
     "resolutionResult": "screenshot-resolution/wireframe.result.json",
-    "resolutionResultFingerprint": "acdc3a7ae1b43207ce885d4762c77630394e9734caf7305a896e6c90878274ee",
+    "resolutionResultFingerprint": "f3619ac91a4dfa658466823ff0e031812d2ddeff902e1e4a997734b365b219db",
     "resolvedDesignIrFingerprint": "6137e04205c3bec89b5e4480e0448e45c6ab55905a0ea3d9fdc55ef2b3e52603",
     "comparedDesignIrFingerprint": "7dfbe60e5cf41444ca132f9f43e714971f99eac991a410ca8ce641ac3b4b6a1d",
     "compareGenerationRequest": "screenshot-compare/wireframe.generation-request.json",
-    "compareGenerationRequestFingerprint": "cfc226ab58a59db11c95f967d7c3518edf1c1138224fb6bcbde3c97cb2905062",
-    "compareGenerationReportFingerprint": "90fb38544416443bf7aaeb7f75a1a5cbf49466f29e6bfe58f5ed2741a2d9f4fc",
+    "compareGenerationRequestFingerprint": "a1384565bf2975af5428dcb8ca8bdd5a64ea43f543d5afe3702aee3ec166695b",
+    "compareGenerationReportFingerprint": "ef24a7c72b6ddb5e80c09c8b93817c1c3e4ab3b2b72ca23067660fa61b4397d1",
     "previewRequest": "screenshot-render/wireframe.preview-request.json",
-    "previewRequestFingerprint": "405dba6210f39fc0bc754a91c67afe48a5ff386ab78952bddaad7279ef58986a",
+    "previewRequestFingerprint": "b13bb85984368bb583097cd6cbc21845907bfa596db54d74001f368b220282a2",
     "acceptedOutputFingerprint": "a7da3f4a7ab79f304d347988e1513b555dc597980906e7846ab204bf213e5500",
     "acceptedRenderTreeFingerprint": "5746bf6dfc564a8724a7d49a20ec6000eeae79441d76ad9a6aa2ff278fcb6f30"
   },
@@ -125,7 +125,7 @@
     {
       "status": "implemented",
       "source": "screenshot wireframe",
-      "expectedComparisonFingerprint": "4b649dd4050c061796d4911fa56e7dffb094f7eb6fcc73f8b6446918e4aa6dc8",
+      "expectedComparisonFingerprint": "418db58866f816d110d9490c1d31459be13260d5b63cabd6b55b7ac07e406479",
       "viewport": {"widthPx": 1079, "heightPx": 2339},
       "expectedSummary": {
         "designNodes": 4,

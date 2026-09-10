@@ -64,6 +64,9 @@ Every artifact links its available `docs/modules/<artifact-id>/README.md`. Publi
 verification reject a missing manual, a catalog-only artifact, or a published artifact omitted from
 this table. Architecture and guide pages remain the source of truth for cross-module concepts.
 
+The global sidebar links to this catalog. Use the Manual column to open each module's current
+documentation; the same links stay within the selected locale on local builds and the hosted site.
+
 | Artifact | Family | Runtime role | Manual |
 | --- | --- | --- | --- |
 | `viewcompose-runtime` | Kernel | Platform-neutral state and observation runtime | [Available](./viewcompose-runtime/README.md) |

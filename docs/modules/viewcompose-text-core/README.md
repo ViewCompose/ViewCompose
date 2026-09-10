@@ -7,6 +7,7 @@ owner:
   id: viewcompose-text-core
 version_lane: released
 capability_ids:
+  - text.editing-state
   - text.input
 artifact_ids:
   - viewcompose-text-core
@@ -124,6 +125,14 @@ transaction, so observers cannot receive a committed text value paired with stal
 - Undo and redo restore documents without reviving ephemeral IME composition.
 - `historyLimit` bounds only the undo stack; the default is 100 entries.
 
+In the unreleased checkout, value, undo/redo lists, and the composition baseline form one immutable
+snapshot-owned state. An abandoned or conflicting enclosing snapshot changes none of them; pinned
+readers see historical text and historical availability together. History operations copy bounded
+lists of immutable value references, sharing document contents. Selection-only programmatic edits
+preserve a pending composition baseline. Finishing IME composition records its undo unit even when
+the document has not changed since the preceding composing update; cancelling back to the baseline
+adds no entry. `clearHistory` clears a pending baseline even when both history lists are empty.
+
 ## Input transformations
 
 `InputTransformation` receives an isolated buffer for a platform-proposed user edit. It may rewrite
@@ -196,3 +205,14 @@ The `0.1.0-alpha02` line establishes UTF-16 offsets, immutable document annotati
 mapping, IME composition history coalescing, Receive Content normalization, and save format version
 1. Do not persist `TextFieldState`, `TextFieldBuffer`, active composition ranges, transformation
 instances, or platform adapters. Persist only values explicitly encoded by a compatible codec.
+
+## Current-checkout regression evidence
+
+The 2026-09-06 audit at `d64710459df73f3b42067767bb2f4f273b9eff33` reproduced two
+text-history defects: finishing unchanged composition lost undo, and abandoned edits left history
+behind. The candidate passes all 854 standalone JVM tests across the same 13-module source set,
+including 12 new `TextHistorySnapshotTest` cases. Both text probes now meet their expected result
+(2 failures to 0; 100% reduction on these probes): **improved**. This establishes transaction and
+composition correctness, not IME/device or editing-latency acceptance. The renderer's
+`TextFieldControllerTest` owns native `finishComposingText` verification; the next action is to run
+that bridge on Android and measure large-history workloads before making performance claims.

@@ -62,6 +62,7 @@ class EnvironmentTest {
             locales = UiLocaleList.of("en-US"),
             layoutDirection = UiLayoutDirection.Rtl,
             resourceRevision = 11L,
+            resourceCacheScope = "mounted-host",
         )
 
         val node = buildVNodeTree {

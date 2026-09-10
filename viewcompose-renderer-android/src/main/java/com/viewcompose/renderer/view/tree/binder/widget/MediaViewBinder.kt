@@ -28,6 +28,7 @@ internal object MediaViewBinder {
         val requestOptions: com.viewcompose.ui.node.UiImageRequestOptions,
         val density: UiDensity,
         val resourceRevision: Long,
+        val resourceCacheScope: String? = null,
     )
 
     fun bindImage(
@@ -59,6 +60,7 @@ internal object MediaViewBinder {
                             contentScale = spec.contentScale,
                             density = spec.density,
                             resourceRevision = spec.resourceRevision,
+                            resourceCacheScope = spec.resourceCacheScope,
                         ),
                         beforeStart = {
                             bindPlaceholder(view, spec.placeholder)
@@ -90,6 +92,9 @@ internal object MediaViewBinder {
             imageLoader = spec.imageLoader,
             requestOptions = spec.requestOptions,
             density = node.environment.density,
+            resourceCacheScope = node.environment.resourceCacheScope.takeIf {
+                spec.source is ImageSource.Resource || spec.placeholder != null || spec.error != null
+            },
             resourceRevision = node.environment.resourceRevision.takeIf {
                 spec.source is ImageSource.Resource ||
                     spec.placeholder != null ||

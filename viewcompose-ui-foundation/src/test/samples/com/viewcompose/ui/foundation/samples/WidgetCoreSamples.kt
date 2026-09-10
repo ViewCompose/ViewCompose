@@ -1291,3 +1291,14 @@ fun compositionEffectContextSample(
 ) {
     CompositionEffectContext.run(callback)
 }
+
+/** Preserves a mounted resource scope when producing node environments. */
+fun resourceScopeEnvironmentSample() {
+    val values = com.viewcompose.ui.environment.UiEnvironmentValues(
+        resourceCacheScope = java.util.UUID.randomUUID().toString(),
+    )
+    val node = com.viewcompose.ui.foundation.buildVNodeTree {
+        UiEnvironment(values) { Text("Scoped resource environment") }
+    }.single()
+    check(node.environment.resourceCacheScope == values.resourceCacheScope)
+}

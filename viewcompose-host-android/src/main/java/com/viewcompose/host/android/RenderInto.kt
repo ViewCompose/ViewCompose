@@ -73,6 +73,7 @@ class RenderSession internal constructor(
  * ordinary rendering.
  *
  * @sample com.viewcompose.host.android.samples.renderIntoSample
+ * @sample com.viewcompose.host.android.samples.renderActivationBoundarySample
  * @param container Android parent that owns all Views mounted by the returned session
  * @param debug enables render logging and slow-operation warnings
  * @param debugTag log tag used by debug rendering

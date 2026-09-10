@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: d9b1b9d42cf6f1fab80b264859edc7649a0897cfa48bd525b8f48df0cca76353
+translation_source_hash: 3b986423cfd5d708f75a320650c0c0527fef459cd1097c58527a8cf6c9ec0e74
 translation_status: current
 ---
 
@@ -275,3 +275,24 @@ Backend，重复 Provider 属于配置错误。
 Render Callback，并增加类型化 Role/Parent 集成输入；自定义平台可以继续使用默认 `null` 端口。
 需要 `Inspect Device Diagnostics` 的应用应在 Debug 配置中保留 `viewcompose-preview`，Release 构建
 不会携带设备 Inspector 实现。
+
+## 当前检出版本的生命周期修正
+
+未发布调度器用代次区分待执行请求与取消操作。在旧后台投递到达主队列前取消，会使该投递失效；
+旧的取消操作也不能移除更新的请求。UI 线程仍使用专用回调，分发时不新增包装分配。
+`FrameAlignedRenderDispatcherTest` 新增三项顺序回归。
+
+资源 Provider 每次挂载生成新的 `resourceCacheScope`，刷新时保持稳定，固定环境值的宿主也遵循该规则。
+作用域与宿主内修订号一起发布。不使用此 Provider 的自定义宿主需要提供进程内唯一作用域，
+否则本地资源加载不使用缓存。该作用域不能作为持久磁盘缓存键。
+
+原取消探针错误地调度了 1 帧；候选版本调度和渲染均为 0，错误调度从 1 降至 0（减少 100%），结论为改进。
+探针使用实际调度器和确定性时钟，不代表真机 Choreographer 时序；后续运行模块 Android 测试和真机启停压力测试，
+当前不宣称帧耗时改善。
+
+最终定向 Gradle 宿主测试通过 22 项帧调度与 Android 资源环境用例，失败和跳过均为零，包含
+SDK 24/35 Provider、刷新保持作用域，以及相同本地修订号下的作用域区分。结合取消探针，正确性得到改进；
+真机调度延迟和资源外观仍不在这些证据的覆盖范围内。
+
+2026-09-07 扩展运行通过 Host 全部 57 项测试，失败、错误和跳过均为零。额外纳入的 35 项已有
+用例扩大了此前定向验证的范围，已执行的 Host 交互未发现回归；真机时序和显示仍需独立验收。

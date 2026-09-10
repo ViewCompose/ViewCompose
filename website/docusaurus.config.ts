@@ -4,7 +4,7 @@ import type {Options, ThemeConfig} from '@docusaurus/preset-classic';
 import {createLocalizedMarkdownLinkResolver} from './src/config/localizedMarkdownLinks';
 import rewriteRepositoryFileLinks from './src/remark/rewriteRepositoryFileLinks';
 import stripGovernanceFrontMatter from './src/remark/stripGovernanceFrontMatter';
-import {compactArchitectureDecisionSidebar} from './src/sidebarItemsGenerator';
+import {compactCatalogSidebars} from './src/sidebarItemsGenerator';
 
 const siteDir = __dirname;
 const docsDir = `${siteDir}/../docs`;
@@ -123,7 +123,7 @@ const config: Config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           sidebarItemsGenerator: async (args) =>
-            compactArchitectureDecisionSidebar(
+            compactCatalogSidebars(
               await args.defaultSidebarItemsGenerator(args),
             ),
           beforeDefaultRemarkPlugins: [
@@ -132,6 +132,9 @@ const config: Config = {
               {
                 repositoryRoot: repositoryDir,
                 docsRoot: docsDir,
+                localizedDocsRoots: locales.map(locale =>
+                  `${siteDir}/i18n/${locale}/docusaurus-plugin-content-docs/current`,
+                ),
                 repositorySourceUrl: 'https://github.com/ViewCompose/ViewCompose/blob/main',
               },
             ],

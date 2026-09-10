@@ -2,7 +2,7 @@
 title: 图片加载
 slug: /guides/image-loading
 translation_source: guides/image-loading.md
-translation_source_hash: a6092cfd7640f3abdb76de901f4b7b0ca521e710428bb38c5db6739f4c2cff69
+translation_source_hash: 8c3d99b7efb95dfee620530fa7658b5907a18024bc93c946429c5471b6df6059
 translation_status: current
 ---
 
@@ -78,10 +78,11 @@ request 保持可移植，node spec 也不会持有 View 或 Drawable。Renderer
 `UiDensity` 复制到每个 `UiImageRequest`；适配器必须使用它，把 `Fixed` 解码边界转换为解码器
 所需的物理像素。
 
-只要 Source、Placeholder、Error 或 Fallback 使用资源，Renderer 还会复制子树捕获的
-`resourceRevision`。Locale、Night、Density 或主题资源变化后，即使整数资源 ID 相等也能重新加载。
-第一方 Coil 与 Glide Adapter 会把该版本加入 Primary Resource Cache 标识，同时保持纯远端 Cache
-标识不变。
+Renderer 对资源请求复制捕获的资源修订号；当前未发布实现还复制 `resourceCacheScope`。
+Android 资源 Provider 每次挂载生成新作用域，并在配置或主题刷新后推进修订号。
+内置适配器结合两者生成资源内存键，单独的宿主内修订号无法隔离共享 Loader。
+缺少作用域时禁用资源内存缓存，临时作用域也不能启用资源磁盘缓存。远程缓存仍由 Loader 管理。
+自定义宿主与重新编译要求见[迁移说明](../migration/image-loading.md)。
 
 ## 生命周期与回收 View
 

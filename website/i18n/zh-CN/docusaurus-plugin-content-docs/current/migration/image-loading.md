@@ -2,7 +2,7 @@
 title: 迁移图片加载
 slug: /migration/image-loading
 translation_source: migration/image-loading.md
-translation_source_hash: 4fd2be6f2440c46cf6c3192f133a0bc47fff57778fbcaa5f64e9fe917186392b
+translation_source_hash: eb089f9850aa40bffe9a1af9055d5e7aa42137895ed7072200659181886efe9b
 translation_status: current
 ---
 
@@ -84,3 +84,16 @@ source 不会启动 request。
 
 [图片加载指南](../guides/image-loading.md)详细说明所有权和释放规则；[Image Coil 模块手册](../modules/viewcompose-image-coil/README.md)
 说明已发布适配器的兼容性边界。
+
+## 未发布资源作用域升级
+
+当前检出版本为 `UiEnvironmentValues` 和 `UiImageRequest` 增加带默认值的 `resourceCacheScope`。
+必须重新编译所有消费者：普通源码调用仍可编译，但 Kotlin 数据类构造器与 `copy` 的二进制签名已改变。
+
+标准 Android 宿主自动安装作用域。自定义宿主优先使用 `AndroidResourceEnvironment`；否则每次挂载
+生成进程内唯一作用域（例如 UUID），刷新期间保持稳定，并与本地修订号一起复制进资源请求。
+每次资源或主题变化后推进修订号。不要持久化作用域、在独立环境间共享它，或单独用本地修订号充当缓存身份。
+
+作用域为 `null` 仍受支持，内置适配器会禁用资源内存缓存。即使默认策略允许缓存，本地主资源的磁盘缓存
+也会禁用，因为框架无法证明任意主题资源具有稳定的持久指纹。远程主图继续沿用 Loader 缓存策略，
+现有文件和 URL 无需增加键。升级时应重新检查资源命中率和主题变化；本次正确性修正不承诺缓存性能不变。

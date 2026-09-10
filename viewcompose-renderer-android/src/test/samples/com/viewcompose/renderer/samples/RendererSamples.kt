@@ -24,6 +24,25 @@ import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.modifier.focusable
+
+/** Uses a valid node without focus overrides to demonstrate reversible native focus ownership. */
+fun focusModifierRemovalSample(container: ViewGroup, node: VNode) {
+    val initial = ViewTreeRenderer.renderInto(container, emptyList(), listOf(node))
+    initial.commitEffects.forEach { it.commit() }
+    val view = initial.mountedNodes.single().view
+    val originalFocusable = view.isFocusable
+    val disabled = ViewTreeRenderer.renderInto(
+        container, initial.mountedNodes, listOf(node.copy(modifier = node.modifier.focusable(false))),
+    )
+    disabled.commitEffects.forEach { it.commit() }
+    check(!view.isFocusable)
+    val restored = ViewTreeRenderer.renderInto(container, disabled.mountedNodes, listOf(node))
+    restored.commitEffects.forEach { it.commit() }
+    check(restored.mountedNodes.single().view === view)
+    check(view.isFocusable == originalFocusable)
+    ViewTreeRenderer.disposeMounted(container, restored.mountedNodes)
+}
 
 // DOCS_REGION_START(renderer-reconciliation)
 fun childReconciliationSample() {

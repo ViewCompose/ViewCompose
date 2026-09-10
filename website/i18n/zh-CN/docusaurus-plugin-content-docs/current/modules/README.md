@@ -53,7 +53,7 @@ validation:
   - ./gradlew verifyDocumentationStructure verifyViewComposePublishingConfiguration
 lifecycle: 公共制品新增、重命名、退役、发布或调整模块分类时更新。
 translation_source: modules/README.md
-translation_source_hash: d3be63479e71a11254065bd0b6c8c2a073c78a6d9cf7f5111086ba8031a0c711
+translation_source_hash: 0d077766ef9f11d5d03efe016aa93d5f0ecb3a09a737bb0f4556f273c05c5cd4
 translation_status: current
 ---
 
@@ -66,47 +66,50 @@ translation_status: current
 每个产物都链接到已提供的 `docs/modules/<artifact-id>/README.md`。发布与站点校验会拒绝缺失手册、
 只存在于目录中的产物，或未登记到本表的已发布产物。跨模块概念仍以架构与指南页面为事实来源。
 
+全局侧栏链接到本目录。通过“手册”列打开各模块的当前文档；这些链接在本地构建和托管站点中
+都保持当前选择的语言。
+
 | 产物 | 分类 | 运行时职责 | 手册 |
 | --- | --- | --- | --- |
-| `viewcompose-runtime` | Kernel | 平台无关的状态与观察运行时 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-runtime) |
-| `viewcompose-text-core` | Kernel | 平台无关的文本编辑模型 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-text-core) |
-| `viewcompose-ui-contract` | Kernel | 平台无关的 UI 契约与节点规范 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract) |
-| `viewcompose-navigation-core` | Kernel | 平台无关的导航状态与事务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-core) |
-| `viewcompose-navigation-kotlinx-serialization` | Integration | 可选 Kotlinx Serialization Route Codec | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-kotlinx-serialization) |
-| `viewcompose-renderer-android` | Android Engine | Android View 渲染与协调引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android) |
-| `viewcompose-ui-foundation` | UI Foundation | 核心 DSL、组件、token 与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation) |
-| `viewcompose-diagnostics` | Integration | 有界且隐私安全的生产故障聚合 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics) |
-| `viewcompose-host-android` | Android Engine | 底层 View 宿主、session、状态与互操作引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-host-android) |
-| `viewcompose-material3` | Design System | Material 3 主题与动态色适配 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-material3) |
-| `viewcompose-material3-android` | Aggregate | 具名 Material 3 Android 应用集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-material3-android) |
-| `viewcompose-oneui7` | Design System | One UI 7 五组件 Alpha Token 与组件集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-oneui7) |
-| `viewcompose-android` | Aggregate | 中立 Android 应用入口依赖 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-android) |
-| `viewcompose-navigation-android` | Integration | Android 导航宿主集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-android) |
-| `viewcompose-overlay-android` | Integration | 不依赖 Material 的 Android Overlay 传输 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-android) |
-| `viewcompose-overlay-material3-android` | Integration | 基于 Material 的 Android 浮层呈现 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-material3-android) |
-| `viewcompose-overlay-oneui7-android` | Integration | 不依赖 Material 的 One UI Snackbar 与底部对话框呈现 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-oneui7-android) |
-| `viewcompose-image-coil` | 集成 | 基于 Coil 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-coil) |
-| `viewcompose-image-glide` | 集成 | 基于 Glide 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-glide) |
-| `viewcompose-lifecycle-androidx` | 集成 | 感知 AndroidX 生命周期的状态、Effect 与已提交原生 View 协同 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-lifecycle-androidx) |
-| `viewcompose-viewmodel-androidx` | 集成 | ViewModel 与 SavedStateHandle 集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-viewmodel-androidx) |
-| `viewcompose-preview-core` | 预览工具 | 预览注解与工具协议 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-core) |
-| `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-gradle-plugin) |
-| `viewcompose-preview-runner` | 预览工具 | Layoutlib 预览渲染运行时 | [已提供](/modules/viewcompose-preview-runner/) |
-| `viewcompose-preview-worker-host` | 预览工具 | 隔离的预览 Worker 宿主 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-worker-host) |
-| `viewcompose-preview` | 预览工具 | 开发预览与快照集成 | [已提供](/modules/viewcompose-preview/) |
-| `viewcompose-animation-core` | Kernel | 平台无关的动画引擎契约 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation-core) |
-| `viewcompose-animation` | UI Foundation | 动画 DSL 与组合集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation) |
-| `viewcompose-gesture-core` | Kernel | 平台无关的手势策略 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture-core) |
-| `viewcompose-gesture` | UI Foundation | 手势 DSL 与状态 API | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture) |
-| `viewcompose-graphics-core` | Kernel | 平台无关的图形模型 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics-core) |
-| `viewcompose-graphics` | UI Foundation | 绘制 DSL 与组合集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics) |
-| `viewcompose-shadow-android` | Integration | 高级 Android 阴影渲染 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-shadow-android) |
-| `viewcompose-constraintlayout-androidx` | Integration | AndroidX ConstraintLayout DSL | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-constraintlayout-androidx) |
-| `viewcompose-media3-androidx` | Integration | 生命周期安全的 AndroidX Media3 PlayerView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-media3-androidx) |
-| `viewcompose-exoplayer2-android` | Integration | 冻结的旧版 ExoPlayer 2 StyledPlayerView 兼容层 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-exoplayer2-android) |
-| `viewcompose-google-maps-android` | Integration | 生命周期安全的 Google Maps MapView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-google-maps-android) |
-| `viewcompose-camerax-androidx` | Integration | 精确且受生命周期约束的 CameraX PreviewView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-camerax-androidx) |
-| `viewcompose-paging-androidx` | Integration | 面向 ViewCompose LazyColumn 的生命周期感知 AndroidX Paging 集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-paging-androidx) |
+| `viewcompose-runtime` | Kernel | 平台无关的状态与观察运行时 | [可用](./viewcompose-runtime/README.md) |
+| `viewcompose-text-core` | Kernel | 平台无关的文本编辑模型 | [可用](./viewcompose-text-core/README.md) |
+| `viewcompose-ui-contract` | Kernel | 平台无关的 UI 契约与节点规范 | [可用](./viewcompose-ui-contract/README.md) |
+| `viewcompose-navigation-core` | Kernel | 平台无关的导航状态与事务 | [可用](./viewcompose-navigation-core/README.md) |
+| `viewcompose-navigation-kotlinx-serialization` | Integration | 可选 Kotlinx Serialization Route Codec | [可用](./viewcompose-navigation-kotlinx-serialization/README.md) |
+| `viewcompose-renderer-android` | Android Engine | Android View 渲染与协调引擎 | [可用](./viewcompose-renderer-android/README.md) |
+| `viewcompose-ui-foundation` | UI Foundation | 核心 DSL、组件、token 与 Local 值 | [可用](./viewcompose-ui-foundation/README.md) |
+| `viewcompose-diagnostics` | Integration | 有界且隐私安全的生产故障聚合 | [可用](./viewcompose-diagnostics/README.md) |
+| `viewcompose-host-android` | Android Engine | 底层 View 宿主、session、状态与互操作引擎 | [可用](./viewcompose-host-android/README.md) |
+| `viewcompose-material3` | Design System | Material 3 主题与动态色适配 | [可用](./viewcompose-material3/README.md) |
+| `viewcompose-material3-android` | Aggregate | 具名 Material 3 Android 应用集成 | [可用](./viewcompose-material3-android/README.md) |
+| `viewcompose-oneui7` | Design System | One UI 7 五组件 Alpha Token 与组件集 | [可用](./viewcompose-oneui7/README.md) |
+| `viewcompose-android` | Aggregate | 中立 Android 应用入口依赖 | [可用](./viewcompose-android/README.md) |
+| `viewcompose-navigation-android` | Integration | Android 导航宿主集成 | [可用](./viewcompose-navigation-android/README.md) |
+| `viewcompose-overlay-android` | Integration | 不依赖 Material 的 Android Overlay 传输 | [可用](./viewcompose-overlay-android/README.md) |
+| `viewcompose-overlay-material3-android` | Integration | 基于 Material 的 Android 浮层呈现 | [可用](./viewcompose-overlay-material3-android/README.md) |
+| `viewcompose-overlay-oneui7-android` | Integration | 不依赖 Material 的 One UI Snackbar 与底部对话框呈现 | [可用](./viewcompose-overlay-oneui7-android/README.md) |
+| `viewcompose-image-coil` | 集成 | 基于 Coil 的通用图片加载 | [可用](./viewcompose-image-coil/README.md) |
+| `viewcompose-image-glide` | 集成 | 基于 Glide 的通用图片加载 | [可用](./viewcompose-image-glide/README.md) |
+| `viewcompose-lifecycle-androidx` | 集成 | 感知 AndroidX 生命周期的状态、Effect 与已提交原生 View 协同 | [可用](./viewcompose-lifecycle-androidx/README.md) |
+| `viewcompose-viewmodel-androidx` | 集成 | ViewModel 与 SavedStateHandle 集成 | [可用](./viewcompose-viewmodel-androidx/README.md) |
+| `viewcompose-preview-core` | 预览工具 | 预览注解与工具协议 | [可用](./viewcompose-preview-core/README.md) |
+| `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | [可用](./viewcompose-preview-gradle-plugin/README.md) |
+| `viewcompose-preview-runner` | 预览工具 | Layoutlib 预览渲染运行时 | [已提供](./viewcompose-preview-runner/README.md) |
+| `viewcompose-preview-worker-host` | 预览工具 | 隔离的预览 Worker 宿主 | [可用](./viewcompose-preview-worker-host/README.md) |
+| `viewcompose-preview` | 预览工具 | 开发预览与快照集成 | [已提供](./viewcompose-preview/README.md) |
+| `viewcompose-animation-core` | Kernel | 平台无关的动画引擎契约 | [可用](./viewcompose-animation-core/README.md) |
+| `viewcompose-animation` | UI Foundation | 动画 DSL 与组合集成 | [可用](./viewcompose-animation/README.md) |
+| `viewcompose-gesture-core` | Kernel | 平台无关的手势策略 | [可用](./viewcompose-gesture-core/README.md) |
+| `viewcompose-gesture` | UI Foundation | 手势 DSL 与状态 API | [可用](./viewcompose-gesture/README.md) |
+| `viewcompose-graphics-core` | Kernel | 平台无关的图形模型 | [可用](./viewcompose-graphics-core/README.md) |
+| `viewcompose-graphics` | UI Foundation | 绘制 DSL 与组合集成 | [可用](./viewcompose-graphics/README.md) |
+| `viewcompose-shadow-android` | Integration | 高级 Android 阴影渲染 | [可用](./viewcompose-shadow-android/README.md) |
+| `viewcompose-constraintlayout-androidx` | Integration | AndroidX ConstraintLayout DSL | [可用](./viewcompose-constraintlayout-androidx/README.md) |
+| `viewcompose-media3-androidx` | Integration | 生命周期安全的 AndroidX Media3 PlayerView 托管 | [可用](./viewcompose-media3-androidx/README.md) |
+| `viewcompose-exoplayer2-android` | Integration | 冻结的旧版 ExoPlayer 2 StyledPlayerView 兼容层 | [可用](./viewcompose-exoplayer2-android/README.md) |
+| `viewcompose-google-maps-android` | Integration | 生命周期安全的 Google Maps MapView 托管 | [可用](./viewcompose-google-maps-android/README.md) |
+| `viewcompose-camerax-androidx` | Integration | 精确且受生命周期约束的 CameraX PreviewView 托管 | [可用](./viewcompose-camerax-androidx/README.md) |
+| `viewcompose-paging-androidx` | Integration | 面向 ViewCompose LazyColumn 的生命周期感知 AndroidX Paging 集成 | [可用](./viewcompose-paging-androidx/README.md) |
 
 ## 目录规则
 

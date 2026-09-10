@@ -4,6 +4,7 @@ import com.viewcompose.runtime.SnapshotRuntime
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.observation.ObservableState
 import com.viewcompose.runtime.observation.Observation
+import com.viewcompose.runtime.observation.ObservationInvalidations
 import com.viewcompose.runtime.observation.RuntimeObservation
 
 /**
@@ -35,34 +36,38 @@ internal class DerivedStateImpl<T>(
         }
 
     override fun addObserver(observer: Observation) {
+        if (observers.isEmpty()) dirty = true
         observers += observer
     }
 
     override fun removeObserver(observer: Observation) {
         observers -= observer
+        if (observers.isEmpty()) {
+            dependencyObservation?.dispose()
+            dependencyObservation = null
+        }
     }
 
     private fun recompute() {
-        dependencyObservation?.dispose()
-        val (nextValue, nextObservation) = RuntimeObservation.observeReads(
-            onInvalidated = ::invalidate,
-        ) {
-            block()
+        val previous = dependencyObservation
+        val nextValue: T
+        if (previous == null) {
+            val (value, observation) = RuntimeObservation.observeReads(onInvalidated = ::invalidate, block = block)
+            nextValue = value
+            if (observers.isEmpty()) observation.dispose() else dependencyObservation = observation
+        } else {
+            val (value, replacement) = RuntimeObservation.prepareReplacement(previous, block)
+            replacement.commit()
+            nextValue = value
         }
-        dependencyObservation = nextObservation
         cachedValue = nextValue
         dirty = false
     }
 
     private fun invalidate() {
-        if (dirty) {
-            return
-        }
         dirty = true
         lastReadToken = Long.MIN_VALUE
-        observers.toList().forEach { observer ->
-            observer.invalidate()
-        }
+        ObservationInvalidations.enqueue(observers.toList())
     }
 
     private object Uninitialized

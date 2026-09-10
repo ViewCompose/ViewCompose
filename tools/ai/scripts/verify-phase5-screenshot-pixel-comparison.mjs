@@ -245,7 +245,7 @@ export async function verifyPhase5ScreenshotPixelComparison({compareGolden = tru
       attributions: 0,
       unassignedMismatchedPixels: 0,
       localizationFingerprint:
-        '77d790d9abfaa105ecef94b898699282d2132932976cffd86b62413176f36000',
+        '6da80994f5abcb7614c6c64d94ec46bc89ac964ef2d37d106e0cb1fef23d5bdb',
     })
   ) {
     throw new Error('Screenshot pixel reference lineage or exact denominator changed');

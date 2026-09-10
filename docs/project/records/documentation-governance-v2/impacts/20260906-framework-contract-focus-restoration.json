@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-focus-restoration",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-renderer-android",
+  "symbol_id": "com.viewcompose.renderer.view.tree.ViewTreeRenderer",
+  "capability_id": "renderer.tree-transactions",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "android",
+    "failure",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.renderer.view.tree.ViewTreeRenderer"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-renderer-android"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "module.renderer-tree-transaction"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.renderer.tree-transactions"
+      ]
+    },
+    "architecture": {
+      "status": "not-applicable",
+      "rationale": "The existing Modifier ownership and transactional renderer boundaries are preserved; the module manual records the corrected inverse operation."
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "Application Modifier usage is unchanged."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The existing focus API remains unchanged; this corrects its renderer restoration behavior."
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "This restores intended focus modifier removal behavior without changing any public signature."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

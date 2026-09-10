@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-image-host",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-host-android",
+  "symbol_id": "com.viewcompose.host.android.resources.UiTreeBuilder.AndroidResourceEnvironment",
+  "capability_id": "host.android-resources",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.host.android.resources.UiTreeBuilder.AndroidResourceEnvironment"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-host-android"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "module.host-android-resources"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.host.android-resources"
+      ]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.android-resource-environment"
+      ]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "Existing installation remains valid; custom-host scope migration is owned by the image migration guide."
+    },
+    "guide": {
+      "status": "updated",
+      "targets": [
+        "guide.image-loading"
+      ]
+    },
+    "migration": {
+      "status": "updated",
+      "targets": [
+        "migration.image-loading"
+      ]
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

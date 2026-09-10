@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "capability_id": "text.editing-state",
+  "kind": "dsl",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-text-core"
+  },
+  "artifact": "viewcompose-text-core",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha04"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.text.TextFieldState",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-text-core/src/main/kotlin/com/viewcompose/text/TextFieldState.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.text.editing-state",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.text-core-state"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-text-core"
+    ],
+    "architecture": [
+      "architecture.text-input-runtime"
+    ]
+  }
+}

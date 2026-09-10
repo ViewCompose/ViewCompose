@@ -5,6 +5,11 @@ package com.viewcompose.ui.foundation
  *
  * Subclasses provide type-specific decode, show, update, and dismiss operations. Invalid or
  * differently typed requests are ignored. An unchanged request reuses its handle without an update.
+ * Removed handles are forgotten before their dismissal is attempted. Cleanup attempts every
+ * matching handle and then rethrows the first failure with later failures suppressed; another
+ * session's handles are unaffected and repeated clear does not repeat failed terminal callbacks.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.overlayCleanupFailureSample
  */
 abstract class SessionBoundSurfaceOverlayHost<Spec : Any, Content : Any, Handle>(
     private val overlayType: OverlayType,
@@ -22,7 +27,7 @@ abstract class SessionBoundSurfaceOverlayHost<Spec : Any, Content : Any, Handle>
         }.associateBy { it.entryId }
         val previousKeys = activeEntries.keys.filter { it.sessionId == sessionId }
 
-        previousKeys.filter { it !in nextEntries.keys }.forEach { entryId ->
+        previousKeys.filter { it !in nextEntries.keys }.forEachOverlayCleanup { entryId ->
             dismiss(entryId)
         }
 
@@ -51,10 +56,10 @@ abstract class SessionBoundSurfaceOverlayHost<Spec : Any, Content : Any, Handle>
         }
     }
 
-    /** Dismisses and forgets all surface handles owned by [sessionId]. */
+    /** Forgets and attempts dismissal of every owned handle before reporting cleanup failures. */
     final override fun clear(sessionId: OverlaySessionId) {
         val keys = activeEntries.keys.filter { it.sessionId == sessionId }
-        keys.forEach { entryId ->
+        keys.forEachOverlayCleanup { entryId ->
             dismiss(entryId)
         }
     }

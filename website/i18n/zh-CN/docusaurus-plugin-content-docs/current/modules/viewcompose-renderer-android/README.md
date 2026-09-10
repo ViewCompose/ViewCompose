@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: f77d43bec08e90546ca11e9cb9371bf235253f077b32d71a51d0031b3786b8f8
+translation_source_hash: 19f29a12ba792b21f8ca405311d94bc299437a692da6ab1b3493a009c8db67e3
 translation_status: current
 ---
 
@@ -379,6 +379,10 @@ Matrix。Phase 4 负责该基准与最终指导。
   Density 或布局方向变化时，SegmentedControl 会重建内部 Shape Drawable，避免解析后的圆角继续
   持有过期环境。
 
+尚未发布的工作树会在焦点覆盖被移除或 View 释放时恢复原生焦点模式和触摸模式标志。AndroidView
+保留原生焦点基线；普通组件根据当前点击能力和固有交互计算默认值。TextField 的属性重绑保留显式
+焦点覆盖。移除覆盖不会恢复已过时的组件默认值，也不会把覆盖后的属性误记为下一次基线。
+
 ## Espresso 键控测试标签
 
 `Modifier.testTag("tool-sections")` 会被 Android Renderer 暴露为键控 View Tag。它不会替换
@@ -512,3 +516,15 @@ Animation Phase 1 Alpha 新增 `viewcompose-animation-core` 实现依赖，并�
 硬切为有限 Spec。自定义 Renderer 分支必须通过同一或等价 Solver 消费物理
 Damping/Stiffness/Safety Guard，在 Spring Retarget 时保留速度，并拒绝无限 Layout Motion。
 继续在 `spring` 名称下使用旧固定时长阻尼 Interpolator 不兼容。
+
+## 当前检出版本的集成证据
+
+接受的审查通过静态路径发现焦点标记在移除后残留。候选版本的定向 Gradle 执行通过
+`ModifierFocusInputApplierTest`、`TextFieldControllerTest` 和 `ImageRequestBindingControllerTest`
+共 34 项测试，失败和跳过均为零，验证原生焦点恢复与重新应用、IME 组合输入结束、资源作用域传递，
+以及纯远程请求继续复用。正确性覆盖得到改进；原焦点发现是静态审查，因此没有可对比的基线失败数量。
+这些属于 Android Robolectric 桥接测试，不代表真机键盘或导航验收。后续验证真机焦点遍历、厂商 IME
+和共享 Loader 图片外观。
+
+2026-09-07 扩展运行通过 Renderer 完整套件的 545 项测试，失败、错误和跳过均为零。它扩大了
+此前 34 项定向用例的验证范围，结论是跨功能回归覆盖改善，不代表新增 511 项测试或性能提升。

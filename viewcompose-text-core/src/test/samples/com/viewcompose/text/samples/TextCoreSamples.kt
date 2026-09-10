@@ -6,6 +6,7 @@ import com.viewcompose.text.ParagraphStyle
 import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextDocumentSaveCodec
 import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
 import com.viewcompose.text.TextSpanStyle
 import com.viewcompose.text.textDocument
@@ -49,6 +50,11 @@ check(state.text == "ViewCompose")
 check(state.undo())
 check(state.text == "Hello")
     // DOCS_REGION_END(text-core-module-state)
+    val composing = TextFieldState()
+    composing.updateFromInput(TextFieldValue("a", composition = TextRange(0, 1)))
+    composing.updateFromInput(TextFieldValue("a"))
+    check(composing.undo())
+    check(composing.text.isEmpty())
 }
 
 fun inputTransformationSample() {

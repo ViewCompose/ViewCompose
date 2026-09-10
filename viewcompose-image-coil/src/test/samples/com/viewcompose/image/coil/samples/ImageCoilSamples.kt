@@ -25,4 +25,12 @@ fun coilImageLoaderAdapterSample(
         ),
     )
     handle.dispose()
+    val resourceHandle = loader.load(
+        target = object : PlatformUiImageTarget { override val target: Any = imageView },
+        request = UiImageRequest(
+            source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+            resourceCacheScope = java.util.UUID.randomUUID().toString(),
+        ),
+    )
+    resourceHandle.dispose()
 }

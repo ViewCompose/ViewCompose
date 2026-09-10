@@ -53,10 +53,10 @@ test('builds a deterministic complete bundle from Governance V2 and compiled sam
   assert.equal(stableJson(first.manifest), stableJson(second.manifest));
   assert.deepEqual([...first.files], [...second.files]);
   assert.equal(first.manifest.counts.artifacts, 31);
-  assert.equal(first.manifest.counts.capabilities, 82);
+  assert.equal(first.manifest.counts.capabilities, 85);
   assert.equal(first.manifest.counts.publicImports, 1393);
   assert.equal(first.manifest.counts.symbols, 540);
-  assert.equal(first.manifest.counts.samples, 218);
+  assert.equal(first.manifest.counts.samples, 220);
   assert.equal(first.manifest.counts.rules, 10);
   const resolved = first.symbols.filter((symbol) => symbol.declarations.length > 0).length;
   assert.equal(resolved, first.symbols.length);

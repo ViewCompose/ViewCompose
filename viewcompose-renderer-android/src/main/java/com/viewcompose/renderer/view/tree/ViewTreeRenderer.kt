@@ -18,6 +18,11 @@ import com.viewcompose.renderer.reconcile.ReconcileNode
  * returned by its previous successful render. Structural and binding mutations are rolled back when
  * preparation fails. [renderInto] returns deferred native work for its caller to execute only after
  * the owning composition commits.
+ * Focus modifiers temporarily override native focusability. Removal or disposal restores the
+ * underlying native/binder baseline, including touch-mode and automatic focusability; a TextField
+ * property rebind preserves an active explicit focus override.
+ *
+ * @sample com.viewcompose.renderer.samples.focusModifierRemovalSample
  */
 object ViewTreeRenderer {
     private const val DEFAULT_RIPPLE_COLOR: Int = 0x22000000

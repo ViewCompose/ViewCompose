@@ -2,7 +2,7 @@
 title: AI 接入
 slug: /ai
 translation_source: ai/README.md
-translation_source_hash: 339df149e045606bdb75b9f619ebd91af7a86019dfb248abb5d75a5f3c7f3f2e
+translation_source_hash: c0168bcb9fed8295ef7c1c3088174d501b2535799665296bca12e5cb76fc8f2b
 translation_status: current
 ---
 
@@ -192,6 +192,10 @@ CI 会在全新 Linux、macOS 和 Windows Project 上验证真实 Package Bootst
 未发布的 `0.8.0` Candidate 会在写入 Project 配置前，把 MCP Command 解析为临时目录和 npm
 短期 npx Cache 之外的规范 Executable。如果只有临时或已缺失的 Node Runtime，`init` 会在写入
 Project 前停止，`doctor` 会返回可执行的修复说明，不再保存会随 Launcher Cache 消失的路径。
+临时目录的别名与物理路径都会被检查。尤其在 macOS 上，把可执行文件从 `/var` 解析到
+`/private/var` 后，它仍被识别为临时运行时。2026-09-08 的 macOS/Node 24.19 回归运行通过
+全部 18 项客户端集成测试；修复前已有的 doctor 用例失败，新增别名用例覆盖两种可执行路径。
+结论为临时运行时识别能力 `improved`，不代表性能提升；Windows 主机执行仍由平台矩阵验证。
 MCP 的 `serverInfo.version` 现在也与打包后的 `0.8.0` 工具身份一致。
 
 ## 无需 ViewCompose 源码即可使用的能力
@@ -635,7 +639,7 @@ Parity。外部复现只覆盖一份标准化 Figma Export 和一台 macOS Host�
 Hosted CI 另行验证 Linux、macOS 与 Windows 原生接入。直接 Figma 登录、Plugin/REST/`.fig`
 导入、自定义字体与不支持 Effect 的生成、Style 或 Pixel Parity，以及源码写入仍不属于本 Release。
 详细分母与下一项 Wave D 工作保存在
-[当前 AI 工具计划](../project/plans/ai-verifiable-development-tooling.md)中。
+[当前 AI 工具计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)中。
 
 公开 `0.5.0` 验收已于 2026-09-01 完成。受保护的
 [Run `33486262197`](https://github.com/ViewCompose/ViewCompose/actions/runs/33486262197)
@@ -657,7 +661,7 @@ Static Evidence，以及故意不完整 Image 调用对应的预期高置信度
 **improved**，单命令接入契约保持不变。公开复现只使用一台 macOS Host，且没有启动或认证专有
 Agent Binary；Hosted CI 另行验证 Linux、macOS 与 Windows 的原生 Bootstrap 行为。Analyzer
 结论仍只适用于文档声明的 Lexical Boundary。详细分母、限制与解释后的结论保存在
-[当前 AI 工具计划](../project/plans/ai-verifiable-development-tooling.md)中。
+[当前 AI 工具计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)中。
 
 npm 版本历史中还包含 `0.4.0-bootstrap.0`。它是一次性的、带 Provenance 的预发布 Package，
 只用于先建立 npm Package Identity，以便绑定稳定版 GitHub Trusted Publisher。npm 在首次
@@ -686,4 +690,36 @@ Repair 契约；请使用精确 Selector `@viewcompose/ai-tooling@0.7.0`。
 | 出现 Credential 请求 | 立即停止。ViewCompose 不需要模型 Provider Credential，也不会在 MCP 参数或 Project 配置中接收它。 |
 
 贡献者内部说明见 [AI 工具契约](https://github.com/ViewCompose/ViewCompose/blob/main/tools/ai/README.md)
-和当前 [AI 可验证工具计划](../project/plans/ai-verifiable-development-tooling.md)。
+和当前 [AI 可验证工具计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/ai-verifiable-development-tooling.md)。
+
+## 当前检出版本的进程边界
+
+整合最新主分支后，未发布的 `0.8.0` 候选包含这项修复，并替代审查期间最初的本地 `0.7.1`
+候选。当前已发布的消费者版本仍为 `0.7.0`。打包、Bootstrap、接入和发布元数据保留上游的
+`0.8.0` 身份。发布属于独立步骤。
+
+集成候选通过 397/397 项 AI 测试、确定性包复现、npm 发布预演清单、安装后的
+CLI／MCP／Agent 流程和完整 `qaQuick`。源码绑定的 XML 与截图证据已重新采集，图像字节、
+比较分母和拒绝阈值均保持一致。已接受的集成环境及剩余设备限制见
+[能力验收](../project/capability-verification.md#框架契约审查验收)。
+
+生成 Preview 请求各自保留 Gradle 项目任务历史，同时共享依赖下载缓存。一个请求的过期
+输出清理不会再删除另一个请求在发现与渲染之间需要的资源类。七项 Preview 适配器测试通过，
+包括新增的任务历史隔离回归；图片绑定场景从空构建目录渲染后复现已接受的 PNG 与渲染树。
+结论是执行隔离**改善**，不宣称渲染速度提升。
+
+未发布的有界执行器在超时、取消或输出超限时终止 POSIX 进程组，并在两秒后升级为强制终止。
+完成路径同时关闭继承的输出管道，因此父进程提前退出不会让请求无限等待后代进程。
+Windows 使用尽力而为的 `taskkill /T /F`；macOS 进程组证据不覆盖 Windows 执行或主动脱离进程组的后代，
+但完成时间边界仍会执行。
+
+macOS Node 环境下，最初候选在更新知识身份前通过执行器、编译器、分析器和 MCP 的 45 项测试，
+审查基线为 39 项。
+六项新增用例覆盖继承管道、取消、输出限制、预先取消、正常执行或启动失败，以及强制终止。
+原继承管道问题已纠正，结论为改进；用例数量增长表示覆盖增加，不是延迟比较。
+后续需要验证 Windows 进程树，才能宣称跨平台后代清理已获验证。
+
+相同的 150 ms 超时探针在最终 macOS 候选版本中用时 158 ms，审查基线为 3558 ms，减少
+3400 ms（约 95.6%）。两次均包含持有继承输出管道的后代进程。这是一次有界完成回归观察，
+不是吞吐量或普遍延迟基准。集成后的 397 项测试全部通过，包括六项进程回归。
+此前过期的 MCP 与视觉夹具现已按刷新的源码身份通过验证。

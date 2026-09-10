@@ -628,3 +628,30 @@ diagnostic contracts. `DesignSystemAttributionProvider` is a Q3 provider API. Ad
 so precompiled direct callers must rebuild. The contracts contain stable identities and resolved
 evidence only; they do not authorize recipes, factories, or named design-system branches in UI
 Foundation or Renderer.
+
+## Current-checkout cleanup contract
+
+Unreleased cleanup attempts every owned handle or delegate even when an earlier dismissal throws.
+Ownership is removed before terminal callbacks; the first failure is rethrown after cleanup and
+later failures are suppressed. Repeated clear does not retry failed terminal callbacks, and another
+session remains owned. Transient presenter failure releases its active queue slot; native window
+teardown is attempted even if nested-session disposal fails. This contract does not promise that a
+failing external platform API successfully releases its resource.
+
+The audit's two-surface failure probe released only the first surface and retained the second.
+The candidate attempts both and retains neither (1 to 2 attempts; 1 to 0 retained entries):
+**improved**. Four foundation cleanup regressions pass within the 854-test standalone JVM run.
+`CompositeOverlayCleanupTest` and the Android presenter suites own integration validation. Window
+visibility and platform failure behavior still need device acceptance; the next action is to retain
+these regressions and exercise native dismissal with a failing child session.
+
+## Current-checkout resource propagation
+
+`UiEnvironment` preserves `resourceCacheScope` in its captured locals and in `Environment.values`.
+Emitted nodes and delayed lazy/pager child sessions therefore retain the same mounted resource
+owner; changing scope at an equal local revision changes child environment identity. The scope is
+an opaque string and does not retain a Context. `EnvironmentTest` and
+`LazyContentLocalPropagationTest` verify both emission and delayed-child invalidation. The complete
+Foundation Gradle suite passes 403 tests with zero failures or skips: **improved** scope coverage.
+This proves propagation and lifecycle logic; shared image-loader request tests own cache identity
+acceptance and devices still own resource appearance/performance acceptance.

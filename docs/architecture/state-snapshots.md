@@ -26,6 +26,7 @@ evidence:
   - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotApiTest.kt
   - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotMutationPolicyTest.kt
   - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt
+  - viewcompose-runtime/src/test/java/com/viewcompose/runtime/RuntimeContractHardeningTest.kt
   - viewcompose-runtime/src/test/java/com/viewcompose/runtime/observation/RuntimeObservationTest.kt
   - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/state/StateConnectorContractTest.kt
 ---
@@ -107,6 +108,21 @@ Goals:
     `commit` switches the authoritative set without an invalidation gap, while `abort` releases only
     candidate additions. Exactly one replacement may be prepared at a time, and every replacement
     requires one terminal operation.
+14. A nested snapshot freezes pending values visible in its parent at creation. Later parent writes
+    cannot alter that read view. Child apply compares per-state write identities with this frozen
+    baseline; earlier parent writes are not conflicts, but later writes are. Applying to an applied
+    or disposed parent is invalid. Read-only children also preserve buffered parent values.
+15. Derived caches distinguish mutable snapshot identities and local mutations. Read snapshots with
+    identical committed history may share cache validity. Upstream subscriptions exist only while
+    consumers observe the derived state; independent reads validate their view without retaining
+    upstream subscriptions, and a new consumer reconnects before its read returns.
+16. Successful publication establishes the mutable snapshot's terminal state before notification.
+    Delivery attempts every affected observation, including derived dependency paths, at most once
+    per apply. Callback failures rethrow the first throwable with later failures suppressed; writes
+    remain committed and cannot be retried as an unapplied transaction. Reentrant applies have
+    their own notification batch.
+17. A failed derived calculation preserves its previous dependency subscriptions. Later applies
+    remain invalidation opportunities even while the cached result is dirty.
 
 ## 4. Concurrency and conflict constraints
 
@@ -118,6 +134,10 @@ Goals:
    value.
 4. Without merge support, including the default policy, a conflict fails and the caller decides
    whether to retry.
+5. Nested conflicts compare buffered write identities, not value equality. Returning a parent value
+   to its earlier value still counts as a later write. A child captures only pending values;
+   committed records remain shared under its pinned read ID. Capturing a parent with pending writes
+   costs space proportional to that pending set, not to all live state objects.
 
 ## 5. Development constraints
 
@@ -141,3 +161,8 @@ Goals:
 1. [Architecture overview](overview.md)
 2. [Performance](../tooling/performance.md)
 3. [Development workflow](../project/workflow.md)
+
+Global apply notifications temporarily leave the caller's snapshot context. They read committed
+global state and may start independent transactions; the caller's previous context is restored in
+`finally`. This also applies when `apply()` is invoked inside `enter()`: notification code can read
+the commit, while subsequent caller reads in the terminal snapshot remain invalid.

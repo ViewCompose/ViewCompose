@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.ui-resource-cache",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "ui.resource-cache",
+  "document_ids": [
+    "module.viewcompose-ui-contract"
+  ],
+  "version_lane": "next",
+  "source": "viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt",
+  "region": "ui-resource-cache",
+  "build_target": ":viewcompose-ui-contract:compileTestKotlin"
+}

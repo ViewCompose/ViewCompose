@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-nullable-draw-cache",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-graphics-core",
+  "symbol_id": "com.viewcompose.graphics.core.DrawCache",
+  "capability_id": "graphics.draw-cache",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "outputs",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.graphics.core.DrawCache"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-graphics-core"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "module.graphics-core-cache"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.graphics.draw-cache"
+      ]
+    },
+    "architecture": {
+      "status": "not-applicable",
+      "rationale": "The explicit single-entry cache API and key ownership are unchanged. Nullable values now cache successfully; the owning module documents this unreleased behavior correction."
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "The explicit single-entry cache API and key ownership are unchanged. Nullable values now cache successfully; the owning module documents this unreleased behavior correction."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "The explicit single-entry cache API and key ownership are unchanged. Nullable values now cache successfully; the owning module documents this unreleased behavior correction."
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "The explicit single-entry cache API and key ownership are unchanged. Nullable values now cache successfully; the owning module documents this unreleased behavior correction."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

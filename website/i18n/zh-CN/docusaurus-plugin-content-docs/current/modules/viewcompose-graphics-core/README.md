@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics-core/README.md
-translation_source_hash: cee73b8d66f6c8171d8e5ac447763bf2e9d38d905e20d5c712b05bfccc349c6b
+translation_source_hash: f1ee489af7a9818e5a094d0f45a364db50fd77d58405cc308538ec57a9e92f05
 translation_status: current
 ---
 
@@ -100,9 +100,9 @@ val badge = drawScene {
 `DrawRecorder` 是可变且线程受限的 Builder。`toCommands` 复制但不验证 Save/Restore；`toScene`
 复制并验证。`group` 构建单独验证的嵌套 Scene。导出后 `clear` 可复用 Recorder，不影响旧快照。
 
-`DrawCache<T>` 在基于相等性的一个 Key 下保留一个非空 Value；不同 Key 替换条目。它不观察
-State、不同步线程，也不推断 Size、Density、Theme 输入；Key 必须包含所有语义依赖，外部输入变化
-时应 Clear。`null` 结果永远不会命中缓存。Builder 异常会传播并保留旧条目。
+`DrawCache<T>` 在基于相等性的一个 Key 下保留一个 Value。当前未发布实现单独记录初始化状态，
+允许 Key 和 Value 为 `null`；早期版本会重新构建空值。不同 Key 替换条目，`clear()` 清除初始化状态。
+缓存不观察状态、不做线程同步；尺寸、Density、Theme 等依赖需要显式放入 Key。Builder 异常仍保留旧条目。
 
 ## 测试自定义图形代码
 
@@ -131,3 +131,9 @@ State、不同步线程，也不推断 Size、Density、Theme 输入；Key 必�
 `0.1.0-alpha02` 建立 Android 对齐坐标与颜色约定、有序命令回放、平衡不可变 Scene、浅不可变
 Paint 模型、轻量 Image Reference 与单条目显式 Key Cache。平台执行属于 Renderer，组合 Modifier
 属于 `viewcompose-graphics`。
+
+## 当前检出版本的回归证据
+
+相较 2026-09-06 审查基线，连续查询空值时 Builder 从调用 2 次降至 1 次（该探针减少 50%），
+结论为改进。两项新增 `DrawCacheTest` 在候选版本的 854 项独立 JVM 测试中通过，覆盖空 Key、
+空 Value、清空和构建失败后保留旧条目。这是调用次数修正，不是帧耗时测量；后续将这些用例保留在模块回归中。

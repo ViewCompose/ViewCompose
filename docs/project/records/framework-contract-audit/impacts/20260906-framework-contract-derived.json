@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.framework-contract-hardening-derived",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-runtime",
+  "symbol_id": "com.viewcompose.runtime.derivedStateOf",
+  "capability_id": "runtime.state",
+  "q_level": "Q3",
+  "contract_fields": [
+    "behavior",
+    "state",
+    "lifecycle",
+    "concurrency",
+    "callbacks",
+    "failure",
+    "performance",
+    "compatibility"
+  ],
+  "documentation": {
+    "kdoc": {
+      "status": "updated",
+      "targets": [
+        "com.viewcompose.runtime.derivedStateOf"
+      ]
+    },
+    "module": {
+      "status": "updated",
+      "targets": [
+        "module.viewcompose-runtime"
+      ]
+    },
+    "sample": {
+      "status": "updated",
+      "targets": [
+        "module.runtime-state",
+        "module.runtime-snapshot"
+      ]
+    },
+    "reference": {
+      "status": "updated",
+      "targets": [
+        "reference.runtime.state"
+      ]
+    },
+    "architecture": {
+      "status": "updated",
+      "targets": [
+        "architecture.state-snapshots"
+      ]
+    },
+    "tutorial": {
+      "status": "not-applicable",
+      "rationale": "Existing basic state tutorial usage is unchanged; nested ownership and failure recovery are explained in the Runtime manual and architecture."
+    },
+    "guide": {
+      "status": "not-applicable",
+      "rationale": "No separate guide owns low-level snapshot transactions or derived dependency lifetime."
+    },
+    "migration": {
+      "status": "not-applicable",
+      "rationale": "Intended isolation, terminal apply, and subscription ownership are corrected without changing signatures or the strict default conflict policy."
+    },
+    "redirect": {
+      "status": "not-applicable",
+      "rationale": "No symbol identity, package, owner, or documentation route moves."
+    }
+  }
+}

@@ -48,6 +48,12 @@ val LocalResourceRevision = uiLocalOf(
     defaultFactory = { 0L },
 )
 
+// Keep the scope in captured locals so delayed child sessions retain the same resource owner.
+private val LocalResourceCacheScope = uiLocalOf<String?>(
+    debugName = "Environment.ResourceCacheScope",
+    defaultFactory = { null },
+)
+
 /** Exposes density, locales, layout direction, and resource revision for the current scope. */
 object Environment {
     /** Current logical density and font scale. */
@@ -82,6 +88,7 @@ object Environment {
             locales = locales,
             layoutDirection = layoutDirection,
             resourceRevision = resourceRevision,
+            resourceCacheScope = UiLocals.current(LocalResourceCacheScope),
         )
 }
 
@@ -91,7 +98,10 @@ object Environment {
  * When [values] is absent, the deterministic [UiEnvironmentDefaults] snapshot is used. Android
  * hosts map platform resources into [UiEnvironmentValues] before entering this boundary. Nested
  * providers restore all previous locals after [content] returns.
+ * The resource cache scope is retained with the revision in emitted nodes and captured child
+ * sessions; the scope is an opaque memory identity and does not retain platform resources.
  *
+ * @sample com.viewcompose.ui.foundation.samples.resourceScopeEnvironmentSample
  * @param values explicit platform-neutral environment snapshot
  */
 fun UiTreeBuilder.UiEnvironment(
@@ -104,6 +114,7 @@ fun UiTreeBuilder.UiEnvironment(
         LocalLocales provides resolvedValues.locales,
         LocalLayoutDirection provides resolvedValues.layoutDirection,
         LocalResourceRevision provides resolvedValues.resourceRevision,
+        LocalResourceCacheScope provides resolvedValues.resourceCacheScope,
     ) {
         content()
     }

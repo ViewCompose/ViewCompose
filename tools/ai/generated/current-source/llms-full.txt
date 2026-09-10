@@ -5,10 +5,10 @@
 ## Version and source
 
 - Lane: current-source
-- Source revision: 78127e51cd740ccdbd58d326e05426caf4e49795
-- Capability fingerprint: 2f97d77ce237ec69e1e17e094140b4d071b6f4e4167edf35bb866af0e6a9d2d5
+- Source revision: 048b63af03ca51d8f44a042fc7b26d9bae85ed01
+- Capability fingerprint: 2cbabcbd18d825fb03d2c42d32f61fff6f19925e1f95a0343a4421f67f6a85cb
 - Entries: 540
-- Capabilities: 82
+- Capabilities: 85
 - Artifacts: 31
 
 ## Canonical references
@@ -393,6 +393,16 @@ Select an exact version lane, retrieve capability and sample IDs, generate only 
 - com.viewcompose.graphics.Modifier.drawWithCache — fun Modifier.drawWithCache( key: Any = Unit, onBuildDrawCache: DrawCacheBuildBlock, ): Modifier
 - com.viewcompose.graphics.Modifier.drawWithContent — fun Modifier.drawWithContent( key: Any = Unit, onDraw: DrawContentBlock, ): Modifier
 - com.viewcompose.graphics.UiTreeBuilder.Canvas — fun UiTreeBuilder.Canvas( key: Any? = null, modifier: Modifier = Modifier, onDraw: DrawBlock, )
+
+## graphics.draw-cache
+
+- Kind: dsl
+- Artifact: viewcompose-graphics-core@0.1.0-alpha02
+- Reference: reference.graphics.draw-cache
+- Compiled sample: module.graphics-core-cache (:viewcompose-graphics-core:compileTestKotlin)
+- Related documents: /modules/viewcompose-graphics-core
+
+
 
 ## host.android-animation
 
@@ -1249,6 +1259,16 @@ Select an exact version lane, retrieve capability and sample IDs, generate only 
 - com.viewcompose.ui.modifier.Modifier.innerShadow — fun Modifier.innerShadow( shadow: UiShadow, shape: UiShape? = null, ): Modifier
 - com.viewcompose.ui.modifier.Modifier.innerShadows — fun Modifier.innerShadows( shadows: List<UiShadow>, shape: UiShape? = null, ): Modifier
 
+## text.editing-state
+
+- Kind: dsl
+- Artifact: viewcompose-text-core@0.1.0-alpha04
+- Reference: reference.text.editing-state
+- Compiled sample: module.text-core-state (:viewcompose-text-core:compileTestKotlin)
+- Related documents: /architecture/text-input, /modules/viewcompose-text-core
+
+
+
 ## text.input
 
 - Kind: dsl
@@ -1301,6 +1321,16 @@ Select an exact version lane, retrieve capability and sample IDs, generate only 
 - Related documents: /architecture/decisions/design-system-host-and-component-backend-boundary, /architecture/design-systems, /architecture/decisions/design-system-resolution-boundary, /modules/viewcompose-oneui7
 
 - com.viewcompose.oneui7.UiTreeBuilder.OneUi7Theme — fun UiTreeBuilder.OneUi7Theme( tokens: UiThemeTokens = OneUi7ThemeDefaults.light(), integrations: List<UiIntegrationAttribution> = OneUi7DefaultIntegrations, content: UiTreeBuilder.() -> Unit, )
+
+## ui.resource-cache
+
+- Kind: dsl
+- Artifact: viewcompose-ui-contract@undefined
+- Reference: reference.ui.resource-cache
+- Compiled sample: module.ui-resource-cache (:viewcompose-ui-contract:compileTestKotlin)
+- Related documents: /architecture/decisions/0007-host-owned-android-resource-environment, /migration/image-loading, /modules/viewcompose-ui-contract
+
+
 
 ## viewmodel.owner-boundaries
 

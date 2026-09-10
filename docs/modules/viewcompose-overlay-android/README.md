@@ -119,3 +119,29 @@ this coordinate. The five-layer migration temporarily retired it in favor of
 `viewcompose-overlay-material3-android`. Version `0.1.0-alpha04` restores the coordinate as the
 single neutral Android transport without a forwarding facade. Material Snackbar and bottom-sheet
 behavior now requires the explicit Material adapter or `viewcompose-material3-android` aggregate.
+
+## Current-checkout cleanup contract
+
+Unreleased cleanup attempts every owned handle or delegate even when an earlier dismissal throws.
+Ownership is removed before terminal callbacks; the first failure is rethrown after cleanup and
+later failures are suppressed. Repeated clear does not retry failed terminal callbacks, and another
+session remains owned. Transient presenter failure releases its active queue slot; native window
+teardown is attempted even if nested-session disposal fails. This contract does not promise that a
+failing external platform API successfully releases its resource.
+
+The audit's two-surface failure probe released only the first surface and retained the second.
+The candidate attempts both and retains neither (1 to 2 attempts; 1 to 0 retained entries):
+**improved**. Four foundation cleanup regressions pass within the 854-test standalone JVM run.
+`CompositeOverlayCleanupTest` and the Android presenter suites own integration validation. Window
+visibility and platform failure behavior still need device acceptance; the next action is to retain
+these regressions and exercise native dismissal with a failing child session.
+
+Final Gradle integration validation passes 1 owning-module test(s) with zero failures or skips.
+The neutral run targets `CompositeOverlayCleanupTest`; design-system runs include their existing
+presenter and host-attribution suites. This adds integration evidence to the foundation failure
+probe without claiming that every external platform failure or device window path is covered.
+
+The extended 2026-09-07 Gradle run passes all nine neutral Overlay Android tests with zero failures,
+errors, or skips. The earlier single composite-cleanup regression remains included; the eight
+additional existing cases broaden integration coverage. This supports improved regression coverage
+without establishing device-window behavior or a performance change.

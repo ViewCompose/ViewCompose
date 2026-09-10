@@ -39,6 +39,17 @@ fun derivedStateSample() {
     check(displayName.value == "Ada Lovelace")
     firstName.value = "Augusta"
     check(displayName.value == "Augusta Lovelace")
+    var invalidations = 0
+    val observer = RuntimeObservation.observeReads({ invalidations++ }) { displayName.value }.second
+    try {
+        lastName.value = "King"
+        check(invalidations == 1)
+        check(displayName.value == "Augusta King")
+    } finally {
+        observer.dispose()
+    }
+    lastName.value = "Lovelace"
+    check(displayName.value == "Augusta Lovelace")
 }
 
 fun mutableSnapshotSample() {
@@ -53,6 +64,12 @@ Snapshot.withMutableSnapshot {
 
 check(count.value == 1 && enabled.value)
     // DOCS_REGION_END(runtime-module-snapshot)
+    Snapshot.withMutableSnapshot {
+        count.value = 2
+        Snapshot.withMutableSnapshot { count.value = 3 }
+        check(count.value == 3)
+    }
+    check(count.value == 3)
 }
 
 fun snapshotMutationPolicySample() {
